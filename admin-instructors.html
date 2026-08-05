@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Admin Instructors | LetsStudy Pro</title>
+
+<meta name="description"
+content="LetsStudy Pro Admin Instructor Management">
+
+<link rel="icon"
+href="https://letsstudy.pro/favicon.png">
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+body{
+  font-family:Inter,system-ui,sans-serif;
+  background:#f8fafc;
+  color:#0f172a;
+}
+
+header{
+  background:#fff;
+  border-bottom:1px solid #e2e8f0;
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+
+.nav{
+  max-width:1200px;
+  margin:auto;
+  min-height:70px;
+  padding:0 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.logo{
+  font-weight:900;
+  color:#0b57d0;
+  font-size:20px;
+}
+
+.back{
+  text-decoration:none;
+  color:#475569;
+  font-weight:700;
+}
+
+.container{
+  width:min(1200px,92%);
+  margin:35px auto;
+}
+
+h1{
+  font-size:32px;
+  margin-bottom:8px;
+}
+
+.subtitle{
+  color:#64748b;
+  margin-bottom:25px;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:15px;
+  margin-bottom:25px;
+}
+
+.stat{
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:16px;
+  padding:22px;
+}
+
+.stat strong{
+  display:block;
+  font-size:28px;
+  color:#0b57d0;
+}
+
+.stat span{
+  color:#64748b;
+  font-size:13px;
+}
+
+.toolbar{
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:16px;
+  padding:18px;
+  display:flex;
+  gap:12px;
+  margin-bottom:20px;
+}
+
+input{
+  width:100%;
+  padding:12px 14px;
+  border:1px solid #cbd5e1;
+  border-radius:10px;
+  outline:none;
+}
+
+input:focus{
+  border-color:#0b57d0;
+}
+
+.btn{
+  border:0;
+  border-radius:10px;
+  padding:12px 18px;
+  background:#0b57d0;
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.table-box{
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:16px;
+  overflow:auto;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:800px;
+}
+
+th,
+td{
+  padding:15px;
+  text-align:left;
+  border-bottom:1px solid #e2e8f0;
+}
+
+th{
+  background:#f8fafc;
+  font-size:13px;
+}
+
+td{
+  font-size:14px;
+}
+
+.badge{
+  display:inline-block;
+  padding:5px 9px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:800;
+}
+
+.active{
+  background:#dcfce7;
+  color:#166534;
+}
+
+.inactive{
+  background:#fee2e2;
+  color:#991b1b;
+}
+
+.actions{
+  display:flex;
+  gap:6px;
+}
+
+.action{
+  border:0;
+  padding:7px 10px;
+  border-radius:7px;
+  cursor:pointer;
+  font-size:12px;
+  font-weight:700;
+}
+
+.view{
+  background:#e0f2fe;
+  color:#0369a1;
+}
+
+.edit{
+  background:#fef3c7;
+  color:#92400e;
+}
+
+.delete{
+  background:#fee2e2;
+  color:#b91c1c;
+}
+
+.empty{
+  text-align:center;
+  padding:40px;
+  color:#64748b;
+}
+
+@media(max-width:700px){
+
+  .stats{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .toolbar{
+    flex-direction:column;
+  }
+
+  h1{
+    font-size:26px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="nav">
+
+    <div class="logo">
+      LetsStudy Pro Admin
+    </div>
+
+    <a class="back" href="admin.html">
+      ← Admin Dashboard
+    </a>
+
+  </div>
+</header>
+
+<main class="container">
+
+  <h1>Instructor Management</h1>
+
+  <p class="subtitle">
+    Manage instructors, teaching accounts and instructor access.
+  </p>
+
+  <section class="stats">
+
+    <div class="stat">
+      <strong id="totalInstructors">0</strong>
+      <span>Total Instructors</span>
+    </div>
+
+    <div class="stat">
+      <strong id="activeInstructors">0</strong>
+      <span>Active</span>
+    </div>
+
+    <div class="stat">
+      <strong id="inactiveInstructors">0</strong>
+      <span>Inactive</span>
+    </div>
+
+    <div class="stat">
+      <strong id="verifiedInstructors">0</strong>
+      <span>Verified</span>
+    </div>
+
+  </section>
+
+  <section class="toolbar">
+
+    <input
+      id="searchInstructor"
+      type="search"
+      placeholder="Search instructor by name or email...">
+
+    <button
+      class="btn"
+      onclick="loadInstructors()">
+      Refresh
+    </button>
+
+  </section>
+
+  <section class="table-box">
+
+    <table>
+
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Subject</th>
+          <th>Status</th>
+          <th>Verified</th>
+          <th>Joined</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody id="instructorsTable">
+
+        <tr>
+          <td colspan="7" class="empty">
+            Loading instructors...
+          </td>
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </section>
+
+</main>
+
+<script type="module">
+
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  deleteDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+
+const firebaseConfig = {
+
+  apiKey:
+    "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+  authDomain:
+    "let-s-study-pro.firebaseapp.com",
+
+  projectId:
+    "let-s-study-pro",
+
+  storageBucket:
+    "let-s-study-pro.firebasestorage.app",
+
+  messagingSenderId:
+    "YOUR_MESSAGING_SENDER_ID",
+
+  appId:
+    "YOUR_APP_ID"
+
+};
+
+
+const app =
+  initializeApp(firebaseConfig);
+
+const auth =
+  getAuth(app);
+
+const db =
+  getFirestore(app);
+
+
+let instructors = [];
+
+
+/* =========================
+   LOAD INSTRUCTORS
+========================= */
+
+async function loadInstructors(){
+
+  const table =
+    document.getElementById(
+      "instructorsTable"
+    );
+
+  try{
+
+    const snapshot =
+      await getDocs(
+        collection(db,"users")
+      );
+
+    instructors = [];
+
+    snapshot.forEach(item => {
+
+      const data =
+        item.data();
+
+      if(
+        data.role === "instructor" ||
+        data.role === "teacher"
+      ){
+
+        instructors.push({
+          id:item.id,
+          ...data
+        });
+
+      }
+
+    });
+
+    updateStats();
+
+    renderInstructors(
+      instructors
+    );
+
+  }catch(error){
+
+    console.error(error);
+
+    table.innerHTML = `
+      <tr>
+        <td colspan="7" class="empty">
+          Failed to load instructors.
+        </td>
+      </tr>
+    `;
+
+  }
+
+}
+
+
+/* =========================
+   STATISTICS
+========================= */
+
+function updateStats(){
+
+  const total =
+    instructors.length;
+
+  const active =
+    instructors.filter(
+      x => (x.status || "active")
+        .toLowerCase() === "active"
+    ).length;
+
+  const inactive =
+    total - active;
+
+  const verified =
+    instructors.filter(
+      x =>
+        x.verified === true ||
+        x.emailVerified === true
+    ).length;
+
+  document.getElementById(
+    "totalInstructors"
+  ).textContent = total;
+
+  document.getElementById(
+    "activeInstructors"
+  ).textContent = active;
+
+  document.getElementById(
+    "inactiveInstructors"
+  ).textContent = inactive;
+
+  document.getElementById(
+    "verifiedInstructors"
+  ).textContent = verified;
+
+}
+
+
+/* =========================
+   RENDER
+========================= */
+
+function renderInstructors(list){
+
+  const table =
+    document.getElementById(
+      "instructorsTable"
+    );
+
+  if(!list.length){
+
+    table.innerHTML = `
+      <tr>
+        <td colspan="7" class="empty">
+          No instructors found.
+        </td>
+      </tr>
+    `;
+
+    return;
+  }
+
+  table.innerHTML =
+    list.map(item => {
+
+      const name =
+        item.name ||
+        item.displayName ||
+        "Unnamed";
+
+      const email =
+        item.email ||
+        "No email";
+
+      const subject =
+        item.subject ||
+        item.specialization ||
+        "—";
+
+      const status =
+        item.status ||
+        "active";
+
+      const verified =
+        item.verified === true ||
+        item.emailVerified === true;
+
+      return `
+
+        <tr>
+
+          <td>
+            <strong>
+              ${escapeHTML(name)}
+            </strong>
+          </td>
+
+          <td>
+            ${escapeHTML(email)}
+          </td>
+
+          <td>
+            ${escapeHTML(subject)}
+          </td>
+
+          <td>
+            <span class="badge ${
+              status === "active"
+              ? "active"
+              : "inactive"
+            }">
+              ${escapeHTML(status)}
+            </span>
+          </td>
+
+          <td>
+            ${verified ? "✅ Yes" : "❌ No"}
+          </td>
+
+          <td>
+            ${
+              item.createdAt?.toDate
+              ? item.createdAt
+                  .toDate()
+                  .toLocaleDateString()
+              : "—"
+            }
+          </td>
+
+          <td>
+
+            <div class="actions">
+
+              <button
+                class="action view"
+                onclick="viewInstructor('${item.id}')">
+                View
+              </button>
+
+              <button
+                class="action edit"
+                onclick="editInstructor('${item.id}')">
+                Edit
+              </button>
+
+              <button
+                class="action delete"
+                onclick="deleteInstructor('${item.id}')">
+                Delete
+              </button>
+
+            </div>
+
+          </td>
+
+        </tr>
+
+      `;
+
+    }).join("");
+
+}
+
+
+/* =========================
+   SEARCH
+========================= */
+
+document
+  .getElementById("searchInstructor")
+  .addEventListener(
+    "input",
+    function(){
+
+      const query =
+        this.value
+          .trim()
+          .toLowerCase();
+
+      const filtered =
+        instructors.filter(item => {
+
+          const name =
+            (
+              item.name ||
+              item.displayName ||
+              ""
+            ).toLowerCase();
+
+          const email =
+            (
+              item.email ||
+              ""
+            ).toLowerCase();
+
+          return (
+            name.includes(query) ||
+            email.includes(query)
+          );
+
+        });
+
+      renderInstructors(
+        filtered
+      );
+
+    }
+  );
+
+
+/* =========================
+   VIEW
+========================= */
+
+window.viewInstructor =
+function(id){
+
+  const instructor =
+    instructors.find(
+      x => x.id === id
+    );
+
+  if(!instructor) return;
+
+  alert(
+    `Instructor
+
+Name: ${
+      instructor.name ||
+      instructor.displayName ||
+      "—"
+    }
+
+Email: ${
+      instructor.email ||
+      "—"
+    }
+
+Subject: ${
+      instructor.subject ||
+      "—"
+    }`
+  );
+
+};
+
+
+/* =========================
+   EDIT
+========================= */
+
+window.editInstructor =
+function(id){
+
+  alert(
+    "Instructor editor will be connected to Firestore in the next module."
+  );
+
+};
+
+
+/* =========================
+   DELETE
+========================= */
+
+window.deleteInstructor =
+async function(id){
+
+  const instructor =
+    instructors.find(
+      x => x.id === id
+    );
+
+  if(!instructor) return;
+
+  const confirmed =
+    confirm(
+      `Delete instructor ${
+        instructor.name ||
+        instructor.email ||
+        ""
+      }?`
+    );
+
+  if(!confirmed) return;
+
+  try{
+
+    await deleteDoc(
+      doc(
+        db,
+        "users",
+        id
+      )
+    );
+
+    await loadInstructors();
+
+  }catch(error){
+
+    console.error(error);
+
+    alert(
+      "Unable to delete instructor."
+    );
+
+  }
+
+};
+
+
+/* =========================
+   SECURITY
+========================= */
+
+onAuthStateChanged(
+  auth,
+  user => {
+
+    if(!user){
+
+      window.location.href =
+        "login.html";
+
+      return;
+
+    }
+
+    loadInstructors();
+
+  }
+);
+
+
+/* =========================
+   ESCAPE HTML
+========================= */
+
+function escapeHTML(value){
+
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+
+}
+
+window.loadInstructors =
+  loadInstructors;
+
+</script>
+
+</body>
+</html>
