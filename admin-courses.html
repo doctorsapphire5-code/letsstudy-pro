@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Admin Courses | LetsStudy Pro</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f5f7fb;
+margin:0;
+}
+
+header{
+background:#111827;
+color:white;
+padding:20px;
+}
+
+.container{
+max-width:1000px;
+margin:auto;
+padding:20px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:15px;
+margin-bottom:20px;
+box-shadow:0 5px 20px #0002;
+}
+
+
+input,textarea,select{
+
+width:100%;
+padding:12px;
+margin:8px 0;
+border:1px solid #ddd;
+border-radius:8px;
+
+}
+
+
+button{
+
+background:#0b57d0;
+color:white;
+border:none;
+padding:12px 20px;
+border-radius:8px;
+cursor:pointer;
+
+}
+
+
+.course{
+
+border-bottom:1px solid #eee;
+padding:15px;
+
+}
+
+
+.delete{
+
+background:#dc2626;
+
+}
+
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<header>
+
+<h1>
+👑 Admin Course Manager
+</h1>
+
+</header>
+
+
+
+<div class="container">
+
+
+
+<div class="card">
+
+
+<h2>
+Add New Course
+</h2>
+
+
+<input id="title"
+placeholder="Course title">
+
+
+<textarea id="description"
+placeholder="Course description"></textarea>
+
+
+<input id="price"
+type="number"
+placeholder="Price TZS">
+
+
+
+<input id="thumbnail"
+placeholder="Thumbnail URL">
+
+
+
+<select id="status">
+
+<option value="published">
+Published
+</option>
+
+<option value="draft">
+Draft
+</option>
+
+</select>
+
+
+
+<button onclick="addCourse()">
+
+Create Course
+
+</button>
+
+
+</div>
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+All Courses
+</h2>
+
+
+<div id="courses">
+
+Loading...
+
+</div>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+<script type="module">
+
+
+import {
+
+db
+
+}
+
+from "./assets/js/firebase.js";
+
+
+
+import {
+
+collection,
+addDoc,
+getDocs,
+deleteDoc,
+doc,
+serverTimestamp
+
+}
+
+from
+
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+
+
+
+
+
+async function addCourse(){
+
+
+
+await addDoc(
+
+collection(
+db,
+"courses"
+),
+
+{
+
+
+title:
+document.getElementById("title").value,
+
+
+description:
+document.getElementById("description").value,
+
+
+price:
+Number(
+document.getElementById("price").value
+),
+
+
+thumbnail:
+document.getElementById("thumbnail").value,
+
+
+status:
+document.getElementById("status").value,
+
+
+createdAt:
+serverTimestamp()
+
+
+}
+
+);
+
+
+
+alert(
+"Course created successfully"
+);
+
+
+loadCourses();
+
+
+}
+
+
+
+
+
+
+
+async function loadCourses(){
+
+
+const snap =
+await getDocs(
+
+collection(
+db,
+"courses"
+)
+
+);
+
+
+
+let html="";
+
+
+
+snap.forEach(
+
+item=>{
+
+
+const c =
+item.data();
+
+
+
+html += `
+
+
+<div class="course">
+
+
+<h3>
+${c.title}
+</h3>
+
+
+<p>
+${c.description || ""}
+</p>
+
+
+<strong>
+TZS ${c.price || 0}
+</strong>
+
+
+<br><br>
+
+
+<button class="delete"
+
+onclick="deleteCourse('${item.id}')">
+
+Delete
+
+</button>
+
+
+</div>
+
+
+`;
+
+
+});
+
+
+
+document.getElementById(
+"courses"
+).innerHTML =
+html;
+
+
+}
+
+
+
+
+
+
+
+window.deleteCourse =
+
+async function(id){
+
+
+if(confirm("Delete this course?")){
+
+
+await deleteDoc(
+
+doc(
+db,
+"courses",
+id
+
+)
+
+);
+
+
+
+loadCourses();
+
+
+}
+
+
+}
+
+
+
+
+
+
+loadCourses();
+
+
+
+</script>
+
+
+</body>
+
+</html>
