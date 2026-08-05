@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Notifications | LetsStudy Pro</title>
+
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<style>
+
+body{
+font-family:Arial;
+background:#f5f7fb;
+}
+
+.container{
+max-width:800px;
+margin:auto;
+padding:20px;
+}
+
+.card{
+
+background:white;
+padding:20px;
+margin-bottom:15px;
+border-radius:15px;
+box-shadow:0 5px 15px #0002;
+
+}
+
+.time{
+color:#777;
+font-size:14px;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+<h1>
+🔔 Notifications
+</h1>
+
+
+<div id="list">
+
+Loading...
+
+</div>
+
+
+</div>
+
+
+
+
+
+<script type="module">
+
+
+import {
+
+auth,
+db
+
+}
+
+from "./assets/js/firebase.js";
+
+
+import {
+
+onAuthStateChanged
+
+}
+
+from
+
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+
+import {
+
+collection,
+query,
+where,
+orderBy,
+getDocs
+
+}
+
+from
+
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+
+
+
+onAuthStateChanged(
+auth,
+user=>{
+
+
+if(!user){
+
+location.href="login.html";
+
+return;
+
+}
+
+
+loadNotifications(user.uid);
+
+
+});
+
+
+
+
+
+
+
+async function loadNotifications(uid){
+
+
+const q=query(
+
+collection(
+db,
+"notifications"
+),
+
+where(
+"userId",
+"==",
+uid
+),
+
+orderBy(
+"createdAt",
+"desc"
+)
+
+);
+
+
+
+const snap =
+await getDocs(q);
+
+
+
+let html="";
+
+
+
+snap.forEach(
+
+doc=>{
+
+
+const n =
+doc.data();
+
+
+
+html+=`
+
+<div class="card">
+
+
+<h3>
+${n.title}
+</h3>
+
+
+<p>
+${n.message}
+</p>
+
+
+<div class="time">
+
+${n.createdAt?.toDate
+?
+n.createdAt.toDate()
+:
+""}
+
+</div>
+
+
+</div>
+
+`;
+
+
+
+});
+
+
+
+document.getElementById(
+"list"
+).innerHTML=
+
+html ||
+
+"No notifications";
+
+
+}
+
+
+</script>
+
+
+</body>
+
+</html>
