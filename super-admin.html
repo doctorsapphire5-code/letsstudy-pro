@@ -2421,3 +2421,75 @@ event.reason
 console.log(
 "Let's Study Pro Super Admin initialized."
 );
+import {
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+  doc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+import {
+  auth,
+  db
+} from "./firebase.js";
+
+
+onAuthStateChanged(
+  auth,
+  async user => {
+
+    if(!user){
+
+      window.location.replace(
+        "auth.html"
+      );
+
+      return;
+
+    }
+
+
+    const snapshot =
+      await getDoc(
+        doc(
+          db,
+          "users",
+          user.uid
+        )
+      );
+
+
+    if(!snapshot.exists()){
+
+      window.location.replace(
+        "dashboard.html"
+      );
+
+      return;
+
+    }
+
+
+    const role =
+      String(
+        snapshot.data().role || ""
+      ).toLowerCase();
+
+
+    if(
+      role !== "superadmin" &&
+      role !== "super_admin"
+    ){
+
+      window.location.replace(
+        "dashboard.html"
+      );
+
+      return;
+
+    }
+
+  }
+);
