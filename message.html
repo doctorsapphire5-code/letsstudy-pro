@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Messages | LetsStudy Pro</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#f5f7fb;
+}
+
+.header{
+background:#0b57d0;
+color:white;
+padding:20px;
+}
+
+.container{
+max-width:900px;
+margin:auto;
+padding:20px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:15px;
+margin-bottom:15px;
+box-shadow:0 5px 20px #0002;
+}
+
+.message{
+padding:15px;
+border-bottom:1px solid #eee;
+}
+
+.message h3{
+margin:0 0 8px;
+}
+
+.date{
+color:#777;
+font-size:14px;
+}
+
+.empty{
+text-align:center;
+color:#777;
+padding:40px;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="header">
+
+<h1>
+💬 LetsStudy Pro Messages
+</h1>
+
+<p>
+Notifications and announcements
+</p>
+
+</div>
+
+
+
+<div class="container">
+
+
+<div class="card">
+
+<h2>
+Inbox
+</h2>
+
+
+<div id="messages">
+
+<div class="empty">
+Loading messages...
+</div>
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+<script type="module">
+
+
+import {
+
+auth,
+db
+
+}
+
+from "./assets/js/firebase.js";
+
+
+
+import {
+
+onAuthStateChanged
+
+}
+
+from
+
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+
+
+import {
+
+collection,
+query,
+where,
+orderBy,
+getDocs
+
+}
+
+from
+
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+
+
+
+onAuthStateChanged(
+auth,
+async(user)=>{
+
+
+if(!user){
+
+location.href="login.html";
+
+return;
+
+}
+
+
+loadMessages(user.uid);
+
+
+});
+
+
+
+
+
+
+
+async function loadMessages(uid){
+
+
+const q = query(
+
+collection(
+db,
+"messages"
+),
+
+where(
+"userId",
+"==",
+uid
+),
+
+orderBy(
+"createdAt",
+"desc"
+)
+
+);
+
+
+
+const snap =
+await getDocs(q);
+
+
+
+let html="";
+
+
+
+snap.forEach(
+doc=>{
+
+
+const data =
+doc.data();
+
+
+
+html += `
+
+
+<div class="message">
+
+
+<h3>
+${data.title || "Notification"}
+
+</h3>
+
+
+<p>
+${data.message || ""}
+</p>
+
+
+<div class="date">
+
+${data.createdAt?.toDate
+?
+data.createdAt.toDate().toLocaleString()
+:
+""
+}
+
+</div>
+
+
+</div>
+
+
+`;
+
+
+
+});
+
+
+
+document.getElementById(
+"messages"
+).innerHTML =
+
+html ||
+
+`
+<div class="empty">
+No messages yet
+</div>
+`;
+
+
+
+}
+
+
+
+</script>
+
+
+</body>
+
+</html>
