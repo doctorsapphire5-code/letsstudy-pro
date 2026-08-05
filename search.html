@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Search | LetsStudy Pro</title>
+
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+
+<style>
+
+body{
+font-family:Arial;
+background:#f5f7fb;
+}
+
+
+.container{
+
+max-width:1000px;
+margin:auto;
+padding:20px;
+
+}
+
+
+input{
+
+width:100%;
+padding:15px;
+border-radius:10px;
+border:1px solid #ddd;
+
+}
+
+
+.card{
+
+background:white;
+padding:20px;
+margin-top:15px;
+border-radius:15px;
+
+}
+
+
+button{
+
+background:#0b57d0;
+color:white;
+border:0;
+padding:10px;
+
+}
+
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+<h1>
+🔎 Search LetsStudy Pro
+</h1>
+
+
+<input id="search"
+
+placeholder="Search courses, resources...">
+
+
+
+<div id="results">
+
+</div>
+
+
+</div>
+
+
+
+
+
+<script type="module">
+
+
+import {
+
+db
+
+}
+
+from "./assets/js/firebase.js";
+
+
+import {
+
+collection,
+getDocs
+
+}
+
+from
+
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+
+
+const input =
+document.getElementById(
+"search"
+);
+
+
+
+input.addEventListener(
+"keyup",
+
+()=>{
+
+searchData(
+input.value
+);
+
+}
+
+);
+
+
+
+
+
+async function searchData(text){
+
+
+if(!text){
+
+document.getElementById(
+"results"
+).innerHTML="";
+
+return;
+
+}
+
+
+
+let html="";
+
+
+
+const collections=[
+
+"courses",
+
+"resources",
+
+"scholarships",
+
+"products"
+
+];
+
+
+
+for(
+const name of collections
+){
+
+
+const snap =
+await getDocs(
+
+collection(
+db,
+name
+)
+
+);
+
+
+
+snap.forEach(
+
+doc=>{
+
+
+const data =
+doc.data();
+
+
+const title =
+(data.title || data.name || "")
+.toLowerCase();
+
+
+
+if(
+title.includes(
+text.toLowerCase()
+)
+
+){
+
+
+html+=`
+
+<div class="card">
+
+<h3>
+${data.title || data.name}
+</h3>
+
+
+<p>
+
+${data.description || ""}
+
+</p>
+
+
+</div>
+
+`;
+
+}
+
+
+});
+
+
+}
+
+
+
+document.getElementById(
+"results"
+).innerHTML=
+
+html ||
+
+"No results found";
+
+
+}
+
+
+
+</script>
+
+
+</body>
+
+</html>
