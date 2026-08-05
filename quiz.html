@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<title>Quiz | LetsStudy Pro</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f5f7fb;
+margin:0;
+}
+
+header{
+background:#0b57d0;
+color:white;
+padding:20px;
+}
+
+.container{
+max-width:900px;
+margin:auto;
+padding:20px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:15px;
+margin-bottom:20px;
+box-shadow:0 5px 20px #0002;
+}
+
+.option{
+padding:12px;
+border:1px solid #ddd;
+margin:10px 0;
+border-radius:8px;
+cursor:pointer;
+}
+
+.option:hover{
+background:#eef4ff;
+}
+
+button{
+background:#0b57d0;
+color:white;
+border:0;
+padding:12px 20px;
+border-radius:8px;
+cursor:pointer;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<header>
+
+<h1>
+📝 Course Quiz
+</h1>
+
+</header>
+
+
+
+<div class="container">
+
+
+<div id="quiz">
+
+Loading quiz...
+
+</div>
+
+
+<button onclick="submitQuiz()">
+
+Submit Quiz
+
+</button>
+
+
+<h2 id="result"></h2>
+
+
+</div>
+
+
+
+
+
+<script type="module">
+
+
+import {
+
+db,
+auth
+
+}
+
+from "./assets/js/firebase.js";
+
+
+
+import {
+
+collection,
+query,
+where,
+getDocs,
+addDoc,
+serverTimestamp
+
+}
+
+from
+
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+
+import {
+
+onAuthStateChanged
+
+}
+
+from
+
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+
+
+
+
+
+const params =
+new URLSearchParams(
+location.search
+);
+
+
+const courseId =
+params.get("courseId");
+
+
+
+let questions=[];
+
+let answers={};
+
+let user;
+
+
+
+onAuthStateChanged(
+auth,
+u=>{
+
+if(!u){
+
+location.href="login.html";
+
+}
+
+user=u;
+
+loadQuiz();
+
+}
+
+);
+
+
+
+
+
+
+
+async function loadQuiz(){
+
+
+const q=query(
+
+collection(
+db,
+"quizzes"
+),
+
+where(
+"courseId",
+"==",
+courseId
+)
+
+);
+
+
+
+const snap=
+await getDocs(q);
+
+
+
+let html="";
+
+
+
+let i=0;
+
+
+
+snap.forEach(
+
+doc=>{
+
+
+const data=doc.data();
+
+questions.push(data);
+
+
+
+html+=`
+
+<div class="card">
+
+<h3>
+${i+1}. ${data.question}
+</h3>
+
+
+${data.options.map((o)=>`
+
+<div class="option">
+
+<label>
+
+<input type="radio"
+
+name="q${i}"
+
+onclick="saveAnswer(${i},'${o}')">
+
+
+${o}
+
+</label>
+
+</div>
+
+`).join("")}
+
+
+</div>
+
+
+`;
+
+i++;
+
+});
+
+
+
+document.getElementById(
+"quiz"
+).innerHTML=html;
+
+
+}
+
+
+
+
+
+
+
+window.saveAnswer=function(
+index,
+answer
+){
+
+answers[index]=answer;
+
+}
+
+
+
+
+
+
+
+window.submitQuiz=async function(){
+
+
+let score=0;
+
+
+questions.forEach(
+(q,i)=>{
+
+
+if(
+answers[i]==q.answer
+){
+
+score++;
+
+}
+
+
+});
+
+
+
+document.getElementById(
+"result"
+).innerHTML=
+
+`Score: ${score}/${questions.length}`;
+
+
+
+await addDoc(
+
+collection(
+db,
+"quizResults"
+),
+
+{
+
+userId:user.uid,
+
+courseId,
+
+score,
+
+createdAt:serverTimestamp()
+
+}
+
+);
+
+
+
+}
+
+
+
+</script>
+
+
+</body>
+
+</html>
