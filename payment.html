@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    LetsStudy Pro | Secure Payment
+  </title>
+
+  <style>
+
+    *{
+      box-sizing:border-box;
+    }
+
+    body{
+      margin:0;
+      font-family:Arial,sans-serif;
+      background:#f5f7fb;
+      color:#172033;
+    }
+
+    .header{
+      padding:18px 6%;
+      background:#fff;
+      border-bottom:1px solid #e5e7eb;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+
+    .logo{
+      font-size:22px;
+      font-weight:800;
+    }
+
+    .logo span{
+      color:#2563eb;
+    }
+
+    .back{
+      text-decoration:none;
+      color:#2563eb;
+      font-weight:600;
+    }
+
+    .container{
+      width:min(1100px,94%);
+      margin:30px auto;
+    }
+
+    .card{
+      background:#fff;
+      border-radius:18px;
+      padding:22px;
+      box-shadow:0 10px 35px rgba(0,0,0,.07);
+    }
+
+    .title{
+      margin:0 0 8px;
+      font-size:25px;
+    }
+
+    .subtitle{
+      color:#667085;
+      margin-bottom:22px;
+    }
+
+    .payment-frame{
+      width:100%;
+      min-height:720px;
+      border:0;
+      border-radius:14px;
+      background:#fff;
+    }
+
+    .status{
+      display:none;
+      padding:14px;
+      margin-bottom:18px;
+      border-radius:10px;
+      background:#eef4ff;
+      color:#1d4ed8;
+    }
+
+    .secure{
+      text-align:center;
+      margin-top:15px;
+      color:#667085;
+      font-size:13px;
+    }
+
+    @media(max-width:600px){
+
+      .container{
+        width:100%;
+        margin:0;
+      }
+
+      .card{
+        border-radius:0;
+        padding:12px;
+      }
+
+      .payment-frame{
+        min-height:800px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<header class="header">
+
+  <div class="logo">
+    LetsStudy <span>Pro</span>
+  </div>
+
+  <a
+    href="checkout.html"
+    class="back"
+  >
+    ← Checkout
+  </a>
+
+</header>
+
+
+<main class="container">
+
+  <div class="card">
+
+    <h1 class="title">
+      Secure Payment
+    </h1>
+
+    <p class="subtitle">
+      Complete your payment securely through Pesapal.
+    </p>
+
+
+    <div
+      id="paymentStatus"
+      class="status"
+    >
+      Checking payment status...
+    </div>
+
+
+    <iframe
+      id="pesapalFrame"
+      class="payment-frame"
+      title="Pesapal Secure Payment"
+      allow="payment"
+      loading="eager"
+      src="https://cybqa.pesapal.com/pesapaliframe/PesapalIframe3/Index?OrderTrackingId=290ef6b6-57a4-42b5-8bb8-da1078ee3ba6">
+    </iframe>
+
+
+    <div class="secure">
+      🔒 Secure payment powered by Pesapal
+    </div>
+
+  </div>
+
+</main>
+
+
+<script type="module">
+
+  import {
+    auth,
+    db
+  } from "./assets/js/firebase.js";
+
+
+  import {
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+
+  import {
+    collection,
+    addDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+
+  const trackingId =
+    params.get(
+      "OrderTrackingId"
+    );
+
+
+  const statusBox =
+    document.getElementById(
+      "paymentStatus"
+    );
+
+
+  const frame =
+    document.getElementById(
+      "pesapalFrame"
+    );
+
+
+  /*
+   * If this page receives a new
+   * OrderTrackingId, use it.
+   */
+
+  if(trackingId){
+
+    frame.src =
+      "https://cybqa.pesapal.com/" +
+      "pesapaliframe/PesapalIframe3/" +
+      "Index?OrderTrackingId=" +
+      encodeURIComponent(
+        trackingId
+      );
+
+  }
+
+
+  /*
+   * User authentication
+   */
+
+  onAuthStateChanged(
+    auth,
+    user => {
+
+      if(!user){
+
+        window.location.href =
+          "auth.html";
+
+        return;
+
+      }
+
+      console.log(
+        "Payment user:",
+        user.uid
+      );
+
+    }
+  );
+
+
+  /*
+   * Listen for callback message.
+   * Do NOT mark the order paid here.
+   * The backend must verify Pesapal status.
+   */
+
+  window.addEventListener(
+    "message",
+    event => {
+
+      if(
+        !event.origin.includes(
+          "pesapal.com"
+        )
+      ){
+
+        return;
+
+      }
+
+      console.log(
+        "Pesapal message:",
+        event.data
+      );
+
+    }
+  );
+
+
+  /*
+   * Show tracking information
+   */
+
+  if(trackingId){
+
+    statusBox.style.display =
+      "block";
+
+    statusBox.textContent =
+      "Payment session: " +
+      trackingId;
+
+  }
+
+</script>
+
+</body>
+
+</html>
