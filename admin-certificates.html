@@ -1,0 +1,1557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Certificate Management | LetsStudy Pro</title>
+
+<meta name="description"
+      content="LetsStudy Pro Certificate Management Admin">
+
+<link rel="icon"
+      href="https://letsstudy.pro/favicon.png">
+
+<style>
+
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+body{
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  background:#f8fafc;
+  color:#0f172a;
+}
+
+header{
+  position:sticky;
+  top:0;
+  z-index:1000;
+
+  background:#fff;
+  border-bottom:1px solid #e2e8f0;
+}
+
+.nav{
+  width:min(1250px,92%);
+  min-height:70px;
+  margin:auto;
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+}
+
+.logo{
+  color:#0b57d0;
+  font-size:20px;
+  font-weight:900;
+}
+
+.back{
+  color:#475569;
+  text-decoration:none;
+  font-weight:700;
+}
+
+.container{
+  width:min(1250px,92%);
+  margin:35px auto;
+}
+
+h1{
+  font-size:32px;
+  margin-bottom:7px;
+}
+
+.subtitle{
+  color:#64748b;
+  margin-bottom:28px;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:16px;
+  margin-bottom:25px;
+}
+
+.stat{
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:18px;
+  padding:22px;
+}
+
+.stat strong{
+  display:block;
+  color:#0b57d0;
+  font-size:29px;
+  margin-bottom:5px;
+}
+
+.stat span{
+  color:#64748b;
+  font-size:13px;
+}
+
+.toolbar{
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:16px;
+  padding:18px;
+
+  display:grid;
+  grid-template-columns:1fr 220px 140px;
+  gap:12px;
+
+  margin-bottom:20px;
+}
+
+input,
+select{
+  width:100%;
+  min-height:45px;
+
+  padding:10px 13px;
+
+  border:1px solid #cbd5e1;
+  border-radius:10px;
+
+  background:#fff;
+  outline:none;
+}
+
+input:focus,
+select:focus{
+  border-color:#0b57d0;
+}
+
+.btn{
+  min-height:45px;
+  padding:0 18px;
+
+  border:0;
+  border-radius:10px;
+
+  background:#0b57d0;
+  color:#fff;
+
+  font-weight:800;
+  cursor:pointer;
+}
+
+.btn:hover{
+  background:#0848b3;
+}
+
+.table-box{
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:17px;
+  overflow:auto;
+}
+
+table{
+  width:100%;
+  min-width:1050px;
+  border-collapse:collapse;
+}
+
+th,
+td{
+  padding:15px;
+  border-bottom:1px solid #e2e8f0;
+  text-align:left;
+}
+
+th{
+  background:#f8fafc;
+  color:#475569;
+  font-size:12px;
+  text-transform:uppercase;
+}
+
+td{
+  font-size:14px;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+
+  padding:5px 10px;
+  border-radius:999px;
+
+  font-size:11px;
+  font-weight:800;
+}
+
+.verified{
+  background:#dcfce7;
+  color:#166534;
+}
+
+.pending{
+  background:#fef3c7;
+  color:#92400e;
+}
+
+.revoked{
+  background:#fee2e2;
+  color:#991b1b;
+}
+
+.actions{
+  display:flex;
+  gap:6px;
+}
+
+.action{
+  border:0;
+  border-radius:8px;
+  padding:8px 10px;
+
+  cursor:pointer;
+  font-size:12px;
+  font-weight:800;
+}
+
+.view{
+  background:#e0f2fe;
+  color:#0369a1;
+}
+
+.edit{
+  background:#e0e7ff;
+  color:#3730a3;
+}
+
+.verify{
+  background:#dcfce7;
+  color:#166534;
+}
+
+.empty{
+  text-align:center;
+  padding:45px;
+  color:#64748b;
+}
+
+.modal{
+  display:none;
+
+  position:fixed;
+  inset:0;
+  z-index:9999;
+
+  background:rgba(15,23,42,.65);
+
+  align-items:center;
+  justify-content:center;
+
+  padding:20px;
+}
+
+.modal-box{
+  position:relative;
+
+  width:min(600px,100%);
+  max-height:90vh;
+
+  overflow:auto;
+
+  background:#fff;
+  border-radius:20px;
+  padding:26px;
+}
+
+.close{
+  position:absolute;
+  top:15px;
+  right:15px;
+
+  width:36px;
+  height:36px;
+
+  border:0;
+  border-radius:50%;
+
+  background:#f1f5f9;
+
+  cursor:pointer;
+  font-size:20px;
+}
+
+.detail{
+  padding:13px 0;
+  border-bottom:1px solid #e2e8f0;
+}
+
+.detail strong{
+  display:block;
+  color:#64748b;
+  font-size:12px;
+  margin-bottom:4px;
+}
+
+.form-group{
+  margin-top:18px;
+}
+
+.form-group label{
+  display:block;
+  font-size:13px;
+  font-weight:700;
+  margin-bottom:7px;
+}
+
+.save{
+  width:100%;
+  margin-top:20px;
+}
+
+@media(max-width:850px){
+
+  .stats{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .toolbar{
+    grid-template-columns:1fr;
+  }
+
+}
+
+@media(max-width:500px){
+
+  .stats{
+    grid-template-columns:1fr;
+  }
+
+  h1{
+    font-size:27px;
+  }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+
+  <div class="nav">
+
+    <div class="logo">
+      LetsStudy Pro Admin
+    </div>
+
+    <a
+      href="admin.html"
+      class="back">
+
+      ← Admin Dashboard
+
+    </a>
+
+  </div>
+
+</header>
+
+
+<main class="container">
+
+  <h1>
+    Certificate Management
+  </h1>
+
+  <p class="subtitle">
+    Issue, verify, manage and monitor
+    LetsStudy Pro certificates.
+  </p>
+
+
+  <!-- =========================
+       STATISTICS
+  ========================= -->
+
+  <section class="stats">
+
+    <div class="stat">
+
+      <strong id="totalCertificates">
+        0
+      </strong>
+
+      <span>
+        Total Certificates
+      </span>
+
+    </div>
+
+
+    <div class="stat">
+
+      <strong id="verifiedCertificates">
+        0
+      </strong>
+
+      <span>
+        Verified
+      </span>
+
+    </div>
+
+
+    <div class="stat">
+
+      <strong id="pendingCertificates">
+        0
+      </strong>
+
+      <span>
+        Pending
+      </span>
+
+    </div>
+
+
+    <div class="stat">
+
+      <strong id="revokedCertificates">
+        0
+      </strong>
+
+      <span>
+        Revoked
+      </span>
+
+    </div>
+
+  </section>
+
+
+  <!-- =========================
+       TOOLBAR
+  ========================= -->
+
+  <section class="toolbar">
+
+    <input
+      id="searchCertificate"
+      type="search"
+      placeholder="Search student, certificate ID or course...">
+
+
+    <select id="statusFilter">
+
+      <option value="">
+        All Statuses
+      </option>
+
+      <option value="verified">
+        Verified
+      </option>
+
+      <option value="pending">
+        Pending
+      </option>
+
+      <option value="revoked">
+        Revoked
+      </option>
+
+    </select>
+
+
+    <button
+      class="btn"
+      onclick="loadCertificates()">
+
+      Refresh
+
+    </button>
+
+  </section>
+
+
+  <!-- =========================
+       CERTIFICATE TABLE
+  ========================= -->
+
+  <section class="table-box">
+
+    <table>
+
+      <thead>
+
+        <tr>
+
+          <th>
+            Certificate
+          </th>
+
+          <th>
+            Student
+          </th>
+
+          <th>
+            Course
+          </th>
+
+          <th>
+            Status
+          </th>
+
+          <th>
+            Issued
+          </th>
+
+          <th>
+            Actions
+          </th>
+
+        </tr>
+
+      </thead>
+
+
+      <tbody id="certificatesTable">
+
+        <tr>
+
+          <td
+            colspan="6"
+            class="empty">
+
+            Loading certificates...
+
+          </td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </section>
+
+</main>
+
+
+<!-- =========================
+     VIEW MODAL
+========================= -->
+
+<div
+  id="viewModal"
+  class="modal">
+
+  <div class="modal-box">
+
+    <button
+      class="close"
+      onclick="closeView()">
+
+      ×
+
+    </button>
+
+    <h2>
+      Certificate Details
+    </h2>
+
+    <div
+      id="certificateDetails"
+      style="margin-top:20px;">
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =========================
+     EDIT MODAL
+========================= -->
+
+<div
+  id="editModal"
+  class="modal">
+
+  <div class="modal-box">
+
+    <button
+      class="close"
+      onclick="closeEdit()">
+
+      ×
+
+    </button>
+
+    <h2>
+      Update Certificate
+    </h2>
+
+
+    <div class="form-group">
+
+      <label>
+        Student Name
+      </label>
+
+      <input
+        id="editStudent"
+        type="text">
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label>
+        Course
+      </label>
+
+      <input
+        id="editCourse"
+        type="text">
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label>
+        Certificate Status
+      </label>
+
+      <select id="editStatus">
+
+        <option value="verified">
+          Verified
+        </option>
+
+        <option value="pending">
+          Pending
+        </option>
+
+        <option value="revoked">
+          Revoked
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <button
+      class="btn save"
+      onclick="saveCertificate()">
+
+      Save Changes
+
+    </button>
+
+  </div>
+
+</div>
+
+
+<script type="module">
+
+import {
+  initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+
+
+import {
+  getAuth,
+  onAuthStateChanged
+}
+from
+"https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  doc,
+  updateDoc
+}
+from
+"https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+
+/* =====================================================
+   FIREBASE CONFIG
+===================================================== */
+
+const firebaseConfig = {
+
+  apiKey:
+    "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+  authDomain:
+    "let-s-study-pro.firebaseapp.com",
+
+  projectId:
+    "let-s-study-pro",
+
+  storageBucket:
+    "let-s-study-pro.firebasestorage.app",
+
+  messagingSenderId:
+    "YOUR_MESSAGING_SENDER_ID",
+
+  appId:
+    "YOUR_APP_ID"
+
+};
+
+
+const app =
+  initializeApp(
+    firebaseConfig
+  );
+
+
+const auth =
+  getAuth(app);
+
+
+const db =
+  getFirestore(app);
+
+
+let certificates = [];
+
+let selectedCertificate = null;
+
+
+/* =====================================================
+   LOAD CERTIFICATES
+===================================================== */
+
+async function loadCertificates(){
+
+  const table =
+    document.getElementById(
+      "certificatesTable"
+    );
+
+
+  table.innerHTML = `
+
+    <tr>
+
+      <td
+        colspan="6"
+        class="empty">
+
+        Loading certificates...
+
+      </td>
+
+    </tr>
+
+  `;
+
+
+  try{
+
+    const snapshot =
+      await getDocs(
+        collection(
+          db,
+          "certificates"
+        )
+      );
+
+
+    certificates = [];
+
+
+    snapshot.forEach(
+      item => {
+
+        certificates.push({
+
+          id:
+            item.id,
+
+          ...item.data()
+
+        });
+
+      }
+    );
+
+
+    updateStatistics();
+
+    applyFilters();
+
+  }catch(error){
+
+    console.error(
+      "Certificate loading error:",
+      error
+    );
+
+
+    table.innerHTML = `
+
+      <tr>
+
+        <td
+          colspan="6"
+          class="empty">
+
+          Failed to load certificates.
+
+        </td>
+
+      </tr>
+
+    `;
+
+  }
+
+}
+
+
+/* =====================================================
+   STATISTICS
+===================================================== */
+
+function updateStatistics(){
+
+  const total =
+    certificates.length;
+
+
+  const verified =
+    certificates.filter(
+      certificate =>
+        normalizeStatus(
+          certificate.status
+        ) === "verified"
+    ).length;
+
+
+  const pending =
+    certificates.filter(
+      certificate =>
+        normalizeStatus(
+          certificate.status
+        ) === "pending"
+    ).length;
+
+
+  const revoked =
+    certificates.filter(
+      certificate =>
+        normalizeStatus(
+          certificate.status
+        ) === "revoked"
+    ).length;
+
+
+  document.getElementById(
+    "totalCertificates"
+  ).textContent =
+    total;
+
+
+  document.getElementById(
+    "verifiedCertificates"
+  ).textContent =
+    verified;
+
+
+  document.getElementById(
+    "pendingCertificates"
+  ).textContent =
+    pending;
+
+
+  document.getElementById(
+    "revokedCertificates"
+  ).textContent =
+    revoked;
+
+}
+
+
+/* =====================================================
+   FILTER
+===================================================== */
+
+function applyFilters(){
+
+  const search =
+    document
+      .getElementById(
+        "searchCertificate"
+      )
+      .value
+      .trim()
+      .toLowerCase();
+
+
+  const status =
+    document
+      .getElementById(
+        "statusFilter"
+      )
+      .value;
+
+
+  const filtered =
+    certificates.filter(
+      certificate => {
+
+        const student =
+          String(
+            certificate.studentName ||
+            certificate.name ||
+            certificate.student ||
+            ""
+          ).toLowerCase();
+
+
+        const certificateId =
+          String(
+            certificate.certificateId ||
+            certificate.id ||
+            ""
+          ).toLowerCase();
+
+
+        const course =
+          String(
+            certificate.courseName ||
+            certificate.course ||
+            ""
+          ).toLowerCase();
+
+
+        const currentStatus =
+          normalizeStatus(
+            certificate.status
+          );
+
+
+        return (
+
+          (
+            !search ||
+            student.includes(search) ||
+            certificateId.includes(search) ||
+            course.includes(search)
+          )
+
+          &&
+
+          (
+            !status ||
+            currentStatus === status
+          )
+
+        );
+
+      }
+    );
+
+
+  renderCertificates(
+    filtered
+  );
+
+}
+
+
+/* =====================================================
+   RENDER
+===================================================== */
+
+function renderCertificates(list){
+
+  const table =
+    document.getElementById(
+      "certificatesTable"
+    );
+
+
+  if(!list.length){
+
+    table.innerHTML = `
+
+      <tr>
+
+        <td
+          colspan="6"
+          class="empty">
+
+          No certificates found.
+
+        </td>
+
+      </tr>
+
+    `;
+
+    return;
+
+  }
+
+
+  table.innerHTML =
+    list.map(
+      certificate => {
+
+        const certificateId =
+          certificate.certificateId ||
+          certificate.id ||
+          "—";
+
+
+        const student =
+          certificate.studentName ||
+          certificate.name ||
+          certificate.student ||
+          "Unknown Student";
+
+
+        const course =
+          certificate.courseName ||
+          certificate.course ||
+          "Unknown Course";
+
+
+        const status =
+          normalizeStatus(
+            certificate.status
+          );
+
+
+        const issued =
+          getIssuedDate(
+            certificate
+          );
+
+
+        return `
+
+          <tr>
+
+            <td>
+
+              <strong>
+                ${escapeHTML(
+                  certificateId
+                )}
+              </strong>
+
+            </td>
+
+
+            <td>
+
+              ${escapeHTML(
+                student
+              )}
+
+            </td>
+
+
+            <td>
+
+              ${escapeHTML(
+                course
+              )}
+
+            </td>
+
+
+            <td>
+
+              <span
+                class="badge ${status}">
+
+                ${escapeHTML(
+                  status
+                )}
+
+              </span>
+
+            </td>
+
+
+            <td>
+
+              ${escapeHTML(
+                issued
+              )}
+
+            </td>
+
+
+            <td>
+
+              <div class="actions">
+
+                <button
+                  class="action view"
+                  onclick="viewCertificate('${certificate.id}')">
+
+                  View
+
+                </button>
+
+
+                <button
+                  class="action edit"
+                  onclick="editCertificate('${certificate.id}')">
+
+                  Edit
+
+                </button>
+
+
+                ${
+                  status !== "verified"
+                  ? `
+                    <button
+                      class="action verify"
+                      onclick="verifyCertificate('${certificate.id}')">
+
+                      Verify
+
+                    </button>
+                  `
+                  : ""
+                }
+
+              </div>
+
+            </td>
+
+          </tr>
+
+        `;
+
+      }
+    ).join("");
+
+}
+
+
+/* =====================================================
+   VIEW CERTIFICATE
+===================================================== */
+
+window.viewCertificate =
+function(id){
+
+  const certificate =
+    certificates.find(
+      item =>
+        item.id === id
+    );
+
+
+  if(!certificate){
+    return;
+  }
+
+
+  const certificateId =
+    certificate.certificateId ||
+    certificate.id ||
+    "—";
+
+
+  const student =
+    certificate.studentName ||
+    certificate.name ||
+    certificate.student ||
+    "Unknown";
+
+
+  const course =
+    certificate.courseName ||
+    certificate.course ||
+    "Unknown";
+
+
+  const status =
+    normalizeStatus(
+      certificate.status
+    );
+
+
+  const issued =
+    getIssuedDate(
+      certificate
+    );
+
+
+  document.getElementById(
+    "certificateDetails"
+  ).innerHTML = `
+
+    <div class="detail">
+
+      <strong>
+        Certificate ID
+      </strong>
+
+      ${escapeHTML(
+        certificateId
+      )}
+
+    </div>
+
+
+    <div class="detail">
+
+      <strong>
+        Student
+      </strong>
+
+      ${escapeHTML(
+        student
+      )}
+
+    </div>
+
+
+    <div class="detail">
+
+      <strong>
+        Course
+      </strong>
+
+      ${escapeHTML(
+        course
+      )}
+
+    </div>
+
+
+    <div class="detail">
+
+      <strong>
+        Status
+      </strong>
+
+      <span class="badge ${status}">
+        ${escapeHTML(
+          status
+        )}
+      </span>
+
+    </div>
+
+
+    <div class="detail">
+
+      <strong>
+        Issued Date
+      </strong>
+
+      ${escapeHTML(
+        issued
+      )}
+
+    </div>
+
+
+    <div class="detail">
+
+      <strong>
+        Student ID
+      </strong>
+
+      ${escapeHTML(
+        certificate.uid ||
+        certificate.userId ||
+        "—"
+      )}
+
+    </div>
+
+  `;
+
+
+  document.getElementById(
+    "viewModal"
+  ).style.display =
+    "flex";
+
+};
+
+
+/* =====================================================
+   EDIT CERTIFICATE
+===================================================== */
+
+window.editCertificate =
+function(id){
+
+  const certificate =
+    certificates.find(
+      item =>
+        item.id === id
+    );
+
+
+  if(!certificate){
+    return;
+  }
+
+
+  selectedCertificate =
+    certificate;
+
+
+  document.getElementById(
+    "editStudent"
+  ).value =
+    certificate.studentName ||
+    certificate.name ||
+    certificate.student ||
+    "";
+
+
+  document.getElementById(
+    "editCourse"
+  ).value =
+    certificate.courseName ||
+    certificate.course ||
+    "";
+
+
+  document.getElementById(
+    "editStatus"
+  ).value =
+    normalizeStatus(
+      certificate.status
+    );
+
+
+  document.getElementById(
+    "editModal"
+  ).style.display =
+    "flex";
+
+};
+
+
+/* =====================================================
+   SAVE CERTIFICATE
+===================================================== */
+
+window.saveCertificate =
+async function(){
+
+  if(!selectedCertificate){
+    return;
+  }
+
+
+  const student =
+    document.getElementById(
+      "editStudent"
+    ).value.trim();
+
+
+  const course =
+    document.getElementById(
+      "editCourse"
+    ).value.trim();
+
+
+  const status =
+    document.getElementById(
+      "editStatus"
+    ).value;
+
+
+  try{
+
+    await updateDoc(
+
+      doc(
+        db,
+        "certificates",
+        selectedCertificate.id
+      ),
+
+      {
+
+        studentName:
+          student,
+
+        courseName:
+          course,
+
+        status:
+          status
+
+      }
+
+    );
+
+
+    closeEdit();
+
+    await loadCertificates();
+
+
+    alert(
+      "Certificate updated successfully."
+    );
+
+
+  }catch(error){
+
+    console.error(
+      error
+    );
+
+
+    alert(
+      "Unable to update certificate."
+    );
+
+  }
+
+};
+
+
+/* =====================================================
+   VERIFY CERTIFICATE
+===================================================== */
+
+window.verifyCertificate =
+async function(id){
+
+  const certificate =
+    certificates.find(
+      item =>
+        item.id === id
+    );
+
+
+  if(!certificate){
+    return;
+  }
+
+
+  const confirmed =
+    confirm(
+      "Verify this certificate?"
+    );
+
+
+  if(!confirmed){
+    return;
+  }
+
+
+  try{
+
+    await updateDoc(
+
+      doc(
+        db,
+        "certificates",
+        id
+      ),
+
+      {
+
+        status:
+          "verified",
+
+        verifiedAt:
+          new Date()
+
+      }
+
+    );
+
+
+    await loadCertificates();
+
+
+  }catch(error){
+
+    console.error(
+      error
+    );
+
+
+    alert(
+      "Certificate verification failed."
+    );
+
+  }
+
+};
+
+
+/* =====================================================
+   DATE
+===================================================== */
+
+function getIssuedDate(certificate){
+
+  const value =
+  certificate.issuedAt ||
+  certificate.issueDate ||
+  certificate.createdAt;
+
+if(value?.toDate){
+
+  return value
+    .toDate()
+    .toLocaleDateString();
+
+}
+
+if(value){
+
+  const date =
+    new Date(value);
+
+  if(!isNaN(date.getTime())){
+
+    return date
+      .toLocaleDateString();
+
+  }
+
+}
+
+return "—";
