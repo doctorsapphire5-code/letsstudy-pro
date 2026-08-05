@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Course Learning | LetsStudy Pro</title>
+
+<style>
+
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+font-family:Inter,Arial,sans-serif;
+background:#f5f7fb;
+color:#222;
+}
+
+
+/* HEADER */
+
+.header{
+
+background:#0b57d0;
+color:white;
+padding:20px;
+
+}
+
+
+.header h1{
+
+margin:0;
+
+}
+
+
+
+/* LAYOUT */
+
+.container{
+
+max-width:1200px;
+margin:auto;
+padding:20px;
+
+}
+
+
+.grid{
+
+display:grid;
+grid-template-columns:320px 1fr;
+gap:20px;
+
+}
+
+
+
+/* CARD */
+
+.card{
+
+background:white;
+border-radius:15px;
+padding:20px;
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+
+}
+
+
+
+/* COURSE */
+
+.course-title{
+
+font-size:28px;
+font-weight:700;
+
+}
+
+
+
+/* LESSONS */
+
+.lesson{
+
+padding:15px;
+border-bottom:1px solid #eee;
+cursor:pointer;
+transition:.3s;
+
+}
+
+
+.lesson:hover{
+
+background:#eef4ff;
+
+}
+
+
+.lock{
+
+color:red;
+font-weight:bold;
+
+}
+
+
+
+/* VIDEO */
+
+
+.video{
+
+width:100%;
+height:420px;
+border-radius:12px;
+background:black;
+
+}
+
+
+
+.content{
+
+line-height:1.8;
+margin-top:20px;
+
+}
+
+
+
+/* BUTTON */
+
+
+.btn{
+
+background:#0b57d0;
+color:white;
+padding:12px 20px;
+border-radius:8px;
+border:none;
+cursor:pointer;
+
+}
+
+
+
+/* MOBILE */
+
+@media(max-width:800px){
+
+.grid{
+
+grid-template-columns:1fr;
+
+}
+
+
+.video{
+
+height:250px;
+
+}
+
+}
+
+
+</style>
+
+</head>
+
+
+
+<body>
+
+
+
+<div class="header">
+
+<h1>
+📚 LetsStudy Pro LMS
+</h1>
+
+<p>
+Course Learning Center
+</p>
+
+</div>
+
+
+
+
+<div class="container">
+
+
+<div class="card">
+
+<h2 id="courseTitle">
+Loading course...
+</h2>
+
+<p id="courseDescription">
+</p>
+
+</div>
+
+
+
+
+<br>
+
+
+<div class="grid">
+
+
+<!-- LESSON LIST -->
+
+<div class="card">
+
+
+<h2>
+Lessons
+</h2>
+
+
+<div id="lessons">
+
+Checking access...
+
+</div>
+
+
+</div>
+
+
+
+
+
+<!-- CONTENT -->
+
+<div class="card">
+
+
+<h2 id="lessonTitle">
+
+Select Lesson
+
+</h2>
+
+
+
+<iframe
+
+id="video"
+
+class="video"
+
+allowfullscreen>
+
+</iframe>
+
+
+
+
+<div
+
+id="content"
+
+class="content">
+
+Choose a lesson to start learning.
+
+</div>
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+<script type="module">
+
+
+import {
+
+auth,
+db
+
+}
+
+from "./assets/js/firebase.js";
+
+
+
+import {
+
+onAuthStateChanged
+
+}
+
+from
+
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+
+
+import {
+
+doc,
+getDoc,
+collection,
+query,
+where,
+getDocs
+
+}
+
+from
+
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+
+
+
+const urlParams =
+new URLSearchParams(
+window.location.search
+);
+
+
+
+const courseId =
+urlParams.get("id");
+
+
+
+
+
+if(!courseId){
+
+alert(
+"Course ID missing"
+);
+
+location.href="courses.html";
+
+}
+
+
+
+
+
+/* =========================
+AUTH CHECK
+========================= */
+
+
+onAuthStateChanged(
+auth,
+async(user)=>{
+
+
+if(!user){
+
+location.href="login.html";
+
+return;
+
+}
+
+
+
+const access =
+await checkEnrollment(
+user.uid,
+courseId
+);
+
+
+
+if(access){
+
+loadCourse();
+
+loadLessons();
+
+
+}else{
+
+
+document.getElementById(
+"lessons"
+).innerHTML=
+
+`
+
+<p class="lock">
+🔒 This course is locked.
+</p>
+
+
+<p>
+Purchase this course to access lessons.
+</p>
+
+
+<button class="btn"
+onclick="location.href='checkout.html?id=${courseId}'">
+
+Buy Course
+
+</button>
+
+`;
+
+
+}
+
+
+
+});
+
+
+
+
+
+
+/* =========================
+CHECK ENROLLMENT
+========================= */
+
+
+async function checkEnrollment(
+uid,
+courseId
+){
+
+
+const q =
+
+query(
+
+collection(
+db,
+"enrollments"
+),
+
+
+where(
+"userId",
+"==",
+uid
+),
+
+
+where(
+"courseId",
+"==",
+courseId
+),
+
+
+where(
+"status",
+"==",
+"active"
+)
+
+
+);
+
+
+
+const snap =
+await getDocs(q);
+
+
+
+return !snap.empty;
+
+
+
+}
+
+
+
+
+
+
+
+/* =========================
+LOAD COURSE
+========================= */
+
+
+async function loadCourse(){
+
+
+const snap =
+
+await getDoc(
+
+doc(
+db,
+"courses",
+courseId
+)
+
+);
+
+
+
+if(snap.exists()){
+
+
+const data =
+snap.data();
+
+
+
+document.getElementById(
+"courseTitle"
+).textContent =
+data.title;
+
+
+
+document.getElementById(
+"courseDescription"
+).textContent =
+data.description || "";
+
+
+
+}
+
+
+}
+
+
+
+
+
+
+
+
+/* =========================
+LOAD LESSONS
+========================= */
+
+
+async function loadLessons(){
+
+
+const q =
+
+query(
+
+collection(
+db,
+"lessons"
+),
+
+
+where(
+"courseId",
+"==",
+courseId
+)
+
+
+);
+
+
+
+const snap =
+await getDocs(q);
+
+
+
+let html="";
+
+
+
+snap.forEach(
+(item)=>{
+
+
+const lesson =
+item.data();
+
+
+
+html+=`
+
+
+<div class="lesson"
+
+onclick="openLesson('${item.id}')">
+
+
+📖 ${lesson.title}
+
+
+</div>
+
+
+`;
+
+
+});
+
+
+
+document.getElementById(
+"lessons"
+).innerHTML =
+html;
+
+
+
+}
+
+
+
+
+
+
+
+
+/* =========================
+OPEN LESSON
+========================= */
+
+
+window.openLesson =
+
+async function(id){
+
+
+
+const snap =
+
+await getDoc(
+
+doc(
+db,
+"lessons",
+id
+)
+
+);
+
+
+
+if(!snap.exists())
+return;
+
+
+
+const data =
+snap.data();
+
+
+
+document.getElementById(
+"lessonTitle"
+).textContent =
+data.title;
+
+
+
+document.getElementById(
+"content"
+).innerHTML =
+data.content || "";
+
+
+
+document.getElementById(
+"video"
+).src =
+data.video || "";
+
+
+
+}
+
+
+
+
+
+</script>
+
+
+
+</body>
+
+</html>
