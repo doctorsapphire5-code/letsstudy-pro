@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>My Courses | LetsStudy Pro</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#f5f7fb;
+}
+
+header{
+background:#0b57d0;
+color:white;
+padding:20px;
+}
+
+.container{
+max-width:1100px;
+margin:auto;
+padding:20px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+gap:20px;
+}
+
+.card{
+
+background:white;
+border-radius:15px;
+padding:20px;
+box-shadow:0 5px 20px #0002;
+
+}
+
+.card h3{
+margin-top:0;
+}
+
+.price{
+color:#0b57d0;
+font-weight:bold;
+}
+
+button{
+
+background:#0b57d0;
+color:white;
+border:none;
+padding:12px 20px;
+border-radius:8px;
+cursor:pointer;
+
+}
+
+.empty{
+
+text-align:center;
+background:white;
+padding:40px;
+border-radius:15px;
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<header>
+
+<h1>
+📚 My Courses
+</h1>
+
+<p>
+LetsStudy Pro Learning Dashboard
+</p>
+
+</header>
+
+
+
+<div class="container">
+
+
+<div id="courses" class="grid">
+
+<div class="empty">
+Loading courses...
+</div>
+
+</div>
+
+
+</div>
+
+
+
+
+<script type="module">
+
+
+import {
+
+auth,
+db
+
+}
+
+from "./assets/js/firebase.js";
+
+
+
+import {
+
+onAuthStateChanged
+
+}
+
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+
+
+import {
+
+collection,
+query,
+where,
+getDocs,
+doc,
+getDoc
+
+}
+
+from
+
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+
+
+
+
+onAuthStateChanged(
+
+auth,
+
+async(user)=>{
+
+
+if(!user){
+
+location.href="login.html";
+
+return;
+
+}
+
+
+loadMyCourses(user.uid);
+
+
+});
+
+
+
+
+
+
+
+
+async function loadMyCourses(uid){
+
+
+const q = query(
+
+collection(
+db,
+"enrollments"
+),
+
+where(
+"userId",
+"==",
+uid
+),
+
+where(
+"status",
+"==",
+"active"
+)
+
+);
+
+
+
+const snap =
+await getDocs(q);
+
+
+
+let html="";
+
+
+
+for(
+const item of snap.docs
+){
+
+
+const enrollment =
+item.data();
+
+
+
+const courseSnap =
+await getDoc(
+
+doc(
+db,
+"courses",
+enrollment.courseId
+)
+
+);
+
+
+
+if(courseSnap.exists()){
+
+
+const course =
+courseSnap.data();
+
+
+
+html += `
+
+
+<div class="card">
+
+
+<h3>
+${course.title}
+</h3>
+
+
+<p>
+${course.description || ""}
+</p>
+
+
+<p class="price">
+
+TZS ${Number(course.price || 0).toLocaleString()}
+
+</p>
+
+
+
+<button
+
+onclick="continueCourse('${courseSnap.id}')">
+
+Continue Learning
+
+</button>
+
+
+</div>
+
+
+`;
+
+}
+
+
+}
+
+
+
+
+document.getElementById(
+"courses"
+).innerHTML =
+
+html ||
+
+`
+
+<div class="empty">
+
+<h3>
+No courses yet
+</h3>
+
+<p>
+Purchase a course to start learning.
+</p>
+
+</div>
+
+`;
+
+
+
+}
+
+
+
+
+
+
+
+window.continueCourse =
+
+function(courseId){
+
+location.href =
+"course-learning.html?id="+courseId;
+
+}
+
+
+
+
+
+</script>
+
+
+</body>
+
+</html>
