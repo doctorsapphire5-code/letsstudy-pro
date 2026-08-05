@@ -1327,8 +1327,53 @@ getDatabase(app);
 Replace this with your actual Firebase UID.
 */
 
-const ADMIN_UID =
-"9aaXI9COVygEfGHGrl3h3kzmJam2";
+import {
+ doc,
+ getDoc
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+async function checkAdmin(user){
+
+const userRef =
+doc(db,"users",user.uid);
+
+
+const snap =
+await getDoc(userRef);
+
+
+if(
+snap.exists()
+&&
+snap.data().role === "admin"
+){
+
+console.log(
+"Admin access granted"
+);
+
+
+document.body.style.display =
+"block";
+
+
+}else{
+
+
+alert(
+"Access denied"
+);
+
+
+location.href =
+"dashboard.html";
+
+
+}
+
+
+}
 
 
 /* ============================================
@@ -1352,15 +1397,19 @@ dateStyle:"medium"
 
 onAuthStateChanged(
 auth,
-async user=>{
+(user)=>{
 
-if(!user){
+if(user){
+
+checkAdmin(user);
+
+}else{
 
 location.href="auth.html";
 
-return;
-
 }
+
+});
 
 
 /*
