@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Admin Lessons | LetsStudy Pro</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f5f7fb;
+margin:0;
+}
+
+header{
+background:#111827;
+color:white;
+padding:20px;
+}
+
+.container{
+max-width:1000px;
+margin:auto;
+padding:20px;
+}
+
+.card{
+
+background:white;
+padding:20px;
+border-radius:15px;
+margin-bottom:20px;
+box-shadow:0 5px 20px #0002;
+
+}
+
+
+input,textarea,select{
+
+width:100%;
+padding:12px;
+margin:8px 0;
+border-radius:8px;
+border:1px solid #ddd;
+
+}
+
+
+button{
+
+background:#0b57d0;
+color:white;
+border:0;
+padding:12px 20px;
+border-radius:8px;
+cursor:pointer;
+
+}
+
+
+.lesson{
+
+padding:15px;
+border-bottom:1px solid #eee;
+
+}
+
+
+.delete{
+
+background:#dc2626;
+
+}
+
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<header>
+
+<h1>
+📖 Admin Lesson Manager
+</h1>
+
+</header>
+
+
+
+<div class="container">
+
+
+<div class="card">
+
+
+<h2>
+Add Lesson
+</h2>
+
+
+
+<select id="course">
+
+<option>
+Loading courses...
+</option>
+
+</select>
+
+
+
+<input id="title"
+placeholder="Lesson title">
+
+
+
+<input id="video"
+placeholder="Video URL">
+
+
+
+<textarea id="content"
+placeholder="Lesson notes/content"></textarea>
+
+
+
+<input id="order"
+type="number"
+placeholder="Lesson order">
+
+
+
+<button onclick="addLesson()">
+
+Add Lesson
+
+</button>
+
+
+</div>
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+All Lessons
+</h2>
+
+
+<div id="lessons">
+
+Loading...
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+<script type="module">
+
+
+import {
+
+db
+
+}
+
+from "./assets/js/firebase.js";
+
+
+
+import {
+
+collection,
+getDocs,
+addDoc,
+deleteDoc,
+doc,
+serverTimestamp
+
+}
+
+from
+
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+
+
+
+
+async function loadCourses(){
+
+
+const snap =
+await getDocs(
+
+collection(
+db,
+"courses"
+)
+
+);
+
+
+let html="";
+
+
+
+snap.forEach(
+
+item=>{
+
+
+const c=item.data();
+
+
+html += `
+
+<option value="${item.id}">
+
+${c.title}
+
+</option>
+
+`;
+
+
+
+});
+
+
+
+document.getElementById(
+"course"
+).innerHTML=html;
+
+
+}
+
+
+
+
+
+
+async function addLesson(){
+
+
+await addDoc(
+
+collection(
+db,
+"lessons"
+),
+
+{
+
+
+courseId:
+
+document.getElementById(
+"course"
+).value,
+
+
+title:
+
+document.getElementById(
+"title"
+).value,
+
+
+video:
+
+document.getElementById(
+"video"
+).value,
+
+
+content:
+
+document.getElementById(
+"content"
+).value,
+
+
+order:
+
+Number(
+document.getElementById(
+"order"
+).value
+),
+
+
+createdAt:
+
+serverTimestamp()
+
+
+}
+
+);
+
+
+
+alert(
+"Lesson Added"
+);
+
+
+
+loadLessons();
+
+
+}
+
+
+
+
+
+
+
+
+async function loadLessons(){
+
+
+const snap =
+await getDocs(
+
+collection(
+db,
+"lessons"
+)
+
+);
+
+
+
+let html="";
+
+
+
+snap.forEach(
+
+item=>{
+
+
+const l =
+item.data();
+
+
+html += `
+
+
+<div class="lesson">
+
+
+<h3>
+${l.title}
+</h3>
+
+
+<p>
+Course ID:
+${l.courseId}
+</p>
+
+
+<button class="delete"
+
+onclick="removeLesson('${item.id}')">
+
+Delete
+
+</button>
+
+
+</div>
+
+
+`;
+
+
+});
+
+
+
+document.getElementById(
+"lessons"
+).innerHTML =
+html;
+
+
+}
+
+
+
+
+
+
+
+window.removeLesson =
+
+async function(id){
+
+
+if(confirm("Delete lesson?")){
+
+
+await deleteDoc(
+
+doc(
+db,
+"lessons",
+id
+)
+
+);
+
+
+
+loadLessons();
+
+
+}
+
+
+}
+
+
+
+
+
+
+
+window.addLesson =
+addLesson;
+
+
+loadCourses();
+
+loadLessons();
+
+
+
+</script>
+
+
+</body>
+
+</html>
