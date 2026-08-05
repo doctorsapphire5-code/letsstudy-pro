@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1.0">
+
+<title>Verify Payment | LetsStudy Pro</title>
+
+<meta name="description"
+content="Secure payment verification for LetsStudy Pro orders.">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+font-family:Arial,Helvetica,sans-serif;
+background:#f8fafc;
+color:#0f172a;
+min-height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:20px;
+}
+
+.container{
+width:100%;
+max-width:520px;
+}
+
+.logo{
+text-align:center;
+font-size:20px;
+font-weight:900;
+margin-bottom:20px;
+}
+
+.logo span{
+color:#2563eb;
+}
+
+.card{
+background:#fff;
+border:1px solid #e2e8f0;
+border-radius:18px;
+padding:30px 22px;
+box-shadow:0 10px 35px rgba(15,23,42,.07);
+text-align:center;
+}
+
+.icon{
+width:70px;
+height:70px;
+margin:0 auto 18px;
+border-radius:50%;
+display:grid;
+place-items:center;
+font-size:32px;
+background:#eff6ff;
+}
+
+h1{
+font-size:22px;
+margin-bottom:8px;
+}
+
+.description{
+font-size:13px;
+color:#64748b;
+line-height:1.6;
+}
+
+.loader{
+width:42px;
+height:42px;
+margin:22px auto;
+border:4px solid #e2e8f0;
+border-top-color:#2563eb;
+border-radius:50%;
+animation:spin 1s linear infinite;
+}
+
+@keyframes spin{
+to{
+transform:rotate(360deg);
+}
+}
+
+.status{
+margin-top:18px;
+padding:14px;
+border-radius:10px;
+font-size:12px;
+font-weight:700;
+}
+
+.status.info{
+background:#eff6ff;
+color:#1d4ed8;
+}
+
+.status.success{
+background:#dcfce7;
+color:#166534;
+}
+
+.status.error{
+background:#fee2e2;
+color:#991b1b;
+}
+
+.details{
+margin-top:20px;
+text-align:left;
+border-top:1px solid #e2e8f0;
+padding-top:15px;
+}
+
+.row{
+display:flex;
+justify-content:space-between;
+gap:15px;
+padding:9px 0;
+font-size:11px;
+border-bottom:1px solid #f1f5f9;
+}
+
+.label{
+color:#64748b;
+}
+
+.value{
+font-weight:800;
+text-align:right;
+word-break:break-all;
+}
+
+button{
+width:100%;
+border:0;
+border-radius:9px;
+padding:12px;
+margin-top:18px;
+background:#2563eb;
+color:#fff;
+font-size:12px;
+font-weight:800;
+cursor:pointer;
+display:none;
+}
+
+button:hover{
+background:#1d4ed8;
+}
+
+.small{
+margin-top:18px;
+font-size:9px;
+color:#94a3b8;
+line-height:1.5;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="logo">
+🎓 LetsStudy <span>Pro</span>
+</div>
+
+<div class="card">
+
+<div
+id="icon"
+class="icon">
+🔐
+</div>
+
+<h1 id="title">
+Verifying Payment
+</h1>
+
+<p
+id="description"
+class="description">
+
+Please wait while we securely verify
+your payment.
+
+</p>
+
+<div
+id="loader"
+class="loader">
+</div>
+
+<div
+id="status"
+class="status info">
+
+Connecting to payment verification service...
+
+</div>
+
+
+<div class="details">
+
+<div class="row">
+
+<span class="label">
+Order ID
+</span>
+
+<span
+id="orderId"
+class="value">
+—
+</span>
+
+</div>
+
+
+<div class="row">
+
+<span class="label">
+Payment Tracking ID
+</span>
+
+<span
+id="trackingId"
+class="value">
+—
+</span>
+
+</div>
+
+
+<div class="row">
+
+<span class="label">
+Payment Status
+</span>
+
+<span
+id="paymentStatus"
+class="value">
+Checking...
+</span>
+
+</div>
+
+</div>
+
+
+<button
+id="continueBtn"
+onclick="continueToOrder()">
+
+Continue
+
+</button>
+
+
+<p class="small">
+
+Never refresh or close the page while
+payment verification is in progress.
+
+</p>
+
+</div>
+
+</div>
+
+
+<script type="module">
+
+import {
+initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getAuth,
+onAuthStateChanged
+}
+from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+getDatabase,
+ref,
+get
+}
+from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+
+/* =========================================
+   FIREBASE
+========================================= */
+
+const firebaseConfig = {
+
+apiKey:
+"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+authDomain:
+"let-s-study-pro-course.firebaseapp.com",
+
+databaseURL:
+"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+projectId:
+"let-s-study-pro-course",
+
+storageBucket:
+"let-s-study-pro-course.firebasestorage.app",
+
+messagingSenderId:
+"474928293390",
+
+appId:
+"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+measurementId:
+"G-85B7V5H5J0"
+
+};
+
+const app =
+initializeApp(firebaseConfig);
+
+const auth =
+getAuth(app);
+
+const db =
+getDatabase(app);
+
+
+/* =========================================
+   URL PARAMETERS
+========================================= */
+
+const params =
+new URLSearchParams(
+window.location.search
+);
+
+const orderId =
+params.get("orderId");
+
+const trackingId =
+params.get("OrderTrackingId") ||
+params.get("orderTrackingId") ||
+params.get("trackingId");
+
+
+document.getElementById(
+"orderId"
+).textContent =
+orderId || "Not provided";
+
+
+document.getElementById(
+"trackingId"
+).textContent =
+trackingId || "Not provided";
+
+
+/* =========================================
+   UI HELPERS
+========================================= */
+
+function setStatus(
+message,
+type="info"
+){
+
+const status =
+document.getElementById(
+"status"
+);
+
+status.textContent =
+message;
+
+status.className =
+"status " + type;
+
+}
+
+
+function setPaymentStatus(
+message
+){
+
+document.getElementById(
+"paymentStatus"
+).textContent =
+message;
+
+}
+
+
+function successUI(){
+
+document.getElementById(
+"loader"
+).style.display =
+"none";
+
+document.getElementById(
+"icon"
+).textContent =
+"✅";
+
+document.getElementById(
+"title"
+).textContent =
+"Payment Verified";
+
+document.getElementById(
+"description"
+).textContent =
+"Your payment has been successfully verified.";
+
+document.getElementById(
+"continueBtn"
+).style.display =
+"block";
+
+}
+
+
+function failedUI(){
+
+document.getElementById(
+"loader"
+).style.display =
+"none";
+
+document.getElementById(
+"icon"
+).textContent =
+"❌";
+
+document.getElementById(
+"title"
+).textContent =
+"Payment Not Verified";
+
+document.getElementById(
+"description"
+).textContent =
+"We could not confirm this payment.";
+
+document.getElementById(
+"continueBtn"
+).style.display =
+"block";
+
+document.getElementById(
+"continueBtn"
+).textContent =
+"Back to Orders";
+
+}
+
+
+/* =========================================
+   VERIFY
+========================================= */
+
+async function verifyPayment(user){
+
+if(!orderId && !trackingId){
+
+setPaymentStatus(
+"Missing information"
+);
+
+setStatus(
+"Order ID or Payment Tracking ID is missing.",
+"error"
+);
+
+failedUI();
+
+return;
+
+}
+
+
+/*
+IMPORTANT:
+
+The browser must NOT directly trust
+the Pesapal URL.
+
+The secure implementation should call
+your backend verification endpoint.
+
+Example:
+
+/api/verify-payment
+
+The backend should verify the transaction
+with Pesapal and return the real status.
+*/
+
+
+try{
+
+setStatus(
+"Checking payment with LetsStudy Pro...",
+"info"
+);
+
+
+/*
+---------------------------------------------
+BACKEND ENDPOINT
+---------------------------------------------
+
+Replace this URL with your deployed
+payment API.
+
+Example:
+
+https://api.letsstudy.pro/verify-payment
+
+---------------------------------------------
+*/
+
+const API_URL =
+"https://YOUR-PAYMENT-API-DOMAIN/verify-payment";
+
+
+const response =
+await fetch(
+API_URL,
+{
+
+method:"POST",
+
+headers:{
+"Content-Type":
+"application/json"
+},
+
+body:JSON.stringify({
+
+orderId:
+orderId,
+
+trackingId:
+trackingId,
+
+uid:
+user.uid
+
+})
+
+});
+
+
+if(!response.ok){
+
+throw new Error(
+"Verification server returned an error."
+);
+
+}
+
+
+const result =
+await response.json();
+
+
+/* =========================================
+   RESULT
+========================================= */
+
+const paymentStatus =
+String(
+result.paymentStatus ||
+result.status ||
+""
+).toLowerCase();
+
+
+if(
+paymentStatus === "paid" ||
+paymentStatus === "completed" ||
+paymentStatus === "success"
+){
+
+setPaymentStatus(
+"PAID"
+);
+
+setStatus(
+"Payment verified successfully.",
+"success"
+);
+
+successUI();
+
+return;
+
+}
+
+
+if(
+paymentStatus === "pending"
+){
+
+document.getElementById(
+"loader"
+).style.display =
+"none";
+
+setPaymentStatus(
+"PENDING"
+);
+
+setStatus(
+"Payment is still being processed. Please check again shortly.",
+"info"
+);
+
+document.getElementById(
+"continueBtn"
+).style.display =
+"block";
+
+document.getElementById(
+"continueBtn"
+).textContent =
+"Check Again";
+
+document.getElementById(
+"continueBtn"
+).onclick =
+()=>location.reload();
+
+return;
+
+}
+
+
+/* FAILED */
+
+setPaymentStatus(
+"NOT PAID"
+);
+
+setStatus(
+"Payment could not be verified.",
+"error"
+);
+
+failedUI();
+
+
+}catch(error){
+
+console.error(
+"Payment verification error:",
+error
+);
+
+setPaymentStatus(
+"Verification Error"
+);
+
+setStatus(
+"Unable to connect to the payment verification server.",
+"error"
+);
+
+failedUI();
+
+}
+
+}
+
+
+/* =========================================
+   AUTH
+========================================= */
+
+onAuthStateChanged(
+auth,
+user=>{
+
+if(!user){
+
+setPaymentStatus(
+"Login required"
+);
+
+setStatus(
+"Please log in before verifying your order.",
+"error"
+);
+
+document.getElementById(
+"loader"
+).style.display =
+"none";
+
+document.getElementById(
+"continueBtn"
+).style.display =
+"block";
+
+document.getElementById(
+"continueBtn"
+).textContent =
+"Login";
+
+document.getElementById(
+"continueBtn"
+).onclick =
+()=>{
+
+location.href =
+"auth.html?redirect=" +
+encodeURIComponent(
+location.href
+);
+
+};
+
+return;
+
+}
+
+verifyPayment(user);
+
+});
+
+
+/* =========================================
+   CONTINUE
+========================================= */
+
+window.continueToOrder =
+function(){
+
+if(orderId){
+
+location.href =
+"order.html?orderId=" +
+encodeURIComponent(
+orderId
+);
+
+return;
+
+}
+
+location.href =
+"orders.html";
+
+};
+
+</script>
+
+</body>
+</html>
