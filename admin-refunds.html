@@ -1,0 +1,1984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<title>Admin Refunds | LetsStudy Pro</title>
+
+<style>
+
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+body{
+  font-family:Arial,sans-serif;
+  background:#f1f5f9;
+  color:#0f172a;
+}
+
+.sidebar{
+  position:fixed;
+  left:0;
+  top:0;
+  bottom:0;
+  width:240px;
+  background:#0f172a;
+  color:#fff;
+  padding:20px 12px;
+  overflow-y:auto;
+}
+
+.logo{
+  font-size:16px;
+  font-weight:900;
+  padding:10px;
+  margin-bottom:25px;
+}
+
+.nav-title{
+  color:#64748b;
+  font-size:8px;
+  font-weight:900;
+  margin:18px 10px 7px;
+  text-transform:uppercase;
+}
+
+.nav-link{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:10px;
+  margin-bottom:3px;
+  color:#cbd5e1;
+  text-decoration:none;
+  border-radius:8px;
+  font-size:9px;
+  font-weight:700;
+}
+
+.nav-link:hover,
+.nav-link.active{
+  background:#1e40af;
+  color:#fff;
+}
+
+.main{
+  margin-left:240px;
+  min-height:100vh;
+}
+
+.topbar{
+  height:65px;
+  background:#fff;
+  border-bottom:1px solid #e2e8f0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 25px;
+  position:sticky;
+  top:0;
+  z-index:20;
+}
+
+.title{
+  font-size:16px;
+  font-weight:900;
+}
+
+.admin{
+  font-size:9px;
+  font-weight:700;
+}
+
+.content{
+  padding:25px;
+}
+
+.heading h1{
+  font-size:22px;
+}
+
+.heading p{
+  color:#64748b;
+  font-size:9px;
+  margin-top:5px;
+}
+
+.cards{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+  margin:20px 0;
+}
+
+.card{
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:13px;
+  padding:17px;
+}
+
+.card-label{
+  color:#64748b;
+  font-size:8px;
+  font-weight:700;
+  margin-bottom:9px;
+}
+
+.card-value{
+  font-size:19px;
+  font-weight:900;
+}
+
+.panel{
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:13px;
+  overflow:hidden;
+  margin-bottom:20px;
+}
+
+.panel-head{
+  padding:15px;
+  border-bottom:1px solid #e2e8f0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.panel-head h2{
+  font-size:11px;
+}
+
+.filters{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+}
+
+.filters input,
+.filters select{
+  border:1px solid #dbe3ed;
+  border-radius:7px;
+  padding:7px 9px;
+  font-size:8px;
+  outline:none;
+  background:#fff;
+}
+
+.table-wrap{
+  overflow-x:auto;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th{
+  background:#f8fafc;
+  color:#64748b;
+  font-size:7px;
+  font-weight:900;
+  text-align:left;
+  padding:11px;
+  white-space:nowrap;
+}
+
+td{
+  border-top:1px solid #f1f5f9;
+  padding:12px 11px;
+  font-size:8px;
+  white-space:nowrap;
+}
+
+.amount{
+  font-weight:900;
+}
+
+.status{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:15px;
+  font-size:6px;
+  font-weight:900;
+}
+
+.pending{
+  background:#fef3c7;
+  color:#92400e;
+}
+
+.approved{
+  background:#dcfce7;
+  color:#166534;
+}
+
+.processing{
+  background:#dbeafe;
+  color:#1d4ed8;
+}
+
+.completed{
+  background:#dcfce7;
+  color:#166534;
+}
+
+.rejected{
+  background:#fee2e2;
+  color:#991b1b;
+}
+
+.failed{
+  background:#fee2e2;
+  color:#991b1b;
+}
+
+.view-btn{
+  border:0;
+  background:#eff6ff;
+  color:#1d4ed8;
+  padding:6px 9px;
+  border-radius:6px;
+  font-size:7px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.empty{
+  padding:45px;
+  text-align:center;
+  color:#94a3b8;
+  font-size:9px;
+}
+
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.55);
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  z-index:100;
+}
+
+.modal.show{
+  display:flex;
+}
+
+.modal-box{
+  width:100%;
+  max-width:500px;
+  max-height:90vh;
+  overflow:auto;
+  background:#fff;
+  border-radius:14px;
+  padding:20px;
+}
+
+.modal-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:15px;
+}
+
+.modal-head h2{
+  font-size:14px;
+}
+
+.close{
+  width:30px;
+  height:30px;
+  border:0;
+  border-radius:7px;
+  background:#f1f5f9;
+  cursor:pointer;
+  font-size:17px;
+}
+
+.detail{
+  padding:11px 0;
+  border-bottom:1px solid #f1f5f9;
+}
+
+.detail-label{
+  color:#94a3b8;
+  font-size:7px;
+  font-weight:900;
+  margin-bottom:5px;
+  text-transform:uppercase;
+}
+
+.detail-value{
+  font-size:9px;
+}
+
+.actions{
+  display:flex;
+  gap:8px;
+  margin-top:18px;
+}
+
+.action-btn{
+  flex:1;
+  border:0;
+  padding:10px;
+  border-radius:7px;
+  cursor:pointer;
+  font-size:8px;
+  font-weight:900;
+}
+
+.approve-btn{
+  background:#dcfce7;
+  color:#166534;
+}
+
+.reject-btn{
+  background:#fee2e2;
+  color:#991b1b;
+}
+
+@media(max-width:900px){
+
+  .cards{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+}
+
+@media(max-width:700px){
+
+  .sidebar{
+    display:none;
+  }
+
+  .main{
+    margin-left:0;
+  }
+
+  .content{
+    padding:16px;
+  }
+
+  .cards{
+    grid-template-columns:1fr;
+  }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+
+<aside class="sidebar">
+
+<div class="logo">
+LetsStudy Pro
+</div>
+
+
+<div class="nav-title">
+Main
+</div>
+
+<a href="/admin.html" class="nav-link">
+📊 Dashboard
+</a>
+
+
+<div class="nav-title">
+Finance
+</div>
+
+<a href="/admin-payments.html" class="nav-link">
+💳 Payments
+</a>
+
+<a href="/admin-wallet.html" class="nav-link">
+👛 Wallet
+</a>
+
+<a href="/admin-withdrawal.html" class="nav-link">
+💸 Withdrawals
+</a>
+
+<a href="/admin-payouts.html" class="nav-link">
+💰 Payouts
+</a>
+
+<a href="/admin-transactions.html" class="nav-link">
+🔄 Transactions
+</a>
+
+<a href="/admin-revenue.html" class="nav-link">
+📈 Revenue
+</a>
+
+<a href="/admin-refund.html" class="nav-link active">
+↩️ Refunds
+</a>
+
+
+<div class="nav-title">
+Management
+</div>
+
+<a href="/admin-students.html" class="nav-link">
+👨‍🎓 Students
+</a>
+
+<a href="/admin-orders.html" class="nav-link">
+🛒 Orders
+</a>
+
+<a href="/admin-settings.html" class="nav-link">
+⚙️ Settings
+</a>
+
+</aside>
+
+
+
+<div class="main">
+
+
+<header class="topbar">
+
+<div class="title">
+Refund Management
+</div>
+
+<div class="admin">
+Admin
+</div>
+
+</header>
+
+
+
+<main class="content">
+
+
+<div class="heading">
+
+<h1>
+Refunds
+</h1>
+
+<p>
+Review and manage customer refund requests.
+</p>
+
+</div>
+
+
+
+<section class="cards">
+
+<div class="card">
+
+<div class="card-label">
+Total Refunds
+</div>
+
+<div
+id="totalRefunds"
+class="card-value">
+TZS 0
+</div>
+
+</div>
+
+
+<div class="card">
+
+<div class="card-label">
+Pending Requests
+</div>
+
+<div
+id="pendingCount"
+class="card-value">
+0
+</div>
+
+</div>
+
+
+<div class="card">
+
+<div class="card-label">
+Completed Refunds
+</div>
+
+<div
+id="completedCount"
+class="card-value">
+0
+</div>
+
+</div>
+
+
+<div class="card">
+
+<div class="card-label">
+Rejected
+</div>
+
+<div
+id="rejectedCount"
+class="card-value">
+0
+</div>
+
+</div>
+
+</section>
+
+
+
+<section class="panel">
+
+<div class="panel-head">
+
+<h2>
+Refund Requests
+</h2>
+
+
+<div class="filters">
+
+<input
+id="searchInput"
+type="search"
+placeholder="Search refund...">
+
+
+<select id="statusFilter">
+
+<option value="all">
+All Status
+</option>
+
+<option value="pending">
+Pending
+</option>
+
+<option value="approved">
+Approved
+</option>
+
+<option value="processing">
+Processing
+</option>
+
+<option value="completed">
+Completed
+</option>
+
+<option value="rejected">
+Rejected
+</option>
+
+<option value="failed">
+Failed
+</option>
+
+</select>
+
+</div>
+
+</div>
+
+
+<div
+id="refundTable"
+class="table-wrap">
+
+<div class="empty">
+Loading refunds...
+</div>
+
+</div>
+
+</section>
+
+</main>
+
+</div>
+
+
+
+<div
+id="detailsModal"
+class="modal">
+
+<div class="modal-box">
+
+<div class="modal-head">
+
+<h2>
+Refund Details
+</h2>
+
+<button
+id="closeModal"
+class="close">
+×
+</button>
+
+</div>
+
+
+<div id="detailsContent">
+</div>
+
+<div
+id="actionArea"
+class="actions">
+</div>
+
+</div>
+
+</div>
+
+
+
+<script type="module">
+
+import {
+initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+
+import {
+getDatabase,
+ref,
+get,
+update
+}
+from
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+
+
+const firebaseConfig = {
+
+apiKey:
+"AIzaSyBcOYDfAVKXKbljsyRgI_0rjodBn678tCc",
+
+authDomain:
+"let-s-study-pro-course.firebaseapp.com",
+
+databaseURL:
+"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+projectId:
+"let-s-study-pro-course",
+
+storageBucket:
+"let-s-study-pro-course.firebasestorage.app",
+
+messagingSenderId:
+"474928293390",
+
+appId:
+"1:474928293390:web:2bcc2aebf2351c12a9fe5f"
+
+};
+
+
+const app =
+initializeApp(
+firebaseConfig
+);
+
+const db =
+getDatabase(app);
+
+
+let refunds = [];
+
+
+/* =========================
+   LOAD REFUNDS
+========================= */
+
+async function loadRefunds(){
+
+try{
+
+const snapshot =
+await get(
+ref(
+db,
+"refunds"
+)
+);
+
+
+refunds = [];
+
+
+if(
+snapshot.exists()
+){
+
+const data =
+snapshot.val();
+
+
+Object.entries(
+data
+)
+.forEach(
+([id,item]) => {
+
+refunds.push({
+
+id,
+
+userId:
+item.userId ||
+item.uid ||
+"",
+
+name:
+item.name ||
+item.displayName ||
+item.userName ||
+"Student",
+
+email:
+item.email ||
+"",
+
+amount:
+Number(
+item.amount ||
+item.refundAmount ||
+0
+),
+
+orderId:
+item.orderId ||
+"—",
+
+paymentId:
+item.paymentId ||
+item.transactionId ||
+"—",
+
+reference:
+item.reference ||
+item.refundId ||
+id,
+
+reason:
+item.reason ||
+item.refundReason ||
+"—",
+
+method:
+item.method ||
+item.paymentMethod ||
+item.gateway ||
+"—",
+
+status:
+normalizeStatus(
+item.status
+),
+
+createdAt:
+item.createdAt ||
+item.timestamp ||
+0,
+
+processedAt:
+item.processedAt ||
+"",
+
+adminNote:
+item.adminNote ||
+""
+
+});
+
+});
+
+}
+
+
+refunds.sort(
+(a,b) =>
+getTime(b.createdAt) -
+getTime(a.createdAt)
+);
+
+
+updateStats();
+
+renderRefunds(
+refunds
+);
+
+
+}catch(error){
+
+console.error(
+error
+);
+
+document
+.getElementById(
+"refundTable"
+)
+.innerHTML = `
+
+<div class="empty">
+
+Unable to load refunds.
+
+</div>
+
+`;
+
+}
+
+}
+
+
+/* =========================
+   STATS
+========================= */
+
+function updateStats(){
+
+const total =
+refunds.reduce(
+(sum,item) =>
+sum + item.amount,
+0
+);
+
+
+const pending =
+refunds.filter(
+item =>
+item.status ===
+"pending"
+).length;
+
+
+const completed =
+refunds.filter(
+item =>
+item.status ===
+"completed"
+).length;
+
+
+const rejected =
+refunds.filter(
+item =>
+item.status ===
+"rejected"
+).length;
+
+
+document
+.getElementById(
+"totalRefunds"
+)
+.textContent =
+money(total);
+
+
+document
+.getElementById(
+"pendingCount"
+)
+.textContent =
+pending;
+
+
+document
+.getElementById(
+"completedCount"
+)
+.textContent =
+completed;
+
+
+document
+.getElementById(
+"rejectedCount"
+)
+.textContent =
+rejected;
+
+}
+
+
+/* =========================
+   RENDER
+========================= */
+
+function renderRefunds(
+data
+){
+
+const container =
+document
+.getElementById(
+"refundTable"
+);
+
+
+if(
+data.length === 0
+){
+
+container.innerHTML = `
+
+<div class="empty">
+
+No refund requests found.
+
+</div>
+
+`;
+
+return;
+
+}
+
+
+container.innerHTML = `
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Reference</th>
+<th>Customer</th>
+<th>Amount</th>
+<th>Order</th>
+<th>Payment</th>
+<th>Reason</th>
+<th>Status</th>
+<th>Date</th>
+<th>Action</th>
+
+</tr>
+
+</thead>
+
+<tbody
+id="refundBody">
+</tbody>
+
+</table>
+
+`;
+
+
+const body =
+document
+.getElementById(
+"refundBody"
+);
+
+
+data.forEach(
+item => {
+
+const row =
+document
+.createElement(
+"tr"
+);
+
+
+row.innerHTML = `
+
+<td>
+
+<strong>
+
+${escapeHTML(
+item.reference
+)}
+
+</strong>
+
+</td>
+
+
+<td>
+
+${escapeHTML(
+item.name
+)}
+
+<br>
+
+<small>
+
+${escapeHTML(
+item.email
+)}
+
+</small>
+
+</td>
+
+
+<td class="amount">
+
+${money(
+item.amount
+)}
+
+</td>
+
+
+<td>
+
+${escapeHTML(
+item.orderId
+)}
+
+</td>
+
+
+<td>
+
+${escapeHTML(
+item.paymentId
+)}
+
+</td>
+
+
+<td>
+
+${escapeHTML(
+item.reason
+)}
+
+</td>
+
+
+<td>
+
+<span
+class="status ${item.status}">
+
+${capitalize(
+item.status
+)}
+
+</span>
+
+</td>
+
+
+<td>
+
+${formatDate(
+item.createdAt
+)}
+
+</td>
+
+
+<td>
+
+<button
+class="view-btn"
+data-id="${escapeHTML(
+item.id
+)}">
+
+View
+
+</button>
+
+</td>
+
+`;
+
+
+body.appendChild(
+row
+);
+
+});
+
+
+body
+.querySelectorAll(
+"[data-id]"
+)
+.forEach(
+button => {
+
+button.addEventListener(
+"click",
+() => {
+
+const item =
+refunds.find(
+x =>
+x.id ===
+button.dataset.id
+);
+
+if(item){
+
+openDetails(
+item
+);
+
+}
+
+});
+
+});
+
+}
+
+
+/* =========================
+   FILTER
+========================= */
+
+function filterRefunds(){
+
+const search =
+document
+.getElementById(
+"searchInput"
+)
+.value
+.toLowerCase()
+.trim();
+
+
+const status =
+document
+.getElementById(
+"statusFilter"
+)
+.value;
+
+
+const filtered =
+refunds.filter(
+item => {
+
+const matchesSearch =
+
+!search ||
+
+String(
+item.reference
+)
+.toLowerCase()
+.includes(
+search
+)
+
+||
+
+String(
+item.name
+)
+.toLowerCase()
+.includes(
+search
+)
+
+||
+
+String(
+item.email
+)
+.toLowerCase()
+.includes(
+search
+)
+
+||
+
+String(
+item.orderId
+)
+.toLowerCase()
+.includes(
+search
+)
+
+||
+
+String(
+item.paymentId
+)
+.toLowerCase()
+.includes(
+search
+);
+
+
+const matchesStatus =
+
+status ===
+"all" ||
+
+item.status ===
+status;
+
+
+return (
+matchesSearch &&
+matchesStatus
+);
+
+});
+
+
+renderRefunds(
+filtered
+);
+
+}
+
+
+document
+.getElementById(
+"searchInput"
+)
+.addEventListener(
+"input",
+filterRefunds
+);
+
+
+document
+.getElementById(
+"statusFilter"
+)
+.addEventListener(
+"change",
+filterRefunds
+);
+
+
+/* =========================
+   DETAILS
+========================= */
+
+function openDetails(
+item
+){
+
+document
+.getElementById(
+"detailsContent"
+)
+.innerHTML = `
+
+<div class="detail">
+
+<div class="detail-label">
+Refund Reference
+</div>
+
+<div class="detail-value">
+
+${escapeHTML(
+item.reference
+)}
+
+</div>
+
+</div>
+
+
+<div class="detail">
+
+<div class="detail-label">
+Customer
+</div>
+
+<div class="detail-value">
+
+${escapeHTML(
+item.name
+)}
+
+</div>
+
+</div>
+
+
+<div class="detail">
+
+<div class="detail-label">
+Email
+</div>
+
+<div class="detail-value">
+
+${escapeHTML(
+item.email ||
+"—"
+)}
+
+</div>
+
+</div>
+
+
+<div class="detail">
+
+<div class="detail-label">
+User ID
+</div>
+
+<div class="detail-value">
+
+${escapeHTML(
+item.userId ||
+"—"
+)}
+
+</div>
+
+</div>
+
+
+<div class="detail">
+
+<div class="detail-label">
+Refund Amount
+</div>
+
+<div class="detail-value">
+
+<strong>
+
+${money(
+item.amount
+)}
+
+</strong>
+
+</div>
+
+</div>
+
+
+<div class="detail">
+
+<div class="detail-label">
+Order ID
+</div>
+
+<div class="detail-value">
+
+${escapeHTML(
+item.orderId
+)}
+
+</div>
+
+</div>
+
+
+<div class="detail">
+
+<div class="detail-label">
+Payment Reference
+</div>
+
+<div class="detail-value">
+
+${escapeHTML(
+item.paymentId
+)}
+
+</div>
+
+</div>
+
+
+<div class="detail">
+
+<div class="detail-label">
+Payment Method
+</div>
+
+<div class="detail-value">
+
+${escapeHTML(
+item.method
+)}
+
+</div>
+
+</div>
+
+
+<div class="detail">
+
+<div class="detail-label">
+Reason
+</div>
+
+<div class="detail-value">
+
+${escapeHTML(
+item.reason
+)}
+
+</div>
+
+</div>
+
+
+<div class="detail">
+
+<div class="detail-label">
+Status
+</div>
+
+<div class="detail-value">
+
+<span
+class="status ${item.status}">
+
+${capitalize(
+item.status
+)}
+
+</span>
+
+</div>
+
+</div>
+
+
+<div class="detail">
+
+<div class="detail-label">
+Requested
+</div>
+
+<div class="detail-value">
+
+${formatDate(
+item.createdAt
+)}
+
+</div>
+
+</div>
+
+
+<div class="detail">
+
+<div class="detail-label">
+Admin Note
+</div>
+
+<div class="detail-value">
+
+${escapeHTML(
+item.adminNote ||
+"—"
+)}
+
+</div>
+
+</div>
+
+`;
+
+
+const actions =
+document
+.getElementById(
+"actionArea"
+);
+
+
+if(
+item.status ===
+"pending"
+){
+
+actions.innerHTML = `
+
+<button
+class="action-btn approve-btn"
+id="approveRefund">
+
+Approve Refund
+
+</button>
+
+<button
+class="action-btn reject-btn"
+id="rejectRefund">
+
+Reject Refund
+
+</button>
+
+`;
+
+
+document
+.getElementById(
+"approveRefund"
+)
+.addEventListener(
+"click",
+() =>
+updateRefundStatus(
+item.id,
+"approved"
+)
+);
+
+
+document
+.getElementById(
+"rejectRefund"
+)
+.addEventListener(
+"click",
+() =>
+updateRefundStatus(
+item.id,
+"rejected"
+)
+);
+
+}else{
+
+actions.innerHTML = "";
+
+}
+
+
+document
+.getElementById(
+"detailsModal"
+)
+.classList.add(
+"show"
+);
+
+}
+
+
+/* =========================
+   UPDATE STATUS
+========================= */
+
+async function updateRefundStatus(
+id,
+status
+){
+
+try{
+
+await update(
+ref(
+db,
+"refunds/" + id
+),
+{
+
+status,
+
+processedAt:
+Date.now()
+
+}
+);
+
+
+const item =
+refunds.find(
+x =>
+x.id === id
+);
+
+
+if(item){
+
+item.status =
+status;
+
+item.processedAt =
+Date.now();
+
+}
+
+
+updateStats();
+
+renderRefunds(
+refunds
+);
+
+
+document
+.getElementById(
+"detailsModal"
+)
+.classList.remove(
+"show"
+);
+
+
+}catch(error){
+
+console.error(
+error
+);
+
+alert(
+"Unable to update refund status."
+);
+
+}
+
+}
+
+
+/* =========================
+   HELPERS
+========================= */
+
+function normalizeStatus(
+status
+){
+
+const value =
+String(
+status ||
+""
+)
+.toLowerCase();
+
+
+if(
+[
+"success",
+"successful",
+"complete",
+"completed",
+"paid"
+].includes(
+value
+)
+){
+
+return "completed";
+
+}
+
+
+if(
+[
+"approve",
+"approved"
+].includes(
+value
+)
+){
+
+return "approved";
+
+}
+
+
+if(
+[
+"processing",
+"in_progress"
+].includes(
+value
+)
+){
+
+return "processing";
+
+}
+
+
+if(
+[
+"reject",
+"rejected",
+"declined"
+].includes(
+value
+)
+){
+
+return "rejected";
+
+}
+
+
+if(
+[
+"failed",
+"failure"
+].includes(
+value
+)
+){
+
+return "failed";
+
+}
+
+
+return "pending";
+
+}
+
+
+function money(
+amount
+){
+
+return (
+
+"TZS " +
+
+Number(
+amount ||
+0
+)
+.toLocaleString(
+"en-TZ"
+)
+
+);
+
+}
+
+
+function getTime(
+value
+){
+
+if(
+typeof value ===
+"number"
+){
+
+return value;
+
+}
+
+
+if(
+value &&
+typeof value ===
+"object" &&
+value.timestamp
+){
+
+return value.timestamp;
+
+}
+
+
+const time =
+new Date(
+value ||
+0
+)
+.getTime();
+
+
+return Number.isNaN(
+time
+)
+?
+0
+:
+time;
+
+}
+
+
+function formatDate(
+value
+){
+
+const time =
+getTime(
+value
+);
+
+
+if(!time){
+return "—";
+}
+
+
+return new Date(
+time
+)
+.toLocaleString(
+undefined,
+{
+year:"numeric",
+month:"short",
+day:"numeric",
+hour:"2-digit",
+minute:"2-digit"
+}
+);
+
+}
+
+
+function capitalize(
+value
+){
+
+const text =
+String(
+value ||
+""
+);
+
+
+return (
+
+text.charAt(0)
+.toUpperCase() +
+
+text.slice(1)
+
+);
+
+}
+
+
+function escapeHTML(
+value
+){
+
+return String(
+value ??
+""
+)
+.replace(
+/&/g,
+"&amp;"
+)
+.replace(
+/</g,
+"&lt;"
+)
+.replace(
+/>/g,
+"&gt;"
+)
+.replace(
+/"/g,
+"&quot;"
+)
+.replace(
+/'/g,
+"&#039;"
+);
+
+}
+
+
+/* =========================
+   MODAL
+========================= */
+
+document
+.getElementById(
+"closeModal"
+)
+.addEventListener(
+"click",
+() => {
+
+document
+.getElementById(
+"detailsModal"
+)
+.classList.remove(
+"show"
+);
+
+});
+
+
+document
+.getElementById(
+"detailsModal"
+)
+.addEventListener(
+"click",
+event => {
+
+if(
+event.target.id ===
+"detailsModal"
+){
+
+event.currentTarget
+.classList.remove(
+"show"
+);
+
+}
+
+});
+
+
+/* =========================
+   START
+========================= */
+
+loadRefunds();
+
+</script>
+
+</body>
+</html>
