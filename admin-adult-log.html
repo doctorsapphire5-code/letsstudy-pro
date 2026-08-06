@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<title>Admin Audit Log | LetsStudy Pro</title>
+
+<style>
+
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+body{
+  font-family:Arial,sans-serif;
+  background:#f1f5f9;
+  color:#0f172a;
+}
+
+.sidebar{
+  position:fixed;
+  left:0;
+  top:0;
+  bottom:0;
+  width:240px;
+  background:#0f172a;
+  color:#fff;
+  padding:20px 12px;
+  overflow-y:auto;
+}
+
+.logo{
+  font-size:16px;
+  font-weight:900;
+  padding:10px;
+  margin-bottom:25px;
+}
+
+.nav-title{
+  color:#64748b;
+  font-size:8px;
+  font-weight:900;
+  margin:18px 10px 7px;
+  text-transform:uppercase;
+}
+
+.nav-link{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:10px;
+  margin-bottom:3px;
+  color:#cbd5e1;
+  text-decoration:none;
+  border-radius:8px;
+  font-size:9px;
+  font-weight:700;
+}
+
+.nav-link:hover,
+.nav-link.active{
+  background:#1e40af;
+  color:#fff;
+}
+
+.main{
+  margin-left:240px;
+  min-height:100vh;
+}
+
+.topbar{
+  height:65px;
+  background:#fff;
+  border-bottom:1px solid #e2e8f0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 25px;
+  position:sticky;
+  top:0;
+  z-index:20;
+}
+
+.title{
+  font-size:16px;
+  font-weight:900;
+}
+
+.admin{
+  font-size:9px;
+  font-weight:700;
+}
+
+.content{
+  padding:25px;
+}
+
+.heading{
+  margin-bottom:20px;
+}
+
+.heading h1{
+  font-size:22px;
+}
+
+.heading p{
+  color:#64748b;
+  font-size:9px;
+  margin-top:5px;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin-bottom:18px;
+}
+
+.stat{
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:12px;
+  padding:15px;
+}
+
+.stat-label{
+  color:#64748b;
+  font-size:8px;
+  font-weight:800;
+}
+
+.stat-value{
+  margin-top:7px;
+  font-size:20px;
+  font-weight:900;
+}
+
+.toolbar{
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:12px;
+  padding:14px;
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:15px;
+}
+
+input,
+select{
+  border:1px solid #dbe3ed;
+  border-radius:7px;
+  padding:9px 10px;
+  background:#fff;
+  font-size:8px;
+  outline:none;
+}
+
+.search{
+  flex:1;
+  min-width:180px;
+}
+
+button{
+  border:0;
+  border-radius:7px;
+  padding:9px 13px;
+  cursor:pointer;
+  font-size:8px;
+  font-weight:900;
+}
+
+.apply{
+  background:#1d4ed8;
+  color:#fff;
+}
+
+.clear{
+  background:#f1f5f9;
+  color:#475569;
+}
+
+.panel{
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:12px;
+  overflow:hidden;
+}
+
+.panel-head{
+  padding:15px;
+  border-bottom:1px solid #e2e8f0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.panel-head h2{
+  font-size:11px;
+}
+
+.panel-head span{
+  color:#64748b;
+  font-size:7px;
+}
+
+.table-wrap{
+  overflow-x:auto;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th{
+  background:#f8fafc;
+  color:#64748b;
+  font-size:7px;
+  text-align:left;
+  padding:11px;
+  white-space:nowrap;
+}
+
+td{
+  border-top:1px solid #f1f5f9;
+  padding:11px;
+  font-size:8px;
+  vertical-align:top;
+}
+
+.action{
+  font-weight:900;
+}
+
+.action.login{
+  color:#2563eb;
+}
+
+.action.create{
+  color:#166534;
+}
+
+.action.update{
+  color:#92400e;
+}
+
+.action.delete{
+  color:#991b1b;
+}
+
+.action.payment{
+  color:#7c3aed;
+}
+
+.status{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:15px;
+  font-size:6px;
+  font-weight:900;
+}
+
+.success{
+  background:#dcfce7;
+  color:#166534;
+}
+
+.warning{
+  background:#fef3c7;
+  color:#92400e;
+}
+
+.danger{
+  background:#fee2e2;
+  color:#991b1b;
+}
+
+.info{
+  color:#64748b;
+  font-size:7px;
+  line-height:1.5;
+}
+
+.empty{
+  padding:45px;
+  text-align:center;
+  color:#94a3b8;
+  font-size:9px;
+}
+
+.pagination{
+  padding:12px 15px;
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:7px;
+  border-top:1px solid #e2e8f0;
+}
+
+.page-info{
+  color:#64748b;
+  font-size:7px;
+  margin-right:5px;
+}
+
+.pagination button{
+  border:1px solid #dbe3ed;
+  background:#fff;
+}
+
+.pagination button:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+@media(max-width:900px){
+
+  .stats{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+}
+
+@media(max-width:700px){
+
+  .sidebar{
+    display:none;
+  }
+
+  .main{
+    margin-left:0;
+  }
+
+  .content{
+    padding:16px;
+  }
+
+  .stats{
+    grid-template-columns:1fr;
+  }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+
+<aside class="sidebar">
+
+<div class="logo">
+LetsStudy Pro
+</div>
+
+<div class="nav-title">
+Main
+</div>
+
+<a href="/admin.html" class="nav-link">
+📊 Dashboard
+</a>
+
+<div class="nav-title">
+Finance
+</div>
+
+<a href="/admin-payments.html" class="nav-link">
+💳 Payments
+</a>
+
+<a href="/admin-transactions.html" class="nav-link">
+🔄 Transactions
+</a>
+
+<a href="/admin-revenue.html" class="nav-link">
+📈 Revenue
+</a>
+
+<a href="/admin-financial-report.html" class="nav-link">
+📑 Financial Report
+</a>
+
+<div class="nav-title">
+Security
+</div>
+
+<a href="/admin-audit-log.html" class="nav-link active">
+🛡️ Audit Log
+</a>
+
+<div class="nav-title">
+Management
+</div>
+
+<a href="/admin-students.html" class="nav-link">
+👨‍🎓 Students
+</a>
+
+<a href="/admin-orders.html" class="nav-link">
+🛒 Orders
+</a>
+
+<a href="/admin-settings.html" class="nav-link">
+⚙️ Settings
+</a>
+
+</aside>
+
+
+
+<div class="main">
+
+<header class="topbar">
+
+<div class="title">
+Admin Audit Log
+</div>
+
+<div class="admin">
+Super Admin
+</div>
+
+</header>
+
+
+
+<main class="content">
+
+
+<div class="heading">
+
+<h1>
+Audit Log
+</h1>
+
+<p>
+Monitor important administrator and system activities.
+</p>
+
+</div>
+
+
+
+<section class="stats">
+
+<div class="stat">
+
+<div class="stat-label">
+TOTAL LOGS
+</div>
+
+<div
+id="totalLogs"
+class="stat-value">
+0
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-label">
+TODAY
+</div>
+
+<div
+id="todayLogs"
+class="stat-value">
+0
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-label">
+SUCCESSFUL
+</div>
+
+<div
+id="successLogs"
+class="stat-value">
+0
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-label">
+WARNINGS / ERRORS
+</div>
+
+<div
+id="dangerLogs"
+class="stat-value">
+0
+</div>
+
+</div>
+
+</section>
+
+
+
+<section class="toolbar">
+
+<input
+id="search"
+class="search"
+type="search"
+placeholder="Search admin, action, resource or description...">
+
+
+<select id="actionFilter">
+
+<option value="all">
+All Actions
+</option>
+
+<option value="login">
+Login
+</option>
+
+<option value="logout">
+Logout
+</option>
+
+<option value="create">
+Create
+</option>
+
+<option value="update">
+Update
+</option>
+
+<option value="delete">
+Delete
+</option>
+
+<option value="payment">
+Payment
+</option>
+
+<option value="refund">
+Refund
+</option>
+
+<option value="payout">
+Payout
+</option>
+
+<option value="settings">
+Settings
+</option>
+
+</select>
+
+
+<select id="statusFilter">
+
+<option value="all">
+All Status
+</option>
+
+<option value="success">
+Success
+</option>
+
+<option value="warning">
+Warning
+</option>
+
+<option value="error">
+Error
+</option>
+
+</select>
+
+
+<input
+id="dateFilter"
+type="date">
+
+
+<button
+id="applyBtn"
+class="apply">
+
+Apply
+
+</button>
+
+
+<button
+id="clearBtn"
+class="clear">
+
+Clear
+
+</button>
+
+</section>
+
+
+
+<section class="panel">
+
+<div class="panel-head">
+
+<h2>
+Activity History
+</h2>
+
+<span id="resultCount">
+0 logs
+</span>
+
+</div>
+
+
+<div
+class="table-wrap"
+id="tableContainer">
+
+<div class="empty">
+Loading audit logs...
+</div>
+
+</div>
+
+
+<div
+class="pagination">
+
+<span
+id="pageInfo"
+class="page-info">
+Page 1
+</span>
+
+<button
+id="prevBtn"
+disabled>
+
+Previous
+
+</button>
+
+<button
+id="nextBtn"
+disabled>
+
+Next
+
+</button>
+
+</div>
+
+</section>
+
+
+</main>
+
+</div>
+
+
+
+<script type="module">
+
+import {
+initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+
+import {
+getDatabase,
+ref,
+get
+}
+from
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+
+
+const firebaseConfig = {
+
+apiKey:
+"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+authDomain:
+"let-s-study-pro-course.firebaseapp.com",
+
+databaseURL:
+"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+projectId:
+"let-s-study-pro-course",
+
+storageBucket:
+"let-s-study-pro-course.firebasestorage.app",
+
+messagingSenderId:
+"474928293390",
+
+appId:
+"1:474928293390:web:2bcc2aebf2351c12a9fe5f"
+
+};
+
+
+const app =
+initializeApp(
+firebaseConfig
+);
+
+const db =
+getDatabase(app);
+
+
+let logs = [];
+let filteredLogs = [];
+
+let currentPage = 1;
+
+const pageSize = 15;
+
+
+/* =========================
+   LOAD AUDIT LOGS
+========================= */
+
+async function loadLogs(){
+
+try{
+
+const snapshot =
+await get(
+ref(
+db,
+"auditLogs"
+)
+);
+
+
+logs = [];
+
+
+if(
+snapshot.exists()
+){
+
+const data =
+snapshot.val();
+
+
+Object.entries(
+data
+)
+.forEach(
+([id,item]) => {
+
+logs.push({
+
+id,
+
+...item
+
+});
+
+});
+
+}
+
+
+/*
+ Support alternative path:
+ adminLogs
+*/
+
+if(
+logs.length === 0
+){
+
+const alternative =
+await get(
+ref(
+db,
+"adminLogs"
+)
+);
+
+
+if(
+alternative.exists()
+){
+
+const data =
+alternative.val();
+
+
+Object.entries(
+data
+)
+.forEach(
+([id,item]) => {
+
+logs.push({
+
+id,
+
+...item
+
+});
+
+});
+
+}
+
+}
+
+
+logs.sort(
+(a,b) =>
+getTime(b.createdAt || b.timestamp || b.date) -
+getTime(a.createdAt || a.timestamp || a.date)
+);
+
+
+updateStats();
+
+applyFilters();
+
+
+}catch(error){
+
+console.error(
+"Audit log error:",
+error
+);
+
+document
+.getElementById(
+"tableContainer"
+)
+.innerHTML = `
+
+<div class="empty">
+
+Unable to load audit logs.
+
+</div>
+
+`;
+
+}
+
+}
+
+
+/* =========================
+   STATS
+========================= */
+
+function updateStats(){
+
+const today =
+new Date();
+
+today.setHours(
+0,0,0,0
+);
+
+
+const todayTime =
+today.getTime();
+
+
+const todayLogs =
+logs.filter(
+item =>
+getTime(
+item.createdAt ||
+item.timestamp ||
+item.date
+) >= todayTime
+);
+
+
+const success =
+logs.filter(
+item =>
+normalizeStatus(
+item.status
+) === "success"
+);
+
+
+const danger =
+logs.filter(
+item =>
+[
+"warning",
+"error"
+]
+.includes(
+normalizeStatus(
+item.status
+)
+)
+);
+
+
+document
+.getElementById(
+"totalLogs"
+)
+.textContent =
+logs.length;
+
+
+document
+.getElementById(
+"todayLogs"
+)
+.textContent =
+todayLogs.length;
+
+
+document
+.getElementById(
+"successLogs"
+)
+.textContent =
+success.length;
+
+
+document
+.getElementById(
+"dangerLogs"
+)
+.textContent =
+danger.length;
+
+}
+
+
+/* =========================
+   FILTERS
+========================= */
+
+function applyFilters(){
+
+const search =
+document
+.getElementById(
+"search"
+)
+.value
+.trim()
+.toLowerCase();
+
+
+const action =
+document
+.getElementById(
+"actionFilter"
+)
+.value;
+
+
+const status =
+document
+.getElementById(
+"statusFilter"
+)
+.value;
+
+
+const date =
+document
+.getElementById(
+"dateFilter"
+)
+.value;
+
+
+filteredLogs =
+logs.filter(
+item => {
+
+const itemAction =
+normalizeAction(
+item.action ||
+item.type ||
+""
+);
+
+
+const itemStatus =
+normalizeStatus(
+item.status
+);
+
+
+const text = [
+
+item.adminName,
+
+item.adminEmail,
+
+item.email,
+
+item.action,
+
+item.type,
+
+item.resource,
+
+item.resourceId,
+
+item.description,
+
+item.message,
+
+item.ip,
+
+item.userAgent
+
+]
+.join(" ")
+.toLowerCase();
+
+
+const matchesSearch =
+!search ||
+text.includes(
+search
+);
+
+
+const matchesAction =
+action === "all" ||
+itemAction === action;
+
+
+const matchesStatus =
+status === "all" ||
+itemStatus === status;
+
+
+let matchesDate = true;
+
+
+if(
+date
+){
+
+const selected =
+new Date(
+date +
+"T00:00:00"
+);
+
+
+const next =
+new Date(
+date +
+"T00:00:00"
+);
+
+next.setDate(
+next.getDate() + 1
+);
+
+
+const time =
+getTime(
+item.createdAt ||
+item.timestamp ||
+item.date
+);
+
+
+matchesDate =
+time >= selected.getTime() &&
+time < next.getTime();
+
+}
+
+
+return (
+
+matchesSearch &&
+
+matchesAction &&
+
+matchesStatus &&
+
+matchesDate
+
+);
+
+});
+
+
+currentPage = 1;
+
+render();
+
+}
+
+
+/* =========================
+   RENDER
+========================= */
+
+function render(){
+
+const container =
+document
+.getElementById(
+"tableContainer"
+);
+
+
+const total =
+filteredLogs.length;
+
+
+document
+.getElementById(
+"resultCount"
+)
+.textContent =
+total +
+(total === 1 ? " log" : " logs");
+
+
+if(
+total === 0
+){
+
+container.innerHTML = `
+
+<div class="empty">
+
+No audit logs found.
+
+</div>
+
+`;
+
+updatePagination();
+
+return;
+
+}
+
+
+const start =
+(currentPage - 1) *
+pageSize;
+
+
+const end =
+start +
+pageSize;
+
+
+const pageLogs =
+filteredLogs.slice(
+start,
+end
+);
+
+
+container.innerHTML = `
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Date</th>
+<th>Admin</th>
+<th>Action</th>
+<th>Resource</th>
+<th>Description</th>
+<th>IP / Device</th>
+<th>Status</th>
+
+</tr>
+
+</thead>
+
+<tbody id="logBody"></tbody>
+
+</table>
+
+`;
+
+
+const body =
+document
+.getElementById(
+"logBody"
+);
+
+
+pageLogs.forEach(
+item => {
+
+const action =
+normalizeAction(
+item.action ||
+item.type
+);
+
+const status =
+normalizeStatus(
+item.status
+);
+
+const date =
+item.createdAt ||
+item.timestamp ||
+item.date;
+
+
+const admin =
+item.adminName ||
+item.adminEmail ||
+item.email ||
+"System";
+
+
+const resource =
+item.resource ||
+item.resourceType ||
+"System";
+
+
+const description =
+item.description ||
+item.message ||
+`${capitalize(action)} activity`;
+
+
+const ip =
+item.ip ||
+item.ipAddress ||
+"—";
+
+
+const device =
+item.userAgent ||
+item.device ||
+"—";
+
+
+const row =
+document
+.createElement(
+"tr"
+);
+
+
+row.innerHTML = `
+
+<td>
+
+${formatDate(date)}
+
+</td>
+
+
+<td>
+
+<strong>
+
+${escapeHTML(admin)}
+
+</strong>
+
+</td>
+
+
+<td>
+
+<span
+class="action ${action}">
+
+${capitalize(action)}
+
+</span>
+
+</td>
+
+
+<td>
+
+${escapeHTML(resource)}
+
+${item.resourceId
+? `<div class="info">
+ID: ${escapeHTML(item.resourceId)}
+</div>`
+: ""}
+
+</td>
+
+
+<td>
+
+${escapeHTML(description)}
+
+</td>
+
+
+<td>
+
+<div class="info">
+
+IP: ${escapeHTML(ip)}
+
+</div>
+
+<div class="info">
+
+${escapeHTML(
+shortDevice(device)
+)}
+
+</div>
+
+</td>
+
+
+<td>
+
+<span
+class="status ${statusClass(status)}">
+
+${capitalize(status)}
+
+</span>
+
+</td>
+
+`;
+
+
+body.appendChild(
+row
+);
+
+});
+
+
+updatePagination();
+
+}
+
+
+/* =========================
+   PAGINATION
+========================= */
+
+function updatePagination(){
+
+const totalPages =
+Math.max(
+1,
+Math.ceil(
+filteredLogs.length /
+pageSize
+)
+);
+
+
+if(
+currentPage >
+totalPages
+){
+
+currentPage =
+totalPages;
+
+}
+
+
+document
+.getElementById(
+"pageInfo"
+)
+.textContent =
+`Page ${currentPage} of ${totalPages}`;
+
+
+document
+.getElementById(
+"prevBtn"
+)
+.disabled =
+currentPage <= 1;
+
+
+document
+.getElementById(
+"nextBtn"
+)
+.disabled =
+currentPage >= totalPages;
+
+}
+
+
+document
+.getElementById(
+"prevBtn"
+)
+.addEventListener(
+"click",
+() => {
+
+if(
+currentPage > 1
+){
+
+currentPage--;
+
+render();
+
+}
+
+});
+
+
+document
+.getElementById(
+"nextBtn"
+)
+.addEventListener(
+"click",
+() => {
+
+const totalPages =
+Math.ceil(
+filteredLogs.length /
+pageSize
+);
+
+
+if(
+currentPage < totalPages
+){
+
+currentPage++;
+
+render();
+
+}
+
+});
+
+
+/* =========================
+   BUTTONS
+========================= */
+
+document
+.getElementById(
+"applyBtn"
+)
+.addEventListener(
+"click",
+applyFilters
+);
+
+
+document
+.getElementById(
+"clearBtn"
+)
+.addEventListener(
+"click",
+() => {
+
+document
+.getElementById(
+"search"
+)
+.value = "";
+
+document
+.getElementById(
+"actionFilter"
+)
+.value = "all";
+
+document
+.getElementById(
+"statusFilter"
+)
+.value = "all";
+
+document
+.getElementById(
+"dateFilter"
+)
+.value = "";
+
+applyFilters();
+
+});
+
+
+document
+.getElementById(
+"search"
+)
+.addEventListener(
+"input",
+applyFilters
+);
+
+
+/* =========================
+   HELPERS
+========================= */
+
+function normalizeAction(
+action
+){
+
+const value =
+String(
+action ||
+""
+)
+.toLowerCase()
+.trim();
+
+
+if(
+value.includes("login")
+){
+
+return "login";
+
+}
+
+if(
+value.includes("logout")
+){
+
+return "logout";
+
+}
+
+if(
+value.includes("create") ||
+value.includes("add")
+){
+
+return "create";
+
+}
+
+if(
+value.includes("update") ||
+value.includes("edit")
+){
+
+return "update";
+
+}
+
+if(
+value.includes("delete") ||
+value.includes("remove")
+){
+
+return "delete";
+
+}
+
+if(
+value.includes("payment")
+){
+
+return "payment";
+
+}
+
+if(
+value.includes("refund")
+){
+
+return "refund";
+
+}
+
+if(
+value.includes("payout") ||
+value.includes("withdraw")
+){
+
+return "payout";
+
+}
+
+if(
+value.includes("setting")
+){
+
+return "settings";
+
+}
+
+return value || "system";
+
+}
+
+
+function normalizeStatus(
+status
+){
+
+const value =
+String(
+status ||
+"success"
+)
+.toLowerCase()
+.trim();
+
+
+if(
+[
+"success",
+"successful",
+"completed",
+"complete",
+"ok"
+].includes(value)
+){
+
+return "success";
+
+}
+
+if(
+[
+"warning",
+"pending",
+"review"
+].includes(value)
+){
+
+return "warning";
+
+}
+
+if(
+[
+"error",
+"failed",
+"failure",
+"denied"
+].includes(value)
+){
+
+return "error";
+
+}
+
+return "success";
+
+}
+
+
+function statusClass(
+status
+){
+
+if(
+status === "success"
+){
+
+return "success";
+
+}
+
+if(
+status === "warning"
+){
+
+return "warning";
+
+}
+
+return "danger";
+
+}
+
+
+function getTime(
+value
+){
+
+if(
+typeof value === "number"
+){
+
+return value;
+
+}
+
+
+if(
+value &&
+typeof value === "object" &&
+value.timestamp
+){
+
+return Number(
+value.timestamp
+);
+
+}
+
+
+const time =
+new Date(
+value ||
+0
+)
+.getTime();
+
+
+return Number.isNaN(
+time
+)
+?
+0
+:
+time;
+
+}
+
+
+function formatDate(
+value
+){
+
+const time =
+getTime(
+value
+);
+
+
+if(
+!time
+){
+
+return "—";
+
+}
+
+
+return new Date(
+time
+)
+.toLocaleString(
+undefined,
+{
+year:"numeric",
+month:"short",
+day:"numeric",
+hour:"2-digit",
+minute:"2-digit"
+}
+);
+
+}
+
+
+function shortDevice(
+value
+){
+
+const text =
+String(
+value ||
+""
+);
+
+
+if(
+text.length <= 45
+){
+
+return text;
+
+}
+
+
+return (
+text.slice(
+0,
+45
+) +
+"..."
+);
+
+}
+
+
+function capitalize(
+value
+){
+
+const text =
+String(
+value ||
+""
+);
+
+
+return (
+
+text.charAt(0)
+.toUpperCase() +
+text.slice(1)
+
+);
+
+}
+
+
+function escapeHTML(
+value
+){
+
+return String(
+value ??
+""
+)
+.replace(
+/&/g,
+"&amp;"
+)
+.replace(
+/</g,
+"&lt;"
+)
+.replace(
+/>/g,
+"&gt;"
+)
+.replace(
+/"/g,
+"&quot;"
+)
+.replace(
+/'/g,
+"&#039;"
+);
+
+}
+
+
+/* =========================
+   START
+========================= */
+
+loadLogs();
+
+</script>
+
+</body>
+</html>
