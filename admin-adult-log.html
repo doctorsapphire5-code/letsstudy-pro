@@ -1,1895 +1,2368 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Adult Access Logs | Let's Study Pro</title>
 
-<title>Admin Audit Log | LetsStudy Pro</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --dark: #0f172a;
+      --text: #334155;
+      --muted: #64748b;
+      --bg: #f8fafc;
+      --white: #ffffff;
+      --border: #e2e8f0;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --warning: #d97706;
+      --shadow: 0 8px 30px rgba(15, 23, 42, .06);
+      --radius: 15px;
+    }
 
-<style>
+    * {
+      box-sizing: border-box;
+    }
 
-*{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
-}
+    body {
+      margin: 0;
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
 
-body{
-  font-family:Arial,sans-serif;
-  background:#f1f5f9;
-  color:#0f172a;
-}
+    button,
+    input,
+    select {
+      font: inherit;
+    }
 
-.sidebar{
-  position:fixed;
-  left:0;
-  top:0;
-  bottom:0;
-  width:240px;
-  background:#0f172a;
-  color:#fff;
-  padding:20px 12px;
-  overflow-y:auto;
-}
+    button {
+      cursor: pointer;
+    }
 
-.logo{
-  font-size:16px;
-  font-weight:900;
-  padding:10px;
-  margin-bottom:25px;
-}
+    /* =========================
+       LAYOUT
+    ========================= */
 
-.nav-title{
-  color:#64748b;
-  font-size:8px;
-  font-weight:900;
-  margin:18px 10px 7px;
-  text-transform:uppercase;
-}
+    .layout {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 250px 1fr;
+    }
 
-.nav-link{
-  display:flex;
-  align-items:center;
-  gap:9px;
-  padding:10px;
-  margin-bottom:3px;
-  color:#cbd5e1;
-  text-decoration:none;
-  border-radius:8px;
-  font-size:9px;
-  font-weight:700;
-}
+    /* =========================
+       SIDEBAR
+    ========================= */
 
-.nav-link:hover,
-.nav-link.active{
-  background:#1e40af;
-  color:#fff;
-}
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      background: #020617;
+      color: white;
+      padding: 22px 14px;
+    }
 
-.main{
-  margin-left:240px;
-  min-height:100vh;
-}
+    .brand {
+      padding: 8px 12px 22px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid rgba(255,255,255,.09);
+    }
 
-.topbar{
-  height:65px;
-  background:#fff;
-  border-bottom:1px solid #e2e8f0;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 25px;
-  position:sticky;
-  top:0;
-  z-index:20;
-}
+    .brand h2 {
+      margin: 0;
+      font-size: 20px;
+    }
 
-.title{
-  font-size:16px;
-  font-weight:900;
-}
+    .brand p {
+      margin: 5px 0 0;
+      color: #94a3b8;
+      font-size: 12px;
+    }
 
-.admin{
-  font-size:9px;
-  font-weight:700;
-}
+    .nav {
+      display: grid;
+      gap: 5px;
+    }
 
-.content{
-  padding:25px;
-}
+    .nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      color: #cbd5e1;
+      text-decoration: none;
+      border-radius: 9px;
+      font-size: 13px;
+      transition: .2s;
+    }
 
-.heading{
-  margin-bottom:20px;
-}
+    .nav a:hover {
+      background: rgba(255,255,255,.07);
+      color: white;
+    }
 
-.heading h1{
-  font-size:22px;
-}
+    .nav a.active {
+      background: #1d4ed8;
+      color: white;
+    }
 
-.heading p{
-  color:#64748b;
-  font-size:9px;
-  margin-top:5px;
-}
+    /* =========================
+       MAIN
+    ========================= */
 
-.stats{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:12px;
-  margin-bottom:18px;
-}
+    .main {
+      min-width: 0;
+    }
 
-.stat{
-  background:#fff;
-  border:1px solid #e2e8f0;
-  border-radius:12px;
-  padding:15px;
-}
+    .topbar {
+      min-height: 72px;
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 14px 30px;
 
-.stat-label{
-  color:#64748b;
-  font-size:8px;
-  font-weight:800;
-}
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
 
-.stat-value{
-  margin-top:7px;
-  font-size:20px;
-  font-weight:900;
-}
+    .topbar h1 {
+      margin: 0;
+      color: var(--dark);
+      font-size: 22px;
+    }
 
-.toolbar{
-  background:#fff;
-  border:1px solid #e2e8f0;
-  border-radius:12px;
-  padding:14px;
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-  margin-bottom:15px;
-}
+    .admin-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-input,
-select{
-  border:1px solid #dbe3ed;
-  border-radius:7px;
-  padding:9px 10px;
-  background:#fff;
-  font-size:8px;
-  outline:none;
-}
+    .admin-avatar {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #dbeafe;
+      color: #1d4ed8;
+      font-weight: 800;
+    }
 
-.search{
-  flex:1;
-  min-width:180px;
-}
+    .admin-email {
+      color: var(--muted);
+      font-size: 12px;
+    }
 
-button{
-  border:0;
-  border-radius:7px;
-  padding:9px 13px;
-  cursor:pointer;
-  font-size:8px;
-  font-weight:900;
-}
+    .content {
+      padding: 30px;
+    }
 
-.apply{
-  background:#1d4ed8;
-  color:#fff;
-}
+    /* =========================
+       STATS
+    ========================= */
 
-.clear{
-  background:#f1f5f9;
-  color:#475569;
-}
+    .stats {
+      display: grid;
+      grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 22px;
+    }
 
-.panel{
-  background:#fff;
-  border:1px solid #e2e8f0;
-  border-radius:12px;
-  overflow:hidden;
-}
+    .stat-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
 
-.panel-head{
-  padding:15px;
-  border-bottom:1px solid #e2e8f0;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
+    .stat-card .label {
+      color: var(--muted);
+      font-size: 12px;
+    }
 
-.panel-head h2{
-  font-size:11px;
-}
+    .stat-card .value {
+      margin-top: 8px;
+      color: var(--dark);
+      font-size: 28px;
+      font-weight: 800;
+    }
 
-.panel-head span{
-  color:#64748b;
-  font-size:7px;
-}
+    /* =========================
+       TOOLBAR
+    ========================= */
 
-.table-wrap{
-  overflow-x:auto;
-}
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
 
-table{
-  width:100%;
-  border-collapse:collapse;
-}
+    .filters {
+      display: flex;
+      gap: 9px;
+      flex: 1;
+      flex-wrap: wrap;
+    }
 
-th{
-  background:#f8fafc;
-  color:#64748b;
-  font-size:7px;
-  text-align:left;
-  padding:11px;
-  white-space:nowrap;
-}
+    .filters input,
+    .filters select {
+      min-width: 180px;
+      padding: 11px 13px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      outline: none;
+      color: var(--text);
+    }
 
-td{
-  border-top:1px solid #f1f5f9;
-  padding:11px;
-  font-size:8px;
-  vertical-align:top;
-}
+    .filters input {
+      flex: 1;
+    }
 
-.action{
-  font-weight:900;
-}
+    .filters input:focus,
+    .filters select:focus {
+      border-color: var(--primary);
+    }
 
-.action.login{
-  color:#2563eb;
-}
+    .refresh-btn {
+      border: 0;
+      border-radius: 9px;
+      padding: 11px 16px;
+      background: var(--primary);
+      color: white;
+      font-weight: 700;
+    }
 
-.action.create{
-  color:#166534;
-}
+    .refresh-btn:hover {
+      background: var(--primary-dark);
+    }
 
-.action.update{
-  color:#92400e;
-}
+    /* =========================
+       TABLE
+    ========================= */
 
-.action.delete{
-  color:#991b1b;
-}
+    .table-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
 
-.action.payment{
-  color:#7c3aed;
-}
+    .table-scroll {
+      overflow-x: auto;
+    }
 
-.status{
-  display:inline-block;
-  padding:4px 8px;
-  border-radius:15px;
-  font-size:6px;
-  font-weight:900;
-}
+    table {
+      width: 100%;
+      min-width: 1050px;
+      border-collapse: collapse;
+    }
 
-.success{
-  background:#dcfce7;
-  color:#166534;
-}
+    th {
+      background: #f8fafc;
+      color: #64748b;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      text-align: left;
+      padding: 14px;
+      border-bottom: 1px solid var(--border);
+    }
 
-.warning{
-  background:#fef3c7;
-  color:#92400e;
-}
+    td {
+      padding: 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      vertical-align: middle;
+    }
 
-.danger{
-  background:#fee2e2;
-  color:#991b1b;
-}
+    tr:last-child td {
+      border-bottom: 0;
+    }
 
-.info{
-  color:#64748b;
-  font-size:7px;
-  line-height:1.5;
-}
+    .user-cell strong {
+      display: block;
+      color: var(--dark);
+      font-size: 13px;
+    }
 
-.empty{
-  padding:45px;
-  text-align:center;
-  color:#94a3b8;
-  font-size:9px;
-}
+    .user-cell small {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 10px;
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
-.pagination{
-  padding:12px 15px;
-  display:flex;
-  justify-content:flex-end;
-  align-items:center;
-  gap:7px;
-  border-top:1px solid #e2e8f0;
-}
+    .content-cell {
+      max-width: 220px;
+    }
 
-.page-info{
-  color:#64748b;
-  font-size:7px;
-  margin-right:5px;
-}
+    .content-title {
+      color: var(--dark);
+      font-weight: 700;
+    }
 
-.pagination button{
-  border:1px solid #dbe3ed;
-  background:#fff;
-}
+    .content-id {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 10px;
+    }
 
-.pagination button:disabled{
-  opacity:.45;
-  cursor:not-allowed;
-}
+    /* =========================
+       BADGES
+    ========================= */
 
-@media(max-width:900px){
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: capitalize;
+    }
 
-  .stats{
-    grid-template-columns:repeat(2,1fr);
-  }
+    .badge.allowed {
+      background: #dcfce7;
+      color: #166534;
+    }
 
-}
+    .badge.blocked {
+      background: #fee2e2;
+      color: #991b1b;
+    }
 
-@media(max-width:700px){
+    .badge.warning {
+      background: #fef3c7;
+      color: #92400e;
+    }
 
-  .sidebar{
-    display:none;
-  }
+    .badge.neutral {
+      background: #e2e8f0;
+      color: #475569;
+    }
 
-  .main{
-    margin-left:0;
-  }
+    /* =========================
+       ACTIONS
+    ========================= */
 
-  .content{
-    padding:16px;
-  }
+    .actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
 
-  .stats{
-    grid-template-columns:1fr;
-  }
+    .action-btn {
+      border: 0;
+      border-radius: 7px;
+      padding: 7px 10px;
+      font-size: 11px;
+      font-weight: 700;
+    }
 
-}
+    .view-btn {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
 
-</style>
+    .delete-btn {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
 
+    /* =========================
+       LOADING / EMPTY
+    ========================= */
+
+    .state {
+      padding: 65px 20px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .spinner {
+      width: 34px;
+      height: 34px;
+      margin: 0 auto 13px;
+
+      border: 4px solid #e2e8f0;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* =========================
+       PAGINATION
+    ========================= */
+
+    .pagination {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .pagination button {
+      border: 1px solid var(--border);
+      background: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      color: var(--text);
+    }
+
+    .pagination button:hover:not(:disabled) {
+      background: #f8fafc;
+    }
+
+    .pagination button:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+
+    .page-info {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    /* =========================
+       MODAL
+    ========================= */
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+
+      padding: 20px;
+
+      background: rgba(2, 6, 23, .72);
+
+      overflow-y: auto;
+    }
+
+    .modal.show {
+      display: grid;
+      place-items: center;
+    }
+
+    .modal-box {
+      position: relative;
+      width: min(720px, 100%);
+      max-height: 90vh;
+      overflow-y: auto;
+
+      padding: 25px;
+
+      background: white;
+      border-radius: 18px;
+    }
+
+    .modal-box h2 {
+      margin: 0 35px 20px 0;
+      color: var(--dark);
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+
+      width: 36px;
+      height: 36px;
+
+      border: 0;
+      border-radius: 50%;
+
+      background: #f1f5f9;
+      color: var(--dark);
+
+      font-size: 20px;
+    }
+
+    .details {
+      display: grid;
+      gap: 11px;
+    }
+
+    .detail {
+      padding: 13px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #f8fafc;
+    }
+
+    .detail-label {
+      margin-bottom: 5px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .detail-value {
+      color: var(--dark);
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    /* =========================
+       TOAST
+    ========================= */
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 10000;
+
+      max-width: 360px;
+
+      padding: 13px 17px;
+
+      border-radius: 10px;
+
+      background: var(--dark);
+      color: white;
+
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+
+      transition: .25s;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* =========================
+       MOBILE
+    ========================= */
+
+    @media (max-width: 1000px) {
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: relative;
+        height: auto;
+      }
+
+      .nav {
+        display: flex;
+        overflow-x: auto;
+      }
+
+      .nav a {
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 650px) {
+
+      .topbar {
+        padding: 14px 18px;
+      }
+
+      .topbar h1 {
+        font-size: 18px;
+      }
+
+      .admin-email {
+        display: none;
+      }
+
+      .content {
+        padding: 18px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .filters {
+        width: 100%;
+        flex-direction: column;
+      }
+
+      .filters input,
+      .filters select {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .refresh-btn {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
+  <div class="layout">
 
-<aside class="sidebar">
+    <!-- =========================
+         SIDEBAR
+    ========================== -->
 
-<div class="logo">
-LetsStudy Pro
-</div>
+    <aside class="sidebar">
 
-<div class="nav-title">
-Main
-</div>
+      <div class="brand">
+        <h2>Let's Study Pro</h2>
+        <p>Admin Panel</p>
+      </div>
 
-<a href="/admin.html" class="nav-link">
-📊 Dashboard
-</a>
+      <nav class="nav">
 
-<div class="nav-title">
-Finance
-</div>
+        <a href="admin.html">
+          📊 Dashboard
+        </a>
 
-<a href="/admin-payments.html" class="nav-link">
-💳 Payments
-</a>
+        <a href="admin-analytics.html">
+          📈 Analytics
+        </a>
 
-<a href="/admin-transactions.html" class="nav-link">
-🔄 Transactions
-</a>
+        <a href="admin-students.html">
+          👨‍🎓 Students
+        </a>
 
-<a href="/admin-revenue.html" class="nav-link">
-📈 Revenue
-</a>
+        <a href="admin-instructors.html">
+          👨‍🏫 Instructors
+        </a>
 
-<a href="/admin-financial-report.html" class="nav-link">
-📑 Financial Report
-</a>
+        <a href="admin-courses.html">
+          📚 Courses
+        </a>
 
-<div class="nav-title">
-Security
-</div>
+        <a href="admin-lessons.html">
+          📝 Lessons
+        </a>
 
-<a href="/admin-audit-log.html" class="nav-link active">
-🛡️ Audit Log
-</a>
+        <a href="admin-quiz.html">
+          ❓ Quiz
+        </a>
 
-<div class="nav-title">
-Management
-</div>
+        <a href="admin-career.html">
+          🚀 Career
+        </a>
 
-<a href="/admin-students.html" class="nav-link">
-👨‍🎓 Students
-</a>
+        <a href="admin-community.html">
+          👥 Community
+        </a>
 
-<a href="/admin-orders.html" class="nav-link">
-🛒 Orders
-</a>
+        <a href="admin-adult-log.html" class="active">
+          🔞 Adult Logs
+        </a>
 
-<a href="/admin-settings.html" class="nav-link">
-⚙️ Settings
-</a>
+        <a href="admin-reports.html">
+          📋 Reports
+        </a>
 
-</aside>
+        <a href="admin-security.html">
+          🔐 Security
+        </a>
 
+        <a href="admin-settings.html">
+          ⚙️ Settings
+        </a>
 
+      </nav>
 
-<div class="main">
+    </aside>
 
-<header class="topbar">
 
-<div class="title">
-Admin Audit Log
-</div>
+    <!-- =========================
+         MAIN
+    ========================== -->
 
-<div class="admin">
-Super Admin
-</div>
+    <main class="main">
 
-</header>
+      <header class="topbar">
 
+        <h1>
+          Adult Access Logs
+        </h1>
 
+        <div class="admin-info">
 
-<main class="content">
+          <div
+            class="admin-avatar"
+            id="adminAvatar"
+          >
+            A
+          </div>
 
+          <div
+            class="admin-email"
+            id="adminEmail"
+          >
+            Loading...
+          </div>
 
-<div class="heading">
+        </div>
 
-<h1>
-Audit Log
-</h1>
+      </header>
 
-<p>
-Monitor important administrator and system activities.
-</p>
 
-</div>
+      <section class="content">
 
+        <!-- =========================
+             STATISTICS
+        ========================== -->
 
+        <div class="stats">
 
-<section class="stats">
+          <div class="stat-card">
 
-<div class="stat">
+            <div class="label">
+              Total Logs
+            </div>
 
-<div class="stat-label">
-TOTAL LOGS
-</div>
+            <div
+              class="value"
+              id="totalLogs"
+            >
+              0
+            </div>
 
-<div
-id="totalLogs"
-class="stat-value">
-0
-</div>
+          </div>
 
-</div>
 
+          <div class="stat-card">
 
-<div class="stat">
+            <div class="label">
+              Allowed
+            </div>
 
-<div class="stat-label">
-TODAY
-</div>
+            <div
+              class="value"
+              id="allowedLogs"
+            >
+              0
+            </div>
 
-<div
-id="todayLogs"
-class="stat-value">
-0
-</div>
+          </div>
 
-</div>
 
+          <div class="stat-card">
 
-<div class="stat">
+            <div class="label">
+              Blocked
+            </div>
 
-<div class="stat-label">
-SUCCESSFUL
-</div>
+            <div
+              class="value"
+              id="blockedLogs"
+            >
+              0
+            </div>
 
-<div
-id="successLogs"
-class="stat-value">
-0
-</div>
+          </div>
 
-</div>
 
+          <div class="stat-card">
 
-<div class="stat">
+            <div class="label">
+              Today's Activity
+            </div>
 
-<div class="stat-label">
-WARNINGS / ERRORS
-</div>
+            <div
+              class="value"
+              id="todayLogs"
+            >
+              0
+            </div>
 
-<div
-id="dangerLogs"
-class="stat-value">
-0
-</div>
+          </div>
 
-</div>
+        </div>
 
-</section>
 
+        <!-- =========================
+             FILTERS
+        ========================== -->
 
+        <div class="toolbar">
 
-<section class="toolbar">
+          <div class="filters">
 
-<input
-id="search"
-class="search"
-type="search"
-placeholder="Search admin, action, resource or description...">
+            <input
+              type="search"
+              id="searchInput"
+              placeholder="Search email, UID, content, reason..."
+            >
 
 
-<select id="actionFilter">
+            <select id="statusFilter">
 
-<option value="all">
-All Actions
-</option>
+              <option value="all">
+                All Status
+              </option>
 
-<option value="login">
-Login
-</option>
+              <option value="allowed">
+                Allowed
+              </option>
 
-<option value="logout">
-Logout
-</option>
+              <option value="blocked">
+                Blocked
+              </option>
 
-<option value="create">
-Create
-</option>
+            </select>
 
-<option value="update">
-Update
-</option>
 
-<option value="delete">
-Delete
-</option>
+            <select id="typeFilter">
 
-<option value="payment">
-Payment
-</option>
+              <option value="all">
+                All Types
+              </option>
 
-<option value="refund">
-Refund
-</option>
+            </select>
 
-<option value="payout">
-Payout
-</option>
+          </div>
 
-<option value="settings">
-Settings
-</option>
 
-</select>
+          <button
+            class="refresh-btn"
+            id="refreshBtn"
+          >
+            ↻ Refresh
+          </button>
 
+        </div>
 
-<select id="statusFilter">
 
-<option value="all">
-All Status
-</option>
+        <!-- =========================
+             TABLE
+        ========================== -->
 
-<option value="success">
-Success
-</option>
+        <div class="table-card">
 
-<option value="warning">
-Warning
-</option>
+          <div
+            class="state"
+            id="loadingState"
+          >
 
-<option value="error">
-Error
-</option>
+            <div class="spinner"></div>
 
-</select>
+            Loading adult access logs...
 
+          </div>
 
-<input
-id="dateFilter"
-type="date">
 
+          <div
+            class="state"
+            id="errorState"
+            style="display:none;"
+          >
+            Unable to load adult access logs.
+          </div>
 
-<button
-id="applyBtn"
-class="apply">
 
-Apply
+          <div
+            class="state"
+            id="emptyState"
+            style="display:none;"
+          >
+            No adult access logs found.
+          </div>
 
-</button>
 
+          <div
+            class="table-scroll"
+            id="tableContainer"
+            style="display:none;"
+          >
 
-<button
-id="clearBtn"
-class="clear">
+            <table>
 
-Clear
+              <thead>
 
-</button>
+                <tr>
 
-</section>
+                  <th>
+                    User
+                  </th>
 
+                  <th>
+                    Content
+                  </th>
 
+                  <th>
+                    Type
+                  </th>
 
-<section class="panel">
+                  <th>
+                    Status
+                  </th>
 
-<div class="panel-head">
+                  <th>
+                    Timestamp
+                  </th>
 
-<h2>
-Activity History
-</h2>
+                  <th>
+                    Actions
+                  </th>
 
-<span id="resultCount">
-0 logs
-</span>
+                </tr>
 
-</div>
+              </thead>
 
+              <tbody
+                id="logBody"
+              ></tbody>
 
-<div
-class="table-wrap"
-id="tableContainer">
+            </table>
 
-<div class="empty">
-Loading audit logs...
-</div>
+          </div>
 
-</div>
 
+          <!-- PAGINATION -->
 
-<div
-class="pagination">
+          <div
+            class="pagination"
+            id="pagination"
+          >
 
-<span
-id="pageInfo"
-class="page-info">
-Page 1
-</span>
+            <button
+              id="previousBtn"
+              disabled
+            >
+              ← Previous
+            </button>
 
-<button
-id="prevBtn"
-disabled>
 
-Previous
+            <span
+              class="page-info"
+              id="pageInfo"
+            >
+              Page 1 of 1
+            </span>
 
-</button>
 
-<button
-id="nextBtn"
-disabled>
+            <button
+              id="nextBtn"
+              disabled
+            >
+              Next →
+            </button>
 
-Next
+          </div>
 
-</button>
+        </div>
 
-</div>
+      </section>
 
-</section>
+    </main>
 
+  </div>
 
-</main>
 
-</div>
+  <!-- =========================
+       DETAILS MODAL
+  ========================== -->
 
+  <div
+    class="modal"
+    id="detailsModal"
+  >
 
+    <div class="modal-box">
 
-<script type="module">
+      <button
+        class="close-btn"
+        id="closeModal"
+        type="button"
+      >
+        ×
+      </button>
 
-import {
-initializeApp
-}
-from
-"https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 
-import {
-getDatabase,
-ref,
-get
-}
-from
-"https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+      <h2>
+        Access Log Details
+      </h2>
 
 
-const firebaseConfig = {
+      <div
+        class="details"
+        id="detailsContent"
+      ></div>
 
-apiKey:
-"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+    </div>
 
-authDomain:
-"let-s-study-pro-course.firebaseapp.com",
+  </div>
 
-databaseURL:
-"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
 
-projectId:
-"let-s-study-pro-course",
+  <!-- =========================
+       TOAST
+  ========================== -->
 
-storageBucket:
-"let-s-study-pro-course.firebasestorage.app",
+  <div
+    class="toast"
+    id="toast"
+  ></div>
 
-messagingSenderId:
-"474928293390",
 
-appId:
-"1:474928293390:web:2bcc2aebf2351c12a9fe5f"
+  <!-- =========================
+       FIREBASE
+  ========================== -->
 
-};
+  <script type="module">
 
+    import {
+      initializeApp
+    } from
+    "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-const app =
-initializeApp(
-firebaseConfig
-);
 
-const db =
-getDatabase(app);
+    import {
+      getAuth,
+      onAuthStateChanged
+    } from
+    "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 
-let logs = [];
-let filteredLogs = [];
+    import {
+      getDatabase,
+      ref,
+      onValue,
+      remove
+    } from
+    "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-let currentPage = 1;
 
-const pageSize = 15;
+    /* =========================
+       FIREBASE CONFIG
+    ========================== */
 
+    const firebaseConfig = {
 
-/* =========================
-   LOAD AUDIT LOGS
-========================= */
+      apiKey:
+        "AIzaSyBcOYDfAVKXbkljsyRgI_0rj0rodBn678tCc",
 
-async function loadLogs(){
+      authDomain:
+        "let-s-study-pro-course.firebaseapp.com",
 
-try{
+      databaseURL:
+        "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
 
-const snapshot =
-await get(
-ref(
-db,
-"auditLogs"
-)
-);
+      projectId:
+        "let-s-study-pro-course",
 
+      storageBucket:
+        "let-s-study-pro-course.firebasestorage.app",
 
-logs = [];
+      messagingSenderId:
+        "474928293390",
 
+      appId:
+        "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
 
-if(
-snapshot.exists()
-){
+      measurementId:
+        "G-85B7V5H5J0"
 
-const data =
-snapshot.val();
+    };
 
 
-Object.entries(
-data
-)
-.forEach(
-([id,item]) => {
+    /* =========================
+       INITIALIZE
+    ========================== */
 
-logs.push({
+    const app =
+      initializeApp(
+        firebaseConfig
+      );
 
-id,
 
-...item
+    const auth =
+      getAuth(app);
 
-});
 
-});
+    const db =
+      getDatabase(app);
 
-}
 
+    /* =========================
+       STATE
+    ========================== */
 
-/*
- Support alternative path:
- adminLogs
-*/
+    let currentUser = null;
 
-if(
-logs.length === 0
-){
+    let logs = [];
 
-const alternative =
-await get(
-ref(
-db,
-"adminLogs"
-)
-);
+    let filteredLogs = [];
 
+    let currentPage = 1;
 
-if(
-alternative.exists()
-){
+    const pageSize = 20;
 
-const data =
-alternative.val();
 
+    /* =========================
+       DOM
+    ========================== */
 
-Object.entries(
-data
-)
-.forEach(
-([id,item]) => {
+    const loadingState =
+      document.getElementById(
+        "loadingState"
+      );
 
-logs.push({
 
-id,
+    const errorState =
+      document.getElementById(
+        "errorState"
+      );
 
-...item
 
-});
+    const emptyState =
+      document.getElementById(
+        "emptyState"
+      );
 
-});
 
-}
+    const tableContainer =
+      document.getElementById(
+        "tableContainer"
+      );
 
-}
 
+    const logBody =
+      document.getElementById(
+        "logBody"
+      );
 
-logs.sort(
-(a,b) =>
-getTime(b.createdAt || b.timestamp || b.date) -
-getTime(a.createdAt || a.timestamp || a.date)
-);
 
+    const pagination =
+      document.getElementById(
+        "pagination"
+      );
 
-updateStats();
 
-applyFilters();
+    /* =========================
+       AUTHENTICATION
+    ========================== */
 
+        /* =========================
+       AUTHENTICATION
+    ========================== */
 
-}catch(error){
+    onAuthStateChanged(
+      auth,
+      async (user) => {
 
-console.error(
-"Audit log error:",
-error
-);
+        if (!user) {
+          window.location.href = "login.html";
+          return;
+        }
 
-document
-.getElementById(
-"tableContainer"
-)
-.innerHTML = `
+        currentUser = user;
 
-<div class="empty">
+        document.getElementById("adminEmail").textContent =
+          user.email || "Administrator";
 
-Unable to load audit logs.
+        document.getElementById("adminAvatar").textContent =
+          (user.email || "A").charAt(0).toUpperCase();
 
-</div>
+        /*
+         * Load Firebase data only after
+         * authentication has been confirmed.
+         */
+        loadLogs();
+      }
+    );
 
-`;
 
-}
+    /* =========================
+       LOAD LOGS FROM FIREBASE
+    ========================== */
 
-}
+    function loadLogs() {
 
+      showLoading();
 
-/* =========================
-   STATS
-========================= */
+      const logsRef = ref(
+        db,
+        "adultAccessLogs"
+      );
 
-function updateStats(){
+      onValue(
+        logsRef,
+        (snapshot) => {
 
-const today =
-new Date();
+          logs = [];
 
-today.setHours(
-0,0,0,0
-);
+          if (snapshot.exists()) {
 
+            const data = snapshot.val();
 
-const todayTime =
-today.getTime();
+            Object.entries(data).forEach(
+              ([id, value]) => {
 
+                if (
+                  value &&
+                  typeof value === "object"
+                ) {
 
-const todayLogs =
-logs.filter(
-item =>
-getTime(
-item.createdAt ||
-item.timestamp ||
-item.date
-) >= todayTime
-);
+                  logs.push({
+                    id,
+                    ...value
+                  });
 
+                }
 
-const success =
-logs.filter(
-item =>
-normalizeStatus(
-item.status
-) === "success"
-);
+              }
+            );
 
+          }
 
-const danger =
-logs.filter(
-item =>
-[
-"warning",
-"error"
-]
-.includes(
-normalizeStatus(
-item.status
-)
-)
-);
+          logs.sort(
+            (a, b) =>
+              getTimestamp(b) -
+              getTimestamp(a)
+          );
 
+          updateStats();
+          updateTypeFilter();
+          applyFilters();
 
-document
-.getElementById(
-"totalLogs"
-)
-.textContent =
-logs.length;
+        },
+        (error) => {
 
+          console.error(
+            "Firebase read error:",
+            error
+          );
 
-document
-.getElementById(
-"todayLogs"
-)
-.textContent =
-todayLogs.length;
+          showError(
+            error.message ||
+            "Failed to load adult access logs."
+          );
 
+        }
+      );
+    }
 
-document
-.getElementById(
-"successLogs"
-)
-.textContent =
-success.length;
 
+    /* =========================
+       FILTER LOGS
+    ========================== */
 
-document
-.getElementById(
-"dangerLogs"
-)
-.textContent =
-danger.length;
+    function applyFilters() {
 
-}
+      const search =
+        document
+          .getElementById("searchInput")
+          .value
+          .trim()
+          .toLowerCase();
 
+      const status =
+        document.getElementById(
+          "statusFilter"
+        ).value;
 
-/* =========================
-   FILTERS
-========================= */
+      const type =
+        document.getElementById(
+          "typeFilter"
+        ).value;
 
-function applyFilters(){
 
-const search =
-document
-.getElementById(
-"search"
-)
-.value
-.trim()
-.toLowerCase();
+      filteredLogs = logs.filter(
+        (log) => {
 
+          const searchable = [
 
-const action =
-document
-.getElementById(
-"actionFilter"
-)
-.value;
+            log.uid,
+            log.userId,
+            log.email,
+            log.userEmail,
+            log.name,
 
+            log.contentId,
+            log.contentTitle,
+            log.title,
 
-const status =
-document
-.getElementById(
-"statusFilter"
-)
-.value;
+            log.type,
+            log.contentType,
 
+            log.status,
+            log.reason,
 
-const date =
-document
-.getElementById(
-"dateFilter"
-)
-.value;
+            log.ip,
+            log.device,
+            log.userAgent
 
+          ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
 
-filteredLogs =
-logs.filter(
-item => {
 
-const itemAction =
-normalizeAction(
-item.action ||
-item.type ||
-""
-);
+          const matchesSearch =
+            !search ||
+            searchable.includes(search);
 
 
-const itemStatus =
-normalizeStatus(
-item.status
-);
+          const logStatus =
+            getStatus(log);
 
+          const matchesStatus =
+            status === "all" ||
+            logStatus === status;
 
-const text = [
 
-item.adminName,
+          const logType =
+            getType(log);
 
-item.adminEmail,
+          const matchesType =
+            type === "all" ||
+            logType === type;
 
-item.email,
 
-item.action,
+          return (
+            matchesSearch &&
+            matchesStatus &&
+            matchesType
+          );
 
-item.type,
+        }
+      );
 
-item.resource,
 
-item.resourceId,
+      currentPage = 1;
 
-item.description,
+      renderTable();
+    }
 
-item.message,
 
-item.ip,
+    /* =========================
+       RENDER TABLE
+    ========================== */
 
-item.userAgent
+    function renderTable() {
 
-]
-.join(" ")
-.toLowerCase();
+      if (
+        filteredLogs.length === 0
+      ) {
 
+        tableContainer.style.display =
+          "none";
 
-const matchesSearch =
-!search ||
-text.includes(
-search
-);
+        emptyState.style.display =
+          "block";
 
+        pagination.style.display =
+          "none";
 
-const matchesAction =
-action === "all" ||
-itemAction === action;
+        return;
+      }
 
 
-const matchesStatus =
-status === "all" ||
-itemStatus === status;
+      tableContainer.style.display =
+        "block";
 
+      emptyState.style.display =
+        "none";
 
-let matchesDate = true;
 
+      const totalPages =
+        Math.ceil(
+          filteredLogs.length /
+          pageSize
+        );
 
-if(
-date
-){
 
-const selected =
-new Date(
-date +
-"T00:00:00"
-);
+      if (
+        currentPage > totalPages
+      ) {
 
+        currentPage =
+          totalPages;
 
-const next =
-new Date(
-date +
-"T00:00:00"
-);
+      }
 
-next.setDate(
-next.getDate() + 1
-);
 
+      const start =
+        (currentPage - 1) *
+        pageSize;
 
-const time =
-getTime(
-item.createdAt ||
-item.timestamp ||
-item.date
-);
+      const end =
+        start + pageSize;
 
 
-matchesDate =
-time >= selected.getTime() &&
-time < next.getTime();
+      const pageItems =
+        filteredLogs.slice(
+          start,
+          end
+        );
 
-}
 
+      logBody.innerHTML =
+        pageItems
+          .map(createRow)
+          .join("");
 
-return (
 
-matchesSearch &&
+      pagination.style.display =
+        "flex";
 
-matchesAction &&
 
-matchesStatus &&
+      document.getElementById(
+        "pageInfo"
+      ).textContent =
+        `Page ${currentPage} of ${totalPages}`;
 
-matchesDate
 
-);
+      document.getElementById(
+        "previousBtn"
+      ).disabled =
+        currentPage <= 1;
 
-});
 
+      document.getElementById(
+        "nextBtn"
+      ).disabled =
+        currentPage >= totalPages;
+    }
 
-currentPage = 1;
 
-render();
+    /* =========================
+       CREATE TABLE ROW
+    ========================== */
 
-}
+    function createRow(log) {
 
+      const status =
+        getStatus(log);
 
-/* =========================
-   RENDER
-========================= */
+      const type =
+        getType(log);
 
-function render(){
+      const email =
+        log.email ||
+        log.userEmail ||
+        "Unknown user";
 
-const container =
-document
-.getElementById(
-"tableContainer"
-);
+      const userId =
+        log.uid ||
+        log.userId ||
+        log.id;
 
+      const contentTitle =
+        log.contentTitle ||
+        log.title ||
+        log.contentName ||
+        "Unknown content";
 
-const total =
-filteredLogs.length;
+      const contentId =
+        log.contentId ||
+        "";
 
 
-document
-.getElementById(
-"resultCount"
-)
-.textContent =
-total +
-(total === 1 ? " log" : " logs");
+      return `
 
+        <tr>
 
-if(
-total === 0
-){
+          <td>
 
-container.innerHTML = `
+            <div class="user-cell">
 
-<div class="empty">
+              <strong>
+                ${escapeHtml(email)}
+              </strong>
 
-No audit logs found.
+              <small>
+                ${escapeHtml(userId)}
+              </small>
 
-</div>
+            </div>
 
-`;
+          </td>
 
-updatePagination();
 
-return;
+          <td>
 
-}
+            <div class="content-cell">
 
+              <div class="content-title">
+                ${escapeHtml(contentTitle)}
+              </div>
 
-const start =
-(currentPage - 1) *
-pageSize;
+              ${
+                contentId
+                  ? `
+                    <div class="content-id">
+                      ID:
+                      ${escapeHtml(contentId)}
+                    </div>
+                  `
+                  : ""
+              }
 
+            </div>
 
-const end =
-start +
-pageSize;
+          </td>
 
 
-const pageLogs =
-filteredLogs.slice(
-start,
-end
-);
+          <td>
 
+            <span class="badge warning">
+              ${escapeHtml(type)}
+            </span>
 
-container.innerHTML = `
+          </td>
 
-<table>
 
-<thead>
+          <td>
 
-<tr>
+            <span class="badge ${
+              status === "allowed"
+                ? "allowed"
+                : "blocked"
+            }">
 
-<th>Date</th>
-<th>Admin</th>
-<th>Action</th>
-<th>Resource</th>
-<th>Description</th>
-<th>IP / Device</th>
-<th>Status</th>
+              ${escapeHtml(status)}
 
-</tr>
+            </span>
 
-</thead>
+          </td>
 
-<tbody id="logBody"></tbody>
 
-</table>
+          <td>
+            ${escapeHtml(
+              formatDate(
+                getTimestamp(log)
+              )
+            )}
+          </td>
 
-`;
 
+          <td>
 
-const body =
-document
-.getElementById(
-"logBody"
-);
+            <div class="actions">
 
+              <button
+                type="button"
+                class="action-btn view-btn"
+                onclick="viewLog('${escapeJs(log.id)}')"
+              >
+                View
+              </button>
 
-pageLogs.forEach(
-item => {
+              <button
+                type="button"
+                class="action-btn delete-btn"
+                onclick="deleteLog('${escapeJs(log.id)}')"
+              >
+                Delete
+              </button>
 
-const action =
-normalizeAction(
-item.action ||
-item.type
-);
+            </div>
 
-const status =
-normalizeStatus(
-item.status
-);
+          </td>
 
-const date =
-item.createdAt ||
-item.timestamp ||
-item.date;
+        </tr>
 
+      `;
+    }
 
-const admin =
-item.adminName ||
-item.adminEmail ||
-item.email ||
-"System";
 
+    /* =========================
+       STATISTICS
+    ========================== */
 
-const resource =
-item.resource ||
-item.resourceType ||
-"System";
+    function updateStats() {
 
+      document.getElementById(
+        "totalLogs"
+      ).textContent =
+        logs.length;
 
-const description =
-item.description ||
-item.message ||
-`${capitalize(action)} activity`;
 
+      const allowed =
+        logs.filter(
+          log =>
+            getStatus(log) ===
+            "allowed"
+        ).length;
 
-const ip =
-item.ip ||
-item.ipAddress ||
-"—";
 
+      const blocked =
+        logs.filter(
+          log =>
+            getStatus(log) ===
+            "blocked"
+        ).length;
 
-const device =
-item.userAgent ||
-item.device ||
-"—";
 
+      document.getElementById(
+        "allowedLogs"
+      ).textContent =
+        allowed;
 
-const row =
-document
-.createElement(
-"tr"
-);
 
+      document.getElementById(
+        "blockedLogs"
+      ).textContent =
+        blocked;
 
-row.innerHTML = `
 
-<td>
+      const now = new Date();
 
-${formatDate(date)}
+      const startOfDay =
+        new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate()
+        ).getTime();
 
-</td>
 
+      const endOfDay =
+        startOfDay +
+        86400000;
 
-<td>
 
-<strong>
+      const today =
+        logs.filter(
+          log => {
 
-${escapeHTML(admin)}
+            const timestamp =
+              getTimestamp(log);
 
-</strong>
+            return (
+              timestamp >=
+              startOfDay &&
+              timestamp <
+              endOfDay
+            );
 
-</td>
+          }
+        ).length;
 
 
-<td>
+      document.getElementById(
+        "todayLogs"
+      ).textContent =
+        today;
+    }
 
-<span
-class="action ${action}">
 
-${capitalize(action)}
+    /* =========================
+       TYPE FILTER
+    ========================== */
 
-</span>
+    function updateTypeFilter() {
 
-</td>
+      const select =
+        document.getElementById(
+          "typeFilter"
+        );
 
+      const selected =
+        select.value;
 
-<td>
 
-${escapeHTML(resource)}
+      const types =
+        [
+          ...new Set(
+            logs
+              .map(
+                log =>
+                  getType(log)
+              )
+              .filter(Boolean)
+          )
+        ]
+        .sort();
 
-${item.resourceId
-? `<div class="info">
-ID: ${escapeHTML(item.resourceId)}
-</div>`
-: ""}
 
-</td>
+      select.innerHTML = `
 
+        <option value="all">
+          All Types
+        </option>
 
-<td>
+        ${types.map(
+          type => `
+            <option value="${escapeHtml(type)}">
+              ${escapeHtml(type)}
+            </option>
+          `
+        ).join("")}
 
-${escapeHTML(description)}
+      `;
 
-</td>
 
+      if (
+        types.includes(selected)
+      ) {
 
-<td>
+        select.value =
+          selected;
 
-<div class="info">
+      }
+    }
 
-IP: ${escapeHTML(ip)}
 
-</div>
+    /* =========================
+       VIEW LOG
+    ========================== */
 
-<div class="info">
+    window.viewLog = function(id) {
 
-${escapeHTML(
-shortDevice(device)
-)}
+      const log =
+        logs.find(
+          item =>
+            String(item.id) ===
+            String(id)
+        );
 
-</div>
 
-</td>
+      if (!log) {
 
+        showToast(
+          "Log not found."
+        );
 
-<td>
+        return;
+      }
 
-<span
-class="status ${statusClass(status)}">
 
-${capitalize(status)}
+      const details =
+        document.getElementById(
+          "detailsContent"
+        );
 
-</span>
 
-</td>
+      details.innerHTML =
+        Object.entries(log)
+          .map(
+            ([key, value]) => `
 
-`;
+              <div class="detail">
 
+                <div class="detail-label">
+                  ${escapeHtml(key)}
+                </div>
 
-body.appendChild(
-row
-);
+                <div class="detail-value">
+                  ${escapeHtml(
+                    formatValue(value)
+                  )}
+                </div>
 
-});
+              </div>
 
+            `
+          )
+          .join("");
 
-updatePagination();
 
-}
+      document
+        .getElementById(
+          "detailsModal"
+        )
+        .classList.add("show");
+    };
 
 
-/* =========================
-   PAGINATION
-========================= */
+    /* =========================
+       DELETE LOG
+    ========================== */
 
-function updatePagination(){
+    window.deleteLog = async function(id) {
 
-const totalPages =
-Math.max(
-1,
-Math.ceil(
-filteredLogs.length /
-pageSize
-)
-);
+      const log =
+        logs.find(
+          item =>
+            String(item.id) ===
+            String(id)
+        );
 
 
-if(
-currentPage >
-totalPages
-){
+      if (!log) {
 
-currentPage =
-totalPages;
+        showToast(
+          "Log not found."
+        );
 
-}
+        return;
+      }
 
 
-document
-.getElementById(
-"pageInfo"
-)
-.textContent =
-`Page ${currentPage} of ${totalPages}`;
+      const confirmed =
+        confirm(
+          "Are you sure you want to permanently delete this log?"
+        );
 
 
-document
-.getElementById(
-"prevBtn"
-)
-.disabled =
-currentPage <= 1;
+      if (!confirmed) {
+        return;
+      }
 
 
-document
-.getElementById(
-"nextBtn"
-)
-.disabled =
-currentPage >= totalPages;
+      try {
 
-}
+        await remove(
+          ref(
+            db,
+            `adultAccessLogs/${id}`
+          )
+        );
 
 
-document
-.getElementById(
-"prevBtn"
-)
-.addEventListener(
-"click",
-() => {
+        showToast(
+          "Log deleted successfully."
+        );
 
-if(
-currentPage > 1
-){
+      } catch (error) {
 
-currentPage--;
+        console.error(
+          "Delete error:",
+          error
+        );
 
-render();
+        showToast(
+          error.message ||
+          "Failed to delete log."
+        );
 
-}
+      }
+    };
 
-});
 
+    /* =========================
+       STATUS
+    ========================== */
 
-document
-.getElementById(
-"nextBtn"
-)
-.addEventListener(
-"click",
-() => {
+    function getStatus(log) {
 
-const totalPages =
-Math.ceil(
-filteredLogs.length /
-pageSize
-);
+      const status =
+        String(
+          log.status ||
+          log.result ||
+          log.action ||
+          ""
+        ).toLowerCase();
 
 
-if(
-currentPage < totalPages
-){
+      if (
+        status === "allowed" ||
+        status === "allow" ||
+        status === "approved" ||
+        status === "verified" ||
+        status === "success" ||
+        status === "true"
+      ) {
 
-currentPage++;
+        return "allowed";
+      }
 
-render();
 
-}
+      return "blocked";
+    }
 
-});
 
+    /* =========================
+       TYPE
+    ========================== */
 
-/* =========================
-   BUTTONS
-========================= */
+    function getType(log) {
 
-document
-.getElementById(
-"applyBtn"
-)
-.addEventListener(
-"click",
-applyFilters
-);
+      return String(
+        log.type ||
+        log.contentType ||
+        log.accessType ||
+        "adult-content"
+      );
+    }
 
 
-document
-.getElementById(
-"clearBtn"
-)
-.addEventListener(
-"click",
-() => {
+    /* =========================
+       TIMESTAMP
+    ========================== */
 
-document
-.getElementById(
-"search"
-)
-.value = "";
+    function getTimestamp(log) {
 
-document
-.getElementById(
-"actionFilter"
-)
-.value = "all";
+      const value =
+        log.timestamp ??
+        log.createdAt ??
+        log.updatedAt ??
+        log.time ??
+        log.date;
 
-document
-.getElementById(
-"statusFilter"
-)
-.value = "all";
 
-document
-.getElementById(
-"dateFilter"
-)
-.value = "";
+      if (
+        value === null ||
+        value === undefined
+      ) {
 
-applyFilters();
+        return 0;
+      }
 
-});
 
+      if (
+        typeof value === "number"
+      ) {
 
-document
-.getElementById(
-"search"
-)
-.addEventListener(
-"input",
-applyFilters
-);
+        /*
+         * Support both:
+         * seconds
+         * milliseconds
+         */
 
+        if (
+          value < 10000000000
+        ) {
 
-/* =========================
-   HELPERS
-========================= */
+          return value * 1000;
+        }
 
-function normalizeAction(
-action
-){
+        return value;
+      }
 
-const value =
-String(
-action ||
-""
-)
-.toLowerCase()
-.trim();
 
+      if (
+        typeof value === "object" &&
+        value.seconds
+      ) {
 
-if(
-value.includes("login")
-){
+        return (
+          Number(value.seconds) *
+          1000
+        );
+      }
 
-return "login";
 
-}
+      const parsed =
+        Date.parse(
+          String(value)
+        );
 
-if(
-value.includes("logout")
-){
 
-return "logout";
+      return Number.isNaN(parsed)
+        ? 0
+        : parsed;
+    }
 
-}
 
-if(
-value.includes("create") ||
-value.includes("add")
-){
+    /* =========================
+       FORMAT DATE
+    ========================== */
 
-return "create";
+    function formatDate(timestamp) {
 
-}
+      if (!timestamp) {
+        return "Unknown";
+      }
 
-if(
-value.includes("update") ||
-value.includes("edit")
-){
 
-return "update";
+      return new Intl.DateTimeFormat(
+        undefined,
+        {
+          dateStyle: "medium",
+          timeStyle: "short"
+        }
+      ).format(
+        new Date(timestamp)
+      );
+    }
 
-}
 
-if(
-value.includes("delete") ||
-value.includes("remove")
-){
+    /* =========================
+       FORMAT VALUE
+    ========================== */
 
-return "delete";
+    function formatValue(value) {
 
-}
+      if (
+        value === null ||
+        value === undefined
+      ) {
 
-if(
-value.includes("payment")
-){
+        return "";
+      }
 
-return "payment";
 
-}
+      if (
+        typeof value === "object"
+      ) {
 
-if(
-value.includes("refund")
-){
+        return JSON.stringify(
+          value,
+          null,
+          2
+        );
+      }
 
-return "refund";
 
-}
+      return String(value);
+    }
 
-if(
-value.includes("payout") ||
-value.includes("withdraw")
-){
 
-return "payout";
+    /* =========================
+       ESCAPE HTML
+    ========================== */
 
-}
+    function escapeHtml(value) {
 
-if(
-value.includes("setting")
-){
+      return String(
+        value ?? ""
+      )
+        .replace(
+          /&/g,
+          "&amp;"
+        )
+        .replace(
+          /</g,
+          "&lt;"
+        )
+        .replace(
+          />/g,
+          "&gt;"
+        )
+        .replace(
+          /"/g,
+          "&quot;"
+        )
+        .replace(
+          /'/g,
+          "&#039;"
+        );
+    }
 
-return "settings";
 
-}
+    /* =========================
+       ESCAPE JS
+    ========================== */
 
-return value || "system";
+    function escapeJs(value) {
 
-}
+      return String(
+        value ?? ""
+      )
+        .replace(
+          /\\/g,
+          "\\\\"
+        )
+        .replace(
+          /'/g,
+          "\\'"
+        );
+    }
 
 
-function normalizeStatus(
-status
-){
+    /* =========================
+       LOADING STATE
+    ========================== */
 
-const value =
-String(
-status ||
-"success"
-)
-.toLowerCase()
-.trim();
+    function showLoading() {
 
+      loadingState.style.display =
+        "block";
 
-if(
-[
-"success",
-"successful",
-"completed",
-"complete",
-"ok"
-].includes(value)
-){
+      errorState.style.display =
+        "none";
 
-return "success";
+      emptyState.style.display =
+        "none";
 
-}
+      tableContainer.style.display =
+        "none";
 
-if(
-[
-"warning",
-"pending",
-"review"
-].includes(value)
-){
+      pagination.style.display =
+        "none";
+    }
 
-return "warning";
 
-}
+    /* =========================
+       ERROR STATE
+    ========================== */
 
-if(
-[
-"error",
-"failed",
-"failure",
-"denied"
-].includes(value)
-){
+    function showError(message) {
 
-return "error";
+      loadingState.style.display =
+        "none";
 
-}
+      tableContainer.style.display =
+        "none";
 
-return "success";
+      pagination.style.display =
+        "none";
 
-}
+      emptyState.style.display =
+        "none";
 
+      errorState.style.display =
+        "block";
 
-function statusClass(
-status
-){
+      errorState.textContent =
+        message ||
+        "Unable to load adult access logs.";
+    }
 
-if(
-status === "success"
-){
 
-return "success";
+    /* =========================
+       TOAST
+    ========================== */
 
-}
+    function showToast(message) {
 
-if(
-status === "warning"
-){
+      const toast =
+        document.getElementById(
+          "toast"
+        );
 
-return "warning";
 
-}
+      toast.textContent =
+        message;
 
-return "danger";
 
-}
+      toast.classList.add(
+        "show"
+      );
 
 
-function getTime(
-value
-){
+      clearTimeout(
+        window.toastTimer
+      );
 
-if(
-typeof value === "number"
-){
 
-return value;
+      window.toastTimer =
+        setTimeout(
+          () => {
 
-}
+            toast.classList.remove(
+              "show"
+            );
 
+          },
+          3000
+        );
+    }
 
-if(
-value &&
-typeof value === "object" &&
-value.timestamp
-){
 
-return Number(
-value.timestamp
-);
+    /* =========================
+       SEARCH
+    ========================== */
 
-}
+    document
+      .getElementById(
+        "searchInput"
+      )
+      .addEventListener(
+        "input",
+        applyFilters
+      );
 
 
-const time =
-new Date(
-value ||
-0
-)
-.getTime();
+    /* =========================
+       STATUS FILTER
+    ========================== */
 
+    document
+      .getElementById(
+        "statusFilter"
+      )
+      .addEventListener(
+        "change",
+        applyFilters
+      );
 
-return Number.isNaN(
-time
-)
-?
-0
-:
-time;
 
-}
+    /* =========================
+       TYPE FILTER
+    ========================== */
 
+    document
+      .getElementById(
+        "typeFilter"
+      )
+      .addEventListener(
+        "change",
+        applyFilters
+      );
 
-function formatDate(
-value
-){
 
-const time =
-getTime(
-value
-);
+    /* =========================
+       REFRESH
+    ========================== */
 
+    document
+      .getElementById(
+        "refreshBtn"
+      )
+      .addEventListener(
+        "click",
+        loadLogs
+      );
 
-if(
-!time
-){
 
-return "—";
+    /* =========================
+       PREVIOUS PAGE
+    ========================== */
 
-}
+    document
+      .getElementById(
+        "previousBtn"
+      )
+      .addEventListener(
+        "click",
+        () => {
 
+          if (
+            currentPage > 1
+          ) {
 
-return new Date(
-time
-)
-.toLocaleString(
-undefined,
-{
-year:"numeric",
-month:"short",
-day:"numeric",
-hour:"2-digit",
-minute:"2-digit"
-}
-);
+            currentPage--;
 
-}
+            renderTable();
+          }
 
+        }
+      );
 
-function shortDevice(
-value
-){
 
-const text =
-String(
-value ||
-""
-);
+    /* =========================
+       NEXT PAGE
+    ========================== */
 
+    document
+      .getElementById(
+        "nextBtn"
+      )
+      .addEventListener(
+        "click",
+        () => {
 
-if(
-text.length <= 45
-){
+          const totalPages =
+            Math.ceil(
+              filteredLogs.length /
+              pageSize
+            );
 
-return text;
 
-}
+          if (
+            currentPage <
+            totalPages
+          ) {
 
+            currentPage++;
 
-return (
-text.slice(
-0,
-45
-) +
-"..."
-);
+            renderTable();
+          }
 
-}
+        }
+      );
 
 
-function capitalize(
-value
-){
+    /* =========================
+       CLOSE MODAL
+    ========================== */
 
-const text =
-String(
-value ||
-""
-);
+    function closeModal() {
 
+      document
+        .getElementById(
+          "detailsModal"
+        )
+        .classList.remove(
+          "show"
+        );
+    }
 
-return (
 
-text.charAt(0)
-.toUpperCase() +
-text.slice(1)
+    document
+      .getElementById(
+        "closeModal"
+      )
+      .addEventListener(
+        "click",
+        closeModal
+      );
 
-);
 
-}
+    /* =========================
+       CLOSE MODAL OUTSIDE
+    ========================== */
 
+    document
+      .getElementById(
+        "detailsModal"
+      )
+      .addEventListener(
+        "click",
+        (event) => {
 
-function escapeHTML(
-value
-){
+          if (
+            event.target.id ===
+            "detailsModal"
+          ) {
 
-return String(
-value ??
-""
-)
-.replace(
-/&/g,
-"&amp;"
-)
-.replace(
-/</g,
-"&lt;"
-)
-.replace(
-/>/g,
-"&gt;"
-)
-.replace(
-/"/g,
-"&quot;"
-)
-.replace(
-/'/g,
-"&#039;"
-);
+            closeModal();
+          }
 
-}
+        }
+      );
 
 
-/* =========================
-   START
-========================= */
+    /* =========================
+       ESC CLOSE
+    ========================== */
 
-loadLogs();
+    document.addEventListener(
+      "keydown",
+      (event) => {
 
-</script>
+        if (
+          event.key === "Escape"
+        ) {
+
+          closeModal();
+        }
+
+      }
+    );
+
+  </script>
 
 </body>
 </html>
