@@ -689,8 +689,199 @@ function(){
 });
 
 </script>
+<script type="module">
 
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc
+}
+from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+
+/* =========================
+   FIREBASE CONFIG
+========================= */
+
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+  authDomain: "let-s-study-pro-course.firebaseapp.com",
+  databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId: "let-s-study-pro-course",
+  storageBucket: "let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId: "474928293390",
+  appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId: "G-85B7V5H5J0"
+};
+
+
+/* =========================
+   INITIALIZE FIREBASE
+========================= */
+
+const app =
+  initializeApp(firebaseConfig);
+
+const db =
+  getFirestore(app);
+
+
+/* =========================
+   GET ORDER ID
+========================= */
+
+const params =
+  new URLSearchParams(
+    window.location.search
+  );
+
+const orderId =
+  params.get("orderId");
+
+
+/* =========================
+   LOAD PAYMENT
+========================= */
+
+async function loadPayment(){
+
+  if(!orderId){
+
+    console.log(
+      "No order ID provided"
+    );
+
+    return;
+
+  }
+
+  try{
+
+    const orderRef =
+      doc(
+        db,
+        "orders",
+        orderId
+      );
+
+    const snapshot =
+      await getDoc(orderRef);
+
+
+    if(!snapshot.exists()){
+
+      console.log(
+        "Order not found"
+      );
+
+      return;
+
+    }
+
+
+    const order =
+      snapshot.data();
+
+
+    /* PAYMENT STATUS */
+
+    const status =
+      order.paymentStatus ||
+      order.status ||
+      "failed";
+
+
+    /* ORDER ID */
+
+    const orderElement =
+      document.getElementById(
+        "orderId"
+      );
+
+    if(orderElement){
+
+      orderElement.textContent =
+        orderId;
+
+    }
+
+
+    /* AMOUNT */
+
+    const amountElement =
+      document.getElementById(
+        "amount"
+      );
+
+    if(
+      amountElement &&
+      order.amount !== undefined
+    ){
+
+      amountElement.textContent =
+        order.amount + " TZS";
+
+    }
+
+
+    /* PAYMENT METHOD */
+
+    const methodElement =
+      document.getElementById(
+        "paymentMethod"
+      );
+
+    if(
+      methodElement &&
+      order.paymentMethod
+    ){
+
+      methodElement.textContent =
+        order.paymentMethod;
+
+    }
+
+
+    /* STATUS */
+
+    const statusElement =
+      document.getElementById(
+        "paymentStatus"
+      );
+
+    if(statusElement){
+
+      statusElement.textContent =
+        status;
+
+    }
+
+
+  }catch(error){
+
+    console.error(
+      "Firebase error:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =========================
+   START
+========================= */
+
+loadPayment();
+
+</script>
 
 </body>
 
 </html>
+
