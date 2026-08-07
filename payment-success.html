@@ -1,256 +1,596 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 
-<title>Payment Success | LetsStudy Pro</title>
+<title>Payment Success - Lets Study Pro</title>
 
 <style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  font-family:Arial,sans-serif;
+}
 
 body{
-font-family:Arial;
-background:#f5f7fb;
-text-align:center;
+  min-height:100vh;
+  background:#f5f7fb;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
 }
 
-.box{
-
-background:white;
-max-width:500px;
-margin:100px auto;
-padding:40px;
-border-radius:20px;
-
+.card{
+  width:100%;
+  max-width:520px;
+  background:#fff;
+  border-radius:20px;
+  padding:35px 25px;
+  text-align:center;
+  box-shadow:0 10px 40px rgba(0,0,0,.08);
 }
 
-button{
-
-background:#0b57d0;
-color:white;
-border:0;
-padding:12px 20px;
-border-radius:8px;
-
+.icon{
+  width:85px;
+  height:85px;
+  margin:0 auto 20px;
+  border-radius:50%;
+  background:#dcfce7;
+  color:#16a34a;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:48px;
+  font-weight:bold;
 }
 
+h1{
+  color:#166534;
+  font-size:28px;
+  margin-bottom:10px;
+}
+
+.message{
+  color:#64748b;
+  line-height:1.6;
+  margin-bottom:22px;
+}
+
+.status{
+  display:inline-block;
+  background:#dcfce7;
+  color:#166534;
+  padding:7px 14px;
+  border-radius:30px;
+  font-size:12px;
+  font-weight:bold;
+  margin-bottom:22px;
+}
+
+.details{
+  background:#f8fafc;
+  border-radius:12px;
+  padding:18px;
+  text-align:left;
+  margin-bottom:25px;
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  padding:11px 0;
+  border-bottom:1px solid #e5e7eb;
+  font-size:14px;
+}
+
+.row:last-child{
+  border-bottom:0;
+}
+
+.label{
+  color:#64748b;
+}
+
+.value{
+  color:#172033;
+  font-weight:bold;
+  text-align:right;
+  word-break:break-word;
+}
+
+.buttons{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.btn{
+  flex:1;
+  min-width:150px;
+  padding:13px;
+  border-radius:9px;
+  text-decoration:none;
+  font-weight:bold;
+}
+
+.primary{
+  background:#2563eb;
+  color:#fff;
+}
+
+.secondary{
+  background:#e5e7eb;
+  color:#172033;
+}
+
+.loading .icon{
+  background:#e0f2fe;
+  color:#0284c7;
+}
+
+.loading h1{
+  color:#0369a1;
+}
+
+.loading .status{
+  background:#e0f2fe;
+  color:#0369a1;
+}
+
+.failed .icon{
+  background:#fee2e2;
+  color:#dc2626;
+}
+
+.failed h1{
+  color:#991b1b;
+}
+
+.failed .status{
+  background:#fee2e2;
+  color:#991b1b;
+}
 </style>
-
 </head>
-
 
 <body>
 
+<div class="card" id="card">
 
-<div class="box">
+  <div class="icon" id="icon">✓</div>
 
-<h1>
-✅ Payment Successful
-</h1>
+  <h1 id="title">
+    Payment Successful!
+  </h1>
 
+  <p class="message" id="message">
+    Your payment has been successfully confirmed.
+    Your purchased content is now available.
+  </p>
 
-<p>
-Your course access is being activated...
-</p>
+  <span class="status" id="status">
+    PAYMENT SUCCESS
+  </span>
 
+  <div class="details">
 
-<button onclick="goCourses()">
+    <div class="row">
+      <span class="label">Amount</span>
+      <span class="value" id="amount">-</span>
+    </div>
 
-Start Learning
+    <div class="row">
+      <span class="label">Transaction ID</span>
+      <span class="value" id="transactionId">-</span>
+    </div>
 
-</button>
+    <div class="row">
+      <span class="label">Order ID</span>
+      <span class="value" id="orderId">-</span>
+    </div>
 
+    <div class="row">
+      <span class="label">Status</span>
+      <span class="value" id="paymentStatus">
+        SUCCESS
+      </span>
+    </div>
+
+    <div class="row">
+      <span class="label">Date</span>
+      <span class="value" id="date">-</span>
+    </div>
+
+  </div>
+
+  <div class="buttons">
+
+    <a
+      href="dashboard.html"
+      class="btn primary">
+      Go to Dashboard
+    </a>
+
+    <a
+      href="courses.html"
+      class="btn secondary">
+      My Courses
+    </a>
+
+  </div>
 
 </div>
 
 
+<script>
 
-
-
-<script type="module">
-
-
-import {
-
-auth,
-db
-
-}
-
-from "./assets/js/firebase.js";
-
-
-import {
-
-onAuthStateChanged
-
-}
-
-from
-
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-
-
-import {
-
-collection,
-addDoc,
-serverTimestamp
-
-}
-
-from
-
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-
-
-
+/*
+========================================================
+PESAPAL CALLBACK DATA
+========================================================
+*/
 
 const params =
 new URLSearchParams(
-location.search
+  window.location.search
 );
 
+const trackingId =
+params.get("OrderTrackingId") ||
+params.get("orderTrackingId") ||
+params.get("transactionId") ||
+"";
 
-const courseId =
-params.get("courseId");
-
-
-const amount =
-Number(
-params.get("amount") || 0
-);
-
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
-  authDomain: "let-s-study-pro-course.firebaseapp.com",
-  databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
-  projectId: "let-s-study-pro-course",
-  storageBucket: "let-s-study-pro-course.firebasestorage.app",
-  messagingSenderId: "474928293390",
-  appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
-  measurementId: "G-85B7V5H5J0"
-};
-
-onAuthStateChanged(
-
-auth,
-
-async(user)=>{
+const merchantReference =
+params.get("OrderMerchantReference") ||
+params.get("orderId") ||
+"";
 
 
-if(!user){
+/*
+========================================================
+DISPLAY DATA
+========================================================
+*/
 
-location.href="login.html";
+document.getElementById(
+  "transactionId"
+).textContent =
+trackingId || "-";
 
-return;
+document.getElementById(
+  "orderId"
+).textContent =
+merchantReference || "-";
+
+document.getElementById(
+  "date"
+).textContent =
+new Date().toLocaleString("en-TZ");
+
+
+/*
+========================================================
+AUTO VERIFY
+========================================================
+
+Change this URL to your deployed backend.
+
+Example:
+
+https://payment-api.letsstudy.pro
+*/
+
+const API =
+"https://YOUR-PAYMENT-API-DOMAIN.com";
+
+
+async function verifyPayment(){
+
+  /*
+  If no tracking ID exists,
+  do not pretend payment succeeded.
+  */
+
+  if(!trackingId){
+
+    showFailed(
+      "Payment tracking ID was not received."
+    );
+
+    return;
+  }
+
+
+  if(!merchantReference){
+
+    showFailed(
+      "Order reference was not received."
+    );
+
+    return;
+  }
+
+
+  try{
+
+    /*
+    Call backend.
+
+    Backend must query Pesapal
+    and return COMPLETED only when
+    the payment is actually confirmed.
+    */
+
+    const response =
+    await fetch(
+      API +
+      "/api/payment-status?" +
+      new URLSearchParams({
+
+        OrderTrackingId:
+          trackingId,
+
+        OrderMerchantReference:
+          merchantReference
+
+      })
+    );
+
+
+    const result =
+    await response.json();
+
+
+    console.log(
+      "Payment verification:",
+      result
+    );
+
+
+    /*
+    SUCCESS
+    */
+
+    if(
+      result.success === true &&
+      String(result.status)
+        .toUpperCase() ===
+      "COMPLETED"
+    ){
+
+      showSuccess(result);
+
+      return;
+    }
+
+
+    /*
+    PENDING
+    */
+
+    if(
+      String(result.status)
+        .toUpperCase() ===
+      "PENDING"
+    ){
+
+      showPending();
+
+      return;
+    }
+
+
+    /*
+    FAILED
+    */
+
+    showFailed(
+      result.message ||
+      "Payment was not completed."
+    );
+
+
+  }catch(error){
+
+    console.error(error);
+
+    showFailed(
+      "Unable to verify payment. Please try again."
+    );
+
+  }
 
 }
 
 
+/*
+========================================================
+SUCCESS
+========================================================
+*/
 
-const payment = await addDoc(
+function showSuccess(result){
 
-collection(
-db,
-"payments"
-),
+  const card =
+  document.getElementById("card");
 
-{
-
-userId:user.uid,
-
-courseId,
-
-amount,
-
-status:"success",
-
-createdAt:
-serverTimestamp()
-
-}
-
-);
+  card.className =
+  "card";
 
 
+  document.getElementById(
+    "icon"
+  ).textContent =
+  "✓";
 
 
+  document.getElementById(
+    "title"
+  ).textContent =
+  "Payment Successful!";
 
 
-await addDoc(
-
-collection(
-db,
-"orders"
-),
-
-{
-
-userId:user.uid,
-
-courseId,
-
-amount,
-
-paymentId:
-payment.id,
-
-status:"completed",
-
-createdAt:
-serverTimestamp()
-
-}
-
-);
+  document.getElementById(
+    "message"
+  ).textContent =
+  "Payment confirmed successfully. Your purchased content is now available.";
 
 
+  document.getElementById(
+    "status"
+  ).textContent =
+  "PAYMENT SUCCESS";
 
 
+  document.getElementById(
+    "paymentStatus"
+  ).textContent =
+  "SUCCESS";
 
 
-await addDoc(
+  if(result.amount){
 
-collection(
-db,
-"enrollments"
-),
+    document.getElementById(
+      "amount"
+    ).textContent =
+    "TZS " +
+    Number(
+      result.amount
+    ).toLocaleString("en-TZ");
 
-{
+  }
 
-userId:user.uid,
 
-courseId,
+  document.getElementById(
+    "transactionId"
+  ).textContent =
+  result.transactionId ||
+  trackingId;
 
-status:"active",
 
-createdAt:
-serverTimestamp()
+  document.getElementById(
+    "orderId"
+  ).textContent =
+  result.orderId ||
+  merchantReference;
+
+
+  document.getElementById(
+    "date"
+  ).textContent =
+  new Date().toLocaleString("en-TZ");
 
 }
 
-);
+
+/*
+========================================================
+PENDING
+========================================================
+*/
+
+function showPending(){
+
+  const card =
+  document.getElementById("card");
+
+  card.className =
+  "card loading";
 
 
-
-});
-
-
-
-
+  document.getElementById(
+    "icon"
+  ).textContent =
+  "...";
 
 
-window.goCourses=function(){
+  document.getElementById(
+    "title"
+  ).textContent =
+  "Payment Pending";
 
-location.href="my-courses.html";
+
+  document.getElementById(
+    "message"
+  ).textContent =
+  "Your payment is being verified. Please wait while we confirm the transaction.";
+
+
+  document.getElementById(
+    "status"
+  ).textContent =
+  "PENDING";
+
+
+  document.getElementById(
+    "paymentStatus"
+  ).textContent =
+  "PENDING";
 
 }
 
+
+/*
+========================================================
+FAILED
+========================================================
+*/
+
+function showFailed(message){
+
+  const card =
+  document.getElementById("card");
+
+  card.className =
+  "card failed";
+
+
+  document.getElementById(
+    "icon"
+  ).textContent =
+  "×";
+
+
+  document.getElementById(
+    "title"
+  ).textContent =
+  "Payment Failed";
+
+
+  document.getElementById(
+    "message"
+  ).textContent =
+  message;
+
+
+  document.getElementById(
+    "status"
+  ).textContent =
+  "FAILED";
+
+
+  document.getElementById(
+    "paymentStatus"
+  ).textContent =
+  "FAILED";
+
+}
+
+
+/*
+========================================================
+START
+========================================================
+*/
+
+verifyPayment();
 
 </script>
 
-
 </body>
-
 </html>
