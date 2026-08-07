@@ -1816,56 +1816,30 @@ dateStyle:"medium"
    AUTH + ADMIN CHECK
 ============================================ */
 
-onAuthStateChanged(
-auth,
-(user)=>{
+onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+        window.location.href = "login.html";
+        return;
+    }
 
-if(user){
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
 
-checkAdmin(user);
+    if (!userSnap.exists()) {
+        window.location.href = "access-denied.html";
+        return;
+    }
 
-}else{
+    const userData = userSnap.data();
 
-location.href="auth.html";
+    if (userData.role !== "admin" && userData.role !== "superadmin") {
+        window.location.href = "access-denied.html";
+        return;
+    }
 
-}
-
+    // Admin page inaendelea hapa
+    document.body.style.display = "block";
 });
-
-
-/*
-Only the specified UID can
-open this admin dashboard.
-*/
-
-if(
-user.uid !== ADMIN_UID
-){
-
-document.getElementById(
-"main"
-).style.display="none";
-
-document.getElementById(
-"denied"
-).style.display="flex";
-
-return;
-
-}
-
-
-document.getElementById(
-"adminUser"
-).textContent =
-user.email ||
-"Administrator";
-
-
-await loadDashboard();
-
-});
-
 
 /* ============================================
    LOAD DASHBOARD
