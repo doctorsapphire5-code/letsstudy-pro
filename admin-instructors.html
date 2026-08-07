@@ -1401,3 +1401,1421 @@ unsubscribe = onValue(
   }
 
 );
+
+/* =========================
+   SORT INSTRUCTORS
+========================= */
+
+function sortInstructors() {
+
+  instructors.sort(
+    (a, b) => {
+
+      const dateA =
+        getTimestamp(a);
+
+      const dateB =
+        getTimestamp(b);
+
+      return dateB - dateA;
+
+    }
+  );
+
+}
+
+
+/* =========================
+   UPDATE STATISTICS
+========================= */
+
+function updateStatistics() {
+
+  const total =
+    instructors.length;
+
+  const active =
+    instructors.filter(
+      instructor =>
+        getStatus(instructor) ===
+        "active"
+    ).length;
+
+  const pending =
+    instructors.filter(
+      instructor =>
+        getStatus(instructor) ===
+        "pending"
+    ).length;
+
+  const blocked =
+    instructors.filter(
+      instructor =>
+        getStatus(instructor) ===
+        "blocked"
+    ).length;
+
+
+  setText(
+    "totalInstructors",
+    formatNumber(total)
+  );
+
+  setText(
+    "activeInstructors",
+    formatNumber(active)
+  );
+
+  setText(
+    "pendingInstructors",
+    formatNumber(pending)
+  );
+
+  setText(
+    "blockedInstructors",
+    formatNumber(blocked)
+  );
+
+}
+
+
+/* =========================
+   APPLY FILTERS
+========================= */
+
+function applyFilters() {
+
+  const query =
+    String(
+      searchInput.value || ""
+    )
+      .trim()
+      .toLowerCase();
+
+
+  const selectedStatus =
+    statusFilter.value;
+
+
+  filteredInstructors =
+    instructors.filter(
+      instructor => {
+
+        const searchable = [
+
+          instructor.id,
+
+          instructor.uid,
+
+          instructor.userId,
+
+          instructor.name,
+
+          instructor.fullName,
+
+          instructor.displayName,
+
+          instructor.email,
+
+          instructor.userEmail,
+
+          instructor.subject,
+
+          instructor.specialization,
+
+          instructor.category,
+
+          instructor.bio,
+
+          instructor.phone
+
+        ]
+          .filter(
+            value =>
+              value !== null &&
+              value !== undefined
+          )
+          .join(" ")
+          .toLowerCase();
+
+
+        const matchesSearch =
+          !query ||
+          searchable.includes(
+            query
+          );
+
+
+        const instructorStatus =
+          getStatus(
+            instructor
+          );
+
+
+        const matchesStatus =
+          selectedStatus ===
+            "all" ||
+          instructorStatus ===
+            selectedStatus;
+
+
+        return (
+          matchesSearch &&
+          matchesStatus
+        );
+
+      }
+    );
+
+
+  currentPage = 1;
+
+  renderInstructors();
+
+}
+
+
+/* =========================
+   RENDER INSTRUCTORS
+========================= */
+
+function renderInstructors() {
+
+  const total =
+    filteredInstructors.length;
+
+
+  setText(
+    "resultCount",
+    `${formatNumber(total)}
+     instructor${total === 1 ? "" : "s"}`
+  );
+
+
+  if (
+    total === 0
+  ) {
+
+    instructorsBody.innerHTML = `
+
+      <tr>
+
+        <td
+          colspan="7"
+          class="empty"
+        >
+
+          <strong>
+            No instructors found
+          </strong>
+
+          <br>
+
+          <small>
+            Try changing your search
+            or status filter.
+          </small>
+
+        </td>
+
+      </tr>
+
+    `;
+
+
+    updatePagination(0);
+
+    return;
+
+  }
+
+
+  const totalPages =
+    Math.ceil(
+      total / pageSize
+    );
+
+
+  if (
+    currentPage >
+    totalPages
+  ) {
+
+    currentPage =
+      totalPages;
+
+  }
+
+
+  const start =
+    (
+      currentPage - 1
+    ) *
+    pageSize;
+
+
+  const end =
+    start +
+    pageSize;
+
+
+  const pageItems =
+    filteredInstructors.slice(
+      start,
+      end
+    );
+
+
+  instructorsBody.innerHTML =
+    pageItems
+      .map(
+        createInstructorRow
+      )
+      .join("");
+
+
+  updatePagination(
+    totalPages
+  );
+
+}
+
+
+/* =========================
+   CREATE TABLE ROW
+========================= */
+
+function createInstructorRow(
+  instructor
+) {
+
+  const name =
+    instructor.name ||
+    instructor.fullName ||
+    instructor.displayName ||
+    "Unknown Instructor";
+
+
+  const email =
+    instructor.email ||
+    instructor.userEmail ||
+    "No email";
+
+
+  const subject =
+    instructor.subject ||
+    instructor.specialization ||
+    instructor.category ||
+    "Not specified";
+
+
+  const courses =
+    instructor.coursesCount ??
+    instructor.courseCount ??
+    getCollectionCount(
+      instructor.courses
+    );
+
+
+  const students =
+    instructor.studentsCount ??
+    instructor.studentCount ??
+    getCollectionCount(
+      instructor.students
+    );
+
+
+  const status =
+    getStatus(
+      instructor
+    );
+
+
+  const joined =
+    formatDate(
+      getTimestamp(
+        instructor
+      )
+    );
+
+
+  const initial =
+    name
+      .charAt(0)
+      .toUpperCase();
+
+
+  return `
+
+    <tr>
+
+      <td>
+
+        <div class="user-cell">
+
+          <div class="user-avatar">
+
+            ${escapeHtml(
+              initial
+            )}
+
+          </div>
+
+
+          <div class="user-info">
+
+            <strong>
+
+              ${escapeHtml(
+                name
+              )}
+
+            </strong>
+
+
+            <small>
+
+              ${escapeHtml(
+                email
+              )}
+
+            </small>
+
+          </div>
+
+        </div>
+
+      </td>
+
+
+      <td>
+
+        ${escapeHtml(
+          subject
+        )}
+
+      </td>
+
+
+      <td>
+
+        ${escapeHtml(
+          courses
+        )}
+
+      </td>
+
+
+      <td>
+
+        ${escapeHtml(
+          students
+        )}
+
+      </td>
+
+
+      <td>
+
+        <span
+          class="badge
+          ${statusClass(status)}"
+        >
+
+          ${escapeHtml(
+            status
+          )}
+
+        </span>
+
+      </td>
+
+
+      <td>
+
+        ${escapeHtml(
+          joined
+        )}
+
+      </td>
+
+
+      <td>
+
+        <div class="actions">
+
+          <button
+            type="button"
+            class="action-btn"
+            data-action="view"
+            data-id="${escapeHtml(
+              instructor.id
+            )}"
+          >
+
+            View
+
+          </button>
+
+        </div>
+
+      </td>
+
+    </tr>
+
+  `;
+
+}
+
+
+/* =========================
+   VIEW BUTTON
+========================= */
+
+instructorsBody.addEventListener(
+  "click",
+  event => {
+
+    const button =
+      event.target.closest(
+        "[data-action='view']"
+      );
+
+
+    if (
+      !button
+    ) {
+
+      return;
+
+    }
+
+
+    const id =
+      button.dataset.id;
+
+
+    const instructor =
+      instructors.find(
+        item =>
+          String(item.id) ===
+          String(id)
+      );
+
+
+    if (
+      instructor
+    ) {
+
+      openInstructorDetails(
+        instructor
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================
+   INSTRUCTOR DETAILS
+========================= */
+
+function openInstructorDetails(
+  instructor
+) {
+
+  const content =
+    document.getElementById(
+      "detailsContent"
+    );
+
+
+  const entries =
+    Object.entries(
+      instructor
+    );
+
+
+  if (
+    entries.length === 0
+  ) {
+
+    content.innerHTML = `
+
+      <div class="detail">
+
+        <div class="detail-value">
+          No instructor information.
+        </div>
+
+      </div>
+
+    `;
+
+  }
+  else {
+
+    content.innerHTML =
+      entries
+        .map(
+          ([key, value]) => {
+
+            return `
+
+              <div class="detail">
+
+                <div class="detail-label">
+
+                  ${escapeHtml(
+                    humanize(key)
+                  )}
+
+                </div>
+
+
+                <div class="detail-value">
+
+                  ${escapeHtml(
+                    formatValue(value)
+                  )}
+
+                </div>
+
+              </div>
+
+            `;
+
+          }
+        )
+        .join("");
+
+  }
+
+
+  document
+    .getElementById(
+      "detailsModal"
+    )
+    .classList.add(
+      "show"
+    );
+
+}
+
+
+/* =========================
+   CLOSE MODAL
+========================= */
+
+function closeModal() {
+
+  document
+    .getElementById(
+      "detailsModal"
+    )
+    .classList.remove(
+      "show"
+    );
+
+}
+
+
+document
+  .getElementById(
+    "closeModalBtn"
+  )
+  .addEventListener(
+    "click",
+    closeModal
+  );
+
+
+document
+  .getElementById(
+    "detailsModal"
+  )
+  .addEventListener(
+    "click",
+    event => {
+
+      if (
+        event.target.id ===
+        "detailsModal"
+      ) {
+
+        closeModal();
+
+      }
+
+    }
+  );
+
+
+document.addEventListener(
+  "keydown",
+  event => {
+
+    if (
+      event.key ===
+      "Escape"
+    ) {
+
+      closeModal();
+
+    }
+
+  }
+);
+
+
+/* =========================
+   GET STATUS
+========================= */
+
+function getStatus(
+  instructor
+) {
+
+  const status =
+    String(
+      instructor.status ||
+      instructor.accountStatus ||
+      instructor.approvalStatus ||
+      instructor.state ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+
+
+  if (
+    [
+      "active",
+      "approved",
+      "verified",
+      "enabled"
+    ].includes(
+      status
+    )
+  ) {
+
+    return "active";
+
+  }
+
+
+  if (
+    [
+      "pending",
+      "review",
+      "processing"
+    ].includes(
+      status
+    )
+  ) {
+
+    return "pending";
+
+  }
+
+
+  if (
+    [
+      "blocked",
+      "suspended",
+      "disabled",
+      "banned"
+    ].includes(
+      status
+    )
+  ) {
+
+    return "blocked";
+
+  }
+
+
+  return status ||
+    "unknown";
+
+}
+
+
+/* =========================
+   STATUS CLASS
+========================= */
+
+function statusClass(
+  status
+) {
+
+  if (
+    status ===
+    "active"
+  ) {
+
+    return "badge-active";
+
+  }
+
+
+  if (
+    status ===
+    "pending"
+  ) {
+
+    return "badge-pending";
+
+  }
+
+
+  if (
+    status ===
+    "blocked"
+  ) {
+
+    return "badge-blocked";
+
+  }
+
+
+  return "badge-neutral";
+
+}
+
+
+/* =========================
+   COLLECTION COUNT
+========================= */
+
+function getCollectionCount(
+  value
+) {
+
+  if (
+    Array.isArray(value)
+  ) {
+
+    return value.length;
+
+  }
+
+
+  if (
+    value &&
+    typeof value ===
+    "object"
+  ) {
+
+    return Object.keys(
+      value
+    ).length;
+
+  }
+
+
+  return 0;
+
+}
+
+
+/* =========================
+   TIMESTAMP
+========================= */
+
+function getTimestamp(
+  instructor
+) {
+
+  const value =
+    instructor.createdAt ??
+    instructor.joinedAt ??
+    instructor.registrationDate ??
+    instructor.registeredAt ??
+    instructor.timestamp ??
+    instructor.updatedAt ??
+    instructor.date;
+
+
+  if (
+    value === null ||
+    value === undefined
+  ) {
+
+    return 0;
+
+  }
+
+
+  if (
+    typeof value ===
+    "number"
+  ) {
+
+    return value <
+      10000000000
+      ? value * 1000
+      : value;
+
+  }
+
+
+  if (
+    typeof value ===
+    "object"
+  ) {
+
+    if (
+      typeof value.toMillis ===
+      "function"
+    ) {
+
+      return value.toMillis();
+
+    }
+
+
+    if (
+      typeof value.seconds ===
+      "number"
+    ) {
+
+      return (
+        value.seconds *
+        1000
+      );
+
+    }
+
+  }
+
+
+  const parsed =
+    Date.parse(
+      String(value)
+    );
+
+
+  return Number.isNaN(
+    parsed
+  )
+    ? 0
+    : parsed;
+
+}
+
+
+/* =========================
+   FORMAT DATE
+========================= */
+
+function formatDate(
+  timestamp
+) {
+
+  if (
+    !timestamp
+  ) {
+
+    return "Unknown";
+
+  }
+
+
+  const date =
+    new Date(
+      timestamp
+    );
+
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+
+    return "Unknown";
+
+  }
+
+
+  return new Intl.DateTimeFormat(
+    undefined,
+    {
+      dateStyle:
+        "medium"
+    }
+  ).format(
+    date
+  );
+
+}
+
+
+/* =========================
+   FORMAT VALUE
+========================= */
+
+function formatValue(
+  value
+) {
+
+  if (
+    value === null ||
+    value === undefined
+  ) {
+
+    return "—";
+
+  }
+
+
+  if (
+    typeof value ===
+    "object"
+  ) {
+
+    try {
+
+      return JSON.stringify(
+        value
+      );
+
+    }
+    catch {
+
+      return String(
+        value
+      );
+
+    }
+
+  }
+
+
+  return String(
+    value
+  );
+
+}
+
+
+/* =========================
+   HUMANIZE KEY
+========================= */
+
+function humanize(
+  key
+) {
+
+  return String(
+    key
+  )
+    .replace(
+      /([A-Z])/g,
+      " $1"
+    )
+    .replace(
+      /[_-]/g,
+      " "
+    )
+    .replace(
+      /^\w/,
+      letter =>
+        letter.toUpperCase()
+    );
+
+}
+
+
+/* =========================
+   PAGINATION
+========================= */
+
+function updatePagination(
+  totalPages
+) {
+
+  const previous =
+    document.getElementById(
+      "previousBtn"
+    );
+
+  const next =
+    document.getElementById(
+      "nextBtn"
+    );
+
+  const info =
+    document.getElementById(
+      "paginationInfo"
+    );
+
+
+  info.textContent =
+    totalPages
+      ? `Page ${currentPage}
+         of ${totalPages}`
+      : "Page 0";
+
+
+  previous.disabled =
+    currentPage <= 1;
+
+
+  next.disabled =
+    totalPages === 0 ||
+    currentPage >=
+      totalPages;
+
+}
+
+
+/* =========================
+   PREVIOUS
+========================= */
+
+document
+  .getElementById(
+    "previousBtn"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      if (
+        currentPage >
+        1
+      ) {
+
+        currentPage--;
+
+        renderInstructors();
+
+      }
+
+    }
+  );
+
+
+/* =========================
+   NEXT
+========================= */
+
+document
+  .getElementById(
+    "nextBtn"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      const totalPages =
+        Math.ceil(
+          filteredInstructors.length /
+          pageSize
+        );
+
+
+      if (
+        currentPage <
+        totalPages
+      ) {
+
+        currentPage++;
+
+        renderInstructors();
+
+      }
+
+    }
+  );
+
+
+/* =========================
+   SEARCH
+========================= */
+
+searchInput.addEventListener(
+  "input",
+  debounce(
+    () => {
+
+      applyFilters();
+
+    },
+    250
+  )
+);
+
+
+/* =========================
+   STATUS FILTER
+========================= */
+
+statusFilter.addEventListener(
+  "change",
+  () => {
+
+    applyFilters();
+
+  }
+);
+
+
+/* =========================
+   CLEAR FILTERS
+========================= */
+
+document
+  .getElementById(
+    "clearBtn"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      searchInput.value =
+        "";
+
+      statusFilter.value =
+        "all";
+
+      currentPage =
+        1;
+
+      applyFilters();
+
+    }
+  );
+
+
+/* =========================
+   REFRESH
+========================= */
+
+document
+  .getElementById(
+    "refreshBtn"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      loadInstructors();
+
+      showToast(
+        "Refreshing instructors..."
+      );
+
+    }
+  );
+
+
+/* =========================
+   SET TEXT
+========================= */
+
+function setText(
+  id,
+  value
+) {
+
+  const element =
+    document.getElementById(
+      id
+    );
+
+
+  if (
+    element
+  ) {
+
+    element.textContent =
+      value;
+
+  }
+
+}
+
+
+/* =========================
+   FORMAT NUMBER
+========================= */
+
+function formatNumber(
+  value
+) {
+
+  return new Intl.NumberFormat()
+    .format(
+      Number(value) || 0
+    );
+
+}
+
+
+/* =========================
+   ESCAPE HTML
+========================= */
+
+function escapeHtml(
+  value
+) {
+
+  return String(
+    value ?? ""
+  )
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+
+}
+
+
+/* =========================
+   DEBOUNCE
+========================= */
+
+function debounce(
+  callback,
+  delay
+) {
+
+  let timer;
+
+
+  return (
+    ...args
+  ) => {
+
+    clearTimeout(
+      timer
+    );
+
+
+    timer =
+      setTimeout(
+        () => {
+
+          callback(
+            ...args
+          );
+
+        },
+        delay
+      );
+
+  };
+
+}
+
+
+/* =========================
+   LOADING
+========================= */
+
+function showLoading() {
+
+  loadingScreen.style.display =
+    "grid";
+
+}
+
+
+function hideLoading() {
+
+  loadingScreen.style.display =
+    "none";
+
+}
+
+
+/* =========================
+   TOAST
+========================= */
+
+let toastTimer;
+
+
+function showToast(
+  message
+) {
+
+  const toast =
+    document.getElementById(
+      "toast"
+    );
+
+
+  toast.textContent =
+    message;
+
+
+  toast.classList.add(
+    "show"
+  );
+
+
+  clearTimeout(
+    toastTimer
+  );
+
+
+  toastTimer =
+    setTimeout(
+      () => {
+
+        toast.classList.remove(
+          "show"
+        );
+
+      },
+      3000
+    );
+
+}
+
+
+/* =========================
+   CLEANUP
+========================= */
+
+window.addEventListener(
+  "beforeunload",
+  () => {
+
+    if (
+      unsubscribe
+    ) {
+
+      unsubscribe();
+
+    }
+
+  }
+);
+
+</script>
+
+</body>
+
+</html>
