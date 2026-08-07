@@ -1,803 +1,1403 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
 
-<title>Admin Instructors | LetsStudy Pro</title>
+  <meta charset="UTF-8">
 
-<meta name="description"
-content="LetsStudy Pro Admin Instructor Management">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-<link rel="icon"
-href="https://letsstudy.pro/favicon.png">
+  <title>
+    Admin Instructors | LetsStudy Pro
+  </title>
 
-<style>
-*{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
-}
+  <style>
 
-body{
-  font-family:Inter,system-ui,sans-serif;
-  background:#f8fafc;
-  color:#0f172a;
-}
+    * {
+      box-sizing: border-box;
+    }
 
-header{
-  background:#fff;
-  border-bottom:1px solid #e2e8f0;
-  position:sticky;
-  top:0;
-  z-index:100;
-}
+    body {
+      margin: 0;
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      background: #f5f7fb;
+      color: #172033;
+    }
 
-.nav{
-  max-width:1200px;
-  margin:auto;
-  min-height:70px;
-  padding:0 20px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-}
+    button,
+    input,
+    select {
+      font: inherit;
+    }
 
-.logo{
-  font-weight:900;
-  color:#0b57d0;
-  font-size:20px;
-}
+    button {
+      cursor: pointer;
+    }
 
-.back{
-  text-decoration:none;
-  color:#475569;
-  font-weight:700;
-}
+    .loading-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      background: #ffffff;
+    }
 
-.container{
-  width:min(1200px,92%);
-  margin:35px auto;
-}
+    .spinner {
+      width: 46px;
+      height: 46px;
+      border: 4px solid #e5e7eb;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
 
-h1{
-  font-size:32px;
-  margin-bottom:8px;
-}
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
 
-.subtitle{
-  color:#64748b;
-  margin-bottom:25px;
-}
+    .layout {
+      min-height: 100vh;
+    }
 
-.stats{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:15px;
-  margin-bottom:25px;
-}
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 250px;
+      padding: 22px 15px;
+      background: #111827;
+      color: #fff;
+      overflow-y: auto;
+    }
 
-.stat{
-  background:#fff;
-  border:1px solid #e2e8f0;
-  border-radius:16px;
-  padding:22px;
-}
+    .brand {
+      padding: 0 10px;
+      margin-bottom: 28px;
+      font-size: 21px;
+      font-weight: 800;
+    }
 
-.stat strong{
-  display:block;
-  font-size:28px;
-  color:#0b57d0;
-}
+    .brand span {
+      color: #60a5fa;
+    }
 
-.stat span{
-  color:#64748b;
-  font-size:13px;
-}
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
 
-.toolbar{
-  background:#fff;
-  border:1px solid #e2e8f0;
-  border-radius:16px;
-  padding:18px;
-  display:flex;
-  gap:12px;
-  margin-bottom:20px;
-}
+    .nav a {
+      display: block;
+      padding: 11px 13px;
+      border-radius: 9px;
+      color: #cbd5e1;
+      text-decoration: none;
+      transition: .2s;
+    }
 
-input{
-  width:100%;
-  padding:12px 14px;
-  border:1px solid #cbd5e1;
-  border-radius:10px;
-  outline:none;
-}
+    .nav a:hover,
+    .nav a.active {
+      color: #fff;
+      background: #1e293b;
+    }
 
-input:focus{
-  border-color:#0b57d0;
-}
+    .main {
+      margin-left: 250px;
+      padding: 28px;
+    }
 
-.btn{
-  border:0;
-  border-radius:10px;
-  padding:12px 18px;
-  background:#0b57d0;
-  color:#fff;
-  font-weight:700;
-  cursor:pointer;
-}
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 26px;
+    }
 
-.table-box{
-  background:#fff;
-  border:1px solid #e2e8f0;
-  border-radius:16px;
-  overflow:auto;
-}
+    .title h1 {
+      margin: 0 0 5px;
+      font-size: 28px;
+    }
 
-table{
-  width:100%;
-  border-collapse:collapse;
-  min-width:800px;
-}
+    .title p {
+      margin: 0;
+      color: #64748b;
+    }
 
-th,
-td{
-  padding:15px;
-  text-align:left;
-  border-bottom:1px solid #e2e8f0;
-}
+    .admin-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-th{
-  background:#f8fafc;
-  font-size:13px;
-}
+    .avatar {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #2563eb;
+      color: #fff;
+      font-weight: 800;
+    }
 
-td{
-  font-size:14px;
-}
+    .admin-email {
+      display: block;
+      margin-top: 2px;
+      color: #64748b;
+      font-size: 12px;
+    }
 
-.badge{
-  display:inline-block;
-  padding:5px 9px;
-  border-radius:999px;
-  font-size:11px;
-  font-weight:800;
-}
+    .stats {
+      display: grid;
+      grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+      gap: 17px;
+      margin-bottom: 22px;
+    }
 
-.active{
-  background:#dcfce7;
-  color:#166534;
-}
+    .stat {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow:
+        0 5px 20px rgba(
+          15,
+          23,
+          42,
+          .04
+        );
+    }
 
-.inactive{
-  background:#fee2e2;
-  color:#991b1b;
-}
+    .stat-label {
+      margin-bottom: 8px;
+      color: #64748b;
+      font-size: 13px;
+    }
 
-.actions{
-  display:flex;
-  gap:6px;
-}
+    .stat-value {
+      font-size: 28px;
+      font-weight: 800;
+    }
 
-.action{
-  border:0;
-  padding:7px 10px;
-  border-radius:7px;
-  cursor:pointer;
-  font-size:12px;
-  font-weight:700;
-}
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 16px;
+      margin-bottom: 18px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+    }
 
-.view{
-  background:#e0f2fe;
-  color:#0369a1;
-}
+    .search {
+      flex: 1;
+      min-width: 230px;
+      height: 42px;
+      padding: 0 13px;
+      border: 1px solid #dbe1ea;
+      border-radius: 8px;
+      outline: none;
+    }
 
-.edit{
-  background:#fef3c7;
-  color:#92400e;
-}
+    .search:focus {
+      border-color: #2563eb;
+    }
 
-.delete{
-  background:#fee2e2;
-  color:#b91c1c;
-}
+    .select {
+      height: 42px;
+      padding: 0 12px;
+      border: 1px solid #dbe1ea;
+      border-radius: 8px;
+      background: #fff;
+      outline: none;
+    }
 
-.empty{
-  text-align:center;
-  padding:40px;
-  color:#64748b;
-}
+    .btn {
+      min-height: 42px;
+      padding: 0 16px;
+      border: 0;
+      border-radius: 8px;
+      font-weight: 700;
+    }
 
-@media(max-width:700px){
+    .btn-primary {
+      background: #2563eb;
+      color: #fff;
+    }
 
-  .stats{
-    grid-template-columns:repeat(2,1fr);
-  }
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #172033;
+    }
 
-  .toolbar{
-    flex-direction:column;
-  }
+    .btn-danger {
+      background: #fee2e2;
+      color: #991b1b;
+    }
 
-  h1{
-    font-size:26px;
-  }
-}
-</style>
+    .table-card {
+      overflow: hidden;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+    }
+
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 18px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .table-header strong {
+      font-size: 17px;
+    }
+
+    .result-count {
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      min-width: 950px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid #edf0f4;
+    }
+
+    th {
+      background: #f8fafc;
+      color: #64748b;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    td {
+      font-size: 14px;
+    }
+
+    .user-cell {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      flex: 0 0 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #dbeafe;
+      color: #1d4ed8;
+      font-weight: 800;
+    }
+
+    .user-info strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .user-info small {
+      color: #94a3b8;
+    }
+
+    .badge {
+      display: inline-flex;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .badge-active {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .badge-pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-blocked {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .badge-neutral {
+      background: #e2e8f0;
+      color: #475569;
+    }
+
+    .actions {
+      display: flex;
+      gap: 7px;
+    }
+
+    .action-btn {
+      padding: 7px 10px;
+      border: 1px solid #dbe1ea;
+      border-radius: 7px;
+      background: #fff;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .action-btn:hover {
+      background: #f8fafc;
+    }
+
+    .empty {
+      padding: 45px 20px;
+      text-align: center;
+      color: #64748b;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 9px;
+      padding: 16px;
+    }
+
+    .pagination button {
+      padding: 8px 13px;
+      border: 1px solid #dbe1ea;
+      border-radius: 7px;
+      background: #fff;
+    }
+
+    .pagination button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 5000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(
+        15,
+        23,
+        42,
+        .55
+      );
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-box {
+      width: min(
+        650px,
+        100%
+      );
+      max-height: 90vh;
+      overflow-y: auto;
+      background: #fff;
+      border-radius: 16px;
+      padding: 23px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 21px;
+    }
+
+    .close {
+      border: 0;
+      background: transparent;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .detail {
+      padding: 13px;
+      border: 1px solid #e5e7eb;
+      border-radius: 9px;
+    }
+
+    .detail-label {
+      margin-bottom: 5px;
+      color: #64748b;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .detail-value {
+      overflow-wrap: anywhere;
+      font-weight: 600;
+    }
+
+    .toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 99999;
+      padding: 12px 17px;
+      border-radius: 9px;
+      background: #111827;
+      color: #fff;
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: .25s;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 1000px) {
+
+      .sidebar {
+        width: 210px;
+      }
+
+      .main {
+        margin-left: 210px;
+      }
+
+      .stats {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+
+    }
+
+    @media (max-width: 700px) {
+
+      .sidebar {
+        position: static;
+        width: 100%;
+      }
+
+      .main {
+        margin-left: 0;
+        padding: 16px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+
+    }
+
+  </style>
+
 </head>
+
 
 <body>
 
-<header>
-  <div class="nav">
 
-    <div class="logo">
-      LetsStudy Pro Admin
-    </div>
+  <!-- =========================
+       LOADING
+  ========================== -->
 
-    <a class="back" href="admin.html">
-      ← Admin Dashboard
-    </a>
+  <div
+    id="loadingScreen"
+    class="loading-screen"
+  >
+
+    <div class="spinner"></div>
 
   </div>
-</header>
 
-<main class="container">
 
-  <h1>Instructor Management</h1>
+  <!-- =========================
+       LAYOUT
+  ========================== -->
 
-  <p class="subtitle">
-    Manage instructors, teaching accounts and instructor access.
-  </p>
+  <div class="layout">
 
-  <section class="stats">
 
-    <div class="stat">
-      <strong id="totalInstructors">0</strong>
-      <span>Total Instructors</span>
+    <!-- =========================
+         SIDEBAR
+    ========================== -->
+
+    <aside class="sidebar">
+
+      <div class="brand">
+        LetsStudy <span>Pro</span>
+      </div>
+
+
+      <nav class="nav">
+
+        <a href="admin.html">
+          Dashboard
+        </a>
+
+        <a href="admin-students.html">
+          Students
+        </a>
+
+        <a
+          href="admin-instructors.html"
+          class="active"
+        >
+          Instructors
+        </a>
+
+        <a href="admin-courses.html">
+          Courses
+        </a>
+
+        <a href="admin-lessons.html">
+          Lessons
+        </a>
+
+        <a href="admin-quiz.html">
+          Quiz
+        </a>
+
+        <a href="admin-community.html">
+          Community
+        </a>
+
+        <a href="admin-analytics.html">
+          Analytics
+        </a>
+
+        <a href="admin-financial-report.html">
+          Financial Report
+        </a>
+
+        <a href="admin-certificates.html">
+          Certificates
+        </a>
+
+        <a href="admin-payments.html">
+          Payments
+        </a>
+
+        <a href="admin-reviews.html">
+          Reviews
+        </a>
+
+        <a href="admin-security.html">
+          Security
+        </a>
+
+        <a href="admin-settings.html">
+          Settings
+        </a>
+
+      </nav>
+
+    </aside>
+
+
+    <!-- =========================
+         MAIN
+    ========================== -->
+
+    <main class="main">
+
+
+      <!-- =========================
+           TOPBAR
+      ========================== -->
+
+      <header class="topbar">
+
+        <div class="title">
+
+          <h1>
+            Instructors
+          </h1>
+
+          <p>
+            Manage instructors registered in LetsStudy Pro.
+          </p>
+
+        </div>
+
+
+        <div class="admin-box">
+
+          <div
+            id="adminAvatar"
+            class="avatar"
+          >
+            A
+          </div>
+
+          <div>
+
+            <strong>
+              Administrator
+            </strong>
+
+            <span
+              id="adminEmail"
+              class="admin-email"
+            >
+              Loading...
+            </span>
+
+          </div>
+
+        </div>
+
+      </header>
+
+
+      <!-- =========================
+           STATISTICS
+      ========================== -->
+
+      <section class="stats">
+
+
+        <div class="stat">
+
+          <div class="stat-label">
+            Total Instructors
+          </div>
+
+          <div
+            id="totalInstructors"
+            class="stat-value"
+          >
+            0
+          </div>
+
+        </div>
+
+
+        <div class="stat">
+
+          <div class="stat-label">
+            Active
+          </div>
+
+          <div
+            id="activeInstructors"
+            class="stat-value"
+          >
+            0
+          </div>
+
+        </div>
+
+
+        <div class="stat">
+
+          <div class="stat-label">
+            Pending
+          </div>
+
+          <div
+            id="pendingInstructors"
+            class="stat-value"
+          >
+            0
+          </div>
+
+        </div>
+
+
+        <div class="stat">
+
+          <div class="stat-label">
+            Blocked
+          </div>
+
+          <div
+            id="blockedInstructors"
+            class="stat-value"
+          >
+            0
+          </div>
+
+        </div>
+
+
+      </section>
+
+
+      <!-- =========================
+           TOOLBAR
+      ========================== -->
+
+      <section class="toolbar">
+
+        <input
+          id="searchInput"
+          class="search"
+          type="search"
+          placeholder="Search instructor, email, subject..."
+        >
+
+
+        <select
+          id="statusFilter"
+          class="select"
+        >
+
+          <option value="all">
+            All Status
+          </option>
+
+          <option value="active">
+            Active
+          </option>
+
+          <option value="pending">
+            Pending
+          </option>
+
+          <option value="blocked">
+            Blocked
+          </option>
+
+        </select>
+
+
+        <button
+          id="clearBtn"
+          class="btn btn-secondary"
+          type="button"
+        >
+          Clear
+        </button>
+
+
+        <button
+          id="refreshBtn"
+          class="btn btn-primary"
+          type="button"
+        >
+          Refresh
+        </button>
+
+      </section>
+
+
+      <!-- =========================
+           TABLE
+      ========================== -->
+
+      <section class="table-card">
+
+
+        <div class="table-header">
+
+          <strong>
+            Instructor Accounts
+          </strong>
+
+          <span
+            id="resultCount"
+            class="result-count"
+          >
+            0 instructors
+          </span>
+
+        </div>
+
+
+        <div class="table-wrap">
+
+          <table>
+
+            <thead>
+
+              <tr>
+
+                <th>
+                  Instructor
+                </th>
+
+                <th>
+                  Subject
+                </th>
+
+                <th>
+                  Courses
+                </th>
+
+                <th>
+                  Students
+                </th>
+
+                <th>
+                  Status
+                </th>
+
+                <th>
+                  Joined
+                </th>
+
+                <th>
+                  Actions
+                </th>
+
+              </tr>
+
+            </thead>
+
+
+            <tbody
+              id="instructorsBody"
+            >
+
+              <tr>
+
+                <td
+                  colspan="7"
+                  class="empty"
+                >
+                  Loading instructors...
+                </td>
+
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+
+        <!-- =========================
+             PAGINATION
+        ========================== -->
+
+        <div class="pagination">
+
+          <button
+            id="previousBtn"
+            type="button"
+            disabled
+          >
+            Previous
+          </button>
+
+          <span
+            id="paginationInfo"
+          >
+            Page 0
+          </span>
+
+          <button
+            id="nextBtn"
+            type="button"
+            disabled
+          >
+            Next
+          </button>
+
+        </div>
+
+
+      </section>
+
+
+    </main>
+
+  </div>
+
+
+  <!-- =========================
+       DETAILS MODAL
+  ========================== -->
+
+  <div
+    id="detailsModal"
+    class="modal"
+  >
+
+    <div class="modal-box">
+
+      <div class="modal-header">
+
+        <h2>
+          Instructor Details
+        </h2>
+
+        <button
+          id="closeModalBtn"
+          class="close"
+          type="button"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <div
+        id="detailsContent"
+        class="detail-grid"
+      ></div>
+
     </div>
 
-    <div class="stat">
-      <strong id="activeInstructors">0</strong>
-      <span>Active</span>
-    </div>
-
-    <div class="stat">
-      <strong id="inactiveInstructors">0</strong>
-      <span>Inactive</span>
-    </div>
-
-    <div class="stat">
-      <strong id="verifiedInstructors">0</strong>
-      <span>Verified</span>
-    </div>
-
-  </section>
-
-  <section class="toolbar">
-
-    <input
-      id="searchInstructor"
-      type="search"
-      placeholder="Search instructor by name or email...">
-
-    <button
-      class="btn"
-      onclick="loadInstructors()">
-      Refresh
-    </button>
-
-  </section>
-
-  <section class="table-box">
-
-    <table>
-
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Subject</th>
-          <th>Status</th>
-          <th>Verified</th>
-          <th>Joined</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-
-      <tbody id="instructorsTable">
-
-        <tr>
-          <td colspan="7" class="empty">
-            Loading instructors...
-          </td>
-        </tr>
-
-      </tbody>
-
-    </table>
-
-  </section>
-
-</main>
-
-<script type="module">
-
-import {
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-
-import {
-  getAuth,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  deleteDoc,
-  doc
-} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+  </div>
 
 
-const firebaseConfig = {
+  <!-- =========================
+       TOAST
+  ========================== -->
 
-  apiKey:
-    "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
-
-  authDomain:
-    "let-s-study-pro.firebaseapp.com",
-
-  projectId:
-    "let-s-study-pro",
-
-  storageBucket:
-    "let-s-study-pro.firebasestorage.app",
-
-  messagingSenderId:
-    "YOUR_MESSAGING_SENDER_ID",
-
-  appId:
-    "YOUR_APP_ID"
-
-};
+  <div
+    id="toast"
+    class="toast"
+  ></div>
 
 
-const app =
-  initializeApp(firebaseConfig);
+  <!-- =========================
+       FIREBASE
+  ========================== -->
 
-const auth =
-  getAuth(app);
-
-const db =
-  getFirestore(app);
+  <script type="module">
 
 
-let instructors = [];
+    /* =========================
+       FIREBASE CONFIG
+    ========================== */
+
+    const firebaseConfig = {
+
+      apiKey:
+        "AIzaSyBcOYDfAVKXbkljsyRgI_0rj0odBn678tCc",
+
+      authDomain:
+        "let-s-study-pro-course.firebaseapp.com",
+
+      databaseURL:
+        "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+      projectId:
+        "let-s-study-pro-course",
+
+      storageBucket:
+        "let-s-study-pro-course.firebasestorage.app",
+
+      messagingSenderId:
+        "474928293390",
+
+      appId:
+        "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+      measurementId:
+        "G-85B7V5H5J0"
+
+    };
 
 
-/* =========================
-   LOAD INSTRUCTORS
-========================= */
+    /* =========================
+       IMPORTS
+    ========================== */
 
-async function loadInstructors(){
+    import {
+      initializeApp
+    }
+    from
+      "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-  const table =
-    document.getElementById(
-      "instructorsTable"
-    );
 
-  try{
+    import {
+      getAuth,
+      onAuthStateChanged
+    }
+    from
+      "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    const snapshot =
-      await getDocs(
-        collection(db,"users")
+
+    import {
+      getDatabase,
+      ref,
+      onValue
+    }
+    from
+      "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+
+    /* =========================
+       INITIALIZE
+    ========================== */
+
+    const app =
+      initializeApp(
+        firebaseConfig
       );
 
-    instructors = [];
 
-    snapshot.forEach(item => {
+    const auth =
+      getAuth(
+        app
+      );
 
-      const data =
-        item.data();
 
-      if(
-        data.role === "instructor" ||
-        data.role === "teacher"
-      ){
+    const db =
+      getDatabase(
+        app
+      );
 
-        instructors.push({
-          id:item.id,
-          ...data
-        });
+
+    /* =========================
+       STATE
+    ========================== */
+
+    let instructors = [];
+
+    let filteredInstructors = [];
+
+    let currentPage = 1;
+
+    const pageSize = 15;
+
+    let unsubscribe = null;
+
+
+    /* =========================
+       DOM
+    ========================== */
+
+    const loadingScreen =
+      document.getElementById(
+        "loadingScreen"
+      );
+
+    const instructorsBody =
+      document.getElementById(
+        "instructorsBody"
+      );
+
+    const searchInput =
+      document.getElementById(
+        "searchInput"
+      );
+
+    const statusFilter =
+      document.getElementById(
+        "statusFilter"
+      );
+
+
+    /* =========================
+       AUTHENTICATION
+    ========================== */
+
+    onAuthStateChanged(
+      auth,
+      user => {
+
+        if (
+          !user
+        ) {
+
+          window.location.href =
+            "login.html";
+
+          return;
+
+        }
+
+
+        document.getElementById(
+          "adminEmail"
+        ).textContent =
+          user.email ||
+          "Administrator";
+
+
+        document.getElementById(
+          "adminAvatar"
+        ).textContent =
+          (
+            user.email ||
+            "A"
+          )
+            .charAt(0)
+            .toUpperCase();
+
+
+        loadInstructors();
+
+      }
+    );
+
+
+    /* =========================
+       LOAD INSTRUCTORS
+    ========================== */
+
+    function loadInstructors() {
+
+      showLoading();
+
+
+      if (
+        unsubscribe
+      ) {
+
+        unsubscribe();
 
       }
 
-    });
 
-    updateStats();
+      /*
+       * Main path:
+       *
+       * instructors
+       *
+       * Example structure:
+       *
+       * instructors
+       *   └── UID
+       *       ├── name
+       *       ├── email
+       *       ├── subject
+       *       ├── status
+       *       ├── courses
+       *       ├── students
+       *       └── createdAt
+       *
+       * The page reads whatever
+       * records actually exist.
+       */
 
-    renderInstructors(
-      instructors
-    );
-
-  }catch(error){
-
-    console.error(error);
-
-    table.innerHTML = `
-      <tr>
-        <td colspan="7" class="empty">
-          Failed to load instructors.
-        </td>
-      </tr>
-    `;
-
-  }
-
-}
-
-
-/* =========================
-   STATISTICS
-========================= */
-
-function updateStats(){
-
-  const total =
-    instructors.length;
-
-  const active =
-    instructors.filter(
-      x => (x.status || "active")
-        .toLowerCase() === "active"
-    ).length;
-
-  const inactive =
-    total - active;
-
-  const verified =
-    instructors.filter(
-      x =>
-        x.verified === true ||
-        x.emailVerified === true
-    ).length;
-
-  document.getElementById(
-    "totalInstructors"
-  ).textContent = total;
-
-  document.getElementById(
-    "activeInstructors"
-  ).textContent = active;
-
-  document.getElementById(
-    "inactiveInstructors"
-  ).textContent = inactive;
-
-  document.getElementById(
-    "verifiedInstructors"
-  ).textContent = verified;
-
-}
+      const instructorsRef =
+        ref(
+          db,
+          "instructors"
+        );
 
 
-/* =========================
-   RENDER
-========================= */
+      unsubscribe =
+        onValue(
 
-function renderInstructors(list){
+          instructorsRef,
 
-  const table =
-    document.getElementById(
-      "instructorsTable"
-    );
+          snapshot => {
 
-  if(!list.length){
-
-    table.innerHTML = `
-      <tr>
-        <td colspan="7" class="empty">
-          No instructors found.
-        </td>
-      </tr>
-    `;
-
-    return;
-  }
-
-  table.innerHTML =
-    list.map(item => {
-
-      const name =
-        item.name ||
-        item.displayName ||
-        "Unnamed";
-
-      const email =
-        item.email ||
-        "No email";
-
-      const subject =
-        item.subject ||
-        item.specialization ||
-        "—";
-
-      const status =
-        item.status ||
-        "active";
-
-      const verified =
-        item.verified === true ||
-        item.emailVerified === true;
-
-      return `
-
-        <tr>
-
-          <td>
-            <strong>
-              ${escapeHTML(name)}
-            </strong>
-          </td>
-
-          <td>
-            ${escapeHTML(email)}
-          </td>
-
-          <td>
-            ${escapeHTML(subject)}
-          </td>
-
-          <td>
-            <span class="badge ${
-              status === "active"
-              ? "active"
-              : "inactive"
-            }">
-              ${escapeHTML(status)}
-            </span>
-          </td>
-
-          <td>
-            ${verified ? "✅ Yes" : "❌ No"}
-          </td>
-
-          <td>
-            ${
-              item.createdAt?.toDate
-              ? item.createdAt
-                  .toDate()
-                  .toLocaleDateString()
-              : "—"
-            }
-          </td>
-
-          <td>
-
-            <div class="actions">
-
-              <button
-                class="action view"
-                onclick="viewInstructor('${item.id}')">
-                View
-              </button>
-
-              <button
-                class="action edit"
-                onclick="editInstructor('${item.id}')">
-                Edit
-              </button>
-
-              <button
-                class="action delete"
-                onclick="deleteInstructor('${item.id}')">
-                Delete
-              </button>
-
-            </div>
-
-          </td>
-
-        </tr>
-
-      `;
-
-    }).join("");
-
-}
+            instructors = [];
 
 
-/* =========================
-   SEARCH
-========================= */
+            if (
+              snapshot.exists()
+            ) {
 
-document
-  .getElementById("searchInstructor")
-  .addEventListener(
-    "input",
-    function(){
+              const data = snapshot.val();
 
-      const query =
-        this.value
-          .trim()
-          .toLowerCase();
+Object.entries(data).forEach(
+  ([id, value]) => {
 
-      const filtered =
-        instructors.filter(item => {
+    if (
+      value &&
+      typeof value === "object"
+    ) {
 
-          const name =
-            (
-              item.name ||
-              item.displayName ||
-              ""
-            ).toLowerCase();
+      instructors.push({
 
-          const email =
-            (
-              item.email ||
-              ""
-            ).toLowerCase();
+        id: id,
 
-          return (
-            name.includes(query) ||
-            email.includes(query)
-          );
+        ...value
 
-        });
-
-      renderInstructors(
-        filtered
-      );
+      });
 
     }
-  );
-
-
-/* =========================
-   VIEW
-========================= */
-
-window.viewInstructor =
-function(id){
-
-  const instructor =
-    instructors.find(
-      x => x.id === id
-    );
-
-  if(!instructor) return;
-
-  alert(
-    `Instructor
-
-Name: ${
-      instructor.name ||
-      instructor.displayName ||
-      "—"
-    }
-
-Email: ${
-      instructor.email ||
-      "—"
-    }
-
-Subject: ${
-      instructor.subject ||
-      "—"
-    }`
-  );
-
-};
-
-
-/* =========================
-   EDIT
-========================= */
-
-window.editInstructor =
-function(id){
-
-  alert(
-    "Instructor editor will be connected to Firestore in the next module."
-  );
-
-};
-
-
-/* =========================
-   DELETE
-========================= */
-
-window.deleteInstructor =
-async function(id){
-
-  const instructor =
-    instructors.find(
-      x => x.id === id
-    );
-
-  if(!instructor) return;
-
-  const confirmed =
-    confirm(
-      `Delete instructor ${
-        instructor.name ||
-        instructor.email ||
-        ""
-      }?`
-    );
-
-  if(!confirmed) return;
-
-  try{
-
-    await deleteDoc(
-      doc(
-        db,
-        "users",
-        id
-      )
-    );
-
-    await loadInstructors();
-
-  }catch(error){
-
-    console.error(error);
-
-    alert(
-      "Unable to delete instructor."
-    );
-
-  }
-
-};
-
-
-/* =========================
-   SECURITY
-========================= */
-
-onAuthStateChanged(
-  auth,
-  user => {
-
-    if(!user){
-
-      window.location.href =
-        "login.html";
-
-      return;
-
-    }
-
-    loadInstructors();
 
   }
 );
 
+sortInstructors();
 
-/* =========================
-   ESCAPE HTML
-========================= */
+updateStatistics();
 
-function escapeHTML(value){
+applyFilters();
 
-  return String(value ?? "")
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#039;");
+hideLoading();
+
+
+Na kisha endelea na error handler:
+
+  },
+
+  error => {
+
+    console.error(
+      "Firebase instructor error:",
+      error
+    );
+
+    instructorsBody.innerHTML = `
+
+      <tr>
+
+        <td
+          colspan="7"
+          class="empty"
+        >
+
+          <strong>
+            Unable to load instructors
+          </strong>
+
+          <br><br>
+
+          ${escapeHtml(
+            error.message ||
+            "Unknown Firebase error"
+          )}
+
+          <br><br>
+
+          <button
+            id="retryBtn"
+            class="btn btn-primary"
+            type="button"
+          >
+            Retry
+          </button>
+
+        </td>
+
+      </tr>
+
+    `;
+
+    document
+      .getElementById("retryBtn")
+      ?.addEventListener(
+        "click",
+        loadInstructors
+      );
+
+    hideLoading();
+
+    showToast(
+      "Unable to load instructor data."
+    );
+
+  }
+
+);
 
 }
 
-window.loadInstructors =
-  loadInstructors;
+Kwa hiyo mwisho wa "loadInstructors()" unapaswa kuwa na:
 
-</script>
+unsubscribe = onValue(
+  instructorsRef,
 
-</body>
-</html>
+  snapshot => {
+
+    instructors = [];
+
+    if (snapshot.exists()) {
+
+      const data =
+        snapshot.val();
+
+      Object.entries(data).forEach(
+        ([id, value]) => {
+
+          if (
+            value &&
+            typeof value === "object"
+          ) {
+
+            instructors.push({
+              id,
+              ...value
+            });
+
+          }
+
+        }
+      );
+
+    }
+
+    sortInstructors();
+    updateStatistics();
+    applyFilters();
+    hideLoading();
+
+  },
+
+  error => {
+
+    console.error(
+      "Firebase instructor error:",
+      error
+    );
+
+    hideLoading();
+
+    showToast(
+      error.message ||
+      "Failed to load instructors."
+    );
+
+  }
+
+);
