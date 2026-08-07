@@ -1006,6 +1006,187 @@ encodeURIComponent(plan);
 }
 
 </script>
+<script type="module">
 
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+
+/* =========================
+   FIREBASE CONFIG
+========================= */
+
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+  authDomain: "let-s-study-pro-course.firebaseapp.com",
+  databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId: "let-s-study-pro-course",
+  storageBucket: "let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId: "474928293390",
+  appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId: "G-85B7V5H5J0"
+};
+
+
+/* =========================
+   INITIALIZE
+========================= */
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+
+const db = getFirestore(app);
+
+
+/* =========================
+   CHECK PREMIUM
+========================= */
+
+async function checkPremium(userId){
+
+  const ref =
+    doc(db, "memberships", userId);
+
+  const snap =
+    await getDoc(ref);
+
+  if(!snap.exists()){
+
+    return {
+      active: false,
+      plan: "free"
+    };
+
+  }
+
+  const data = snap.data();
+
+  const expiry =
+    data.expiresAt?.toDate?.();
+
+  const active =
+    data.status === "active" &&
+    (!expiry || expiry > new Date());
+
+  return {
+    active: active,
+    plan: data.plan || "free",
+    data: data
+  };
+
+}
+
+
+/* =========================
+   CREATE PREMIUM
+========================= */
+
+async function createPremium(
+  userId,
+  plan,
+  amount,
+  paymentMethod
+){
+
+  await setDoc(
+    doc(db, "memberships", userId),
+    {
+
+      userId: userId,
+
+      plan: plan,
+
+      amount: Number(amount),
+
+      currency: "TZS",
+
+      paymentMethod: paymentMethod,
+
+      status: "active",
+
+      startedAt:
+        serverTimestamp(),
+
+      expiresAt: null,
+
+      updatedAt:
+        serverTimestamp()
+
+    }
+  );
+
+}
+
+
+/* =========================
+   UPDATE PREMIUM
+========================= */
+
+async function updatePremium(
+  userId,
+  status
+){
+
+  await updateDoc(
+    doc(db, "memberships", userId),
+    {
+
+      status: status,
+
+      updatedAt:
+        serverTimestamp()
+
+    }
+  );
+
+}
+
+
+/* =========================
+   USER LOGIN
+========================= */
+
+onAuthStateChanged(
+  auth,
+  async user => {
+
+    if(!user){
+
+      console.log(
+        "User not logged in"
+      );
+
+      return;
+
+    }
+
+    const premium =
+      await checkPremium(user.uid);
+
+    console.log(
+      "Premium:",
+      premium
+    );
+
+  }
+);
+
+</script>
 </body>
 </html>
