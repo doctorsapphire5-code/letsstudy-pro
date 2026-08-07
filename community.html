@@ -1612,6 +1612,147 @@ char=>({
 renderPosts(posts);
 
 </script>
+<!-- Firebase Community -->
+<script type="module">
 
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  orderBy,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+
+/* =========================
+   FIREBASE CONFIG
+========================= */
+
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+  authDomain: "let-s-study-pro-course.firebaseapp.com",
+  databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId: "let-s-study-pro-course",
+  storageBucket: "let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId: "474928293390",
+  appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId: "G-85B7V5H5J0"
+};
+
+/* =========================
+   INITIALIZE
+========================= */
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+
+const db = getFirestore(app);
+
+
+/* =========================
+   CHECK USER
+========================= */
+
+onAuthStateChanged(auth, user => {
+
+  if(user){
+
+    console.log(
+      "Community user:",
+      user.uid
+    );
+
+  }else{
+
+    console.log(
+      "User not logged in"
+    );
+
+  }
+
+});
+
+
+/* =========================
+   CREATE POST
+========================= */
+
+async function createPost(text){
+
+  const user = auth.currentUser;
+
+  if(!user){
+
+    alert("Please login first.");
+    return;
+
+  }
+
+
+  await addDoc(
+    collection(db, "communityPosts"),
+    {
+
+      uid: user.uid,
+
+      name:
+        user.displayName || "Student",
+
+      email:
+        user.email || "",
+
+      text: text,
+
+      likes: 0,
+
+      comments: 0,
+
+      createdAt:
+        serverTimestamp()
+
+    }
+  );
+
+}
+
+
+/* =========================
+   LOAD POSTS
+========================= */
+
+async function loadPosts(){
+
+  const q = query(
+    collection(db, "communityPosts"),
+    orderBy("createdAt", "desc")
+  );
+
+  const snapshot =
+    await getDocs(q);
+
+  snapshot.forEach(doc => {
+
+    console.log(
+      doc.id,
+      doc.data()
+    );
+
+  });
+
+}
+
+</script>
 </body>
 </html>
