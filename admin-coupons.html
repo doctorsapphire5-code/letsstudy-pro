@@ -1,0 +1,711 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Coupons | LetsStudy Pro Admin</title><style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+header{height:62px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;padding:0 16px;gap:12px;position:sticky;top:0;z-index:5}
+header h1{flex:1;font-size:18px}
+button{border:0;border-radius:9px;padding:10px 13px;cursor:pointer}
+.primary{background:#2563eb;color:#fff}
+.light{background:#eef2ff;color:#1d4ed8}
+.danger{background:#fee2e2;color:#b91c1c}
+main{padding:18px;max-width:1200px;margin:auto}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.stat,.card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:15px}
+.stat span{font-size:11px;color:#64748b}
+.stat b{display:block;font-size:23px;margin-top:5px}
+.toolbar{display:flex;gap:8px;margin-bottom:14px}
+input,select{width:100%;padding:10px;border:1px solid #dbe1e8;border-radius:9px;outline:0}
+.toolbar input{max-width:350px}
+.table{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{text-align:left;padding:11px 8px;border-bottom:1px solid #edf0f4}
+th{font-size:10px;color:#64748b}
+.badge{padding:4px 8px;border-radius:20px;font-size:9px;font-weight:bold}
+.active{background:#dcfce7;color:#15803d}
+.expired{background:#fee2e2;color:#b91c1c}
+.disabled{background:#e5e7eb;color:#475569}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:11px;font-weight:bold;margin-bottom:5px}
+.full{grid-column:1/-1}
+.modal{display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;padding:15px;z-index:20}
+.modal.show{display:flex}
+.box{background:#fff;border-radius:15px;padding:18px;width:100%;max-width:600px;max-height:90vh;overflow:auto}
+.modalhead{display:flex;align-items:center;margin-bottom:15px}
+.modalhead h2{flex:1;font-size:17px}
+.empty{text-align:center;padding:30px;color:#64748b}
+.toast{position:fixed;right:20px;bottom:20px;background:#172033;color:#fff;padding:12px 15px;border-radius:9px;display:none;font-size:12px}
+.toast.show{display:block}
+@media(max-width:700px){
+.stats{grid-template-columns:1fr 1fr}
+.form{grid-template-columns:1fr}
+.full{grid-column:auto}
+}
+</style></head><body><header><button class="light"
+onclick="location.href='admin-marketing.html'">
+←
+</button>
+
+<h1>🎟️ Coupons & Promo Codes</h1><button class="primary"
+onclick="openModal()">
+
++ Coupon
+  </button>
+
+</header><main><section class="stats"><div class="stat">
+<span>Total Coupons</span>
+<b id="total">0</b>
+</div><div class="stat">
+<span>Active</span>
+<b id="active">0</b>
+</div><div class="stat">
+<span>Used</span>
+<b id="used">0</b>
+</div><div class="stat">
+<span>Discount Value</span>
+<b id="discount">TZS 0</b>
+</div></section><section class="card"><div class="toolbar"><input
+id="search"
+placeholder="Search coupon..."
+oninput="render()"
+
+«»
+
+<select
+id="filter"
+onchange="render()">
+
+<option value="all">All</option>
+<option value="active">Active</option>
+<option value="expired">Expired</option>
+<option value="disabled">Disabled</option></select></div><div class="table"><table><thead><tr>
+<th>Code</th>
+<th>Discount</th>
+<th>Usage</th>
+<th>Expiry</th>
+<th>Status</th>
+<th>Actions</th>
+</tr></thead><tbody id="list"></tbody></table></div></section></main><!-- MODAL --><div class="modal" id="modal"><div class="box"><div class="modalhead"><h2 id="modalTitle">
+Create Coupon
+</h2><button onclick="closeModal()">
+✕
+</button></div><form id="form"><div class="form"><div class="field"><label>Coupon Code</label>
+
+<input
+id="code"
+required
+placeholder="LETS20"
+
+«»
+
+</div><div class="field"><label>Discount Type</label>
+
+<select id="type"><option value="percent">
+Percentage
+</option><option value="fixed">
+Fixed Amount
+</option></select></div><div class="field"><label>Discount Value</label>
+
+<input
+id="value"
+type="number"
+min="0"
+required
+
+«»
+
+</div><div class="field"><label>Maximum Uses</label>
+
+<input
+id="maxUses"
+type="number"
+min="1"
+value="100"
+
+«»
+
+</div><div class="field"><label>Minimum Order (TZS)</label>
+
+<input
+id="minimum"
+type="number"
+min="0"
+value="0"
+
+«»
+
+</div><div class="field"><label>Expiry Date</label>
+
+<input
+id="expiry"
+type="datetime-local"
+required
+
+«»
+
+</div><div class="field"><label>Status</label>
+
+<select id="status"><option value="active">
+Active
+</option><option value="disabled">
+Disabled
+</option></select></div><div class="field"><label>Course ID (optional)</label>
+
+<input
+id="courseId"
+placeholder="Leave empty for all courses"
+
+«»
+
+</div></div><br><button
+class="primary"
+type="submit">
+
+Save Coupon
+
+</button></form></div></div><div
+class="toast"
+id="toast">
+Saved
+</div><script type="module">
+
+import{initializeApp}
+from"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import{
+getAuth,
+onAuthStateChanged
+}
+from"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import{
+getFirestore,
+collection,
+doc,
+getDoc,
+getDocs,
+setDoc,
+deleteDoc,
+serverTimestamp
+}
+from"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/* FIREBASE */
+
+const firebaseConfig={
+apiKey:"YOUR_API_KEY",
+authDomain:"YOUR_PROJECT.firebaseapp.com",
+projectId:"YOUR_PROJECT_ID",
+storageBucket:"YOUR_PROJECT.firebasestorage.app",
+messagingSenderId:"YOUR_MESSAGING_SENDER_ID",
+appId:"YOUR_APP_ID"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let user=null;
+let coupons=[];
+let editing=null;
+
+
+/* AUTH */
+
+onAuthStateChanged(auth,async u=>{
+
+if(!u){
+location.href="login.html";
+return;
+}
+
+const snap=await getDoc(
+doc(db,"users",u.uid)
+);
+
+if(
+!snap.exists() ||
+snap.data().role!=="admin"
+){
+
+alert("Access denied");
+location.href="dashboard.html";
+return;
+
+}
+
+user=u;
+load();
+
+});
+
+
+/* LOAD */
+
+async function load(){
+
+const snap=
+await getDocs(
+collection(db,"coupons")
+);
+
+coupons=snap.docs.map(
+d=>({
+id:d.id,
+...d.data()
+})
+);
+
+updateStats();
+render();
+
+}
+
+
+/* STATS */
+
+function updateStats(){
+
+document.getElementById("total")
+.textContent=coupons.length;
+
+document.getElementById("active")
+.textContent=
+coupons.filter(
+x=>getStatus(x)==="active"
+).length;
+
+document.getElementById("used")
+.textContent=
+coupons.reduce(
+(a,x)=>a+Number(x.usedCount||0),
+0
+);
+
+const discount=
+coupons.reduce(
+(a,x)=>a+Number(x.discountValue||0),
+0
+);
+
+document.getElementById("discount")
+.textContent=
+"Tz "+discount.toLocaleString();
+
+}
+
+
+/* STATUS */
+
+function getStatus(x){
+
+if(x.status==="disabled")
+return"disabled";
+
+if(
+x.expiry &&
+new Date(x.expiry)<new Date()
+)
+return"expired";
+
+if(
+x.maxUses &&
+Number(x.usedCount||0)>=
+Number(x.maxUses)
+)
+return"expired";
+
+return"active";
+
+}
+
+
+/* RENDER */
+
+window.render=function(){
+
+const search=
+document.getElementById("search")
+.value
+.toLowerCase();
+
+const filter=
+document.getElementById("filter")
+.value;
+
+const list=
+document.getElementById("list");
+
+const data=
+coupons.filter(x=>{
+
+const code=
+(x.code||x.id)
+.toLowerCase();
+
+const status=
+getStatus(x);
+
+return(
+code.includes(search) &&
+(filter==="all"||status===filter)
+);
+
+});
+
+
+if(!data.length){
+
+list.innerHTML=`
+<tr>
+<td colspan="6">
+<div class="empty">
+No coupons found.
+</div>
+</td>
+</tr>`;
+
+return;
+
+}
+
+
+list.innerHTML=
+data.map(x=>{
+
+const status=getStatus(x);
+
+return`
+
+<tr>
+
+<td>
+<strong>
+${esc(x.code||x.id)}
+</strong>
+
+${x.courseId?
+`<br><small>
+Course: ${esc(x.courseId)}
+</small>`:""}
+
+</td>
+
+<td>
+
+${
+x.discountType==="percent"
+?
+Number(x.discountValue||0)+"%"
+:
+"TZS "+
+Number(x.discountValue||0)
+.toLocaleString()
+}
+
+</td>
+
+<td>
+
+${Number(x.usedCount||0)}
+/
+${x.maxUses||"∞"}
+
+</td>
+
+<td>
+${formatDate(x.expiry)}
+</td>
+
+<td>
+
+<span class="badge ${status}">
+${status}
+</span>
+
+</td>
+
+<td>
+
+<button
+class="light"
+onclick="editCoupon('${x.id}')">
+Edit
+</button>
+
+<button
+class="danger"
+onclick="removeCoupon('${x.id}')">
+Delete
+</button>
+
+</td>
+
+</tr>
+
+`;
+
+}).join("");
+
+};
+
+
+/* SAVE */
+
+document.getElementById("form")
+.addEventListener(
+"submit",
+async e=>{
+
+e.preventDefault();
+
+const code=
+value("code")
+.toUpperCase();
+
+const data={
+
+code,
+
+discountType:
+value("type"),
+
+discountValue:
+Number(value("value")||0),
+
+maxUses:
+Number(value("maxUses")||0),
+
+minimumOrder:
+Number(value("minimum")||0),
+
+expiry:
+value("expiry"),
+
+status:
+value("status"),
+
+courseId:
+value("courseId"),
+
+updatedAt:
+serverTimestamp()
+
+};
+
+
+try{
+
+await setDoc(
+doc(db,"coupons",code),
+{
+
+...data,
+
+usedCount:
+editing
+?
+(coupons.find(x=>x.id===editing)
+?.usedCount||0)
+:
+0,
+
+createdBy:
+user.uid,
+
+createdAt:
+serverTimestamp()
+
+},
+{merge:true}
+);
+
+
+toast(
+editing
+?
+"Coupon updated."
+:
+"Coupon created."
+);
+
+closeModal();
+await load();
+
+}catch(err){
+
+console.error(err);
+toast("Unable to save coupon.");
+
+}
+
+});
+
+
+/* EDIT */
+
+window.editCoupon=function(id){
+
+const x=
+coupons.find(c=>c.id===id);
+
+if(!x)return;
+
+editing=id;
+
+document.getElementById("modalTitle")
+.textContent="Edit Coupon";
+
+document.getElementById("code")
+.value=x.code||id;
+
+document.getElementById("type")
+.value=x.discountType||"percent";
+
+document.getElementById("value")
+.value=x.discountValue||0;
+
+document.getElementById("maxUses")
+.value=x.maxUses||100;
+
+document.getElementById("minimum")
+.value=x.minimumOrder||0;
+
+document.getElementById("expiry")
+.value=x.expiry||"";
+
+document.getElementById("status")
+.value=x.status||"active";
+
+document.getElementById("courseId")
+.value=x.courseId||"";
+
+openModal();
+
+};
+
+
+/* DELETE */
+
+window.removeCoupon=
+async function(id){
+
+if(
+!confirm(
+"Delete this coupon?"
+)
+)return;
+
+try{
+
+await deleteDoc(
+doc(db,"coupons",id)
+);
+
+toast("Coupon deleted.");
+
+await load();
+
+}catch(err){
+
+console.error(err);
+toast("Delete failed.");
+
+}
+
+};
+
+
+/* MODAL */
+
+window.openModal=function(){
+
+document.getElementById("modal")
+.classList.add("show");
+
+};
+
+window.closeModal=function(){
+
+document.getElementById("modal")
+.classList.remove("show");
+
+editing=null;
+
+document.getElementById("form")
+.reset();
+
+document.getElementById("modalTitle")
+.textContent="Create Coupon";
+
+};
+
+
+/* UTILS */
+
+function value(id){
+
+return document
+.getElementById(id)
+.value
+.trim();
+
+}
+
+function esc(v){
+
+return String(v??"")
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+
+}
+
+function formatDate(v){
+
+if(!v)return"-";
+
+try{
+
+return new Date(v)
+.toLocaleDateString(
+"en-GB",
+{
+day:"2-digit",
+month:"short",
+year:"numeric"
+}
+);
+
+}catch{
+
+return"-";
+
+}
+
+}
+
+function toast(text){
+
+const el=
+document.getElementById("toast");
+
+el.textContent=text;
+
+el.classList.add("show");
+
+setTimeout(
+()=>el.classList.remove("show"),
+3000
+);
+
+}
+
+</script></body>
+</html>
