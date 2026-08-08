@@ -1241,54 +1241,18 @@ const statusFilter =
 
 onAuthStateChanged(
   auth,
-  user => {
+  async user => {
 
-    if (!user) {
+    if(!user){
 
-      window.location.href =
-        "login.html";
-
+      location.href = "login.html";
       return;
 
     }
 
+    admin = user;
 
-    const email =
-      user.email ||
-      "Administrator";
-
-
-    const emailElement =
-      document.getElementById(
-        "adminEmail"
-      );
-
-
-    const avatarElement =
-      document.getElementById(
-        "adminAvatar"
-      );
-
-
-    if (emailElement) {
-
-      emailElement.textContent =
-        email;
-
-    }
-
-
-    if (avatarElement) {
-
-      avatarElement.textContent =
-        email
-          .charAt(0)
-          .toUpperCase();
-
-    }
-
-
-    loadCertificates();
+    loadJobs();
 
   }
 );
@@ -2763,6 +2727,338 @@ function showToast(
 
 
 </script>
+<!-- ================================
+     ADD CERTIFICATE
+================================ -->
 
+<section class="panel">
+
+  <div class="panel-header">
+    <h2>🏆 Add Certificate</h2>
+  </div>
+
+  <form id="certificateForm" class="form">
+
+    <div class="form-grid">
+
+      <!-- Certificate Title -->
+      <div class="field">
+        <label>Certificate Title *</label>
+        <input
+          type="text"
+          id="certificateTitle"
+          placeholder="e.g. Web Development Certificate"
+          required
+        >
+      </div>
+
+      <!-- Course -->
+      <div class="field">
+        <label>Course *</label>
+        <input
+          type="text"
+          id="certificateCourse"
+          placeholder="e.g. Web Development"
+          required
+        >
+      </div>
+
+      <!-- Student Name -->
+      <div class="field">
+        <label>Student Name *</label>
+        <input
+          type="text"
+          id="studentName"
+          placeholder="e.g. John Doe"
+          required
+        >
+      </div>
+
+      <!-- Student Email -->
+      <div class="field">
+        <label>Student Email</label>
+        <input
+          type="email"
+          id="studentEmail"
+          placeholder="student@example.com"
+        >
+      </div>
+
+      <!-- Certificate ID -->
+      <div class="field">
+        <label>Certificate ID *</label>
+        <input
+          type="text"
+          id="certificateId"
+          placeholder="e.g. LSP-2026-0001"
+          required
+        >
+      </div>
+
+      <!-- Issue Date -->
+      <div class="field">
+        <label>Issue Date *</label>
+        <input
+          type="date"
+          id="issueDate"
+          required
+        >
+      </div>
+
+      <!-- Expiry Date -->
+      <div class="field">
+        <label>Expiry Date</label>
+        <input
+          type="date"
+          id="expiryDate"
+        >
+      </div>
+
+      <!-- Certificate Status -->
+      <div class="field">
+        <label>Status</label>
+
+        <select id="certificateStatus">
+
+          <option value="active">
+            Active
+          </option>
+
+          <option value="revoked">
+            Revoked
+          </option>
+
+          <option value="expired">
+            Expired
+          </option>
+
+        </select>
+
+      </div>
+
+      <!-- Certificate URL -->
+      <div class="field full">
+        <label>Certificate URL</label>
+
+        <input
+          type="url"
+          id="certificateUrl"
+          placeholder="https://letsstudy.pro/certificate.html?id=..."
+        >
+      </div>
+
+      <!-- Description -->
+      <div class="field full">
+
+        <label>Description</label>
+
+        <textarea
+          id="certificateDescription"
+          rows="4"
+          placeholder="Certificate description..."
+        ></textarea>
+
+      </div>
+
+    </div>
+
+
+    <!-- Buttons -->
+    <div class="form-actions">
+
+      <button
+        type="reset"
+        class="btn btn-secondary"
+      >
+        Clear
+      </button>
+
+      <button
+        type="submit"
+        class="btn btn-primary"
+      >
+        💾 Add Certificate
+      </button>
+
+    </div>
+
+  </form>
+
+</section>
+
+
+<!-- ================================
+     FIREBASE
+================================ -->
+
+<script type="module">
+
+  import {
+    initializeApp
+  } from
+  "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+  import {
+    getDatabase,
+    ref,
+    push,
+    set
+  } from
+  "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+
+
+  const firebaseConfig = {
+
+    apiKey:
+      "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+    authDomain:
+      "let-s-study-pro-course.firebaseapp.com",
+
+    databaseURL:
+      "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+    projectId:
+      "let-s-study-pro-course",
+
+    storageBucket:
+      "let-s-study-pro-course.firebasestorage.app",
+
+    messagingSenderId:
+      "474928293390",
+
+    appId:
+      "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+    measurementId:
+      "G-85B7V5H5J0"
+
+  };
+
+
+  const app =
+    initializeApp(firebaseConfig);
+
+  const db =
+    getDatabase(app);
+
+
+  /* ================================
+     ADD CERTIFICATE
+  ================================= */
+
+  document
+    .getElementById("certificateForm")
+    .addEventListener(
+      "submit",
+      async function(e){
+
+        e.preventDefault();
+
+
+        const certificateRef =
+          push(
+            ref(db,"certificates")
+          );
+
+
+        const certificate = {
+
+          certificateTitle:
+            document
+              .getElementById("certificateTitle")
+              .value
+              .trim(),
+
+          course:
+            document
+              .getElementById("certificateCourse")
+              .value
+              .trim(),
+
+          studentName:
+            document
+              .getElementById("studentName")
+              .value
+              .trim(),
+
+          studentEmail:
+            document
+              .getElementById("studentEmail")
+              .value
+              .trim(),
+
+          certificateId:
+            document
+              .getElementById("certificateId")
+              .value
+              .trim(),
+
+          issueDate:
+            document
+              .getElementById("issueDate")
+              .value,
+
+          expiryDate:
+            document
+              .getElementById("expiryDate")
+              .value,
+
+          status:
+            document
+              .getElementById("certificateStatus")
+              .value,
+
+          certificateUrl:
+            document
+              .getElementById("certificateUrl")
+              .value
+              .trim(),
+
+          description:
+            document
+              .getElementById("certificateDescription")
+              .value
+              .trim(),
+
+          createdAt:
+            Date.now()
+
+        };
+
+
+        try{
+
+          await set(
+            certificateRef,
+            certificate
+          );
+
+
+          alert(
+            "Certificate added successfully!"
+          );
+
+
+          document
+            .getElementById("certificateForm")
+            .reset();
+
+
+        }catch(error){
+
+          console.error(error);
+
+          alert(
+            "Failed to add certificate: "
+            + error.message
+          );
+
+        }
+
+      }
+    );
+
+</script>
 </body>
 </html>
