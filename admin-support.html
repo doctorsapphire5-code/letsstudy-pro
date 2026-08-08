@@ -1,1603 +1,861 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Support | LetsStudy Pro</title><style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f7fb;color:#172033}
+button,input,select,textarea{font:inherit}
+button{border:0;border-radius:9px;padding:9px 12px;cursor:pointer}
+header{height:62px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:12px;padding:0 16px;position:sticky;top:0;z-index:20}
+header h1{flex:1;font-size:18px;margin:0}
+main{max-width:1250px;margin:auto;padding:18px}
+.back{background:#eef2ff;color:#1d4ed8}
+.primary{background:#2563eb;color:#fff}
+.success{background:#dcfce7;color:#15803d}
+.danger{background:#fee2e2;color:#b91c1c}
+.warning{background:#fef3c7;color:#a16207}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.card,.stat{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:15px}
+.stat span{font-size:11px;color:#64748b}
+.stat b{display:block;font-size:23px;margin-top:5px}
+.toolbar{display:flex;gap:8px;margin-bottom:14px}
+.toolbar input{max-width:420px}
+input,select,textarea{width:100%;padding:10px;border:1px solid #dbe1e8;border-radius:9px;background:#fff;outline:none}
+.table{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{text-align:left;padding:11px 8px;border-bottom:1px solid #edf0f4;white-space:nowrap}
+th{font-size:10px;color:#64748b}
+.badge{padding:4px 8px;border-radius:20px;font-size:9px;font-weight:bold}
+.open{background:#fee2e2;color:#b91c1c}
+.progress{background:#fef3c7;color:#a16207}
+.resolved{background:#dcfce7;color:#15803d}
+.closed{background:#e5e7eb;color:#475569}
+.low{background:#e5e7eb;color:#475569}
+.medium{background:#dbeafe;color:#1d4ed8}
+.high{background:#fef3c7;color:#a16207}
+.urgent{background:#fee2e2;color:#b91c1c}
+.modal{display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;padding:15px;z-index:50}
+.modal.show{display:flex}
+.box{background:#fff;width:100%;max-width:760px;max-height:92vh;overflow:auto;border-radius:16px;padding:20px}
+.head{display:flex;align-items:center;margin-bottom:15px}
+.head h2{flex:1;margin:0;font-size:18px}
+.info{padding:11px;background:#f8fafc;border-radius:9px;margin-bottom:10px;font-size:12px}
+.info small{display:block;color:#64748b;font-size:10px;margin-bottom:4px}
+.message{padding:12px;border-radius:10px;background:#f8fafc;margin:8px 0;font-size:12px}
+.message.admin{background:#eef2ff}
+.message strong{display:block;margin-bottom:5px}
+.reply{margin-top:14px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.toast{position:fixed;right:20px;bottom:20px;background:#172033;color:#fff;padding:12px 15px;border-radius:9px;display:none;z-index:100;font-size:12px}
+.toast.show{display:block}
+.empty{text-align:center;padding:35px;color:#64748b}
+@media(max-width:800px){
+.stats{grid-template-columns:1fr 1fr}
+.toolbar{flex-wrap:wrap}
+}
+</style></head><body><header><button class="back"
+onclick="location.href='admin-dashboard.html'">
+←
+</button>
 
-<title>Support & Tickets | LetsStudy Pro Admin</title>
+<h1>🎧 Support Center</h1><button class="primary"
+onclick="openCreate()">
 
-<link rel="icon"
-      type="image/png"
-      href="https://letsstudy.pro/favicon.png">
++ New Ticket
+  </button>
 
-<style>
-*{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
+</header><main><section class="stats"><div class="stat">
+<span>Total Tickets</span>
+<b id="total">0</b>
+</div><div class="stat">
+<span>Open</span>
+<b id="open">0</b>
+</div><div class="stat">
+<span>In Progress</span>
+<b id="progress">0</b>
+</div><div class="stat">
+<span>Resolved</span>
+<b id="resolved">0</b>
+</div></section><section class="card"><div class="toolbar"><input
+id="search"
+placeholder="Search ticket, email or subject..."
+oninput="render()">
+
+<select id="statusFilter"
+onchange="render()">
+
+<option value="all">All Status</option>
+<option value="open">Open</option>
+<option value="in-progress">In Progress</option>
+<option value="resolved">Resolved</option>
+<option value="closed">Closed</option></select><select id="priorityFilter"
+onchange="render()">
+
+<option value="all">All Priority</option>
+<option value="urgent">Urgent</option>
+<option value="high">High</option>
+<option value="medium">Medium</option>
+<option value="low">Low</option></select></div><div class="table"><table><thead><tr>
+<th>Ticket</th>
+<th>User</th>
+<th>Subject</th>
+<th>Priority</th>
+<th>Status</th>
+<th>Assigned</th>
+<th>Action</th>
+</tr></thead><tbody id="ticketList"></tbody></table></div></section></main><!-- TICKET MODAL --><div id="modal" class="modal"><div class="box"><div class="head"><h2 id="modalTitle">
+Support Ticket
+</h2><button onclick="closeModal()">✕</button>
+
+</div><div id="ticketDetails"></div><div class="reply"><label>Reply to User</label>
+
+<textarea
+id="replyText"
+rows="5"
+placeholder="Write your response..."></textarea><br><br>
+
+<button
+class="primary"
+onclick="sendReply()">
+
+📤 Send Reply
+
+</button></div><br><div class="actions"><select
+id="ticketStatus">
+
+<option value="open">Open</option>
+<option value="in-progress">In Progress</option>
+<option value="resolved">Resolved</option>
+<option value="closed">Closed</option></select><select
+id="ticketPriority">
+
+<option value="low">Low</option>
+<option value="medium">Medium</option>
+<option value="high">High</option>
+<option value="urgent">Urgent</option></select><input
+id="assignedTo"
+placeholder="Assign admin UID">
+
+<button
+class="success"
+onclick="updateTicket()">
+
+Save Ticket
+
+</button></div></div></div><!-- CREATE --><div id="createModal" class="modal"><div class="box"><div class="head"><h2>Create Support Ticket</h2><button onclick="closeCreate()">✕</button>
+
+</div><form id="createForm"><label>User ID / Email</label>
+<input id="newUser" required>
+
+<br><br>
+
+<label>Subject</label>
+<input id="newSubject" required>
+
+<br><br>
+
+<label>Priority</label>
+
+<select id="newPriority"><option value="low">Low</option>
+<option value="medium" selected>Medium</option>
+<option value="high">High</option>
+<option value="urgent">Urgent</option></select><br><br>
+
+<label>Message</label>
+
+<textarea
+id="newMessage"
+rows="5"
+required></textarea><br><br>
+
+<button class="primary">
+Create Ticket
+</button></form></div></div><div id="toast" class="toast"></div><script type="module">
+
+import{
+initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import{
+getAuth,
+onAuthStateChanged
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import{
+getFirestore,
+collection,
+doc,
+getDoc,
+getDocs,
+addDoc,
+updateDoc,
+arrayUnion,
+serverTimestamp
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/* =========================================
+ FIREBASE
+========================================= */
+
+const firebaseConfig={
+
+apiKey:"YOUR_API_KEY",
+
+authDomain:
+"YOUR_PROJECT.firebaseapp.com",
+
+projectId:
+"YOUR_PROJECT_ID",
+
+storageBucket:
+"YOUR_PROJECT.firebasestorage.app",
+
+messagingSenderId:
+"YOUR_MESSAGING_SENDER_ID",
+
+appId:"YOUR_APP_ID"
+
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let tickets=[];
+let selected=null;
+let admin=null;
+
+
+/* =========================================
+ ADMIN CHECK
+========================================= */
+
+onAuthStateChanged(
+auth,
+async user=>{
+
+if(!user){
+
+location.href="login.html";
+return;
+
 }
 
-body{
-  font-family:Inter,system-ui,-apple-system,
-  BlinkMacSystemFont,"Segoe UI",sans-serif;
-  background:#f8fafc;
-  color:#0f172a;
+const snap=await getDoc(
+doc(db,"users",user.uid)
+);
+
+if(
+!snap.exists() ||
+snap.data().role!=="admin"
+){
+
+alert("Access denied");
+location.href="dashboard.html";
+return;
+
 }
 
-button,input,select,textarea{
-  font:inherit;
+admin=user;
+loadTickets();
+
+});
+
+
+/* =========================================
+ LOAD
+========================================= */
+
+async function loadTickets(){
+
+try{
+
+const snap=await getDocs(
+collection(db,"supportTickets")
+);
+
+tickets=snap.docs.map(
+d=>({
+id:d.id,
+...d.data()
+})
+);
+
+updateStats();
+render();
+
+}catch(error){
+
+console.error(error);
+toast("Unable to load tickets.");
+
 }
 
-button{
-  cursor:pointer;
 }
 
-header{
-  position:sticky;
-  top:0;
-  z-index:1000;
-  background:#fff;
-  border-bottom:1px solid #e2e8f0;
+
+/* =========================================
+ STATS
+========================================= */
+
+function updateStats(){
+
+document.getElementById("total")
+.textContent=tickets.length;
+
+document.getElementById("open")
+.textContent=tickets.filter(
+x=>x.status==="open"
+).length;
+
+document.getElementById("progress")
+.textContent=tickets.filter(
+x=>x.status==="in-progress"
+).length;
+
+document.getElementById("resolved")
+.textContent=tickets.filter(
+x=>x.status==="resolved"
+).length;
+
 }
 
-.nav{
-  width:min(1250px,92%);
-  min-height:70px;
-  margin:auto;
 
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
+/* =========================================
+ RENDER
+========================================= */
+
+window.render=function(){
+
+const search=
+document.getElementById("search")
+.value.toLowerCase().trim();
+
+const status=
+document.getElementById("statusFilter").value;
+
+const priority=
+document.getElementById("priorityFilter").value;
+
+
+const data=tickets.filter(x=>{
+
+const text=
+`${x.ticketNumber||""}
+${x.email||""}
+${x.userId||""}
+${x.subject||""}`
+.toLowerCase();
+
+return(
+text.includes(search) &&
+(status==="all"||x.status===status) &&
+(priority==="all"||x.priority===priority)
+);
+
+});
+
+
+const list=
+document.getElementById("ticketList");
+
+
+if(!data.length){
+
+list.innerHTML=`
+<tr>
+<td colspan="7">
+<div class="empty">
+No support tickets found.
+</div>
+</td>
+</tr>`;
+
+return;
+
 }
 
-.logo{
-  color:#0b57d0;
-  font-size:20px;
-  font-weight:900;
+
+list.innerHTML=data.map(x=>`
+
+<tr>
+
+<td>
+<strong>
+${esc(
+x.ticketNumber||
+x.id
+)}
+</strong>
+</td>
+
+<td>
+${esc(
+x.email||
+x.userId||
+"-"
+)}
+</td>
+
+<td>
+${esc(x.subject||"No subject")}
+</td>
+
+<td>
+
+<span class="badge ${
+esc(x.priority||"medium")
+}">
+
+${esc(
+x.priority||"medium"
+)}
+
+</span>
+
+</td>
+
+<td>
+
+<span class="badge ${
+esc(x.status||"open")
+}">
+
+${esc(
+x.status||"open"
+)}
+
+</span>
+
+</td>
+
+<td>
+${esc(
+x.assignedTo||
+"Unassigned"
+)}
+</td>
+
+<td>
+
+<button
+class="back"
+onclick="viewTicket('${x.id}')">
+
+View
+
+</button>
+
+</td>
+
+</tr>
+
+`).join("");
+
+};
+
+
+/* =========================================
+ VIEW
+========================================= */
+
+window.viewTicket=async function(id){
+
+const x=tickets.find(
+t=>t.id===id
+);
+
+if(!x)return;
+
+selected=x;
+
+document.getElementById(
+"ticketStatus"
+).value=
+x.status||"open";
+
+document.getElementById(
+"ticketPriority"
+).value=
+x.priority||"medium";
+
+document.getElementById(
+"assignedTo"
+).value=
+x.assignedTo||"";
+
+let messages="";
+
+if(Array.isArray(x.messages)){
+
+messages=x.messages.map(m=>`
+
+<div class="message ${
+m.senderRole==="admin"
+?"admin":""
+}">
+
+<strong>
+${esc(
+m.senderRole==="admin"
+?"Admin":
+m.email||"User"
+)}
+</strong>
+
+${esc(m.text||"")}
+
+</div>
+
+`).join("");
+
 }
 
-.back{
-  color:#475569;
-  font-weight:700;
-}
 
-.container{
-  width:min(1250px,92%);
-  margin:35px auto;
-}
+document.getElementById(
+"ticketDetails"
+).innerHTML=`
 
-.page-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:20px;
-  margin-bottom:28px;
-}
+<div class="info">
 
-.page-header h1{
-  font-size:32px;
-  margin-bottom:5px;
-}
+<small>Ticket</small>
 
-.page-header p{
-  color:#64748b;
-}
-
-.stats{
-  display:grid;
-  grid-template-columns:
-    repeat(5,1fr);
-  gap:15px;
-  margin-bottom:22px;
-}
-
-.stat{
-  background:#fff;
-  border:1px solid #e2e8f0;
-  border-radius:18px;
-  padding:20px;
-}
-
-.stat strong{
-  display:block;
-  font-size:28px;
-  color:#0b57d0;
-}
-
-.stat span{
-  color:#64748b;
-  font-size:13px;
-}
-
-.toolbar{
-  display:grid;
-  grid-template-columns:1fr 180px 180px;
-  gap:12px;
-  background:#fff;
-  border:1px solid #e2e8f0;
-  border-radius:16px;
-  padding:16px;
-  margin-bottom:20px;
-}
-
-input,
-select,
-textarea{
-  width:100%;
-  border:1px solid #cbd5e1;
-  border-radius:10px;
-  padding:11px 13px;
-  outline:none;
-  background:#fff;
-}
-
-input:focus,
-select:focus,
-textarea:focus{
-  border-color:#0b57d0;
-}
-
-.table-box{
-  overflow:auto;
-  background:#fff;
-  border:1px solid #e2e8f0;
-  border-radius:17px;
-}
-
-table{
-  width:100%;
-  min-width:1100px;
-  border-collapse:collapse;
-}
-
-th,
-td{
-  padding:15px;
-  border-bottom:1px solid #e2e8f0;
-  text-align:left;
-}
-
-th{
-  background:#f8fafc;
-  font-size:12px;
-  color:#475569;
-  text-transform:uppercase;
-}
-
-td{
-  font-size:14px;
-}
-
-.badge{
-  display:inline-flex;
-  padding:5px 10px;
-  border-radius:999px;
-  font-size:11px;
-  font-weight:800;
-}
-
-.open{
-  background:#dbeafe;
-  color:#1d4ed8;
-}
-
-.pending{
-  background:#fef3c7;
-  color:#92400e;
-}
-
-.resolved{
-  background:#dcfce7;
-  color:#166534;
-}
-
-.closed{
-  background:#e2e8f0;
-  color:#475569;
-}
-
-.high{
-  background:#fee2e2;
-  color:#991b1b;
-}
-
-.medium{
-  background:#fef3c7;
-  color:#92400e;
-}
-
-.low{
-  background:#dcfce7;
-  color:#166534;
-}
-
-.actions{
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-}
-
-.action{
-  border:0;
-  padding:8px 10px;
-  border-radius:8px;
-  font-size:12px;
-  font-weight:800;
-}
-
-.view{
-  background:#e0f2fe;
-  color:#0369a1;
-}
-
-.reply{
-  background:#e0e7ff;
-  color:#3730a3;
-}
-
-.status{
-  background:#dcfce7;
-  color:#166534;
-}
-
-.delete{
-  background:#fee2e2;
-  color:#991b1b;
-}
-
-.empty{
-  text-align:center;
-  padding:45px;
-  color:#64748b;
-}
-
-.modal{
-  display:none;
-  position:fixed;
-  inset:0;
-  z-index:9999;
-  background:rgba(15,23,42,.65);
-  padding:20px;
-  align-items:center;
-  justify-content:center;
-}
-
-.modal-box{
-  width:min(700px,100%);
-  max-height:92vh;
-  overflow:auto;
-  background:#fff;
-  border-radius:20px;
-  padding:26px;
-  position:relative;
-}
-
-.close{
-  position:absolute;
-  top:13px;
-  right:13px;
-  width:36px;
-  height:36px;
-  border:0;
-  border-radius:50%;
-  background:#f1f5f9;
-  font-size:20px;
-}
-
-.modal-box h2{
-  margin-bottom:20px;
-}
-
-.detail{
-  padding:13px 0;
-  border-bottom:1px solid #e2e8f0;
-}
-
-.detail strong{
-  display:block;
-  color:#64748b;
-  font-size:12px;
-  margin-bottom:4px;
-}
-
-.form-group{
-  margin-bottom:16px;
-}
-
-.form-group label{
-  display:block;
-  font-size:13px;
-  font-weight:800;
-  margin-bottom:7px;
-}
-
-.form-actions{
-  display:flex;
-  gap:10px;
-  margin-top:20px;
-}
-
-.form-actions button{
-  flex:1;
-}
-
-.btn{
-  border:0;
-  border-radius:10px;
-  padding:12px 17px;
-  font-weight:800;
-}
-
-.primary{
-  background:#0b57d0;
-  color:#fff;
-}
-
-.secondary{
-  background:#f1f5f9;
-  color:#334155;
-}
-
-@media(max-width:950px){
-
-  .stats{
-    grid-template-columns:
-      repeat(2,1fr);
-  }
-
-  .toolbar{
-    grid-template-columns:1fr;
-  }
-
-  .page-header{
-    flex-direction:column;
-    align-items:flex-start;
-  }
-}
-
-@media(max-width:500px){
-
-  .stats{
-    grid-template-columns:1fr;
-  }
-
-  .page-header h1{
-    font-size:27px;
-  }
-
-  .form-actions{
-    flex-direction:column;
-  }
-}
-</style>
-</head>
-
-<body>
-
-<header>
-
-  <div class="nav">
-
-    <div class="logo">
-      LetsStudy Pro Admin
-    </div>
-
-    <a
-      href="admin.html"
-      class="back">
-
-      ← Admin Dashboard
-
-    </a>
-
-  </div>
-
-</header>
-
-
-<main class="container">
-
-  <div class="page-header">
-
-    <div>
-
-      <h1>
-        Support & Tickets
-      </h1>
-
-      <p>
-        Manage student support requests,
-        questions and reported problems.
-      </p>
-
-    </div>
-
-  </div>
-
-
-  <!-- STATISTICS -->
-
-  <section class="stats">
-
-    <div class="stat">
-
-      <strong id="totalTickets">
-        0
-      </strong>
-
-      <span>
-        Total Tickets
-      </span>
-
-    </div>
-
-    <div class="stat">
-
-      <strong id="openTickets">
-        0
-      </strong>
-
-      <span>
-        Open
-      </span>
-
-    </div>
-
-    <div class="stat">
-
-      <strong id="pendingTickets">
-        0
-      </strong>
-
-      <span>
-        Pending
-      </span>
-
-    </div>
-
-    <div class="stat">
-
-      <strong id="resolvedTickets">
-        0
-      </strong>
-
-      <span>
-        Resolved
-      </span>
-
-    </div>
-
-    <div class="stat">
-
-      <strong id="highTickets">
-        0
-      </strong>
-
-      <span>
-        High Priority
-      </span>
-
-    </div>
-
-  </section>
-
-
-  <!-- FILTER -->
-
-  <section class="toolbar">
-
-    <input
-      id="searchTicket"
-      type="search"
-      placeholder="Search ticket, subject or student...">
-
-    <select id="statusFilter">
-
-      <option value="">
-        All Status
-      </option>
-
-      <option value="open">
-        Open
-      </option>
-
-      <option value="pending">
-        Pending
-      </option>
-
-      <option value="resolved">
-        Resolved
-      </option>
-
-      <option value="closed">
-        Closed
-      </option>
-
-    </select>
-
-    <select id="priorityFilter">
-
-      <option value="">
-        All Priority
-      </option>
-
-      <option value="high">
-        High
-      </option>
-
-      <option value="medium">
-        Medium
-      </option>
-
-      <option value="low">
-        Low
-      </option>
-
-    </select>
-
-  </section>
-
-
-  <!-- TABLE -->
-
-  <section class="table-box">
-
-    <table>
-
-      <thead>
-
-        <tr>
-
-          <th>
-            Ticket
-          </th>
-
-          <th>
-            Student
-          </th>
-
-          <th>
-            Subject
-          </th>
-
-          <th>
-            Priority
-          </th>
-
-          <th>
-            Status
-          </th>
-
-          <th>
-            Date
-          </th>
-
-          <th>
-            Actions
-          </th>
-
-        </tr>
-
-      </thead>
-
-      <tbody id="ticketsTable">
-
-        <tr>
-
-          <td
-            colspan="7"
-            class="empty">
-
-            Loading tickets...
-
-          </td>
-
-        </tr>
-
-      </tbody>
-
-    </table>
-
-  </section>
-
-</main>
-
-
-<!-- VIEW / REPLY MODAL -->
-
-<div
-  id="ticketModal"
-  class="modal">
-
-  <div class="modal-box">
-
-    <button
-      class="close"
-      onclick="closeModal()">
-
-      ×
-
-    </button>
-
-    <h2 id="modalTitle">
-      Ticket
-    </h2>
-
-    <div id="ticketDetails"></div>
-
-    <div
-      id="replyArea"
-      style="display:none;margin-top:22px;">
-
-      <div class="form-group">
-
-        <label>
-          Reply to Student
-        </label>
-
-        <textarea
-          id="replyMessage"
-          rows="6"
-          placeholder="Write your response..."></textarea>
-
-      </div>
-
-      <div class="form-actions">
-
-        <button
-          class="btn secondary"
-          onclick="closeModal()">
-
-          Cancel
-
-        </button>
-
-        <button
-          class="btn primary"
-          onclick="sendReply()">
-
-          Send Reply
-
-        </button>
-
-      </div>
-
-    </div>
-
-  </div>
+<strong>
+${esc(
+x.ticketNumber||x.id
+)}
+</strong>
 
 </div>
 
 
-<script type="module">
+<div class="info">
 
-import {
-  initializeApp
-}
-from
-"https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+<small>User</small>
 
-import {
-  getAuth,
-  onAuthStateChanged
-}
-from
-"https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+<strong>
+${esc(
+x.email||x.userId||"-"
+)}
+</strong>
 
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  addDoc,
-  doc,
-  serverTimestamp
-}
-from
-"https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+</div>
 
 
-/* =====================================================
-   FIREBASE
-===================================================== */
+<div class="info">
 
-const firebaseConfig = {
+<small>Subject</small>
 
-  apiKey:
-    "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+<strong>
+${esc(x.subject||"-")}
+</strong>
 
-  authDomain:
-    "let-s-study-pro.firebaseapp.com",
+</div>
 
-  projectId:
-    "let-s-study-pro",
 
-  storageBucket:
-    "let-s-study-pro.firebasestorage.app",
+<div class="info">
 
-  messagingSenderId:
-    "YOUR_MESSAGING_SENDER_ID",
+<small>Conversation</small>
 
-  appId:
-    "YOUR_APP_ID"
+${messages||
+"<div class='empty'>No messages yet.</div>"}
+
+</div>
+
+`;
+
+document.getElementById(
+"modal"
+).classList.add("show");
 
 };
 
 
-const app =
-  initializeApp(
-    firebaseConfig
-  );
+/* =========================================
+ SEND REPLY
+========================================= */
 
-const auth =
-  getAuth(app);
+window.sendReply=async function(){
 
-const db =
-  getFirestore(app);
+if(!selected)return;
 
+const text=
+document.getElementById(
+"replyText"
+).value.trim();
 
-/* =====================================================
-   STATE
-===================================================== */
+if(!text)return;
 
-let tickets = [];
+try{
 
-let selectedTicket = null;
+await updateDoc(
+doc(
+db,
+"supportTickets",
+selected.id
+),
+{
 
+messages:arrayUnion({
 
-/* =====================================================
-   LOAD TICKETS
-===================================================== */
+text,
 
-async function loadTickets(){
+senderId:admin.uid,
 
-  const table =
-    document.getElementById(
-      "ticketsTable"
-    );
+senderRole:"admin",
 
-  try{
+createdAt:
+new Date().toISOString()
 
-    const snapshot =
-      await getDocs(
-        collection(
-          db,
-          "supportTickets"
-        )
-      );
+}),
 
-    tickets = [];
+status:"in-progress",
 
-    snapshot.forEach(
-      item => {
-
-        tickets.push({
-
-          id:
-            item.id,
-
-          ...item.data()
-
-        });
-
-      }
-    );
-
-
-    updateStats();
-
-    applyFilters();
-
-  }catch(error){
-
-    console.error(
-      "Load tickets error:",
-      error
-    );
-
-    table.innerHTML = `
-
-      <tr>
-
-        <td
-          colspan="7"
-          class="empty">
-
-          Failed to load tickets.
-
-        </td>
-
-      </tr>
-
-    `;
-
-  }
+updatedAt:
+serverTimestamp()
 
 }
+);
 
+document.getElementById(
+"replyText"
+).value="";
 
-/* =====================================================
-   STATISTICS
-===================================================== */
+toast("Reply sent.");
 
-function updateStats(){
+await loadTickets();
 
-  document.getElementById(
-    "totalTickets"
-  ).textContent =
-    tickets.length;
+viewTicket(selected.id);
 
+}catch(error){
 
-  document.getElementById(
-    "openTickets"
-  ).textContent =
-
-    tickets.filter(
-      item =>
-        normalize(
-          item.status
-        ) === "open"
-    ).length;
-
-
-  document.getElementById(
-    "pendingTickets"
-  ).textContent =
-
-    tickets.filter(
-      item =>
-        normalize(
-          item.status
-        ) === "pending"
-    ).length;
-
-
-  document.getElementById(
-    "resolvedTickets"
-  ).textContent =
-
-    tickets.filter(
-      item =>
-        normalize(
-          item.status
-        ) === "resolved"
-    ).length;
-
-
-  document.getElementById(
-    "highTickets"
-  ).textContent =
-
-    tickets.filter(
-      item =>
-        normalize(
-          item.priority
-        ) === "high"
-    ).length;
+console.error(error);
+toast("Unable to send reply.");
 
 }
-
-
-/* =====================================================
-   FILTER
-===================================================== */
-
-function applyFilters(){
-
-  const search =
-    document.getElementById(
-      "searchTicket"
-    )
-    .value
-    .trim()
-    .toLowerCase();
-
-
-  const status =
-    document.getElementById(
-      "statusFilter"
-    ).value;
-
-
-  const priority =
-    document.getElementById(
-      "priorityFilter"
-    ).value;
-
-
-  const filtered =
-    tickets.filter(
-      item => {
-
-        const subject =
-          String(
-            item.subject || ""
-          ).toLowerCase();
-
-
-        const message =
-          String(
-            item.message || ""
-          ).toLowerCase();
-
-
-        const student =
-          String(
-            item.studentName ||
-            item.email ||
-            item.userEmail ||
-            ""
-          ).toLowerCase();
-
-
-        const ticketId =
-          String(
-            item.id || ""
-          ).toLowerCase();
-
-
-        return (
-
-          (
-            !search ||
-            subject.includes(search) ||
-            message.includes(search) ||
-            student.includes(search) ||
-            ticketId.includes(search)
-          )
-
-          &&
-
-          (
-            !status ||
-            normalize(
-              item.status
-            ) === status
-          )
-
-          &&
-
-          (
-            !priority ||
-            normalize(
-              item.priority
-            ) === priority
-          )
-
-        );
-
-      }
-    );
-
-
-  renderTickets(
-    filtered
-  );
-
-}
-
-
-/* =====================================================
-   RENDER
-===================================================== */
-
-function renderTickets(list){
-
-  const table =
-    document.getElementById(
-      "ticketsTable"
-    );
-
-
-  if(!list.length){
-
-    table.innerHTML = `
-
-      <tr>
-
-        <td
-          colspan="7"
-          class="empty">
-
-          No support tickets found.
-
-        </td>
-
-      </tr>
-
-    `;
-
-    return;
-
-  }
-
-
-  table.innerHTML =
-    list.map(
-      item => {
-
-        const status =
-          normalize(
-            item.status
-          ) || "open";
-
-
-        const priority =
-          normalize(
-            item.priority
-          ) || "medium";
-
-
-        return `
-
-          <tr>
-
-            <td>
-
-              <strong>
-
-                #${escapeHTML(
-                  item.id.slice(
-                    0,
-                    8
-                  )
-                )}
-
-              </strong>
-
-            </td>
-
-
-            <td>
-
-              ${escapeHTML(
-                item.studentName ||
-                item.name ||
-                item.email ||
-                item.userEmail ||
-                "Unknown Student"
-              )}
-
-            </td>
-
-
-            <td>
-
-              ${escapeHTML(
-                item.subject ||
-                "No subject"
-              )}
-
-            </td>
-
-
-            <td>
-
-              <span
-                class="badge ${priority}">
-
-                ${escapeHTML(
-                  priority
-                )}
-
-              </span>
-
-            </td>
-
-
-            <td>
-
-              <span
-                class="badge ${status}">
-
-                ${escapeHTML(
-                  status
-                )}
-
-              </span>
-
-            </td>
-
-
-            <td>
-
-              ${formatDate(
-                item.createdAt
-              )}
-
-            </td>
-
-
-            <td>
-
-              <div class="actions">
-
-                <button
-                  class="action view"
-                  onclick="viewTicket('${item.id}')">
-
-                  View
-
-                </button>
-
-
-                <button
-                  class="action reply"
-                  onclick="replyTicket('${item.id}')">
-
-                  Reply
-
-                </button>
-
-
-                <button
-                  class="action status"
-                  onclick="resolveTicket('${item.id}')">
-
-                  Resolve
-
-                </button>
-
-
-                <button
-                  class="action delete"
-                  onclick="deleteTicket('${item.id}')">
-
-                  Delete
-
-                </button>
-
-              </div>
-
-            </td>
-
-          </tr>
-
-        `;
-
-      }
-    ).join("");
-
-}
-
-
-/* =====================================================
-   VIEW TICKET
-===================================================== */
-
-window.viewTicket =
-function(id){
-
-  const item =
-    tickets.find(
-      ticket =>
-        ticket.id === id
-    );
-
-
-  if(!item){
-
-    alert(
-      "Ticket not found."
-    );
-
-    return;
-
-  }
-
-
-  selectedTicket =
-    item;
-
-
-  document.getElementById(
-    "modalTitle"
-  ).textContent =
-    "Support Ticket";
-
-
-  document.getElementById(
-    "replyArea"
-  ).style.display =
-    "none";
-
-
-  document.getElementById(
-    "ticketDetails"
-  ).innerHTML = `
-
-    <div class="detail">
-
-      <strong>
-        Student
-      </strong>
-
-      ${escapeHTML(
-        item.studentName ||
-        item.name ||
-        item.email ||
-        item.userEmail ||
-        "Unknown"
-      )}
-
-    </div>
-
-
-    <div class="detail">
-
-      <strong>
-        Email
-      </strong>
-
-      ${escapeHTML(
-        item.email ||
-        item.userEmail ||
-        "—"
-      )}
-
-    </div>
-
-
-    <div class="detail">
-
-      <strong>
-        Subject
-      </strong>
-
-      ${escapeHTML(
-        item.subject ||
-        "—"
-      )}
-
-    </div>
-
-
-    <div class="detail">
-
-      <strong>
-        Priority
-      </strong>
-
-      ${escapeHTML(
-        item.priority ||
-        "medium"
-      )}
-
-    </div>
-
-
-    <div class="detail">
-
-      <strong>
-        Status
-      </strong>
-
-      ${escapeHTML(
-        item.status ||
-        "open"
-      )}
-
-    </div>
-
-
-    <div class="detail">
-
-      <strong>
-        Message
-      </strong>
-
-      ${escapeHTML(
-        item.message ||
-        item.description ||
-        "No message."
-      )}
-
-    </div>
-
-
-    <div class="detail">
-
-      <strong>
-        Created
-      </strong>
-
-      ${formatDate(
-        item.createdAt
-      )}
-
-    </div>
-
-  `;
-
-
-  document.getElementById(
-    "ticketModal"
-  ).style.display =
-    "flex";
 
 };
 
 
-/* =====================================================
-   REPLY
-===================================================== */
+/* =========================================
+ UPDATE
+========================================= */
 
-window.replyTicket =
-function(id){
+window.updateTicket=async function(){
 
-  const item =
-    tickets.find(
-      ticket =>
-        ticket.id === id
-    );
+if(!selected)return;
 
+try{
 
-  if(!item){
+await updateDoc(
+doc(
+db,
+"supportTickets",
+selected.id
+),
+{
 
-    alert(
-      "Ticket not found."
-    );
+status:
+document.getElementById(
+"ticketStatus"
+).value,
 
-    return;
+priority:
+document.getElementById(
+"ticketPriority"
+).value,
 
-  }
+assignedTo:
+document.getElementById(
+"assignedTo"
+).value.trim(),
 
+updatedAt:
+serverTimestamp()
 
-  selectedTicket =
-    item;
+}
+);
 
+toast("Ticket updated.");
 
-  document.getElementById(
-    "modalTitle"
-  ).textContent =
-    "Reply to Student";
+closeModal();
 
+await loadTickets();
 
-  document.getElementById(
-    "ticketDetails"
-  ).innerHTML = `
+}catch(error){
 
-    <div class="detail">
+console.error(error);
+toast("Unable to update ticket.");
 
-      <strong>
-        Subject
-      </strong>
-
-      ${escapeHTML(
-        item.subject ||
-        "Support Request"
-      )}
-
-    </div>
-
-
-    <div class="detail">
-
-      <strong>
-        Student Message
-      </strong>
-
-      ${escapeHTML(
-        item.message ||
-        item.description ||
-        "No message."
-      )}
-
-    </div>
-
-  `;
-
-
-  document.getElementById(
-    "replyMessage"
-  ).value = "";
-
-
-  document.getElementById(
-    "replyArea"
-  ).style.display =
-    "block";
-
-
-  document.getElementById(
-    "ticketModal"
-  ).style.display =
-    "flex";
+}
 
 };
 
 
-/* =====================================================
-   SEND REPLY
-===================================================== */
+/* =========================================
+ CREATE
+========================================= */
 
-window.sendReply =
-async function(){
+document.getElementById(
+"createForm"
+).addEventListener(
+"submit",
+async e=>{
 
-  if(!selectedTicket){
+e.preventDefault();
 
-    return;
+const ticketNumber=
+"LS-"+Date.now();
 
-  }
+const data={
 
+ticketNumber,
 
-  const message =
-    document.getElementById(
-      "replyMessage"
-    ).value.trim();
+userId:
+document.getElementById(
+"newUser"
+).value.trim(),
 
+subject:
+document.getElementById(
+"newSubject"
+).value.trim(),
 
-  if(!message){
+priority:
+document.getElementById(
+"newPriority"
+).value,
 
-    alert(
-      "Please enter a reply."
-    );
+status:"open",
 
-    return;
+messages:[{
 
-  }
+text:
+document.getElementById(
+"newMessage"
+).value.trim(),
 
+senderId:admin.uid,
 
-  try{
+senderRole:"admin",
 
-    await addDoc(
+createdAt:
+new Date().toISOString()
 
-      collection(
-        db,
-        "supportReplies"
-      ),
+}],
 
-      {
+assignedTo:"",
 
-        ticketId:
-          selectedTicket.id,
+createdBy:admin.uid,
 
-        studentId:
-          selectedTicket.userId ||
-          selectedTicket.uid ||
-          "",
+createdAt:
+serverTimestamp(),
 
-        studentEmail:
-          selectedTicket.email ||
-          selectedTicket.userEmail ||
-          "",
-
-        message:
-          message,
-
-        sender:
-          "admin",
-
-        createdAt:
-          serverTimestamp()
-
-      }
-
-    );
-
-
-    await updateDoc(
-
-      doc(
-        db,
-        "supportTickets",
-        selectedTicket.id
-      ),
-
-      {
-
-        status:
-          "pending",
-
-        lastReplyAt:
-          serverTimestamp()
-
-      }
-
-    );
-
-
-    alert(
-      "Reply sent successfully."
-    );
-
-
-    closeModal();
-
-    await loadTickets();
-
-  }catch(error){
-
-    console.error(
-      "Reply error:",
-      error
-    );
-
-    alert(
-      "Unable to send reply."
-    );
-
-  }
+updatedAt:
+serverTimestamp()
 
 };
 
 
-/* =====================================================
-   RESOLVE
-===================================================
-/* =====================================================
-   RESOLVE
-===================================================== */
+try{
 
-window.resolveTicket =
-async function(id){
+await addDoc(
+collection(db,"supportTickets"),
+data
+);
 
-  const item =
-    tickets.find(
-      ticket =>
-        ticket.id === id
-    );
+toast("Ticket created.");
 
-  if(!item){
+closeCreate();
 
-    alert(
-      "Ticket not found."
-    );
+document.getElementById(
+"createForm"
+).reset();
 
-    return;
+await loadTickets();
 
-  }
+}catch(error){
 
-  const confirmed =
-    confirm(
-      "Mark this ticket as resolved?"
-    );
+console.error(error);
+toast("Unable to create ticket.");
 
-  if(!confirmed){
-    return;
-  }
+}
 
-  try{
+});
 
-    await updateDoc(
 
-      doc(
-        db,
-        "supportTickets",
-        id
-      ),
+/* =========================================
+ MODALS
+========================================= */
 
-      {
-        status:
-          "resolved",
+window.closeModal=function(){
 
-        resolvedAt:
-          serverTimestamp(),
+document.getElementById(
+"modal"
+).classList.remove("show");
 
-        updatedAt:
-          serverTimestamp()
-      }
-
-    );
-
-    alert(
-      "Ticket resolved successfully."
-    );
-
-    await loadTickets();
-
-  }catch(error){
-
-    console.error(
-      "Resolve ticket error:",
-      error
-    );
-
-    alert(
-      "Unable to resolve ticket."
-    );
-
-  }
+selected=null;
 
 };
+
+window.openCreate=function(){
+
+document.getElementById(
+"createModal"
+).classList.add("show");
+
+};
+
+window.closeCreate=function(){
+
+document.getElementById(
+"createModal"
+).classList.remove("show");
+
+};
+
+
+/* =========================================
+ HELPERS
+========================================= */
+
+function esc(value){
+
+return String(value??"")
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+
+}
+
+function toast(text){
+
+const el=
+document.getElementById("toast");
+
+el.textContent=text;
+el.classList.add("show");
+
+clearTimeout(window.toastTimer);
+
+window.toastTimer=setTimeout(
+()=>{
+el.classList.remove("show");
+},
+3000
+);
+
+}
+
+</script></body>
+</html>
