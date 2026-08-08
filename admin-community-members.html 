@@ -1,0 +1,931 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Community Members | LetsStudy Pro</title><style>
+*{box-sizing:border-box}
+body{margin:0;background:#f5f7fb;color:#172033;font-family:Inter,Arial,sans-serif}
+.sidebar{position:fixed;left:0;top:0;width:235px;height:100vh;background:#111827;color:#fff;padding:20px;z-index:10}
+.logo{font-size:20px;font-weight:800;margin-bottom:25px}
+.nav a{display:block;text-decoration:none;color:#cbd5e1;padding:11px;border-radius:8px;margin:4px 0}
+.nav a:hover,.nav a.active{background:#2563eb;color:#fff}
+.main{margin-left:235px;padding:25px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+h1{margin:0}
+.card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 3px 15px #00000008;margin-bottom:18px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}
+.stat span{color:#64748b;font-size:13px}
+.stat b{display:block;font-size:26px;margin-top:7px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap}
+input,select{padding:11px;border:1px solid #dbe1ea;border-radius:8px;outline:0}
+.search{width:min(420px,100%)}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:13px;border-bottom:1px solid #edf0f4}
+th{font-size:12px;color:#64748b}
+.badge{padding:5px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.green{background:#dcfce7;color:#166534}
+.red{background:#fee2e2;color:#991b1b}
+.blue{background:#dbeafe;color:#1e40af}
+.gray{background:#e5e7eb;color:#374151}
+.btn{border:0;border-radius:7px;padding:8px 11px;cursor:pointer;font-weight:600}
+.block{background:#dc2626;color:white}
+.unblock{background:#16a34a;color:white}
+.remove{background:#111827;color:white}
+.edit{background:#e5e7eb;color:#111827}
+.actions{display:flex;gap:5px;flex-wrap:wrap}
+.empty{text-align:center;padding:35px;color:#64748b}
+.modal{display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;z-index:50}
+.modal.show{display:flex}
+.modal-box{background:#fff;width:min(430px,94%);padding:22px;border-radius:15px}
+.modal-head{display:flex;justify-content:space-between;align-items:center}
+.close{font-size:25px;cursor:pointer}
+.form-group{margin:15px 0}
+.form-group label{display:block;font-weight:600;margin-bottom:6px}
+.form-group input,.form-group select{width:100%}
+.message{position:fixed;right:20px;bottom:20px;background:#16a34a;color:#fff;padding:13px 18px;border-radius:8px;display:none;z-index:100}
+.message.show{display:block}
+@media(max-width:800px){
+.sidebar{width:65px;padding:12px}
+.logo{font-size:0}.logo:after{content:"LS";font-size:18px}
+.nav a{font-size:0;text-align:center}
+.main{margin-left:65px;padding:15px}
+.stats{grid-template-columns:repeat(2,1fr)}
+table{min-width:850px}
+.card{overflow-x:auto}
+}
+</style></head><body><aside class="sidebar"><div class="logo">LetsStudy Pro</div><nav class="nav">
+<a href="admin-community.html">💬 Community</a>
+<a href="admin-community-groups.html">👥 Groups</a>
+<a href="admin-community-members.html" class="active">👤 Members</a>
+<a href="admin-community-reports.html">🚨 Reports</a>
+<a href="admin-dashboard.html">🏠 Dashboard</a>
+</nav></aside><main class="main"><div class="top"><div>
+<h1>Community Members</h1>
+<p>Manage members and community access.</p>
+</div></div><div class="stats"><div class="card stat">
+<span>Total Members</span>
+<b id="totalMembers">0</b>
+</div><div class="card stat">
+<span>Active</span>
+<b id="activeMembers">0</b>
+</div><div class="card stat">
+<span>Blocked</span>
+<b id="blockedMembers">0</b>
+</div><div class="card stat">
+<span>Admins</span>
+<b id="adminMembers">0</b>
+</div></div><div class="card"><div class="toolbar"><input
+id="search"
+class="search"
+placeholder="Search name, email or UID..."
+oninput="renderMembers()">
+
+<select id="statusFilter"
+onchange="renderMembers()">
+
+<option value="all">All Status</option>
+<option value="active">Active</option>
+<option value="blocked">Blocked</option></select><select id="roleFilter"
+onchange="renderMembers()">
+
+<option value="all">All Roles</option>
+<option value="member">Members</option>
+<option value="admin">Admins</option>
+<option value="moderator">Moderators</option></select></div></div><div class="card"><div style="overflow-x:auto"><table><thead><tr>
+<th>Member</th>
+<th>Role</th>
+<th>Status</th>
+<th>Joined</th>
+<th>Actions</th>
+</tr></thead><tbody id="membersTable"><tr>
+<td colspan="5" class="empty">
+Loading members...
+</td>
+</tr></tbody></table></div></div></main><!-- EDIT MEMBER --><div class="modal" id="editModal"><div class="modal-box"><div class="modal-head">
+<h2>Edit Member</h2>
+<span class="close" onclick="closeModal()">×</span>
+</div><form id="editForm"><div class="form-group"><label>Role</label>
+
+<select id="editRole"><option value="member">Member</option>
+<option value="moderator">Moderator</option>
+<option value="admin">Admin</option></select></div><div class="form-group"><label>Status</label>
+
+<select id="editStatus"><option value="active">Active</option>
+<option value="blocked">Blocked</option></select></div><button
+class="btn"
+style="background:#2563eb;color:white;width:100%"
+type="submit">
+
+Save Changes
+
+</button></form></div>
+</div><div id="message" class="message"></div><script type="module">
+
+import {
+initializeApp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+getAuth,
+onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+getFirestore,
+collection,
+getDocs,
+doc,
+updateDoc,
+deleteDoc,
+setDoc,
+serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/* =========================================
+FIREBASE
+========================================= */
+
+const firebaseConfig={
+
+apiKey:"YOUR_API_KEY",
+
+authDomain:"YOUR_PROJECT.firebaseapp.com",
+
+projectId:"YOUR_PROJECT_ID",
+
+storageBucket:"YOUR_PROJECT.firebasestorage.app",
+
+messagingSenderId:"YOUR_SENDER_ID",
+
+appId:"YOUR_APP_ID"
+
+};
+
+const app=initializeApp(firebaseConfig);
+
+const auth=getAuth(app);
+
+const db=getFirestore(app);
+
+
+/* =========================================
+DATA
+========================================= */
+
+let members=[];
+let editingId=null;
+
+
+/* =========================================
+AUTH
+========================================= */
+
+onAuthStateChanged(auth,async user=>{
+
+if(!user){
+
+location.href="login.html";
+
+return;
+
+}
+
+await loadMembers();
+
+});
+
+
+/* =========================================
+LOAD
+========================================= */
+
+async function loadMembers(){
+
+try{
+
+const snap=await getDocs(
+collection(db,"communityMembers")
+);
+
+
+members=snap.docs.map(d=>({
+
+id:d.id,
+...d.data()
+
+}));
+
+
+renderMembers();
+updateStats();
+
+
+}catch(error){
+
+console.error(error);
+
+document.getElementById(
+"membersTable"
+).innerHTML=`
+
+<tr>
+<td colspan="5" class="empty">
+Unable to load members.
+</td>
+</tr>
+
+`;
+
+}
+
+}
+
+
+/* =========================================
+RENDER
+========================================= */
+
+window.renderMembers=function(){
+
+const search=
+document.getElementById(
+"search"
+).value.toLowerCase().trim();
+
+
+const status=
+document.getElementById(
+"statusFilter"
+).value;
+
+
+const role=
+document.getElementById(
+"roleFilter"
+).value;
+
+
+const filtered=members.filter(m=>{
+
+const text=`
+
+${m.name||""}
+${m.email||""}
+${m.uid||""}
+
+`.toLowerCase();
+
+
+const matchSearch=
+text.includes(search);
+
+
+const memberStatus=
+m.status||"active";
+
+
+const memberRole=
+m.role||"member";
+
+
+const matchStatus=
+status==="all" ||
+memberStatus===status;
+
+
+const matchRole=
+role==="all" ||
+memberRole===role;
+
+
+return(
+matchSearch &&
+matchStatus &&
+matchRole
+);
+
+});
+
+
+const table=
+document.getElementById(
+"membersTable"
+);
+
+
+if(!filtered.length){
+
+table.innerHTML=`
+
+<tr>
+<td colspan="5" class="empty">
+No members found.
+</td>
+</tr>
+
+`;
+
+return;
+
+}
+
+
+table.innerHTML="";
+
+
+filtered.forEach(m=>{
+
+const tr=
+document.createElement("tr");
+
+
+const status=
+m.status||"active";
+
+
+const role=
+m.role||"member";
+
+
+tr.innerHTML=`
+
+<td>
+
+<strong>
+${escapeHTML(
+m.name ||
+m.displayName ||
+"Member"
+)}
+</strong>
+
+<div style="
+font-size:12px;
+color:#64748b;
+margin-top:4px">
+
+${escapeHTML(
+m.email||m.uid||""
+)}
+
+</div>
+
+</td>
+
+
+<td>
+
+<span class="badge ${
+role==="admin"
+?"red":
+role==="moderator"
+?"blue":
+"gray"
+}">
+
+${escapeHTML(role)}
+
+</span>
+
+</td>
+
+
+<td>
+
+<span class="badge ${
+status==="blocked"
+?"red"
+:"green"
+}">
+
+${status==="blocked"
+?"Blocked"
+:"Active"}
+
+</span>
+
+</td>
+
+
+<td>
+${formatDate(m.joinedAt)}
+</td>
+
+
+<td>
+
+<div class="actions">
+
+<button
+class="btn edit"
+onclick="editMember('${m.id}')">
+
+Edit
+
+</button>
+
+
+${
+status==="blocked"
+
+?`
+
+<button
+class="btn unblock"
+onclick="unblockMember('${m.id}')">
+
+Unblock
+
+</button>
+
+`
+
+:`
+
+<button
+class="btn block"
+onclick="blockMember('${m.id}')">
+
+Block
+
+</button>
+
+`
+}
+
+
+<button
+class="btn remove"
+onclick="removeMember('${m.id}')">
+
+Remove
+
+</button>
+
+</div>
+
+</td>
+
+`;
+
+
+table.appendChild(tr);
+
+});
+
+};
+
+
+/* =========================================
+STATS
+========================================= */
+
+function updateStats(){
+
+document.getElementById(
+"totalMembers"
+).textContent=
+members.length;
+
+
+document.getElementById(
+"activeMembers"
+).textContent=
+members.filter(
+m=>(m.status||"active")==="active"
+).length;
+
+
+document.getElementById(
+"blockedMembers"
+).textContent=
+members.filter(
+m=>m.status==="blocked"
+).length;
+
+
+document.getElementById(
+"adminMembers"
+).textContent=
+members.filter(
+m=>m.role==="admin"
+).length;
+
+}
+
+
+/* =========================================
+EDIT
+========================================= */
+
+window.editMember=function(id){
+
+const member=
+members.find(
+m=>m.id===id
+);
+
+
+if(!member)return;
+
+
+editingId=id;
+
+
+document.getElementById(
+"editRole"
+).value=
+member.role||"member";
+
+
+document.getElementById(
+"editStatus"
+).value=
+member.status||"active";
+
+
+document.getElementById(
+"editModal"
+).classList.add("show");
+
+};
+
+
+/* =========================================
+SAVE EDIT
+========================================= */
+
+document.getElementById(
+"editForm"
+).addEventListener(
+"submit",
+async e=>{
+
+e.preventDefault();
+
+
+if(!editingId)return;
+
+
+try{
+
+await updateDoc(
+doc(
+db,
+"communityMembers",
+editingId
+),
+{
+
+role:
+document.getElementById(
+"editRole"
+).value,
+
+status:
+document.getElementById(
+"editStatus"
+).value,
+
+updatedAt:
+serverTimestamp()
+
+}
+);
+
+
+showMessage(
+"Member updated successfully."
+);
+
+
+closeModal();
+
+await loadMembers();
+
+
+}catch(error){
+
+console.error(error);
+
+showMessage(
+"Unable to update member."
+);
+
+}
+
+}
+);
+
+
+/* =========================================
+BLOCK
+========================================= */
+
+window.blockMember=async function(id){
+
+if(!confirm(
+"Block this member?"
+))return;
+
+
+try{
+
+await updateDoc(
+doc(
+db,
+"communityMembers",
+id
+),
+{
+
+status:"blocked",
+
+updatedAt:
+serverTimestamp()
+
+}
+);
+
+
+/* Keep a separate blocked record */
+
+await setDoc(
+doc(
+db,
+"blockedUsers",
+id
+),
+{
+
+uid:id,
+
+blockedAt:
+serverTimestamp(),
+
+status:"blocked"
+
+},
+{merge:true}
+);
+
+
+showMessage(
+"Member blocked successfully."
+);
+
+
+await loadMembers();
+
+
+}catch(error){
+
+console.error(error);
+
+showMessage(
+"Unable to block member."
+);
+
+}
+
+};
+
+
+/* =========================================
+UNBLOCK
+========================================= */
+
+window.unblockMember=
+async function(id){
+
+if(!confirm(
+"Unblock this member?"
+))return;
+
+
+try{
+
+await updateDoc(
+doc(
+db,
+"communityMembers",
+id
+),
+{
+
+status:"active",
+
+updatedAt:
+serverTimestamp()
+
+}
+);
+
+
+await deleteDoc(
+doc(
+db,
+"blockedUsers",
+id
+)
+).catch(()=>{});
+
+
+showMessage(
+"Member unblocked successfully."
+);
+
+
+await loadMembers();
+
+
+}catch(error){
+
+console.error(error);
+
+showMessage(
+"Unable to unblock member."
+);
+
+}
+
+};
+
+
+/* =========================================
+REMOVE
+========================================= */
+
+window.removeMember=
+async function(id){
+
+const member=
+members.find(
+m=>m.id===id
+);
+
+
+if(!confirm(
+`Remove ${
+member?.name ||
+"this member"
+} from the community?`
+))return;
+
+
+try{
+
+await deleteDoc(
+doc(
+db,
+"communityMembers",
+id
+)
+);
+
+
+await deleteDoc(
+doc(
+db,
+"blockedUsers",
+id
+)
+).catch(()=>{});
+
+
+showMessage(
+"Member removed successfully."
+);
+
+
+await loadMembers();
+
+
+}catch(error){
+
+console.error(error);
+
+showMessage(
+"Unable to remove member."
+);
+
+}
+
+};
+
+
+/* =========================================
+MODAL
+========================================= */
+
+window.closeModal=function(){
+
+document.getElementById(
+"editModal"
+).classList.remove(
+"show"
+);
+
+editingId=null;
+
+};
+
+
+document.getElementById(
+"editModal"
+).addEventListener(
+"click",
+e=>{
+
+if(
+e.target.id==="editModal"
+){
+
+closeModal();
+
+}
+
+});
+
+
+/* =========================================
+HELPERS
+========================================= */
+
+function escapeHTML(value){
+
+return String(
+value??""
+)
+
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+
+}
+
+
+function formatDate(timestamp){
+
+if(!timestamp)return"-";
+
+try{
+
+const date=
+timestamp.toDate
+?timestamp.toDate()
+:new Date(timestamp);
+
+
+return date.toLocaleDateString(
+"en-GB",
+{
+day:"2-digit",
+month:"short",
+year:"numeric"
+}
+);
+
+}catch{
+
+return"-";
+
+}
+
+}
+
+
+function showMessage(text){
+
+const box=
+document.getElementById(
+"message"
+);
+
+
+box.textContent=text;
+
+box.classList.add("show");
+
+
+clearTimeout(
+window.msgTimer
+);
+
+
+window.msgTimer=
+setTimeout(()=>{
+
+box.classList.remove(
+"show"
+);
+
+},3000);
+
+}
+
+</script></body>
+</html>
