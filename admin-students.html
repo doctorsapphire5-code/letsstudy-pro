@@ -1,1403 +1,810 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Students | LetsStudy Pro</title><style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f7fb;color:#172033}
+button,input,select{font:inherit}
+button{border:0;border-radius:9px;padding:9px 12px;cursor:pointer}
+header{height:62px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:12px;padding:0 16px;position:sticky;top:0;z-index:20}
+header h1{flex:1;font-size:18px;margin:0}
+main{max-width:1250px;margin:auto;padding:18px}
+.back{background:#eef2ff;color:#1d4ed8}
+.primary{background:#2563eb;color:#fff}
+.success{background:#dcfce7;color:#15803d}
+.danger{background:#fee2e2;color:#b91c1c}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.card,.stat{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:15px}
+.stat span{font-size:11px;color:#64748b}
+.stat b{display:block;font-size:23px;margin-top:5px}
+.toolbar{display:flex;gap:8px;margin-bottom:14px}
+.toolbar input{max-width:450px}
+input,select{width:100%;padding:10px;border:1px solid #dbe1e8;border-radius:9px;background:#fff;outline:none}
+.table{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{text-align:left;padding:11px 8px;border-bottom:1px solid #edf0f4;white-space:nowrap}
+th{font-size:10px;color:#64748b}
+.badge{padding:4px 8px;border-radius:20px;font-size:9px;font-weight:bold}
+.active{background:#dcfce7;color:#15803d}
+.blocked{background:#fee2e2;color:#b91c1c}
+.pending{background:#fef3c7;color:#a16207}
+.modal{display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;padding:15px;z-index:50}
+.modal.show{display:flex}
+.box{background:#fff;width:100%;max-width:700px;max-height:90vh;overflow:auto;border-radius:16px;padding:20px}
+.head{display:flex;align-items:center;margin-bottom:16px}
+.head h2{flex:1;font-size:18px;margin:0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.info{padding:12px;background:#f8fafc;border-radius:10px;margin-bottom:8px}
+.info small{display:block;color:#64748b;font-size:10px}
+.info strong{display:block;margin-top:4px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.empty{text-align:center;padding:35px;color:#64748b}
+.toast{position:fixed;right:20px;bottom:20px;background:#172033;color:#fff;padding:12px 15px;border-radius:9px;display:none;z-index:100;font-size:12px}
+.toast.show{display:block}
+@media(max-width:750px){
+.stats{grid-template-columns:1fr 1fr}
+.grid{grid-template-columns:1fr}
+.toolbar{flex-wrap:wrap}
+}
+</style></head><body><header><button class="back"
+onclick="location.href='admin-dashboard.html'">
+←
+</button>
+
+<h1>👨‍🎓 Students</h1><button class="primary"
+onclick="exportStudents()">
+⬇ Export
+</button>
+
+</header><main><section class="stats"><div class="stat">
+<span>Total Students</span>
+<b id="total">0</b>
+</div><div class="stat">
+<span>Active</span>
+<b id="active">0</b>
+</div><div class="stat">
+<span>Blocked</span>
+<b id="blocked">0</b>
+</div><div class="stat">
+<span>Premium</span>
+<b id="premium">0</b>
+</div></section><section class="card"><div class="toolbar"><input
+id="search"
+placeholder="Search name, email or UID..."
+oninput="render()">
+
+<select
+id="status"
+onchange="render()">
+
+<option value="all">All Status</option>
+<option value="active">Active</option>
+<option value="blocked">Blocked</option>
+<option value="pending">Pending</option></select><select
+id="form"
+onchange="render()">
+
+<option value="all">All Forms</option>
+<option>Form 1</option>
+<option>Form 2</option>
+<option>Form 3</option>
+<option>Form 4</option>
+<option>Form 5</option>
+<option>Form 6</option>
+<option>University</option></select></div><div class="table"><table><thead><tr>
+<th>Student</th>
+<th>Email</th>
+<th>Form</th>
+<th>Role</th>
+<th>Status</th>
+<th>Premium</th>
+<th>Actions</th>
+</tr></thead><tbody id="studentList"></tbody></table></div></section></main><!-- PROFILE MODAL --><div id="modal" class="modal"><div class="box"><div class="head"><h2>Student Profile</h2><button onclick="closeModal()">✕</button>
+
+</div><div class="grid"><div class="info">
+<small>Name</small>
+<strong id="pName">-</strong>
+</div><div class="info">
+<small>Email</small>
+<strong id="pEmail">-</strong>
+</div><div class="info">
+<small>Firebase UID</small>
+<strong id="pUid">-</strong>
+</div><div class="info">
+<small>Role</small>
+<strong id="pRole">-</strong>
+</div><div class="info">
+<small>Form</small>
+<strong id="pForm">-</strong>
+</div><div class="info">
+<small>Status</small>
+<strong id="pStatus">-</strong>
+</div><div class="info">
+<small>Referral Code</small>
+<strong id="pReferral">-</strong>
+</div><div class="info">
+<small>Wallet Balance</small>
+<strong id="pWallet">TZS 0</strong>
+</div><div class="info">
+<small>Orders</small>
+<strong id="pOrders">0</strong>
+</div><div class="info">
+<small>Premium</small>
+<strong id="pPremium">No</strong>
+</div></div><div class="actions"><button
+class="primary"
+onclick="editStudent()">
+Edit
+</button>
+
+<button
+class="success"
+onclick="setStatus('active')">
+Activate
+</button>
+
+<button
+class="danger"
+onclick="setStatus('blocked')">
+Block
+</button>
 
-<title>LetsStudy Pro | Student Management</title>
+<button
+class="danger"
+onclick="deleteStudent()">
+Delete
+</button>
 
-<meta name="description"
-      content="LetsStudy Pro Admin Student Management">
+</div></div></div><div id="toast" class="toast"></div><script type="module">
 
-<link rel="icon"
-      type="image/png"
-      href="/favicon.png">
-
-<style>
-*{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
-}
-
-body{
-  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,
-  "Segoe UI",sans-serif;
-  background:#f8fafc;
-  color:#0f172a;
-}
-
-button,input,select{
-  font:inherit;
-}
-
-button{
-  cursor:pointer;
-}
-
-a{
-  text-decoration:none;
-  color:inherit;
-}
-
-.container{
-  width:min(1250px,94%);
-  margin:auto;
-}
-
-/* HEADER */
-
-.header{
-  position:sticky;
-  top:0;
-  z-index:1000;
-  background:rgba(255,255,255,.95);
-  backdrop-filter:blur(15px);
-  border-bottom:1px solid #e2e8f0;
-}
-
-.header-inner{
-  min-height:70px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:20px;
-}
-
-.logo{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  font-weight:900;
-  color:#0b57d0;
-}
-
-.logo-icon{
-  width:40px;
-  height:40px;
-  border-radius:12px;
-  background:#0b57d0;
-  color:#fff;
-  display:grid;
-  place-items:center;
-}
-
-.header-right{
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-
-.user-info{
-  text-align:right;
-}
-
-.user-info strong{
-  display:block;
-  font-size:14px;
-}
-
-.user-info small{
-  color:#64748b;
-}
-
-.btn{
-  border:0;
-  border-radius:10px;
-  padding:10px 15px;
-  font-weight:700;
-  cursor:pointer;
-}
-
-.btn-primary{
-  background:#0b57d0;
-  color:#fff;
-}
-
-.btn-danger{
-  background:#dc2626;
-  color:#fff;
-}
-
-.btn-success{
-  background:#16a34a;
-  color:#fff;
-}
-
-.btn-warning{
-  background:#f59e0b;
-  color:#fff;
-}
-
-.btn-light{
-  background:#fff;
-  color:#334155;
-  border:1px solid #dbe3ef;
-}
-
-.btn:hover{
-  opacity:.9;
-}
-
-/* PAGE */
-
-.page{
-  padding:35px 0 70px;
-}
-
-.page-title{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:20px;
-  margin-bottom:30px;
-}
-
-.page-title h1{
-  font-size:32px;
-  letter-spacing:-1px;
-}
-
-.page-title p{
-  color:#64748b;
-  margin-top:5px;
-}
-
-/* ACCESS */
-
-.access-denied{
-  max-width:600px;
-  margin:80px auto;
-  padding:40px;
-  text-align:center;
-  background:#fff;
-  border:1px solid #e2e8f0;
-  border-radius:22px;
-}
-
-.access-denied h2{
-  margin-bottom:10px;
-}
-
-.access-denied p{
-  color:#64748b;
-  margin-bottom:20px;
-}
-
-/* STATS */
-
-.stats{
-  display:grid;
-  grid-template-columns:repeat(5,1fr);
-  gap:16px;
-  margin-bottom:28px;
+import{
+initializeApp
 }
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
-.stat{
-  background:#fff;
-  border:1px solid #e2e8f0;
-  border-radius:18px;
-  padding:22px;
+import{
+getAuth,
+onAuthStateChanged
 }
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
-.stat-icon{
-  font-size:24px;
-  margin-bottom:10px;
+import{
+getFirestore,
+collection,
+doc,
+getDoc,
+getDocs,
+updateDoc,
+deleteDoc
 }
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-.stat strong{
-  display:block;
-  font-size:28px;
-}
-
-.stat span{
-  color:#64748b;
-  font-size:13px;
-}
 
-/* TOOLBAR */
-
-.toolbar{
-  background:#fff;
-  border:1px solid #e2e8f0;
-  border-radius:18px;
-  padding:18px;
-  margin-bottom:20px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  flex-wrap:wrap;
-}
-
-.search{
-  flex:1;
-  min-width:220px;
-}
+/* =========================================
+ FIREBASE CONFIG
+========================================= */
 
-.search input,
-.toolbar select{
-  width:100%;
-  min-height:45px;
-  padding:0 14px;
-  border:1px solid #dbe3ef;
-  border-radius:10px;
-  outline:none;
-  background:#fff;
-}
+const firebaseConfig={
 
-.search input:focus,
-.toolbar select:focus{
-  border-color:#0b57d0;
-}
+apiKey:"YOUR_API_KEY",
 
-/* TABLE */
+authDomain:
+"YOUR_PROJECT.firebaseapp.com",
 
-.table-card{
-  background:#fff;
-  border:1px solid #e2e8f0;
-  border-radius:20px;
-  overflow:hidden;
-}
+projectId:
+"YOUR_PROJECT_ID",
 
-.table-wrap{
-  overflow-x:auto;
-}
+storageBucket:
+"YOUR_PROJECT.firebasestorage.app",
 
-table{
-  width:100%;
-  border-collapse:collapse;
-  min-width:900px;
-}
+messagingSenderId:
+"YOUR_MESSAGING_SENDER_ID",
 
-th{
-  background:#f8fafc;
-  color:#475569;
-  text-align:left;
-  padding:15px;
-  font-size:12px;
-  text-transform:uppercase;
-  letter-spacing:.04em;
-}
+appId:
+"YOUR_APP_ID"
 
-td{
-  padding:15px;
-  border-top:1px solid #eef2f7;
-  font-size:14px;
-}
+};
 
-.student{
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
 
-.avatar{
-  width:42px;
-  height:42px;
-  border-radius:50%;
-  display:grid;
-  place-items:center;
-  background:#e8f0fe;
-  color:#0b57d0;
-  font-weight:900;
-}
+let students=[];
+let selectedStudent=null;
+let admin=null;
 
-.student strong{
-  display:block;
-}
 
-.student small{
-  color:#64748b;
-}
+/* =========================================
+ ADMIN CHECK
+========================================= */
 
-.badge{
-  display:inline-flex;
-  align-items:center;
-  padding:5px 9px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:800;
-}
+onAuthStateChanged(auth,async user=>{
 
-.active{
-  background:#dcfce7;
-  color:#166534;
-}
+if(!user){
 
-.inactive{
-  background:#fee2e2;
-  color:#991b1b;
-}
+location.href="login.html";
+return;
 
-.role{
-  background:#e0f2fe;
-  color:#075985;
 }
 
-.actions{
-  display:flex;
-  gap:6px;
-  flex-wrap:wrap;
-}
+try{
 
-.actions button{
-  padding:7px 9px;
-  border-radius:8px;
-  border:0;
-  font-size:12px;
-  font-weight:700;
-}
+const snap=await getDoc(
+doc(db,"users",user.uid)
+);
 
-/* EMPTY */
+if(
+!snap.exists() ||
+snap.data().role!=="admin"
+){
 
-.empty{
-  text-align:center;
-  padding:50px 20px;
-  color:#64748b;
-}
+alert("Access denied");
+location.href="dashboard.html";
+return;
 
-/* MODAL */
-
-.modal{
-  display:none;
-  position:fixed;
-  inset:0;
-  z-index:2000;
-  background:rgba(2,6,23,.65);
-  padding:20px;
-  overflow:auto;
 }
 
-.modal.show{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
+admin=user;
+loadStudents();
 
-.modal-card{
-  width:min(600px,100%);
-  background:#fff;
-  border-radius:22px;
-  padding:28px;
-  box-shadow:0 30px 80px rgba(0,0,0,.25);
-}
+}catch(error){
 
-.modal-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:22px;
-}
+console.error(error);
+alert("Unable to verify admin.");
 
-.close{
-  width:38px;
-  height:38px;
-  border:0;
-  border-radius:10px;
-  background:#f1f5f9;
 }
 
-.form-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:15px;
-}
+});
 
-.field{
-  display:flex;
-  flex-direction:column;
-  gap:7px;
-}
 
-.field.full{
-  grid-column:1/-1;
-}
+/* =========================================
+ LOAD STUDENTS
+========================================= */
 
-.field label{
-  font-size:13px;
-  font-weight:700;
-}
+async function loadStudents(){
 
-.field input,
-.field select{
-  min-height:44px;
-  padding:0 12px;
-  border:1px solid #dbe3ef;
-  border-radius:10px;
-  outline:none;
-}
+try{
 
-.modal-footer{
-  display:flex;
-  justify-content:flex-end;
-  gap:10px;
-  margin-top:22px;
-}
+const snap=await getDocs(
+collection(db,"users")
+);
 
-/* TOAST */
-
-.toast{
-  position:fixed;
-  right:20px;
-  bottom:20px;
-  z-index:5000;
-  background:#0f172a;
-  color:#fff;
-  padding:14px 18px;
-  border-radius:12px;
-  display:none;
-  max-width:350px;
-  box-shadow:0 15px 40px rgba(0,0,0,.2);
-}
+students=snap.docs
+.map(d=>({
+id:d.id,
+...d.data()
+}))
+.filter(
+x=>x.role==="student"
+);
 
-.toast.show{
-  display:block;
-}
+updateStats();
+render();
 
-/* LOADING */
+}catch(error){
 
-.loading{
-  padding:40px;
-  text-align:center;
-  color:#64748b;
-}
+console.error(error);
+toast("Unable to load students.");
 
-/* FOOTER */
-
-.footer{
-  background:#020617;
-  color:#94a3b8;
-  padding:30px 20px;
-  text-align:center;
-  font-size:13px;
 }
 
-.footer a{
-  color:#cbd5e1;
-  margin:0 7px;
 }
-
-/* MOBILE */
 
-@media(max-width:1000px){
-  .stats{
-    grid-template-columns:repeat(3,1fr);
-  }
-}
 
-@media(max-width:650px){
+/* =========================================
+ STATS
+========================================= */
 
-  .page-title{
-    align-items:flex-start;
-    flex-direction:column;
-  }
+function updateStats(){
 
-  .stats{
-    grid-template-columns:repeat(2,1fr);
-  }
+document.getElementById("total")
+.textContent=students.length;
 
-  .form-grid{
-    grid-template-columns:1fr;
-  }
+document.getElementById("active")
+.textContent=
+students.filter(
+x=>x.status==="active" ||
+!x.status
+).length;
 
-  .field.full{
-    grid-column:auto;
-  }
+document.getElementById("blocked")
+.textContent=
+students.filter(
+x=>x.status==="blocked"
+).length;
 
-  .user-info{
-    display:none;
-  }
+document.getElementById("premium")
+.textContent=
+students.filter(
+x=>x.premium===true ||
+x.membership==="premium"
+).length;
 
-  .header-right .btn{
-    padding:9px 11px;
-  }
 }
-</style>
-</head>
-
-<body>
-
-<header class="header">
-
-  <div class="container header-inner">
-
-    <a href="/admin.html" class="logo">
-      <span class="logo-icon">LS</span>
-      <span>LetsStudy Pro Admin</span>
-    </a>
-
-    <div class="header-right">
-
-      <div class="user-info">
-        <strong id="adminName">Checking...</strong>
-        <small id="adminRole">Authentication</small>
-      </div>
-
-      <a href="/admin.html" class="btn btn-light">
-        Dashboard
-      </a>
-
-      <button id="logoutBtn"
-              class="btn btn-danger">
-        Logout
-      </button>
-
-    </div>
-
-  </div>
-
-</header>
-
-
-<main class="page">
-
-  <div class="container">
-
-    <div id="accessDenied"
-         class="access-denied"
-         style="display:none">
-
-      <h2>🔒 Access Denied</h2>
-
-      <p>
-        You must be signed in as an Admin or Super Admin
-        to access Student Management.
-      </p>
-
-      <a href="/login.html"
-         class="btn btn-primary">
-        Login
-      </a>
-
-    </div>
-
-
-    <div id="app"
-         style="display:none">
-
-      <div class="page-title">
-
-        <div>
-
-          <h1>👥 Student Management</h1>
-
-          <p>
-            Manage LetsStudy Pro students and accounts.
-          </p>
-
-        </div>
-
-        <button id="addStudentBtn"
-                class="btn btn-primary">
-          + Add Student
-        </button>
-
-      </div>
-
-
-      <!-- STATISTICS -->
-
-      <div class="stats">
-
-        <div class="stat">
-          <div class="stat-icon">👥</div>
-          <strong id="totalStudents">0</strong>
-          <span>Total Students</span>
-        </div>
-
-        <div class="stat">
-          <div class="stat-icon">🟢</div>
-          <strong id="activeStudents">0</strong>
-          <span>Active</span>
-        </div>
-
-        <div class="stat">
-          <div class="stat-icon">🔴</div>
-          <strong id="inactiveStudents">0</strong>
-          <span>Inactive</span>
-        </div>
-
-        <div class="stat">
-          <div class="stat-icon">💎</div>
-          <strong id="premiumStudents">0</strong>
-          <span>Premium</span>
-        </div>
-
-        <div class="stat">
-          <div class="stat-icon">🎓</div>
-          <strong id="newStudents">0</strong>
-          <span>New Students</span>
-        </div>
-
-      </div>
-
-
-      <!-- TOOLBAR -->
-
-      <div class="toolbar">
-
-        <div class="search">
-
-          <input
-            id="searchInput"
-            type="search"
-            placeholder="Search by name, email, phone or student ID...">
-
-        </div>
-
-        <div style="min-width:170px">
-
-          <select id="statusFilter">
-
-            <option value="all">
-              All Status
-            </option>
-
-            <option value="active">
-              Active
-            </option>
-
-            <option value="inactive">
-              Inactive
-            </option>
-
-          </select>
-
-        </div>
-
-        <div style="min-width:170px">
-
-          <select id="membershipFilter">
-
-            <option value="all">
-              All Memberships
-            </option>
-
-            <option value="free">
-              Free
-            </option>
-
-            <option value="premium">
-              Premium
-            </option>
-
-          </select>
-
-        </div>
-
-        <button id="refreshBtn"
-                class="btn btn-light">
-          ↻ Refresh
-        </button>
-
-      </div>
-
-
-      <!-- STUDENTS -->
-
-      <div class="table-card">
-
-        <div id="loading"
-             class="loading">
-          Loading students...
-        </div>
-
-        <div id="tableContainer"
-             class="table-wrap"
-             style="display:none">
-
-          <table>
-
-            <thead>
-
-              <tr>
-
-                <th>Student</th>
-                <th>Student ID</th>
-                <th>Form</th>
-                <th>Membership</th>
-                <th>Status</th>
-                <th>Joined</th>
-                <th>Actions</th>
-
-              </tr>
-
-            </thead>
-
-            <tbody id="studentsTable"></tbody>
-
-          </table>
-
-          <div id="empty"
-               class="empty"
-               style="display:none">
-
-            No students found.
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</main>
-
-
-<!-- ADD / EDIT MODAL -->
-
-<div id="studentModal"
-     class="modal">
-
-  <div class="modal-card">
-
-    <div class="modal-header">
-
-      <h2 id="modalTitle">
-        Add Student
-      </h2>
-
-      <button class="close"
-              id="closeModal">
-        ✕
-      </button>
-
-    </div>
-
-    <form id="studentForm">
-
-      <input type="hidden"
-             id="studentDocId">
-
-      <div class="form-grid">
-
-        <div class="field">
-
-          <label>
-            First Name
-          </label>
-
-          <input
-            id="firstName"
-            required>
-
-        </div>
-
-        <div class="field">
-
-          <label>
-            Last Name
-          </label>
-
-          <input
-            id="lastName"
-            required>
-
-        </div>
-
-        <div class="field full">
-
-          <label>
-            Email
-          </label>
-
-          <input
-            id="email"
-            type="email"
-            required>
-
-        </div>
-
-        <div class="field">
-
-          <label>
-            Phone
-          </label>
-
-          <input id="phone">
-
-        </div>
-
-        <div class="field">
-
-          <label>
-            Form / Level
-          </label>
-
-          <select id="formLevel">
-
-            <option value="">
-              Select level
-            </option>
-
-            <option value="Form 1">Form 1</option>
-            <option value="Form 2">Form 2</option>
-            <option value="Form 3">Form 3</option>
-            <option value="Form 4">Form 4</option>
-            <option value="Form 5">Form 5</option>
-            <option value="Form 6">Form 6</option>
-            <option value="University">University</option>
-            <option value="Other">Other</option>
-
-          </select>
-
-        </div>
-
-        <div class="field">
-
-          <label>
-            Membership
-          </label>
 
-          <select id="membership">
 
-            <option value="free">
-              Free
-            </option>
+/* =========================================
+ RENDER
+========================================= */
 
-            <option value="premium">
-              Premium
-            </option>
+window.render=function(){
 
-          </select>
+const search=
+document.getElementById("search")
+.value.toLowerCase().trim();
 
-        </div>
+const status=
+document.getElementById("status").value;
 
-        <div class="field">
+const form=
+document.getElementById("form").value;
 
-          <label>
-            Status
-          </label>
 
-          <select id="status">
+const data=students.filter(x=>{
 
-            <option value="active">
-              Active
-            </option>
+const text=
+`${x.name||""}
+${x.displayName||""}
+${x.email||""}
+${x.id||""}`
+.toLowerCase();
 
-            <option value="inactive">
-              Inactive
-            </option>
+const studentStatus=
+x.status||"active";
 
-          </select>
+return(
+text.includes(search) &&
+(status==="all"||studentStatus===status) &&
+(form==="all"||x.form===form)
+);
 
-        </div>
+});
 
-      </div>
 
-      <div class="modal-footer">
+const list=
+document.getElementById(
+"studentList"
+);
 
-        <button type="button"
-                id="cancelBtn"
-                class="btn btn-light">
-          Cancel
-        </button>
 
-        <button type="submit"
-                id="saveBtn"
-                class="btn btn-primary">
-          Save Student
-        </button>
+if(!data.length){
 
-      </div>
+list.innerHTML=`
 
-    </form>
+<tr>
 
-  </div>
+<td colspan="7">
 
+<div class="empty">
+No students found.
 </div>
 
+</td>
 
-<div id="toast"
-     class="toast"></div>
+</tr>
 
+`;
 
-<footer class="footer">
+return;
 
-  <p>
-    © 2026 LetsStudy Pro. All rights reserved.
-  </p>
-
-  <p style="margin-top:8px">
-
-    <a href="/admin.html">
-      Admin
-    </a>
-
-    <a href="/super-admin.html">
-      Super Admin
-    </a>
-
-    <a href="/privacy.html">
-      Privacy
-    </a>
-
-    <a href="/terms.html">
-      Terms
-    </a>
-
-  </p>
-
-</footer>
+}
 
 
-<script type="module">
+list.innerHTML=data.map(x=>`
 
-/*
-=========================================================
- FIREBASE IMPORTS
-=========================================================
-*/
+<tr>
 
-import {
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+<td>
 
-import {
-  getAuth,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+<strong>
+${esc(
+x.name||
+x.displayName||
+"Student"
+)}
+</strong>
 
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  getDoc,
-  doc,
-  addDoc,
-  setDoc,
-  updateDoc,
-  deleteDoc,
-  serverTimestamp,
-  query,
-  orderBy
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+<br>
+
+<small>
+${esc(x.id)}
+</small>
+
+</td>
 
 
-/*
-=========================================================
- FIREBASE CONFIG
-=========================================================
+<td>
+${esc(x.email||"-")}
+</td>
 
-Replace these values with your Firebase Web App config.
-=========================================================
-*/
 
-const firebaseConfig = {
+<td>
+${esc(x.form||"-")}
+</td>
 
-  apiKey:
-    "YOUR_FIREBASE_API_KEY",
 
-  authDomain:
-    "YOUR_PROJECT.firebaseapp.com",
+<td>
+${esc(x.role||"student")}
+</td>
 
-  projectId:
-    "YOUR_PROJECT_ID",
 
-  storageBucket:
-    "YOUR_PROJECT.firebasestorage.app",
+<td>
 
-  messagingSenderId:
-    "YOUR_MESSAGING_SENDER_ID",
+<span class="badge ${
+(x.status||"active")==="blocked"
+?"blocked":
+(x.status||"active")==="pending"
+?"pending":
+"active"
+}">
 
-  appId:
-    "YOUR_FIREBASE_APP_ID"
+${esc(x.status||"active")}
+
+</span>
+
+</td>
+
+
+<td>
+${x.premium===true||
+x.membership==="premium"
+?"Yes":"No"}
+</td>
+
+
+<td>
+
+<button
+class="back"
+onclick="viewStudent('${x.id}')">
+
+View
+
+</button>
+
+</td>
+
+</tr>
+
+`).join("");
 
 };
 
 
-/*
-=========================================================
- INITIALIZE
-=========================================================
-*/
+/* =========================================
+ VIEW
+========================================= */
 
-const app =
-  initializeApp(firebaseConfig);
+window.viewStudent=async function(id){
 
-const auth =
-  getAuth(app);
+const student=
+students.find(x=>x.id===id);
 
-const db =
-  getFirestore(app);
+if(!student)return;
 
+selectedStudent=student;
 
-/*
-=========================================================
- ELEMENTS
-=========================================================
-*/
 
-const appContainer =
-  document.getElementById("app");
+document.getElementById("pName")
+.textContent=
+student.name||
+student.displayName||
+"Student";
 
-const accessDenied =
-  document.getElementById("accessDenied");
+document.getElementById("pEmail")
+.textContent=
+student.email||"-";
 
-const adminName =
-  document.getElementById("adminName");
+document.getElementById("pUid")
+.textContent=
+student.id;
 
-const adminRole =
-  document.getElementById("adminRole");
+document.getElementById("pRole")
+.textContent=
+student.role||"student";
 
-const logoutBtn =
-  document.getElementById("logoutBtn");
+document.getElementById("pForm")
+.textContent=
+student.form||"-";
 
-const searchInput =
-  document.getElementById("searchInput");
+document.getElementById("pStatus")
+.textContent=
+student.status||"active";
 
-const statusFilter =
-  document.getElementById("statusFilter");
+document.getElementById("pReferral")
+.textContent=
+student.referralCode||"-";
 
-const membershipFilter =
-  document.getElementById("membershipFilter");
+document.getElementById("pWallet")
+.textContent=
+"TZS "+
+Number(
+student.walletBalance||0
+).toLocaleString();
 
-const refreshBtn =
-  document.getElementById("refreshBtn");
-
-const studentsTable =
-  document.getElementById("studentsTable");
-
-const loading =
-  document.getElementById("loading");
-
-const tableContainer =
-  document.getElementById("tableContainer");
-
-const empty =
-  document.getElementById("empty");
-
-const modal =
-  document.getElementById("studentModal");
-
-const modalTitle =
-  document.getElementById("modalTitle");
-
-const studentForm =
-  document.getElementById("studentForm");
-
-const studentDocId =
-  document.getElementById("studentDocId");
-
-const firstName =
-  document.getElementById("firstName");
-
-const lastName =
-  document.getElementById("lastName");
-
-const email =
-  document.getElementById("email");
-
-const phone =
-  document.getElementById("phone");
-
-const formLevel =
-  document.getElementById("formLevel");
-
-const membership =
-  document.getElementById("membership");
-
-const status =
-  document.getElementById("status");
-
-const addStudentBtn =
-  document.getElementById("addStudentBtn");
-
-const closeModal =
-  document.getElementById("closeModal");
-
-const cancelBtn =
-  document.getElementById("cancelBtn");
-
-const saveBtn =
-  document.getElementById("saveBtn");
-
-const toast =
-  document.getElementById("toast");
-
-
-/*
-=========================================================
- STATE
-=========================================================
-*/
-
-let currentUser = null;
-
-let currentRole = null;
-
-let students = [];
-
-
-/*
-=========================================================
- TOAST
-=========================================================
-*/
-
-function showToast(message){
-
-  toast.textContent =
-    message;
-
-  toast.classList.add("show");
-
-  setTimeout(() => {
-
-    toast.classList.remove("show");
-
-  },3000);
-
-}
-
-
-/*
-=========================================================
- NORMALIZE
-=========================================================
-*/
-
-function valueOf(value){
-
-  if(
-    value === undefined ||
-    value === null
-  ){
-
-    return "";
-
-  }
-
-  return String(value);
-
-}
-
-
-/*
-=========================================================
- ROLE CHECK
-=========================================================
-
-Expected user document:
-
-users/{uid}
-
-{
-  role: "admin"
-}
-
-or
-
-{
-  role: "superAdmin"
-}
-
-=========================================================
-*/
-
-async function checkAdminRole(user){
-
-  try{
-
-    const userRef =
-      doc(
-        db,
-        "users",
-        user.uid
-      );
-
-    const snapshot =
-      await getDoc(userRef);
-
-    if(
-      !snapshot.exists()
-    ){
-
-      return null;
-
-    }
-
-    const data =
-      snapshot.data();
-
-    const role =
-      valueOf(data.role)
-      .toLowerCase()
-      .replace(/\s/g,"");
-
-    if(
-      role === "admin" ||
-      role === "superadmin"
-    ){
-
-      return role;
-
-    }
-
-    return null;
-
-  }catch(error){
-
-    console.error(
-      "Role check failed:",
-      error
-    );
-
-    return null;
-
-  }
-
-}
-
-
-/*
-=========================================================
- AUTHENTICATION
-=========================================================
-*/
-
-onAuthStateChanged(
-  auth,
-  async user => {
-
-    if(!user){
-
-      appContainer.style.display =
-        "none";
-
-      accessDenied.style.display =
-        "block";
-
-      return;
-
-    }
-
-    currentUser =
-      user;
-
-    const role =
-      await checkAdminRole(user);
-
-    if(!role){
-
-      appContainer.style.display =
-        "none";
-
-      accessDenied.style.display =
-        "block";
-
-      adminName.textContent =
-        user.email || "User";
-
-      adminRole.textContent =
-        "Access denied";
-
-      return;
-
-    }
-
-    currentRole =
-      role;
-
-    accessDenied.style.display =
-      "none";
-
-    appContainer.style.display =
-      "block";
-
-    adminName.textContent =
-      user.displayName ||
-      user.email ||
-      "Administrator";
-
-    adminRole.textContent =
-      role === "superadmin"
-      ? "Super Admin"
-      : "Admin";
-
-    await loadStudents();
-
-  }
+document.getElementById("pOrders")
+.textContent=
+Number(
+student.ordersCount||0
 );
 
+document.getElementById("pPremium")
+.textContent=
+student.premium===true||
+student.membership==="premium"
+?"Yes":"No";
 
-/*
-=========================================================
- LOAD STUDENTS
-===================
-/* =====================================================
-   LOAD STUDENTS
-===================================================== */
 
-async function loadStudents(){
+document.getElementById("modal")
+.classList.add("show");
 
-  const tbody = document.getElementById("studentsTableBody");
+};
 
-  if(!tbody) return;
 
-  tbody.innerHTML = `
-    <tr>
-      <td colspan="7" style="text-align:center;padding:30px;">
-        Loading students...
-      </td>
-    </tr>
-  `;
+/* =========================================
+ STATUS
+========================================= */
 
-  try{
+window.setStatus=async function(status){
 
-    const snapshot = await getDocs(
-      collection(db, "users")
-    );
+if(!selectedStudent)return;
 
-    students = [];
+try{
 
-    snapshot.forEach(docSnap => {
+await updateDoc(
+doc(
+db,
+"users",
+selectedStudent.id
+),
+{
+status
+}
+);
 
-      const data = docSnap.data();
+toast(
+status==="active"
+?"Student activated."
+:"Student blocked."
+);
 
-      if(
-        data.role === "student" ||
-        !data.role
-      ){
+closeModal();
+await loadStudents();
 
-        students.push({
-          id: docSnap.id,
-          ...data
-        });
+}catch(error){
 
-      }
-
-    });
-
-    updateStatistics();
-    renderStudents(students);
-
-  }catch(error){
-
-    console.error(
-      "Error loading students:",
-      error
-    );
-
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="7"
-            style="
-              text-align:center;
-              padding:30px;
-              color:#dc2626;
-            ">
-          Failed to load students.
-          <br>
-          <small>${escapeHTML(error.message)}</small>
-        </td>
-      </tr>
-    `;
-
-  }
+console.error(error);
+toast("Unable to update student.");
 
 }
+
+};
+
+
+/* =========================================
+ EDIT
+========================================= */
+
+window.editStudent=function(){
+
+if(!selectedStudent)return;
+
+const form=prompt(
+"Enter student form:",
+selectedStudent.form||""
+);
+
+if(form===null)return;
+
+updateStudent({
+form
+});
+
+};
+
+
+async function updateStudent(data){
+
+try{
+
+await updateDoc(
+doc(
+db,
+"users",
+selectedStudent.id
+),
+data
+);
+
+toast("Student updated.");
+
+closeModal();
+await loadStudents();
+
+}catch(error){
+
+console.error(error);
+toast("Update failed.");
+
+}
+
+}
+
+
+/* =========================================
+ DELETE
+========================================= */
+
+window.deleteStudent=async function(){
+
+if(!selectedStudent)return;
+
+if(!confirm(
+`Delete student ${selectedStudent.email||selectedStudent.id}?`
+))return;
+
+try{
+
+await deleteDoc(
+doc(
+db,
+"users",
+selectedStudent.id
+)
+);
+
+toast("Student deleted.");
+
+closeModal();
+await loadStudents();
+
+}catch(error){
+
+console.error(error);
+toast("Delete failed.");
+
+}
+
+};
+
+
+/* =========================================
+ EXPORT
+========================================= */
+
+window.exportStudents=function(){
+
+const rows=[
+[
+"UID",
+"Name",
+"Email",
+"Form",
+"Status",
+"Premium",
+"Referral"
+]
+];
+
+
+students.forEach(x=>{
+
+rows.push([
+
+x.id,
+
+x.name||
+x.displayName||
+"",
+
+x.email||"",
+
+x.form||"",
+
+x.status||
+"active",
+
+x.premium===true||
+x.membership==="premium"
+?"Yes":"No",
+
+x.referralCode||""
+
+]);
+
+});
+
+
+const csv=
+rows.map(row=>
+row.map(cell=>
+`"${String(cell??"")
+.replace(/"/g,'""')}"`
+).join(",")
+).join("\n");
+
+
+const blob=
+new Blob(
+[csv],
+{
+type:"text/csv;charset=utf-8"
+}
+);
+
+const url=
+URL.createObjectURL(blob);
+
+const a=
+document.createElement("a");
+
+a.href=url;
+
+a.download=
+"letsstudy-students.csv";
+
+a.click();
+
+URL.revokeObjectURL(url);
+
+};
+
+
+/* =========================================
+ MODAL
+========================================= */
+
+window.closeModal=function(){
+
+document.getElementById(
+"modal"
+).classList.remove("show");
+
+selectedStudent=null;
+
+};
+
+
+/* =========================================
+ HELPERS
+========================================= */
+
+function esc(value){
+
+return String(value??"")
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+
+}
+
+function toast(text){
+
+const el=
+document.getElementById("toast");
+
+el.textContent=text;
+
+el.classList.add("show");
+
+clearTimeout(
+window.toastTimer
+);
+
+window.toastTimer=setTimeout(
+()=>{
+el.classList.remove("show");
+},
+3000
+);
+
+}
+
+</script></body>
+</html>
