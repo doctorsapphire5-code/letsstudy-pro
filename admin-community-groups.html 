@@ -1,0 +1,849 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Community Groups | LetsStudy Pro Admin</title><style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Arial,sans-serif;background:#f5f7fb;color:#172033}
+.sidebar{position:fixed;left:0;top:0;width:240px;height:100vh;background:#111827;color:white;padding:20px;z-index:10}
+.logo{font-size:21px;font-weight:800;margin-bottom:25px}
+.nav a{display:block;color:#cbd5e1;text-decoration:none;padding:11px 12px;border-radius:9px;margin:4px 0}
+.nav a:hover,.nav a.active{background:#2563eb;color:white}
+.main{margin-left:240px;padding:25px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+h1{margin:0;font-size:26px}
+.btn{border:0;border-radius:8px;padding:10px 15px;cursor:pointer;font-weight:600}
+.primary{background:#2563eb;color:white}
+.danger{background:#dc2626;color:white}
+.secondary{background:#e5e7eb;color:#111827}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:20px}
+.card{background:white;border-radius:14px;padding:18px;box-shadow:0 3px 15px #00000008}
+.stat b{display:block;font-size:26px;margin-top:5px}
+.toolbar{display:flex;gap:10px;margin-bottom:15px}
+input,select,textarea{width:100%;padding:11px;border:1px solid #dbe1ea;border-radius:8px;outline:none}
+.search{max-width:400px}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:13px;border-bottom:1px solid #edf0f4}
+th{font-size:13px;color:#64748b}
+.badge{padding:5px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.public{background:#dcfce7;color:#166534}
+.private{background:#fee2e2;color:#991b1b}
+.actions{display:flex;gap:6px}
+.modal{display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;z-index:50}
+.modal.show{display:flex}
+.modal-box{background:white;width:min(500px,94%);padding:22px;border-radius:15px}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-weight:600;margin-bottom:6px}
+.close{font-size:25px;cursor:pointer}
+.message{position:fixed;right:20px;bottom:20px;padding:13px 18px;border-radius:9px;background:#16a34a;color:white;display:none;z-index:100}
+.message.show{display:block}
+.empty{text-align:center;padding:35px;color:#64748b}
+@media(max-width:800px){
+.sidebar{width:65px;padding:12px}
+.logo{font-size:0}.logo:after{content:"LS";font-size:18px}
+.nav a{font-size:0;text-align:center}.nav a:first-letter{font-size:18px}
+.main{margin-left:65px;padding:15px}
+.stats{grid-template-columns:1fr}
+.top{gap:10px;align-items:flex-start}
+table{min-width:750px}
+.card{overflow-x:auto}
+}
+</style></head><body><aside class="sidebar">
+  <div class="logo">LetsStudy Pro</div>  <nav class="nav">
+    <a href="admin-community.html">💬 Community</a>
+    <a href="admin-community-groups.html" class="active">👥 Groups</a>
+    <a href="admin-community-members.html">👤 Members</a>
+    <a href="admin-community-reports.html">🚨 Reports</a>
+    <a href="admin-dashboard.html">🏠 Dashboard</a>
+  </nav>
+</aside><main class="main"><div class="top">
+  <div>
+    <h1>Community Groups</h1>
+    <p>Manage LetsStudy community groups.</p>
+  </div>  <button class="btn primary" onclick="openModal()">
+    + Create Group
+  </button>
+</div><div class="stats">  <div class="card stat">
+    Total Groups
+    <b id="totalGroups">0</b>
+  </div>  <div class="card stat">
+    Public Groups
+    <b id="publicGroups">0</b>
+  </div>  <div class="card stat">
+    Private Groups
+    <b id="privateGroups">0</b>
+  </div></div><div class="card">  <div class="toolbar">
+    <input
+      class="search"
+      id="search"
+      placeholder="Search groups..."
+      oninput="renderGroups()">
+  </div>  <div style="overflow-x:auto"><table>
+
+  <thead>
+    <tr>
+      <th>Group</th>
+      <th>Type</th>
+      <th>Privacy</th>
+      <th>Members</th>
+      <th>Created</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+
+  <tbody id="groupsTable">
+    <tr>
+      <td colspan="6" class="empty">
+        Loading groups...
+      </td>
+    </tr>
+  </tbody>
+
+</table>
+
+  </div></div></main><!-- CREATE / EDIT MODAL --><div class="modal" id="modal"><div class="modal-box">  <div class="modal-head"><h2 id="modalTitle">Create Group</h2>
+
+<span class="close" onclick="closeModal()">×</span>
+
+  </div>  <form id="groupForm"><div class="form-group">
+  <label>Group Name</label>
+  <input id="groupName" required
+         placeholder="e.g. Form 5 Physics">
+</div>
+
+<div class="form-group">
+  <label>Description</label>
+  <textarea id="groupDescription"
+            placeholder="Group description"></textarea>
+</div>
+
+<div class="form-group">
+  <label>Group Type</label>
+
+  <select id="groupType">
+    <option value="study">📚 Study</option>
+    <option value="discussion">💬 Discussion</option>
+    <option value="general">👥 General</option>
+    <option value="announcement">📢 Announcement</option>
+  </select>
+
+</div>
+
+<div class="form-group">
+  <label>Privacy</label>
+
+  <select id="groupPrivacy">
+    <option value="public">Public</option>
+    <option value="private">Private</option>
+  </select>
+
+</div>
+
+<div style="display:flex;gap:8px">
+
+  <button type="button"
+          class="btn secondary"
+          onclick="closeModal()">
+    Cancel
+  </button>
+
+  <button class="btn primary" type="submit">
+    Save Group
+  </button>
+
+</div>
+
+  </form></div>
+</div><div id="message" class="message"></div><script type="module">
+
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/* =========================================
+   FIREBASE CONFIG
+========================================= */
+
+const firebaseConfig = {
+
+  apiKey:"YOUR_API_KEY",
+
+  authDomain:"YOUR_PROJECT.firebaseapp.com",
+
+  projectId:"YOUR_PROJECT_ID",
+
+  storageBucket:"YOUR_PROJECT.firebasestorage.app",
+
+  messagingSenderId:"YOUR_SENDER_ID",
+
+  appId:"YOUR_APP_ID"
+
+};
+
+
+const app =
+  initializeApp(firebaseConfig);
+
+const auth =
+  getAuth(app);
+
+const db =
+  getFirestore(app);
+
+
+/* =========================================
+   DATA
+========================================= */
+
+let groups = [];
+let editingId = null;
+
+
+/* =========================================
+   AUTH
+========================================= */
+
+onAuthStateChanged(
+  auth,
+  async user => {
+
+    if(!user){
+
+      location.href="login.html";
+
+      return;
+
+    }
+
+    await loadGroups();
+
+  }
+);
+
+
+/* =========================================
+   LOAD GROUPS
+========================================= */
+
+async function loadGroups(){
+
+  try{
+
+    const snap =
+      await getDocs(
+        collection(db,"groups")
+      );
+
+    groups =
+      snap.docs.map(
+        d => ({
+          id:d.id,
+          ...d.data()
+        })
+      );
+
+    renderGroups();
+
+    updateStats();
+
+  }catch(error){
+
+    console.error(error);
+
+    document.getElementById(
+      "groupsTable"
+    ).innerHTML = `
+      <tr>
+        <td colspan="6" class="empty">
+          Unable to load groups.
+        </td>
+      </tr>
+    `;
+
+  }
+
+}
+
+
+/* =========================================
+   RENDER
+========================================= */
+
+window.renderGroups =
+function(){
+
+  const search =
+    document
+      .getElementById("search")
+      .value
+      .toLowerCase()
+      .trim();
+
+  const filtered =
+    groups.filter(g => {
+
+      const text =
+        `${g.name || ""}
+         ${g.description || ""}
+         ${g.type || ""}`
+        .toLowerCase();
+
+      return text.includes(search);
+
+    });
+
+
+  const table =
+    document.getElementById(
+      "groupsTable"
+    );
+
+
+  if(!filtered.length){
+
+    table.innerHTML = `
+      <tr>
+        <td colspan="6" class="empty">
+          No groups found.
+        </td>
+      </tr>
+    `;
+
+    return;
+
+  }
+
+
+  table.innerHTML = "";
+
+
+  filtered.forEach(g => {
+
+    const tr =
+      document.createElement("tr");
+
+
+    tr.innerHTML = `
+
+      <td>
+
+        <strong>
+          ${escapeHTML(
+            g.name || "Unnamed Group"
+          )}
+        </strong>
+
+        <div style="
+          color:#64748b;
+          font-size:12px;
+          margin-top:4px">
+
+          ${escapeHTML(
+            g.description || ""
+          )}
+
+        </div>
+
+      </td>
+
+
+      <td>
+        ${escapeHTML(
+          g.type || "general"
+        )}
+      </td>
+
+
+      <td>
+
+        <span class="badge ${
+          g.privacy === "private"
+          ? "private"
+          : "public"
+        }">
+
+          ${
+            g.privacy === "private"
+            ? "Private"
+            : "Public"
+          }
+
+        </span>
+
+      </td>
+
+
+      <td>
+        ${Number(
+          g.memberCount || 0
+        )}
+      </td>
+
+
+      <td>
+        ${formatDate(
+          g.createdAt
+        )}
+      </td>
+
+
+      <td>
+
+        <div class="actions">
+
+          <button
+            class="btn secondary"
+            onclick="editGroup('${g.id}')">
+
+            Edit
+
+          </button>
+
+          <button
+            class="btn danger"
+            onclick="removeGroup('${g.id}')">
+
+            Delete
+
+          </button>
+
+        </div>
+
+      </td>
+
+    `;
+
+
+    table.appendChild(tr);
+
+  });
+
+};
+
+
+/* =========================================
+   STATS
+========================================= */
+
+function updateStats(){
+
+  document.getElementById(
+    "totalGroups"
+  ).textContent =
+    groups.length;
+
+
+  document.getElementById(
+    "publicGroups"
+  ).textContent =
+    groups.filter(
+      g => g.privacy !== "private"
+    ).length;
+
+
+  document.getElementById(
+    "privateGroups"
+  ).textContent =
+    groups.filter(
+      g => g.privacy === "private"
+    ).length;
+
+}
+
+
+/* =========================================
+   OPEN MODAL
+========================================= */
+
+window.openModal =
+function(){
+
+  editingId = null;
+
+  document.getElementById(
+    "modalTitle"
+  ).textContent =
+    "Create Group";
+
+  document.getElementById(
+    "groupForm"
+  ).reset();
+
+  document.getElementById(
+    "modal"
+  ).classList.add("show");
+
+};
+
+
+/* =========================================
+   EDIT
+========================================= */
+
+window.editGroup =
+function(id){
+
+  const group =
+    groups.find(
+      g => g.id === id
+    );
+
+  if(!group)
+    return;
+
+
+  editingId = id;
+
+
+  document.getElementById(
+    "modalTitle"
+  ).textContent =
+    "Edit Group";
+
+
+  document.getElementById(
+    "groupName"
+  ).value =
+    group.name || "";
+
+
+  document.getElementById(
+    "groupDescription"
+  ).value =
+    group.description || "";
+
+
+  document.getElementById(
+    "groupType"
+  ).value =
+    group.type || "general";
+
+
+  document.getElementById(
+    "groupPrivacy"
+  ).value =
+    group.privacy || "public";
+
+
+  document.getElementById(
+    "modal"
+  ).classList.add("show");
+
+};
+
+
+/* =========================================
+   SAVE
+========================================= */
+
+document.getElementById(
+  "groupForm"
+).addEventListener(
+  "submit",
+  async e => {
+
+    e.preventDefault();
+
+
+    const data = {
+
+      name:
+        document
+          .getElementById("groupName")
+          .value
+          .trim(),
+
+      description:
+        document
+          .getElementById("groupDescription")
+          .value
+          .trim(),
+
+      type:
+        document
+          .getElementById("groupType")
+          .value,
+
+      privacy:
+        document
+          .getElementById("groupPrivacy")
+          .value
+
+    };
+
+
+    if(!data.name){
+
+      showMessage(
+        "Group name is required."
+      );
+
+      return;
+
+    }
+
+
+    try{
+
+      if(editingId){
+
+        await updateDoc(
+          doc(
+            db,
+            "groups",
+            editingId
+          ),
+          {
+            ...data,
+            updatedAt:
+              serverTimestamp()
+          }
+        );
+
+        showMessage(
+          "Group updated successfully."
+        );
+
+      }else{
+
+        await addDoc(
+          collection(
+            db,
+            "groups"
+          ),
+          {
+
+            ...data,
+
+            memberCount:0,
+
+            status:"active",
+
+            createdAt:
+              serverTimestamp()
+
+          }
+        );
+
+        showMessage(
+          "Group created successfully."
+        );
+
+      }
+
+
+      closeModal();
+
+      await loadGroups();
+
+
+    }catch(error){
+
+      console.error(error);
+
+      showMessage(
+        "Unable to save group."
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================================
+   DELETE
+========================================= */
+
+window.removeGroup =
+async function(id){
+
+  const group =
+    groups.find(
+      g => g.id === id
+    );
+
+
+  if(!group)
+    return;
+
+
+  if(
+    !confirm(
+      `Delete "${group.name}"?`
+    )
+  )
+    return;
+
+
+  try{
+
+    await deleteDoc(
+      doc(
+        db,
+        "groups",
+        id
+      )
+    );
+
+
+    showMessage(
+      "Group deleted successfully."
+    );
+
+
+    await loadGroups();
+
+
+  }catch(error){
+
+    console.error(error);
+
+    showMessage(
+      "Unable to delete group."
+    );
+
+  }
+
+};
+
+
+/* =========================================
+   CLOSE MODAL
+========================================= */
+
+window.closeModal =
+function(){
+
+  document.getElementById(
+    "modal"
+  ).classList.remove(
+    "show"
+  );
+
+};
+
+
+document.getElementById(
+  "modal"
+).addEventListener(
+  "click",
+  e => {
+
+    if(
+      e.target.id === "modal"
+    ){
+
+      closeModal();
+
+    }
+
+  }
+);
+
+
+/* =========================================
+   HELPERS
+========================================= */
+
+function formatDate(timestamp){
+
+  if(!timestamp)
+    return "-";
+
+
+  try{
+
+    const date =
+      timestamp.toDate
+      ? timestamp.toDate()
+      : new Date(timestamp);
+
+
+    return date.toLocaleDateString(
+      "en-GB",
+      {
+        day:"2-digit",
+        month:"short",
+        year:"numeric"
+      }
+    );
+
+  }catch{
+
+    return "-";
+
+  }
+
+}
+
+
+function escapeHTML(value){
+
+  return String(
+    value ?? ""
+  )
+  .replace(/&/g,"&amp;")
+  .replace(/</g,"&lt;")
+  .replace(/>/g,"&gt;")
+  .replace(/"/g,"&quot;")
+  .replace(/'/g,"&#039;");
+
+}
+
+
+function showMessage(text){
+
+  const box =
+    document.getElementById(
+      "message"
+    );
+
+
+  box.textContent =
+    text;
+
+  box.classList.add(
+    "show"
+  );
+
+
+  clearTimeout(
+    window.msgTimer
+  );
+
+
+  window.msgTimer =
+    setTimeout(
+      () => {
+
+        box.classList.remove(
+          "show"
+        );
+
+      },
+      3000
+    );
+
+}
+
+</script></body>
+</html>
