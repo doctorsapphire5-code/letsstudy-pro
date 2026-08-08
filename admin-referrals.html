@@ -2,347 +2,812 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Referrals | LetsStudy Pro Admin</title>
-<style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f5f7fb;color:#172033}
-header{height:62px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;padding:0 16px;gap:12px}
-header h1{flex:1;font-size:18px}main{max-width:1200px;margin:auto;padding:18px}
-button{border:0;border-radius:9px;padding:9px 12px;cursor:pointer}.primary{background:#2563eb;color:#fff}.light{background:#eef2ff;color:#1d4ed8}.danger{background:#fee2e2;color:#b91c1c}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:15px}.card,.stat{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:15px}.stat span{font-size:11px;color:#64748b}.stat b{display:block;font-size:22px;margin-top:5px}
-.toolbar{display:flex;gap:8px;margin-bottom:14px}input,select{padding:10px;border:1px solid #dbe1e8;border-radius:9px;width:100%}.toolbar input{max-width:350px}
-.table{overflow:auto}table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;padding:11px 8px;border-bottom:1px solid #edf0f4}th{font-size:10px;color:#64748b}
-.badge{padding:4px 8px;border-radius:20px;font-size:9px;font-weight:bold}.active{background:#dcfce7;color:#15803d}.pending{background:#fef3c7;color:#a16207}.blocked{background:#fee2e2;color:#b91c1c}
-.modal{display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;padding:15px}.show{display:flex}.box{background:#fff;padding:18px;border-radius:15px;width:100%;max-width:520px}.head{display:flex;align-items:center}.head h2{flex:1;font-size:17px}.field{margin:12px 0}.field label{display:block;font-size:11px;font-weight:bold;margin-bottom:5px}
-.toast{position:fixed;right:20px;bottom:20px;background:#172033;color:#fff;padding:12px;border-radius:9px;display:none}.toast.show{display:block}
-@media(max-width:700px){.stats{grid-template-columns:1fr 1fr}}
-</style>
-</head><body><header>
-<button class="light" onclick="location.href='admin-marketing.html'">←</button>
-<h1>🤝 Referral & Affiliate</h1>
-<button class="primary" onclick="openModal()">+ Referral</button>
-</header><main><section class="stats">
-<div class="stat"><span>Total Referrers</span><b id="total">0</b></div>
-<div class="stat"><span>Active</span><b id="active">0</b></div>
-<div class="stat"><span>Conversions</span><b id="conversions">0</b></div>
-<div class="stat"><span>Commission</span><b id="commission">TZS 0</b></div>
-</section><section class="card"><div class="toolbar">
-<input id="search" placeholder="Search name or code..." oninput="render()">
-<select id="filter" onchange="render()">
-<option value="all">All</option>
+<title>Admin Referrals | LetsStudy Pro</title><style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f7fb;color:#172033}
+button,input,select{font:inherit}
+button{border:0;cursor:pointer;border-radius:9px;padding:9px 12px}
+header{height:62px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:12px;padding:0 16px;position:sticky;top:0;z-index:10}
+header h1{flex:1;font-size:18px;margin:0}
+.back{background:#eef2ff;color:#1d4ed8}
+.primary{background:#2563eb;color:#fff}
+.danger{background:#fee2e2;color:#b91c1c}
+main{max-width:1200px;margin:auto;padding:18px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.stat,.card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:15px}
+.stat span{font-size:11px;color:#64748b}
+.stat b{display:block;font-size:23px;margin-top:5px}
+.toolbar{display:flex;gap:8px;margin-bottom:14px}
+.toolbar input{max-width:420px}
+input,select{width:100%;padding:10px;border:1px solid #dbe1e8;border-radius:9px;outline:none;background:#fff}
+.table{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{text-align:left;padding:11px 8px;border-bottom:1px solid #edf0f4;white-space:nowrap}
+th{font-size:10px;color:#64748b}
+.badge{padding:4px 8px;border-radius:20px;font-size:9px;font-weight:bold}
+.active{background:#dcfce7;color:#15803d}
+.pending{background:#fef3c7;color:#a16207}
+.blocked{background:#fee2e2;color:#b91c1c}
+.modal{display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;padding:15px;z-index:50}
+.modal.show{display:flex}
+.box{background:#fff;width:100%;max-width:600px;max-height:90vh;overflow:auto;border-radius:16px;padding:20px}
+.head{display:flex;align-items:center;margin-bottom:16px}
+.head h2{flex:1;font-size:18px;margin:0}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field label{display:block;font-size:11px;font-weight:bold;margin-bottom:5px}
+.full{grid-column:1/-1}
+.help{font-size:10px;color:#64748b;margin-top:5px}
+.empty{text-align:center;padding:35px;color:#64748b}
+.toast{position:fixed;right:20px;bottom:20px;background:#172033;color:#fff;padding:12px 15px;border-radius:9px;display:none;font-size:12px;z-index:100}
+.toast.show{display:block}
+@media(max-width:700px){
+.stats{grid-template-columns:1fr 1fr}
+.form{grid-template-columns:1fr}
+.full{grid-column:auto}
+}
+</style></head><body><header><button class="back"
+onclick="location.href='admin-marketing.html'">
+←
+</button>
+
+<h1>🤝 Referral & Affiliate</h1><button class="primary"
+onclick="openCreate()">
+
++ Add Referral
+  </button>
+
+</header><main><section class="stats"><div class="stat">
+<span>Total Referrers</span>
+<b id="total">0</b>
+</div><div class="stat">
+<span>Active</span>
+<b id="active">0</b>
+</div><div class="stat">
+<span>Conversions</span>
+<b id="conversions">0</b>
+</div><div class="stat">
+<span>Total Commission</span>
+<b id="commission">TZS 0</b>
+</div></section><section class="card"><div class="toolbar"><input
+id="search"
+placeholder="Search name, UID or referral code..."
+oninput="render()"
+
+«»
+
+<select
+id="filter"
+onchange="render()">
+
+<option value="all">All Status</option>
 <option value="active">Active</option>
 <option value="pending">Pending</option>
-<option value="blocked">Blocked</option>
-</select>
-</div><div class="table">
-<table>
-<thead>
-<tr>
+<option value="blocked">Blocked</option></select></div><div class="table"><table><thead><tr>
 <th>Referrer</th>
 <th>Code</th>
-<th>Rate</th>
-<th>Conversions</th>
 <th>Commission</th>
+<th>Conversions</th>
+<th>Earnings</th>
 <th>Status</th>
 <th>Actions</th>
-</tr>
-</thead>
-<tbody id="list"></tbody>
-</table>
-</div></section>
-</main><div class="modal" id="modal">
-<div class="box"><div class="head">
-<h2>Referral Partner</h2>
-<button onclick="closeModal()">✕</button>
-</div><form id="form"><div class="field">
-<label>User ID</label>
-<input id="userId" required placeholder="Firebase User UID">
-</div><div class="field">
-<label>Referral Code</label>
-<input id="code" required placeholder="DOCTOR10">
-</div><div class="field">
-<label>Commission (%)</label>
-<input id="rate" type="number" min="0" max="100" value="10">
-</div><div class="field">
-<label>Status</label>
-<select id="status">
-<option value="active">Active</option>
-<option value="pending">Pending</option>
-<option value="blocked">Blocked</option>
-</select>
-</div><button class="primary" type="submit">Save Referral</button>
+</tr></thead><tbody id="list"></tbody></table></div></section></main><!-- MODAL --><div
+id="modal"
+class="modal"><div class="box"><div class="head"><h2 id="modalTitle">
+Add Referral
+</h2><button
+onclick="closeModal()">
+✕
+</button>
 
-</form>
-</div>
-</div><div class="toast" id="toast"></div><script type="module">
+</div><form id="form"><div class="form"><div class="field full"><label>User Firebase UID</label>
 
-import{initializeApp}
-from"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+<input
+id="userId"
+required
+placeholder="Firebase User UID"
+
+«»
+
+<div class="help">
+UID ya mtumiaji anayekuwa referral partner.
+</div></div><div class="field"><label>Referral Code</label>
+
+<input
+id="code"
+required
+placeholder="LETS10"
+
+«»
+
+</div><div class="field"><label>Commission (%)</label>
+
+<input
+id="rate"
+type="number"
+min="0"
+max="100"
+value="10"
+required
+
+«»
+
+</div><div class="field"><label>Status</label>
+
+<select id="status"><option value="active">
+Active
+</option><option value="pending">
+Pending
+</option><option value="blocked">
+Blocked
+</option></select></div><div class="field"><label>Conversion Target</label>
+
+<input
+id="target"
+type="number"
+min="0"
+value="0"
+
+«»
+
+</div><div class="field full"><label>Notes</label>
+
+<input
+id="notes"
+placeholder="Optional admin notes"
+
+«»
+
+</div></div><br><button
+class="primary"
+type="submit">
+
+💾 Save Referral
+
+</button></form></div></div><div
+id="toast"
+class="toast">
+Saved
+</div><script type="module">
 
 import{
-getAuth,onAuthStateChanged
-}from"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
 import{
-getFirestore,collection,doc,getDoc,getDocs,
-setDoc,deleteDoc,serverTimestamp
-}from"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+getAuth,
+onAuthStateChanged
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
+import{
+getFirestore,
+collection,
+doc,
+getDoc,
+getDocs,
+setDoc,
+deleteDoc,
+serverTimestamp
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/* ==========================================
+ FIREBASE
+========================================== */
 
 const firebaseConfig={
+
 apiKey:"YOUR_API_KEY",
-authDomain:"YOUR_PROJECT.firebaseapp.com",
-projectId:"YOUR_PROJECT_ID",
-storageBucket:"YOUR_PROJECT.firebasestorage.app",
-messagingSenderId:"YOUR_MESSAGING_SENDER_ID",
-appId:"YOUR_APP_ID"
+
+authDomain:
+"YOUR_PROJECT.firebaseapp.com",
+
+projectId:
+"YOUR_PROJECT_ID",
+
+storageBucket:
+"YOUR_PROJECT.firebasestorage.app",
+
+messagingSenderId:
+"YOUR_MESSAGING_SENDER_ID",
+
+appId:
+"YOUR_APP_ID"
+
 };
 
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
+
+const app=
+initializeApp(firebaseConfig);
+
+const auth=
+getAuth(app);
+
+const db=
+getFirestore(app);
+
+
+/* ==========================================
+ STATE
+========================================== */
 
 let referrals=[];
-let editing=null;
+let editingId=null;
 let admin=null;
 
 
-onAuthStateChanged(auth,async user=>{
+/* ==========================================
+ ADMIN AUTH
+========================================== */
+
+onAuthStateChanged(
+auth,
+async user=>{
 
 if(!user){
+
 location.href="login.html";
 return;
+
 }
 
-const snap=await getDoc(
+try{
+
+const snap=
+await getDoc(
 doc(db,"users",user.uid)
 );
 
-if(!snap.exists()||snap.data().role!=="admin"){
+if(
+!snap.exists() ||
+snap.data().role!=="admin"
+){
+
 alert("Access denied");
-location.href="dashboard.html";
+
+location.href=
+"dashboard.html";
+
 return;
+
 }
 
 admin=user;
+
 load();
+
+}catch(error){
+
+console.error(error);
+
+alert("Unable to verify admin.");
+
+}
 
 });
 
 
+/* ==========================================
+ LOAD
+========================================== */
+
 async function load(){
 
-const snap=await getDocs(
+try{
+
+const snap=
+await getDocs(
 collection(db,"referrals")
 );
 
-referrals=snap.docs.map(
-d=>({id:d.id,...d.data()})
+referrals=
+snap.docs.map(
+d=>({
+
+id:d.id,
+...d.data()
+
+})
 );
 
-stats();
+updateStats();
 render();
+
+}catch(error){
+
+console.error(error);
+
+toast(
+"Unable to load referrals."
+);
+
+}
 
 }
 
 
-function stats(){
+/* ==========================================
+ STATS
+========================================== */
 
-document.getElementById("total").textContent=
+function updateStats(){
+
+document.getElementById(
+"total"
+).textContent=
 referrals.length;
 
-document.getElementById("active").textContent=
-referrals.filter(x=>x.status==="active").length;
+document.getElementById(
+"active"
+).textContent=
+referrals.filter(
+x=>x.status==="active"
+).length;
 
-document.getElementById("conversions").textContent=
+document.getElementById(
+"conversions"
+).textContent=
 referrals.reduce(
-(a,x)=>a+Number(x.conversions||0),0
+(a,x)=>
+a+Number(x.conversions||0),
+0
 );
 
-document.getElementById("commission").textContent=
+document.getElementById(
+"commission"
+).textContent=
 "TZS "+
 referrals.reduce(
-(a,x)=>a+Number(x.commission||0),0
+(a,x)=>
+a+Number(x.commission||0),
+0
 ).toLocaleString();
 
 }
 
 
+/* ==========================================
+ RENDER
+========================================== */
+
 window.render=function(){
 
-const q=
-document.getElementById("search").value.toLowerCase();
+const search=
+document.getElementById(
+"search"
+).value
+.toLowerCase()
+.trim();
 
-const f=
-document.getElementById("filter").value;
+const filter=
+document.getElementById(
+"filter"
+).value;
 
-const data=referrals.filter(x=>{
 
-const match=
-(x.code||"").toLowerCase().includes(q)||
-(x.userId||"").toLowerCase().includes(q);
+const data=
+referrals.filter(x=>{
 
-return match&&(f==="all"||x.status===f);
+const text=
+`${x.userId||""}
+${x.code||""}`
+.toLowerCase();
+
+return(
+text.includes(search) &&
+(
+filter==="all" ||
+x.status===filter
+)
+);
 
 });
 
-document.getElementById("list").innerHTML=
-data.length?
+
+const list=
+document.getElementById("list");
+
+
+if(!data.length){
+
+list.innerHTML=`
+
+<tr>
+
+<td colspan="7">
+
+<div class="empty">
+
+No referral partners found.
+
+</div>
+
+</td>
+
+</tr>
+
+`;
+
+return;
+
+}
+
+
+list.innerHTML=
 data.map(x=>`
 
 <tr>
 
-<td>${esc(x.userId)}</td>
-
-<td><strong>${esc(x.code)}</strong></td>
-
-<td>${Number(x.rate||0)}%</td>
-
-<td>${Number(x.conversions||0)}</td>
-
-<td>TZS ${Number(x.commission||0).toLocaleString()}</td>
-
 <td>
-<span class="badge ${esc(x.status||"pending")}">
-${esc(x.status||"pending")}
-</span>
+
+<strong>
+${esc(x.name||"Referral Partner")}
+</strong>
+
+<br>
+
+<small>
+${esc(x.userId||"")}
+</small>
+
 </td>
 
+
 <td>
 
-<button class="light"
+<strong>
+${esc(x.code||"")}
+</strong>
+
+</td>
+
+
+<td>
+
+${Number(x.rate||0)}%
+
+</td>
+
+
+<td>
+
+${Number(
+x.conversions||0
+).toLocaleString()}
+
+${x.target?
+` / ${Number(x.target).toLocaleString()}`
+:""}
+
+</td>
+
+
+<td>
+
+TZS ${Number(
+x.commission||0
+).toLocaleString()}
+
+</td>
+
+
+<td>
+
+<span class="badge ${
+esc(x.status||"pending")
+}">
+
+${esc(x.status||"pending")}
+
+</span>
+
+</td>
+
+
+<td>
+
+<button
+class="back"
 onclick="editReferral('${x.id}')">
+
 Edit
+
 </button>
 
-<button class="danger"
-onclick="removeReferral('${x.id}')">
+<button
+class="danger"
+onclick="deleteReferral('${x.id}')">
+
 Delete
+
 </button>
 
 </td>
 
 </tr>
 
-`).join("")
-:
-`<tr><td colspan="7" style="text-align:center;padding:30px">
-No referral partners found.
-</td></tr>`;
+`).join("");
 
 };
 
 
-document.getElementById("form")
-.addEventListener("submit",async e=>{
+/* ==========================================
+ CREATE
+========================================== */
+
+window.openCreate=function(){
+
+editingId=null;
+
+document.getElementById(
+"modalTitle"
+).textContent=
+"Add Referral";
+
+document.getElementById(
+"form"
+).reset();
+
+document.getElementById(
+"rate"
+).value=10;
+
+document.getElementById(
+"modal"
+).classList.add("show");
+
+};
+
+
+/* ==========================================
+ EDIT
+========================================== */
+
+window.editReferral=function(id){
+
+const x=
+referrals.find(
+r=>r.id===id
+);
+
+if(!x)return;
+
+editingId=id;
+
+document.getElementById(
+"modalTitle"
+).textContent=
+"Edit Referral";
+
+
+set("userId",x.userId||"");
+set("code",x.code||"");
+set("rate",x.rate||10);
+set("status",x.status||"active");
+set("target",x.target||0);
+set("notes",x.notes||"");
+
+
+document.getElementById(
+"modal"
+).classList.add("show");
+
+};
+
+
+/* ==========================================
+ SAVE
+========================================== */
+
+document.getElementById(
+"form"
+).addEventListener(
+"submit",
+async e=>{
 
 e.preventDefault();
 
+
 const code=
-document.getElementById("code")
-.value.trim().toUpperCase();
+get("code")
+.toUpperCase()
+.replace(/\s+/g,"");
+
+
+if(!code){
+
+toast(
+"Referral code is required."
+);
+
+return;
+
+}
+
+
+const old=
+editingId
+?
+referrals.find(
+x=>x.id===editingId
+)
+:null;
+
 
 const data={
 
-userId:document.getElementById("userId").value.trim(),
+userId:get("userId"),
 
 code,
 
 rate:Number(
-document.getElementById("rate").value||0
+get("rate")||0
 ),
 
-status:document.getElementById("status").value,
+status:get("status"),
 
-updatedAt:serverTimestamp()
+target:Number(
+get("target")||0
+),
+
+notes:get("notes"),
+
+conversions:
+old?.conversions||0,
+
+commission:
+old?.commission||0,
+
+updatedAt:
+serverTimestamp()
 
 };
+
 
 try{
 
 await setDoc(
-doc(db,"referrals",code),
+doc(
+db,
+"referrals",
+code
+),
 {
+
 ...data,
-conversions:
-editing?
-(referrals.find(x=>x.id===editing)?.conversions||0):0,
-commission:
-editing?
-(referrals.find(x=>x.id===editing)?.commission||0):0,
-createdBy:admin.uid,
-createdAt:serverTimestamp()
+
+createdBy:
+admin.uid,
+
+createdAt:
+old?.createdAt||
+serverTimestamp()
+
 },
-{merge:true}
+{
+merge:true
+}
 );
 
-toast(editing?"Referral updated":"Referral created");
+
+toast(
+editingId
+?
+"Referral updated."
+:
+"Referral created."
+);
 
 closeModal();
-load();
 
-}catch(e){
+await load();
 
-console.error(e);
-toast("Unable to save referral");
+}catch(error){
+
+console.error(error);
+
+toast(
+"Unable to save referral."
+);
 
 }
 
 });
 
 
-window.editReferral=function(id){
+/* ==========================================
+ DELETE
+========================================== */
 
-const x=referrals.find(r=>r.id===id);
-if(!x)return;
+window.deleteReferral=
+async function(id){
 
-editing=id;
-
-document.getElementById("userId").value=x.userId||"";
-document.getElementById("code").value=x.code||"";
-document.getElementById("rate").value=x.rate||10;
-document.getElementById("status").value=x.status||"active";
-
-openModal();
-
-};
-
-
-window.removeReferral=async function(id){
-
-if(!confirm("Delete this referral partner?"))return;
-
-await deleteDoc(
-doc(db,"referrals",id)
+const x=
+referrals.find(
+r=>r.id===id
 );
 
-toast("Referral deleted");
-load();
+if(!x)return;
+
+
+if(!confirm(
+`Delete referral "${x.code}"?`
+))return;
+
+
+try{
+
+await deleteDoc(
+doc(
+db,
+"referrals",
+id
+)
+);
+
+toast(
+"Referral deleted."
+);
+
+await load();
+
+}catch(error){
+
+console.error(error);
+
+toast(
+"Delete failed."
+);
+
+}
 
 };
 
 
-window.openModal=()=>{
+/* ==========================================
+ MODAL
+========================================== */
 
-document.getElementById("modal")
-.classList.add("show");
+window.closeModal=function(){
 
-};
+document.getElementById(
+"modal"
+).classList.remove("show");
 
-window.closeModal=()=>{
-
-document.getElementById("modal")
-.classList.remove("show");
-
-document.getElementById("form").reset();
-
-editing=null;
+editingId=null;
 
 };
 
 
-function esc(v){
+/* ==========================================
+ HELPERS
+========================================== */
 
-return String(v??"")
+function get(id){
+
+return document
+.getElementById(id)
+.value
+.trim();
+
+}
+
+function set(id,value){
+
+document
+.getElementById(id)
+.value=value;
+
+}
+
+function esc(value){
+
+return String(value??"")
 .replace(/&/g,"&amp;")
 .replace(/</g,"&lt;")
 .replace(/>/g,"&gt;")
@@ -351,15 +816,27 @@ return String(v??"")
 
 }
 
-function toast(t){
+function toast(text){
 
-const x=document.getElementById("toast");
+const el=
+document.getElementById(
+"toast"
+);
 
-x.textContent=t;
-x.classList.add("show");
+el.textContent=text;
 
+el.classList.add("show");
+
+clearTimeout(
+window.toastTimer
+);
+
+window.toastTimer=
 setTimeout(
-()=>x.classList.remove("show"),3000
+()=>{
+el.classList.remove("show");
+},
+3000
 );
 
 }
