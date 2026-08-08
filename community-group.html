@@ -1,0 +1,544 @@
+<!-- community-group.html --><!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Community Group | LetsStudy Pro</title>
+<meta name="description" content="LetsStudy Pro community study group.">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+header{background:#fff;border-bottom:1px solid #e5e7eb;padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+.back{border:0;background:#f1f5f9;padding:9px 12px;border-radius:10px;cursor:pointer}
+.avatar{width:46px;height:46px;border-radius:50%;background:#2563eb;color:white;display:grid;place-items:center;font-size:22px;font-weight:bold}
+.info{flex:1}.info h1{font-size:18px}.info p{font-size:12px;color:#64748b;margin-top:3px}
+.actions{display:flex;gap:7px}
+.btn{border:0;border-radius:9px;padding:9px 12px;cursor:pointer;font-weight:600}
+.primary{background:#2563eb;color:white}.light{background:#eef2ff;color:#1d4ed8}
+main{max-width:900px;margin:auto;padding:18px}
+.banner{background:#fff;border-radius:16px;padding:18px;margin-bottom:15px;border:1px solid #e5e7eb}
+.banner h2{font-size:18px;margin-bottom:7px}.banner p{color:#64748b;font-size:14px;line-height:1.5}
+.tabs{display:flex;gap:7px;overflow:auto;margin-bottom:15px}
+.tab{border:0;background:#fff;padding:10px 15px;border-radius:10px;white-space:nowrap;cursor:pointer}
+.tab.active{background:#2563eb;color:#fff}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:15px;padding:15px;margin-bottom:12px}
+.post-head{display:flex;gap:10px;align-items:center}.small-avatar{width:38px;height:38px;border-radius:50%;background:#dbeafe;display:grid;place-items:center;font-weight:bold;color:#1d4ed8}
+.post-head small{display:block;color:#64748b;margin-top:3px}
+.post-body{padding:12px 0;line-height:1.55}
+.post-actions{display:flex;gap:8px;border-top:1px solid #eef0f4;padding-top:10px}
+.empty{text-align:center;padding:35px;color:#64748b}
+.member{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #eef0f4}
+.member:last-child{border:0}.member .grow{flex:1}
+#loading{text-align:center;padding:40px;color:#64748b}
+@media(max-width:600px){main{padding:10px}.actions .hide-mobile{display:none}}
+</style>
+</head><body><header><button class="back" onclick="history.back()">←</button>
+
+<div class="avatar" id="groupAvatar">G</div><div class="info">
+<h1 id="groupName">Loading...</h1>
+<p id="groupMeta">Loading group...</p>
+</div><div class="actions">
+<button class="btn light hide-mobile" onclick="openChat()">💬 Chat</button>
+<button class="btn primary" onclick="shareGroup()">Share</button>
+</div></header><main><div id="loading">Loading community group...</div><section id="content" style="display:none"><div class="banner">
+<h2 id="groupTitle">Study Group</h2>
+<p id="groupDescription">Welcome to this LetsStudy Pro study group.</p>
+</div><div class="tabs"><button class="tab active" onclick="showTab('posts',this)">
+Posts
+</button><button class="tab" onclick="showTab('members',this)">
+Members
+</button><button class="tab" onclick="openChat()">
+💬 Chat
+</button></div><!-- POSTS --><div id="postsTab"><div class="card"><textarea
+id="postText"
+placeholder="Write something to your group..."
+style="width:100%;min-height:90px;border:1px solid #e2e8f0;border-radius:10px;padding:12px;resize:vertical"
+></textarea><div style="text-align:right;margin-top:8px">
+<button class="btn primary" onclick="createPost()">
+Post
+</button>
+</div></div><div id="postsList"></div></div><!-- MEMBERS --><div id="membersTab" style="display:none"><div class="card"><h3 style="margin-bottom:10px">
+Group Members
+</h3><div id="membersList"></div></div></div></section></main><script type="module">
+
+import {
+initializeApp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+getAuth,
+onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+getFirestore,
+doc,
+getDoc,
+collection,
+query,
+where,
+orderBy,
+limit,
+getDocs,
+addDoc,
+serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/* FIREBASE CONFIG */
+
+const firebaseConfig = {
+
+apiKey:"YOUR_API_KEY",
+authDomain:"YOUR_PROJECT.firebaseapp.com",
+projectId:"YOUR_PROJECT_ID",
+storageBucket:"YOUR_PROJECT.firebasestorage.app",
+messagingSenderId:"YOUR_MESSAGING_SENDER_ID",
+appId:"YOUR_APP_ID"
+
+};
+
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+
+/* GROUP ID */
+
+const params=new URLSearchParams(location.search);
+
+const groupId=
+params.get("id") ||
+params.get("group") ||
+localStorage.getItem("communityGroupId");
+
+
+let currentUser=null;
+let groupData=null;
+
+
+/* AUTH */
+
+onAuthStateChanged(auth,async user=>{
+
+if(!user){
+
+location.href="login.html";
+return;
+
+}
+
+currentUser=user;
+
+if(!groupId){
+
+document.getElementById("loading").textContent=
+"Group not found.";
+
+return;
+
+}
+
+await loadGroup();
+await loadPosts();
+await loadMembers();
+
+});
+
+
+/* GROUP */
+
+async function loadGroup(){
+
+try{
+
+const snap=await getDoc(
+doc(db,"groups",groupId)
+);
+
+if(!snap.exists()){
+
+document.getElementById("loading").textContent=
+"This group does not exist.";
+
+return;
+
+}
+
+groupData=snap.data();
+
+document.getElementById("groupName").textContent=
+groupData.name || "Study Group";
+
+document.getElementById("groupTitle").textContent=
+groupData.name || "Study Group";
+
+document.getElementById("groupDescription").textContent=
+groupData.description ||
+"Welcome to this LetsStudy Pro study group.";
+
+document.getElementById("groupMeta").textContent=
+`${groupData.memberCount || 0} members • ${groupData.privacy || "public"}`;
+
+document.getElementById("groupAvatar").textContent=
+(groupData.name || "G").charAt(0).toUpperCase();
+
+document.getElementById("loading").style.display="none";
+document.getElementById("content").style.display="block";
+
+}catch(error){
+
+console.error(error);
+
+document.getElementById("loading").textContent=
+"Unable to load group.";
+
+}
+
+}
+
+
+/* POSTS */
+
+async function loadPosts(){
+
+const container=
+document.getElementById("postsList");
+
+try{
+
+const q=query(
+collection(db,"posts"),
+where("groupId","==",groupId),
+orderBy("createdAt","desc"),
+limit(30)
+);
+
+const snap=await getDocs(q);
+
+if(snap.empty){
+
+container.innerHTML=`
+<div class="card empty">
+<h3>No posts yet</h3>
+<p>Be the first member to start the discussion.</p>
+</div>`;
+
+return;
+
+}
+
+container.innerHTML="";
+
+snap.docs.forEach(item=>{
+
+const data=item.data();
+
+const post=document.createElement("div");
+
+post.className="card";
+
+post.innerHTML=`
+
+<div class="post-head">
+
+<div class="small-avatar">
+${escapeHtml(
+(data.authorName || "U").charAt(0).toUpperCase()
+)}
+</div>
+
+<div>
+<strong>
+${escapeHtml(
+data.authorName || "Member"
+)}
+</strong>
+
+<small>
+${formatDate(data.createdAt)}
+</small>
+</div>
+
+</div>
+
+<div class="post-body">
+${escapeHtml(data.content || "")}
+</div>
+
+<div class="post-actions">
+
+<button class="btn light">
+❤️ ${data.likes || 0}
+</button>
+
+<button class="btn light" onclick="openChat()">
+💬 Comments
+</button>
+
+</div>
+`;
+
+container.appendChild(post);
+
+});
+
+}catch(error){
+
+console.error(error);
+
+container.innerHTML=`
+<div class="card empty">
+Unable to load posts.
+</div>`;
+
+}
+
+}
+
+
+/* CREATE POST */
+
+window.createPost=async function(){
+
+const input=
+document.getElementById("postText");
+
+const content=input.value.trim();
+
+if(!content){
+
+alert("Write something first.");
+return;
+
+}
+
+try{
+
+await addDoc(
+collection(db,"posts"),
+{
+
+groupId:groupId,
+
+authorId:currentUser.uid,
+
+authorName:
+currentUser.displayName ||
+currentUser.email ||
+"Member",
+
+content:content,
+
+likes:0,
+
+createdAt:
+serverTimestamp()
+
+}
+);
+
+input.value="";
+
+await loadPosts();
+
+}catch(error){
+
+console.error(error);
+
+alert("Unable to create post.");
+
+}
+
+};
+
+
+/* MEMBERS */
+
+async function loadMembers(){
+
+const container=
+document.getElementById("membersList");
+
+try{
+
+const q=query(
+collection(db,"communityMembers"),
+where("groupId","==",groupId),
+limit(100)
+);
+
+const snap=await getDocs(q);
+
+if(snap.empty){
+
+container.innerHTML=`
+<div class="empty">
+No members found.
+</div>`;
+
+return;
+
+}
+
+container.innerHTML="";
+
+snap.docs.forEach(item=>{
+
+const data=item.data();
+
+const div=document.createElement("div");
+
+div.className="member";
+
+div.innerHTML=`
+
+<div class="small-avatar">
+${escapeHtml(
+(data.name || "U").charAt(0).toUpperCase()
+)}
+</div>
+
+<div class="grow">
+
+<strong>
+${escapeHtml(
+data.name ||
+data.email ||
+"Member"
+)}
+</strong>
+
+<div style="font-size:12px;color:#64748b">
+${escapeHtml(
+data.role || "member"
+)}
+</div>
+
+</div>
+
+`;
+
+container.appendChild(div);
+
+});
+
+}catch(error){
+
+console.error(error);
+
+container.innerHTML=
+`<div class="empty">Unable to load members.</div>`;
+
+}
+
+}
+
+
+/* TABS */
+
+window.showTab=function(tab,button){
+
+document.getElementById("postsTab").style.display=
+tab==="posts" ? "block" : "none";
+
+document.getElementById("membersTab").style.display=
+tab==="members" ? "block" : "none";
+
+document.querySelectorAll(".tab")
+.forEach(x=>x.classList.remove("active"));
+
+if(button)
+button.classList.add("active");
+
+};
+
+
+/* CHAT */
+
+window.openChat=function(){
+
+localStorage.setItem(
+"communityGroupId",
+groupId
+);
+
+location.href=
+"community-chat.html?group="+
+encodeURIComponent(groupId);
+
+};
+
+
+/* SHARE */
+
+window.shareGroup=async function(){
+
+const url=
+location.origin+
+location.pathname+
+"?id="+
+encodeURIComponent(groupId);
+
+try{
+
+await navigator.clipboard.writeText(url);
+
+alert("Group link copied.");
+
+}catch{
+
+prompt(
+"Copy group link:",
+url
+);
+
+}
+
+};
+
+
+/* HELPERS */
+
+function escapeHtml(value){
+
+return String(value ?? "")
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+
+}
+
+
+function formatDate(timestamp){
+
+if(!timestamp)return"Just now";
+
+try{
+
+const date=
+timestamp.toDate
+? timestamp.toDate()
+: new Date(timestamp);
+
+return date.toLocaleDateString(
+"en-GB",
+{
+day:"2-digit",
+month:"short",
+year:"numeric"
+}
+);
+
+}catch{
+
+return"Recently";
+
+}
+
+}
+
+</script></body>
+</html>
