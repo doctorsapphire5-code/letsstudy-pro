@@ -266,38 +266,22 @@ let editingId=null;
 ========================================= */
 
 onAuthStateChanged(
-auth,
-async user=>{
+  auth,
+  async user => {
 
-if(!user){
+    if(!user){
 
-location.href="login.html";
-return;
+      location.href = "login.html";
+      return;
 
-}
+    }
 
-const snap=
-await getDoc(
-doc(db,"users",user.uid)
+    admin = user;
+
+    loadJobs();
+
+  }
 );
-
-if(
-!snap.exists() ||
-snap.data().role!=="admin"
-){
-
-alert("Access denied");
-location.href="dashboard.html";
-return;
-
-}
-
-admin=user;
-
-loadJobs();
-
-});
-
 
 /* =========================================
  LOAD JOBS
@@ -1014,5 +998,366 @@ el.classList.remove("show");
 
 }
 
-</script></body>
+</script>
+<!-- ================================
+     ADD CAREER
+================================ -->
+
+<section class="panel">
+
+  <div class="panel-header">
+    <h2>➕ Add Career</h2>
+  </div>
+
+  <form id="careerForm" class="form">
+
+    <div class="form-grid">
+
+      <!-- Career Title -->
+      <div class="field">
+        <label>Career Title *</label>
+        <input
+          type="text"
+          id="careerTitle"
+          placeholder="e.g. Software Engineer"
+          required
+        >
+      </div>
+
+
+      <!-- Category -->
+      <div class="field">
+        <label>Category *</label>
+        <input
+          type="text"
+          id="careerCategory"
+          placeholder="e.g. Technology"
+          required
+        >
+      </div>
+
+
+      <!-- Education -->
+      <div class="field">
+        <label>Required Education</label>
+        <input
+          type="text"
+          id="careerEducation"
+          placeholder="e.g. Bachelor Degree"
+        >
+      </div>
+
+
+      <!-- Subjects -->
+      <div class="field">
+        <label>Required Subjects</label>
+        <input
+          type="text"
+          id="careerSubjects"
+          placeholder="e.g. Mathematics, Physics, ICT"
+        >
+      </div>
+
+
+      <!-- Skills -->
+      <div class="field">
+        <label>Key Skills</label>
+        <input
+          type="text"
+          id="careerSkills"
+          placeholder="e.g. Coding, Communication, Leadership"
+        >
+      </div>
+
+
+      <!-- Salary -->
+      <div class="field">
+        <label>Average Salary</label>
+        <input
+          type="text"
+          id="careerSalary"
+          placeholder="e.g. TZS 1,500,000 - 4,000,000"
+        >
+      </div>
+
+
+      <!-- Status -->
+      <div class="field">
+        <label>Status</label>
+
+        <select id="careerStatus">
+
+          <option value="active">
+            Active
+          </option>
+
+          <option value="draft">
+            Draft
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <!-- Image -->
+      <div class="field">
+        <label>Career Image URL</label>
+
+        <input
+          type="url"
+          id="careerImage"
+          placeholder="https://example.com/image.jpg"
+        >
+
+      </div>
+
+
+      <!-- Description -->
+      <div class="field full">
+
+        <label>Career Description *</label>
+
+        <textarea
+          id="careerDescription"
+          rows="5"
+          placeholder="Write a detailed description about this career..."
+          required
+        ></textarea>
+
+      </div>
+
+
+      <!-- Job Opportunities -->
+      <div class="field full">
+
+        <label>Job Opportunities</label>
+
+        <textarea
+          id="careerOpportunities"
+          rows="4"
+          placeholder="e.g. Banks, Hospitals, Schools, Government..."
+        ></textarea>
+
+      </div>
+
+
+      <!-- Related Courses -->
+      <div class="field full">
+
+        <label>Related Courses</label>
+
+        <input
+          type="text"
+          id="careerCourses"
+          placeholder="e.g. Computer Science, IT, Software Engineering"
+        >
+
+      </div>
+
+    </div>
+
+
+    <!-- Buttons -->
+    <div class="form-actions">
+
+      <button
+        type="reset"
+        class="btn btn-secondary"
+      >
+        Clear
+      </button>
+
+      <button
+        type="submit"
+        class="btn btn-primary"
+      >
+        💾 Save Career
+      </button>
+
+    </div>
+
+  </form>
+
+</section>
+
+
+<!-- ================================
+     FIREBASE ADD CAREER
+================================ -->
+
+<script type="module">
+
+  import {
+    initializeApp
+  } from
+  "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+  import {
+    getDatabase,
+    ref,
+    push,
+    set
+  } from
+  "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+
+
+  const firebaseConfig = {
+
+    apiKey:
+      "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+    authDomain:
+      "let-s-study-pro-course.firebaseapp.com",
+
+    databaseURL:
+      "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+    projectId:
+      "let-s-study-pro-course",
+
+    storageBucket:
+      "let-s-study-pro-course.firebasestorage.app",
+
+    messagingSenderId:
+      "474928293390",
+
+    appId:
+      "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+    measurementId:
+      "G-85B7V5H5J0"
+
+  };
+
+
+  const app =
+    initializeApp(firebaseConfig);
+
+  const db =
+    getDatabase(app);
+
+
+  /* ================================
+     SAVE CAREER
+  ================================= */
+
+  document
+    .getElementById("careerForm")
+    .addEventListener("submit", async (e) => {
+
+      e.preventDefault();
+
+
+      const careerRef =
+        push(ref(db, "careers"));
+
+
+      const career = {
+
+        title:
+          document
+            .getElementById("careerTitle")
+            .value
+            .trim(),
+
+        category:
+          document
+            .getElementById("careerCategory")
+            .value
+            .trim(),
+
+        education:
+          document
+            .getElementById("careerEducation")
+            .value
+            .trim(),
+
+        subjects:
+          document
+            .getElementById("careerSubjects")
+            .value
+            .trim(),
+
+        skills:
+          document
+            .getElementById("careerSkills")
+            .value
+            .trim(),
+
+        salary:
+          document
+            .getElementById("careerSalary")
+            .value
+            .trim(),
+
+        status:
+          document
+            .getElementById("careerStatus")
+            .value,
+
+        image:
+          document
+            .getElementById("careerImage")
+            .value
+            .trim(),
+
+        description:
+          document
+            .getElementById("careerDescription")
+            .value
+            .trim(),
+
+        opportunities:
+          document
+            .getElementById("careerOpportunities")
+            .value
+            .trim(),
+
+        courses:
+          document
+            .getElementById("careerCourses")
+            .value
+            .trim(),
+
+        createdAt:
+          Date.now()
+
+      };
+
+
+      try{
+
+        await set(
+          careerRef,
+          career
+        );
+
+
+        alert(
+          "Career added successfully!"
+        );
+
+
+        document
+          .getElementById("careerForm")
+          .reset();
+
+
+      }catch(error){
+
+        console.error(error);
+
+        alert(
+          "Failed to add career: "
+          + error.message
+        );
+
+      }
+
+    });
+
+</script>
+
+</body>
 </html>
