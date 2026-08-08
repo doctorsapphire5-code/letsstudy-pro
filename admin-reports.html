@@ -1,1515 +1,851 @@
-
-  snapshot.forEach(
-    item => {
-
-      result.push({
-
-        id:item.id,
-
-        ...item.data()
-
-      });
-
-    }
-  );
-
-  return result;
-
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Reports | LetsStudy Pro</title><style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f7fb;color:#172033}
+button,select,input{font:inherit}
+button{border:0;cursor:pointer;border-radius:9px;padding:9px 12px}
+header{height:62px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:12px;padding:0 16px;position:sticky;top:0;z-index:10}
+header h1{flex:1;font-size:18px;margin:0}
+.back{background:#eef2ff;color:#1d4ed8}
+.primary{background:#2563eb;color:#fff}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:16px}
+main{max-width:1250px;margin:auto;padding:18px}
+.filters{display:flex;gap:10px;margin-bottom:16px}
+.filters>*{width:auto}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.stat span{font-size:11px;color:#64748b}
+.stat b{display:block;font-size:22px;margin-top:6px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card h2{font-size:15px;margin:0 0 14px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{text-align:left;padding:10px 7px;border-bottom:1px solid #edf0f4}
+th{font-size:10px;color:#64748b}
+.table{overflow:auto}
+.bar{height:10px;background:#e5e7eb;border-radius:20px;overflow:hidden}
+.bar i{display:block;height:100%;background:#2563eb}
+.metric{display:flex;justify-content:space-between;margin:10px 0;font-size:12px}
+.empty{text-align:center;color:#64748b;padding:30px}
+@media(max-width:800px){
+.stats{grid-template-columns:1fr 1fr}
+.grid{grid-template-columns:1fr}
+.filters{flex-wrap:wrap}
 }
+</style></head><body><header><button class="back"
+onclick="location.href='admin-dashboard.html'">
+←
+</button>
 
+<h1>📊 Admin Reports</h1><button class="primary"
+onclick="exportCSV()">
+⬇ Export CSV
+</button>
 
-/* =====================================================
-   LOAD REPORT
-===================================================== */
+</header><main><div class="filters"><select id="period" onchange="loadReports()">
+<option value="all">All Time</option>
+<option value="7">Last 7 Days</option>
+<option value="30" selected>Last 30 Days</option>
+<option value="90">Last 90 Days</option>
+</select><button class="back"
+onclick="loadReports()">
+↻ Refresh
+</button>
 
-async function loadReport(){
+</div><section class="stats"><div class="card stat">
+<span>Total Revenue</span>
+<b id="revenue">TZS 0</b>
+</div><div class="card stat">
+<span>Total Orders</span>
+<b id="orders">0</b>
+</div><div class="card stat">
+<span>Students</span>
+<b id="students">0</b>
+</div><div class="card stat">
+<span>Courses</span>
+<b id="courses">0</b>
+</div></section><section class="grid"><!-- SALES --><div class="card"><h2>💰 Sales Overview</h2><div class="metric">
+<span>Successful Payments</span>
+<strong id="successful">0</strong>
+</div><div class="metric">
+<span>Pending Payments</span>
+<strong id="pending">0</strong>
+</div><div class="metric">
+<span>Failed Payments</span>
+<strong id="failed">0</strong>
+</div><div class="metric">
+<span>Refunds</span>
+<strong id="refunds">0</strong>
+</div></div><!-- REFERRALS --><div class="card"><h2>🤝 Referral Performance</h2><div class="metric">
+<span>Referrers</span>
+<strong id="referrers">0</strong>
+</div><div class="metric">
+<span>Conversions</span>
+<strong id="conversions">0</strong>
+</div><div class="metric">
+<span>Commission</span>
+<strong id="commission">TZS 0</strong>
+</div></div><!-- TOP COURSES --><div class="card"><h2>🏆 Top Courses</h2><div class="table"><table><thead>
+<tr>
+<th>Course</th>
+<th>Students</th>
+<th>Revenue</th>
+</tr>
+</thead><tbody id="topCourses"></tbody></table></div></div><!-- USER REPORT --><div class="card"><h2>👥 User Overview</h2><div class="metric">
+<span>Total Users</span>
+<strong id="totalUsers">0</strong>
+</div><div class="metric">
+<span>Admins</span>
+<strong id="admins">0</strong>
+</div><div class="metric">
+<span>Students</span>
+<strong id="studentUsers">0</strong>
+</div><div class="metric">
+<span>Instructors</span>
+<strong id="instructors">0</strong>
+</div></div><!-- PAYMENT METHODS --><div class="card"><h2>💳 Payment Methods</h2><div id="methods">
+<div class="empty">
+Loading...
+</div>
+</div></div><!-- ORDERS --><div class="card"><h2>🧾 Recent Orders</h2><div class="table"><table><thead><tr>
+<th>Order</th>
+<th>User</th>
+<th>Amount</th>
+<th>Status</th>
+</tr></thead><tbody id="recentOrders"></tbody></table></div></div></section></main><script type="module">
 
-  try{
-
-    users =
-      await loadCollection(
-        "users"
-      );
-
-  }catch(error){
-
-    console.error(
-      "Users:",
-      error
-    );
-
-    users = [];
-
-  }
-
-
-  try{
-
-    courses =
-      await loadCollection(
-        "courses"
-      );
-
-  }catch(error){
-
-    console.error(
-      "Courses:",
-      error
-    );
-
-    courses = [];
-
-  }
-
-
-  try{
-
-    orders =
-      await loadCollection(
-        "orders"
-      );
-
-  }catch(error){
-
-    console.error(
-      "Orders:",
-      error
-    );
-
-    orders = [];
-
-  }
-
-
-  renderSummary();
-
-  renderUsers();
-
-  renderCourses();
-
-  renderOrders();
-
+import{
+initializeApp
 }
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
-
-/* =====================================================
-   SUMMARY
-===================================================== */
-
-function renderSummary(){
-
-  const premium =
-    users.filter(
-      user =>
-
-        user.isPremium === true ||
-
-        user.membership ===
-        "premium" ||
-
-        user.role ===
-        "premium"
-
-    ).length;
-
-
-  const revenue =
-    orders.reduce(
-      (
-        total,
-        order
-      ) => {
-
-        const status =
-          String(
-            order.status ||
-            ""
-          ).toLowerCase();
-
-        if(
-          status === "paid" ||
-          status === "completed" ||
-          status === "success"
-        ){
-
-          return (
-            total +
-            Number(
-              order.amount ||
-              order.total ||
-              order.price ||
-              0
-            )
-          );
-
-        }
-
-        return total;
-
-      },
-      0
-    );
-
-
-  document.getElementById(
-    "users"
-  ).textContent =
-    users.length;
-
-
-  document.getElementById(
-    "courses"
-  ).textContent =
-    courses.length;
-
-
-  document.getElementById(
-    "orders"
-  ).textContent =
-    orders.length;
-
-
-  document.getElementById(
-    "revenue"
-  ).textContent =
-    money(
-      revenue
-    );
-
-
-  document.getElementById(
-    "premium"
-  ).textContent =
-    premium;
-
+import{
+getAuth,
+onAuthStateChanged
 }
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
-
-/* =====================================================
-   USERS REPORT
-===================================================== */
-
-function renderUsers(){
-
-  const table =
-    document.getElementById(
-      "usersTable"
-    );
-
-
-  const data =
-    [...users]
-    .sort(
-      (
-        a,
-        b
-      ) => {
-
-        const da =
-          getDate(
-            a.createdAt
-          )?.getTime() || 0;
-
-        const db =
-          getDate(
-            b.createdAt
-          )?.getTime() || 0;
-
-        return db - da;
-
-      }
-    )
-    .slice(
-      0,
-      50
-    );
-
-
-  if(!data.length){
-
-    table.innerHTML = `
-
-      <tr>
-
-        <td
-          colspan="4"
-          class="empty">
-
-          No users found.
-
-        </td>
-
-      </tr>
-
-    `;
-
-    return;
-
-  }
-
-
-  table.innerHTML =
-    data.map(
-      user => `
-
-        <tr>
-
-          <td>
-            ${escapeHTML(
-              user.name ||
-              user.displayName ||
-              "Student"
-            )}
-          </td>
-
-          <td>
-            ${escapeHTML(
-              user.email ||
-              "—"
-            )}
-          </td>
-
-          <td>
-            ${escapeHTML(
-              user.role ||
-              "student"
-            )}
-          </td>
-
-          <td>
-            ${formatDate(
-              user.createdAt
-            )}
-          </td>
-
-        </tr>
-
-      `
-    ).join("");
-
+import{
+getFirestore,
+collection,
+getDoc,
+doc,
+getDocs
 }
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 
-/* =====================================================
-   COURSE REPORT
-===================================================== */
+/* ==========================================
+ FIREBASE
+========================================== */
 
-function renderCourses(){
+const firebaseConfig={
 
-  const table =
-    document.getElementById(
-      "coursesTable"
-    );
+apiKey:"YOUR_API_KEY",
 
+authDomain:
+"YOUR_PROJECT.firebaseapp.com",
 
-  const data =
-    [...courses]
-    .sort(
-      (
-        a,
-        b
-      ) => {
+projectId:
+"YOUR_PROJECT_ID",
 
-        const ea =
-          Number(
-            a.enrollments ||
-            a.students ||
-            a.enrolled ||
-            0
-          );
+storageBucket:
+"YOUR_PROJECT.firebasestorage.app",
 
-        const eb =
-          Number(
-            b.enrollments ||
-            b.students ||
-            b.enrolled ||
-            0
-          );
+messagingSenderId:
+"YOUR_MESSAGING_SENDER_ID",
 
-        return eb - ea;
+appId:
+"YOUR_APP_ID"
 
-      }
-    );
+};
 
 
-  if(!data.length){
+const app=
+initializeApp(firebaseConfig);
 
-    table.innerHTML = `
+const auth=
+getAuth(app);
 
-      <tr>
+const db=
+getFirestore(app);
 
-        <td
-          colspan="4"
-          class="empty">
 
-          No courses found.
+/* ==========================================
+ DATA
+========================================== */
 
-        </td>
+let reportData={
+payments:[],
+orders:[],
+users:[],
+courses:[],
+referrals:[]
+};
 
-      </tr>
+let admin=null;
 
-    `;
 
-    return;
-
-  }
-
-
-  table.innerHTML =
-    data.map(
-      course => `
-
-        <tr>
-
-          <td>
-            ${escapeHTML(
-              course.title ||
-              course.name ||
-              "Untitled Course"
-            )}
-          </td>
-
-          <td>
-            ${escapeHTML(
-              course.instructorName ||
-              course.instructor ||
-              "—"
-            )}
-          </td>
-
-          <td>
-            ${Number(
-              course.enrollments ||
-              course.students ||
-              course.enrolled ||
-              0
-            ).toLocaleString()}
-          </td>
-
-          <td>
-            ${money(
-              course.price
-            )}
-          </td>
-
-        </tr>
-
-      `
-    ).join("");
-
-}
-
-
-/* =====================================================
-   ORDER REPORT
-===================================================== */
-
-function renderOrders(){
-
-  const table =
-    document.getElementById(
-      "ordersTable"
-    );
-
-
-  const data =
-    [...orders]
-    .sort(
-      (
-        a,
-        b
-      ) => {
-
-        const da =
-          getDate(
-            a.createdAt ||
-            a.date
-          )?.getTime() || 0;
-
-        const db =
-          getDate(
-            b.createdAt ||
-            b.date
-          )?.getTime() || 0;
-
-        return db - da;
-
-      }
-    )
-    .slice(
-      0,
-      100
-    );
-
-
-  if(!data.length){
-
-    table.innerHTML = `
-
-      <tr>
-
-        <td
-          colspan="5"
-          class="empty">
-
-          No orders found.
-
-        </td>
-
-      </tr>
-
-    `;
-
-    return;
-
-  }
-
-
-  table.innerHTML =
-    data.map(
-      order => {
-
-        const status =
-          String(
-            order.status ||
-            "pending"
-          ).toLowerCase();
-
-
-        let type =
-          "pending";
-
-
-        if(
-          status === "paid" ||
-          status === "completed" ||
-          status === "success"
-        ){
-
-          type =
-            "success";
-
-        }
-
-
-        if(
-          status === "failed" ||
-          status === "cancelled"
-        ){
-
-          type =
-            "failed";
-
-        }
-
-
-        return `
-
-          <tr>
-
-            <td>
-              ${escapeHTML(
-                order.id
-              )}
-            </td>
-
-            <td>
-              ${escapeHTML(
-                order.email ||
-                order.userEmail ||
-                order.userId ||
-                "—"
-              )}
-            </td>
-
-            <td>
-              ${money(
-                order.amount ||
-                order.total ||
-                order.price
-              )}
-            </td>
-
-            <td>
-
-              <span
-                class="badge ${type}">
-
-                ${escapeHTML(
-                  order.status ||
-                  "pending"
-                )}
-
-              </span>
-
-            </td>
-
-            <td>
-              ${formatDate(
-                order.createdAt ||
-                order.date
-              )}
-            </td>
-
-          </tr>
-
-        `;
-
-      }
-    ).join("");
-
-}
-
-
-/* =====================================================
-   CSV EXPORT
-===================================================== */
-
-function exportCSV(){
-
-  const rows = [
-
-    [
-      "Order ID",
-      "Customer",
-      "Amount",
-      "Status",
-      "Date"
-    ]
-
-  ];
-
-
-  orders.forEach(
-    order => {
-
-      rows.push([
-
-        order.id || "",
-
-        order.email ||
-        order.userEmail ||
-        order.userId ||
-        "",
-
-        order.amount ||
-        order.total ||
-        order.price ||
-        0,
-
-        order.status ||
-        "pending",
-
-        formatDate(
-          order.createdAt ||
-          order.date
-        )
-
-      ]);
-
-    }
-  );
-
-
-  const csv =
-    rows.map(
-      row =>
-
-        row.map(
-          value =>
-
-            `"${String(
-              value
-            ).replace(
-              /"/g,
-              '""'
-            )}"`
-
-        ).join(",")
-
-    ).join("\n");
-
-
-  const blob =
-    new Blob(
-      [csv],
-      {
-        type:
-          "text/csv;charset=utf-8;"
-      }
-    );
-
-
-  const url =
-    URL.createObjectURL(
-      blob
-    );
-
-
-  const link =
-    document.createElement(
-      "a"
-    );
-
-
-  link.href =
-    url;
-
-  link.download =
-    "letsstudy-pro-report.csv";
-
-  link.click();
-
-
-  URL.revokeObjectURL(
-    url
-  );
-
-}
-
-
-/* =====================================================
-   EVENTS
-===================================================== */
-
-document
-  .getElementById(
-    "period"
-  )
-  .addEventListener(
-    "change",
-    event => {
-
-      periodDays =
-        Number(
-          event.target.value
-        );
-
-      showToast(
-        "Report period changed."
-      );
-
-    }
-  );
-
-
-document
-  .getElementById(
-    "refresh"
-  )
-  .addEventListener(
-    "click",
-    async () => {
-
-      await loadReport();
-
-      showToast(
-        "Report updated."
-      );
-
-    }
-  );
-
-
-document
-  .getElementById(
-    "print"
-  )
-  .addEventListener(
-    "click",
-    () => {
-
-      window.print();
-
-    }
-  );
-
-
-document
-  .getElementById(
-    "printReport"
-  )
-  .addEventListener(
-    "click",
-    () => {
-
-      window.print();
-
-    }
-  );
-
-
-document
-  .getElementById(
-    "exportCSV"
-  )
-  .addEventListener(
-    "click",
-    exportCSV
-  );
-
-
-/* =====================================================
-   TOAST
-===================================================== */
-
-function showToast(
-  message
-){
-
-  const toast =
-    document.getElementById(
-      "toast"
-    );
-
-  toast.textContent =
-    message;
-
-  toast.style.display =
-    "block";
-
-  clearTimeout(
-    window.toastTimer
-  );
-
-  window.toastTimer =
-    setTimeout(
-      () => {
-
-        toast.style.display =
-          "none";
-
-      },
-      2500
-    );
-
-}
-
-
-/* =====================================================
-   AUTH
-===================================================== */
+/* ==========================================
+ ADMIN CHECK
+========================================== */
 
 onAuthStateChanged(
-  auth,
-  async user => {
+auth,
+async user=>{
 
-    if(!user){
+if(!user){
 
-      window.location.href =
-        "login.html";
+location.href="login.html";
+return;
 
-      return;
 }
+
+const snap=
+await getDoc(
+doc(db,"users",user.uid)
+);
+
+if(
+!snap.exists() ||
+snap.data().role!=="admin"
+){
+
+alert("Access denied");
+
+location.href=
+"dashboard.html";
+
+return;
+
+}
+
+admin=user;
+
+loadReports();
+
+});
+
+
+/* ==========================================
+ LOAD REPORTS
+========================================== */
+
+window.loadReports=async function(){
 
 try{
 
-  await loadReport();
+const[
+payments,
+orders,
+users,
+courses,
+referrals
+]=await Promise.all([
 
-  showToast(
-    "Reports loaded successfully."
-  );
+getDocs(collection(db,"payments")),
+
+getDocs(collection(db,"orders")),
+
+getDocs(collection(db,"users")),
+
+getDocs(collection(db,"courses")),
+
+getDocs(collection(db,"referrals"))
+
+]);
+
+
+reportData.payments=
+payments.docs.map(
+d=>({id:d.id,...d.data()})
+);
+
+reportData.orders=
+orders.docs.map(
+d=>({id:d.id,...d.data()})
+);
+
+reportData.users=
+users.docs.map(
+d=>({id:d.id,...d.data()})
+);
+
+reportData.courses=
+courses.docs.map(
+d=>({id:d.id,...d.data()})
+);
+
+reportData.referrals=
+referrals.docs.map(
+d=>({id:d.id,...d.data()})
+);
+
+
+renderReports();
 
 }catch(error){
 
-  console.error(
-    "REPORT INITIALIZATION ERROR:",
-    error
-  );
+console.error(error);
 
-  showToast(
-    "Unable to load reports."
-  );
+alert(
+"Unable to load reports."
+);
 
 }
+
+};
+
+
+/* ==========================================
+ PERIOD
+========================================== */
+
+function withinPeriod(item){
+
+const period=
+document.getElementById(
+"period"
+).value;
+
+if(period==="all")
+return true;
+
+const date=
+getDate(item);
+
+if(!date)
+return true;
+
+const cutoff=
+new Date();
+
+cutoff.setDate(
+cutoff.getDate()-
+Number(period)
+);
+
+return date>=cutoff;
+
+}
+
+
+function getDate(item){
+
+const value=
+item.createdAt ||
+item.date ||
+item.updatedAt;
+
+if(!value)return null;
+
+if(
+typeof value==="object" &&
+value.seconds
+){
+
+return new Date(
+value.seconds*1000
+);
+
+}
+
+const date=
+new Date(value);
+
+return isNaN(date)
+?null
+:date;
+
+}
+
+
+/* ==========================================
+ RENDER
+========================================== */
+
+function renderReports(){
+
+const payments=
+reportData.payments
+.filter(withinPeriod);
+
+const orders=
+reportData.orders
+.filter(withinPeriod);
+
+const referrals=
+reportData.referrals
+.filter(withinPeriod);
+
+
+/* REVENUE */
+
+const successful=
+payments.filter(
+p=>
+p.status==="success" ||
+p.status==="completed" ||
+p.status==="paid"
+);
+
+const revenue=
+successful.reduce(
+(a,p)=>
+a+Number(
+p.amount||p.total||0
+),
+0
+);
+
+
+document.getElementById(
+"revenue"
+).textContent=
+money(revenue);
+
+document.getElementById(
+"orders"
+).textContent=
+orders.length;
+
+
+/* PAYMENTS */
+
+document.getElementById(
+"successful"
+).textContent=
+successful.length;
+
+document.getElementById(
+"pending"
+).textContent=
+payments.filter(
+p=>p.status==="pending"
+).length;
+
+document.getElementById(
+"failed"
+).textContent=
+payments.filter(
+p=>
+p.status==="failed" ||
+p.status==="cancelled"
+).length;
+
+document.getElementById(
+"refunds"
+).textContent=
+payments.filter(
+p=>p.status==="refunded"
+).length;
+
+
+/* USERS */
+
+document.getElementById(
+"students"
+).textContent=
+reportData.users.filter(
+u=>u.role==="student"
+).length;
+
+document.getElementById(
+"courses"
+).textContent=
+reportData.courses.length;
+
+document.getElementById(
+"totalUsers"
+).textContent=
+reportData.users.length;
+
+document.getElementById(
+"admins"
+).textContent=
+reportData.users.filter(
+u=>u.role==="admin"
+).length;
+
+document.getElementById(
+"studentUsers"
+).textContent=
+reportData.users.filter(
+u=>u.role==="student"
+).length;
+
+document.getElementById(
+"instructors"
+).textContent=
+reportData.users.filter(
+u=>u.role==="instructor"
+).length;
+
+
+/* REFERRALS */
+
+document.getElementById(
+"referrers"
+).textContent=
+referrals.length;
+
+document.getElementById(
+"conversions"
+).textContent=
+referrals.reduce(
+(a,x)=>
+a+Number(x.conversions||0),
+0
+);
+
+document.getElementById(
+"commission"
+).textContent=
+money(
+referrals.reduce(
+(a,x)=>
+a+Number(x.commission||0),
+0
+)
+);
+
+
+/* TOP COURSES */
+
+renderTopCourses();
+
+renderPaymentMethods();
+
+renderRecentOrders();
+
+}
+
+
+/* ==========================================
+ TOP COURSES
+========================================== */
+
+function renderTopCourses(){
+
+const courses=
+[...reportData.courses]
+.sort(
+(a,b)=>
+Number(b.studentsCount||0)-
+Number(a.studentsCount||0)
+)
+.slice(0,10);
+
+
+const el=
+document.getElementById(
+"topCourses"
+);
+
+
+if(!courses.length){
+
+el.innerHTML=
+`<tr><td colspan="3">No courses.</td></tr>`;
+
+return;
+
+}
+
+
+el.innerHTML=
+courses.map(c=>`
+
+<tr>
+
+<td>
+${esc(c.title||"Untitled")}
+</td>
+
+<td>
+${Number(
+c.studentsCount||0
+).toLocaleString()}
+</td>
+
+<td>
+${money(
+Number(c.revenue||0)
+)}
+</td>
+
+</tr>
+
+`).join("");
+
+}
+
+
+/* ==========================================
+ PAYMENT METHODS
+========================================== */
+
+function renderPaymentMethods(){
+
+const map={};
+
+reportData.payments
+.filter(withinPeriod)
+.forEach(p=>{
+
+const method=
+p.method ||
+p.paymentMethod ||
+"Other";
+
+if(!map[method])
+map[method]=0;
+
+map[method]++;
 
 });
 
-   showToast(
-  "Unable to load reports."
+
+const total=
+Object.values(map)
+.reduce((a,b)=>a+b,0);
+
+const el=
+document.getElementById(
+"methods"
 );
 
+
+if(!total){
+
+el.innerHTML=
+`<div class="empty">
+No payment data.
+</div>`;
+
+return;
+
 }
+
+
+el.innerHTML=
+Object.entries(map)
+.sort((a,b)=>b[1]-a[1])
+.map(([name,count])=>{
+
+const percent=
+Math.round(
+count/total*100
+);
+
+return`
+
+<div class="metric">
+
+<span>
+${esc(name)}
+</span>
+
+<strong>
+${count}
+(${percent}%)
+</strong>
+
+</div>
+
+<div class="bar">
+<i style="width:${percent}%"></i>
+</div>
+
+`;
+
+}).join("");
+
+}
+
+
+/* ==========================================
+ RECENT ORDERS
+========================================== */
+
+function renderRecentOrders(){
+
+const orders=
+[...reportData.orders]
+.sort(
+(a,b)=>
+(getDate(b)||0)-
+(getDate(a)||0)
+)
+.slice(0,10);
+
+
+const el=
+document.getElementById(
+"recentOrders"
+);
+
+
+if(!orders.length){
+
+el.innerHTML=
+`<tr><td colspan="4">No orders.</td></tr>`;
+
+return;
+
+}
+
+
+el.innerHTML=
+orders.map(o=>`
+
+<tr>
+
+<td>
+${esc(
+o.orderId||
+o.id||
+"-"
+)}
+</td>
+
+<td>
+${esc(
+o.userId||
+o.email||
+"-"
+)}
+</td>
+
+<td>
+${money(
+Number(
+o.amount||
+o.total||
+0
+)
+)}
+</td>
+
+<td>
+${esc(o.status||"pending")}
+</td>
+
+</tr>
+
+`).join("");
+
+}
+
+
+/* ==========================================
+ EXPORT CSV
+========================================== */
+
+window.exportCSV=function(){
+
+const rows=[
+[
+"Order ID",
+"User ID",
+"Amount",
+"Status",
+"Date"
+]
+];
+
+
+reportData.orders
+.filter(withinPeriod)
+.forEach(o=>{
+
+rows.push([
+
+o.orderId||o.id||"",
+
+o.userId||o.email||"",
+
+o.amount||o.total||0,
+
+o.status||"",
+
+getDate(o)?
+getDate(o).toISOString():""
+
+]);
 
 });
 
 
-/* =====================================================
-   GENERATE REPORT
-===================================================== */
+const csv=
+rows.map(
+row=>
+row.map(csvCell).join(",")
+).join("\n");
 
-document.getElementById(
-  "generateBtn"
-).addEventListener(
-  "click",
-  () => {
 
-    generateReport();
-
-  }
+const blob=
+new Blob(
+[csv],
+{
+type:"text/csv;charset=utf-8;"
+}
 );
 
 
-/* =====================================================
-   PRINT REPORT
-===================================================== */
+const url=
+URL.createObjectURL(blob);
 
-document.getElementById(
-  "printBtn"
-).addEventListener(
-  "click",
-  () => {
+const a=
+document.createElement("a");
 
-    window.print();
+a.href=url;
 
-  }
-);
+a.download=
+"letsstudy-reports.csv";
 
+a.click();
 
-/* =====================================================
-   REPORT TYPE FILTER
-===================================================== */
+URL.revokeObjectURL(url);
 
-document.getElementById(
-  "reportType"
-).addEventListener(
-  "change",
-  () => {
+};
 
-    const type =
-      document.getElementById(
-        "reportType"
-      ).value;
 
+function csvCell(value){
 
-    const paymentPanel =
-      document
-      .getElementById(
-        "paymentReport"
-      )
-      ?.closest(
-        ".panel"
-      );
-
-
-    const premiumPanel =
-      document
-      .getElementById(
-        "premiumReport"
-      )
-      ?.closest(
-        ".panel"
-      );
-
-
-    const quizPanel =
-      document
-      .getElementById(
-        "quizReport"
-      )
-      ?.closest(
-        ".panel"
-      );
-
-
-    const userPanel =
-      document
-      .getElementById(
-        "userReport"
-      )
-      ?.closest(
-        ".panel"
-      );
-
-
-    const revenuePanel =
-      document
-      .getElementById(
-        "revenueReport"
-      )
-      ?.closest(
-        ".panel"
-      );
-
-
-    if(type === "all"){
-
-      [
-        paymentPanel,
-        premiumPanel,
-        quizPanel,
-        userPanel,
-        revenuePanel
-      ]
-      .forEach(
-        panel => {
-
-          if(panel){
-
-            panel.style.display =
-              "";
-
-          }
-
-        }
-      );
-
-      return;
-
-    }
-
-
-    if(paymentPanel){
-
-      paymentPanel.style.display =
-        type === "payments"
-        ? ""
-        : "none";
-
-    }
-
-
-    if(revenuePanel){
-
-      revenuePanel.style.display =
-        type === "payments"
-        ? ""
-        : "none";
-
-    }
-
-
-    if(premiumPanel){
-
-      premiumPanel.style.display =
-        type === "premium"
-        ? ""
-        : "none";
-
-    }
-
-
-    if(quizPanel){
-
-      quizPanel.style.display =
-        type === "quizzes"
-        ? ""
-        : "none";
-
-    }
-
-
-    if(userPanel){
-
-      userPanel.style.display =
-        type === "users"
-        ? ""
-        : "none";
-
-    }
-
-  }
-);
-
-
-/* =====================================================
-   TOAST
-===================================================== */
-
-function showToast(
-  message,
-  type = "error"
-){
-
-  let toast =
-    document.getElementById(
-      "toast"
-    );
-
-
-  if(!toast){
-
-    toast =
-      document.createElement(
-        "div"
-      );
-
-
-    toast.id =
-      "toast";
-
-
-    toast.style.position =
-      "fixed";
-
-    toast.style.right =
-      "20px";
-
-    toast.style.bottom =
-      "20px";
-
-    toast.style.zIndex =
-      "9999";
-
-    toast.style.maxWidth =
-      "360px";
-
-    toast.style.padding =
-      "14px 18px";
-
-    toast.style.borderRadius =
-      "10px";
-
-    toast.style.fontSize =
-      "14px";
-
-    toast.style.fontWeight =
-      "600";
-
-    toast.style.boxShadow =
-      "0 8px 30px rgba(0,0,0,.15)";
-
-    document.body.appendChild(
-      toast
-    );
-
-  }
-
-
-  toast.textContent =
-    message;
-
-
-  toast.style.background =
-    type === "success"
-      ? "#16a34a"
-      : "#dc2626";
-
-
-  toast.style.color =
-    "#fff";
-
-
-  toast.style.display =
-    "block";
-
-
-  clearTimeout(
-    window.toastTimer
-  );
-
-
-  window.toastTimer =
-    setTimeout(
-      () => {
-
-        toast.style.display =
-          "none";
-
-      },
-      3500
-    );
+return `"${String(
+value??""
+).replace(/"/g,'""')}"`;
 
 }
 
 
-/* =====================================================
-   MONEY FORMAT
-===================================================== */
+/* ==========================================
+ HELPERS
+========================================== */
 
-function money(
-  value
-){
+function money(value){
 
-  return (
-    "TZS " +
-    Number(
-      value || 0
-    ).toLocaleString(
-      "en-TZ"
-    )
-  );
+return "TZS "+
+Number(value||0)
+.toLocaleString();
 
 }
 
+function esc(value){
 
-/* =====================================================
-   DATE FORMAT
-===================================================== */
-
-function formatDate(
-  value
-){
-
-  if(!value){
-
-    return "-";
-
-  }
-
-
-  const date =
-    new Date(
-      Number(value)
-    );
-
-
-  if(
-    Number.isNaN(
-      date.getTime()
-    )
-  ){
-
-    return "-";
-
-  }
-
-
-  return date.toLocaleString(
-    "en-TZ",
-    {
-      dateStyle:
-        "medium",
-
-      timeStyle:
-        "short"
-    }
-  );
+return String(value??"")
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
 
 }
 
-
-/* =====================================================
-   GET TIMESTAMP
-===================================================== */
-
-function getTimestamp(
-  item
-){
-
-  if(!item){
-
-    return 0;
-
-  }
-
-
-  const possible =
-    [
-
-      item.createdAt,
-
-      item.updatedAt,
-
-      item.paidAt,
-
-      item.timestamp,
-
-      item.time
-
-    ];
-
-
-  for(
-    const value of possible
-  ){
-
-    if(
-      value !== undefined &&
-      value !== null
-    ){
-
-      const number =
-        Number(
-          value
-        );
-
-
-      if(
-        !Number.isNaN(
-          number
-        )
-      ){
-
-        return number;
-
-      }
-
-    }
-
-  }
-
-
-  return 0;
-
-}
-
-
-/* =====================================================
-   PAYMENT STATUS
-===================================================== */
-
-function isPaid(
-  payment
-){
-
-  const status =
-    String(
-      payment?.status ||
-      payment?.paymentStatus ||
-      ""
-    )
-    .toLowerCase()
-    .trim();
-
-
-  return [
-
-    "paid",
-
-    "success",
-
-    "successful",
-
-    "completed",
-
-    "complete",
-
-    "approved",
-
-    "confirmed"
-
-  ].includes(
-    status
-  );
-
-}
-
-
-function isPending(
-  payment
-){
-
-  const status =
-    String(
-      payment?.status ||
-      payment?.paymentStatus ||
-      ""
-    )
-    .toLowerCase()
-    .trim();
-
-
-  return [
-
-    "pending",
-
-    "processing",
-
-    "waiting"
-
-  ].includes(
-    status
-  );
-
-}
-
-
-/* =====================================================
-   ESCAPE HTML
-===================================================== */
-
-function escapeHtml(
-  value
-){
-
-  return String(
-    value ?? ""
-  )
-  .replaceAll(
-    "&",
-    "&amp;"
-  )
-  .replaceAll(
-    "<",
-    "&lt;"
-  )
-  .replaceAll(
-    ">",
-    "&gt;"
-  )
-  .replaceAll(
-    '"',
-    "&quot;"
-  )
-  .replaceAll(
-    "'",
-    "&#039;"
-  );
-
-}
-
-
-/* =====================================================
-   ESCAPE ATTRIBUTE
-===================================================== */
-
-function escapeAttr(
-  value
-){
-
-  return String(
-    value ?? ""
-  )
-  .replaceAll(
-    "\\",
-    "\\\\"
-  )
-  .replaceAll(
-    "'",
-    "\\'"
-  )
-  .replaceAll(
-    '"',
-    "&quot;"
-  );
-
-}
-
-
-/* =====================================================
-   DEFAULT DATE RANGE
-===================================================== */
-
-function setDefaultDates(){
-
-  const today =
-    new Date();
-
-
-  const previous =
-    new Date();
-
-
-  previous.setDate(
-    today.getDate() - 30
-  );
-
-
-  const todayString =
-    today
-    .toISOString()
-    .split("T")[0];
-
-
-  const previousString =
-    previous
-    .toISOString()
-    .split("T")[0];
-
-
-  const from =
-    document.getElementById(
-      "fromDate"
-    );
-
-
-  const to =
-    document.getElementById(
-      "toDate"
-    );
-
-
-  if(from){
-
-    from.value =
-      previousString;
-
-  }
-
-
-  if(to){
-
-    to.value =
-      todayString;
-
-  }
-
-}
-
-
-/* =====================================================
-   OUTSIDE CLICK
-===================================================== */
-
-document.addEventListener(
-  "click",
-  event => {
-
-    const toast =
-      document.getElementById(
-        "toast"
-      );
-
-
-    if(
-      toast &&
-      event.target === toast
-    ){
-
-      toast.style.display =
-        "none";
-
-    }
-
-  }
-);
-
-
-/* =====================================================
-   ESCAPE KEY
-===================================================== */
-
-document.addEventListener(
-  "keydown",
-  event => {
-
-    if(
-      event.key ===
-      "Escape"
-    ){
-
-      const toast =
-        document.getElementById(
-          "toast"
-        );
-
-
-      if(toast){
-
-        toast.style.display =
-          "none";
-
-      }
-
-    }
-
-  }
-);
-
-
-/* =====================================================
-   INITIALIZE
-===================================================== */
-
-setDefaultDates();
-
-
-console.log(
-  "Lets Study Pro Admin Reports ready."
-);
-
-</script>
-
-</body>
+</script></body>
 </html>
