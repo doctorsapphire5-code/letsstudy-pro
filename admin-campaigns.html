@@ -1,0 +1,521 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Campaigns | LetsStudy Pro Admin</title><style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+header{height:62px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;padding:0 16px;gap:12px;position:sticky;top:0;z-index:5}
+header h1{font-size:18px;flex:1}
+button{border:0;border-radius:9px;padding:10px 13px;cursor:pointer}
+.primary{background:#2563eb;color:white}
+.light{background:#eef2ff;color:#1d4ed8}
+.danger{background:#fee2e2;color:#b91c1c}
+main{padding:18px;max-width:1200px;margin:auto}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.stat,.card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:15px}
+.stat b{font-size:23px;display:block;margin-top:5px}
+.stat span{font-size:11px;color:#64748b}
+.toolbar{display:flex;gap:8px;margin-bottom:14px}
+input,select,textarea{width:100%;padding:10px;border:1px solid #dbe1e8;border-radius:9px;outline:0}
+.toolbar input{max-width:350px}
+.table{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{text-align:left;padding:11px 8px;border-bottom:1px solid #edf0f4}
+th{font-size:10px;color:#64748b}
+.badge{padding:4px 8px;border-radius:20px;font-size:9px;font-weight:bold}
+.active{background:#dcfce7;color:#15803d}
+.paused{background:#fef3c7;color:#a16207}
+.draft{background:#e0e7ff;color:#3730a3}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:11px;font-weight:bold;margin-bottom:5px}
+.full{grid-column:1/-1}
+.modal{display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;padding:15px;z-index:20}
+.modal.show{display:flex}
+.box{background:#fff;border-radius:15px;padding:18px;width:100%;max-width:620px;max-height:90vh;overflow:auto}
+.modalhead{display:flex;align-items:center;margin-bottom:15px}
+.modalhead h2{flex:1;font-size:17px}
+.empty{text-align:center;color:#64748b;padding:30px}
+.toast{position:fixed;bottom:20px;right:20px;background:#172033;color:#fff;padding:12px 15px;border-radius:9px;display:none;font-size:12px}
+.toast.show{display:block}
+@media(max-width:700px){
+.stats{grid-template-columns:1fr 1fr}
+.form{grid-template-columns:1fr}
+.full{grid-column:auto}
+}
+</style></head><body><header>
+<button class="light" onclick="location.href='admin-marketing.html'">←</button>
+<h1>🎯 Marketing Campaigns</h1>
+<button class="primary" onclick="openModal()">+ Campaign</button>
+</header><main><section class="stats"><div class="stat">
+<span>Total Campaigns</span>
+<b id="total">0</b>
+</div><div class="stat">
+<span>Active</span>
+<b id="active">0</b>
+</div><div class="stat">
+<span>Conversions</span>
+<b id="conversions">0</b>
+</div><div class="stat">
+<span>Revenue</span>
+<b id="revenue">TZS 0</b>
+</div></section><section class="card"><div class="toolbar"><input
+id="search"
+placeholder="Search campaigns..."
+oninput="render()"
+
+«»
+
+<select id="filter" onchange="render()">
+<option value="all">All Status</option>
+<option value="active">Active</option>
+<option value="paused">Paused</option>
+<option value="draft">Draft</option>
+</select></div><div class="table"><table><thead>
+<tr>
+<th>Campaign</th>
+<th>Audience</th>
+<th>Budget</th>
+<th>Status</th>
+<th>Conversions</th>
+<th>Actions</th>
+</tr>
+</thead><tbody id="list"></tbody></table></div></section></main><!-- MODAL --><div class="modal" id="modal"><div class="box"><div class="modalhead">
+<h2 id="modalTitle">Create Campaign</h2>
+<button onclick="closeModal()">✕</button>
+</div><form id="form"><div class="form"><div class="field">
+<label>Campaign Name</label>
+<input id="name" required placeholder="Back to School">
+</div><div class="field">
+<label>Campaign Type</label>
+<select id="type">
+<option>Course Promotion</option>
+<option>Flash Sale</option>
+<option>New Students</option>
+<option>Retention</option>
+<option>Referral</option>
+<option>Brand Awareness</option>
+</select>
+</div><div class="field">
+<label>Audience</label>
+<select id="audience">
+<option>All Students</option>
+<option>New Students</option>
+<option>Active Students</option>
+<option>Inactive Students</option>
+<option>Premium Students</option>
+</select>
+</div><div class="field">
+<label>Budget (TZS)</label>
+<input id="budget" type="number" value="0">
+</div><div class="field">
+<label>Start</label>
+<input id="start" type="datetime-local">
+</div><div class="field">
+<label>End</label>
+<input id="end" type="datetime-local">
+</div><div class="field full">
+<label>Message</label>
+<textarea id="message" placeholder="Write campaign message..."></textarea>
+</div><div class="field">
+<label>Status</label>
+<select id="status">
+<option value="draft">Draft</option>
+<option value="active">Active</option>
+<option value="paused">Paused</option>
+</select>
+</div></div><br><button class="primary" type="submit">
+Save Campaign
+</button></form></div>
+</div><div class="toast" id="toast"></div><script type="module">
+
+import{initializeApp}
+from"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import{
+getAuth,
+onAuthStateChanged
+}
+from"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import{
+getFirestore,
+collection,
+doc,
+getDoc,
+getDocs,
+addDoc,
+updateDoc,
+deleteDoc,
+serverTimestamp
+}
+from"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/* FIREBASE */
+
+const firebaseConfig={
+apiKey:"YOUR_API_KEY",
+authDomain:"YOUR_PROJECT.firebaseapp.com",
+projectId:"YOUR_PROJECT_ID",
+storageBucket:"YOUR_PROJECT.firebasestorage.app",
+messagingSenderId:"YOUR_MESSAGING_SENDER_ID",
+appId:"YOUR_APP_ID"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let user=null;
+let campaigns=[];
+let editing=null;
+
+
+/* AUTH + ADMIN */
+
+onAuthStateChanged(auth,async u=>{
+
+if(!u){
+location.href="login.html";
+return;
+}
+
+const snap=await getDoc(
+doc(db,"users",u.uid)
+);
+
+if(!snap.exists()||snap.data().role!=="admin"){
+alert("Access denied");
+location.href="dashboard.html";
+return;
+}
+
+user=u;
+load();
+
+});
+
+
+/* LOAD */
+
+async function load(){
+
+const snap=await getDocs(
+collection(db,"marketingCampaigns")
+);
+
+campaigns=snap.docs.map(d=>({
+id:d.id,
+...d.data()
+}));
+
+updateStats();
+render();
+
+}
+
+
+/* STATS */
+
+function updateStats(){
+
+document.getElementById("total").textContent=
+campaigns.length;
+
+document.getElementById("active").textContent=
+campaigns.filter(x=>x.status==="active").length;
+
+const conversions=
+campaigns.reduce(
+(a,x)=>a+Number(x.conversions||0),0
+);
+
+document.getElementById("conversions").textContent=
+conversions;
+
+const revenue=
+campaigns.reduce(
+(a,x)=>a+Number(x.revenue||0),0
+);
+
+document.getElementById("revenue").textContent=
+"TZS "+revenue.toLocaleString();
+
+}
+
+
+/* RENDER */
+
+window.render=function(){
+
+const q=
+document.getElementById("search")
+.value.toLowerCase();
+
+const filter=
+document.getElementById("filter").value;
+
+const list=
+document.getElementById("list");
+
+const data=
+campaigns.filter(x=>{
+
+const match=
+(x.name||"")
+.toLowerCase()
+.includes(q);
+
+const status=
+filter==="all"||
+x.status===filter;
+
+return match&&status;
+
+});
+
+
+if(!data.length){
+
+list.innerHTML=`
+<tr>
+<td colspan="6">
+<div class="empty">
+No campaigns found.
+</div>
+</td>
+</tr>`;
+
+return;
+}
+
+
+list.innerHTML=
+data.map(x=>`
+
+<tr>
+
+<td>
+<strong>${esc(x.name||"Campaign")}</strong>
+<br>
+<small>${esc(x.type||"")}</small>
+</td>
+
+<td>${esc(x.audience||"All")}</td>
+
+<td>
+TZS ${Number(x.budget||0).toLocaleString()}
+</td>
+
+<td>
+<span class="badge ${esc(x.status||"draft")}">
+${esc(x.status||"draft")}
+</span>
+</td>
+
+<td>
+${Number(x.conversions||0)}
+</td>
+
+<td>
+
+<button class="light"
+onclick="editCampaign('${x.id}')">
+Edit
+</button>
+
+<button class="danger"
+onclick="removeCampaign('${x.id}')">
+Delete
+</button>
+
+</td>
+
+</tr>
+
+`).join("");
+
+};
+
+
+/* CREATE / UPDATE */
+
+document.getElementById("form")
+.addEventListener("submit",async e=>{
+
+e.preventDefault();
+
+const data={
+
+name:value("name"),
+type:value("type"),
+audience:value("audience"),
+budget:Number(value("budget")||0),
+startDate:value("start"),
+endDate:value("end"),
+message:value("message"),
+status:value("status"),
+updatedAt:serverTimestamp()
+
+};
+
+
+try{
+
+if(editing){
+
+await updateDoc(
+doc(db,"marketingCampaigns",editing),
+data
+);
+
+toast("Campaign updated.");
+
+}else{
+
+await addDoc(
+collection(db,"marketingCampaigns"),
+{
+
+...data,
+
+conversions:0,
+revenue:0,
+clicks:0,
+impressions:0,
+
+createdBy:user.uid,
+createdAt:serverTimestamp()
+
+}
+);
+
+toast("Campaign created.");
+
+}
+
+closeModal();
+await load();
+
+}catch(err){
+
+console.error(err);
+toast("Unable to save campaign.");
+
+}
+
+});
+
+
+/* EDIT */
+
+window.editCampaign=function(id){
+
+const x=
+campaigns.find(c=>c.id===id);
+
+if(!x)return;
+
+editing=id;
+
+document.getElementById("modalTitle")
+.textContent="Edit Campaign";
+
+document.getElementById("name").value=x.name||"";
+document.getElementById("type").value=x.type||"Course Promotion";
+document.getElementById("audience").value=x.audience||"All Students";
+document.getElementById("budget").value=x.budget||0;
+document.getElementById("start").value=x.startDate||"";
+document.getElementById("end").value=x.endDate||"";
+document.getElementById("message").value=x.message||"";
+document.getElementById("status").value=x.status||"draft";
+
+openModal();
+
+};
+
+
+/* DELETE */
+
+window.removeCampaign=async function(id){
+
+if(!confirm("Delete this campaign?"))return;
+
+try{
+
+await deleteDoc(
+doc(db,"marketingCampaigns",id)
+);
+
+toast("Campaign deleted.");
+
+await load();
+
+}catch(err){
+
+console.error(err);
+toast("Delete failed.");
+
+}
+
+};
+
+
+/* MODAL */
+
+window.openModal=function(){
+
+document.getElementById("modal")
+.classList.add("show");
+
+};
+
+window.closeModal=function(){
+
+document.getElementById("modal")
+.classList.remove("show");
+
+editing=null;
+
+document.getElementById("form").reset();
+
+document.getElementById("modalTitle")
+.textContent="Create Campaign";
+
+};
+
+
+/* UTILS */
+
+function value(id){
+return document.getElementById(id).value.trim();
+}
+
+function esc(v){
+return String(v??"")
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+}
+
+function toast(text){
+
+const el=
+document.getElementById("toast");
+
+el.textContent=text;
+el.classList.add("show");
+
+setTimeout(
+()=>el.classList.remove("show"),
+3000
+);
+
+}
+
+</script></body>
+</html>
