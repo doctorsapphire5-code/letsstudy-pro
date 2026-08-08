@@ -1,0 +1,1067 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Community Reports | LetsStudy Pro Admin</title><style>
+*{box-sizing:border-box}
+body{margin:0;background:#f5f7fb;color:#172033;font-family:Inter,Arial,sans-serif}
+.sidebar{position:fixed;left:0;top:0;width:235px;height:100vh;background:#111827;color:#fff;padding:20px;z-index:10}
+.logo{font-size:20px;font-weight:800;margin-bottom:25px}
+.nav a{display:block;text-decoration:none;color:#cbd5e1;padding:11px;border-radius:8px;margin:4px 0}
+.nav a:hover,.nav a.active{background:#2563eb;color:#fff}
+.main{margin-left:235px;padding:25px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+h1{margin:0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:18px}
+.card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 3px 15px #00000008;margin-bottom:18px}
+.stat span{font-size:13px;color:#64748b}
+.stat b{display:block;font-size:27px;margin-top:6px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap}
+input,select{padding:11px;border:1px solid #dbe1ea;border-radius:8px;outline:0}
+.search{width:min(430px,100%)}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:13px;border-bottom:1px solid #edf0f4;vertical-align:top}
+th{font-size:12px;color:#64748b}
+.badge{padding:5px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.pending{background:#fef3c7;color:#92400e}
+.resolved{background:#dcfce7;color:#166534}
+.rejected{background:#e5e7eb;color:#374151}
+.high{background:#fee2e2;color:#991b1b}
+.medium{background:#fef3c7;color:#92400e}
+.low{background:#dbeafe;color:#1e40af}
+.btn{border:0;border-radius:7px;padding:8px 10px;cursor:pointer;font-weight:600}
+.resolve{background:#16a34a;color:white}
+.delete{background:#dc2626;color:white}
+.block{background:#111827;color:white}
+.view{background:#e5e7eb;color:#111827}
+.actions{display:flex;gap:5px;flex-wrap:wrap}
+.empty{text-align:center;padding:35px;color:#64748b}
+.modal{display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;z-index:50}
+.modal.show{display:flex}
+.modal-box{background:#fff;width:min(500px,94%);max-height:90vh;overflow:auto;padding:22px;border-radius:15px}
+.modal-head{display:flex;justify-content:space-between;align-items:center}
+.close{font-size:26px;cursor:pointer}
+.detail{background:#f8fafc;padding:12px;border-radius:9px;margin:10px 0}
+.detail small{display:block;color:#64748b;margin-bottom:4px}
+.message{position:fixed;right:20px;bottom:20px;background:#16a34a;color:#fff;padding:13px 18px;border-radius:8px;display:none;z-index:100}
+.message.show{display:block}
+@media(max-width:800px){
+.sidebar{width:65px;padding:12px}
+.logo{font-size:0}.logo:after{content:"LS";font-size:18px}
+.nav a{font-size:0;text-align:center}
+.main{margin-left:65px;padding:15px}
+.stats{grid-template-columns:repeat(2,1fr)}
+table{min-width:1000px}
+.card{overflow-x:auto}
+}
+</style></head><body><aside class="sidebar"><div class="logo">LetsStudy Pro</div><nav class="nav"><a href="admin-community.html">💬 Community</a>
+
+<a href="admin-community-groups.html">👥 Groups</a>
+
+<a href="admin-community-members.html">👤 Members</a>
+
+<a href="admin-community-reports.html" class="active">
+🚨 Reports
+</a><a href="admin-dashboard.html">🏠 Dashboard</a>
+
+</nav></aside><main class="main"><div class="top"><div><h1>Community Reports</h1><p>
+Review and moderate reported community content.
+</p></div></div><div class="stats"><div class="card stat"><span>Total Reports</span>
+
+<b id="totalReports">0</b>
+
+</div><div class="card stat"><span>Pending</span>
+
+<b id="pendingReports">0</b>
+
+</div><div class="card stat"><span>Resolved</span>
+
+<b id="resolvedReports">0</b>
+
+</div><div class="card stat"><span>High Priority</span>
+
+<b id="highReports">0</b>
+
+</div></div><div class="card"><div class="toolbar"><input
+id="search"
+class="search"
+placeholder="Search reports..."
+oninput="renderReports()">
+
+<select
+id="statusFilter"
+onchange="renderReports()">
+
+<option value="all">
+All Status
+</option><option value="pending">
+Pending
+</option><option value="resolved">
+Resolved
+</option><option value="rejected">
+Rejected
+</option></select><select
+id="priorityFilter"
+onchange="renderReports()">
+
+<option value="all">
+All Priority
+</option><option value="high">
+High
+</option><option value="medium">
+Medium
+</option><option value="low">
+Low
+</option></select></div></div><div class="card"><div style="overflow-x:auto"><table><thead><tr><th>Report</th><th>Reporter</th><th>Reported User</th><th>Priority</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="reportsTable"><tr><td colspan="7" class="empty">
+Loading reports...
+</td></tr></tbody></table></div></div></main><!-- VIEW REPORT MODAL --><div class="modal" id="viewModal"><div class="modal-box"><div class="modal-head"><h2>Report Details</h2><span
+class="close"
+onclick="closeModal()">
+×
+</span>
+
+</div><div id="reportDetails"></div><div style="margin-top:15px"><button
+class="btn view"
+onclick="closeModal()">
+
+Close
+
+</button></div></div></div><div id="message" class="message"></div><script type="module">
+
+import {
+initializeApp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+getAuth,
+onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+getFirestore,
+collection,
+getDocs,
+doc,
+updateDoc,
+deleteDoc,
+setDoc,
+serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/* =========================================
+FIREBASE CONFIG
+========================================= */
+
+const firebaseConfig={
+
+apiKey:"YOUR_API_KEY",
+
+authDomain:"YOUR_PROJECT.firebaseapp.com",
+
+projectId:"YOUR_PROJECT_ID",
+
+storageBucket:"YOUR_PROJECT.firebasestorage.app",
+
+messagingSenderId:"YOUR_SENDER_ID",
+
+appId:"YOUR_APP_ID"
+
+};
+
+
+const app=
+initializeApp(firebaseConfig);
+
+const auth=
+getAuth(app);
+
+const db=
+getFirestore(app);
+
+
+/* =========================================
+DATA
+========================================= */
+
+let reports=[];
+
+
+/* =========================================
+AUTH
+========================================= */
+
+onAuthStateChanged(
+auth,
+async user=>{
+
+if(!user){
+
+location.href="login.html";
+
+return;
+
+}
+
+await loadReports();
+
+});
+
+
+/* =========================================
+LOAD REPORTS
+========================================= */
+
+async function loadReports(){
+
+try{
+
+const snap=
+await getDocs(
+collection(
+db,
+"reports"
+)
+);
+
+
+reports=
+snap.docs.map(
+d=>({
+
+id:d.id,
+...d.data()
+
+})
+);
+
+
+renderReports();
+
+updateStats();
+
+
+}catch(error){
+
+console.error(error);
+
+document.getElementById(
+"reportsTable"
+).innerHTML=`
+
+<tr>
+
+<td colspan="7"
+class="empty">
+
+Unable to load reports.
+
+</td>
+
+</tr>
+
+`;
+
+}
+
+}
+
+
+/* =========================================
+RENDER
+========================================= */
+
+window.renderReports=
+function(){
+
+const search=
+document.getElementById(
+"search"
+).value
+.toLowerCase()
+.trim();
+
+
+const status=
+document.getElementById(
+"statusFilter"
+).value;
+
+
+const priority=
+document.getElementById(
+"priorityFilter"
+).value;
+
+
+const filtered=
+reports.filter(r=>{
+
+const text=`
+
+${r.reason||""}
+${r.description||""}
+${r.reporterName||""}
+${r.reportedUserName||""}
+${r.reportedUid||""}
+
+`.toLowerCase();
+
+
+const reportStatus=
+r.status||"pending";
+
+
+const reportPriority=
+r.priority||"medium";
+
+
+return(
+
+text.includes(search)&&
+
+(
+status==="all" ||
+reportStatus===status
+)&&
+
+(
+priority==="all" ||
+reportPriority===priority
+)
+
+);
+
+});
+
+
+const table=
+document.getElementById(
+"reportsTable"
+);
+
+
+if(!filtered.length){
+
+table.innerHTML=`
+
+<tr>
+
+<td colspan="7"
+class="empty">
+
+No reports found.
+
+</td>
+
+</tr>
+
+`;
+
+return;
+
+}
+
+
+table.innerHTML="";
+
+
+filtered
+.sort(
+(a,b)=>{
+
+const at=
+a.createdAt?.toMillis?.()||0;
+
+const bt=
+b.createdAt?.toMillis?.()||0;
+
+return bt-at;
+
+})
+.forEach(r=>{
+
+const tr=
+document.createElement("tr");
+
+
+const reportStatus=
+r.status||"pending";
+
+
+const reportPriority=
+r.priority||"medium";
+
+
+tr.innerHTML=`
+
+<td>
+
+<strong>
+
+${escapeHTML(
+r.reason||
+"Community Report"
+)}
+
+</strong>
+
+
+<div style="
+font-size:12px;
+color:#64748b;
+margin-top:5px">
+
+${escapeHTML(
+truncate(
+r.description||
+r.message||
+"No description",
+70
+)
+)}
+
+</div>
+
+</td>
+
+
+<td>
+
+${escapeHTML(
+r.reporterName||
+r.reporterEmail||
+r.reporterUid||
+"Unknown"
+)}
+
+</td>
+
+
+<td>
+
+${escapeHTML(
+r.reportedUserName||
+r.reportedEmail||
+r.reportedUid||
+"Unknown"
+)}
+
+</td>
+
+
+<td>
+
+<span class="badge ${
+
+reportPriority==="high"
+?"high":
+reportPriority==="low"
+?"low":
+"medium"
+
+}">
+
+${escapeHTML(
+reportPriority
+)}
+
+</span>
+
+</td>
+
+
+<td>
+
+<span class="badge ${
+
+reportStatus==="resolved"
+?"resolved":
+reportStatus==="rejected"
+?"rejected":
+"pending"
+
+}">
+
+${escapeHTML(
+reportStatus
+)}
+
+</span>
+
+</td>
+
+
+<td>
+
+${formatDate(
+r.createdAt
+)}
+
+</td>
+
+
+<td>
+
+<div class="actions">
+
+
+<button
+class="btn view"
+onclick="viewReport('${r.id}')">
+
+View
+
+</button>
+
+
+${
+reportStatus==="pending"
+
+?`
+
+<button
+class="btn resolve"
+onclick="resolveReport('${r.id}')">
+
+Resolve
+
+</button>
+
+`
+
+:""
+
+}
+
+
+${
+r.reportedUid
+
+?`
+
+<button
+class="btn block"
+onclick="blockUser('${escapeAttribute(
+r.reportedUid
+)}')">
+
+Block
+
+</button>
+
+`
+
+:""
+
+}
+
+
+<button
+class="btn delete"
+onclick="deleteReport('${r.id}')">
+
+Delete
+
+</button>
+
+
+</div>
+
+</td>
+
+`;
+
+
+table.appendChild(tr);
+
+});
+
+};
+
+
+/* =========================================
+STATS
+========================================= */
+
+function updateStats(){
+
+document.getElementById(
+"totalReports"
+).textContent=
+reports.length;
+
+
+document.getElementById(
+"pendingReports"
+).textContent=
+reports.filter(
+r=>(r.status||"pending")==="pending"
+).length;
+
+
+document.getElementById(
+"resolvedReports"
+).textContent=
+reports.filter(
+r=>r.status==="resolved"
+).length;
+
+
+document.getElementById(
+"highReports"
+).textContent=
+reports.filter(
+r=>(r.priority||"medium")==="high"
+&&
+(r.status||"pending")==="pending"
+).length;
+
+}
+
+
+/* =========================================
+VIEW
+========================================= */
+
+window.viewReport=
+function(id){
+
+const report=
+reports.find(
+r=>r.id===id
+);
+
+
+if(!report)return;
+
+
+document.getElementById(
+"reportDetails"
+).innerHTML=`
+
+<div class="detail">
+
+<small>Reason</small>
+
+<strong>
+${escapeHTML(
+report.reason||
+"Community Report"
+)}
+</strong>
+
+</div>
+
+
+<div class="detail">
+
+<small>Description</small>
+
+${escapeHTML(
+report.description||
+report.message||
+"No description provided."
+)}
+
+</div>
+
+
+<div class="detail">
+
+<small>Reporter</small>
+
+${escapeHTML(
+report.reporterName||
+report.reporterEmail||
+report.reporterUid||
+"Unknown"
+)}
+
+</div>
+
+
+<div class="detail">
+
+<small>Reported User</small>
+
+${escapeHTML(
+report.reportedUserName||
+report.reportedEmail||
+report.reportedUid||
+"Unknown"
+)}
+
+</div>
+
+
+<div class="detail">
+
+<small>Content ID</small>
+
+${escapeHTML(
+report.contentId||
+report.postId||
+report.commentId||
+"-"
+)}
+
+</div>
+
+
+<div class="detail">
+
+<small>Status</small>
+
+${escapeHTML(
+report.status||
+"pending"
+)}
+
+</div>
+
+
+<div class="detail">
+
+<small>Created</small>
+
+${formatDate(
+report.createdAt
+)}
+
+</div>
+
+`;
+
+
+document.getElementById(
+"viewModal"
+).classList.add(
+"show"
+);
+
+};
+
+
+/* =========================================
+RESOLVE
+========================================= */
+
+window.resolveReport=
+async function(id){
+
+if(
+!confirm(
+"Mark this report as resolved?"
+)
+)return;
+
+
+try{
+
+await updateDoc(
+doc(
+db,
+"reports",
+id
+),
+{
+
+status:"resolved",
+
+resolvedBy:
+auth.currentUser.uid,
+
+resolvedAt:
+serverTimestamp()
+
+}
+);
+
+
+showMessage(
+"Report resolved successfully."
+);
+
+
+await loadReports();
+
+
+}catch(error){
+
+console.error(error);
+
+showMessage(
+"Unable to resolve report."
+);
+
+}
+
+};
+
+
+/* =========================================
+BLOCK USER
+========================================= */
+
+window.blockUser=
+async function(uid){
+
+if(
+!confirm(
+"Block the reported user?"
+)
+)return;
+
+
+try{
+
+await setDoc(
+doc(
+db,
+"blockedUsers",
+uid
+),
+{
+
+uid:uid,
+
+status:"blocked",
+
+blockedBy:
+auth.currentUser.uid,
+
+blockedAt:
+serverTimestamp()
+
+},
+{merge:true}
+);
+
+
+/* Update community member if available */
+
+await updateDoc(
+doc(
+db,
+"communityMembers",
+uid
+),
+{
+
+status:"blocked",
+
+updatedAt:
+serverTimestamp()
+
+}
+).catch(()=>{});
+
+
+showMessage(
+"User blocked successfully."
+);
+
+
+}catch(error){
+
+console.error(error);
+
+showMessage(
+"Unable to block user."
+);
+
+}
+
+};
+
+
+/* =========================================
+DELETE
+========================================= */
+
+window.deleteReport=
+async function(id){
+
+if(
+!confirm(
+"Delete this report permanently?"
+)
+)return;
+
+
+try{
+
+await deleteDoc(
+doc(
+db,
+"reports",
+id
+)
+);
+
+
+showMessage(
+"Report deleted successfully."
+);
+
+
+await loadReports();
+
+
+}catch(error){
+
+console.error(error);
+
+showMessage(
+"Unable to delete report."
+);
+
+}
+
+};
+
+
+/* =========================================
+MODAL
+========================================= */
+
+window.closeModal=
+function(){
+
+document.getElementById(
+"viewModal"
+).classList.remove(
+"show"
+);
+
+};
+
+
+document.getElementById(
+"viewModal"
+).addEventListener(
+"click",
+e=>{
+
+if(
+e.target.id==="viewModal"
+){
+
+closeModal();
+
+}
+
+});
+
+
+/* =========================================
+HELPERS
+========================================= */
+
+function escapeHTML(value){
+
+return String(
+value??""
+)
+
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+
+}
+
+
+function escapeAttribute(value){
+
+return String(
+value??""
+)
+.replace(/'/g,"&#039;")
+.replace(/"/g,"&quot;");
+
+}
+
+
+function truncate(
+text,
+length
+){
+
+text=String(
+text||""
+);
+
+return text.length>length
+?text.substring(0,length)+"..."
+:text;
+
+}
+
+
+function formatDate(timestamp){
+
+if(!timestamp)return"-";
+
+try{
+
+const date=
+timestamp.toDate
+?timestamp.toDate()
+:new Date(timestamp);
+
+
+return date.toLocaleDateString(
+"en-GB",
+{
+day:"2-digit",
+month:"short",
+year:"numeric"
+}
+);
+
+}catch{
+
+return"-";
+
+}
+
+}
+
+
+function showMessage(text){
+
+const box=
+document.getElementById(
+"message"
+);
+
+
+box.textContent=text;
+
+box.classList.add("show");
+
+
+clearTimeout(
+window.messageTimer
+);
+
+
+window.messageTimer=
+setTimeout(
+()=>{
+
+box.classList.remove(
+"show"
+);
+
+},
+3000
+);
+
+}
+
+</script></body>
+</html>
