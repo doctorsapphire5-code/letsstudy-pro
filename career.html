@@ -1,1939 +1,548 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Career Opportunities | LetsStudy Pro</title><style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f7fb;color:#172033}
+header{height:64px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:12px;padding:0 16px;position:sticky;top:0;z-index:20}
+header h1{flex:1;margin:0;font-size:18px}
+button{border:0;border-radius:9px;padding:10px 13px;cursor:pointer;font-weight:600}
+.back{background:#eef2ff;color:#1d4ed8}
+.primary{background:#2563eb;color:#fff}
+main{max-width:1150px;margin:auto;padding:18px}
+.hero{background:linear-gradient(135deg,#172554,#2563eb);color:#fff;border-radius:18px;padding:28px;margin-bottom:16px}
+.hero h2{margin:0 0 8px;font-size:28px}
+.hero p{margin:0;color:#dbeafe;font-size:13px}
+.search{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px;margin-bottom:16px;display:grid;grid-template-columns:2fr 1fr 1fr;gap:9px}
+input,select{width:100%;padding:11px;border:1px solid #dbe1e8;border-radius:9px;background:#fff;outline:none}
+.jobs{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.job{background:#fff;border:1px solid #e5e7eb;border-radius:15px;padding:16px;transition:.2s}
+.job:hover{transform:translateY(-2px);box-shadow:0 8px 25px #0000000d}
+.logo{width:48px;height:48px;border-radius:12px;background:#eef2ff;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:12px;overflow:hidden}
+.logo img{width:100%;height:100%;object-fit:cover}
+.job h3{margin:0 0 6px;font-size:16px}
+.company{font-size:12px;color:#475569;margin-bottom:10px}
+.info{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.tag{background:#f1f5f9;color:#475569;padding:5px 8px;border-radius:20px;font-size:9px}
+.deadline{font-size:10px;color:#64748b;margin:10px 0}
+.empty{text-align:center;padding:55px;color:#64748b;background:#fff;border-radius:15px;border:1px solid #e5e7eb}
+.modal{display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;padding:15px;z-index:100}
+.modal.show{display:flex}
+.box{background:#fff;width:100%;max-width:650px;max-height:92vh;overflow:auto;border-radius:17px;padding:20px}
+.head{display:flex;gap:10px;align-items:center;margin-bottom:15px}
+.head h2{flex:1;margin:0;font-size:20px}
+.description{font-size:13px;line-height:1.7;color:#475569;white-space:pre-wrap}
+.section{margin-top:18px}
+.section h4{margin:0 0 7px;font-size:13px}
+.meta{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}
+.actions{display:flex;gap:8px;margin-top:18px}
+.toast{position:fixed;right:18px;bottom:18px;background:#172033;color:#fff;padding:12px 15px;border-radius:9px;display:none;z-index:200;font-size:12px}
+.toast.show{display:block}
+@media(max-width:900px){.jobs{grid-template-columns:1fr 1fr}}
+@media(max-width:650px){.jobs,.search{grid-template-columns:1fr}}
+</style></head><body><header><button class="back" onclick="history.back()">←</button>
+
+<h1>💼 Career</h1><button class="back" onclick="location.href='dashboard.html'">
+Dashboard
+</button></header><main><section class="hero"><h2>Build Your Future 🚀</h2><p>
+Discover jobs, internships, remote opportunities and career opportunities.
+</p></section><section class="search"><input
+id="search"
+placeholder="Search jobs, company or location..."
+oninput="render()">
+
+<select id="type" onchange="render()"><option value="all">All Job Types</option>
+<option value="full-time">Full Time</option>
+<option value="part-time">Part Time</option>
+<option value="internship">Internship</option>
+<option value="contract">Contract</option>
+<option value="remote">Remote</option></select><select id="category" onchange="render()"><option value="all">All Categories</option>
+<option value="Technology">Technology</option>
+<option value="Education">Education</option>
+<option value="Business">Business</option>
+<option value="Marketing">Marketing</option>
+<option value="Finance">Finance</option>
+<option value="Engineering">Engineering</option></select></section><div id="jobs" class="jobs"><div class="empty">
+Loading career opportunities...
+</div></div></main><!-- JOB DETAILS --><div id="modal" class="modal"><div class="box"><div class="head"><h2 id="modalTitle">Job</h2><button class="back" onclick="closeJob()">✕</button>
+
+</div><div id="modalCompany"></div><div id="modalMeta" class="meta"></div><div class="section"><h4>Description</h4><div id="modalDescription" class="description"></div></div><div class="section"><h4>Requirements</h4><div id="modalRequirements" class="description"></div></div><div class="section"><h4>Salary</h4><div id="modalSalary" class="description"></div></div><div class="section"><h4>Application Deadline</h4><div id="modalDeadline" class="description"></div></div><div class="actions"><button
+id="applyBtn"
+class="primary">
+Apply Now
+</button>
+
+<button
+class="back"
+onclick="closeJob()">
+Close
+</button>
+
+</div></div></div><div id="toast" class="toast"></div><script type="module">
+
+import{
+initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import{
+getFirestore,
+collection,
+getDocs
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/* =========================================
+ FIREBASE
+========================================= */
+
+const firebaseConfig={
 
-  <title>Future Careers | Let's Study Pro</title>
+apiKey:
+"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
 
-  <meta
-    name="description"
-    content="Explore future skills and career opportunities with Let's Study Pro."
-  >
+authDomain:
+"let-s-study-pro-course.firebaseapp.com",
 
-  <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="responsive.css">
+databaseURL:
+"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
 
-  <style>
-    :root {
-      --primary: #2563eb;
-      --primary-dark: #1d4ed8;
-      --purple: #7c3aed;
-      --dark: #0f172a;
-      --text: #334155;
-      --muted: #64748b;
-      --bg: #f8fafc;
-      --white: #ffffff;
-      --border: #e2e8f0;
-      --success: #16a34a;
-      --danger: #dc2626;
-      --radius: 20px;
-      --shadow: 0 15px 45px rgba(15, 23, 42, .08);
-    }
+projectId:
+"let-s-study-pro-course",
 
-    * {
-      box-sizing: border-box;
-    }
+storageBucket:
+"let-s-study-pro-course.firebasestorage.app",
 
-    html {
-      scroll-behavior: smooth;
-    }
+messagingSenderId:
+"474928293390",
 
-    body {
-      margin: 0;
-      font-family: Inter, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
+appId:
+"1:474928293390:web:89eef78b2ccfbcf0a9fe5f",
 
-    button,
-    input,
-    select {
-      font: inherit;
-    }
+measurementId:
+"G-NCZNKYB3YB"
 
-    button {
-      cursor: pointer;
-    }
-
-    .career-container {
-      width: min(1180px, calc(100% - 32px));
-      margin: auto;
-    }
-
-    /* ================================
-       HERO
-    ================================= */
-
-    .future-hero {
-      position: relative;
-      overflow: hidden;
-      min-height: 520px;
-      display: flex;
-      align-items: center;
-      color: white;
-      background:
-        radial-gradient(
-          circle at 10% 20%,
-          rgba(59,130,246,.28),
-          transparent 30%
-        ),
-        radial-gradient(
-          circle at 90% 20%,
-          rgba(168,85,247,.25),
-          transparent 30%
-        ),
-        linear-gradient(
-          135deg,
-          #020617 0%,
-          #0f172a 45%,
-          #312e81 100%
-        );
-    }
-
-    .future-hero::before {
-      content: "";
-      position: absolute;
-      width: 420px;
-      height: 420px;
-      right: -140px;
-      bottom: -180px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,.1);
-      box-shadow:
-        0 0 0 60px rgba(255,255,255,.025),
-        0 0 0 120px rgba(255,255,255,.018);
-    }
-
-    .future-hero-content {
-      position: relative;
-      z-index: 2;
-      max-width: 850px;
-      padding: 90px 0;
-    }
-
-    .future-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      border: 1px solid rgba(255,255,255,.15);
-      border-radius: 999px;
-      background: rgba(255,255,255,.07);
-      color: #dbeafe;
-      font-size: 13px;
-      font-weight: 700;
-      backdrop-filter: blur(10px);
-    }
-
-    .future-hero h1 {
-      margin: 22px 0 18px;
-      max-width: 800px;
-      font-size: clamp(42px, 7vw, 76px);
-      line-height: 1;
-      letter-spacing: -3px;
-    }
-
-    .future-hero h1 span {
-      background: linear-gradient(
-        90deg,
-        #60a5fa,
-        #a78bfa,
-        #c084fc
-      );
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    .future-hero p {
-      max-width: 720px;
-      margin: 0 0 30px;
-      color: #cbd5e1;
-      font-size: 18px;
-      line-height: 1.7;
-    }
-
-    .hero-buttons {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .hero-btn {
-      border: 0;
-      border-radius: 12px;
-      padding: 14px 20px;
-      font-weight: 800;
-    }
-
-    .hero-btn-primary {
-      background: white;
-      color: #172554;
-    }
-
-    .hero-btn-secondary {
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.18);
-      color: white;
-    }
-
-    /* ================================
-       STATS
-    ================================= */
-
-    .stats-wrap {
-      margin-top: -45px;
-      position: relative;
-      z-index: 10;
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 22px;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-
-    .stat {
-      text-align: center;
-      padding: 25px 15px;
-      border-right: 1px solid var(--border);
-    }
-
-    .stat:last-child {
-      border-right: 0;
-    }
-
-    .stat strong {
-      display: block;
-      color: var(--dark);
-      font-size: 28px;
-      margin-bottom: 5px;
-    }
-
-    .stat span {
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    /* ================================
-       MAIN
-    ================================= */
-
-    .career-main {
-      padding: 80px 0;
-    }
-
-    .section-heading {
-      margin-bottom: 25px;
-    }
-
-    .section-heading h2 {
-      margin: 0 0 8px;
-      color: var(--dark);
-      font-size: 34px;
-      letter-spacing: -.8px;
-    }
-
-    .section-heading p {
-      margin: 0;
-      color: var(--muted);
-    }
-
-    /* ================================
-       SEARCH
-    ================================= */
-
-    .career-toolbar {
-      display: grid;
-      grid-template-columns: 1fr 220px;
-      gap: 12px;
-      margin-bottom: 30px;
-    }
-
-    .career-toolbar input,
-    .career-toolbar select {
-      width: 100%;
-      padding: 15px 16px;
-      border: 1px solid var(--border);
-      border-radius: 13px;
-      background: white;
-      outline: none;
-      color: var(--dark);
-    }
-
-    .career-toolbar input:focus,
-    .career-toolbar select:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(37,99,235,.1);
-    }
-
-    /* ================================
-       CATEGORIES
-    ================================= */
-
-    .categories {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 35px;
-    }
-
-    .category-btn {
-      border: 1px solid var(--border);
-      background: white;
-      color: var(--text);
-      border-radius: 999px;
-      padding: 10px 15px;
-      font-weight: 700;
-      transition: .2s;
-    }
-
-    .category-btn:hover,
-    .category-btn.active {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: white;
-    }
-
-    /* ================================
-       CAREER GRID
-    ================================= */
-
-    .career-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-    }
-
-    .career-card {
-      overflow: hidden;
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: 0 5px 20px rgba(15,23,42,.03);
-      transition: .25s ease;
-    }
-
-    .career-card:hover {
-      transform: translateY(-5px);
-      box-shadow: var(--shadow);
-    }
-
-    .career-card-cover {
-      position: relative;
-      padding: 25px;
-      background:
-        radial-gradient(
-          circle at top right,
-          rgba(124,58,237,.14),
-          transparent 40%
-        ),
-        linear-gradient(
-          135deg,
-          #eff6ff,
-          #f5f3ff
-        );
-    }
-
-    .career-icon {
-      width: 56px;
-      height: 56px;
-      display: grid;
-      place-items: center;
-      border-radius: 16px;
-      background: white;
-      box-shadow: 0 8px 25px rgba(15,23,42,.08);
-      font-size: 27px;
-      margin-bottom: 18px;
-    }
-
-    .career-card h3 {
-      margin: 0 0 8px;
-      color: var(--dark);
-      font-size: 20px;
-    }
-
-    .career-card-description {
-      margin: 0;
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.6;
-    }
-
-    .career-card-body {
-      padding: 20px;
-    }
-
-    .career-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-      margin-bottom: 18px;
-    }
-
-    .career-tag {
-      padding: 6px 9px;
-      border-radius: 999px;
-      background: #f1f5f9;
-      color: #475569;
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    .skills {
-      display: flex;
-      gap: 7px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
-    }
-
-    .skill {
-      padding: 6px 8px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: #475569;
-      font-size: 11px;
-    }
-
-    .career-card-actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .career-card-actions button {
-      border: 0;
-      border-radius: 10px;
-      padding: 11px;
-      font-weight: 800;
-    }
-
-    .view-career {
-      flex: 1;
-      background: var(--primary);
-      color: white;
-    }
-
-    .view-career:hover {
-      background: var(--primary-dark);
-    }
-
-    .save-career {
-      width: 46px;
-      background: #f1f5f9;
-      color: #334155;
-    }
-
-    /* ================================
-       LOADING
-    ================================= */
-
-    .loading-state {
-      padding: 70px 20px;
-      text-align: center;
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 20px;
-    }
-
-    .spinner {
-      width: 42px;
-      height: 42px;
-      margin: 0 auto 15px;
-      border: 4px solid #e2e8f0;
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    /* ================================
-       EMPTY
-    ================================= */
-
-    .empty-state {
-      display: none;
-      padding: 70px 20px;
-      text-align: center;
-      background: white;
-      border: 1px dashed var(--border);
-      border-radius: 20px;
-    }
-
-    .empty-state-icon {
-      font-size: 45px;
-      margin-bottom: 15px;
-    }
-
-    .empty-state h3 {
-      margin: 0 0 8px;
-      color: var(--dark);
-    }
-
-    .empty-state p {
-      margin: 0;
-      color: var(--muted);
-    }
-
-    /* ================================
-       ROADMAP
-    ================================= */
-
-    .future-roadmap {
-      margin-top: 75px;
-      padding: 45px;
-      background:
-        radial-gradient(
-          circle at top right,
-          rgba(37,99,235,.1),
-          transparent 35%
-        ),
-        white;
-      border: 1px solid var(--border);
-      border-radius: 25px;
-    }
-
-    .roadmap-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 18px;
-      margin-top: 30px;
-    }
-
-    .roadmap-card {
-      padding: 22px;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      background: #fff;
-    }
-
-    .roadmap-number {
-      width: 36px;
-      height: 36px;
-      display: grid;
-      place-items: center;
-      border-radius: 50%;
-      background: var(--primary);
-      color: white;
-      font-weight: 900;
-      margin-bottom: 15px;
-    }
-
-    .roadmap-card h3 {
-      margin: 0 0 8px;
-      color: var(--dark);
-    }
-
-    .roadmap-card p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.6;
-    }
-
-    /* ================================
-       MODAL
-    ================================= */
-
-    .career-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      padding: 20px;
-      background: rgba(2,6,23,.72);
-      overflow-y: auto;
-    }
-
-    .career-modal.show {
-      display: grid;
-      place-items: center;
-    }
-
-    .modal-box {
-      width: min(700px, 100%);
-      max-height: 90vh;
-      overflow-y: auto;
-      position: relative;
-      padding: 30px;
-      background: white;
-      border-radius: 22px;
-    }
-
-    .modal-close {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      width: 38px;
-      height: 38px;
-      border: 0;
-      border-radius: 50%;
-      background: #f1f5f9;
-      color: var(--dark);
-      font-size: 20px;
-    }
-
-    .modal-icon {
-      font-size: 55px;
-      margin-bottom: 10px;
-    }
-
-    .modal-box h2 {
-      margin: 0 0 10px;
-      color: var(--dark);
-      font-size: 30px;
-    }
-
-    .modal-box h3 {
-      margin-top: 28px;
-      color: var(--dark);
-    }
-
-    .modal-box p {
-      color: var(--muted);
-      line-height: 1.7;
-    }
-
-    .roadmap-list {
-      margin: 0;
-      padding-left: 22px;
-    }
-
-    .roadmap-list li {
-      margin-bottom: 10px;
-      color: var(--text);
-      line-height: 1.6;
-    }
-
-    /* ================================
-       TOAST
-    ================================= */
-
-    .toast {
-      position: fixed;
-      right: 20px;
-      bottom: 20px;
-      z-index: 10000;
-      padding: 13px 18px;
-      border-radius: 12px;
-      background: var(--dark);
-      color: white;
-      transform: translateY(100px);
-      opacity: 0;
-      transition: .25s;
-    }
-
-    .toast.show {
-      transform: translateY(0);
-      opacity: 1;
-    }
-
-    /* ================================
-       MOBILE
-    ================================= */
-
-    @media (max-width: 950px) {
-
-      .career-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .roadmap-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-    }
-
-    @media (max-width: 700px) {
-
-      .future-hero-content {
-        padding: 65px 0 90px;
-      }
-
-      .future-hero h1 {
-        letter-spacing: -2px;
-      }
-
-      .stats {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .stat:nth-child(2) {
-        border-right: 0;
-      }
-
-      .stat:nth-child(-n+2) {
-        border-bottom: 1px solid var(--border);
-      }
-
-      .career-toolbar {
-        grid-template-columns: 1fr;
-      }
-
-      .career-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .roadmap-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .future-roadmap {
-        padding: 25px;
-      }
-
-    }
-  </style>
-</head>
-
-<body>
-
-  <main>
-
-    <!-- =====================================
-         FUTURE HERO
-    ====================================== -->
-
-    <section class="future-hero">
-
-      <div class="career-container">
-
-        <div class="future-hero-content">
-
-          <div class="future-label">
-            🚀 FUTURE SKILLS
-          </div>
-
-          <h1>
-            Your Career Starts
-            <span>With The Future.</span>
-          </h1>
-
-          <p>
-            Explore real career opportunities, discover the skills
-            employers need, and build your learning journey with
-            Let's Study Pro.
-          </p>
-
-          <div class="hero-buttons">
-
-            <button
-              class="hero-btn hero-btn-primary"
-              type="button"
-              onclick="scrollToCareers()"
-            >
-              Explore Careers
-            </button>
-
-            <button
-              class="hero-btn hero-btn-secondary"
-              type="button"
-              onclick="showSavedCareers()"
-            >
-              ⭐ My Saved Careers
-            </button>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- =====================================
-         STATS
-    ====================================== -->
-
-    <section class="stats-wrap">
-
-      <div class="career-container">
-
-        <div class="stats">
-
-          <div class="stat">
-            <strong id="careerCount">0</strong>
-            <span>Careers</span>
-          </div>
-
-          <div class="stat">
-            <strong id="categoryCount">0</strong>
-            <span>Categories</span>
-          </div>
-
-          <div class="stat">
-            <strong id="skillCount">0</strong>
-            <span>Skills</span>
-          </div>
-
-          <div class="stat">
-            <strong id="savedCount">0</strong>
-            <span>Saved</span>
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- =====================================
-         CAREER EXPLORER
-    ====================================== -->
-
-    <section
-      class="career-main"
-      id="careerExplorer"
-    >
-
-      <div class="career-container">
-
-        <div class="section-heading">
-
-          <h2>Explore Future Careers</h2>
-
-          <p>
-            Find a career by searching skills, technologies,
-            categories or career names.
-          </p>
-
-        </div>
-
-
-        <!-- SEARCH -->
-
-        <div class="career-toolbar">
-
-          <input
-            id="careerSearch"
-            type="search"
-            placeholder="Search careers or skills..."
-            autocomplete="off"
-          >
-
-          <select id="careerLevel">
-
-            <option value="all">
-              All Levels
-            </option>
-
-            <option value="beginner">
-              Beginner
-            </option>
-
-            <option value="intermediate">
-              Intermediate
-            </option>
-
-            <option value="advanced">
-              Advanced
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <!-- CATEGORIES -->
-
-        <div
-          class="categories"
-          id="categories"
-        ></div>
-
-
-        <!-- LOADING -->
-
-        <div
-          class="loading-state"
-          id="loadingState"
-        >
-
-          <div class="spinner"></div>
-
-          <strong>
-            Loading careers...
-          </strong>
-
-          <p>
-            Connecting to Firebase.
-          </p>
-
-        </div>
-
-
-        <!-- CAREERS -->
-
-        <div
-          class="career-grid"
-          id="careerGrid"
-        ></div>
-
-
-        <!-- EMPTY -->
-
-        <div
-          class="empty-state"
-          id="emptyState"
-        >
-
-          <div class="empty-state-icon">
-            🔎
-          </div>
-
-          <h3>
-            No careers found
-          </h3>
-
-          <p>
-            There is no career matching your search.
-          </p>
-
-        </div>
-
-
-        <!-- =================================
-             FUTURE ROADMAP
-        ================================== -->
-
-        <section class="future-roadmap">
-
-          <div class="section-heading">
-
-            <h2>
-              Build Your Future
-            </h2>
-
-            <p>
-              Turn your interest into practical career progress.
-            </p>
-
-          </div>
-
-          <div class="roadmap-grid">
-
-            <div class="roadmap-card">
-
-              <div class="roadmap-number">
-                01
-              </div>
-
-              <h3>
-                Discover
-              </h3>
-
-              <p>
-                Explore careers and identify the fields
-                that match your interests.
-              </p>
-
-            </div>
-
-
-            <div class="roadmap-card">
-
-              <div class="roadmap-number">
-                02
-              </div>
-
-              <h3>
-                Learn
-              </h3>
-
-              <p>
-                Build the knowledge and technical skills
-                required for your chosen career.
-              </p>
-
-            </div>
-
-
-            <div class="roadmap-card">
-
-              <div class="roadmap-number">
-                03
-              </div>
-
-              <h3>
-                Build
-              </h3>
-
-              <p>
-                Create practical projects that demonstrate
-                what you can actually do.
-              </p>
-
-            </div>
-
-
-            <div class="roadmap-card">
-
-              <div class="roadmap-number">
-                04
-              </div>
-
-              <h3>
-                Launch
-              </h3>
-
-              <p>
-                Build your portfolio and prepare for
-                internships, jobs and opportunities.
-              </p>
-
-            </div>
-
-          </div>
-
-        </section>
-
-      </div>
-
-    </section>
-
-  </main>
-
-
-  <!-- =====================================
-       CAREER MODAL
-  ====================================== -->
-
-  <div
-    class="career-modal"
-    id="careerModal"
-  >
-
-    <div class="modal-box">
-
-      <button
-        class="modal-close"
-        type="button"
-        onclick="closeCareerModal()"
-        aria-label="Close"
-      >
-        ×
-      </button>
-
-      <div id="modalContent"></div>
-
-    </div>
-
-  </div>
-
-
-  <!-- TOAST -->
-
-  <div
-    class="toast"
-    id="toast"
-  ></div>
-
-
-  <!-- =====================================
-       FIREBASE
-  ====================================== -->
-
-  <script type="module">
-
-    import {
-      initializeApp
-    } from
-      "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-
-    import {
-  getAuth,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-import {
-  getDatabase,
-  ref,
-  onValue,
-  set
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBcOYDfAVKXbkljsyRgI_0rj0rodBn678tCc",
-  authDomain: "let-s-study-pro-course.firebaseapp.com",
-  databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
-  projectId: "let-s-study-pro-course",
-  storageBucket: "let-s-study-pro-course.firebasestorage.app",
-  messagingSenderId: "474928293390",
-  appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
-  measurementId: "G-85B7V5H5J0"
 };
 
+const app=initializeApp(firebaseConfig);
 
-const app = initializeApp(firebaseConfig);
+const db=getFirestore(app);
 
-const auth = getAuth(app);
-
-const db = getDatabase(app);
-
-let currentUser = null;
+let jobs=[];
 
 
-/* =====================================
-   AUTH STATE
-===================================== */
+/* =========================================
+ LOAD
+========================================= */
 
-onAuthStateChanged(auth, user => {
+loadJobs();
 
-  currentUser = user;
 
-  if (user) {
-    loadSavedCareers(user.uid);
-  } else {
-    savedCareers = [];
-    updateStats();
-    renderCareers();
-  }
+async function loadJobs(){
+
+const container=
+document.getElementById("jobs");
+
+try{
+
+const snap=
+await getDocs(
+collection(db,"careers")
+);
+
+jobs=
+snap.docs.map(
+d=>({
+id:d.id,
+...d.data()
+})
+);
+
+
+/* Only active jobs */
+
+jobs=
+jobs.filter(
+x=>x.status==="active"
+);
+
+
+/* Newest first */
+
+jobs.sort(
+(a,b)=>
+getTime(b.createdAt)-
+getTime(a.createdAt)
+);
+
+render();
+
+}catch(error){
+
+console.error(error);
+
+container.innerHTML=`
+
+<div class="empty">
+
+<div style="font-size:40px">
+⚠️
+</div>
+
+Unable to load career opportunities.
+
+<br><br>
+
+<button
+class="primary"
+onclick="location.reload()">
+
+Try Again
+
+</button>
+
+</div>
+
+`;
+
+}
+
+}
+
+
+/* =========================================
+ RENDER
+========================================= */
+
+window.render=function(){
+
+const search=
+document.getElementById("search")
+.value
+.toLowerCase()
+.trim();
+
+const type=
+document.getElementById("type")
+.value;
+
+const category=
+document.getElementById("category")
+.value;
+
+
+const data=
+jobs.filter(job=>{
+
+const text=
+`${job.title||""}
+${job.company||""}
+${job.location||""}
+${job.category||""}`
+.toLowerCase();
+
+return(
+
+text.includes(search) &&
+
+(type==="all"||
+job.type===type) &&
+
+(category==="all"||
+job.category===category)
+
+);
 
 });
 
 
-/* =====================================
-   REAL FIREBASE CAREERS
-===================================== */
-
-const careersRef = ref(db, "careers");
-
-onValue(careersRef, snapshot => {
-
-  loadingState.style.display = "none";
-
-  careers = [];
-
-  if (!snapshot.exists()) {
-
-    renderCategories();
-    renderCareers();
-    updateStats();
-
-    return;
-  }
+const container=
+document.getElementById("jobs");
 
 
-  const data = snapshot.val();
+if(!data.length){
 
+container.innerHTML=`
 
-  Object.entries(data).forEach(([id, career]) => {
+<div class="empty"
+style="grid-column:1/-1">
 
-    if (!career || typeof career !== "object") {
-      return;
-    }
+<div style="font-size:40px">
+🔎
+</div>
 
-    careers.push({
-      id,
-      ...career
-    });
+<strong>
+No opportunities found
+</strong>
 
-  });
+<br>
 
+Try another search or filter.
 
-  renderCategories();
+</div>
 
-  renderCareers();
+`;
 
-  updateStats();
-
-}, error => {
-
-  console.error("Firebase error:", error);
-
-  loadingState.style.display = "none";
-
-  careerGrid.innerHTML = "";
-
-  emptyState.style.display = "block";
-
-  emptyState.innerHTML = `
-    <div class="empty-state-icon">⚠️</div>
-
-    <h3>
-      Failed to load careers
-    </h3>
-
-    <p>
-      ${escapeHtml(error.message)}
-    </p>
-  `;
-
-});
-
-
-/* =====================================
-   LOAD SAVED CAREERS
-===================================== */
-
-let savedCareers = [];
-
-async function loadSavedCareers(uid) {
-
-  const savedRef =
-    ref(db, `users/${uid}/savedCareers`);
-
-  onValue(savedRef, snapshot => {
-
-    if (!snapshot.exists()) {
-
-      savedCareers = [];
-
-      updateStats();
-      renderCareers();
-
-      return;
-    }
-
-
-    const data = snapshot.val();
-
-
-    if (Array.isArray(data)) {
-
-      savedCareers =
-        data.map(String);
-
-    } else {
-
-      savedCareers =
-        Object.keys(data || {});
-
-    }
-
-
-    updateStats();
-
-    renderCareers();
-
-  });
+return;
 
 }
 
 
-/* =====================================
-   SAVE / UNSAVE CAREER
-===================================== */
+container.innerHTML=
+data.map(job=>`
 
-window.toggleSaveCareer = async function(id) {
+<article class="job">
 
-  if (!currentUser) {
+<div class="logo">
 
-    showToast(
-      "Please login first to save a career."
-    );
+${
+job.logo
+?
+`<img
+src="${safe(job.logo)}"
+alt=""
+onerror="this.style.display='none'">`
+:
+"💼"
+}
 
-    return;
-  }
+</div>
 
+<h3>
+${esc(job.title||"Untitled Job")}
+</h3>
 
-  id = String(id);
+<div class="company">
+🏢 ${esc(job.company||"Company")}
+</div>
 
+<div class="info">
 
-  if (savedCareers.includes(id)) {
+<span class="tag">
+📍 ${esc(job.location||"Location not specified")}
+</span>
 
-    savedCareers =
-      savedCareers.filter(
-        item => item !== id
-      );
+<span class="tag">
+💼 ${esc(job.type||"Job")}
+</span>
 
-  } else {
+${
+job.category
+?
+`<span class="tag">
+📚 ${esc(job.category)}
+</span>`
+:
+""
+}
 
-    savedCareers.push(id);
+</div>
 
-  }
+<div class="deadline">
 
+⏰ Deadline:
+${esc(job.deadline||"Not specified")}
 
-  try {
+</div>
 
-    await set(
-      ref(
-        db,
-        `users/${currentUser.uid}/savedCareers`
-      ),
-      savedCareers
-    );
+<button
+class="primary"
+onclick="openJob('${job.id}')">
 
-    updateStats();
+View Opportunity
 
-    renderCareers();
+</button>
 
-  } catch (error) {
+</article>
 
-    console.error(error);
-
-    showToast(
-      "Unable to update saved career."
-    );
-
-  }
+`).join("");
 
 };
 
 
-/* =====================================
-   CAREER CARD
-===================================== */
+/* =========================================
+ OPEN JOB
+========================================= */
 
-function createCareerCard(career) {
+window.openJob=function(id){
 
-  const skills =
-    normalizeArray(career.skills);
+const job=
+jobs.find(
+x=>x.id===id
+);
 
-  const saved =
-    savedCareers.includes(
-      String(career.id)
-    );
-
-
-  return `
-
-    <article class="career-card">
-
-      <div class="career-card-cover">
-
-        <div class="career-icon">
-          ${escapeHtml(
-            career.icon || "🚀"
-          )}
-        </div>
-
-        <h3>
-          ${escapeHtml(
-            career.title || "Untitled Career"
-          )}
-        </h3>
-
-        <p class="career-card-description">
-          ${escapeHtml(
-            career.description || ""
-          )}
-        </p>
-
-      </div>
+if(!job)return;
 
 
-      <div class="career-card-body">
-
-        <div class="career-tags">
-
-          ${
-            career.category
-              ? `
-                <span class="career-tag">
-                  ${escapeHtml(
-                    career.category
-                  )}
-                </span>
-              `
-              : ""
-          }
-
-          ${
-            career.level
-              ? `
-                <span class="career-tag">
-                  ${escapeHtml(
-                    career.level
-                  )}
-                </span>
-              `
-              : ""
-          }
-
-          ${
-            career.demand
-              ? `
-                <span class="career-tag">
-                  ${escapeHtml(
-                    career.demand
-                  )}
-                </span>
-              `
-              : ""
-          }
-
-        </div>
+document.getElementById(
+"modalTitle"
+).textContent=
+job.title||"Career Opportunity";
 
 
-        <div class="skills">
-
-          ${skills.map(skill => `
-
-            <span class="skill">
-              ${escapeHtml(skill)}
-            </span>
-
-          `).join("")}
-
-        </div>
+document.getElementById(
+"modalCompany"
+).innerHTML=
+`<strong>
+🏢 ${esc(job.company||"")}
+</strong>`;
 
 
-        <div class="career-card-actions">
+document.getElementById(
+"modalMeta"
+).innerHTML=`
 
-          <button
-            class="view-career"
-            onclick="openCareer(
-              '${escapeJs(career.id)}'
-            )"
-          >
-            Explore Career
-          </button>
+<span class="tag">
+📍 ${esc(job.location||"Not specified")}
+</span>
+
+<span class="tag">
+💼 ${esc(job.type||"Not specified")}
+</span>
+
+<span class="tag">
+📚 ${esc(job.category||"General")}
+</span>
+
+`;
 
 
-          <button
-            class="save-career"
-            onclick="toggleSaveCareer(
-              '${escapeJs(career.id)}'
-            )"
-            title="Save career"
-          >
-            ${saved ? "★" : "☆"}
-          </button>
+document.getElementById(
+"modalDescription"
+).textContent=
+job.description||
+"No description provided.";
 
-        </div>
 
-      </div>
+document.getElementById(
+"modalRequirements"
+).textContent=
+job.requirements||
+"No specific requirements provided.";
 
-    </article>
 
-  `;
+document.getElementById(
+"modalSalary"
+).textContent=
+job.salary||
+"Not specified";
+
+
+document.getElementById(
+"modalDeadline"
+).textContent=
+job.deadline||
+"Not specified";
+
+
+const apply=
+document.getElementById(
+"applyBtn"
+);
+
+
+if(job.applyUrl){
+
+apply.style.display=
+"inline-block";
+
+apply.onclick=()=>{
+
+window.open(
+job.applyUrl,
+"_blank"
+);
+
+};
+
+}else{
+
+apply.style.display=
+"none";
 
 }
 
 
-/* =====================================
-   OPEN CAREER
-===================================== */
-
-window.openCareer = function(id) {
-
-  const career =
-    careers.find(
-      item =>
-        String(item.id) === String(id)
-    );
-
-
-  if (!career) return;
-
-
-  const skills =
-    normalizeArray(career.skills);
-
-  const roadmap =
-    normalizeArray(career.roadmap);
-
-
-  document.getElementById(
-    "modalContent"
-  ).innerHTML = `
-
-    <div class="modal-icon">
-      ${escapeHtml(
-        career.icon || "🚀"
-      )}
-    </div>
-
-
-    <h2>
-      ${escapeHtml(
-        career.title || "Career"
-      )}
-    </h2>
-
-
-    <div class="career-tags">
-
-      <span class="career-tag">
-        ${escapeHtml(
-          career.category || "Career"
-        )}
-      </span>
-
-      <span class="career-tag">
-        ${escapeHtml(
-          career.level || "All Levels"
-        )}
-      </span>
-
-      ${
-        career.demand
-          ? `
-            <span class="career-tag">
-              ${escapeHtml(
-                career.demand
-              )}
-            </span>
-          `
-          : ""
-      }
-
-      ${
-        career.salary
-          ? `
-            <span class="career-tag">
-              ${escapeHtml(
-                career.salary
-              )}
-            </span>
-          `
-          : ""
-      }
-
-    </div>
-
-
-    ${
-      career.description
-        ? `
-          <p>
-            ${escapeHtml(
-              career.description
-            )}
-          </p>
-        `
-        : ""
-    }
-
-
-    ${
-      career.future
-        ? `
-
-          <h3>
-            Future Outlook
-          </h3>
-
-          <p>
-            ${escapeHtml(
-              career.future
-            )}
-          </p>
-
-        `
-        : ""
-    }
-
-
-    ${
-      skills.length
-        ? `
-
-          <h3>
-            Future Skills
-          </h3>
-
-          <div class="skills">
-
-            ${skills.map(skill => `
-
-              <span class="skill">
-                ${escapeHtml(skill)}
-              </span>
-
-            `).join("")}
-
-          </div>
-
-        `
-        : ""
-    }
-
-
-    ${
-      roadmap.length
-        ? `
-
-          <h3>
-            Learning Roadmap
-          </h3>
-
-          <ol class="roadmap-list">
-
-            ${roadmap.map(step => `
-
-              <li>
-                ${escapeHtml(step)}
-              </li>
-
-            `).join("")}
-
-          </ol>
-
-        `
-        : ""
-    }
-
-  `;
-
-
-  document.getElementById(
-    "careerModal"
-  ).classList.add("show");
+document.getElementById(
+"modal"
+).classList.add("show");
 
 };
 
 
-window.closeCareerModal = function() {
+/* =========================================
+ CLOSE
+========================================= */
 
-  document.getElementById(
-    "careerModal"
-  ).classList.remove("show");
+window.closeJob=function(){
 
-};
-
-
-/* =====================================
-   SEARCH
-===================================== */
-
-document
-  .getElementById("careerSearch")
-  .addEventListener("input", renderCareers);
-
-
-document
-  .getElementById("careerLevel")
-  .addEventListener("change", renderCareers);
-
-
-/* =====================================
-   RENDER
-===================================== */
-
-function renderCareers() {
-
-  const search =
-    document
-      .getElementById("careerSearch")
-      .value
-      .trim()
-      .toLowerCase();
-
-
-  const level =
-    document
-      .getElementById("careerLevel")
-      .value;
-
-
-  const filtered =
-    careers.filter(career => {
-
-      const categoryMatch =
-        selectedCategory === "all" ||
-        String(
-          career.category || ""
-        ) === selectedCategory;
-
-
-      const levelMatch =
-        level === "all" ||
-        String(
-          career.level || ""
-        ).toLowerCase() ===
-        level.toLowerCase();
-
-
-      const text = [
-
-        career.title,
-
-        career.category,
-
-        career.description,
-
-        career.future,
-
-        career.demand,
-
-        career.salary,
-
-        ...normalizeArray(
-          career.skills
-        )
-
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-
-      return (
-        categoryMatch &&
-        levelMatch &&
-        (
-          !search ||
-          text.includes(search)
-        )
-      );
-
-    });
-
-
-  if (!filtered.length) {
-
-    careerGrid.innerHTML = "";
-
-    emptyState.style.display =
-      "block";
-
-    return;
-
-  }
-
-
-  emptyState.style.display =
-    "none";
-
-
-  careerGrid.innerHTML =
-    filtered
-      .map(createCareerCard)
-      .join("");
-
-}
-
-
-/* =====================================
-   CATEGORY FILTER
-===================================== */
-
-window.selectCategory =
-function(category) {
-
-  selectedCategory =
-    category;
-
-  renderCategories();
-
-  renderCareers();
+document.getElementById(
+"modal"
+).classList.remove("show");
 
 };
 
 
-function renderCategories() {
+/* =========================================
+ HELPERS
+========================================= */
 
-  const categories =
-    [
-      ...new Set(
-        careers
-          .map(
-            career =>
-              career.category
-          )
-          .filter(Boolean)
-      )
-    ]
-    .sort();
+function getTime(timestamp){
 
+if(!timestamp)
+return 0;
 
-  document.getElementById(
-    "categories"
-  ).innerHTML = `
+try{
 
-    <button
-      class="category-btn ${
-        selectedCategory === "all"
-          ? "active"
-          : ""
-      }"
-      onclick="selectCategory('all')"
-    >
-      All
-    </button>
+if(
+typeof timestamp.toDate===
+"function"
+){
 
-    ${
-      categories.map(category => `
+return timestamp
+.toDate()
+.getTime();
 
-        <button
-          class="category-btn ${
-            selectedCategory === category
-              ? "active"
-              : ""
-          }"
-          onclick="selectCategory(
-            ${JSON.stringify(category)}
-          )"
-        >
-          ${escapeHtml(category)}
-        </button>
+}
 
-      `).join("")
-    }
+return new Date(timestamp)
+.getTime();
 
-  `;
+}catch{
+
+return 0;
+
+}
 
 }
 
 
-/* =====================================
-   STATS
-===================================== */
+function esc(value){
 
-function updateStats() {
+return String(
+value??""
+)
 
-  document.getElementById(
-    "careerCount"
-  ).textContent =
-    careers.length;
-
-
-  const categories =
-    new Set(
-      careers
-        .map(
-          career =>
-            career.category
-        )
-        .filter(Boolean)
-    );
-
-
-  document.getElementById(
-    "categoryCount"
-  ).textContent =
-    categories.size;
-
-
-  const skills =
-    new Set();
-
-
-  careers.forEach(career => {
-
-    normalizeArray(
-      career.skills
-    ).forEach(skill => {
-
-      skills.add(
-        String(skill)
-      );
-
-    });
-
-  });
-
-
-  document.getElementById(
-    "skillCount"
-  ).textContent =
-    skills.size;
-
-
-  document.getElementById(
-    "savedCount"
-  ).textContent =
-    savedCareers.length;
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
 
 }
 
 
-/* =====================================
-   HELPERS
-===================================== */
+function safe(value){
 
-function normalizeArray(value) {
-
-  if (Array.isArray(value)) {
-    return value;
-  }
-
-
-  if (
-    value &&
-    typeof value === "object"
-  ) {
-    return Object.values(value);
-  }
-
-
-  if (
-    typeof value === "string"
-  ) {
-
-    return value
-      .split(",")
-      .map(
-        item => item.trim()
-      )
-      .filter(Boolean);
-
-  }
-
-
-  return [];
+return String(value||"")
+.replace(/"/g,"%22")
+.replace(/'/g,"%27");
 
 }
 
-
-function escapeHtml(value) {
-
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-
-}
-
-
-function escapeJs(value) {
-
-  return String(value)
-    .replace(/\\/g, "\\\\")
-    .replace(/'/g, "\\'")
-    .replace(/\n/g, "\\n")
-    .replace(/\r/g, "\\r");
-
-}
-
-
-function showToast(message) {
-
-  const toast =
-    document.getElementById(
-      "toast"
-    );
-
-
-  toast.textContent =
-    message;
-
-
-  toast.classList.add("show");
-
-
-  setTimeout(() => {
-
-    toast.classList.remove("show");
-
-  }, 2500);
-
-}
-
-
-/* =====================================
-   INITIAL LOAD
-===================================== */
-
-renderCategories();
-
-renderCareers();
-
-updateStats();
+</script></body>
+</html>
