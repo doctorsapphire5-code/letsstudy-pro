@@ -1,370 +1,1311 @@
-<!DOCTYPE html>
-<html lang="en">
-
+<!DOCTYPE html><html lang="en">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-
-<title>Quiz | LetsStudy Pro</title>
-
-<style>
+<title>Quiz | LetsStudy Pro</title><style>
+*{box-sizing:border-box}
 
 body{
-font-family:Arial;
-background:#f5f7fb;
 margin:0;
+font-family:Arial,Helvetica,sans-serif;
+background:#f5f7fb;
+color:#172033;
 }
 
 header{
-background:#0b57d0;
-color:white;
-padding:20px;
+height:64px;
+background:#fff;
+border-bottom:1px solid #e5e7eb;
+display:flex;
+align-items:center;
+gap:12px;
+padding:0 16px;
+position:sticky;
+top:0;
+z-index:10;
 }
 
-.container{
-max-width:900px;
+.logo{
+font-weight:900;
+color:#2563eb;
+font-size:16px;
+}
+
+.title{
+flex:1;
+font-weight:700;
+font-size:15px;
+}
+
+.timer{
+background:#fee2e2;
+color:#b91c1c;
+padding:9px 12px;
+border-radius:9px;
+font-weight:bold;
+font-size:11px;
+}
+
+main{
+max-width:850px;
 margin:auto;
-padding:20px;
+padding:18px;
 }
 
 .card{
-background:white;
-padding:20px;
-border-radius:15px;
+background:#fff;
+border:1px solid #e5e7eb;
+border-radius:17px;
+padding:22px;
+}
+
+.quiz-head{
+display:flex;
+justify-content:space-between;
+gap:15px;
+margin-bottom:18px;
+}
+
+.quiz-title{
+font-size:20px;
+font-weight:800;
+}
+
+.quiz-info{
+font-size:10px;
+color:#64748b;
+margin-top:5px;
+}
+
+.progress{
+height:7px;
+background:#e5e7eb;
+border-radius:20px;
+overflow:hidden;
+margin-bottom:25px;
+}
+
+.progress-bar{
+height:100%;
+background:#2563eb;
+width:0;
+transition:.3s;
+}
+
+.question-number{
+font-size:10px;
+font-weight:bold;
+color:#2563eb;
+margin-bottom:8px;
+}
+
+.question{
+font-size:17px;
+font-weight:800;
+line-height:1.5;
 margin-bottom:20px;
-box-shadow:0 5px 20px #0002;
 }
 
 .option{
-padding:12px;
-border:1px solid #ddd;
-margin:10px 0;
-border-radius:8px;
+display:flex;
+align-items:center;
+gap:10px;
+border:1px solid #e2e8f0;
+padding:13px;
+border-radius:10px;
+margin-bottom:9px;
 cursor:pointer;
+font-size:12px;
+transition:.2s;
 }
 
 .option:hover{
-background:#eef4ff;
+background:#f8fafc;
+}
+
+.option.selected{
+background:#eff6ff;
+border-color:#2563eb;
+color:#1d4ed8;
+}
+
+.option input{
+accent-color:#2563eb;
+}
+
+.actions{
+display:flex;
+justify-content:space-between;
+gap:10px;
+margin-top:22px;
 }
 
 button{
-background:#0b57d0;
-color:white;
 border:0;
-padding:12px 20px;
-border-radius:8px;
+padding:11px 16px;
+border-radius:9px;
+font-size:11px;
+font-weight:bold;
 cursor:pointer;
 }
 
-</style>
-
-</head>
-
-
-<body>
-
-
-<header>
-
-<h1>
-📝 Course Quiz
-</h1>
-
-</header>
-
-
-
-<div class="container">
-
-
-<div id="quiz">
-
-Loading quiz...
-
-</div>
-
-
-<button onclick="submitQuiz()">
-
-Submit Quiz
-
-</button>
-
-
-<h2 id="result"></h2>
-
-
-</div>
-
-
-
-
-
-<script type="module">
-
-
-import {
-
-db,
-auth
-
+.secondary{
+background:#f1f5f9;
+color:#334155;
 }
 
-from "./assets/js/firebase.js";
+.primary{
+background:#2563eb;
+color:#fff;
+}
 
+.submit{
+background:#059669;
+color:#fff;
+}
 
+.result{
+text-align:center;
+padding:25px 10px;
+}
 
-import {
+.result-icon{
+font-size:55px;
+}
 
+.score{
+font-size:42px;
+font-weight:900;
+color:#2563eb;
+margin:10px 0;
+}
+
+.result p{
+font-size:12px;
+color:#64748b;
+}
+
+.result-actions{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin-top:20px;
+}
+
+.loading{
+text-align:center;
+padding:50px 15px;
+color:#64748b;
+font-size:12px;
+}
+
+.error{
+background:#fee2e2;
+color:#b91c1c;
+padding:12px;
+border-radius:9px;
+font-size:11px;
+}
+
+@media(max-width:600px){
+
+main{
+padding:10px;
+}
+
+.card{
+padding:16px;
+}
+
+.quiz-title{
+font-size:17px;
+}
+
+.question{
+font-size:15px;
+}
+
+.actions{
+flex-direction:column;
+}
+
+.result-actions{
+grid-template-columns:1fr;
+}
+
+}
+</style></head><body><header><div class="logo">
+LETSSTUDY PRO
+</div><div class="title">
+Quiz
+</div><div
+id="timer"
+class="timer">
+--:--
+</div></header><main><div
+id="app"
+class="card"><div class="loading">
+📚 Loading quiz...
+</div></div></main><script type="module">
+
+import{
+initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import{
+getAuth,
+onAuthStateChanged
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import{
+getFirestore,
 collection,
 query,
 where,
 getDocs,
 addDoc,
 serverTimestamp
-
 }
-
 from
-
 "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 
+/* =====================================
+ FIREBASE
+===================================== */
 
-import {
+const firebaseConfig={
 
-onAuthStateChanged
+apiKey:
+"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
 
-}
+authDomain:
+"let-s-study-pro-course.firebaseapp.com",
 
-from
+databaseURL:
+"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
 
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+projectId:
+"let-s-study-pro-course",
+
+storageBucket:
+"let-s-study-pro-course.firebasestorage.app",
+
+messagingSenderId:
+"474928293390",
+
+appId:
+"1:474928293390:web:89eef78b2ccfbcf0a9fe5f",
+
+measurementId:
+"G-NCZNKYB3YB"
+
+};
+
+const app=
+initializeApp(firebaseConfig);
+
+const auth=
+getAuth(app);
+
+const db=
+getFirestore(app);
 
 
+/* =====================================
+ URL
+===================================== */
 
-
-
-
-const params =
+const params=
 new URLSearchParams(
 location.search
 );
 
+const quizId=
+params.get("quizId");
 
-const courseId =
+const courseId=
 params.get("courseId");
 
 
+/* =====================================
+ STATE
+===================================== */
+
+let currentUser=null;
+
+let quiz=null;
 
 let questions=[];
 
-let answers={};
+let answers=[];
 
-let user;
+let currentIndex=0;
+
+let timeLeft=0;
+
+let timerInterval=null;
+
+let submitted=false;
 
 
+/* =====================================
+ AUTH
+===================================== */
 
 onAuthStateChanged(
 auth,
-u=>{
+user=>{
 
-if(!u){
+if(!user){
 
 location.href="login.html";
 
+return;
+
 }
 
-user=u;
+currentUser=user;
 
 loadQuiz();
 
-}
-
-);
+});
 
 
-
-
-
-
+/* =====================================
+ LOAD QUIZ
+===================================== */
 
 async function loadQuiz(){
 
+const appBox=
+document.getElementById("app");
 
-const q=query(
+if(!quizId){
 
-collection(
-db,
-"quizzes"
-),
-
-where(
-"courseId",
-"==",
-courseId
-)
-
+showError(
+"Quiz ID is missing."
 );
 
+return;
+
+}
 
 
-const snap=
-await getDocs(q);
+try{
+
+/*
+Expected structure:
+
+quizzes/{quizId}
+
+title
+description
+duration
+courseId
+
+questions/{questionId}
+quizId
+question
+options
+correctAnswer
+*/
+
+const quizQuery=
+query(
+collection(db,"quizzes"),
+where("__name__","==",quizId)
+);
+
+const quizSnap=
+await getDocs(quizQuery);
 
 
+if(quizSnap.empty){
 
-let html="";
+showError(
+"Quiz not found."
+);
 
+return;
 
-
-let i=0;
-
-
-
-snap.forEach(
-
-doc=>{
+}
 
 
-const data=doc.data();
-
-questions.push(data);
-
-
-
-html+=`
-
-<div class="card">
-
-<h3>
-${i+1}. ${data.question}
-</h3>
+quiz={
+id:quizSnap.docs[0].id,
+...quizSnap.docs[0].data()
+};
 
 
-${data.options.map((o)=>`
+const questionQuery=
+query(
+collection(db,"questions"),
+where("quizId","==",quizId)
+);
 
-<div class="option">
-
-<label>
-
-<input type="radio"
-
-name="q${i}"
-
-onclick="saveAnswer(${i},'${o}')">
+const questionSnap=
+await getDocs(questionQuery);
 
 
-${o}
+questions=
+questionSnap.docs.map(doc=>({
+
+id:doc.id,
+...doc.data()
+
+}));
+
+
+/*
+Fallback:
+some systems store questions
+inside quiz.questions.
+*/
+
+if(
+!questions.length &&
+Array.isArray(quiz.questions)
+){
+
+questions=
+quiz.questions;
+
+}
+
+
+if(!questions.length){
+
+showError(
+"This quiz has no questions yet."
+);
+
+return;
+
+}
+
+
+/*
+Shuffle can be enabled by adding:
+
+shuffle: true
+*/
+
+if(quiz.shuffle===true){
+
+questions=
+shuffleArray(questions);
+
+}
+
+
+answers=
+new Array(
+questions.length
+).fill(null);
+
+
+timeLeft=
+Number(
+quiz.duration||
+quiz.timeLimit||
+30
+)*60;
+
+
+document.getElementById(
+"timer"
+).textContent=
+formatTime(timeLeft);
+
+
+renderQuestion();
+
+startTimer();
+
+}catch(error){
+
+console.error(error);
+
+showError(
+"Unable to load quiz."
+);
+
+}
+
+}
+
+
+/* =====================================
+ RENDER QUESTION
+===================================== */
+
+function renderQuestion(){
+
+if(submitted)
+return;
+
+
+const question=
+questions[currentIndex];
+
+const options=
+Array.isArray(question.options)
+?
+question.options
+:
+[];
+
+
+const progress=
+(
+(currentIndex+1)/
+questions.length
+)*100;
+
+
+document.getElementById(
+"app"
+).innerHTML=`
+
+<div class="quiz-head">
+
+<div>
+
+<div class="quiz-title">
+
+${escapeHTML(
+quiz.title||
+"Quiz"
+)}
+
+</div>
+
+<div class="quiz-info">
+
+${questions.length}
+questions
+
+</div>
+
+</div>
+
+<div>
+
+${currentIndex+1}
+/
+${questions.length}
+
+</div>
+
+</div>
+
+
+<div class="progress">
+
+<div
+class="progress-bar"
+style="width:${progress}%">
+</div>
+
+</div>
+
+
+<div class="question-number">
+
+QUESTION ${currentIndex+1}
+
+</div>
+
+
+<div class="question">
+
+${escapeHTML(
+question.question||
+question.text||
+"Question"
+)}
+
+</div>
+
+
+<div>
+
+${options.map(
+(option,index)=>`
+
+<label
+class="option ${
+answers[currentIndex]===index
+?
+"selected"
+:
+""
+}">
+
+<input
+type="radio"
+name="answer"
+value="${index}"
+${
+answers[currentIndex]===index
+?
+"checked"
+:
+""
+}
+onchange="selectAnswer(${index})">
+
+<span>
+
+${escapeHTML(
+String.fromCharCode(65+index)
+)}.
+
+</span>
+
+<span>
+
+${escapeHTML(option)}
+
+</span>
 
 </label>
 
-</div>
-
-`).join("")}
-
+`
+).join("")}
 
 </div>
 
+
+<div class="actions">
+
+<button
+class="secondary"
+onclick="previousQuestion()"
+${currentIndex===0?"disabled":""}>
+
+← Previous
+
+</button>
+
+
+${
+currentIndex<
+questions.length-1
+?
+`
+<button
+class="primary"
+onclick="nextQuestion()">
+
+Next →
+
+</button>
+`
+:
+`
+<button
+class="submit"
+onclick="submitQuiz(false)">
+
+✓ Submit Quiz
+
+</button>
+`
+}
+
+</div>
 
 `;
 
-i++;
-
-});
-
-
-
-document.getElementById(
-"quiz"
-).innerHTML=html;
-
-
 }
 
 
+/* =====================================
+ SELECT ANSWER
+===================================== */
+
+window.selectAnswer=
+function(index){
+
+answers[currentIndex]=index;
+
+renderQuestion();
+
+};
 
 
+/* =====================================
+ NEXT
+===================================== */
 
+window.nextQuestion=
+function(){
 
-
-window.saveAnswer=function(
-index,
-answer
+if(
+answers[currentIndex]===null
 ){
 
-answers[index]=answer;
+alert(
+"Please select an answer first."
+);
+
+return;
 
 }
-
-
-
-
-
-
-
-window.submitQuiz=async function(){
-
-
-let score=0;
-
-
-questions.forEach(
-(q,i)=>{
 
 
 if(
-answers[i]==q.answer
+currentIndex<
+questions.length-1
 ){
 
-score++;
+currentIndex++;
+
+renderQuestion();
 
 }
 
+};
+
+
+/* =====================================
+ PREVIOUS
+===================================== */
+
+window.previousQuestion=
+function(){
+
+if(currentIndex>0){
+
+currentIndex--;
+
+renderQuestion();
+
+}
+
+};
+
+
+/* =====================================
+ TIMER
+===================================== */
+
+function startTimer(){
+
+clearInterval(timerInterval);
+
+
+timerInterval=
+setInterval(
+()=>{
+
+timeLeft--;
+
+document.getElementById(
+"timer"
+).textContent=
+formatTime(timeLeft);
+
+
+if(timeLeft<=0){
+
+clearInterval(
+timerInterval
+);
+
+submitQuiz(true);
+
+}
+
+},
+1000
+);
+
+}
+
+
+/* =====================================
+ SUBMIT
+===================================== */
+
+window.submitQuiz=
+async function(autoSubmit){
+
+if(submitted)
+return;
+
+
+if(!autoSubmit){
+
+const unanswered=
+answers.filter(
+answer=>answer===null
+).length;
+
+
+if(unanswered>0){
+
+const confirmSubmit=
+confirm(
+`You have ${unanswered} unanswered question(s). Submit anyway?`
+);
+
+if(!confirmSubmit)
+return;
+
+}
+
+}
+
+
+submitted=true;
+
+clearInterval(
+timerInterval
+);
+
+
+let correct=0;
+
+
+questions.forEach(
+(question,index)=>{
+
+const selected=
+answers[index];
+
+const correctAnswer=
+question.correctAnswer;
+
+
+if(
+selected!==null &&
+isCorrect(
+selected,
+correctAnswer,
+question.options
+)
+){
+
+correct++;
+
+}
 
 });
 
 
+const total=
+questions.length;
 
-document.getElementById(
-"result"
-).innerHTML=
+const percentage=
+Math.round(
+(correct/total)*100
+);
 
-`Score: ${score}/${questions.length}`;
-
-
-
-await addDoc(
-
-collection(
-db,
-"quizResults"
-),
-
-{
-
-userId:user.uid,
-
-courseId,
-
-score,
-
-createdAt:serverTimestamp()
-
-}
-
+const passed=
+percentage>=Number(
+quiz.passMark||
+50
 );
 
 
+await saveResult(
+correct,
+total,
+percentage,
+passed
+);
+
+
+showResult(
+correct,
+total,
+percentage,
+passed,
+autoSubmit
+);
+
+};
+
+
+/* =====================================
+ CHECK ANSWER
+===================================== */
+
+function isCorrect(
+selected,
+correctAnswer,
+options
+){
+
+if(
+typeof correctAnswer==="number"
+){
+
+return selected===correctAnswer;
 
 }
 
 
+if(
+typeof correctAnswer==="string"
+){
 
-</script>
+const answer=
+correctAnswer.trim();
 
 
-</body>
+/*
+A/B/C/D
+*/
 
+if(
+answer.length===1 &&
+/[A-D]/i.test(answer)
+){
+
+return selected===
+answer.toUpperCase()
+.charCodeAt(0)-65;
+
+}
+
+
+/*
+Exact option text
+*/
+
+if(
+Array.isArray(options)
+){
+
+return String(
+options[selected]
+).trim().toLowerCase()
+===
+answer.toLowerCase();
+
+}
+
+}
+
+
+return false;
+
+}
+
+
+/* =====================================
+ SAVE RESULT
+===================================== */
+
+async function saveResult(
+correct,
+total,
+percentage,
+passed
+){
+
+try{
+
+await addDoc(
+collection(db,"quizResults"),
+{
+
+userId:
+currentUser.uid,
+
+quizId:
+quiz.id,
+
+courseId:
+courseId||
+quiz.courseId||
+null,
+
+score:correct,
+
+total:total,
+
+percentage:percentage,
+
+passed:passed,
+
+answers:answers,
+
+completedAt:
+serverTimestamp()
+
+}
+);
+
+}catch(error){
+
+console.error(
+"Result save error:",
+error
+);
+
+}
+
+}
+
+
+/* =====================================
+ RESULT
+===================================== */
+
+function showResult(
+correct,
+total,
+percentage,
+passed,
+autoSubmit
+){
+
+document.getElementById(
+"timer"
+).textContent=
+"Done";
+
+
+document.getElementById(
+"app"
+).innerHTML=`
+
+<div class="result">
+
+<div class="result-icon">
+
+${passed?"🎉":"📚"}
+
+</div>
+
+
+<h2>
+
+${
+passed
+?
+"Congratulations!"
+:
+"Keep Learning!"
+}
+
+</h2>
+
+
+<div class="score">
+
+${percentage}%
+
+</div>
+
+
+<p>
+
+You scored
+
+<strong>
+${correct}
+</strong>
+
+out of
+
+<strong>
+${total}
+</strong>
+
+questions.
+
+</p>
+
+
+<p>
+
+${
+passed
+?
+"✓ You passed this quiz."
+:
+"Your score is below the pass mark. Review the lessons and try again."
+}
+
+</p>
+
+
+${
+autoSubmit
+?
+`
+<p>
+⏰ The quiz was automatically submitted because time expired.
+</p>
+`
+:
+""
+}
+
+
+<div class="result-actions">
+
+<button
+class="primary"
+onclick="retryQuiz()">
+
+↻ Try Again
+
+</button>
+
+
+<button
+class="secondary"
+onclick="goBack()">
+
+← Back to Course
+
+</button>
+
+</div>
+
+</div>
+
+`;
+
+}
+
+
+/* =====================================
+ RETRY
+===================================== */
+
+window.retryQuiz=
+function(){
+
+location.reload();
+
+};
+
+
+/* =====================================
+ BACK
+===================================== */
+
+window.goBack=
+function(){
+
+if(courseId){
+
+location.href=
+"course-learning.html?courseId="+
+encodeURIComponent(courseId);
+
+}else{
+
+location.href=
+"my-courses.html";
+
+}
+
+};
+
+
+/* =====================================
+ ERROR
+===================================== */
+
+function showError(message){
+
+document.getElementById(
+"app"
+).innerHTML=`
+
+<div class="error">
+
+⚠️ ${escapeHTML(message)}
+
+<br><br>
+
+<button
+class="secondary"
+onclick="location.href='dashboard.html'">
+
+← Dashboard
+
+</button>
+
+</div>
+
+`;
+
+
+document.getElementById(
+"timer"
+).textContent=
+"--:--";
+
+}
+
+
+/* =====================================
+ TIME
+===================================== */
+
+function formatTime(seconds){
+
+seconds=
+Math.max(0,seconds);
+
+const minutes=
+Math.floor(seconds/60);
+
+const secs=
+seconds%60;
+
+return String(minutes)
+.padStart(2,"0")
++
+":"+
+String(secs)
+.padStart(2,"0");
+
+}
+
+
+/* =====================================
+ SHUFFLE
+===================================== */
+
+function shuffleArray(array){
+
+return [...array].sort(
+()=>Math.random()-0.5
+);
+
+}
+
+
+/* =====================================
+ ESCAPE HTML
+===================================== */
+
+function escapeHTML(value){
+
+return String(value??"")
+
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+
+}
+
+</script></body>
 </html>
