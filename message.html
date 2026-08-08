@@ -1,284 +1,387 @@
-<!DOCTYPE html>
-<html lang="en">
-
+<!DOCTYPE html><html lang="en">
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Messages | LetsStudy Pro</title>
-
-<style>
-
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Messages | LetsStudy Pro</title><style>
+*{box-sizing:border-box}
 body{
 margin:0;
 font-family:Arial,sans-serif;
 background:#f5f7fb;
+color:#172033;
 }
-
-.header{
-background:#0b57d0;
-color:white;
-padding:20px;
+header{
+height:64px;
+background:#fff;
+border-bottom:1px solid #e5e7eb;
+display:flex;
+align-items:center;
+gap:12px;
+padding:0 15px;
+position:sticky;
+top:0;
+z-index:10;
 }
-
-.container{
-max-width:900px;
+.logo{
+font-weight:900;
+color:#2563eb;
+}
+.title{
+flex:1;
+font-weight:700;
+}
+.btn{
+border:0;
+background:#eff6ff;
+color:#2563eb;
+padding:9px 11px;
+border-radius:9px;
+cursor:pointer;
+}
+main{
+max-width:850px;
 margin:auto;
-padding:20px;
-}
-
-.card{
-background:white;
-padding:20px;
-border-radius:15px;
-margin-bottom:15px;
-box-shadow:0 5px 20px #0002;
-}
-
-.message{
 padding:15px;
-border-bottom:1px solid #eee;
 }
-
-.message h3{
-margin:0 0 8px;
+.search{
+background:#fff;
+border:1px solid #e5e7eb;
+border-radius:12px;
+padding:10px;
+margin-bottom:12px;
 }
-
-.date{
-color:#777;
-font-size:14px;
+.search input{
+width:100%;
+border:0;
+outline:0;
+padding:10px;
 }
-
+.message{
+background:#fff;
+border:1px solid #e5e7eb;
+border-radius:14px;
+padding:14px;
+display:flex;
+gap:12px;
+margin-bottom:9px;
+cursor:pointer;
+}
+.message:hover{
+background:#f8fafc;
+}
+.avatar{
+width:44px;
+height:44px;
+border-radius:50%;
+background:#2563eb;
+color:#fff;
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:bold;
+flex-shrink:0;
+}
+.content{
+flex:1;
+min-width:0;
+}
+.top{
+display:flex;
+gap:8px;
+}
+.name{
+font-weight:700;
+font-size:13px;
+flex:1;
+}
+.time{
+font-size:9px;
+color:#94a3b8;
+}
+.preview{
+font-size:11px;
+color:#64748b;
+margin-top:5px;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+}
+.unread{
+font-weight:bold;
+color:#172033;
+}
 .empty{
+background:#fff;
+border:1px solid #e5e7eb;
+border-radius:14px;
+padding:50px 20px;
 text-align:center;
-color:#777;
-padding:40px;
+color:#64748b;
+font-size:12px;
 }
+</style></head><body><header><div class="logo">LETSSTUDY PRO</div><div class="title">Messages</div><button
+class="btn"
+onclick="location.href='dashboard.html'">
+🏠
+</button>
 
-</style>
+<button
+class="btn"
+onclick="location.href='private-chat.html'">
+💬
+</button>
 
-</head>
+</header><main><div class="search">
+<input
+id="search"
+type="search"
+placeholder="Search messages..."
+oninput="render()">
+</div><div id="messages">
+<div class="empty">Loading messages...</div>
+</div></main><script type="module">
 
-
-<body>
-
-
-<div class="header">
-
-<h1>
-💬 LetsStudy Pro Messages
-</h1>
-
-<p>
-Notifications and announcements
-</p>
-
-</div>
-
-
-
-<div class="container">
-
-
-<div class="card">
-
-<h2>
-Inbox
-</h2>
-
-
-<div id="messages">
-
-<div class="empty">
-Loading messages...
-</div>
-
-</div>
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-<script type="module">
-
-
-import {
-
-auth,
-db
-
+import{
+initializeApp
 }
-
-from "./assets/js/firebase.js";
-
-
-
-import {
-
-onAuthStateChanged
-
-}
-
 from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
+import{
+getAuth,
+onAuthStateChanged
+}
+from
 "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
-
-
-import {
-
+import{
+getFirestore,
 collection,
 query,
 where,
-orderBy,
 getDocs
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+authDomain:"let-s-study-pro-course.firebaseapp.com",
+databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+projectId:"let-s-study-pro-course",
+storageBucket:"let-s-study-pro-course.firebasestorage.app",
+messagingSenderId:"474928293390",
+appId:"1:474928293390:web:89eef78b2ccfbcf0a9fe5f",
+measurementId:"G-NCZNKYB3YB"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let currentUser=null;
+let messages=[];
+
+onAuthStateChanged(auth,user=>{
+
+if(!user){
+location.href="login.html";
+return;
+}
+
+currentUser=user;
+loadMessages();
+
+});
+
+async function loadMessages(){
+
+try{
+
+const q=query(
+collection(db,"privateMessages"),
+where("participants","array-contains",currentUser.uid)
+);
+
+const snap=await getDocs(q);
+
+messages=snap.docs.map(doc=>({
+id:doc.id,
+...doc.data()
+}));
+
+render();
+
+}catch(error){
+
+console.error(error);
+
+document.getElementById("messages").innerHTML=`
+<div class="empty">
+⚠️ Unable to load messages.
+<br><br>
+${escapeHTML(error.message)}
+</div>
+`;
 
 }
 
-from
+}
 
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+window.render=function(){
 
+const box=document.getElementById("messages");
 
+const search=document
+.getElementById("search")
+.value
+.toLowerCase()
+.trim();
 
+const filtered=messages.filter(message=>{
 
+const name=String(
+message.otherUserName||
+message.senderName||
+""
+).toLowerCase();
 
-onAuthStateChanged(
-auth,
-async(user)=>{
+const text=String(
+message.text||
+message.message||
+""
+).toLowerCase();
 
+return !search||
+name.includes(search)||
+text.includes(search);
 
-if(!user){
+});
 
-location.href="login.html";
+if(!filtered.length){
+
+box.innerHTML=`
+<div class="empty">
+💬
+<br><br>
+No messages yet.
+<br><br>
+Start a conversation from Private Chat.
+</div>
+`;
 
 return;
 
 }
 
+box.innerHTML=filtered.map(message=>{
 
-loadMessages(user.uid);
+const name=
+message.otherUserName||
+message.senderName||
+"User";
 
+const text=
+message.text||
+message.message||
+"";
 
-});
+const initial=
+name.charAt(0).toUpperCase();
 
+const chatId=
+message.chatId||
+message.conversationId||
+message.id;
 
+return`
 
+<div
+class="message"
+onclick="openChat('${escapeAttr(chatId)}')">
 
+<div class="avatar">
+${escapeHTML(initial)}
+</div>
 
+<div class="content">
 
+<div class="top">
 
-async function loadMessages(uid){
+<div class="name">
+${escapeHTML(name)}
+</div>
 
+<div class="time">
+${formatDate(message.createdAt)}
+</div>
 
-const q = query(
+</div>
 
-collection(
-db,
-"messages"
-),
+<div class="preview">
+${escapeHTML(text)}
+</div>
 
-where(
-"userId",
-"==",
-uid
-),
+</div>
 
-orderBy(
-"createdAt",
-"desc"
-)
+</div>
 
-);
+`;
 
+}).join("");
 
+};
 
-const snap =
-await getDocs(q);
+window.openChat=function(id){
 
+location.href=
+"private-chat.html?chatId="+
+encodeURIComponent(id);
 
+};
 
-let html="";
+function formatDate(timestamp){
 
+if(!timestamp)
+return"";
 
+try{
 
-snap.forEach(
-doc=>{
-
-
-const data =
-doc.data();
-
-
-
-html += `
-
-
-<div class="message">
-
-
-<h3>
-${data.title || "Notification"}
-
-</h3>
-
-
-<p>
-${data.message || ""}
-</p>
-
-
-<div class="date">
-
-${data.createdAt?.toDate
+const date=
+timestamp.toDate
 ?
-data.createdAt.toDate().toLocaleString()
+timestamp.toDate()
 :
-""
-}
+new Date(timestamp);
 
-</div>
+return date.toLocaleDateString();
 
+}catch{
 
-</div>
-
-
-`;
-
-
-
-});
-
-
-
-document.getElementById(
-"messages"
-).innerHTML =
-
-html ||
-
-`
-<div class="empty">
-No messages yet
-</div>
-`;
-
-
+return"";
 
 }
 
+}
 
+function escapeHTML(value){
 
-</script>
+return String(value??"")
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
 
+}
 
-</body>
+function escapeAttr(value){
 
+return String(value??"")
+.replace(/\\/g,"\\\\")
+.replace(/'/g,"\\'");
+
+}
+
+</script></body>
 </html>
