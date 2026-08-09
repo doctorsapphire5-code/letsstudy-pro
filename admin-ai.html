@@ -1,2539 +1,2764 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>AI Management | Let's Study Pro</title>
-
-  <style>
-    :root {
-      --primary: #2563eb;
-      --primary-dark: #1d4ed8;
-      --dark: #0f172a;
-      --text: #334155;
-      --muted: #64748b;
-      --bg: #f8fafc;
-      --white: #fff;
-      --border: #e2e8f0;
-      --success: #16a34a;
-      --danger: #dc2626;
-      --warning: #d97706;
-      --purple: #7c3aed;
-      --radius: 15px;
-      --shadow: 0 8px 30px rgba(15, 23, 42, .06);
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family:
-        Inter,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
-
-    button,
-    input,
-    select,
-    textarea {
-      font: inherit;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    .layout {
-      min-height: 100vh;
-      display: grid;
-      grid-template-columns: 250px 1fr;
-    }
-
-    /* SIDEBAR */
-
-    .sidebar {
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow-y: auto;
-      background: #020617;
-      color: white;
-      padding: 22px 14px;
-    }
-
-    .brand {
-      padding: 8px 12px 22px;
-      margin-bottom: 18px;
-      border-bottom: 1px solid rgba(255,255,255,.09);
-    }
-
-    .brand h2 {
-      margin: 0;
-      font-size: 20px;
-    }
-
-    .brand p {
-      margin: 5px 0 0;
-      color: #94a3b8;
-      font-size: 12px;
-    }
-
-    .nav {
-      display: grid;
-      gap: 5px;
-    }
-
-    .nav a {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px;
-      color: #cbd5e1;
-      text-decoration: none;
-      border-radius: 9px;
-      font-size: 13px;
-      transition: .2s;
-    }
-
-    .nav a:hover {
-      background: rgba(255,255,255,.07);
-      color: white;
-    }
-
-    .nav a.active {
-      background: var(--primary);
-      color: white;
-    }
-
-    /* MAIN */
-
-    .main {
-      min-width: 0;
-    }
-
-    .topbar {
-      min-height: 72px;
-      background: white;
-      border-bottom: 1px solid var(--border);
-      padding: 14px 30px;
-
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-    }
-
-    .topbar h1 {
-      margin: 0;
-      color: var(--dark);
-      font-size: 22px;
-    }
-
-    .admin-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .admin-avatar {
-      width: 38px;
-      height: 38px;
-      display: grid;
-      place-items: center;
-      border-radius: 50%;
-      background: #ede9fe;
-      color: var(--purple);
-      font-weight: 800;
-    }
-
-    .admin-email {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .content {
-      padding: 30px;
-    }
-
-    /* HERO */
-
-    .hero {
-      padding: 25px;
-      margin-bottom: 22px;
-      border-radius: var(--radius);
-      background:
-        linear-gradient(
-          135deg,
-          #111827,
-          #312e81
-        );
-      color: white;
-      box-shadow: var(--shadow);
-    }
-
-    .hero h2 {
-      margin: 0 0 7px;
-      font-size: 24px;
-    }
-
-    .hero p {
-      margin: 0;
-      color: #cbd5e1;
-      font-size: 13px;
-      max-width: 700px;
-      line-height: 1.6;
-    }
-
-    /* STATS */
-
-    .stats {
-      display: grid;
-      grid-template-columns:
-        repeat(4, minmax(0, 1fr));
-      gap: 16px;
-      margin-bottom: 22px;
-    }
-
-    .stat {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      box-shadow: var(--shadow);
-    }
-
-    .stat-label {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .stat-value {
-      margin-top: 8px;
-      color: var(--dark);
-      font-size: 28px;
-      font-weight: 800;
-    }
-
-    /* TOOLBAR */
-
-    .toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 18px;
-    }
-
-    .filters {
-      display: flex;
-      flex: 1;
-      gap: 9px;
-      flex-wrap: wrap;
-    }
-
-    .filters input,
-    .filters select {
-      min-width: 180px;
-      padding: 11px 13px;
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      outline: none;
-    }
-
-    .filters input {
-      flex: 1;
-    }
-
-    .filters input:focus,
-    .filters select:focus {
-      border-color: var(--primary);
-    }
-
-    .refresh {
-      border: 0;
-      border-radius: 9px;
-      padding: 11px 16px;
-      background: var(--primary);
-      color: white;
-      font-weight: 700;
-    }
-
-    .refresh:hover {
-      background: var(--primary-dark);
-    }
-
-    /* TABLE */
-
-    .table-card {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-
-    .table-scroll {
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      min-width: 1100px;
-      border-collapse: collapse;
-    }
-
-    th {
-      padding: 14px;
-      text-align: left;
-      background: #f8fafc;
-      color: var(--muted);
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      border-bottom: 1px solid var(--border);
-    }
-
-    td {
-      padding: 14px;
-      font-size: 13px;
-      border-bottom: 1px solid var(--border);
-      vertical-align: middle;
-    }
-
-    tr:last-child td {
-      border-bottom: 0;
-    }
-
-    .title-cell strong {
-      display: block;
-      color: var(--dark);
-    }
-
-    .title-cell small {
-      display: block;
-      margin-top: 4px;
-      color: var(--muted);
-      font-size: 10px;
-    }
-
-    .user-cell strong {
-      display: block;
-      color: var(--dark);
-    }
-
-    .user-cell small {
-      display: block;
-      margin-top: 4px;
-      color: var(--muted);
-      font-size: 10px;
-      max-width: 180px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* BADGES */
-
-    .badge {
-      display: inline-flex;
-      padding: 5px 9px;
-      border-radius: 999px;
-      font-size: 10px;
-      font-weight: 800;
-      text-transform: capitalize;
-    }
-
-    .badge.active {
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    .badge.inactive {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-    .badge.type {
-      background: #ede9fe;
-      color: #6d28d9;
-    }
-
-    .badge.default {
-      background: #e2e8f0;
-      color: #475569;
-    }
-
-    /* ACTIONS */
-
-    .actions {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .action {
-      border: 0;
-      border-radius: 7px;
-      padding: 7px 10px;
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    .view {
-      background: #dbeafe;
-      color: #1d4ed8;
-    }
-
-    .delete {
-      background: #fee2e2;
-      color: #b91c1c;
-    }
-
-    /* STATES */
-
-    .state {
-      padding: 65px 20px;
-      text-align: center;
-      color: var(--muted);
-    }
-
-    .spinner {
-      width: 35px;
-      height: 35px;
-      margin: 0 auto 13px;
-      border: 4px solid #e2e8f0;
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    /* PAGINATION */
-
-    .pagination {
-      display: none;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px;
-      border-top: 1px solid var(--border);
-    }
-
-    .pagination button {
-      padding: 8px 12px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: white;
-    }
-
-    .pagination button:disabled {
-      opacity: .4;
-      cursor: not-allowed;
-    }
-
-    .page-info {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    /* MODAL */
-
-    .modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      padding: 20px;
-      background: rgba(2,6,23,.75);
-      overflow-y: auto;
-    }
-
-    .modal.show {
-      display: grid;
-      place-items: center;
-    }
-
-    .modal-box {
-      position: relative;
-      width: min(760px, 100%);
-      max-height: 90vh;
-      overflow-y: auto;
-      padding: 25px;
-      background: white;
-      border-radius: 18px;
-    }
-
-    .modal-box h2 {
-      margin: 0 40px 20px 0;
-      color: var(--dark);
-    }
-
-    .close {
-      position: absolute;
-      top: 14px;
-      right: 14px;
-      width: 36px;
-      height: 36px;
-      border: 0;
-      border-radius: 50%;
-      background: #f1f5f9;
-      font-size: 20px;
-    }
-
-    .details {
-      display: grid;
-      gap: 10px;
-    }
-
-    .detail {
-      padding: 13px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: #f8fafc;
-    }
-
-    .detail-label {
-      margin-bottom: 5px;
-      color: var(--muted);
-      font-size: 10px;
-      font-weight: 800;
-      text-transform: uppercase;
-    }
-
-    .detail-value {
-      color: var(--dark);
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
-    /* TOAST */
-
-    .toast {
-      position: fixed;
-      right: 20px;
-      bottom: 20px;
-      z-index: 10000;
-
-      padding: 13px 17px;
-      border-radius: 10px;
-
-      background: var(--dark);
-      color: white;
-
-      opacity: 0;
-      transform: translateY(20px);
-      pointer-events: none;
-
-      transition: .25s;
-    }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    /* MOBILE */
-
-    @media (max-width: 1000px) {
-
-      .layout {
-        grid-template-columns: 1fr;
-      }
-
-      .sidebar {
-        position: relative;
-        height: auto;
-      }
-
-      .nav {
-        display: flex;
-        overflow-x: auto;
-      }
-
-      .nav a {
-        flex-shrink: 0;
-        white-space: nowrap;
-      }
-
-      .stats {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @media (max-width: 650px) {
-
-      .topbar {
-        padding: 14px 18px;
-      }
-
-      .admin-email {
-        display: none;
-      }
-
-      .content {
-        padding: 18px;
-      }
-
-      .stats {
-        grid-template-columns: 1fr;
-      }
-
-      .filters {
-        flex-direction: column;
-        width: 100%;
-      }
-
-      .filters input,
-      .filters select {
-        width: 100%;
-        min-width: 0;
-      }
-
-      .refresh {
-        width: 100%;
-      }
-    }
-  </style>
+
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+>
+
+<title>Admin AI | LetsStudy Pro</title>
+
+<meta
+  name="description"
+  content="LetsStudy Pro Super Admin AI Management"
+>
+
+<style>
+
+*{
+  box-sizing:border-box;
+}
+
+:root{
+  --bg:#f5f7fb;
+  --card:#ffffff;
+  --text:#172033;
+  --muted:#687386;
+  --border:#e5e9f2;
+  --primary:#4f46e5;
+  --primary2:#6366f1;
+  --success:#16a34a;
+  --danger:#dc2626;
+  --warning:#d97706;
+  --shadow:0 12px 35px rgba(15,23,42,.08);
+}
+
+body{
+  margin:0;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+a{
+  text-decoration:none;
+  color:inherit;
+}
+
+button,
+input,
+select,
+textarea{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+.app{
+  display:flex;
+  min-height:100vh;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+  width:270px;
+  background:#111827;
+  color:white;
+  padding:22px 16px;
+  position:fixed;
+  left:0;
+  top:0;
+  bottom:0;
+  overflow-y:auto;
+  z-index:1000;
+}
+
+.logo{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:10px 12px 24px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.logo-icon{
+  width:42px;
+  height:42px;
+  border-radius:12px;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(
+    135deg,
+    #6366f1,
+    #8b5cf6
+  );
+  font-size:21px;
+  font-weight:800;
+}
+
+.logo strong{
+  display:block;
+  font-size:17px;
+}
+
+.logo span{
+  display:block;
+  font-size:11px;
+  color:#9ca3af;
+  margin-top:2px;
+}
+
+.nav-title{
+  font-size:10px;
+  color:#6b7280;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  margin:25px 12px 8px;
+}
+
+.nav a{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:11px 12px;
+  border-radius:10px;
+  color:#cbd5e1;
+  font-size:13px;
+  margin:3px 0;
+}
+
+.nav a:hover,
+.nav a.active{
+  background:rgba(99,102,241,.18);
+  color:white;
+}
+
+.nav-icon{
+  width:22px;
+  text-align:center;
+}
+
+.logout{
+  margin-top:25px;
+  width:100%;
+  border:1px solid rgba(255,255,255,.1);
+  background:#1f2937;
+  color:#e5e7eb;
+  padding:11px;
+  border-radius:10px;
+}
+
+/* MAIN */
+
+.main{
+  margin-left:270px;
+  width:calc(100% - 270px);
+}
+
+.topbar{
+  height:72px;
+  background:white;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 30px;
+  position:sticky;
+  top:0;
+  z-index:500;
+}
+
+.page-title{
+  font-size:19px;
+  font-weight:750;
+}
+
+.page-subtitle{
+  color:var(--muted);
+  font-size:12px;
+  margin-top:3px;
+}
+
+.admin-user{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.avatar{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:#eef2ff;
+  color:var(--primary);
+  font-weight:800;
+}
+
+.admin-email{
+  font-size:12px;
+  font-weight:650;
+}
+
+.admin-role{
+  font-size:10px;
+  color:var(--muted);
+}
+
+/* CONTENT */
+
+.content{
+  padding:28px;
+  max-width:1500px;
+  margin:auto;
+}
+
+.hero{
+  background:
+    linear-gradient(
+      135deg,
+      #312e81,
+      #4f46e5 55%,
+      #7c3aed
+    );
+  color:white;
+  border-radius:20px;
+  padding:28px;
+  box-shadow:var(--shadow);
+  margin-bottom:24px;
+}
+
+.hero-top{
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  align-items:center;
+}
+
+.hero h1{
+  margin:0 0 8px;
+  font-size:28px;
+}
+
+.hero p{
+  margin:0;
+  color:#e0e7ff;
+  max-width:720px;
+  line-height:1.6;
+  font-size:14px;
+}
+
+.ai-status{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:rgba(255,255,255,.13);
+  border:1px solid rgba(255,255,255,.18);
+  padding:10px 14px;
+  border-radius:30px;
+  white-space:nowrap;
+  font-size:12px;
+}
+
+.status-dot{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:#22c55e;
+}
+
+.status-dot.off{
+  background:#ef4444;
+}
+
+/* GRID */
+
+.stats{
+  display:grid;
+  grid-template-columns:
+    repeat(4, minmax(0,1fr));
+  gap:16px;
+  margin-bottom:24px;
+}
+
+.stat{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:19px;
+  box-shadow:var(--shadow);
+}
+
+.stat-label{
+  color:var(--muted);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.6px;
+}
+
+.stat-value{
+  font-size:27px;
+  font-weight:800;
+  margin-top:8px;
+}
+
+.stat-note{
+  font-size:11px;
+  color:var(--muted);
+  margin-top:4px;
+}
+
+/* PANELS */
+
+.grid{
+  display:grid;
+  grid-template-columns:
+    minmax(0,1.35fr)
+    minmax(320px,.65fr);
+  gap:20px;
+}
+
+.panel{
+  background:white;
+  border:1px solid var(--border);
+  border-radius:18px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  margin-bottom:20px;
+}
+
+.panel-header{
+  padding:19px 21px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+}
+
+.panel-header h2{
+  margin:0;
+  font-size:16px;
+}
+
+.panel-header p{
+  margin:4px 0 0;
+  color:var(--muted);
+  font-size:11px;
+}
+
+.panel-body{
+  padding:21px;
+}
+
+/* FORM */
+
+.form-grid{
+  display:grid;
+  grid-template-columns:
+    repeat(2,minmax(0,1fr));
+  gap:17px;
+}
+
+.form-group{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+
+.form-group.full{
+  grid-column:1/-1;
+}
+
+label{
+  font-size:12px;
+  font-weight:700;
+}
+
+input,
+select,
+textarea{
+  width:100%;
+  border:1px solid var(--border);
+  background:#fafbfe;
+  border-radius:10px;
+  padding:11px 12px;
+  outline:none;
+  color:var(--text);
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+  border-color:var(--primary);
+  box-shadow:
+    0 0 0 3px rgba(79,70,229,.1);
+}
+
+textarea{
+  min-height:100px;
+  resize:vertical;
+}
+
+.help{
+  font-size:10px;
+  color:var(--muted);
+  line-height:1.5;
+}
+
+/* SWITCH */
+
+.switch-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  padding:14px;
+  background:#f8fafc;
+  border:1px solid var(--border);
+  border-radius:12px;
+  margin-bottom:12px;
+}
+
+.switch-title{
+  font-size:13px;
+  font-weight:700;
+}
+
+.switch-desc{
+  color:var(--muted);
+  font-size:10px;
+  margin-top:3px;
+}
+
+.switch{
+  position:relative;
+  width:46px;
+  height:25px;
+  flex:none;
+}
+
+.switch input{
+  display:none;
+}
+
+.slider{
+  position:absolute;
+  inset:0;
+  background:#cbd5e1;
+  border-radius:30px;
+  transition:.2s;
+}
+
+.slider:before{
+  content:"";
+  position:absolute;
+  width:19px;
+  height:19px;
+  left:3px;
+  top:3px;
+  background:white;
+  border-radius:50%;
+  transition:.2s;
+  box-shadow:0 2px 5px rgba(0,0,0,.2);
+}
+
+.switch input:checked + .slider{
+  background:var(--primary);
+}
+
+.switch input:checked + .slider:before{
+  transform:translateX(21px);
+}
+
+/* BUTTONS */
+
+.actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:20px;
+}
+
+.btn{
+  border:0;
+  border-radius:10px;
+  padding:11px 16px;
+  font-weight:700;
+  font-size:12px;
+}
+
+.btn-primary{
+  color:white;
+  background:var(--primary);
+}
+
+.btn-primary:hover{
+  background:#4338ca;
+}
+
+.btn-secondary{
+  background:#eef2ff;
+  color:#3730a3;
+}
+
+.btn-danger{
+  color:white;
+  background:var(--danger);
+}
+
+.btn:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
+/* INFO */
+
+.info-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.info-item{
+  padding:13px;
+  background:#f8fafc;
+  border:1px solid var(--border);
+  border-radius:11px;
+}
+
+.info-item strong{
+  display:block;
+  font-size:12px;
+}
+
+.info-item span{
+  display:block;
+  margin-top:4px;
+  color:var(--muted);
+  font-size:10px;
+}
+
+/* TABLE */
+
+.table-wrap{
+  overflow-x:auto;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:11px;
+}
+
+th,
+td{
+  text-align:left;
+  padding:12px;
+  border-bottom:1px solid var(--border);
+}
+
+th{
+  background:#f8fafc;
+  color:var(--muted);
+  font-size:10px;
+  text-transform:uppercase;
+}
+
+.badge{
+  display:inline-flex;
+  padding:4px 8px;
+  border-radius:20px;
+  font-size:9px;
+  font-weight:750;
+}
+
+.badge-success{
+  background:#dcfce7;
+  color:#166534;
+}
+
+.badge-warning{
+  background:#fef3c7;
+  color:#92400e;
+}
+
+.badge-danger{
+  background:#fee2e2;
+  color:#991b1b;
+}
+
+/* TOAST */
+
+.toast{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  min-width:260px;
+  max-width:380px;
+  background:#111827;
+  color:white;
+  padding:14px 16px;
+  border-radius:12px;
+  box-shadow:var(--shadow);
+  transform:translateY(120px);
+  opacity:0;
+  transition:.25s;
+  z-index:9999;
+  font-size:12px;
+}
+
+.toast.show{
+  transform:translateY(0);
+  opacity:1;
+}
+
+.toast.success{
+  border-left:4px solid #22c55e;
+}
+
+.toast.error{
+  border-left:4px solid #ef4444;
+}
+
+/* LOADER */
+
+.loader-screen{
+  position:fixed;
+  inset:0;
+  background:#f8fafc;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:99999;
+}
+
+.loader-box{
+  text-align:center;
+}
+
+.loader{
+  width:40px;
+  height:40px;
+  border:4px solid #e5e7eb;
+  border-top-color:#4f46e5;
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+  margin:auto auto 12px;
+}
+
+@keyframes spin{
+  to{
+    transform:rotate(360deg);
+  }
+}
+
+/* MOBILE */
+
+@media(max-width:1000px){
+
+  .stats{
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
+  }
+
+  .grid{
+    grid-template-columns:1fr;
+  }
+
+}
+
+@media(max-width:700px){
+
+  .sidebar{
+    width:0;
+    padding:0;
+    overflow:hidden;
+  }
+
+  .main{
+    margin-left:0;
+    width:100%;
+  }
+
+  .topbar{
+    padding:0 15px;
+  }
+
+  .content{
+    padding:15px;
+  }
+
+  .hero{
+    padding:20px;
+  }
+
+  .hero-top{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .stats{
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+
+  .form-grid{
+    grid-template-columns:1fr;
+  }
+
+  .form-group.full{
+    grid-column:auto;
+  }
+
+  .admin-email{
+    display:none;
+  }
+
+}
+
+</style>
+
 </head>
 
 <body>
 
-  <div class="layout">
+<!-- GLOBAL LOADER -->
 
-    <!-- SIDEBAR -->
+<div
+  id="pageLoader"
+  class="loader-screen"
+>
 
-    <aside class="sidebar">
+  <div class="loader-box">
 
-      <div class="brand">
-        <h2>Let's Study Pro</h2>
-        <p>Administration</p>
-      </div>
+    <div class="loader"></div>
 
-      <nav class="nav">
+    <strong>
+      Checking Super Admin access...
+    </strong>
 
-        <a href="admin.html">
-          📊 Dashboard
-        </a>
+    <div
+      style="
+        margin-top:5px;
+        color:#64748b;
+        font-size:11px;
+      "
+    >
+      LetsStudy Pro
+    </div>
 
-        <a href="admin-analytics.html">
-          📈 Analytics
-        </a>
+  </div>
 
-        <a href="admin-students.html">
-          👨‍🎓 Students
-        </a>
+</div>
 
-        <a href="admin-instructors.html">
-          👨‍🏫 Instructors
-        </a>
 
-        <a href="admin-courses.html">
-          📚 Courses
-        </a>
+<div class="app" id="app" style="display:none">
 
-        <a href="admin-lessons.html">
-          📝 Lessons
-        </a>
 
-        <a href="admin-quiz.html">
-          ❓ Quiz
-        </a>
+<!-- =====================================================
+     SIDEBAR
+===================================================== -->
 
-        <a href="admin-ai.html" class="active">
-          🤖 AI
-        </a>
+<aside class="sidebar">
 
-        <a href="admin-career.html">
-          🚀 Career
-        </a>
+  <div class="logo">
 
-        <a href="admin-community.html">
-          👥 Community
-        </a>
+    <div class="logo-icon">
+      L
+    </div>
 
-        <a href="admin-adult-log.html">
-          🔞 Adult Logs
-        </a>
-
-        <a href="admin-certificates.html">
-          🎓 Certificates
-        </a>
-
-        <a href="admin-payments.html">
-          💳 Payments
-        </a>
-
-        <a href="admin-reports.html">
-          📋 Reports
-        </a>
-
-        <a href="admin-security.html">
-          🔐 Security
-        </a>
-
-        <a href="admin-settings.html">
-          ⚙️ Settings
-        </a>
-
-      </nav>
-
-    </aside>
-
-
-    <!-- MAIN -->
-
-    <main class="main">
-
-      <header class="topbar">
-
-        <h1>
-          AI Management
-        </h1>
-
-        <div class="admin-info">
-
-          <div
-            class="admin-avatar"
-            id="adminAvatar"
-          >
-            A
-          </div>
-
-          <div
-            class="admin-email"
-            id="adminEmail"
-          >
-            Loading...
-          </div>
-
-        </div>
-
-      </header>
-
-
-      <section class="content">
-
-        <div class="hero">
-
-          <h2>
-            AI Control Center
-          </h2>
-
-          <p>
-            Manage AI resources, AI tools,
-            generated content and AI activity
-            connected to Let's Study Pro.
-          </p>
-
-        </div>
-
-
-        <!-- STATS -->
-
-        <div class="stats">
-
-          <div class="stat">
-
-            <div class="stat-label">
-              Total AI Records
-            </div>
-
-            <div
-              class="stat-value"
-              id="totalAI"
-            >
-              0
-            </div>
-
-          </div>
-
-
-          <div class="stat">
-
-            <div class="stat-label">
-              Active
-            </div>
-
-            <div
-              class="stat-value"
-              id="activeAI"
-            >
-              0
-            </div>
-
-          </div>
-
-
-          <div class="stat">
-
-            <div class="stat-label">
-              Inactive
-            </div>
-
-            <div
-              class="stat-value"
-              id="inactiveAI"
-            >
-              0
-            </div>
-
-          </div>
-
-
-          <div class="stat">
-
-            <div class="stat-label">
-              Today's Activity
-            </div>
-
-            <div
-              class="stat-value"
-              id="todayAI"
-            >
-              0
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <!-- TOOLBAR -->
-
-        <div class="toolbar">
-
-          <div class="filters">
-
-            <input
-              id="searchInput"
-              type="search"
-              placeholder="Search AI records..."
-            >
-
-
-            <select id="statusFilter">
-
-              <option value="all">
-                All Status
-              </option>
-
-              <option value="active">
-                Active
-              </option>
-
-              <option value="inactive">
-                Inactive
-              </option>
-
-            </select>
-
-
-            <select id="typeFilter">
-
-              <option value="all">
-                All Types
-              </option>
-
-            </select>
-
-          </div>
-
-
-          <button
-            class="refresh"
-            id="refreshBtn"
-            type="button"
-          >
-            ↻ Refresh
-          </button>
-
-        </div>
-
-
-        <!-- TABLE -->
-
-        <div class="table-card">
-
-          <div
-            class="state"
-            id="loadingState"
-          >
-
-            <div class="spinner"></div>
-
-            Loading AI data...
-
-          </div>
-
-
-          <div
-            class="state"
-            id="errorState"
-            style="display:none;"
-          >
-            Unable to load AI data.
-          </div>
-
-
-          <div
-            class="state"
-            id="emptyState"
-            style="display:none;"
-          >
-            No AI records found.
-          </div>
-
-
-          <div
-            class="table-scroll"
-            id="tableContainer"
-            style="display:none;"
-          >
-
-            <table>
-
-              <thead>
-
-                <tr>
-
-                  <th>
-                    Title
-                  </th>
-
-                  <th>
-                    User
-                  </th>
-
-                  <th>
-                    Type
-                  </th>
-
-                  <th>
-                    Status
-                  </th>
-
-                  <th>
-                    Created
-                  </th>
-
-                  <th>
-                    Actions
-                  </th>
-
-                </tr>
-
-              </thead>
-
-              <tbody
-                id="aiBody"
-              ></tbody>
-
-            </table>
-
-          </div>
-
-
-          <div
-            class="pagination"
-            id="pagination"
-          >
-
-            <button
-              id="previousBtn"
-              disabled
-            >
-              ← Previous
-            </button>
-
-            <span
-              class="page-info"
-              id="pageInfo"
-            >
-              Page 1 of 1
-            </span>
-
-            <button
-              id="nextBtn"
-              disabled
-            >
-              Next →
-            </button>
-
-          </div>
-
-        </div>
-
-      </section>
-
-    </main>
+    <div>
+      <strong>LetsStudy Pro</strong>
+      <span>Super Admin</span>
+    </div>
 
   </div>
 
 
-  <!-- DETAILS MODAL -->
+  <div class="nav-title">
+    Main
+  </div>
 
-  <div
-    class="modal"
-    id="detailsModal"
+  <nav class="nav">
+
+    <a href="super-admin.html">
+      <span class="nav-icon">🏠</span>
+      Super Admin
+    </a>
+
+    <a href="admin.html">
+      <span class="nav-icon">📊</span>
+      Admin Dashboard
+    </a>
+
+    <a href="admin-users.html">
+      <span class="nav-icon">👥</span>
+      Users
+    </a>
+
+    <a href="admin-courses.html">
+      <span class="nav-icon">📚</span>
+      Courses
+    </a>
+
+  </nav>
+
+
+  <div class="nav-title">
+    AI Management
+  </div>
+
+  <nav class="nav">
+
+    <a
+      href="admin-ai.html"
+      class="active"
+    >
+      <span class="nav-icon">🤖</span>
+      AI Control
+    </a>
+
+    <a href="ai-settings.html">
+      <span class="nav-icon">⚙️</span>
+      AI User Settings
+    </a>
+
+    <a href="ai-usage.html">
+      <span class="nav-icon">📈</span>
+      AI Usage
+    </a>
+
+    <a href="ai-history.html">
+      <span class="nav-icon">🕘</span>
+      AI History
+    </a>
+
+  </nav>
+
+
+  <div class="nav-title">
+    System
+  </div>
+
+  <nav class="nav">
+
+    <a href="admin-analytics.html">
+      <span class="nav-icon">📊</span>
+      Analytics
+    </a>
+
+    <a href="admin-security.html">
+      <span class="nav-icon">🔐</span>
+      Security
+    </a>
+
+    <a href="admin-settings.html">
+      <span class="nav-icon">⚙️</span>
+      Settings
+    </a>
+
+    <a href="admin-system-health.html">
+      <span class="nav-icon">❤️</span>
+      System Health
+    </a>
+
+  </nav>
+
+
+  <button
+    class="logout"
+    data-logout
   >
+    🚪 Logout
+  </button>
 
-    <div class="modal-box">
+</aside>
 
-      <button
-        class="close"
-        id="closeModal"
-        type="button"
-      >
-        ×
-      </button>
 
-      <h2>
-        AI Record Details
-      </h2>
+<!-- =====================================================
+     MAIN
+===================================================== -->
+
+<main class="main">
+
+
+<header class="topbar">
+
+  <div>
+
+    <div class="page-title">
+      AI Administration
+    </div>
+
+    <div class="page-subtitle">
+      Manage LetsStudy Pro AI infrastructure
+    </div>
+
+  </div>
+
+
+  <div class="admin-user">
+
+    <div class="avatar" id="avatar">
+      A
+    </div>
+
+    <div>
 
       <div
-        class="details"
-        id="detailsContent"
-      ></div>
+        class="admin-email"
+        id="adminEmail"
+      >
+        Loading...
+      </div>
+
+      <div class="admin-role">
+        SUPER ADMIN
+      </div>
+
+    </div>
+
+  </div>
+
+</header>
+
+
+<section class="content">
+
+
+<!-- HERO -->
+
+<div class="hero">
+
+  <div class="hero-top">
+
+    <div>
+
+      <h1>
+        🤖 LetsStudy AI Control Center
+      </h1>
+
+      <p>
+        Manage AI availability, usage limits,
+        models, maintenance mode and public
+        AI settings from one secure Super Admin
+        dashboard.
+      </p>
+
+    </div>
+
+
+    <div class="ai-status">
+
+      <span
+        id="statusDot"
+        class="status-dot"
+      ></span>
+
+      <span id="statusText">
+        Checking...
+      </span>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- STATS -->
+
+<div class="stats">
+
+  <div class="stat">
+
+    <div class="stat-label">
+      AI Status
+    </div>
+
+    <div
+      class="stat-value"
+      id="statStatus"
+    >
+      —
+    </div>
+
+    <div class="stat-note">
+      Global AI availability
+    </div>
+
+  </div>
+
+
+  <div class="stat">
+
+    <div class="stat-label">
+      Free Limit
+    </div>
+
+    <div
+      class="stat-value"
+      id="statFree"
+    >
+      —
+    </div>
+
+    <div class="stat-note">
+      Requests per day
+    </div>
+
+  </div>
+
+
+  <div class="stat">
+
+    <div class="stat-label">
+      Premium Limit
+    </div>
+
+    <div
+      class="stat-value"
+      id="statPremium"
+    >
+      —
+    </div>
+
+    <div class="stat-note">
+      Requests per day
+    </div>
+
+  </div>
+
+
+  <div class="stat">
+
+    <div class="stat-label">
+      Model
+    </div>
+
+    <div
+      class="stat-value"
+      id="statModel"
+      style="font-size:18px"
+    >
+      —
+    </div>
+
+    <div class="stat-note">
+      Active AI model
+    </div>
+
+  </div>
+
+</div>
+
+
+<div class="grid">
+
+
+<!-- =====================================================
+     SETTINGS
+===================================================== -->
+
+<div>
+
+
+<div class="panel">
+
+  <div class="panel-header">
+
+    <div>
+
+      <h2>
+        AI Configuration
+      </h2>
+
+      <p>
+        Global configuration for LetsStudy AI.
+      </p>
 
     </div>
 
   </div>
 
 
-  <!-- TOAST -->
+  <div class="panel-body">
 
-  <div
-    class="toast"
-    id="toast"
-  ></div>
+    <div class="form-grid">
 
 
-  <!-- FIREBASE -->
+      <div class="form-group">
 
-  <script type="module">
+        <label>
+          AI Model
+        </label>
 
-    import {
-      initializeApp
-    } from
-    "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        <select id="model">
 
+          <option value="gemini-2.5-flash">
+            Gemini 2.5 Flash
+          </option>
 
-    import {
-      getAuth,
-      onAuthStateChanged
-    } from
-    "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+          <option value="gemini-2.5-pro">
+            Gemini 2.5 Pro
+          </option>
 
+          <option value="gemini-2.0-flash">
+            Gemini 2.0 Flash
+          </option>
 
-    import {
-      getDatabase,
-      ref,
-      onValue,
-      remove
-    } from
-    "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+          <option value="custom">
+            Custom / Server Model
+          </option>
 
+        </select>
 
-    /* =========================
-       FIREBASE CONFIG
-    ========================== */
+        <div class="help">
+          The frontend should never contain
+          your private AI API key.
+        </div>
 
-    const firebaseConfig = {
-
-      apiKey:
-        "AIzaSyBcOYDfAVKXbkljsyRgI_0rj0odBn678tCc",
-
-      authDomain:
-        "let-s-study-pro-course.firebaseapp.com",
-
-      databaseURL:
-        "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
-
-      projectId:
-        "let-s-study-pro-course",
-
-      storageBucket:
-        "let-s-study-pro-course.firebasestorage.app",
-
-      messagingSenderId:
-        "474928293390",
-
-      appId:
-        "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
-
-      measurementId:
-        "G-85B7V5H5J0"
-    };
+      </div>
 
 
-    /* =========================
-       INITIALIZE FIREBASE
-    ========================== */
+      <div class="form-group">
 
-    const app =
-      initializeApp(
-        firebaseConfig
-      );
+        <label>
+          Provider
+        </label>
 
-    const auth =
-      getAuth(app);
+        <select id="provider">
 
-    const db =
-      getDatabase(app);
+          <option value="gemini">
+            Google Gemini
+          </option>
 
+          <option value="openai">
+            OpenAI
+          </option>
 
-    /* =========================
-       STATE
-    ========================== */
+          <option value="custom">
+            Custom API
+          </option>
 
-    let currentUser = null;
+        </select>
 
-    let aiRecords = [];
-
-    let filteredRecords = [];
-
-    let currentPage = 1;
-
-    const pageSize = 20;
+      </div>
 
 
-    /* =========================
-       DOM
-    ========================== */
+      <div class="form-group">
 
-    const loadingState =
-      document.getElementById(
-        "loadingState"
-      );
+        <label>
+          Free User Daily Limit
+        </label>
 
-    const errorState =
-      document.getElementById(
-        "errorState"
-      );
+        <input
+          id="freeLimit"
+          type="number"
+          min="0"
+          max="10000"
+          value="20"
+        >
 
-    const emptyState =
-      document.getElementById(
-        "emptyState"
-      );
-
-    const tableContainer =
-      document.getElementById(
-        "tableContainer"
-      );
-
-    const aiBody =
-      document.getElementById(
-        "aiBody"
-      );
-
-    const pagination =
-      document.getElementById(
-        "pagination"
-      );
+      </div>
 
 
-    /* =========================
-       AUTHENTICATION
-    ========================== */
+      <div class="form-group">
 
-    onAuthStateChanged(
-      auth,
-      user => {
+        <label>
+          Premium User Daily Limit
+        </label>
 
-        if (!user) {
+        <input
+          id="premiumLimit"
+          type="number"
+          min="0"
+          max="100000"
+          value="500"
+        >
 
-          window.location.href =
-            "login.html";
-
-          return;
-        }
-
-
-        currentUser =
-          user;
+      </div>
 
 
-        document.getElementById(
-          "adminEmail"
-        ).textContent =
-          user.email ||
-          "Administrator";
+      <div class="form-group">
+
+        <label>
+          Maximum Tokens
+        </label>
+
+        <input
+          id="maxTokens"
+          type="number"
+          min="100"
+          max="100000"
+          value="4000"
+        >
+
+      </div>
 
 
-        document.getElementById(
-          "adminAvatar"
-        ).textContent =
-          (
-            user.email ||
-            "A"
+      <div class="form-group">
+
+        <label>
+          Temperature
+        </label>
+
+        <input
+          id="temperature"
+          type="number"
+          min="0"
+          max="2"
+          step="0.1"
+          value="0.7"
+        >
+
+      </div>
+
+
+      <div class="form-group full">
+
+        <label>
+          System Instruction
+        </label>
+
+        <textarea
+          id="systemInstruction"
+          placeholder="Define the global behavior of LetsStudy AI..."
+        ></textarea>
+
+        <div class="help">
+          This instruction is stored as AI configuration.
+          Keep private secrets outside Firestore.
+        </div>
+
+      </div>
+
+
+    </div>
+
+
+    <div style="margin-top:20px">
+
+      <div class="switch-row">
+
+        <div>
+
+          <div class="switch-title">
+            Enable LetsStudy AI
+          </div>
+
+          <div class="switch-desc">
+            Turn the AI service on or off globally.
+          </div>
+
+        </div>
+
+
+        <label class="switch">
+
+          <input
+            id="enabled"
+            type="checkbox"
+            checked
+          >
+
+          <span class="slider"></span>
+
+        </label>
+
+      </div>
+
+
+      <div class="switch-row">
+
+        <div>
+
+          <div class="switch-title">
+            Premium AI Priority
+          </div>
+
+          <div class="switch-desc">
+            Give Premium users higher AI priority.
+          </div>
+
+        </div>
+
+
+        <label class="switch">
+
+          <input
+            id="premiumPriority"
+            type="checkbox"
+            checked
+          >
+
+          <span class="slider"></span>
+
+        </label>
+
+      </div>
+
+
+      <div class="switch-row">
+
+        <div>
+
+          <div class="switch-title">
+            Maintenance Mode
+          </div>
+
+          <div class="switch-desc">
+            Temporarily disable AI requests for users.
+          </div>
+
+        </div>
+
+
+        <label class="switch">
+
+          <input
+            id="maintenance"
+            type="checkbox"
+          >
+
+          <span class="slider"></span>
+
+        </label>
+
+      </div>
+
+    </div>
+
+
+    <div class="actions">
+
+      <button
+        id="resetBtn"
+        class="btn btn-secondary"
+      >
+        Reset
+      </button>
+
+      <button
+        id="saveBtn"
+        class="btn btn-primary"
+      >
+        Save AI Settings
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ANNOUNCEMENT -->
+
+<div class="panel">
+
+  <div class="panel-header">
+
+    <div>
+
+      <h2>
+        AI Maintenance Announcement
+      </h2>
+
+      <p>
+        Message shown to users when AI is unavailable.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <div class="panel-body">
+
+    <div class="form-group">
+
+      <label>
+        Announcement
+      </label>
+
+      <textarea
+        id="announcement"
+        placeholder="Example: LetsStudy AI is temporarily under maintenance. Please try again later."
+      ></textarea>
+
+    </div>
+
+
+    <div class="actions">
+
+      <button
+        id="saveAnnouncement"
+        class="btn btn-primary"
+      >
+        Save Announcement
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- SECURITY NOTICE -->
+
+<div class="panel">
+
+  <div class="panel-header">
+
+    <div>
+
+      <h2>
+        🔐 AI Security
+      </h2>
+
+      <p>
+        Important production security rules.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <div class="panel-body">
+
+    <div class="info-list">
+
+      <div class="info-item">
+
+        <strong>
+          API Keys
+        </strong>
+
+        <span>
+          Never store Gemini, OpenAI, Pesapal or
+          other private API keys in this HTML page,
+          Firebase Realtime Database or client-side JavaScript.
+        </span>
+
+      </div>
+
+
+      <div class="info-item">
+
+  <strong>
+    AI System Status
+  </strong>
+
+  <span id="aiSystemStatus">
+    Checking...
+  </span>
+
+</div>
+
+
+<div class="info-item">
+
+  <strong>
+    AI Requests Today
+  </strong>
+
+  <span id="aiRequestsToday">
+    0
+  </span>
+
+</div>
+
+
+<div class="info-item">
+
+  <strong>
+    Active AI Users
+  </strong>
+
+  <span id="activeAIUsers">
+    0
+  </span>
+
+</div>
+
+
+<div class="info-item">
+
+  <strong>
+    AI Usage Limit
+  </strong>
+
+  <span id="aiUsageLimit">
+    0
+  </span>
+
+</div>
+
+
+<div class="info-item">
+
+  <strong>
+    Last Updated
+  </strong>
+
+  <span id="aiLastUpdated">
+    --
+  </span>
+
+</div>
+
+</div>
+
+
+<!-- =====================================================
+     AI CONTROL PANEL
+===================================================== -->
+
+<section class="admin-section">
+
+  <div class="section-header">
+
+    <div>
+
+      <h2>
+        🤖 AI Control Center
+      </h2>
+
+      <p>
+        Manage LetsStudy Pro AI services, usage,
+        limits and access.
+      </p>
+
+    </div>
+
+    <span
+      class="status-badge"
+      id="globalAIStatus"
+    >
+      Loading...
+    </span>
+
+  </div>
+
+
+  <!-- AI TOGGLE -->
+
+  <div class="control-card">
+
+    <div>
+
+      <h3>
+        Global AI Access
+      </h3>
+
+      <p>
+        Enable or disable AI services across
+        LetsStudy Pro.
+      </p>
+
+    </div>
+
+    <label class="switch">
+
+      <input
+        type="checkbox"
+        id="aiEnabled"
+      >
+
+      <span class="slider"></span>
+
+    </label>
+
+  </div>
+
+
+  <!-- MAINTENANCE -->
+
+  <div class="control-card">
+
+    <div>
+
+      <h3>
+        AI Maintenance Mode
+      </h3>
+
+      <p>
+        Temporarily disable AI requests while
+        performing system maintenance.
+      </p>
+
+    </div>
+
+    <label class="switch">
+
+      <input
+        type="checkbox"
+        id="aiMaintenance"
+      >
+
+      <span class="slider"></span>
+
+    </label>
+
+  </div>
+
+
+  <!-- FREE USERS -->
+
+  <div class="control-card">
+
+    <div>
+
+      <h3>
+        Free User AI Access
+      </h3>
+
+      <p>
+        Allow free users to access AI features.
+      </p>
+
+    </div>
+
+    <label class="switch">
+
+      <input
+        type="checkbox"
+        id="freeAIEnabled"
+      >
+
+      <span class="slider"></span>
+
+    </label>
+
+  </div>
+
+
+  <!-- PREMIUM USERS -->
+
+  <div class="control-card">
+
+    <div>
+
+      <h3>
+        Premium AI Access
+      </h3>
+
+      <p>
+        Allow premium members to use advanced
+        AI features.
+      </p>
+
+    </div>
+
+    <label class="switch">
+
+      <input
+        type="checkbox"
+        id="premiumAIEnabled"
+      >
+
+      <span class="slider"></span>
+
+    </label>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     AI LIMITS
+===================================================== -->
+
+<section class="admin-section">
+
+  <div class="section-header">
+
+    <div>
+
+      <h2>
+        ⚙️ AI Usage Limits
+      </h2>
+
+      <p>
+        Configure daily AI usage limits.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <div class="form-grid">
+
+    <div class="form-group">
+
+      <label>
+        Free User Daily Requests
+      </label>
+
+      <input
+        type="number"
+        id="freeDailyLimit"
+        min="0"
+        value="10"
+      >
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label>
+        Premium Daily Requests
+      </label>
+
+      <input
+        type="number"
+        id="premiumDailyLimit"
+        min="0"
+        value="100"
+      >
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label>
+        Maximum Tokens / Request
+      </label>
+
+      <input
+        type="number"
+        id="maxTokens"
+        min="100"
+        value="2000"
+      >
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label>
+        Cooldown Seconds
+      </label>
+
+      <input
+        type="number"
+        id="cooldownSeconds"
+        min="0"
+        value="5"
+      >
+
+    </div>
+
+  </div>
+
+
+  <button
+    class="primary-btn"
+    id="saveAILimits"
+  >
+
+    💾 Save AI Limits
+
+  </button>
+
+</section>
+
+
+<!-- =====================================================
+     AI PROVIDER
+===================================================== -->
+
+<section class="admin-section">
+
+  <div class="section-header">
+
+    <div>
+
+      <h2>
+        🔌 AI Provider
+      </h2>
+
+      <p>
+        Configure the active AI provider.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <div class="form-grid">
+
+    <div class="form-group">
+
+      <label>
+        Provider
+      </label>
+
+      <select id="aiProvider">
+
+        <option value="openai">
+          OpenAI
+        </option>
+
+        <option value="gemini">
+          Google Gemini
+        </option>
+
+        <option value="anthropic">
+          Anthropic
+        </option>
+
+        <option value="custom">
+          Custom API
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label>
+        Model
+      </label>
+
+      <input
+        type="text"
+        id="aiModel"
+        placeholder="Enter AI model"
+      >
+
+    </div>
+
+  </div>
+
+
+  <button
+    class="primary-btn"
+    id="saveAIProvider"
+  >
+
+    🔌 Save Provider
+
+  </button>
+
+</section>
+
+
+<!-- =====================================================
+     AI FEATURES
+===================================================== -->
+
+<section class="admin-section">
+
+  <div class="section-header">
+
+    <div>
+
+      <h2>
+        🧠 AI Features
+      </h2>
+
+      <p>
+        Control individual AI features.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <div class="feature-grid">
+
+
+    <div class="feature-card">
+
+      <div class="feature-icon">
+        💬
+      </div>
+
+      <h3>
+        AI Chat
+      </h3>
+
+      <p>
+        General AI conversation.
+      </p>
+
+      <label class="switch">
+
+        <input
+          type="checkbox"
+          id="featureChat"
+          checked
+        >
+
+        <span class="slider"></span>
+
+      </label>
+
+    </div>
+
+
+    <div class="feature-card">
+
+      <div class="feature-icon">
+        📚
+      </div>
+
+      <h3>
+        AI Tutor
+      </h3>
+
+      <p>
+        Educational tutoring assistance.
+      </p>
+
+      <label class="switch">
+
+        <input
+          type="checkbox"
+          id="featureTutor"
+          checked
+        >
+
+        <span class="slider"></span>
+
+      </label>
+
+    </div>
+
+
+    <div class="feature-card">
+
+      <div class="feature-icon">
+        📝
+      </div>
+
+      <h3>
+        AI Quiz Generator
+      </h3>
+
+      <p>
+        Generate quizzes automatically.
+      </p>
+
+      <label class="switch">
+
+        <input
+          type="checkbox"
+          id="featureQuiz"
+          checked
+        >
+
+        <span class="slider"></span>
+
+      </label>
+
+    </div>
+
+
+    <div class="feature-card">
+
+      <div class="feature-icon">
+        📄
+      </div>
+
+      <h3>
+        AI Notes
+      </h3>
+
+      <p>
+        Generate summaries and study notes.
+      </p>
+
+      <label class="switch">
+
+        <input
+          type="checkbox"
+          id="featureNotes"
+          checked
+        >
+
+        <span class="slider"></span>
+
+      </label>
+
+    </div>
+
+
+    <div class="feature-card">
+
+      <div class="feature-icon">
+        🎯
+      </div>
+
+      <h3>
+        AI Career Advisor
+      </h3>
+
+      <p>
+        Career recommendations and guidance.
+      </p>
+
+      <label class="switch">
+
+        <input
+          type="checkbox"
+          id="featureCareer"
+          checked
+        >
+
+        <span class="slider"></span>
+
+      </label>
+
+    </div>
+
+
+    <div class="feature-card">
+
+      <div class="feature-icon">
+        ✨
+      </div>
+
+      <h3>
+        AI Content Generator
+      </h3>
+
+      <p>
+        Generate educational content.
+      </p>
+
+      <label class="switch">
+
+        <input
+          type="checkbox"
+          id="featureContent"
+          checked
+        >
+
+        <span class="slider"></span>
+
+      </label>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     AI ANNOUNCEMENT
+===================================================== -->
+
+<section class="admin-section">
+
+  <div class="section-header">
+
+    <div>
+
+      <h2>
+        📢 AI Announcement
+      </h2>
+
+      <p>
+        Send an announcement to AI users.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <div class="form-group">
+
+    <label>
+      Announcement
+    </label>
+
+    <textarea
+      id="aiAnnouncement"
+      rows="5"
+      placeholder="Write AI system announcement..."
+    ></textarea>
+
+  </div>
+
+
+  <button
+    class="primary-btn"
+    id="sendAIAnnouncement"
+  >
+
+    📢 Publish Announcement
+
+  </button>
+
+</section>
+
+
+<!-- =====================================================
+     AI ACTIVITY LOG
+===================================================== -->
+
+<section class="admin-section">
+
+  <div class="section-header">
+
+    <div>
+
+      <h2>
+        📊 Recent AI Activity
+      </h2>
+
+      <p>
+        Monitor recent AI system activity.
+      </p>
+
+    </div>
+
+    <button
+      class="secondary-btn"
+      id="refreshAILogs"
+    >
+
+      🔄 Refresh
+
+    </button>
+
+  </div>
+
+
+  <div class="table-wrapper">
+
+    <table>
+
+      <thead>
+
+        <tr>
+
+          <th>
+            User
+          </th>
+
+          <th>
+            Feature
+          </th>
+
+          <th>
+            Requests
+          </th>
+
+          <th>
+            Status
+          </th>
+
+          <th>
+            Date
+          </th>
+
+        </tr>
+
+      </thead>
+
+      <tbody id="aiActivityTable">
+
+        <tr>
+
+          <td colspan="5">
+
+            Loading AI activity...
+
+          </td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     SAVE ALL
+===================================================== -->
+
+<section class="admin-section">
+
+  <button
+    class="primary-btn large"
+    id="saveAllAISettings"
+  >
+
+    💾 Save All AI Settings
+
+  </button>
+
+</section>
+
+
+<!-- =====================================================
+     FIREBASE
+===================================================== -->
+
+<script type="module">
+
+import {
+  initializeApp
+} from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged
+} from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+  getDatabase,
+  ref,
+  get,
+  set,
+  update,
+  push,
+  serverTimestamp
+} from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+
+
+const firebaseConfig = {
+
+  apiKey:
+    "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+  authDomain:
+    "let-s-study-pro-course.firebaseapp.com",
+
+  databaseURL:
+    "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+  projectId:
+    "let-s-study-pro-course",
+
+  storageBucket:
+    "let-s-study-pro-course.firebasestorage.app",
+
+  messagingSenderId:
+    "474928293390",
+
+  appId:
+    "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+  measurementId:
+    "G-85B7V5H5J0"
+
+};
+
+
+const app =
+  initializeApp(firebaseConfig);
+
+const auth =
+  getAuth(app);
+
+const db =
+  getDatabase(app);
+
+
+/* =====================================================
+   ADMIN CHECK
+===================================================== */
+
+onAuthStateChanged(
+  auth,
+  async user => {
+
+    if(!user){
+
+      location.href =
+        "login.html?redirect=admin-ai.html";
+
+      return;
+
+    }
+
+
+    try{
+
+      const snapshot =
+        await get(
+          ref(
+            db,
+            "users/" + user.uid
           )
-          .charAt(0)
-          .toUpperCase();
-
-
-        loadAI();
-
-      }
-    );
-
-
-    /* =========================
-       LOAD AI DATA
-    ========================== */
-
-    /*
-       * Main Firebase location.
-       *
-       * If your existing project stores
-       * AI records under another node,
-       * change only "ai" below.
-       */
-
-      const aiRef = ref(db, "ai");
-
-      onValue(
-        aiRef,
-        (snapshot) => {
-
-          aiRecords = [];
-
-          if (snapshot.exists()) {
-
-            const data = snapshot.val();
-
-            /*
-             * Firebase can return either:
-             *
-             * {
-             *   id1: {...},
-             *   id2: {...}
-             * }
-             *
-             * or a single AI object.
-             */
-
-            if (
-              typeof data === "object" &&
-              !Array.isArray(data)
-            ) {
-
-              Object.entries(data).forEach(
-                ([id, value]) => {
-
-                  if (
-                    value &&
-                    typeof value === "object"
-                  ) {
-
-                    aiRecords.push({
-                      id,
-                      ...value
-                    });
-
-                  }
-
-                }
-              );
-
-            }
-
-          }
-
-          /*
-           * Newest records first.
-           */
-
-          aiRecords.sort(
-            (a, b) =>
-              getTimestamp(b) -
-              getTimestamp(a)
-          );
-
-          updateStats();
-
-          updateTypeFilter();
-
-          applyFilters();
-
-        },
-
-        (error) => {
-
-          console.error(
-            "Firebase AI error:",
-            error
-          );
-
-          showError(
-            error.message ||
-            "Failed to load AI data from Firebase."
-          );
-
-        }
-      );
-
-    }
-
-
-    /* =========================
-       APPLY FILTERS
-    ========================== */
-
-    function applyFilters() {
-
-      const searchInput =
-        document.getElementById(
-          "searchInput"
-        );
-
-      const statusFilter =
-        document.getElementById(
-          "statusFilter"
-        );
-
-      const typeFilter =
-        document.getElementById(
-          "typeFilter"
         );
 
 
-      const search =
-        searchInput
-          .value
-          .trim()
-          .toLowerCase();
+      if(!snapshot.exists()){
 
-
-      const selectedStatus =
-        statusFilter.value;
-
-
-      const selectedType =
-        typeFilter.value;
-
-
-      filteredRecords =
-        aiRecords.filter(
-          (record) => {
-
-            /*
-             * Search through all useful
-             * Firebase fields.
-             */
-
-            const searchable = [
-
-              record.id,
-
-              record.uid,
-              record.userId,
-
-              record.email,
-              record.userEmail,
-
-              record.name,
-
-              record.title,
-              record.description,
-
-              record.type,
-              record.category,
-              record.aiType,
-
-              record.prompt,
-              record.question,
-
-              record.response,
-              record.answer,
-
-              record.model,
-
-              record.status
-
-            ]
-              .filter(
-                value =>
-                  value !== undefined &&
-                  value !== null
-              )
-              .join(" ")
-              .toLowerCase();
-
-
-            const matchesSearch =
-              !search ||
-              searchable.includes(
-                search
-              );
-
-
-            const status =
-              getStatus(record);
-
-
-            const matchesStatus =
-              selectedStatus === "all" ||
-              status === selectedStatus;
-
-
-            const type =
-              getType(record);
-
-
-            const matchesType =
-              selectedType === "all" ||
-              type === selectedType;
-
-
-            return (
-              matchesSearch &&
-              matchesStatus &&
-              matchesType
-            );
-
-          }
-        );
-
-
-      currentPage = 1;
-
-      renderTable();
-
-    }
-
-
-    /* =========================
-       RENDER TABLE
-    ========================== */
-
-    function renderTable() {
-
-      if (
-        filteredRecords.length === 0
-      ) {
-
-        tableContainer.style.display =
-          "none";
-
-        pagination.style.display =
-          "none";
-
-        emptyState.style.display =
-          "block";
+        location.href =
+          "access-denied.html";
 
         return;
 
       }
 
 
-      tableContainer.style.display =
-        "block";
+      const data =
+        snapshot.val();
 
-      emptyState.style.display =
-        "none";
 
+      const allowedRoles = [
 
-      const totalPages =
-        Math.ceil(
-          filteredRecords.length /
-          pageSize
-        );
+        "superadmin",
+        "super_admin",
+        "administrator"
 
+      ];
 
-      if (
-        currentPage > totalPages
-      ) {
 
-        currentPage =
-          totalPages;
-
-      }
-
-
-      const start =
-        (currentPage - 1) *
-        pageSize;
-
-
-      const end =
-        start +
-        pageSize;
-
-
-      const pageRecords =
-        filteredRecords.slice(
-          start,
-          end
-        );
-
-
-      aiBody.innerHTML =
-        pageRecords
-          .map(
-            record =>
-              createRow(record)
-          )
-          .join("");
-
-
-      pagination.style.display =
-        "flex";
-
-
-      document.getElementById(
-        "pageInfo"
-      ).textContent =
-        `Page ${currentPage} of ${totalPages}`;
-
-
-      document.getElementById(
-        "previousBtn"
-      ).disabled =
-        currentPage <= 1;
-
-
-      document.getElementById(
-        "nextBtn"
-      ).disabled =
-        currentPage >= totalPages;
-
-    }
-
-
-    /* =========================
-       CREATE ROW
-    ========================== */
-
-    function createRow(record) {
-
-      const title =
-        record.title ||
-        record.name ||
-        record.prompt ||
-        record.question ||
-        "Untitled AI record";
-
-
-      const email =
-        record.email ||
-        record.userEmail ||
-        "Unknown user";
-
-
-      const uid =
-        record.uid ||
-        record.userId ||
-        "—";
-
-
-      const type =
-        getType(record);
-
-
-      const status =
-        getStatus(record);
-
-
-      return `
-
-        <tr>
-
-          <td>
-
-            <div class="title-cell">
-
-              <strong>
-                ${escapeHtml(title)}
-              </strong>
-
-              <small>
-                ID:
-                ${escapeHtml(record.id)}
-              </small>
-
-            </div>
-
-          </td>
-
-
-          <td>
-
-            <div class="user-cell">
-
-              <strong>
-                ${escapeHtml(email)}
-              </strong>
-
-              <small>
-                ${escapeHtml(uid)}
-              </small>
-
-            </div>
-
-          </td>
-
-
-          <td>
-
-            <span class="badge type">
-
-              ${escapeHtml(type)}
-
-            </span>
-
-          </td>
-
-
-          <td>
-
-            <span
-              class="badge ${
-                status === "active"
-                  ? "active"
-                  : "inactive"
-              }"
-            >
-
-              ${escapeHtml(status)}
-
-            </span>
-
-          </td>
-
-
-          <td>
-
-            ${escapeHtml(
-              formatDate(
-                getTimestamp(record)
-              )
-            )}
-
-          </td>
-
-
-          <td>
-
-            <div class="actions">
-
-              <button
-                type="button"
-                class="action view"
-                onclick="viewAI('${escapeJs(record.id)}')"
-              >
-                View
-              </button>
-
-
-              <button
-                type="button"
-                class="action delete"
-                onclick="deleteAI('${escapeJs(record.id)}')"
-              >
-                Delete
-              </button>
-
-            </div>
-
-          </td>
-
-        </tr>
-
-      `;
-
-    }
-
-
-    /* =========================
-       UPDATE STATISTICS
-    ========================== */
-
-    function updateStats() {
-
-      const total =
-        aiRecords.length;
-
-
-      const active =
-        aiRecords.filter(
-          record =>
-            getStatus(record) ===
-            "active"
-        ).length;
-
-
-      const inactive =
-        aiRecords.filter(
-          record =>
-            getStatus(record) ===
-            "inactive"
-        ).length;
-
-
-      const now =
-        new Date();
-
-
-      const startOfDay =
-        new Date(
-          now.getFullYear(),
-          now.getMonth(),
-          now.getDate()
-        ).getTime();
-
-
-      const endOfDay =
-        startOfDay +
-        24 * 60 * 60 * 1000;
-
-
-      const today =
-        aiRecords.filter(
-          record => {
-
-            const timestamp =
-              getTimestamp(record);
-
-
-            return (
-              timestamp >= startOfDay &&
-              timestamp < endOfDay
-            );
-
-          }
-        ).length;
-
-
-      document.getElementById(
-        "totalAI"
-      ).textContent =
-        total;
-
-
-      document.getElementById(
-        "activeAI"
-      ).textContent =
-        active;
-
-
-      document.getElementById(
-        "inactiveAI"
-      ).textContent =
-        inactive;
-
-
-      document.getElementById(
-        "todayAI"
-      ).textContent =
-        today;
-
-    }
-
-
-    /* =========================
-       UPDATE TYPE FILTER
-    ========================== */
-
-    function updateTypeFilter() {
-
-      const select =
-        document.getElementById(
-          "typeFilter"
-        );
-
-
-      const currentValue =
-        select.value;
-
-
-      const types = [
-        ...new Set(
-          aiRecords
-            .map(
-              record =>
-                getType(record)
-            )
-            .filter(Boolean)
+      if(
+        !allowedRoles.includes(
+          String(
+            data.role || ""
+          ).toLowerCase()
         )
-      ].sort();
+      ){
+
+        location.href =
+          "access-denied.html";
+
+        return;
+
+      }
 
 
-      select.innerHTML = `
+      loadAISettings();
 
-        <option value="all">
-          All Types
-        </option>
+    }catch(error){
 
-        ${types
-          .map(
-            type => `
+      console.error(
+        "Admin AI authorization error:",
+        error
+      );
 
-              <option
-                value="${escapeHtml(type)}"
-              >
-                ${escapeHtml(type)}
-              </option>
+      location.href =
+        "access-denied.html";
 
-            `
-          )
-          .join("")}
+    }
 
-      `;
+  }
+);
 
 
-      if (
-        types.includes(
-          currentValue
+/* =====================================================
+   LOAD AI SETTINGS
+===================================================== */
+
+async function loadAISettings(){
+
+  try{
+
+    const snapshot =
+      await get(
+        ref(
+          db,
+          "system/ai"
         )
-      ) {
+      );
 
-        select.value =
-          currentValue;
 
-      }
+    if(!snapshot.exists()){
+
+      return;
 
     }
 
 
-    /* =========================
-       VIEW AI RECORD
-    ========================== */
+    const data =
+      snapshot.val();
 
-    window.viewAI =
-      function(id) {
 
-        const record =
-          aiRecords.find(
-            item =>
-              String(item.id) ===
-              String(id)
-          );
+    document.getElementById(
+      "aiEnabled"
+    ).checked =
+      data.enabled !== false;
 
 
-        if (!record) {
+    document.getElementById(
+      "aiMaintenance"
+    ).checked =
+      data.maintenance === true;
 
-          showToast(
-            "AI record not found."
-          );
 
-          return;
+    document.getElementById(
+      "freeAIEnabled"
+    ).checked =
+      data.freeUsers !== false;
 
-        }
 
+    document.getElementById(
+      "premiumAIEnabled"
+    ).checked =
+      data.premiumUsers !== false;
 
-        const details =
-          document.getElementById(
-            "detailsContent"
-          );
 
+    document.getElementById(
+      "freeDailyLimit"
+    ).value =
+      data.freeDailyLimit || 10;
 
-        details.innerHTML =
-          Object.entries(record)
-            .map(
-              ([key, value]) => `
 
-                <div class="detail">
+    document.getElementById(
+      "premiumDailyLimit"
+    ).value =
+      data.premiumDailyLimit || 100;
 
-                  <div class="detail-label">
 
-                    ${escapeHtml(key)}
+    document.getElementById(
+      "maxTokens"
+    ).value =
+      data.maxTokens || 2000;
 
-                  </div>
 
-                  <div class="detail-value">
+    document.getElementById(
+      "cooldownSeconds"
+    ).value =
+      data.cooldownSeconds || 5;
 
-                    ${escapeHtml(
-                      formatValue(value)
-                    )}
 
-                  </div>
+    document.getElementById(
+      "aiProvider"
+    ).value =
+      data.provider || "openai";
 
-                </div>
 
-              `
-            )
-            .join("");
+    document.getElementById(
+      "aiModel"
+    ).value =
+      data.model || "";
 
 
-        document
-          .getElementById(
-            "detailsModal"
-          )
-          .classList.add(
-            "show"
-          );
+    const features =
+      data.features || {};
 
-      };
 
+    document.getElementById(
+      "featureChat"
+    ).checked =
+      features.chat !== false;
 
-    /* =========================
-       DELETE AI RECORD
-    ========================== */
 
-    window.deleteAI =
-      async function(id) {
+    document.getElementById(
+      "featureTutor"
+    ).checked =
+      features.tutor !== false;
 
-        const record =
-          aiRecords.find(
-            item =>
-              String(item.id) ===
-              String(id)
-          );
 
+    document.getElementById(
+      "featureQuiz"
+    ).checked =
+      features.quiz !== false;
 
-        if (!record) {
 
-          showToast(
-            "AI record not found."
-          );
+    document.getElementById(
+      "featureNotes"
+    ).checked =
+      features.notes !== false;
 
-          return;
 
-        }
+    document.getElementById(
+      "featureCareer"
+    ).checked =
+      features.career !== false;
 
 
-        const confirmed =
-          window.confirm(
-            "Are you sure you want to permanently delete this AI record?"
-          );
+    document.getElementById(
+      "featureContent"
+    ).checked =
+      features.content !== false;
 
 
-        if (!confirmed) {
-          return;
-        }
-
-
-        try {
-
-          await remove(
-            ref(
-              db,
-              `ai/${id}`
-            )
-          );
-
-
-          showToast(
-            "AI record deleted successfully."
-          );
-
-        } catch (error) {
-
-          console.error(
-            "Delete AI error:",
-            error
-          );
-
-
-          showToast(
-            error.message ||
-            "Failed to delete AI record."
-          );
-
-        }
-
-      };
-
-
-    /* =========================
-       GET STATUS
-    ========================== */
-
-    function getStatus(record) {
-
-      const status =
-        record.status;
-
-
-      if (
-        record.active === true ||
-        record.enabled === true ||
-        record.published === true
-      ) {
-
-        return "active";
-
-      }
-
-
-      if (
-        typeof status ===
-        "boolean"
-      ) {
-
-        return status
-          ? "active"
-          : "inactive";
-
-      }
-
-
-      const value =
-        String(
-          status ||
-          record.state ||
-          ""
-        ).toLowerCase();
-
-
-      if (
-        value === "active" ||
-        value === "enabled" ||
-        value === "published" ||
-        value === "online" ||
-        value === "true"
-      ) {
-
-        return "active";
-
-      }
-
-
-      return "inactive";
-
-    }
-
-
-    /* =========================
-       GET TYPE
-    ========================== */
-
-    function getType(record) {
-
-      return String(
-        record.type ||
-        record.category ||
-        record.aiType ||
-        record.toolType ||
-        "AI"
-      );
-
-    }
-
-
-    /* =========================
-       GET TIMESTAMP
-    ========================== */
-
-    function getTimestamp(record) {
-
-      const value =
-        record.timestamp ??
-        record.createdAt ??
-        record.updatedAt ??
-        record.time ??
-        record.date;
-
-
-      if (
-        value === null ||
-        value === undefined
-      ) {
-
-        return 0;
-
-      }
-
-
-      if (
-        typeof value === "number"
-      ) {
-
-        /*
-         * Firebase timestamps can be
-         * stored in seconds or milliseconds.
-         */
-
-        if (
-          value < 10000000000
-        ) {
-
-          return value * 1000;
-
-        }
-
-        return value;
-
-      }
-
-
-      if (
-        typeof value === "object"
-      ) {
-
-        if (
-          typeof value.seconds ===
-          "number"
-        ) {
-
-          return (
-            value.seconds * 1000
-          );
-
-        }
-
-        if (
-          typeof value.toMillis ===
-          "function"
-        ) {
-
-          return value.toMillis();
-
-        }
-
-      }
-
-
-      const parsed =
-        Date.parse(
-          String(value)
-        );
-
-
-      return Number.isNaN(parsed)
-        ? 0
-        : parsed;
-
-    }
-
-
-    /* =========================
-       FORMAT DATE
-    ========================== */
-
-    function formatDate(timestamp) {
-
-      if (!timestamp) {
-
-        return "Unknown";
-
-      }
-
-
-      return new Intl.DateTimeFormat(
-        undefined,
-        {
-          dateStyle: "medium",
-          timeStyle: "short"
-        }
-      ).format(
-        new Date(timestamp)
-      );
-
-    }
-
-
-    /* =========================
-       FORMAT VALUE
-    ========================== */
-
-    function formatValue(value) {
-
-      if (
-        value === null ||
-        value === undefined
-      ) {
-
-        return "";
-
-      }
-
-
-      if (
-        typeof value === "object"
-      ) {
-
-        try {
-
-          return JSON.stringify(
-            value,
-            null,
-            2
-          );
-
-        } catch {
-
-          return String(value);
-
-        }
-
-      }
-
-
-      return String(value);
-
-    }
-
-
-    /* =========================
-       ESCAPE HTML
-    ========================== */
-
-    function escapeHtml(value) {
-
-      return String(
-        value ?? ""
-      )
-        .replace(
-          /&/g,
-          "&amp;"
-        )
-        .replace(
-          /</g,
-          "&lt;"
-        )
-        .replace(
-          />/g,
-          "&gt;"
-        )
-        .replace(
-          /"/g,
-          "&quot;"
-        )
-        .replace(
-          /'/g,
-          "&#039;"
-        );
-
-    }
-
-
-    /* =========================
-       ESCAPE JS
-    ========================== */
-
-    function escapeJs(value) {
-
-      return String(
-        value ?? ""
-      )
-        .replace(
-          /\\/g,
-          "\\\\"
-        )
-        .replace(
-          /'/g,
-          "\\'"
-        );
-
-    }
-
-
-    /* =========================
-       LOADING STATE
-    ========================== */
-
-    function showLoading() {
-
-      loadingState.style.display =
-        "block";
-
-
-      errorState.style.display =
-        "none";
-
-
-      emptyState.style.display =
-        "none";
-
-
-      tableContainer.style.display =
-        "none";
-
-
-      pagination.style.display =
-        "none";
-
-    }
-
-
-    /* =========================
-       ERROR STATE
-    ========================== */
-
-    function showError(message) {
-
-      loadingState.style.display =
-        "none";
-
-
-      tableContainer.style.display =
-        "none";
-
-
-      pagination.style.display =
-        "none";
-
-
-      emptyState.style.display =
-        "none";
-
-
-      errorState.style.display =
-        "block";
-
-
-      errorState.textContent =
-        message ||
-        "Unable to load AI data.";
-
-    }
-
-
-    /* =========================
-       TOAST
-    ========================== */
-
-    function showToast(message) {
-
-      const toast =
-        document.getElementById(
-          "toast"
-        );
-
-
-      toast.textContent =
-        message;
-
-
-      toast.classList.add(
-        "show"
-      );
-
-
-      clearTimeout(
-        window.toastTimer
-      );
-
-
-      window.toastTimer =
-        setTimeout(
-          () => {
-
-            toast.classList.remove(
-              "show"
-            );
-
-          },
-          3000
-        );
-
-    }
-
-
-    /* =========================
-       SEARCH
-    ========================== */
-
-    document
-      .getElementById(
-        "searchInput"
-      )
-      .addEventListener(
-        "input",
-        applyFilters
-      );
-
-
-    /* =========================
-       STATUS FILTER
-    ========================== */
-
-    document
-      .getElementById(
-        "statusFilter"
-      )
-      .addEventListener(
-        "change",
-        applyFilters
-      );
-
-
-    /* =========================
-       TYPE FILTER
-    ========================== */
-
-    document
-      .getElementById(
-        "typeFilter"
-      )
-      .addEventListener(
-        "change",
-        applyFilters
-      );
-
-
-    /* =========================
-       REFRESH
-    ========================== */
-
-    document
-      .getElementById(
-        "refreshBtn"
-      )
-      .addEventListener(
-        "click",
-        loadAI
-      );
-
-
-    /* =========================
-       PREVIOUS PAGE
-    ========================== */
-
-    document
-      .getElementById(
-        "previousBtn"
-      )
-      .addEventListener(
-        "click",
-        () => {
-
-          if (
-            currentPage > 1
-          ) {
-
-            currentPage--;
-
-            renderTable();
-
-          }
-
-        }
-      );
-
-
-    /* =========================
-       NEXT PAGE
-    ========================== */
-
-    document
-      .getElementById(
-        "nextBtn"
-      )
-      .addEventListener(
-        "click",
-        () => {
-
-          const totalPages =
-            Math.ceil(
-              filteredRecords.length /
-              pageSize
-            );
-
-
-          if (
-            currentPage <
-            totalPages
-          ) {
-
-            currentPage++;
-
-            renderTable();
-
-          }
-
-        }
-      );
-
-
-    /* =========================
-       CLOSE MODAL
-    ========================== */
-
-    function closeModal() {
-
-      document
-        .getElementById(
-          "detailsModal"
-        )
-        .classList.remove(
-          "show"
-        );
-
-    }
-
-
-    document
-      .getElementById(
-        "closeModal"
-      )
-      .addEventListener(
-        "click",
-        closeModal
-      );
-
-
-    document
-      .getElementById(
-        "detailsModal"
-      )
-      .addEventListener(
-        "click",
-        event => {
-
-          if (
-            event.target.id ===
-            "detailsModal"
-          ) {
-
-            closeModal();
-
-          }
-
-        }
-      );
-
-
-    /* =========================
-       ESC KEY
-    /* =========================
-       ESC KEY
-    ========================== */
-
-    document.addEventListener(
-      "keydown",
-      (event) => {
-
-        if (
-          event.key === "Escape"
-        ) {
-
-          closeModal();
-
-        }
-
-      }
+    updateStatus(
+      data.enabled !== false,
+      data.maintenance === true
     );
 
 
-    /* =========================
-       INITIAL PAGE STATE
-    ========================== */
+  }catch(error){
 
-    showLoading();
+    console.error(
+      "Load AI settings error:",
+      error
+    );
+
+  }
+
+}
 
 
-    /* =========================
-       END FIREBASE SCRIPT
-    ========================== */
+/* =====================================================
+   SAVE SETTINGS
+===================================================== */
 
-  </script>
+async function saveAISettings(){
 
-</body>
-</html>
+  const settings = {
+
+    enabled:
+      document.getElementById(
+        "aiEnabled"
+      ).checked,
+
+    maintenance:
+      document.getElementById(
+        "aiMaintenance"
+      ).checked,
+
+    freeUsers:
+      document.getElementById(
+        "freeAIEnabled"
+      ).checked,
+
+    premiumUsers:
+      document.getElementById(
+        "premiumAIEnabled"
+      ).checked,
+
+    freeDailyLimit:
+      Number(
+        document.getElementById(
+          "freeDailyLimit"
+        ).value
+      ),
+
+    premiumDailyLimit:
+      Number(
+        document.getElementById(
+          "premiumDailyLimit"
+        ).value
+      ),
+
+    maxTokens:
+      Number(
+        document.getElementById(
+          "maxTokens"
+        ).value
+      ),
+
+    cooldownSeconds:
+      Number(
+        document.getElementById(
+          "cooldownSeconds"
+        ).value
+      ),
+
+    provider:
+      document.getElementById(
+        "aiProvider"
+      ).value,
+
+    model:
+      document.getElementById(
+        "aiModel"
+      ).value.trim(),
+
+    features: {
+
+      chat:
+        document.getElementById(
+          "featureChat"
+        ).checked,
+
+      tutor:
+        document.getElementById(
+          "featureTutor"
+        ).checked,
+
+      quiz:
+        document.getElementById(
+          "featureQuiz"
+        ).checked,
+
+      notes:
+        document.getElementById(
+          "featureNotes"
+        ).checked,
+
+      career:
+        document.getElementById(
+          "featureCareer"
+        ).checked,
+
+      content:
+        document.getElementById(
+          "featureContent"
+        ).checked
+
+    },
+
+    updatedAt:
+      serverTimestamp()
+
+  };
+
+
+  try{
+
+    await set(
+      ref(
+        db,
+        "system/ai"
+      ),
+      settings
+    );
+
+
+    updateStatus(
+      settings.enabled,
+      settings.maintenance
+    );
+
+
+    alert(
+      "AI settings saved successfully."
+    );
+
+
+  }catch(error){
+
+    console.error(
+      "Save AI settings error:",
+      error
+    );
+
+    alert(
+      "Unable to save AI settings."
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   STATUS
+===================================================== */
+
+function updateStatus(
+  enabled,
+  maintenance
+){
+
+  const status =
+    document.getElementById(
+      "globalAIStatus"
+    );
+
+  const systemStatus =
+    document.getElementById(
+      "aiSystemStatus"
+    );
+
+
+  if(maintenance){
+
+    status.textContent =
+      "Maintenance";
+
+    systemStatus.textContent =
+      "Maintenance";
+
+    return;
+
+  }
+
+
+  if(enabled){
+
+    status.textContent =
+      "Online";
+
+    systemStatus.textContent =
+      "Online";
+
+  }else{
+
+    status.textContent =
+      "Disabled";
+
+    systemStatus.textContent =
+      "Disabled";
+
+  }
+
+}
+
+
+/* =====================================================
+   BUTTON EVENTS
+===================================================== */
+
+document.getElementById(
+  "saveAllAISettings"
+).addEventListener(
+  "click",
+  saveAISettings
+);
+
+
+document.getElementById(
+  "saveAILimits"
+).addEventListener(
+  "click",
+  saveAISettings
+);
+
+
+document.getElementById(
+  "saveAIProvider"
+).addEventListener(
+  "click",
+  saveAISettings
+);
+
+
+/* =====================================================
+   INITIAL STATUS
+===================================================== */
+
+updateStatus(
+  true,
+  false
+);
+
+</script>
