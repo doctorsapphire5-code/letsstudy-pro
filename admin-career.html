@@ -1,1094 +1,888 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Admin Career | LetsStudy Pro</title><style>
-*{box-sizing:border-box}
-body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f7fb;color:#172033}
-header{height:64px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:12px;padding:0 16px;position:sticky;top:0;z-index:20}
-header h1{flex:1;margin:0;font-size:18px}
-button{border:0;border-radius:9px;padding:10px 13px;cursor:pointer;font-weight:600}
-.back{background:#eef2ff;color:#1d4ed8}
-.primary{background:#2563eb;color:#fff}
-.success{background:#dcfce7;color:#15803d}
-.danger{background:#fee2e2;color:#b91c1c}
-.warning{background:#fef3c7;color:#a16207}
-main{max-width:1250px;margin:auto;padding:18px}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
-.card{background:#fff;border:1px solid #e5e7eb;border-radius:15px;padding:16px;margin-bottom:16px}
-.stat span{font-size:11px;color:#64748b}
-.stat b{display:block;font-size:22px;margin-top:5px}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.toolbar input{flex:1;min-width:200px}
-input,select,textarea{width:100%;padding:10px;border:1px solid #dbe1e8;border-radius:9px;background:#fff;outline:none}
-textarea{resize:vertical}
-.table{overflow:auto}
-table{width:100%;border-collapse:collapse;font-size:12px}
-th,td{text-align:left;padding:11px 8px;border-bottom:1px solid #edf0f4;white-space:nowrap}
-th{font-size:10px;color:#64748b}
-.badge{display:inline-block;padding:4px 8px;border-radius:20px;font-size:9px;font-weight:bold}
-.active{background:#dcfce7;color:#15803d}
-.closed{background:#fee2e2;color:#b91c1c}
-.draft{background:#f1f5f9;color:#64748b}
-.modal{display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;padding:15px;z-index:100}
-.modal.show{display:flex}
-.box{background:#fff;width:100%;max-width:700px;max-height:92vh;overflow:auto;border-radius:17px;padding:20px}
-.head{display:flex;align-items:center;gap:10px;margin-bottom:15px}
-.head h2{flex:1;margin:0;font-size:18px}
-.field{margin-bottom:13px}
-label{display:block;font-size:11px;font-weight:bold;margin-bottom:6px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
-.empty{text-align:center;padding:35px;color:#64748b}
-.toast{position:fixed;right:18px;bottom:18px;background:#172033;color:#fff;padding:12px 15px;border-radius:9px;display:none;z-index:200;font-size:12px}
-.toast.show{display:block}
-@media(max-width:800px){.stats{grid-template-columns:1fr 1fr}}
-@media(max-width:600px){.stats,.grid{grid-template-columns:1fr}}
-</style></head><body><header><button class="back"
-onclick="location.href='admin-dashboard.html'">
-←
-</button>
 
-<h1>💼 Career Management</h1><button class="primary"
-onclick="openJob()">
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+>
 
-+ Add Job
-  </button>
+<title>Admin Career | LetsStudy Pro</title>
 
-</header><main><section class="stats"><div class="card stat">
-<span>Total Jobs</span>
-<b id="totalJobs">0</b>
-</div><div class="card stat">
-<span>Active Jobs</span>
-<b id="activeJobs">0</b>
-</div><div class="card stat">
-<span>Applications</span>
-<b id="applications">0</b>
-</div><div class="card stat">
-<span>Closing Soon</span>
-<b id="closingSoon">0</b>
-</div></section><section class="card"><div class="toolbar"><input
-id="search"
-placeholder="Search jobs, company or location..."
-oninput="renderJobs()">
+<meta
+  name="description"
+  content="LetsStudy Pro Career Administration"
+>
 
-<select id="statusFilter"
-onchange="renderJobs()">
+<style>
 
-<option value="all">All Status</option>
-<option value="active">Active</option>
-<option value="draft">Draft</option>
-<option value="closed">Closed</option></select><select id="typeFilter"
-onchange="renderJobs()">
-
-<option value="all">All Types</option>
-<option value="full-time">Full Time</option>
-<option value="part-time">Part Time</option>
-<option value="internship">Internship</option>
-<option value="contract">Contract</option>
-<option value="remote">Remote</option></select></div><div class="table"><table><thead><tr>
-<th>Job</th>
-<th>Company</th>
-<th>Location</th>
-<th>Type</th>
-<th>Deadline</th>
-<th>Status</th>
-<th>Applications</th>
-<th>Action</th>
-</tr></thead><tbody id="jobList"></tbody></table></div></section></main><!-- ADD / EDIT JOB --><div
-id="jobModal"
-class="modal"><div class="box"><div class="head"><h2 id="modalTitle">
-Add Career
-</h2><button
-class="back"
-onclick="closeJob()">
-✕
-</button>
-
-</div><div class="field"><label>Job Title *</label>
-
-<input
-id="jobTitle"
-placeholder="e.g. Frontend Developer">
-
-</div><div class="grid"><div class="field"><label>Company *</label>
-
-<input
-id="company"
-placeholder="Company name">
-
-</div><div class="field"><label>Location</label>
-
-<input
-id="location"
-placeholder="Dar es Salaam / Remote">
-
-</div></div><div class="grid"><div class="field"><label>Job Type</label>
-
-<select id="jobType"><option value="full-time">Full Time</option>
-<option value="part-time">Part Time</option>
-<option value="internship">Internship</option>
-<option value="contract">Contract</option>
-<option value="remote">Remote</option></select></div><div class="field"><label>Status</label>
-
-<select id="jobStatus"><option value="active">Active</option>
-<option value="draft">Draft</option>
-<option value="closed">Closed</option></select></div></div><div class="grid"><div class="field"><label>Category</label>
-
-<input
-id="category"
-placeholder="Technology">
-
-</div><div class="field"><label>Deadline</label>
-
-<input
-id="deadline"
-type="date">
-
-</div></div><div class="grid"><div class="field"><label>Salary</label>
-
-<input
-id="salary"
-placeholder="TZS 800,000 - 1,500,000">
-
-</div><div class="field"><label>Application URL</label>
-
-<input
-id="applyUrl"
-placeholder="https://...">
-
-</div></div><div class="field"><label>Short Description</label>
-
-<textarea
-id="description"
-rows="4"
-placeholder="Describe the opportunity..."></textarea></div><div class="field"><label>Requirements</label>
-
-<textarea
-id="requirements"
-rows="5"
-placeholder="Education, skills, experience..."></textarea></div><div class="field"><label>Company Logo URL</label>
-
-<input
-id="logo"
-placeholder="https://...">
-
-</div><div class="actions"><button
-class="primary"
-onclick="saveJob()">
-
-Save Job
-
-</button><button
-class="back"
-onclick="closeJob()">
-
-Cancel
-
-</button></div></div></div><div
-id="toast"
-class="toast">
-</div><script type="module">
-
-
-/* =========================================
- FIREBASE
-========================================= */
-
-import{
-initializeApp
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
 }
-from
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
-import{
-getAuth,
-onAuthStateChanged
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  background:#f5f7fb;
+  color:#172033;
 }
-from
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
-import{
-getFirestore,
-collection,
-doc,
-getDoc,
-getDocs,
-addDoc,
-updateDoc,
-deleteDoc,
-serverTimestamp
+button,
+input,
+select,
+textarea{
+  font:inherit;
 }
-from
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
+button{
+  cursor:pointer;
+}
 
-const firebaseConfig={
+a{
+  text-decoration:none;
+  color:inherit;
+}
 
-apiKey:
-"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+/* HEADER */
 
-authDomain:
-"let-s-study-pro-course.firebaseapp.com",
+.header{
+  position:sticky;
+  top:0;
+  z-index:100;
+  background:#fff;
+  border-bottom:1px solid #e5e7eb;
+  padding:15px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
 
-databaseURL:
-"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
 
-projectId:
-"let-s-study-pro-course",
+.logo{
+  width:42px;
+  height:42px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#111827;
+  color:#fff;
+  font-weight:800;
+}
 
-storageBucket:
-"let-s-study-pro-course.firebasestorage.app",
+.brand h1{
+  font-size:18px;
+}
 
-messagingSenderId:
-"474928293390",
+.brand span{
+  display:block;
+  color:#6b7280;
+  font-size:12px;
+  margin-top:3px;
+}
 
-appId:
-"1:474928293390:web:89eef78b2ccfbcf0a9fe5f",
+.header-actions{
+  display:flex;
+  gap:8px;
+}
 
-measurementId:
-"G-NCZNKYB3YB"
+.btn{
+  border:0;
+  border-radius:9px;
+  padding:10px 14px;
+  font-weight:700;
+}
 
-};
+.btn-primary{
+  background:#2563eb;
+  color:#fff;
+}
 
+.btn-dark{
+  background:#111827;
+  color:#fff;
+}
 
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
+.btn-danger{
+  background:#dc2626;
+  color:#fff;
+}
 
-let admin=null;
-let jobs=[];
-let editingId=null;
+.btn-light{
+  background:#f3f4f6;
+  color:#111827;
+}
 
+.btn-success{
+  background:#16a34a;
+  color:#fff;
+}
 
-/* =========================================
- ADMIN AUTH
-========================================= */
+/* LAYOUT */
 
-onAuthStateChanged(
-  auth,
-  async user => {
+.layout{
+  display:flex;
+  min-height:calc(100vh - 73px);
+}
 
-    if(!user){
+.sidebar{
+  width:245px;
+  background:#111827;
+  color:#fff;
+  padding:20px 14px;
+  flex-shrink:0;
+}
 
-      location.href = "login.html";
-      return;
+.sidebar-title{
+  font-size:11px;
+  text-transform:uppercase;
+  color:#9ca3af;
+  margin:18px 10px 8px;
+}
 
-    }
+.sidebar a{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:11px 12px;
+  margin:3px 0;
+  border-radius:8px;
+  color:#d1d5db;
+}
 
-    admin = user;
+.sidebar a:hover,
+.sidebar a.active{
+  background:#2563eb;
+  color:#fff;
+}
 
-    loadJobs();
+.main{
+  flex:1;
+  padding:25px;
+  min-width:0;
+}
 
+/* PAGE TITLE */
+
+.page-title{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  margin-bottom:25px;
+}
+
+.page-title h2{
+  font-size:28px;
+}
+
+.page-title p{
+  color:#6b7280;
+  margin-top:5px;
+}
+
+/* STATS */
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:15px;
+  margin-bottom:25px;
+}
+
+.stat{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:20px;
+}
+
+.stat-icon{
+  font-size:25px;
+  margin-bottom:12px;
+}
+
+.stat-label{
+  color:#6b7280;
+  font-size:13px;
+}
+
+.stat-value{
+  font-size:27px;
+  font-weight:800;
+  margin-top:5px;
+}
+
+/* CARD */
+
+.card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  margin-bottom:20px;
+  overflow:hidden;
+}
+
+.card-header{
+  padding:18px 20px;
+  border-bottom:1px solid #e5e7eb;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+}
+
+.card-header h3{
+  font-size:17px;
+}
+
+.card-body{
+  padding:20px;
+}
+
+/* FILTERS */
+
+.filters{
+  display:grid;
+  grid-template-columns:2fr 1fr 1fr auto;
+  gap:10px;
+}
+
+input,
+select,
+textarea{
+  width:100%;
+  border:1px solid #d1d5db;
+  border-radius:9px;
+  padding:11px 12px;
+  outline:none;
+  background:#fff;
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+  border-color:#2563eb;
+}
+
+textarea{
+  min-height:120px;
+  resize:vertical;
+}
+
+/* TABLE */
+
+.table-wrap{
+  overflow-x:auto;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:900px;
+}
+
+th,
+td{
+  padding:14px 12px;
+  text-align:left;
+  border-bottom:1px solid #e5e7eb;
+}
+
+th{
+  background:#f9fafb;
+  font-size:12px;
+  text-transform:uppercase;
+  color:#6b7280;
+}
+
+td{
+  font-size:14px;
+}
+
+.job-title{
+  font-weight:800;
+}
+
+.job-meta{
+  color:#6b7280;
+  font-size:12px;
+  margin-top:4px;
+}
+
+.badge{
+  display:inline-flex;
+  padding:5px 9px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:800;
+}
+
+.badge-active{
+  background:#dcfce7;
+  color:#166534;
+}
+
+.badge-closed{
+  background:#fee2e2;
+  color:#991b1b;
+}
+
+.badge-draft{
+  background:#fef3c7;
+  color:#92400e;
+}
+
+.actions{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+.small-btn{
+  border:0;
+  padding:7px 9px;
+  border-radius:7px;
+  font-size:12px;
+  font-weight:700;
+}
+
+/* MODAL */
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  z-index:500;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+.modal.show{
+  display:flex;
+}
+
+.modal-box{
+  width:100%;
+  max-width:760px;
+  max-height:92vh;
+  overflow-y:auto;
+  background:#fff;
+  border-radius:16px;
+}
+
+.modal-header{
+  padding:18px 20px;
+  border-bottom:1px solid #e5e7eb;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.modal-body{
+  padding:20px;
+}
+
+.close{
+  border:0;
+  background:#f3f4f6;
+  width:34px;
+  height:34px;
+  border-radius:50%;
+}
+
+.form-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:15px;
+}
+
+.form-group{
+  margin-bottom:15px;
+}
+
+.form-group.full{
+  grid-column:1/-1;
+}
+
+.form-group label{
+  display:block;
+  font-weight:700;
+  font-size:13px;
+  margin-bottom:7px;
+}
+
+.modal-footer{
+  padding:15px 20px;
+  border-top:1px solid #e5e7eb;
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+}
+
+/* TOAST */
+
+.toast{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  z-index:1000;
+  background:#111827;
+  color:#fff;
+  padding:14px 18px;
+  border-radius:10px;
+  box-shadow:0 10px 30px rgba(0,0,0,.2);
+  display:none;
+  max-width:350px;
+}
+
+.toast.show{
+  display:block;
+}
+
+/* LOADER */
+
+.loader{
+  position:fixed;
+  inset:0;
+  z-index:2000;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:12px;
+}
+
+.spinner{
+  width:40px;
+  height:40px;
+  border:4px solid #e5e7eb;
+  border-top-color:#2563eb;
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+
+@keyframes spin{
+  to{
+    transform:rotate(360deg);
   }
-);
+}
 
-/* =========================================
- LOAD JOBS
-========================================= */
+/* EMPTY */
 
-async function loadJobs(){
+.empty{
+  text-align:center;
+  padding:45px 20px;
+  color:#6b7280;
+}
 
-try{
+/* RESPONSIVE */
 
-const snap=
-await getDocs(
-collection(db,"careers")
-);
+@media(max-width:1000px){
 
-jobs=
-snap.docs.map(
-d=>({
-id:d.id,
-...d.data()
-})
-);
+  .stats{
+    grid-template-columns:repeat(2,1fr);
+  }
 
-jobs.sort(
-(a,b)=>
-getTime(b.createdAt)-
-getTime(a.createdAt)
-);
-
-updateStats();
-renderJobs();
-
-}catch(error){
-
-console.error(error);
-
-toast(
-"Unable to load careers."
-);
+  .filters{
+    grid-template-columns:1fr 1fr;
+  }
 
 }
 
-}
+@media(max-width:760px){
 
+  .sidebar{
+    display:none;
+  }
 
-/* =========================================
- STATS
-========================================= */
+  .main{
+    padding:15px;
+  }
 
-function updateStats(){
+  .page-title{
+    align-items:flex-start;
+    flex-direction:column;
+  }
 
-document.getElementById(
-"totalJobs"
-).textContent=
-jobs.length;
+  .stats{
+    grid-template-columns:1fr 1fr;
+  }
 
+  .form-grid{
+    grid-template-columns:1fr;
+  }
 
-document.getElementById(
-"activeJobs"
-).textContent=
-jobs.filter(
-x=>x.status==="active"
-).length;
-
-
-document.getElementById(
-"applications"
-).textContent=
-jobs.reduce(
-(a,x)=>
-a+Number(x.applications||0),
-0
-);
-
-
-const now=
-Date.now();
-
-const sevenDays=
-7*24*60*60*1000;
-
-document.getElementById(
-"closingSoon"
-).textContent=
-jobs.filter(x=>{
-
-if(!x.deadline)
-return false;
-
-const d=
-new Date(
-x.deadline
-).getTime();
-
-return(
-x.status==="active" &&
-d>=now &&
-d-now<=sevenDays
-);
-
-}).length;
+  .form-group.full{
+    grid-column:auto;
+  }
 
 }
 
+@media(max-width:500px){
 
-/* =========================================
- RENDER
-========================================= */
+  .stats{
+    grid-template-columns:1fr;
+  }
 
-window.renderJobs=function(){
+  .filters{
+    grid-template-columns:1fr;
+  }
 
-const search=
-document.getElementById(
-"search"
-).value
-.toLowerCase()
-.trim();
+  .header{
+    padding:12px;
+  }
 
-const status=
-document.getElementById(
-"statusFilter"
-).value;
+  .header-actions .btn-light{
+    display:none;
+  }
 
-const type=
-document.getElementById(
-"typeFilter"
-).value;
+}
 
+</style>
 
-const data=
-jobs.filter(x=>{
+</head>
 
-const text=
-`${x.title||""}
-${x.company||""}
-${x.location||""}
-${x.category||""}`
-.toLowerCase();
+<body>
 
-return(
+<!-- LOADER -->
 
-text.includes(search) &&
+<div
+  id="loader"
+  class="loader"
+>
 
-(status==="all"||
-x.status===status) &&
+  <div class="spinner"></div>
 
-(type==="all"||
-x.type===type)
-
-);
-
-});
-
-
-const list=
-document.getElementById(
-"jobList"
-);
-
-
-if(!data.length){
-
-list.innerHTML=`
-
-<tr>
-<td colspan="8">
-
-<div class="empty">
-
-No career opportunities found.
+  <strong>
+    Loading LetsStudy Pro...
+  </strong>
 
 </div>
 
-</td>
-</tr>
 
-`;
+<!-- HEADER -->
 
-return;
+<header class="header">
 
-}
+  <div class="brand">
 
+    <div class="logo">
+      L
+    </div>
 
-list.innerHTML=
-data.map(x=>`
+    <div>
 
-<tr>
+      <h1>
+        LetsStudy Pro
+      </h1>
 
-<td>
-<strong>
-${esc(x.title||"-")}
-</strong>
-</td>
+      <span>
+        Career Administration
+      </span>
 
-<td>
-${esc(x.company||"-")}
-</td>
+    </div>
 
-<td>
-${esc(x.location||"-")}
-</td>
-
-<td>
-${esc(x.type||"-")}
-</td>
-
-<td>
-${esc(x.deadline||"-")}
-</td>
-
-<td>
-
-<span class="badge ${
-x.status||"draft"
-}">
-
-${esc(
-x.status||"draft"
-)}
-
-</span>
-
-</td>
-
-<td>
-${Number(x.applications||0)}
-</td>
-
-<td>
-
-<button
-class="back"
-onclick="editJob('${x.id}')">
-
-Edit
-
-</button>
-
-<button
-class="danger"
-onclick="removeJob('${x.id}')">
-
-Delete
-
-</button>
-
-</td>
-
-</tr>
-
-`).join("");
-
-};
-
-
-/* =========================================
- OPEN JOB
-========================================= */
-
-window.openJob=function(){
-
-editingId=null;
-
-document.getElementById(
-"modalTitle"
-).textContent=
-"Add Career";
-
-
-clearForm();
-
-
-document.getElementById(
-"jobModal"
-).classList.add("show");
-
-};
-
-
-/* =========================================
- EDIT JOB
-========================================= */
-
-window.editJob=function(id){
-
-const job=
-jobs.find(
-x=>x.id===id
-);
-
-if(!job)
-return;
-
-editingId=id;
-
-
-document.getElementById(
-"modalTitle"
-).textContent=
-"Edit Career";
-
-
-document.getElementById(
-"jobTitle"
-).value=
-job.title||"";
-
-
-document.getElementById(
-"company"
-).value=
-job.company||"";
-
-
-document.getElementById(
-"location"
-).value=
-job.location||"";
-
-
-document.getElementById(
-"jobType"
-).value=
-job.type||"full-time";
-
-
-document.getElementById(
-"jobStatus"
-).value=
-job.status||"active";
-
-
-document.getElementById(
-"category"
-).value=
-job.category||"";
-
-
-document.getElementById(
-"deadline"
-).value=
-job.deadline||"";
-
-
-document.getElementById(
-"salary"
-).value=
-job.salary||"";
-
-
-document.getElementById(
-"applyUrl"
-).value=
-job.applyUrl||"";
-
-
-document.getElementById(
-"description"
-).value=
-job.description||"";
-
-
-document.getElementById(
-"requirements"
-).value=
-job.requirements||"";
-
-
-document.getElementById(
-"logo"
-).value=
-job.logo||"";
-
-
-document.getElementById(
-"jobModal"
-).classList.add("show");
-
-};
-
-
-/* =========================================
- SAVE
-========================================= */
-
-window.saveJob=async function(){
-
-const title=
-document.getElementById(
-"jobTitle"
-).value.trim();
-
-const company=
-document.getElementById(
-"company"
-).value.trim();
-
-
-if(!title||!company){
-
-toast(
-"Job title and company are required."
-);
-
-return;
-
-}
-
-
-const data={
-
-title,
-
-company,
-
-location:
-document.getElementById(
-"location"
-).value.trim(),
-
-type:
-document.getElementById(
-"jobType"
-).value,
-
-status:
-document.getElementById(
-"jobStatus"
-).value,
-
-category:
-document.getElementById(
-"category"
-).value.trim(),
-
-deadline:
-document.getElementById(
-"deadline"
-).value,
-
-salary:
-document.getElementById(
-"salary"
-).value.trim(),
-
-applyUrl:
-document.getElementById(
-"applyUrl"
-).value.trim(),
-
-description:
-document.getElementById(
-"description"
-).value.trim(),
-
-requirements:
-document.getElementById(
-"requirements"
-).value.trim(),
-
-logo:
-document.getElementById(
-"logo"
-).value.trim(),
-
-updatedAt:
-serverTimestamp(),
-
-updatedBy:
-admin.uid
-
-};
-
-
-try{
-
-if(editingId){
-
-await updateDoc(
-
-doc(
-db,
-"careers",
-editingId
-),
-
-data
-
-);
-
-toast(
-"Career updated successfully."
-);
-
-}else{
-
-await addDoc(
-
-collection(
-db,
-"careers"
-),
-
-{
-
-...data,
-
-applications:0,
-
-createdAt:
-serverTimestamp(),
-
-createdBy:
-admin.uid
-
-}
-
-);
-
-toast(
-"Career added successfully."
-);
-
-}
-
-
-closeJob();
-
-await loadJobs();
-
-
-}catch(error){
-
-console.error(error);
-
-toast(
-"Unable to save career."
-);
-
-}
-
-};
-
-
-/* =========================================
- DELETE
-========================================= */
-
-window.removeJob=
-async function(id){
-
-const job=
-jobs.find(
-x=>x.id===id
-);
-
-if(!job)
-return;
-
-
-if(
-!confirm(
-`Delete "${job.title}"?`
-)
-)
-return;
-
-
-try{
-
-await deleteDoc(
-doc(
-db,
-"careers",
-id
-)
-);
-
-toast(
-"Career deleted."
-);
-
-await loadJobs();
-
-}catch(error){
-
-console.error(error);
-
-toast(
-"Unable to delete career."
-);
-
-}
-
-};
-
-
-/* =========================================
- CLOSE
-========================================= */
-
-window.closeJob=function(){
-
-document.getElementById(
-"jobModal"
-).classList.remove("show");
-
-editingId=null;
-
-};
-
-
-function clearForm(){
-
-[
-"jobTitle",
-"company",
-"location",
-"category",
-"deadline",
-"salary",
-"applyUrl",
-"description",
-"requirements",
-"logo"
-]
-.forEach(id=>{
-
-document.getElementById(id).value="";
-
-});
-
-document.getElementById(
-"jobType"
-).value="full-time";
-
-document.getElementById(
-"jobStatus"
-).value="active";
-
-}
-
-
-/* =========================================
- HELPERS
-========================================= */
-
-function getTime(timestamp){
-
-if(!timestamp)
-return 0;
-
-try{
-
-if(
-typeof timestamp.toDate===
-"function"
-){
-
-return timestamp
-.toDate()
-.getTime();
-
-}
-
-return new Date(timestamp)
-.getTime();
-
-}catch{
-
-return 0;
-
-}
-
-}
-
-
-function esc(value){
-
-return String(
-value??""
-)
-
-.replace(/&/g,"&amp;")
-.replace(/</g,"&lt;")
-.replace(/>/g,"&gt;")
-.replace(/"/g,"&quot;")
-.replace(/'/g,"&#039;");
-
-}
-
-
-function toast(message){
-
-const el=
-document.getElementById(
-"toast"
-);
-
-el.textContent=message;
-
-el.classList.add("show");
-
-clearTimeout(
-window.toastTimer
-);
-
-window.toastTimer=
-setTimeout(
-()=>{
-el.classList.remove("show");
-},
-3000
-);
-
-}
-
-</script>
-<!-- ================================
-     ADD CAREER
-================================ -->
-
-<section class="panel">
-
-  <div class="panel-header">
-    <h2>➕ Add Career</h2>
   </div>
 
-  <form id="careerForm" class="form">
+  <div class="header-actions">
 
-    <div class="form-grid">
+    <button
+      class="btn btn-light"
+      onclick="window.location.href='admin.html'"
+    >
+      ← Admin
+    </button>
 
-      <!-- Career Title -->
-      <div class="field">
-        <label>Career Title *</label>
-        <input
-          type="text"
-          id="careerTitle"
-          placeholder="e.g. Software Engineer"
-          required
-        >
+    <button
+      class="btn btn-primary"
+      onclick="openJobModal()"
+    >
+      + Add Career
+    </button>
+
+    <button
+      class="btn btn-dark"
+      data-logout
+    >
+      Logout
+    </button>
+
+  </div>
+
+</header>
+
+
+<div class="layout">
+
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar">
+
+  <div class="sidebar-title">
+    Management
+  </div>
+
+  <a href="admin.html">
+    🏠 Dashboard
+  </a>
+
+  <a
+    href="admin-career.html"
+    class="active"
+  >
+    💼 Careers
+  </a>
+
+  <a href="admin-courses.html">
+    📚 Courses
+  </a>
+
+  <a href="admin-students.html">
+    👨‍🎓 Students
+  </a>
+
+  <a href="admin-instructors.html">
+    👨‍🏫 Instructors
+  </a>
+
+  <div class="sidebar-title">
+    Content
+  </div>
+
+  <a href="admin-scholarships.html">
+    🎓 Scholarships
+  </a>
+
+  <a href="admin-resourses.html">
+    📂 Resources
+  </a>
+
+  <a href="admin-community.html">
+    👥 Community
+  </a>
+
+  <div class="sidebar-title">
+    System
+  </div>
+
+  <a href="admin-analytics.html">
+    📊 Analytics
+  </a>
+
+  <a href="admin-reports.html">
+    📈 Reports
+  </a>
+
+  <a href="admin-settings.html">
+    ⚙️ Settings
+  </a>
+
+  <a href="super-admin.html">
+    👑 Super Admin
+  </a>
+
+</aside>
+
+
+<!-- MAIN -->
+
+<main class="main">
+
+
+  <div class="page-title">
+
+    <div>
+
+      <h2>
+        Career Management
+      </h2>
+
+      <p>
+        Create, manage and publish career opportunities.
+      </p>
+
+    </div>
+
+    <button
+      class="btn btn-primary"
+      onclick="openJobModal()"
+    >
+      + Create Opportunity
+    </button>
+
+  </div>
+
+
+  <!-- STATS -->
+
+  <section class="stats">
+
+    <div class="stat">
+
+      <div class="stat-icon">
+        💼
       </div>
 
-
-      <!-- Category -->
-      <div class="field">
-        <label>Category *</label>
-        <input
-          type="text"
-          id="careerCategory"
-          placeholder="e.g. Technology"
-          required
-        >
+      <div class="stat-label">
+        Total Careers
       </div>
 
-
-      <!-- Education -->
-      <div class="field">
-        <label>Required Education</label>
-        <input
-          type="text"
-          id="careerEducation"
-          placeholder="e.g. Bachelor Degree"
-        >
+      <div
+        id="totalJobs"
+        class="stat-value"
+      >
+        0
       </div>
 
+    </div>
 
-      <!-- Subjects -->
-      <div class="field">
-        <label>Required Subjects</label>
-        <input
-          type="text"
-          id="careerSubjects"
-          placeholder="e.g. Mathematics, Physics, ICT"
-        >
+
+    <div class="stat">
+
+      <div class="stat-icon">
+        🟢
       </div>
 
-
-      <!-- Skills -->
-      <div class="field">
-        <label>Key Skills</label>
-        <input
-          type="text"
-          id="careerSkills"
-          placeholder="e.g. Coding, Communication, Leadership"
-        >
+      <div class="stat-label">
+        Active
       </div>
 
-
-      <!-- Salary -->
-      <div class="field">
-        <label>Average Salary</label>
-        <input
-          type="text"
-          id="careerSalary"
-          placeholder="e.g. TZS 1,500,000 - 4,000,000"
-        >
+      <div
+        id="activeJobs"
+        class="stat-value"
+      >
+        0
       </div>
 
+    </div>
 
-      <!-- Status -->
-      <div class="field">
-        <label>Status</label>
 
-        <select id="careerStatus">
+    <div class="stat">
+
+      <div class="stat-icon">
+        🔴
+      </div>
+
+      <div class="stat-label">
+        Closed
+      </div>
+
+      <div
+        id="closedJobs"
+        class="stat-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="stat">
+
+      <div class="stat-icon">
+        👥
+      </div>
+
+      <div class="stat-label">
+        Applications
+      </div>
+
+      <div
+        id="totalApplications"
+        class="stat-value"
+      >
+        0
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- FILTERS -->
+
+  <section class="card">
+
+    <div class="card-header">
+
+      <h3>
+        Career Opportunities
+      </h3>
+
+    </div>
+
+    <div class="card-body">
+
+      <div class="filters">
+
+        <input
+          id="searchInput"
+          type="search"
+          placeholder="Search title, company, location..."
+        >
+
+        <select id="categoryFilter">
+
+          <option value="">
+            All Categories
+          </option>
+
+          <option value="technology">
+            Technology
+          </option>
+
+          <option value="education">
+            Education
+          </option>
+
+          <option value="business">
+            Business
+          </option>
+
+          <option value="marketing">
+            Marketing
+          </option>
+
+          <option value="health">
+            Health
+          </option>
+
+          <option value="engineering">
+            Engineering
+          </option>
+
+          <option value="other">
+            Other
+          </option>
+
+        </select>
+
+
+        <select id="statusFilter">
+
+          <option value="">
+            All Status
+          </option>
 
           <option value="active">
             Active
+          </option>
+
+          <option value="closed">
+            Closed
           </option>
 
           <option value="draft">
@@ -1097,267 +891,1846 @@ el.classList.remove("show");
 
         </select>
 
-      </div>
 
-
-      <!-- Image -->
-      <div class="field">
-        <label>Career Image URL</label>
-
-        <input
-          type="url"
-          id="careerImage"
-          placeholder="https://example.com/image.jpg"
+        <button
+          class="btn btn-light"
+          onclick="resetFilters()"
         >
-
-      </div>
-
-
-      <!-- Description -->
-      <div class="field full">
-
-        <label>Career Description *</label>
-
-        <textarea
-          id="careerDescription"
-          rows="5"
-          placeholder="Write a detailed description about this career..."
-          required
-        ></textarea>
-
-      </div>
-
-
-      <!-- Job Opportunities -->
-      <div class="field full">
-
-        <label>Job Opportunities</label>
-
-        <textarea
-          id="careerOpportunities"
-          rows="4"
-          placeholder="e.g. Banks, Hospitals, Schools, Government..."
-        ></textarea>
-
-      </div>
-
-
-      <!-- Related Courses -->
-      <div class="field full">
-
-        <label>Related Courses</label>
-
-        <input
-          type="text"
-          id="careerCourses"
-          placeholder="e.g. Computer Science, IT, Software Engineering"
-        >
+          Reset
+        </button>
 
       </div>
 
     </div>
 
+  </section>
 
-    <!-- Buttons -->
-    <div class="form-actions">
+
+  <!-- TABLE -->
+
+  <section class="card">
+
+    <div class="table-wrap">
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>
+              Opportunity
+            </th>
+
+            <th>
+              Category
+            </th>
+
+            <th>
+              Location
+            </th>
+
+            <th>
+              Type
+            </th>
+
+            <th>
+              Applications
+            </th>
+
+            <th>
+              Status
+            </th>
+
+            <th>
+              Actions
+            </th>
+
+          </tr>
+
+        </thead>
+
+        <tbody id="jobsTable">
+
+          <tr>
+
+            <td
+              colspan="7"
+              class="empty"
+            >
+              Loading careers...
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </section>
+
+
+</main>
+
+</div>
+
+
+<!-- JOB MODAL -->
+
+<div
+  id="jobModal"
+  class="modal"
+>
+
+  <div class="modal-box">
+
+    <div class="modal-header">
+
+      <h3 id="modalTitle">
+        Add Career Opportunity
+      </h3>
 
       <button
-        type="reset"
-        class="btn btn-secondary"
+        class="close"
+        onclick="closeJobModal()"
       >
-        Clear
-      </button>
-
-      <button
-        type="submit"
-        class="btn btn-primary"
-      >
-        💾 Save Career
+        ×
       </button>
 
     </div>
 
-  </form>
 
-</section>
+    <form id="jobForm">
+
+      <div class="modal-body">
+
+        <div class="form-grid">
 
 
-<!-- ================================
-     FIREBASE ADD CAREER
-================================ -->
+          <div class="form-group full">
+
+            <label>
+              Job / Opportunity Title *
+            </label>
+
+            <input
+              id="jobTitle"
+              required
+              placeholder="e.g. Frontend Developer"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label>
+              Company / Organization
+            </label>
+
+            <input
+              id="company"
+              placeholder="LetsStudy Pro"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label>
+              Category *
+            </label>
+
+            <select
+              id="category"
+              required
+            >
+
+              <option value="">
+                Select category
+              </option>
+
+              <option value="technology">
+                Technology
+              </option>
+
+              <option value="education">
+                Education
+              </option>
+
+              <option value="business">
+                Business
+              </option>
+
+              <option value="marketing">
+                Marketing
+              </option>
+
+              <option value="health">
+                Health
+              </option>
+
+              <option value="engineering">
+                Engineering
+              </option>
+
+              <option value="other">
+                Other
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label>
+              Location
+            </label>
+
+            <input
+              id="location"
+              placeholder="Dar es Salaam / Remote"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label>
+              Employment Type
+            </label>
+
+            <select id="type">
+
+              <option value="full-time">
+                Full Time
+              </option>
+
+              <option value="part-time">
+                Part Time
+              </option>
+
+              <option value="contract">
+                Contract
+              </option>
+
+              <option value="internship">
+                Internship
+              </option>
+
+              <option value="volunteer">
+                Volunteer
+              </option>
+
+              <option value="remote">
+                Remote
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label>
+              Salary
+            </label>
+
+            <input
+              id="salary"
+              placeholder="e.g. TZS 1,000,000/month"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label>
+              Application Deadline
+            </label>
+
+            <input
+              id="deadline"
+              type="date"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label>
+              Status
+            </label>
+
+            <select id="status">
+
+              <option value="draft">
+                Draft
+              </option>
+
+              <option value="active">
+                Active
+              </option>
+
+              <option value="closed">
+                Closed
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="form-group full">
+
+            <label>
+              Description *
+            </label>
+
+            <textarea
+              id="description"
+              required
+              placeholder="Describe this opportunity..."
+            ></textarea>
+
+          </div>
+
+
+          <div class="form-group full">
+
+            <label>
+              Requirements
+            </label>
+
+            <textarea
+              id="requirements"
+              placeholder="One requirement per line..."
+            ></textarea>
+
+          </div>
+
+
+          <div class="form-group full">
+
+            <label>
+              Application URL
+            </label>
+
+            <input
+              id="applicationUrl"
+              type="url"
+              placeholder="https://..."
+            >
+
+          </div>
+
+
+        </div>
+
+      </div>
+
+
+      <div class="modal-footer">
+
+        <button
+          type="button"
+          class="btn btn-light"
+          onclick="closeJobModal()"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+          id="saveButton"
+        >
+          Save Opportunity
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+<!-- TOAST -->
+
+<div
+  id="toast"
+  class="toast"
+></div>
+
+
+<!-- FIREBASE -->
 
 <script type="module">
 
-  import {
-    initializeApp
-  } from
-  "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-
-  import {
-    getDatabase,
-    ref,
-    push,
-    set
-  } from
-  "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+import {
+  initializeApp
+} from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
 
-  const firebaseConfig = {
-
-    apiKey:
-      "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
-
-    authDomain:
-      "let-s-study-pro-course.firebaseapp.com",
-
-    databaseURL:
-      "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
-
-    projectId:
-      "let-s-study-pro-course",
-
-    storageBucket:
-      "let-s-study-pro-course.firebasestorage.app",
-
-    messagingSenderId:
-      "474928293390",
-
-    appId:
-      "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
-
-    measurementId:
-      "G-85B7V5H5J0"
-
-  };
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut
+} from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
 
-  const app =
-    initializeApp(firebaseConfig);
-
-  const db =
-    getDatabase(app);
-
-
-  /* ================================
-     SAVE CAREER
-  ================================= */
-
-  document
-    .getElementById("careerForm")
-    .addEventListener("submit", async (e) => {
-
-      e.preventDefault();
+import {
+  getDatabase,
+  ref,
+  get,
+  set,
+  push,
+  remove,
+  serverTimestamp
+} from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
 
 
-      const careerRef =
-        push(ref(db, "careers"));
+/* =====================================================
+   FIREBASE CONFIG
+===================================================== */
+
+const firebaseConfig = {
+
+  apiKey:
+    "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+  authDomain:
+    "let-s-study-pro-course.firebaseapp.com",
+
+  databaseURL:
+    "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+  projectId:
+    "let-s-study-pro-course",
+
+  storageBucket:
+    "let-s-study-pro-course.firebasestorage.app",
+
+  messagingSenderId:
+    "474928293390",
+
+  appId:
+    "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+  measurementId:
+    "G-85B7V5H5J0"
+
+};
 
 
-      const career = {
+/* =====================================================
+   INIT
+===================================================== */
 
-        title:
-          document
-            .getElementById("careerTitle")
-            .value
-            .trim(),
+const app =
+  initializeApp(firebaseConfig);
+
+const auth =
+  getAuth(app);
+
+const db =
+  getDatabase(app);
+
+
+/* =====================================================
+   STATE
+===================================================== */
+
+let adminUser = null;
+
+let jobs = {};
+
+let editingId = null;
+
+
+/* =====================================================
+   ELEMENTS
+===================================================== */
+
+const loader =
+  document.getElementById("loader");
+
+const modal =
+  document.getElementById("jobModal");
+
+const jobForm =
+  document.getElementById("jobForm");
+
+const jobsTable =
+  document.getElementById("jobsTable");
+
+const searchInput =
+  document.getElementById("searchInput");
+
+const categoryFilter =
+  document.getElementById("categoryFilter");
+
+const statusFilter =
+  document.getElementById("statusFilter");
+
+
+/* =====================================================
+   TOAST
+===================================================== */
+
+function showToast(
+  message
+){
+
+  const toast =
+    document.getElementById("toast");
+
+  toast.textContent =
+    message;
+
+  toast.classList.add(
+    "show"
+  );
+
+  setTimeout(
+    ()=>{
+      toast.classList.remove(
+        "show"
+      );
+    },
+    3000
+  );
+
+}
+
+
+/* =====================================================
+   ADMIN CHECK
+===================================================== */
+
+async function checkAdmin(
+  user
+){
+
+  if(!user){
+
+    window.location.replace(
+      "login.html?redirect=admin-career.html"
+    );
+
+    return false;
+
+  }
+
+
+  try{
+
+    const userSnap =
+      await get(
+        ref(
+          rtdb,
+          "users/" + user.uid
+        )
+      );
+
+
+    if(!userSnap.exists()){
+
+      alert(
+        "User profile not found."
+      );
+
+      window.location.href =
+        "dashboard.html";
+
+      return;
+
+    }
+
+
+    const userData =
+      userSnap.val();
+
+
+    /* =========================================
+       SUPER ADMIN ONLY
+    ========================================= */
+
+    const allowedRoles = [
+      "superadmin",
+      "super_admin",
+      "administrator"
+    ];
+
+
+    if(
+      !allowedRoles.includes(
+        String(
+          userData.role || ""
+        ).toLowerCase()
+      )
+    ){
+
+      window.location.href =
+        "access-denied.html";
+
+      return;
+
+    }
+
+
+    currentAdmin =
+      user;
+
+
+    await loadCareers();
+
+  }catch(error){
+
+    console.error(
+      "Admin career authentication error:",
+      error
+    );
+
+    alert(
+      "Unable to verify administrator access."
+    );
+
+    window.location.href =
+      "access-denied.html";
+
+  }
+
+});
+
+
+/* =========================================================
+   LOAD CAREERS
+========================================================= */
+
+async function loadCareers(){
+
+  try{
+
+    careerList.innerHTML = `
+      <div class="loading">
+        Loading careers...
+      </div>
+    `;
+
+
+    const snapshot =
+      await get(
+        ref(
+          rtdb,
+          "careers"
+        )
+      );
+
+
+    careerList.innerHTML = "";
+
+
+    if(!snapshot.exists()){
+
+      careerList.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">💼</div>
+          <h3>No Careers Found</h3>
+          <p>Create your first career opportunity.</p>
+        </div>
+      `;
+
+      updateStats([]);
+
+      return;
+
+    }
+
+
+    const data =
+      snapshot.val();
+
+
+    const careers =
+      Object.entries(data)
+        .map(
+          ([id,value])=>({
+
+            id,
+
+            ...value
+
+          })
+        )
+        .sort(
+          (a,b)=>
+            Number(
+              b.createdAt || 0
+            ) -
+            Number(
+              a.createdAt || 0
+            )
+        );
+
+
+    updateStats(
+      careers
+    );
+
+
+    careers.forEach(
+      career =>
+        renderCareer(
+          career
+        )
+    );
+
+
+  }catch(error){
+
+    console.error(
+      "Load careers error:",
+      error
+    );
+
+
+    careerList.innerHTML = `
+      <div class="error-state">
+        <div>⚠️</div>
+        <h3>Unable to load careers</h3>
+        <p>${escapeHTML(
+          error.message
+        )}</p>
+      </div>
+    `;
+
+  }
+
+}
+
+
+/* =========================================================
+   UPDATE STATISTICS
+========================================================= */
+
+function updateStats(
+  careers
+){
+
+  const total =
+    careers.length;
+
+
+  const active =
+    careers.filter(
+      career =>
+        career.status === "active"
+    ).length;
+
+
+  const draft =
+    careers.filter(
+      career =>
+        career.status === "draft"
+    ).length;
+
+
+  const featured =
+    careers.filter(
+      career =>
+        career.featured === true
+    ).length;
+
+
+  const totalViews =
+    careers.reduce(
+      (
+        total,
+        career
+      ) =>
+        total +
+        Number(
+          career.views || 0
+        ),
+      0
+    );
+
+
+  if(totalCareers){
+
+    totalCareers.textContent =
+      total;
+
+  }
+
+
+  if(activeCareers){
+
+    activeCareers.textContent =
+      active;
+
+  }
+
+
+  if(draftCareers){
+
+    draftCareers.textContent =
+      draft;
+
+  }
+
+
+  if(featuredCareers){
+
+    featuredCareers.textContent =
+      featured;
+
+  }
+
+
+  if(totalViewsElement){
+
+    totalViewsElement.textContent =
+      totalViews.toLocaleString();
+
+  }
+
+}
+
+
+/* =========================================================
+   RENDER CAREER
+========================================================= */
+
+function renderCareer(
+  career
+){
+
+  const card =
+    document.createElement(
+      "div"
+    );
+
+
+  card.className =
+    "career-card";
+
+
+  const status =
+    career.status ||
+    "draft";
+
+
+  const featured =
+    career.featured === true;
+
+
+  card.innerHTML = `
+
+    <div class="career-card-header">
+
+      <div>
+
+        <span class="career-category">
+          ${escapeHTML(
+            career.category ||
+            "Career"
+          )}
+        </span>
+
+        <h3>
+          ${escapeHTML(
+            career.title ||
+            "Untitled Career"
+          )}
+        </h3>
+
+      </div>
+
+      <span
+        class="status ${status}"
+      >
+        ${escapeHTML(
+          status
+        )}
+      </span>
+
+    </div>
+
+
+    <p class="career-description">
+      ${escapeHTML(
+        career.description ||
+        "No description available."
+      )}
+    </p>
+
+
+    <div class="career-meta">
+
+      <span>
+        📍
+        ${escapeHTML(
+          career.location ||
+          "Remote"
+        )}
+      </span>
+
+      <span>
+        🎓
+        ${escapeHTML(
+          career.level ||
+          "All Levels"
+        )}
+      </span>
+
+      <span>
+        👁
+        ${Number(
+          career.views || 0
+        ).toLocaleString()}
+      </span>
+
+    </div>
+
+
+    <div class="career-tags">
+
+      ${
+        Array.isArray(
+          career.skills
+        )
+        ?
+        career.skills
+          .slice(
+            0,
+            5
+          )
+          .map(
+            skill =>
+              `<span>
+                ${escapeHTML(
+                  skill
+                )}
+              </span>`
+          )
+          .join("")
+        :
+        ""
+      }
+
+    </div>
+
+
+    <div class="career-footer">
+
+      <span>
+        ${
+          featured
+          ? "⭐ Featured"
+          : "Standard"
+        }
+      </span>
+
+
+      <div class="career-actions">
+
+        <button
+          class="btn-edit"
+          data-edit="${career.id}"
+        >
+          ✏️ Edit
+        </button>
+
+
+        <button
+          class="btn-toggle"
+          data-toggle="${career.id}"
+        >
+          ${
+            status === "active"
+            ? "⏸ Disable"
+            : "▶️ Activate"
+          }
+        </button>
+
+
+        <button
+          class="btn-delete"
+          data-delete="${career.id}"
+        >
+          🗑 Delete
+        </button>
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  careerList.appendChild(
+    card
+  );
+
+}
+
+
+/* =========================================================
+   OPEN ADD CAREER
+========================================================= */
+
+if(addCareerBtn){
+
+  addCareerBtn.addEventListener(
+    "click",
+    ()=>{
+
+      editingCareerId =
+        null;
+
+      careerForm.reset();
+
+
+      if(careerStatus){
+
+        careerStatus.value =
+          "active";
+
+      }
+
+
+      if(careerFeatured){
+
+        careerFeatured.checked =
+          false;
+
+      }
+
+
+      if(modal){
+
+        modal.classList.add(
+          "show"
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   CLOSE MODAL
+========================================================= */
+
+function closeModal(){
+
+  if(modal){
+
+    modal.classList.remove(
+      "show"
+    );
+
+  }
+
+  editingCareerId =
+    null;
+
+}
+
+
+if(closeModalBtn){
+
+  closeModalBtn.addEventListener(
+    "click",
+    closeModal
+  );
+
+}
+
+
+if(cancelBtn){
+
+  cancelBtn.addEventListener(
+    "click",
+    closeModal
+  );
+
+}
+
+
+if(modal){
+
+  modal.addEventListener(
+    "click",
+    event => {
+
+      if(
+        event.target ===
+        modal
+      ){
+
+        closeModal();
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   SAVE CAREER
+========================================================= */
+
+if(careerForm){
+
+  careerForm.addEventListener(
+    "submit",
+    async event => {
+
+      event.preventDefault();
+
+
+      if(!currentAdmin){
+
+        alert(
+          "Administrator session expired."
+        );
+
+        return;
+
+      }
+
+
+      const title =
+        document.getElementById(
+          "careerTitle"
+        )?.value.trim();
+
+
+      const category =
+        document.getElementById(
+          "careerCategory"
+        )?.value.trim();
+
+
+      const description =
+        document.getElementById(
+          "careerDescription"
+        )?.value.trim();
+
+
+      const location =
+        document.getElementById(
+          "careerLocation"
+        )?.value.trim();
+
+
+      const level =
+        document.getElementById(
+          "careerLevel"
+        )?.value.trim();
+
+
+      const skillsInput =
+        document.getElementById(
+          "careerSkills"
+        )?.value.trim();
+
+
+      if(!title){
+
+        alert(
+          "Career title is required."
+        );
+
+        return;
+
+      }
+
+
+      if(!description){
+
+        alert(
+          "Career description is required."
+        );
+
+        return;
+
+      }
+
+
+      const skills =
+        skillsInput
+        ?
+        skillsInput
+          .split(",")
+          .map(
+            skill =>
+              skill.trim()
+          )
+          .filter(Boolean)
+        :
+        [];
+
+
+      const careerData = {
+
+        title,
 
         category:
-          document
-            .getElementById("careerCategory")
-            .value
-            .trim(),
+          category ||
+          "Career",
 
-        education:
-          document
-            .getElementById("careerEducation")
-            .value
-            .trim(),
+        description,
 
-        subjects:
-          document
-            .getElementById("careerSubjects")
-            .value
-            .trim(),
+        location:
+          location ||
+          "Remote",
 
-        skills:
-          document
-            .getElementById("careerSkills")
-            .value
-            .trim(),
+        level:
+          level ||
+          "All Levels",
 
-        salary:
-          document
-            .getElementById("careerSalary")
-            .value
-            .trim(),
+        skills,
 
         status:
-          document
-            .getElementById("careerStatus")
-            .value,
+          careerStatus?.value ||
+          "active",
 
-        image:
-          document
-            .getElementById("careerImage")
-            .value
-            .trim(),
+        featured:
+          careerFeatured?.checked ||
+          false,
 
-        description:
-          document
-            .getElementById("careerDescription")
-            .value
-            .trim(),
+        updatedAt:
+          Date.now(),
 
-        opportunities:
-          document
-            .getElementById("careerOpportunities")
-            .value
-            .trim(),
-
-        courses:
-          document
-            .getElementById("careerCourses")
-            .value
-            .trim(),
-
-        createdAt:
-          Date.now()
+        updatedBy:
+          currentAdmin.uid
 
       };
 
 
       try{
 
-        await set(
-          careerRef,
-          career
-        );
+        if(editingCareerId){
+
+          await update(
+            ref(
+              rtdb,
+              "careers/" +
+              editingCareerId
+            ),
+            careerData
+          );
 
 
-        alert(
-          "Career added successfully!"
-        );
+          showToast(
+            "Career updated successfully."
+          );
+
+        }else{
+
+          const careerRef =
+            push(
+              ref(
+                rtdb,
+                "careers"
+              )
+            );
 
 
-        document
-          .getElementById("careerForm")
-          .reset();
+          await set(
+            careerRef,
+            {
+
+              ...careerData,
+
+              id:
+                careerRef.key,
+
+              views:
+                0,
+
+              applications:
+                0,
+
+              createdAt:
+                Date.now(),
+
+              createdBy:
+                currentAdmin.uid
+
+            }
+          );
+
+
+          showToast(
+            "Career created successfully."
+          );
+
+        }
+
+
+        closeModal();
+
+        await loadCareers();
 
 
       }catch(error){
 
-        console.error(error);
+        console.error(
+          "Save career error:",
+          error
+        );
+
 
         alert(
-          "Failed to add career: "
-          + error.message
+          "Unable to save career: " +
+          error.message
         );
 
       }
 
-    });
+    }
+  );
 
-</script>
+}
 
-</body>
-</html>
+
+/* =========================================================
+   CAREER ACTIONS
+========================================================= */
+
+if(careerList){
+
+  careerList.addEventListener(
+    "click",
+    async event => {
+
+      const editButton =
+        event.target.closest(
+          "[data-edit]"
+        );
+
+
+      const deleteButton =
+        event.target.closest(
+          "[data-delete]"
+        );
+
+
+      const toggleButton =
+        event.target.closest(
+          "[data-toggle]"
+        );
+
+
+      /* EDIT */
+
+      if(editButton){
+
+        await editCareer(
+          editButton.dataset.edit
+        );
+
+        return;
+
+      }
+
+
+      /* DELETE */
+
+      if(deleteButton){
+
+        await deleteCareer(
+          deleteButton.dataset.delete
+        );
+
+        return;
+
+      }
+
+
+      /* TOGGLE */
+
+      if(toggleButton){
+
+        await toggleCareer(
+          toggleButton.dataset.toggle
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   EDIT CAREER
+========================================================= */
+
+async function editCareer(
+  id
+){
+
+  try{
+
+    const snapshot =
+      await get(
+        ref(
+          rtdb,
+          "careers/" + id
+        )
+      );
+
+
+    if(!snapshot.exists()){
+
+      alert(
+        "Career not found."
+      );
+
+      return;
+
+    }
+
+
+    const career =
+      snapshot.val();
+
+
+    editingCareerId =
+      id;
+
+
+    document.getElementById(
+      "careerTitle"
+    ).value =
+      career.title || "";
+
+
+    document.getElementById(
+      "careerCategory"
+    ).value =
+      career.category || "";
+
+
+    document.getElementById(
+      "careerDescription"
+    ).value =
+      career.description || "";
+
+
+    document.getElementById(
+      "careerLocation"
+    ).value =
+      career.location || "";
+
+
+    document.getElementById(
+      "careerLevel"
+    ).value =
+      career.level || "";
+
+
+    document.getElementById(
+      "careerSkills"
+    ).value =
+      Array.isArray(
+        career.skills
+      )
+      ?
+      career.skills.join(
+        ", "
+      )
+      :
+      "";
+
+
+    if(careerStatus){
+
+      careerStatus.value =
+        career.status ||
+        "draft";
+
+    }
+
+
+    if(careerFeatured){
+
+      careerFeatured.checked =
+        career.featured === true;
+
+    }
+
+
+    if(modal){
+
+      modal.classList.add(
+        "show"
+      );
+
+    }
+
+  }catch(error){
+
+    console.error(
+      "Edit career error:",
+      error
+    );
+
+    alert(
+      "Unable to load career."
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   DELETE CAREER
+========================================================= */
+
+async function deleteCareer(
+  id
+){
+
+  const confirmed =
+    confirm(
+      "Delete this career permanently?"
+    );
+
+
+  if(!confirmed){
+
+    return;
+
+  }
+
+
+  try{
+
+    await remove(
+      ref(
+        rtdb,
+        "careers/" + id
+      )
+    );
+
+
+    showToast(
+      "Career deleted successfully."
+    );
+
+
+    await loadCareers();
+
+
+  }catch(error){
+
+    console.error(
+      "Delete career error:",
+      error
+    );
+
+
+    alert(
+      "Unable to delete career."
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   TOGGLE CAREER STATUS
+========================================================= */
+
+async function toggleCareer(
+  id
+){
+
+  try{
+
+    const careerRef =
+      ref(
+        rtdb,
+        "careers/" + id
+      );
+
+
+    const snapshot =
+      await get(
+        careerRef
+      );
+
+
+    if(!snapshot.exists()){
+
+      return;
+
+    }
+
+
+    const career =
+      snapshot.val();
+
+
+    const newStatus =
+      career.status ===
+      "active"
+      ?
+      "draft"
+      :
+      "active";
+
+
+    await update(
+      careerRef,
+      {
+
+        status:
+          newStatus,
+
+        updatedAt:
+          Date.now(),
+
+        updatedBy:
+          currentAdmin.uid
+
+      }
+    );
+
+
+    showToast(
+      newStatus === "active"
+      ?
+      "Career activated."
+      :
+      "Career disabled."
+    );
+
+
+    await loadCareers();
+
+
+  }catch(error){
+
+    console.error(
+      "Toggle career error:",
+      error
+    );
+
+    alert(
+      "Unable to update career status."
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+if(searchInput){
+
+  searchInput.addEventListener(
+    "input",
+    async event => {
+
+      const keyword =
+        event.target.value
+          .toLowerCase()
+          .trim();
+
+
+      const cards =
+        careerList.querySelectorAll(
+          ".career-card"
+        );
+
+
+      cards.forEach(
+        card => {
+
+          const text =
+            card.textContent
+              .toLowerCase();
+
+
+          card.style.display =
+            !keyword ||
+            text.includes(
+              keyword
+            )
+            ?
+            ""
+            :
+            "none";
+
+        }
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+function showToast(
+  message
+){
+
+  const toast =
+    document.getElementById(
+      "toast"
+    );
+
+
+  if(!toast){
+
+    return;
+
+  }
+
+
+  toast.textContent =
+    message;
+
+
+  toast.classList.add(
+    "show"
+  );
+
+
+  clearTimeout(
+    window.__toastTimer
+  );
+
+
+  window.__toastTimer =
+    setTimeout(
+      ()=>{
+
+        toast.classList.remove(
+          "show"
+        );
+
+      },
+      3000
+    );
+
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHTML(
+  value
+){
+
+  return String(
+    value ?? ""
+  )
+  .replace(
+    /&/g,
+    "&amp;"
+  )
+  .replace(
+    /</g,
+    "&lt;"
+  )
+  .replace(
+    />/g,
+    "&gt;"
+  )
+  .replace(
+    /"/g,
+    "&quot;"
+  )
+  .replace(
+    /'/g,
+    "&#039;"
+  );
+
+}
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
+if(logoutBtn){
+
+  logoutBtn.addEventListener(
+    "click",
+    async ()=>{
+
+      try{
+
+        await signOut(
+          auth
+        );
+
+        window.location.href =
+          "login.html";
+
+      }catch(error){
+
+        console.error(
+          "Logout error:",
+          error
+        );
+
+        alert(
+          "Unable to logout."
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   INITIAL LOAD
+========================================================= */
+
+console.log(
+  "LetsStudy Pro Admin Career ready."
+);
