@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Admin Courses | LetsStudy Pro</title>
 
 <style>
@@ -16,73 +16,77 @@ body{
 header{
  background:#111827;
  color:#fff;
- padding:18px 22px;
+ padding:16px 20px;
  display:flex;
  justify-content:space-between;
- align-items:center
+ align-items:center;
+ position:sticky;
+ top:0;
+ z-index:20
 }
 .container{
  max-width:1200px;
  margin:auto;
  padding:20px
 }
-.grid{
- display:grid;
- grid-template-columns:repeat(4,1fr);
- gap:15px;
- margin-bottom:20px
-}
 .card{
  background:#fff;
  border-radius:14px;
  padding:18px;
+ margin-bottom:18px;
  box-shadow:0 3px 15px #0001
 }
-.stat{
- font-size:28px;
- font-weight:bold;
- margin-top:8px
-}
-.form{
+.grid{
  display:grid;
- gap:11px
+ grid-template-columns:repeat(4,1fr);
+ gap:15px
+}
+.stat{
+ font-size:26px;
+ font-weight:800;
+ margin-top:7px
+}
+.form-grid{
+ display:grid;
+ grid-template-columns:repeat(2,1fr);
+ gap:12px
 }
 input,textarea,select{
  width:100%;
  padding:12px;
- border:1px solid #d9dee8;
+ border:1px solid #dbe0e7;
  border-radius:9px;
- font-size:15px
+ font:inherit
 }
 textarea{
- min-height:100px;
+ min-height:110px;
  resize:vertical
+}
+.full{
+ grid-column:1/-1
 }
 button{
  border:0;
- border-radius:9px;
- padding:10px 15px;
+ padding:10px 14px;
+ border-radius:8px;
  cursor:pointer;
- font-weight:bold
+ font-weight:700
 }
 .primary{background:#2563eb;color:#fff}
+.success{background:#16a34a;color:#fff}
 .danger{background:#dc2626;color:#fff}
-.secondary{background:#e5e7eb;color:#111}
-.actions{
- display:flex;
- gap:7px;
- flex-wrap:wrap
-}
+.warning{background:#f59e0b;color:#111}
+.gray{background:#e5e7eb;color:#111}
 .toolbar{
  display:grid;
- grid-template-columns:2fr 1fr;
+ grid-template-columns:2fr 1fr 1fr;
  gap:10px;
  margin-bottom:15px
 }
 .course{
  border:1px solid #e5e7eb;
- border-radius:12px;
- padding:16px;
+ border-radius:13px;
+ padding:15px;
  margin-bottom:12px
 }
 .course h3{
@@ -93,25 +97,57 @@ button{
  font-size:13px;
  line-height:1.7
 }
+.actions{
+ display:flex;
+ gap:7px;
+ flex-wrap:wrap;
+ margin-top:12px
+}
 .badge{
  display:inline-block;
  padding:4px 8px;
  border-radius:20px;
+ font-size:11px;
  background:#eef2ff;
  color:#3730a3;
- font-size:12px
+ margin-right:4px
 }
-#loading{
+.modal{
+ position:fixed;
+ inset:0;
+ background:#0008;
+ display:none;
+ align-items:center;
+ justify-content:center;
+ padding:15px;
+ z-index:100
+}
+.modal-box{
+ background:#fff;
+ width:min(800px,100%);
+ max-height:90vh;
+ overflow:auto;
+ border-radius:16px;
+ padding:20px
+}
+.modal-head{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ margin-bottom:15px
+}
+.empty{
  text-align:center;
- padding:50px
+ padding:30px;
+ color:#6b7280
 }
 .hidden{display:none}
 @media(max-width:800px){
  .grid{grid-template-columns:repeat(2,1fr)}
+ .form-grid,.toolbar{grid-template-columns:1fr}
 }
 @media(max-width:500px){
  .grid{grid-template-columns:1fr}
- .toolbar{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -119,112 +155,260 @@ button{
 <body>
 
 <header>
- <strong>📚 LetsStudy Pro — Courses</strong>
- <button class="secondary" onclick="logout()">Logout</button>
+ <strong>📚 LetsStudy Pro — Course Admin</strong>
+ <button class="gray" onclick="logout()">Logout</button>
 </header>
 
-<div id="loading">Loading Courses...</div>
+<main class="container">
 
-<main id="app" class="container hidden">
+<!-- =====================================
+     STATISTICS
+===================================== -->
 
- <div class="grid">
+<section class="grid">
 
-  <div class="card">
-   <div>Total Courses</div>
-   <div id="total" class="stat">0</div>
-  </div>
-
-  <div class="card">
-   <div>Published</div>
-   <div id="published" class="stat">0</div>
-  </div>
-
-  <div class="card">
-   <div>Drafts</div>
-   <div id="drafts" class="stat">0</div>
-  </div>
-
-  <div class="card">
-   <div>Free Courses</div>
-   <div id="free" class="stat">0</div>
-  </div>
-
+ <div class="card">
+  <div>Total Courses</div>
+  <div id="totalCourses" class="stat">0</div>
  </div>
 
+ <div class="card">
+  <div>Published</div>
+  <div id="publishedCourses" class="stat">0</div>
+ </div>
 
- <section class="card">
+ <div class="card">
+  <div>Free Courses</div>
+  <div id="freeCourses" class="stat">0</div>
+ </div>
 
-  <h2 id="formTitle">
-   Create Course
-  </h2>
+ <div class="card">
+  <div>Featured</div>
+  <div id="featuredCourses" class="stat">0</div>
+ </div>
 
-  <form id="courseForm" class="form">
+</section>
 
-   <input
-    id="courseTitle"
-    placeholder="Course title"
-    required
-   >
 
-   <textarea
-    id="courseDescription"
-    placeholder="Course description"
-    required
-   ></textarea>
+<!-- =====================================
+     ADD COURSE
+===================================== -->
 
-   <input
-    id="courseCategory"
-    placeholder="Category e.g. Technology"
-    required
-   >
+<section class="card">
 
-   <input
-    id="courseInstructor"
-    placeholder="Instructor name"
-   >
+ <h2>Create Course</h2>
 
-   <input
-    id="courseDuration"
-    placeholder="Duration e.g. 8 Weeks"
-   >
+ <form id="courseForm">
 
-   <input
-    id="coursePrice"
-    type="number"
-    min="0"
-    placeholder="Price TZS"
-   >
+  <div class="form-grid">
 
-   <input
-    id="courseImage"
-    placeholder="Course image URL"
-   >
+   <div>
+    <label>Course Title</label>
+    <input
+     id="courseTitle"
+     required
+     placeholder="e.g. A-Level Biology"
+    >
+   </div>
 
-   <select id="courseLevel">
-    <option value="beginner">Beginner</option>
-    <option value="intermediate">Intermediate</option>
-    <option value="advanced">Advanced</option>
-   </select>
+   <div>
+    <label>Slug</label>
+    <input
+     id="courseSlug"
+     placeholder="a-level-biology"
+    >
+   </div>
 
-   <select id="courseStatus">
-    <option value="draft">Draft</option>
-    <option value="published">Published</option>
-   </select>
+   <div>
+    <label>Category</label>
+    <input
+     id="courseCategory"
+     placeholder="Biology"
+    >
+   </div>
 
-   <div class="actions">
+   <div>
+    <label>Level</label>
+    <select id="courseLevel">
+     <option value="beginner">Beginner</option>
+     <option value="intermediate">Intermediate</option>
+     <option value="advanced">Advanced</option>
+     <option value="all">All Levels</option>
+    </select>
+   </div>
+
+   <div>
+    <label>Language</label>
+    <select id="courseLanguage">
+     <option value="English">English</option>
+     <option value="Swahili">Swahili</option>
+     <option value="English & Swahili">
+      English & Swahili
+     </option>
+    </select>
+   </div>
+
+   <div>
+    <label>Instructor Name</label>
+    <input
+     id="instructorName"
+     placeholder="Instructor name"
+    >
+   </div>
+
+   <div>
+    <label>Instructor ID</label>
+    <input
+     id="instructorId"
+     placeholder="Firebase UID"
+    >
+   </div>
+
+   <div>
+    <label>Duration</label>
+    <input
+     id="courseDuration"
+     placeholder="e.g. 12 weeks"
+    >
+   </div>
+
+   <div>
+    <label>Price</label>
+    <input
+     id="coursePrice"
+     type="number"
+     min="0"
+     value="0"
+    >
+   </div>
+
+   <div>
+    <label>Discount Price</label>
+    <input
+     id="discountPrice"
+     type="number"
+     min="0"
+     value="0"
+    >
+   </div>
+
+   <div>
+    <label>Currency</label>
+    <input
+     id="currency"
+     value="TZS"
+    >
+   </div>
+
+   <div>
+    <label>Thumbnail URL</label>
+    <input
+     id="thumbnail"
+     placeholder="https://..."
+    >
+   </div>
+
+   <div class="full">
+    <label>Banner URL</label>
+    <input
+     id="banner"
+     placeholder="https://..."
+    >
+   </div>
+
+   <div class="full">
+    <label>Short Description</label>
+    <textarea
+     id="shortDescription"
+     placeholder="Short course description"
+    ></textarea>
+   </div>
+
+   <div class="full">
+    <label>Description</label>
+    <textarea
+     id="description"
+     placeholder="Full course description"
+    ></textarea>
+   </div>
+
+   <div class="full">
+    <label>Requirements</label>
+    <textarea
+     id="requirements"
+     placeholder="Course requirements"
+    ></textarea>
+   </div>
+
+   <div class="full">
+    <label>Learning Outcomes</label>
+    <textarea
+     id="learningOutcomes"
+     placeholder="What students will learn"
+    ></textarea>
+   </div>
+
+   <div class="full">
+    <label>Tags</label>
+    <input
+     id="tags"
+     placeholder="biology, science, a-level"
+    >
+   </div>
+
+   <div>
+    <label>
+     <input
+      id="isFree"
+      type="checkbox"
+     >
+     Free Course
+    </label>
+   </div>
+
+   <div>
+    <label>
+     <input
+      id="published"
+      type="checkbox"
+     >
+     Published
+    </label>
+   </div>
+
+   <div>
+    <label>
+     <input
+      id="featured"
+      type="checkbox"
+     >
+     Featured
+    </label>
+   </div>
+
+   <div>
+    <label>
+     <input
+      id="certificateEnabled"
+      type="checkbox"
+      checked
+     >
+     Certificate Enabled
+    </label>
+   </div>
+
+   <div class="full">
 
     <button
      class="primary"
      type="submit"
     >
-     <span id="submitText">
-      Create Course
-     </span>
+     ➕ Create Course
     </button>
 
     <button
      type="button"
-     class="secondary"
+     class="gray"
      onclick="resetForm()"
     >
      Clear
@@ -232,84 +416,269 @@ button{
 
    </div>
 
-  </form>
+  </div>
 
- </section>
+ </form>
 
- <br>
+</section>
 
- <section class="card">
 
-  <div class="toolbar">
+<!-- =====================================
+     COURSE LIST
+===================================== -->
 
-   <input
-    id="search"
-    placeholder="Search courses..."
+<section class="card">
+
+ <h2>Courses</h2>
+
+ <div class="toolbar">
+
+  <input
+   id="search"
+   placeholder="Search courses..."
+  >
+
+  <select id="statusFilter">
+   <option value="all">All Status</option>
+   <option value="published">Published</option>
+   <option value="draft">Draft</option>
+  </select>
+
+  <select id="categoryFilter">
+   <option value="all">All Categories</option>
+  </select>
+
+ </div>
+
+ <div id="courseList">
+  Loading courses...
+ </div>
+
+</section>
+
+</main>
+
+
+<!-- =====================================
+     EDIT MODAL
+===================================== -->
+
+<div
+ id="editModal"
+ class="modal"
+>
+
+ <div class="modal-box">
+
+  <div class="modal-head">
+
+   <h2>Edit Course</h2>
+
+   <button
+    class="gray"
+    onclick="closeModal()"
    >
-
-   <select id="filter">
-    <option value="all">All Courses</option>
-    <option value="published">Published</option>
-    <option value="draft">Drafts</option>
-    <option value="free">Free</option>
-   </select>
+    ✕
+   </button>
 
   </div>
 
-  <div id="courseList"></div>
+  <div class="form-grid">
 
- </section>
+   <div class="full">
+    <label>Title</label>
+    <input id="editTitle">
+   </div>
 
-</main>
+   <div>
+    <label>Category</label>
+    <input id="editCategory">
+   </div>
+
+   <div>
+    <label>Level</label>
+    <select id="editLevel">
+     <option value="beginner">Beginner</option>
+     <option value="intermediate">Intermediate</option>
+     <option value="advanced">Advanced</option>
+     <option value="all">All Levels</option>
+    </select>
+   </div>
+
+   <div>
+    <label>Price</label>
+    <input
+     id="editPrice"
+     type="number"
+    >
+   </div>
+
+   <div>
+    <label>Discount Price</label>
+    <input
+     id="editDiscount"
+     type="number"
+    >
+   </div>
+
+   <div>
+    <label>Duration</label>
+    <input id="editDuration">
+   </div>
+
+   <div class="full">
+    <label>Short Description</label>
+    <textarea id="editShort"></textarea>
+   </div>
+
+   <div class="full">
+    <label>Description</label>
+    <textarea id="editDescription"></textarea>
+   </div>
+
+   <div class="full">
+    <label>Thumbnail</label>
+    <input id="editThumbnail">
+   </div>
+
+   <div class="full">
+    <label>Tags</label>
+    <input id="editTags">
+   </div>
+
+   <div>
+
+    <label>
+     <input
+      id="editFree"
+      type="checkbox"
+     >
+     Free
+    </label>
+
+   </div>
+
+   <div>
+
+    <label>
+     <input
+      id="editPublished"
+      type="checkbox"
+     >
+     Published
+    </label>
+
+   </div>
+
+   <div>
+
+    <label>
+     <input
+      id="editFeatured"
+      type="checkbox"
+     >
+     Featured
+    </label>
+
+   </div>
+
+   <div>
+
+    <label>
+     <input
+      id="editCertificate"
+      type="checkbox"
+     >
+     Certificate
+    </label>
+
+   </div>
+
+   <div class="full">
+
+    <button
+     class="primary"
+     onclick="saveEdit()"
+    >
+     💾 Save Changes
+    </button>
+
+   </div>
+
+  </div>
+
+ </div>
+
+</div>
 
 
 <script type="module">
 
 import {
  initializeApp
-} from
+}
+from
 "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
  getAuth,
  onAuthStateChanged,
  signOut
-} from
+}
+from
 "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
  getFirestore,
  collection,
- addDoc,
  getDocs,
- doc,
+ addDoc,
  updateDoc,
  deleteDoc,
+ doc,
  serverTimestamp
-} from
+}
+from
 "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
 /* =====================================
-   FIREBASE
+   FIREBASE CONFIG
 ===================================== */
 
 const firebaseConfig = {
- apiKey:"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
- authDomain:"let-s-study-pro-course.firebaseapp.com",
+
+ apiKey:
+ "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+ authDomain:
+ "let-s-study-pro-course.firebaseapp.com",
+
  databaseURL:
  "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
- projectId:"let-s-study-pro-course",
+
+ projectId:
+ "let-s-study-pro-course",
+
  storageBucket:
  "let-s-study-pro-course.firebasestorage.app",
- messagingSenderId:"474928293390",
+
+ messagingSenderId:
+ "474928293390",
+
  appId:
  "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
- measurementId:"G-85B7V5H5J0"
+
+ measurementId:
+ "G-85B7V5H5J0"
+
 };
 
+
 const app =
- initializeApp(firebaseConfig);
+ initializeApp(
+  firebaseConfig
+ );
 
 const auth =
  getAuth(app);
@@ -323,41 +692,10 @@ const db =
 ===================================== */
 
 let courses = [];
+
 let editingId = null;
+
 let currentUser = null;
-
-
-/* =====================================
-   ELEMENTS
-===================================== */
-
-const loading =
- document.getElementById("loading");
-
-const appBox =
- document.getElementById("app");
-
-const form =
- document.getElementById("courseForm");
-
-const list =
- document.getElementById("courseList");
-
-
-/* =====================================
-   ESCAPE
-===================================== */
-
-function escapeHTML(value){
-
- return String(value ?? "")
-  .replace(/&/g,"&amp;")
-  .replace(/</g,"&lt;")
-  .replace(/>/g,"&gt;")
-  .replace(/"/g,"&quot;")
-  .replace(/'/g,"&#039;");
-
-}
 
 
 /* =====================================
@@ -368,10 +706,7 @@ onAuthStateChanged(
  auth,
  async user => {
 
-  currentUser = user || null;
-
-  loading.classList.add("hidden");
-  appBox.classList.remove("hidden");
+  currentUser = user;
 
   await loadCourses();
 
@@ -397,41 +732,30 @@ async function loadCourses(){
 
   courses =
    snap.docs.map(
-    item => ({
-     id:item.id,
-     ...item.data()
+    d => ({
+     id:d.id,
+     ...d.data()
     })
    );
 
-  courses.sort(
-   (a,b) => {
+  updateStats();
 
-    const x =
-     a.createdAt?.seconds || 0;
-
-    const y =
-     b.createdAt?.seconds || 0;
-
-    return y-x;
-
-   }
-  );
+  updateCategories();
 
   renderCourses();
-  updateStats();
 
  }
  catch(error){
 
   console.error(
-   "Courses error:",
+   "Course loading error:",
    error
   );
 
-  list.innerHTML =
-   `<div class="course">
-    Failed to load courses.
-   </div>`;
+  document.getElementById(
+   "courseList"
+  ).innerHTML =
+   "<div class='empty'>Failed to load courses.</div>";
 
  }
 
@@ -439,49 +763,188 @@ async function loadCourses(){
 
 
 /* =====================================
-   STATS
+   CREATE COURSE
 ===================================== */
 
-function updateStats(){
+document
+ .getElementById(
+  "courseForm"
+ )
+ .addEventListener(
+  "submit",
+  async event => {
 
- const total =
-  courses.length;
+   event.preventDefault();
 
- const published =
-  courses.filter(
-   c => c.status === "published"
-  ).length;
+   const title =
+    value("courseTitle");
 
- const drafts =
-  courses.filter(
-   c =>
-    !c.status ||
-    c.status === "draft"
-  ).length;
+   if(!title){
 
- const free =
-  courses.filter(
-   c =>
-    Number(c.price || 0) === 0
-  ).length;
+    alert(
+     "Course title is required."
+    );
 
- document.getElementById(
-  "total"
- ).textContent = total;
+    return;
 
- document.getElementById(
-  "published"
- ).textContent = published;
+   }
 
- document.getElementById(
-  "drafts"
- ).textContent = drafts;
 
- document.getElementById(
-  "free"
- ).textContent = free;
+   try{
 
-}
+    const slug =
+     value("courseSlug") ||
+     createSlug(title);
+
+    const isFree =
+     checked("isFree");
+
+    const published =
+     checked("published");
+
+    const data = {
+
+     title,
+
+     slug,
+
+     description:
+      value("description"),
+
+     shortDescription:
+      value("shortDescription"),
+
+     thumbnail:
+      value("thumbnail"),
+
+     banner:
+      value("banner"),
+
+     categoryId:
+      createSlug(
+       value("courseCategory")
+      ),
+
+     categoryName:
+      value("courseCategory"),
+
+     instructorId:
+      value("instructorId"),
+
+     instructorName:
+      value("instructorName"),
+
+     level:
+      value("courseLevel"),
+
+     language:
+      value("courseLanguage"),
+
+     price:
+      Number(
+       value("coursePrice")
+      ) || 0,
+
+     currency:
+      value("currency") ||
+      "TZS",
+
+     discountPrice:
+      Number(
+       value("discountPrice")
+      ) || 0,
+
+     isFree,
+
+     status:
+      published ?
+      "published" :
+      "draft",
+
+     featured:
+      checked("featured"),
+
+     published,
+
+     rating:0,
+
+     ratingCount:0,
+
+     enrollmentCount:0,
+
+     duration:
+      value("courseDuration"),
+
+     lessonCount:0,
+
+     certificateEnabled:
+      checked(
+       "certificateEnabled"
+      ),
+
+     requirements:
+      value("requirements"),
+
+     learningOutcomes:
+      value("learningOutcomes"),
+
+     tags:
+      value("tags")
+       .split(",")
+       .map(
+        x => x.trim()
+       )
+       .filter(Boolean),
+
+     createdAt:
+      serverTimestamp(),
+
+     updatedAt:
+      serverTimestamp(),
+
+     publishedAt:
+      published ?
+      serverTimestamp() :
+      null,
+
+     createdBy:
+      currentUser?.uid ||
+      ""
+
+    };
+
+
+    await addDoc(
+     collection(
+      db,
+      "courses"
+     ),
+     data
+    );
+
+
+    alert(
+     "Course created successfully."
+    );
+
+    resetForm();
+
+    await loadCourses();
+
+   }
+   catch(error){
+
+    console.error(error);
+
+    alert(
+     "Failed to create course: " +
+     error.message
+    );
+
+   }
+
+  }
+);
 
 
 /* =====================================
@@ -491,16 +954,14 @@ function updateStats(){
 function renderCourses(){
 
  const search =
-  document.getElementById(
-   "search"
-  ).value
-   .toLowerCase()
-   .trim();
+  value("search")
+   .toLowerCase();
 
- const filter =
-  document.getElementById(
-   "filter"
-  ).value;
+ const status =
+  value("statusFilter");
+
+ const category =
+  value("categoryFilter");
 
 
  const filtered =
@@ -509,333 +970,228 @@ function renderCourses(){
 
     const text =
      (
-      course.title || ""
-     ).toLowerCase()
-     + " " +
-     (
-      course.category || ""
-     ).toLowerCase()
-     + " " +
-     (
-      course.instructor || ""
+      course.title ||
+      ""
      ).toLowerCase();
 
     const matchesSearch =
      !search ||
      text.includes(search);
 
-    let matchesFilter = true;
+    const matchesStatus =
+     status === "all" ||
+     (
+      status === "published" &&
+      course.published === true
+     ) ||
+     (
+      status === "draft" &&
+      course.published !== true
+     );
 
-    if(
-     filter === "published"
-    ){
-
-     matchesFilter =
-      course.status ===
-      "published";
-
-    }
-
-    if(
-     filter === "draft"
-    ){
-
-     matchesFilter =
-      !course.status ||
-      course.status === "draft";
-
-    }
-
-    if(
-     filter === "free"
-    ){
-
-     matchesFilter =
-      Number(
-       course.price || 0
-      ) === 0;
-
-    }
+    const matchesCategory =
+     category === "all" ||
+     (
+      course.categoryName ||
+      ""
+     ) === category;
 
     return (
      matchesSearch &&
-     matchesFilter
+     matchesStatus &&
+     matchesCategory
     );
 
    }
   );
 
 
+ const container =
+  document.getElementById(
+   "courseList"
+  );
+
+
  if(!filtered.length){
 
-  list.innerHTML =
-   `<div class="course">
-    No courses found.
-   </div>`;
+  container.innerHTML = `
+   <div class="empty">
+    <div style="font-size:35px">
+     📚
+    </div>
+    <p>No courses found.</p>
+   </div>
+  `;
 
   return;
 
  }
 
 
- list.innerHTML =
+ container.innerHTML =
   filtered.map(
-   course => `
+   course => {
 
-   <div class="course">
+    const price =
+     course.isFree
+     ? "FREE"
+     : (
+      course.currency ||
+      "TZS"
+     ) +
+     " " +
+     Number(
+      course.discountPrice ||
+      course.price ||
+      0
+     ).toLocaleString();
 
-    <h3>
-     ${escapeHTML(
-      course.title ||
-      "Untitled Course"
-     )}
-    </h3>
 
-    <p>
-     ${escapeHTML(
-      course.description ||
-      ""
-     )}
-    </p>
+    return `
 
-    <div class="meta">
+     <div class="course">
 
-     <span class="badge">
-      ${escapeHTML(
-       course.status ||
-       "draft"
-      )}
-     </span>
+      <h3>
+       ${escapeHTML(
+        course.title ||
+        "Untitled Course"
+       )}
+      </h3>
 
-     &nbsp;
+      <div class="meta">
 
-     Category:
-     ${escapeHTML(
-      course.category ||
-      "General"
-     )}
+       Category:
+       ${escapeHTML(
+        course.categoryName ||
+        "-"
+       )}
 
-     <br>
+       <br>
 
-     Instructor:
-     ${escapeHTML(
-      course.instructor ||
-      "Not assigned"
-     )}
+       Level:
+       ${escapeHTML(
+        course.level ||
+        "-"
+       )}
 
-     <br>
+       <br>
 
-     Level:
-     ${escapeHTML(
-      course.level ||
-      "beginner"
-     )}
+       Instructor:
+       ${escapeHTML(
+        course.instructorName ||
+        "-"
+       )}
 
-     <br>
+       <br>
 
-     Duration:
-     ${escapeHTML(
-      course.duration ||
-      "Not specified"
-     )}
+       Price:
+       <strong>
+        ${escapeHTML(price)}
+       </strong>
 
-     <br>
+       <br>
 
-     Price:
-     TZS ${Number(
-      course.price || 0
-     ).toLocaleString()}
+       Enrollments:
+       ${Number(
+        course.enrollmentCount ||
+        0
+       ).toLocaleString()}
 
-    </div>
+       <br>
 
-    <br>
+       Rating:
+       ⭐
+       ${Number(
+        course.rating ||
+        0
+       ).toFixed(1)}
 
-    <div class="actions">
+      </div>
 
-     <button
-      class="secondary"
-      onclick="editCourse('${course.id}')"
-     >
-      Edit
-     </button>
+      <div style="margin-top:8px">
 
-     <button
-      class="secondary"
-      onclick="toggleStatus('${course.id}')"
-     >
-      ${course.status === "published"
-       ? "Unpublish"
-       : "Publish"}
-     </button>
+       <span class="badge">
+        ${
+         course.published
+         ? "Published"
+         : "Draft"
+        }
+       </span>
 
-     <button
-      class="danger"
-      onclick="deleteCourse('${course.id}')"
-     >
-      Delete
-     </button>
+       ${
+        course.featured
+        ? `
+         <span class="badge">
+          ⭐ Featured
+         </span>
+        `
+        : ""
+       }
 
-    </div>
+       ${
+        course.isFree
+        ? `
+         <span class="badge">
+          Free
+         </span>
+        `
+        : ""
+       }
 
-   </div>
+      </div>
 
-  `
+      <div class="actions">
+
+       <button
+        class="primary"
+        onclick="editCourse('${course.id}')"
+       >
+        ✏️ Edit
+       </button>
+
+       <button
+        class="warning"
+        onclick="togglePublish('${course.id}')"
+       >
+        ${
+         course.published
+         ? "Unpublish"
+         : "Publish"
+        }
+       </button>
+
+       <button
+        class="success"
+        onclick="toggleFeatured('${course.id}')"
+       >
+        ${
+         course.featured
+         ? "Remove Featured"
+         : "⭐ Featured"
+        }
+       </button>
+
+       <button
+        class="danger"
+        onclick="deleteCourse('${course.id}')"
+       >
+        🗑 Delete
+       </button>
+
+      </div>
+
+     </div>
+
+    `;
+
+   }
   ).join("");
 
 }
 
 
 /* =====================================
-   CREATE / UPDATE
-===================================== */
-
-form.addEventListener(
- "submit",
- async event => {
-
-  event.preventDefault();
-
-
-  const data = {
-
-   title:
-    document.getElementById(
-     "courseTitle"
-    ).value.trim(),
-
-   description:
-    document.getElementById(
-     "courseDescription"
-    ).value.trim(),
-
-   category:
-    document.getElementById(
-     "courseCategory"
-    ).value.trim(),
-
-   instructor:
-    document.getElementById(
-     "courseInstructor"
-    ).value.trim(),
-
-   duration:
-    document.getElementById(
-     "courseDuration"
-    ).value.trim(),
-
-   price:
-    Number(
-     document.getElementById(
-      "coursePrice"
-     ).value || 0
-    ),
-
-   image:
-    document.getElementById(
-     "courseImage"
-    ).value.trim(),
-
-   level:
-    document.getElementById(
-     "courseLevel"
-    ).value,
-
-   status:
-    document.getElementById(
-     "courseStatus"
-    ).value,
-
-   updatedAt:
-    serverTimestamp()
-
-  };
-
-
-  if(!data.title){
-
-   alert(
-    "Course title is required."
-   );
-
-   return;
-
-  }
-
-
-  try{
-
-   if(editingId){
-
-    await updateDoc(
-     doc(
-      db,
-      "courses",
-      editingId
-     ),
-     data
-    );
-
-    alert(
-     "Course updated."
-    );
-
-   }
-   else{
-
-    await addDoc(
-     collection(
-      db,
-      "courses"
-     ),
-     {
-
-      ...data,
-
-      createdAt:
-       serverTimestamp(),
-
-      createdBy:
-       currentUser?.uid ||
-       "admin",
-
-      students:0,
-
-      rating:0,
-
-      reviews:0
-
-     }
-    );
-
-    alert(
-     "Course created."
-    );
-
-   }
-
-
-   resetForm();
-
-   await loadCourses();
-
-  }
-  catch(error){
-
-   console.error(error);
-
-   alert(
-    "Operation failed: " +
-    error.message
-   );
-
-  }
-
- }
-);
-
-
-/* =====================================
-   EDIT
+   EDIT COURSE
 ===================================== */
 
 window.editCourse =
@@ -843,224 +1199,787 @@ window.editCourse =
 
   const course =
    courses.find(
-    c => c.id === id
+    x => x.id === id
    );
 
-  if(!course) return;
+  if(!course)
+   return;
 
   editingId = id;
 
 
   document.getElementById(
-   "courseTitle"
+   "editTitle"
   ).value =
    course.title || "";
 
-  document.getElementById(
-   "courseDescription"
-  ).value =
-   course.description || "";
 
   document.getElementById(
-   "courseCategory"
+   "editCategory"
   ).value =
-   course.category || "";
+   course.categoryName || "";
+
 
   document.getElementById(
-   "courseInstructor"
+   "editLevel"
   ).value =
-   course.instructor || "";
+   course.level || "all";
+
 
   document.getElementById(
-   "courseDuration"
-  ).value =
-   course.duration || "";
-
-  document.getElementById(
-   "coursePrice"
+   "editPrice"
   ).value =
    course.price || 0;
 
+
   document.getElementById(
-   "courseImage"
+   "editDiscount"
   ).value =
-   course.image || "";
+   course.discountPrice || 0;
+
 
   document.getElementById(
-   "courseLevel"
+   "editDuration"
   ).value =
-   course.level || "beginner";
+   course.duration || "";
+
 
   document.getElementById(
-   "courseStatus"
+   "editShort"
   ).value =
-   course.status || "draft";
+   course.shortDescription || "";
 
 
   document.getElementById(
-   "formTitle"
-  ).textContent =
-   "Edit Course";
+   "editDescription"
+  ).value =
+   course.description || "";
+
 
   document.getElementById(
-   "submitText"
-  ).textContent =
-   "Update Course";
+   "editThumbnail"
+  ).value =
+   course.thumbnail || "";
 
 
-  window.scrollTo({
-   top:0,
-   behavior:"smooth"
-  });
+  document.getElementById(
+   "editTags"
+  ).value =
+   Array.isArray(
+    course.tags
+   )
+   ? course.tags.join(", ")
+   : (
+    course.tags || ""
+   );
+
+
+  document.getElementById(
+   "editFree"
+  ).checked =
+   course.isFree === true;
+
+
+  document.getElementById(
+   "editPublished"
+  ).checked =
+   course.published === true;
+
+
+  document.getElementById(
+   "editFeatured"
+  ).checked =
+   course.featured === true;
+
+
+  document.getElementById(
+   "editCertificate"
+  ).checked =
+   course.certificateEnabled !== false;
+
+
+  document.getElementById(
+   "editModal"
+  ).style.display =
+   "flex";
 
  };
 
 
 /* =====================================
-   DELETE
+   SAVE EDIT
 ===================================== */
 
-window.deleteCourse =
- async function(id){
+window.saveEdit =
+ async function(){
 
-  if(
-   !confirm(
-    "Delete this course permanently?"
-   )
-  ){
-
+  if(!editingId)
    return;
 
-  }
+
+  const data = {
+
+   title:
+    value("editTitle"),
+
+   categoryName:
+    value("editCategory"),
+
+   categoryId:
+    createSlug(
+     value("editCategory")
+    ),
+
+   level:
+    value("editLevel"),
+
+   price:
+    Number(
+     value("editPrice")
+    ) || 0,
+
+   discountPrice:
+    Number(
+     value("editDiscount")
+    ) || 0,
+
+   duration:
+    value("editDuration"),
+
+   shortDescription:
+    value("editShort"),
+
+   description:
+    value("editDescription"),
+
+   thumbnail:
+    value("editThumbnail"),
+
+   tags:
+    value("editTags")
+     .split(",")
+     .map(
+      x => x.trim()
+     )
+     .filter(Boolean),
+
+   isFree:
+    checked("editFree"),
+
+   published:
+    checked("editPublished"),
+
+status:
+    checked("editPublished")
+      ? "published"
+      : "draft",
+
+featured:
+    checked("editFeatured"),
+
+certificateEnabled:
+    checked("editCertificate"),
+
+updatedAt:
+    serverTimestamp(),
+
+publishedAt:
+    checked("editPublished")
+      ? serverTimestamp()
+      : null
+
+};
 
 
-  try{
+try{
 
-   await deleteDoc(
+  await updateDoc(
     doc(
-     db,
-     "courses",
-     id
-    )
-   );
+      db,
+      "courses",
+      editingId
+    ),
+    data
+  );
 
-   await loadCourses();
+  alert(
+    "Course updated successfully."
+  );
 
-  }
-  catch(error){
+  closeModal();
 
-   console.error(error);
+  await loadCourses();
 
-   alert(
-    "Delete failed: " +
+}
+catch(error){
+
+  console.error(
+    "Update course error:",
+    error
+  );
+
+  alert(
+    "Failed to update course: " +
     error.message
-   );
+  );
 
-  }
+}
 
- };
+};
 
 
 /* =====================================
    PUBLISH / UNPUBLISH
 ===================================== */
 
-window.toggleStatus =
- async function(id){
+window.togglePublish =
+async function(id){
 
   const course =
-   courses.find(
-    c => c.id === id
-   );
+    courses.find(
+      item => item.id === id
+    );
 
-  if(!course) return;
+  if(!course){
+
+    alert(
+      "Course not found."
+    );
+
+    return;
+
+  }
 
 
-  const status =
-   course.status ===
-   "published"
-    ? "draft"
-    : "published";
+  const newStatus =
+    course.published !== true;
+
+
+  const action =
+    newStatus
+      ? "publish"
+      : "unpublish";
+
+
+  if(
+    !confirm(
+      "Are you sure you want to " +
+      action +
+      " this course?"
+    )
+  ){
+
+    return;
+
+  }
 
 
   try{
 
-   await updateDoc(
-    doc(
-     db,
-     "courses",
-     id
-    ),
-    {
+    await updateDoc(
+      doc(
+        db,
+        "courses",
+        id
+      ),
+      {
 
-     status,
+        published:
+          newStatus,
 
-     updatedAt:
-      serverTimestamp()
+        status:
+          newStatus
+            ? "published"
+            : "draft",
 
-    }
-   );
+        publishedAt:
+          newStatus
+            ? serverTimestamp()
+            : null,
 
-   await loadCourses();
+        updatedAt:
+          serverTimestamp()
+
+      }
+    );
+
+
+    await loadCourses();
 
   }
   catch(error){
 
-   console.error(error);
+    console.error(
+      "Publish error:",
+      error
+    );
 
-   alert(
-    "Status update failed."
-   );
+    alert(
+      "Failed to update course status."
+    );
 
   }
 
- };
+};
 
 
 /* =====================================
-   RESET
+   FEATURED
+===================================== */
+
+window.toggleFeatured =
+async function(id){
+
+  const course =
+    courses.find(
+      item => item.id === id
+    );
+
+  if(!course){
+
+    return;
+
+  }
+
+
+  try{
+
+    await updateDoc(
+      doc(
+        db,
+        "courses",
+        id
+      ),
+      {
+
+        featured:
+          course.featured !== true,
+
+        updatedAt:
+          serverTimestamp()
+
+      }
+    );
+
+
+    await loadCourses();
+
+  }
+  catch(error){
+
+    console.error(
+      "Featured update error:",
+      error
+    );
+
+    alert(
+      "Failed to update featured status."
+    );
+
+  }
+
+};
+
+
+/* =====================================
+   DELETE COURSE
+===================================== */
+
+window.deleteCourse =
+async function(id){
+
+  const course =
+    courses.find(
+      item => item.id === id
+    );
+
+  if(!course){
+
+    return;
+
+  }
+
+
+  const confirmed =
+    confirm(
+      "Delete this course?\n\n" +
+      course.title +
+      "\n\nThis action cannot be undone."
+    );
+
+
+  if(!confirmed){
+
+    return;
+
+  }
+
+
+  try{
+
+    await deleteDoc(
+      doc(
+        db,
+        "courses",
+        id
+      )
+    );
+
+
+    alert(
+      "Course deleted successfully."
+    );
+
+
+    await loadCourses();
+
+  }
+  catch(error){
+
+    console.error(
+      "Delete course error:",
+      error
+    );
+
+    alert(
+      "Failed to delete course: " +
+      error.message
+    );
+
+  }
+
+};
+
+
+/* =====================================
+   STATISTICS
+===================================== */
+
+function updateStats(){
+
+  const total =
+    courses.length;
+
+
+  const published =
+    courses.filter(
+      course =>
+        course.published === true
+    ).length;
+
+
+  const free =
+    courses.filter(
+      course =>
+        course.isFree === true
+    ).length;
+
+
+  const featured =
+    courses.filter(
+      course =>
+        course.featured === true
+    ).length;
+
+
+  document.getElementById(
+    "totalCourses"
+  ).textContent =
+    total;
+
+
+  document.getElementById(
+    "publishedCourses"
+  ).textContent =
+    published;
+
+
+  document.getElementById(
+    "freeCourses"
+  ).textContent =
+    free;
+
+
+  document.getElementById(
+    "featuredCourses"
+  ).textContent =
+    featured;
+
+}
+
+
+/* =====================================
+   CATEGORY FILTER
+===================================== */
+
+function updateCategories(){
+
+  const select =
+    document.getElementById(
+      "categoryFilter"
+    );
+
+
+  const categories =
+    [
+      ...new Set(
+        courses
+          .map(
+            course =>
+              course.categoryName
+          )
+          .filter(Boolean)
+      )
+    ]
+    .sort();
+
+
+  select.innerHTML =
+    `
+      <option value="all">
+        All Categories
+      </option>
+    `;
+
+
+  categories.forEach(
+    category => {
+
+      const option =
+        document.createElement(
+          "option"
+        );
+
+
+      option.value =
+        category;
+
+
+      option.textContent =
+        category;
+
+
+      select.appendChild(
+        option
+      );
+
+    }
+  );
+
+}
+
+
+/* =====================================
+   HELPER
+===================================== */
+
+function value(id){
+
+  const element =
+    document.getElementById(
+      id
+    );
+
+
+  return element
+    ? element.value
+    : "";
+
+}
+
+
+function checked(id){
+
+  const element =
+    document.getElementById(
+      id
+    );
+
+
+  return element
+    ? element.checked
+    : false;
+
+}
+
+
+/* =====================================
+   SLUG GENERATOR
+===================================== */
+
+function createSlug(text){
+
+  return String(
+    text || ""
+  )
+  .toLowerCase()
+  .trim()
+  .replace(
+    /[^a-z0-9]+/g,
+    "-"
+  )
+  .replace(
+    /^-+|-+$/g,
+    "");
+
+}
+
+
+/* =====================================
+   HTML ESCAPE
+===================================== */
+
+function escapeHTML(value){
+
+  return String(
+    value ?? ""
+  )
+  .replace(
+    /&/g,
+    "&amp;"
+  )
+  .replace(
+    /</g,
+    "&lt;"
+  )
+  .replace(
+    />/g,
+    "&gt;"
+  )
+  .replace(
+    /"/g,
+    "&quot;"
+  )
+  .replace(
+    /'/g,
+    "&#039;"
+  );
+
+}
+
+
+/* =====================================
+   RESET FORM
 ===================================== */
 
 window.resetForm =
- function(){
+function(){
 
-  editingId = null;
+  document
+    .getElementById(
+      "courseForm"
+    )
+    .reset();
 
-  form.reset();
-
-  document.getElementById(
-   "coursePrice"
-  ).value = 0;
-
-  document.getElementById(
-   "formTitle"
-  ).textContent =
-   "Create Course";
 
   document.getElementById(
-   "submitText"
-  ).textContent =
-   "Create Course";
+    "coursePrice"
+  ).value =
+    0;
 
- };
+
+  document.getElementById(
+    "discountPrice"
+  ).value =
+    0;
+
+
+  document.getElementById(
+    "currency"
+  ).value =
+    "TZS";
+
+};
 
 
 /* =====================================
-   SEARCH / FILTER
+   CLOSE EDIT MODAL
+===================================== */
+
+window.closeModal =
+function(){
+
+  editingId =
+    null;
+
+
+  document.getElementById(
+    "editModal"
+  ).style.display =
+    "none";
+
+};
+
+
+/* =====================================
+   SEARCH
 ===================================== */
 
 document.getElementById(
- "search"
+  "search"
 ).addEventListener(
- "input",
- renderCourses
+  "input",
+  renderCourses
 );
 
+
 document.getElementById(
- "filter"
+  "statusFilter"
 ).addEventListener(
- "change",
- renderCourses
+  "change",
+  renderCourses
+);
+
+
+document.getElementById(
+  "categoryFilter"
+).addEventListener(
+  "change",
+  renderCourses
+);
+
+
+/* =====================================
+   AUTO SLUG
+===================================== */
+
+document.getElementById(
+  "courseTitle"
+).addEventListener(
+  "input",
+  event => {
+
+    const slugField =
+      document.getElementById(
+        "courseSlug"
+      );
+
+
+    if(
+      !slugField.dataset.edited
+    ){
+
+      slugField.value =
+        createSlug(
+          event.target.value
+        );
+
+    }
+
+  }
+);
+
+
+document.getElementById(
+  "courseSlug"
+).addEventListener(
+  "input",
+  event => {
+
+    event.target.dataset.edited =
+      "true";
+
+  }
 );
 
 
@@ -1069,14 +1988,41 @@ document.getElementById(
 ===================================== */
 
 window.logout =
- async function(){
+async function(){
 
-  await signOut(auth);
+  try{
 
-  location.href =
-   "login.html";
+    await signOut(
+      auth
+    );
 
- };
+
+    window.location.href =
+      "login.html";
+
+  }
+  catch(error){
+
+    console.error(
+      "Logout error:",
+      error
+    );
+
+
+    alert(
+      "Logout failed."
+    );
+
+  }
+
+};
+
+
+/* =====================================
+   INITIAL LOAD
+===================================== */
+
+loadCourses();
 
 </script>
 
