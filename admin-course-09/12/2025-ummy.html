@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Courses | LetsStudy Pro</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+header{background:#111827;color:#fff;padding:16px 5%;font-weight:700}
+main{max-width:1150px;margin:auto;padding:20px}
+.card,.course{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:16px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stat{background:#fff;padding:15px;border-radius:10px;border:1px solid #e5e7eb}
+.num{font-size:25px;font-weight:700;margin-top:5px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.full{grid-column:1/-1}
+input,select,textarea{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:7px}
+textarea{min-height:85px}
+label{font-size:13px;font-weight:700;display:block;margin-bottom:4px}
+button{border:0;border-radius:7px;padding:9px 12px;cursor:pointer}
+.blue{background:#2563eb;color:white}.green{background:#16a34a;color:white}
+.red{background:#dc2626;color:white}.orange{background:#f59e0b;color:white}
+.gray{background:#e5e7eb}
+.toolbar{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.course{margin:0}
+.course img{width:100%;height:150px;object-fit:cover;border-radius:8px}
+.badge{display:inline-block;padding:4px 8px;border-radius:20px;font-size:11px;margin:3px}
+.published{background:#dcfce7;color:#166534}.draft{background:#eee}
+.featured{background:#fef3c7;color:#92400e}
+.actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px}
+.modal{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:15px;z-index:5}
+.modalBox{background:white;border-radius:12px;padding:20px;width:min(700px,100%);max-height:90vh;overflow:auto}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.module,.lesson{border:1px solid #ddd;padding:10px;border-radius:8px;margin:8px 0}
+.lesson{margin-left:20px;background:#fafafa}
+@media(max-width:750px){
+.stats,.grid{grid-template-columns:1fr 1fr}
+.form,.toolbar{grid-template-columns:1fr}
+.full{grid-column:auto}
+}
+@media(max-width:450px){.stats,.grid{grid-template-columns:1fr}}
+</style>
+</head>
+
+<body>
+
+<header>🎓 LetsStudy Pro — Admin Courses</header>
+
+<main>
+
+<h1>Course Management</h1>
+
+<div class="stats">
+<div class="stat">Courses<div class="num" id="total">0</div></div>
+<div class="stat">Published<div class="num" id="published">0</div></div>
+<div class="stat">Drafts<div class="num" id="drafts">0</div></div>
+<div class="stat">Featured<div class="num" id="featured">0</div></div>
+</div>
+
+<div class="card">
+<h2>➕ Add / Edit Course</h2>
+
+<form id="courseForm">
+<input type="hidden" id="courseId">
+
+<div class="form">
+
+<div class="full">
+<label>Course Title *</label>
+<input id="title" required>
+</div>
+
+<div>
+<label>Slug</label>
+<input id="slug" placeholder="auto-generated">
+</div>
+
+<div>
+<label>Category</label>
+<select id="category">
+<option>Technology</option>
+<option>Business</option>
+<option>Marketing</option>
+<option>Programming</option>
+<option>AI</option>
+<option>Cybersecurity</option>
+<option>Design</option>
+<option>Languages</option>
+<option>Science</option>
+<option>Mathematics</option>
+</select>
+</div>
+
+<div>
+<label>Instructor ID</label>
+<input id="instructorId">
+</div>
+
+<div>
+<label>Instructor Name</label>
+<input id="instructorName">
+</div>
+
+<div>
+<label>Level</label>
+<select id="level">
+<option>Beginner</option>
+<option>Intermediate</option>
+<option>Advanced</option>
+<option>All Levels</option>
+</select>
+</div>
+
+<div>
+<label>Language</label>
+<input id="language" value="English">
+</div>
+
+<div>
+<label>Price</label>
+<input id="price" type="number" min="0" value="0">
+</div>
+
+<div>
+<label>Currency</label>
+<select id="currency">
+<option>TZS</option>
+<option>USD</option>
+</select>
+</div>
+
+<div>
+<label>Discount Price</label>
+<input id="discountPrice" type="number" min="0">
+</div>
+
+<div>
+<label>Duration</label>
+<input id="duration" placeholder="10 hours">
+</div>
+
+<div>
+<label>Lesson Count</label>
+<input id="lessonCount" type="number" min="0" value="0">
+</div>
+
+<div>
+<label>Status</label>
+<select id="status">
+<option value="draft">Draft</option>
+<option value="published">Published</option>
+</select>
+</div>
+
+<div>
+<label>Featured</label>
+<select id="featured">
+<option value="false">No</option>
+<option value="true">Yes</option>
+</select>
+</div>
+
+<div>
+<label>Certificate</label>
+<select id="certificate">
+<option value="true">Enabled</option>
+<option value="false">Disabled</option>
+</select>
+</div>
+
+<div>
+<label>Free Course</label>
+<select id="free">
+<option value="false">No</option>
+<option value="true">Yes</option>
+</select>
+</div>
+
+<div class="full">
+<label>Thumbnail URL</label>
+<input id="thumbnail" type="url">
+</div>
+
+<div class="full">
+<label>Banner URL</label>
+<input id="banner" type="url">
+</div>
+
+<div class="full">
+<label>Short Description</label>
+<textarea id="shortDescription"></textarea>
+</div>
+
+<div class="full">
+<label>Description *</label>
+<textarea id="description" required></textarea>
+</div>
+
+<div class="full">
+<label>Requirements</label>
+<textarea id="requirements"
+placeholder="One requirement per line"></textarea>
+</div>
+
+<div class="full">
+<label>Learning Outcomes</label>
+<textarea id="outcomes"
+placeholder="One outcome per line"></textarea>
+</div>
+
+<div class="full">
+<label>Tags</label>
+<input id="tags" placeholder="HTML, CSS, JavaScript">
+</div>
+
+</div>
+
+<br>
+
+<button class="blue">Save Course</button>
+<button type="button" class="gray" onclick="clearForm()">Clear</button>
+
+</form>
+</div>
+
+<div class="card">
+<h2>🔎 Courses</h2>
+
+<div class="toolbar">
+<input id="search" placeholder="Search courses...">
+
+<select id="statusFilter">
+<option value="">All Status</option>
+<option value="published">Published</option>
+<option value="draft">Draft</option>
+</select>
+
+<select id="categoryFilter">
+<option value="">All Categories</option>
+<option>Technology</option>
+<option>Business</option>
+<option>Marketing</option>
+<option>Programming</option>
+<option>AI</option>
+<option>Cybersecurity</option>
+<option>Design</option>
+<option>Languages</option>
+<option>Science</option>
+<option>Mathematics</option>
+</select>
+</div>
+</div>
+
+<div id="courses" class="grid">Loading...</div>
+
+</main>
+
+
+<!-- MODULE / LESSON MANAGER -->
+
+<div class="modal" id="manager">
+<div class="modalBox">
+
+<div class="row">
+<h2 id="managerTitle">Manage Course</h2>
+<button class="gray" onclick="closeManager()">✕</button>
+</div>
+
+<div id="moduleForm">
+
+<h3>➕ Add Module</h3>
+
+<input id="moduleTitle" placeholder="Module title">
+<br><br>
+<textarea id="moduleDescription"
+placeholder="Module description"></textarea>
+<br><br>
+<button class="blue" onclick="addModule()">Add Module</button>
+
+</div>
+
+<hr>
+
+<div id="modules">Loading...</div>
+
+</div>
+</div>
+
+
+<script type="module">
+
+import{initializeApp}
+from"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import{
+getFirestore,
+collection,
+getDocs,
+addDoc,
+updateDoc,
+deleteDoc,
+doc,
+serverTimestamp,
+query,
+orderBy
+}
+from"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+const firebaseConfig={
+apiKey:"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+authDomain:"let-s-study-pro-course.firebaseapp.com",
+databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+projectId:"let-s-study-pro-course",
+storageBucket:"let-s-study-pro-course.firebasestorage.app",
+messagingSenderId:"474928293390",
+appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+measurementId:"G-85B7V5H5J0"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+let courses=[];
+let editing=null;
+let activeCourse=null;
+
+const $=id=>document.getElementById(id);
+
+const clean=x=>String(x??"")
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;")
+.replaceAll('"',"&quot;")
+.replaceAll("'","&#039;");
+
+
+function slugify(x){
+return x.toLowerCase()
+.replace(/[^a-z0-9]+/g,"-")
+.replace(/^-|-$/g,"");
+}
+
+
+async function loadCourses(){
+
+const snap=await getDocs(
+collection(db,"courses")
+);
+
+courses=snap.docs.map(d=>({
+id:d.id,
+...d.data()
+}));
+
+stats();
+render();
+
+}
+
+
+function stats(){
+
+$("total").textContent=courses.length;
+
+$("published").textContent=
+courses.filter(x=>x.status==="published").length;
+
+$("drafts").textContent=
+courses.filter(x=>x.status==="draft").length;
+
+$("featured").textContent=
+courses.filter(x=>x.featured===true).length;
+
+}
+
+
+function render(){
+
+const q=$("search").value.toLowerCase();
+const st=$("statusFilter").value;
+const cat=$("categoryFilter").value;
+
+const list=courses.filter(c=>{
+
+const text=[
+c.title,
+c.description,
+c.categoryName,
+c.instructorName,
+(c.tags||[]).join(" ")
+].join(" ").toLowerCase();
+
+return(
+(!q||text.includes(q))&&
+(!st||c.status===st)&&
+(!cat||c.categoryName===cat)
+);
+
+});
+
+if(!list.length){
+$("courses").innerHTML=
+"<div class='card'>No courses found.</div>";
+return;
+}
+
+$("courses").innerHTML=list.map(c=>`
+
+<div class="course">
+
+${c.thumbnail?
+`<img src="${clean(c.thumbnail)}"
+onerror="this.style.display='none'>`:""}
+
+<h3>${clean(c.title)}</h3>
+
+<p>${clean(c.shortDescription||c.description||"")}</p>
+
+<p>
+<b>${clean(c.categoryName||"General")}</b>
+· ${clean(c.level||"All Levels")}
+</p>
+
+<p>
+${c.isFree?"FREE":
+`${clean(c.discountPrice||c.price||0)}
+${clean(c.currency||"TZS")}`}
+</p>
+
+<span class="badge ${c.status}">
+${clean(c.status)}
+</span>
+
+${c.featured?
+"<span class='badge featured'>⭐ Featured</span>":""}
+
+<div class="actions">
+
+<button class="blue"
+onclick="manageCourse('${c.id}')">
+📚 Manage
+</button>
+
+<button class="gray"
+onclick="editCourse('${c.id}')">
+✏ Edit
+</button>
+
+<button class="orange"
+onclick="togglePublish('${c.id}')">
+${c.status==="published"?"Unpublish":"Publish"}
+</button>
+
+<button class="red"
+onclick="deleteCourse('${c.id}')">
+🗑 Delete
+</button>
+
+</div>
+
+</div>
+
+`).join("");
+
+}
+
+
+/* SAVE COURSE */
+
+$("courseForm").onsubmit=async e=>{
+
+e.preventDefault();
+
+const title=$("title").value.trim();
+
+const data={
+
+title,
+
+slug:$("slug").value.trim()||slugify(title),
+
+description:$("description").value.trim(),
+
+shortDescription:
+$("shortDescription").value.trim(),
+
+thumbnail:$("thumbnail").value.trim(),
+
+banner:$("banner").value.trim(),
+
+categoryId:
+slugify($("category").value),
+
+categoryName:
+$("category").value,
+
+instructorId:
+$("instructorId").value.trim(),
+
+instructorName:
+$("instructorName").value.trim(),
+
+level:$("level").value,
+
+language:
+$("language").value.trim(),
+
+price:Number($("price").value||0),
+
+currency:$("currency").value,
+
+discountPrice:
+Number($("discountPrice").value||0),
+
+isFree:$("free").value==="true",
+
+status:$("status").value,
+
+published:$("status").value==="published",
+
+featured:$("featured").value==="true",
+
+duration:$("duration").value.trim(),
+
+lessonCount:
+Number($("lessonCount").value||0),
+
+certificateEnabled:
+$("certificate").value==="true",
+
+requirements:
+$("requirements").value
+.split("\n").map(x=>x.trim()).filter(Boolean),
+
+learningOutcomes:
+$("outcomes").value
+.split("\n").map(x=>x.trim()).filter(Boolean),
+
+tags:$("tags").value
+.split(",").map(x=>x.trim()).filter(Boolean),
+
+updatedAt:serverTimestamp()
+
+};
+
+try{
+
+if(editing){
+
+await updateDoc(
+doc(db,"courses",editing),
+data
+);
+
+alert("Course updated.");
+
+}else{
+
+await addDoc(
+collection(db,"courses"),
+{
+...data,
+rating:0,
+ratingCount:0,
+enrollmentCount:0,
+createdAt:serverTimestamp()
+}
+);
+
+alert("Course created.");
+
+}
+
+clearForm();
+loadCourses();
+
+}catch(e){
+
+alert(e.message);
+
+}
+
+};
+
+
+/* EDIT */
+
+window.editCourse=id=>{
+
+const c=courses.find(x=>x.id===id);
+if(!c)return;
+
+editing=id;
+
+$("courseId").value=id;
+$("title").value=c.title||"";
+$("slug").value=c.slug||"";
+$("category").value=c.categoryName||"Technology";
+$("instructorId").value=c.instructorId||"";
+$("instructorName").value=c.instructorName||"";
+$("level").value=c.level||"Beginner";
+$("language").value=c.language||"English";
+$("price").value=c.price||0;
+$("currency").value=c.currency||"TZS";
+$("discountPrice").value=c.discountPrice||0;
+$("duration").value=c.duration||"";
+$("lessonCount").value=c.lessonCount||0;
+$("status").value=c.status||"draft";
+$("featured").value=c.featured?"true":"false";
+$("certificate").value=c.certificateEnabled?"true":"false";
+$("free").value=c.isFree?"true":"false";
+$("thumbnail").value=c.thumbnail||"";
+$("banner").value=c.banner||"";
+$("shortDescription").value=c.shortDescription||"";
+$("description").value=c.description||"";
+$("requirements").value=(c.requirements||[]).join("\n");
+$("outcomes").value=(c.learningOutcomes||[]).join("\n");
+$("tags").value=(c.tags||[]).join(", ");
+
+scrollTo({top:0,behavior:"smooth"});
+
+};
+
+
+/* CLEAR */
+
+window.clearForm=()=>{
+editing=null;
+$("courseForm").reset();
+$("courseId").value="";
+$("language").value="English";
+$("price").value=0;
+$("lessonCount").value=0;
+};
+
+
+/* DELETE */
+
+window.deleteCourse=async id=>{
+
+const c=courses.find(x=>x.id===id);
+
+if(!confirm("Delete "+c?.title+"?"))return;
+
+await deleteDoc(
+doc(db,"courses",id)
+);
+
+loadCourses();
+
+};
+
+
+/* PUBLISH */
+
+window.togglePublish=async id=>{
+
+const c=courses.find(x=>x.id===id);
+
+const published=c.status!=="published";
+
+await updateDoc(
+doc(db,"courses",id),
+{
+status:published?"published":"draft",
+published,
+publishedAt:published?serverTimestamp():null,
+updatedAt:serverTimestamp()
+}
+);
+
+loadCourses();
+
+};
+
+
+/* MANAGE COURSE */
+
+window.manageCourse=async id=>{
+
+activeCourse=id;
+
+const c=courses.find(x=>x.id===id);
+
+$("managerTitle").textContent=
+"Manage: "+c.title;
+
+$("manager").style.display="flex";
+
+loadModules();
+
+};
+
+
+window.closeManager=()=>{
+$("manager").style.display="none";
+activeCourse=null;
+};
+
+
+/* ADD MODULE */
+
+window.addModule=async()=>{
+
+if(!activeCourse)return;
+
+const title=$("moduleTitle").value.trim();
+
+if(!title){
+alert("Enter module title.");
+return;
+}
+
+const modulesRef=collection(
+db,
+"courses",
+activeCourse,
+"modules"
+);
+
+const snap=await getDocs(modulesRef);
+
+await addDoc(modulesRef,{
+
+title,
+
+description:
+$("moduleDescription").value.trim(),
+
+order:snap.size+1,
+
+lessonCount:0,
+
+createdAt:serverTimestamp(),
+
+updatedAt:serverTimestamp()
+
+});
+
+$("moduleTitle").value="";
+$("moduleDescription").value="";
+
+loadModules();
+
+};
+
+
+/* LOAD MODULES */
+
+async function loadModules(){
+
+if(!activeCourse)return;
+
+const ref=collection(
+db,
+"courses",
+activeCourse,
+"modules"
+);
+
+const snap=await getDocs(ref);
+
+const modules=snap.docs.map(d=>({
+id:d.id,
+...d.data()
+}));
+
+if(!modules.length){
+
+$("modules").innerHTML=
+"<p>No modules yet.</p>";
+
+return;
+
+}
+
+$("modules").innerHTML="";
+
+for(const m of modules){
+
+const box=document.createElement("div");
+
+box.className="module";
+
+box.innerHTML=`
+
+<div class="row">
+
+<div>
+<b>Module ${m.order||""}: ${clean(m.title)}</b>
+<div>${clean(m.description||"")}</div>
+</div>
+
+<div>
+
+<button class="green"
+onclick="addLesson('${m.id}')">
++ Lesson
+</button>
+
+<button class="red"
+onclick="deleteModule('${m.id}')">
+Delete
+</button>
+
+</div>
+
+</div>
+
+<div id="lessons-${m.id}">
+Loading lessons...
+</div>
+`;
+
+$("modules").appendChild(box);
+
+loadLessons(m.id);
+
+}
+
+}
+
+
+/* ADD LESSON */
+
+window.addLesson=async moduleId=>{
+
+const title=prompt("Lesson title:");
+
+if(!title)return;
+
+const type=prompt(
+"Type: video, article, pdf, quiz, assignment, live",
+"video"
+)||"video";
+
+const lessonsRef=collection(
+db,
+"courses",
+activeCourse,
+"lessons"
+);
+
+const snap=await getDocs(lessonsRef);
+
+await addDoc(lessonsRef,{
+
+title,
+
+description:"",
+
+moduleId,
+
+order:snap.size+1,
+
+type,
+
+videoUrl:"",
+
+videoDuration:0,
+
+content:"",
+
+pdfUrl:"",
+
+resources:[],
+
+isPreview:false,
+
+isPublished:false,
+
+createdAt:serverTimestamp(),
+
+updatedAt:serverTimestamp()
+
+});
+
+loadModules();
+
+};
+
+
+/* LOAD LESSONS */
+
+async function loadLessons(moduleId){
+
+const ref=collection(
+db,
+"courses",
+activeCourse,
+"lessons"
+);
+
+const snap=await getDocs(ref);
+
+const lessons=snap.docs
+.map(d=>({id:d.id,...d.data()}))
+.filter(x=>x.moduleId===moduleId);
+
+const box=$("lessons-"+moduleId);
+
+if(!box)return;
+
+if(!lessons.length){
+
+box.innerHTML=
+"<small>No lessons.</small>";
+
+return;
+
+}
+
+box.innerHTML=lessons.map(l=>`
+
+<div class="lesson">
+
+<div class="row">
+
+<div>
+<b>📖 ${clean(l.title)}</b>
+<br>
+<small>
+${clean(l.type)}
+ · ${l.isPublished?"Published":"Draft"}
+</small>
+</div>
+
+<div>
+
+<button class="orange"
+onclick="toggleLesson('${l.id}',${l.isPublished})">
+${l.isPublished?"Unpublish":"Publish"}
+</button>
+
+<button class="red"
+onclick="deleteLesson('${l.id}')">
+Delete
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+`).join("");
+
+}
+
+
+/* DELETE MODULE */
+
+window.deleteModule=async id=>{
+
+if(!confirm("Delete this module?"))return;
+
+await deleteDoc(
+doc(db,"courses",activeCourse,"modules",id)
+);
+
+loadModules();
+
+};
+
+
+/* DELETE LESSON */
+
+window.deleteLesson=async id=>{
+
+if(!confirm("Delete this lesson?"))return;
+
+await deleteDoc(
+doc(db,"courses",activeCourse,"lessons",id)
+);
+
+loadModules();
+
+};
+
+
+/* PUBLISH LESSON */
+
+window.toggleLesson=async(id,state)=>{
+
+await updateDoc(
+doc(db,"courses",activeCourse,"lessons",id),
+{
+isPublished:!state,
+updatedAt:serverTimestamp()
+}
+);
+
+loadModules();
+
+};
+
+
+$("search").oninput=render;
+$("statusFilter").onchange=render;
+$("categoryFilter").onchange=render;
+
+loadCourses();
+
+</script>
+
+</body>
+</html>
