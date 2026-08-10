@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Certificate Admin | LetsStudy Pro</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;background:#f5f7fb;color:#172033}
+header{background:#111827;color:#fff;padding:18px 5%;font-weight:bold}
+main{max-width:1100px;margin:auto;padding:20px 15px}
+.card,.item,.stat{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:15px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.num{font-size:26px;font-weight:bold;margin-top:5px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.full{grid-column:1/-1}
+input,select{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:7px}
+label{font-size:13px;font-weight:bold;display:block;margin-bottom:4px}
+button{border:0;border-radius:7px;padding:9px 13px;cursor:pointer}
+.blue{background:#2563eb;color:white}
+.green{background:#16a34a;color:white}
+.red{background:#dc2626;color:white}
+.gray{background:#e5e7eb;color:#111}
+.orange{background:#f59e0b;color:white}
+.toolbar{display:grid;grid-template-columns:2fr 1fr;gap:8px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.badge{display:inline-block;padding:4px 8px;border-radius:15px;font-size:11px;margin:2px}
+.active{background:#dcfce7;color:#166534}
+.revoked{background:#fee2e2;color:#991b1b}
+.actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px}
+.cert{
+border:3px solid #d4af37;
+padding:25px;
+text-align:center;
+background:#fffdf4;
+}
+@media(max-width:700px){
+.stats,.grid{grid-template-columns:1fr 1fr}
+.form,.toolbar{grid-template-columns:1fr}
+.full{grid-column:auto}
+}
+@media(max-width:450px){
+.stats,.grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<header>🎓 LetsStudy Pro — Certificate Admin</header>
+
+<main>
+
+<h1>Certificate Management</h1>
+
+<div class="stats">
+
+<div class="stat">
+Total Certificates
+<div class="num" id="total">0</div>
+</div>
+
+<div class="stat">
+Active
+<div class="num" id="active">0</div>
+</div>
+
+<div class="stat">
+Revoked
+<div class="num" id="revoked">0</div>
+</div>
+
+<div class="stat">
+Courses
+<div class="num" id="courses">0</div>
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>➕ Add / Edit Certificate</h2>
+
+<form id="form">
+
+<input type="hidden" id="id">
+
+<div class="form">
+
+<div>
+<label>Certificate Number *</label>
+<input id="number" required
+placeholder="LSP-2026-0001">
+</div>
+
+<div>
+<label>Verification Code *</label>
+<input id="verification" required
+placeholder="ABC123XYZ">
+</div>
+
+<div>
+<label>Student Name *</label>
+<input id="userName" required
+placeholder="Student name">
+</div>
+
+<div>
+<label>User ID *</label>
+<input id="userId" required
+placeholder="Firebase UID">
+</div>
+
+<div>
+<label>Course ID *</label>
+<input id="courseId" required
+placeholder="Course ID">
+</div>
+
+<div>
+<label>Course Title *</label>
+<input id="courseTitle" required
+placeholder="Web Development">
+</div>
+
+<div>
+<label>Instructor ID</label>
+<input id="instructorId">
+</div>
+
+<div>
+<label>Issue Date</label>
+<input id="issueDate" type="date">
+</div>
+
+<div>
+<label>Completion Date</label>
+<input id="completionDate" type="date">
+</div>
+
+<div>
+<label>Status</label>
+<select id="status">
+<option value="active">Active</option>
+<option value="revoked">Revoked</option>
+</select>
+</div>
+
+<div class="full">
+<label>Certificate URL</label>
+<input id="certificateUrl"
+placeholder="https://...">
+</div>
+
+</div>
+
+<br>
+
+<button class="blue" id="save">
+Add Certificate
+</button>
+
+<button type="button"
+class="gray"
+onclick="clearForm()">
+Clear
+</button>
+
+</form>
+
+</div>
+
+
+<div class="card">
+
+<h2>🔎 Certificates</h2>
+
+<div class="toolbar">
+
+<input id="search"
+placeholder="Search certificate, student or course...">
+
+<select id="filter">
+<option value="">All Status</option>
+<option value="active">Active</option>
+<option value="revoked">Revoked</option>
+</select>
+
+</div>
+
+</div>
+
+
+<div id="list" class="grid">
+Loading...
+</div>
+
+</main>
+
+
+<script type="module">
+
+import{initializeApp}
+from"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import{
+getFirestore,
+collection,
+getDocs,
+addDoc,
+updateDoc,
+deleteDoc,
+doc,
+serverTimestamp
+}
+from"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+const firebaseConfig={
+
+apiKey:"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+authDomain:
+"let-s-study-pro-course.firebaseapp.com",
+
+databaseURL:
+"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+projectId:
+"let-s-study-pro-course",
+
+storageBucket:
+"let-s-study-pro-course.firebasestorage.app",
+
+messagingSenderId:
+"474928293390",
+
+appId:
+"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+measurementId:
+"G-85B7V5H5J0"
+
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+let certificates=[];
+let editing=null;
+
+const $=id=>document.getElementById(id);
+
+const clean=x=>String(x||"")
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;")
+.replaceAll('"',"&quot;")
+.replaceAll("'","&#039;");
+
+
+async function load(){
+
+try{
+
+const snap=
+await getDocs(
+collection(db,"certificates")
+);
+
+certificates=snap.docs.map(d=>({
+id:d.id,
+...d.data()
+}));
+
+render();
+stats();
+
+}catch(e){
+
+console.error(e);
+
+$("list").innerHTML=
+"<div class='card'>Unable to load certificates.</div>";
+
+}
+
+}
+
+
+function stats(){
+
+$("total").textContent=
+certificates.length;
+
+$("active").textContent=
+certificates.filter(x=>x.status==="active").length;
+
+$("revoked").textContent=
+certificates.filter(x=>x.status==="revoked").length;
+
+$("courses").textContent=
+new Set(
+certificates.map(x=>x.courseId)
+).size;
+
+}
+
+
+function render(){
+
+const q=
+$("search").value.toLowerCase();
+
+const status=
+$("filter").value;
+
+const list=certificates.filter(x=>{
+
+const text=[
+x.certificateNumber,
+x.userName,
+x.courseTitle,
+x.courseId,
+x.verificationCode
+]
+.join(" ")
+.toLowerCase();
+
+return(
+(!q||text.includes(q))&&
+(!status||x.status===status)
+);
+
+});
+
+if(!list.length){
+
+$("list").innerHTML=
+"<div class='card'>No certificates found.</div>";
+
+return;
+}
+
+
+$("list").innerHTML=list.map(x=>`
+
+<div class="item">
+
+<h3>🎓 ${clean(x.courseTitle)}</h3>
+
+<p>
+<strong>${clean(x.userName)}</strong>
+</p>
+
+<p>
+Certificate:
+<b>${clean(x.certificateNumber)}</b>
+</p>
+
+<p>
+Verification:
+<code>${clean(x.verificationCode)}</code>
+</p>
+
+<p>
+Issue Date:
+${clean(x.issueDate||"-")}
+</p>
+
+<span class="badge ${x.status}">
+${clean(x.status)}
+</span>
+
+<div class="actions">
+
+<button class="gray"
+onclick="editCertificate('${x.id}')">
+✏ Edit
+</button>
+
+<button class="green"
+onclick="preview('${x.id}')">
+👁 Preview
+</button>
+
+<button class="orange"
+onclick="toggleStatus('${x.id}')">
+${x.status==="active"?"Revoke":"Activate"}
+</button>
+
+<button class="red"
+onclick="deleteCertificate('${x.id}')">
+🗑 Delete
+</button>
+
+</div>
+
+</div>
+
+`).join("");
+
+}
+
+
+/* SAVE */
+
+$("form").onsubmit=async e=>{
+
+e.preventDefault();
+
+const data={
+
+certificateNumber:
+$("number").value.trim(),
+
+verificationCode:
+$("verification").value.trim(),
+
+userId:
+$("userId").value.trim(),
+
+userName:
+$("userName").value.trim(),
+
+courseId:
+$("courseId").value.trim(),
+
+courseTitle:
+$("courseTitle").value.trim(),
+
+instructorId:
+$("instructorId").value.trim(),
+
+issueDate:
+$("issueDate").value,
+
+completionDate:
+$("completionDate").value,
+
+certificateUrl:
+$("certificateUrl").value.trim(),
+
+status:
+$("status").value,
+
+updatedAt:
+serverTimestamp()
+
+};
+
+$("save").disabled=true;
+$("save").textContent="Saving...";
+
+try{
+
+if(editing){
+
+await updateDoc(
+doc(db,"certificates",editing),
+data
+);
+
+alert("Certificate updated.");
+
+}else{
+
+await addDoc(
+collection(db,"certificates"),
+{
+...data,
+createdAt:serverTimestamp()
+}
+);
+
+alert("Certificate created.");
+
+}
+
+clearForm();
+
+await load();
+
+}catch(e){
+
+alert(e.message);
+
+}
+
+$("save").disabled=false;
+$("save").textContent="Add Certificate";
+
+};
+
+
+/* EDIT */
+
+window.editCertificate=id=>{
+
+const x=
+certificates.find(a=>a.id===id);
+
+if(!x)return;
+
+editing=id;
+
+$("id").value=id;
+
+$("number").value=
+x.certificateNumber||"";
+
+$("verification").value=
+x.verificationCode||"";
+
+$("userId").value=
+x.userId||"";
+
+$("userName").value=
+x.userName||"";
+
+$("courseId").value=
+x.courseId||"";
+
+$("courseTitle").value=
+x.courseTitle||"";
+
+$("instructorId").value=
+x.instructorId||"";
+
+$("issueDate").value=
+x.issueDate||"";
+
+$("completionDate").value=
+x.completionDate||"";
+
+$("certificateUrl").value=
+x.certificateUrl||"";
+
+$("status").value=
+x.status||"active";
+
+$("save").textContent=
+"Update Certificate";
+
+scrollTo({
+top:0,
+behavior:"smooth"
+});
+
+};
+
+
+/* CLEAR */
+
+window.clearForm=()=>{
+
+editing=null;
+
+$("form").reset();
+
+$("id").value="";
+
+$("save").textContent=
+"Add Certificate";
+
+};
+
+
+/* DELETE */
+
+window.deleteCertificate=async id=>{
+
+const x=
+certificates.find(a=>a.id===id);
+
+if(!confirm(
+"Delete certificate "+x?.certificateNumber+"?"
+))return;
+
+await deleteDoc(
+doc(db,"certificates",id)
+);
+
+await load();
+
+};
+
+
+/* STATUS */
+
+window.toggleStatus=async id=>{
+
+const x=
+certificates.find(a=>a.id===id);
+
+if(!x)return;
+
+const status=
+x.status==="active"
+?"revoked"
+:"active";
+
+await updateDoc(
+doc(db,"certificates",id),
+{
+status,
+updatedAt:serverTimestamp()
+}
+);
+
+await load();
+
+};
+
+
+/* PREVIEW */
+
+window.preview=id=>{
+
+const x=
+certificates.find(a=>a.id===id);
+
+if(!x)return;
+
+const win=
+window.open("","_blank");
+
+win.document.write(`
+
+<html>
+
+<head>
+
+<title>
+Certificate ${clean(x.certificateNumber)}
+</title>
+
+<style>
+
+body{
+font-family:Arial;
+padding:30px;
+background:#f5f5f5
+}
+
+.cert{
+max-width:850px;
+margin:auto;
+padding:60px;
+background:#fffdf0;
+border:10px double #c9a227;
+text-align:center
+}
+
+h1{
+font-size:42px;
+color:#b08a19
+}
+
+.name{
+font-size:34px;
+font-weight:bold;
+margin:25px
+}
+
+.code{
+margin-top:30px;
+font-size:13px
+}
+
+button{
+padding:12px 20px;
+margin:20px;
+cursor:pointer
+}
+
+@media print{
+button{display:none}
+body{background:white}
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="cert">
+
+<h1>Certificate of Completion</h1>
+
+<p>This certificate is proudly presented to</p>
+
+<div class="name">
+${clean(x.userName)}
+</div>
+
+<p>
+for successfully completing
+</p>
+
+<h2>
+${clean(x.courseTitle)}
+</h2>
+
+<p>
+Issued by LetsStudy Pro
+</p>
+
+<p>
+<strong>Certificate No:</strong>
+${clean(x.certificateNumber)}
+</p>
+
+<p>
+<strong>Verification Code:</strong>
+${clean(x.verificationCode)}
+</p>
+
+<p>
+<strong>Completion Date:</strong>
+${clean(x.completionDate||"-")}
+</p>
+
+<p>
+<strong>Issue Date:</strong>
+${clean(x.issueDate||"-")}
+</p>
+
+<button onclick="window.print()">
+Print / Save PDF
+</button>
+
+</div>
+
+</body>
+
+</html>
+
+`);
+
+win.document.close();
+
+};
+
+
+/* FILTER */
+
+$("search").oninput=render;
+$("filter").onchange=render;
+
+
+/* START */
+
+load();
+
+</script>
+
+</body>
+</html>
