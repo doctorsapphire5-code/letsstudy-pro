@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Analytics | LetsStudy Pro</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:Arial,sans-serif;
+ background:#f5f7fb;
+ color:#172033
+}
+header{
+ background:#111827;
+ color:#fff;
+ padding:16px 5%;
+ font-weight:700
+}
+main{
+ max-width:1150px;
+ margin:auto;
+ padding:20px
+}
+.stats{
+ display:grid;
+ grid-template-columns:repeat(4,1fr);
+ gap:10px;
+ margin-bottom:15px
+}
+.stat,.card,.event{
+ background:#fff;
+ border:1px solid #e5e7eb;
+ border-radius:12px;
+ padding:15px
+}
+.num{
+ font-size:25px;
+ font-weight:700;
+ margin-top:5px
+}
+.toolbar{
+ display:grid;
+ grid-template-columns:2fr 1fr 1fr 1fr auto;
+ gap:8px
+}
+input,select{
+ width:100%;
+ padding:10px;
+ border:1px solid #d1d5db;
+ border-radius:7px
+}
+button{
+ border:0;
+ border-radius:7px;
+ padding:9px 12px;
+ cursor:pointer
+}
+.blue{background:#2563eb;color:#fff}
+.red{background:#dc2626;color:#fff}
+.gray{background:#e5e7eb;color:#111827}
+.grid{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:15px;
+ margin-top:15px
+}
+.event{
+ margin-bottom:10px
+}
+.badge{
+ display:inline-block;
+ padding:4px 8px;
+ border-radius:20px;
+ background:#dbeafe;
+ color:#1e40af;
+ font-size:11px;
+ margin:2px
+}
+.bar{
+ background:#e5e7eb;
+ height:9px;
+ border-radius:20px;
+ overflow:hidden;
+ margin-top:6px
+}
+.bar span{
+ display:block;
+ height:100%;
+ background:#2563eb
+}
+table{
+ width:100%;
+ border-collapse:collapse
+}
+th,td{
+ padding:10px;
+ border-bottom:1px solid #eee;
+ text-align:left;
+ font-size:13px
+}
+.scroll{
+ overflow-x:auto
+}
+@media(max-width:800px){
+ .stats{grid-template-columns:1fr 1fr}
+ .toolbar{grid-template-columns:1fr 1fr}
+ .grid{grid-template-columns:1fr}
+}
+@media(max-width:450px){
+ .stats,.toolbar{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+📊 LetsStudy Pro — Admin Analytics
+</header>
+
+<main>
+
+<h1>Analytics Dashboard</h1>
+
+<div class="stats">
+
+<div class="stat">
+Total Events
+<div class="num" id="total">0</div>
+</div>
+
+<div class="stat">
+Page Views
+<div class="num" id="views">0</div>
+</div>
+
+<div class="stat">
+Enrollments
+<div class="num" id="enrollments">0</div>
+</div>
+
+<div class="stat">
+Payments
+<div class="num" id="payments">0</div>
+</div>
+
+</div>
+
+
+<div class="card">
+
+<div class="toolbar">
+
+<input
+id="search"
+placeholder="Search analytics...">
+
+<select id="eventFilter">
+<option value="">All Events</option>
+<option>page_view</option>
+<option>course_view</option>
+<option>course_enroll</option>
+<option>lesson_start</option>
+<option>lesson_complete</option>
+<option>quiz_complete</option>
+<option>certificate_download</option>
+<option>payment_start</option>
+<option>payment_complete</option>
+</select>
+
+<select id="deviceFilter">
+<option value="">All Devices</option>
+<option>mobile</option>
+<option>desktop</option>
+<option>tablet</option>
+</select>
+
+<select id="countryFilter">
+<option value="">All Countries</option>
+<option>Tanzania</option>
+<option>Kenya</option>
+<option>Uganda</option>
+<option>Nigeria</option>
+<option>Ghana</option>
+<option>United States</option>
+<option>United Kingdom</option>
+</select>
+
+<button
+class="blue"
+onclick="loadAnalytics()">
+↻ Refresh
+</button>
+
+</div>
+
+</div>
+
+
+<div class="grid">
+
+<div class="card">
+
+<h2>📈 Event Breakdown</h2>
+
+<div id="events">
+Loading...
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>🌍 Countries</h2>
+
+<div id="countries">
+Loading...
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>🕒 Recent Activity</h2>
+
+<div class="scroll">
+
+<table>
+
+<thead>
+<tr>
+<th>Event</th>
+<th>User</th>
+<th>Page</th>
+<th>Device</th>
+<th>Country</th>
+<th>Date</th>
+</tr>
+</thead>
+
+<tbody id="recent">
+<tr>
+<td colspan="6">Loading...</td>
+</tr>
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</main>
+
+
+<script type="module">
+
+import{
+ initializeApp
+}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import{
+ getFirestore,
+ collection,
+ getDocs
+}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+const firebaseConfig={
+
+apiKey:"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+authDomain:
+"let-s-study-pro-course.firebaseapp.com",
+
+databaseURL:
+"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+projectId:
+"let-s-study-pro-course",
+
+storageBucket:
+"let-s-study-pro-course.firebasestorage.app",
+
+messagingSenderId:
+"474928293390",
+
+appId:
+"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+measurementId:
+"G-85B7V5H5J0"
+
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+let data=[];
+
+const $=id=>
+document.getElementById(id);
+
+
+/* ESCAPE */
+
+function clean(x){
+
+return String(x??"")
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;")
+.replaceAll('"',"&quot;")
+.replaceAll("'","&#039;");
+
+}
+
+
+/* DATE */
+
+function formatDate(value){
+
+if(!value)return "Unknown";
+
+try{
+
+const d=value.toDate
+?value.toDate()
+:new Date(value);
+
+return d.toLocaleString();
+
+}catch{
+
+return "Unknown";
+
+}
+
+}
+
+
+/* LOAD */
+
+window.loadAnalytics=async()=>{
+
+try{
+
+$("recent").innerHTML=
+`<tr>
+<td colspan="6">Loading...</td>
+</tr>`;
+
+const snap=
+await getDocs(
+collection(db,"analytics")
+);
+
+data=snap.docs.map(d=>({
+
+id:d.id,
+...d.data()
+
+}));
+
+render();
+
+}catch(error){
+
+$("recent").innerHTML=
+`<tr>
+<td colspan="6">
+${clean(error.message)}
+</td>
+</tr>`;
+
+}
+
+};
+
+
+/* FILTER */
+
+function filtered(){
+
+const q=
+$("search").value
+.toLowerCase()
+.trim();
+
+const event=
+$("eventFilter").value;
+
+const device=
+$("deviceFilter").value;
+
+const country=
+$("countryFilter").value;
+
+
+return data.filter(x=>{
+
+const text=[
+
+x.userId,
+x.page,
+x.courseId,
+x.event,
+x.device,
+x.country,
+x.type
+
+].join(" ").toLowerCase();
+
+
+return(
+
+(!q||text.includes(q))&&
+(!event||x.event===event)&&
+(!device||x.device===device)&&
+(!country||x.country===country)
+
+);
+
+});
+
+}
+
+
+/* RENDER */
+
+function render(){
+
+const rows=filtered();
+
+
+$("total").textContent=
+rows.length;
+
+$("views").textContent=
+rows.filter(
+x=>x.event==="page_view"
+).length;
+
+$("enrollments").textContent=
+rows.filter(
+x=>x.event==="course_enroll"
+).length;
+
+$("payments").textContent=
+rows.filter(
+x=>x.event==="payment_complete"
+).length;
+
+
+/* EVENTS */
+
+const eventMap={};
+
+rows.forEach(x=>{
+
+const e=x.event||"unknown";
+
+eventMap[e]=
+(eventMap[e]||0)+1;
+
+});
+
+const eventEntries=
+Object.entries(eventMap)
+.sort((a,b)=>b[1]-a[1]);
+
+const maxEvent=
+eventEntries[0]?.[1]||1;
+
+
+$("events").innerHTML=
+eventEntries.length
+?
+eventEntries.map(([name,count])=>`
+
+<div style="margin-bottom:12px">
+
+<div>
+<b>${clean(name)}</b>
+<span style="float:right">
+${count}
+</span>
+</div>
+
+<div class="bar">
+<span style="width:${count/maxEvent*100}%"></span>
+</div>
+
+</div>
+
+`).join("")
+:
+"No event data.";
+
+
+/* COUNTRIES */
+
+const countryMap={};
+
+rows.forEach(x=>{
+
+const c=x.country||"Unknown";
+
+countryMap[c]=
+(countryMap[c]||0)+1;
+
+});
+
+const countryEntries=
+Object.entries(countryMap)
+.sort((a,b)=>b[1]-a[1]);
+
+const maxCountry=
+countryEntries[0]?.[1]||1;
+
+
+$("countries").innerHTML=
+countryEntries.length
+?
+countryEntries.map(([name,count])=>`
+
+<div style="margin-bottom:12px">
+
+<div>
+<b>${clean(name)}</b>
+<span style="float:right">
+${count}
+</span>
+</div>
+
+<div class="bar">
+<span style="width:${count/maxCountry*100}%"></span>
+</div>
+
+</div>
+
+`).join("")
+:
+"No country data.";
+
+
+/* RECENT */
+
+const recent=
+[...rows]
+.sort((a,b)=>{
+
+const da=a.createdAt?.toDate
+?a.createdAt.toDate()
+:new Date(a.createdAt||0);
+
+const db=b.createdAt?.toDate
+?b.createdAt.toDate()
+:new Date(b.createdAt||0);
+
+return db-da;
+
+})
+.slice(0,100);
+
+
+if(!recent.length){
+
+$("recent").innerHTML=
+`<tr>
+<td colspan="6">
+No analytics data.
+</td>
+</tr>`;
+
+return;
+
+}
+
+
+$("recent").innerHTML=
+recent.map(x=>`
+
+<tr>
+
+<td>
+<span class="badge">
+${clean(x.event||"unknown")}
+</span>
+</td>
+
+<td>
+${clean(x.userId||"Guest")}
+</td>
+
+<td>
+${clean(x.page||"-")}
+</td>
+
+<td>
+${clean(x.device||"-")}
+</td>
+
+<td>
+${clean(x.country||"-")}
+</td>
+
+<td>
+${clean(formatDate(x.createdAt))}
+</td>
+
+</tr>
+
+`).join("");
+
+}
+
+
+/* FILTER EVENTS */
+
+$("search").oninput=render;
+
+$("eventFilter").onchange=render;
+
+$("deviceFilter").onchange=render;
+
+$("countryFilter").onchange=render;
+
+
+/* START */
+
+loadAnalytics();
+
+</script>
+
+</body>
+</html>
