@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin AI | LetsStudy Pro</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:Arial,sans-serif;
+ background:#f5f7fb;
+ color:#172033
+}
+header{
+ background:#111827;
+ color:#fff;
+ padding:16px 5%;
+ font-weight:700
+}
+main{
+ max-width:1100px;
+ margin:auto;
+ padding:20px
+}
+.stats{
+ display:grid;
+ grid-template-columns:repeat(4,1fr);
+ gap:10px;
+ margin-bottom:15px
+}
+.stat,.card,.item{
+ background:#fff;
+ border:1px solid #e5e7eb;
+ border-radius:12px;
+ padding:15px;
+ margin-bottom:15px
+}
+.num{
+ font-size:25px;
+ font-weight:700;
+ margin-top:5px
+}
+.form{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:10px
+}
+.full{grid-column:1/-1}
+label{
+ display:block;
+ font-size:13px;
+ font-weight:700;
+ margin-bottom:4px
+}
+input,select,textarea{
+ width:100%;
+ padding:10px;
+ border:1px solid #d1d5db;
+ border-radius:7px;
+ font-size:14px
+}
+textarea{min-height:100px}
+button{
+ border:0;
+ border-radius:7px;
+ padding:9px 12px;
+ cursor:pointer
+}
+.blue{background:#2563eb;color:#fff}
+.green{background:#16a34a;color:#fff}
+.red{background:#dc2626;color:#fff}
+.orange{background:#f59e0b;color:#fff}
+.gray{background:#e5e7eb;color:#111827}
+.toolbar{
+ display:grid;
+ grid-template-columns:2fr 1fr 1fr auto;
+ gap:8px
+}
+.grid{
+ display:grid;
+ grid-template-columns:repeat(2,1fr);
+ gap:12px
+}
+.item{margin:0}
+.badge{
+ display:inline-block;
+ padding:4px 8px;
+ border-radius:20px;
+ font-size:11px;
+ margin:3px
+}
+.on{
+ background:#dcfce7;
+ color:#166534
+}
+.off{
+ background:#fee2e2;
+ color:#991b1b
+}
+.actions{
+ display:flex;
+ gap:5px;
+ flex-wrap:wrap;
+ margin-top:12px
+}
+@media(max-width:750px){
+ .stats,.grid{grid-template-columns:1fr 1fr}
+ .form,.toolbar{grid-template-columns:1fr}
+ .full{grid-column:auto}
+}
+@media(max-width:450px){
+ .stats,.grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+🤖 LetsStudy Pro — Admin AI
+</header>
+
+<main>
+
+<h1>AI Management</h1>
+
+<div class="stats">
+
+<div class="stat">
+AI Configurations
+<div class="num" id="total">0</div>
+</div>
+
+<div class="stat">
+Enabled
+<div class="num" id="enabled">0</div>
+</div>
+
+<div class="stat">
+AI Requests
+<div class="num" id="requests">0</div>
+</div>
+
+<div class="stat">
+Tokens Used
+<div class="num" id="tokens">0</div>
+</div>
+
+</div>
+
+
+<!-- AI CONFIG -->
+
+<div class="card">
+
+<h2>➕ Add / Edit AI Configuration</h2>
+
+<form id="aiForm">
+
+<input type="hidden" id="id">
+
+<div class="form">
+
+<div>
+<label>AI Name *</label>
+<input id="name"
+required
+placeholder="LetsStudy AI">
+</div>
+
+<div>
+<label>Provider</label>
+<select id="provider">
+<option>OpenAI</option>
+<option>Google AI</option>
+<option>Anthropic</option>
+<option>Custom</option>
+</select>
+</div>
+
+<div>
+<label>Model</label>
+<input id="model"
+placeholder="AI model name">
+</div>
+
+<div>
+<label>Status</label>
+<select id="status">
+<option value="enabled">Enabled</option>
+<option value="disabled">Disabled</option>
+</select>
+</div>
+
+<div>
+<label>Daily Request Limit</label>
+<input id="dailyLimit"
+type="number"
+value="1000">
+</div>
+
+<div>
+<label>Max Tokens</label>
+<input id="maxTokens"
+type="number"
+value="2000">
+</div>
+
+<div>
+<label>Temperature</label>
+<input id="temperature"
+type="number"
+step="0.1"
+min="0"
+max="2"
+value="0.7">
+</div>
+
+<div>
+<label>AI Feature</label>
+<select id="feature">
+<option>AI Tutor</option>
+<option>AI Quiz Generator</option>
+<option>AI Notes Generator</option>
+<option>AI Study Assistant</option>
+<option>AI Career Assistant</option>
+<option>AI Chat</option>
+<option>General</option>
+</select>
+</div>
+
+<div class="full">
+<label>System Instructions</label>
+<textarea id="instructions"
+placeholder="Instructions for the AI..."></textarea>
+</div>
+
+<div class="full">
+<label>Description</label>
+<textarea id="description"
+placeholder="Describe this AI service..."></textarea>
+</div>
+
+</div>
+
+<br>
+
+<button class="blue">
+Save AI Configuration
+</button>
+
+<button
+type="button"
+class="gray"
+onclick="clearForm()">
+Clear
+</button>
+
+</form>
+
+</div>
+
+
+<!-- SEARCH -->
+
+<div class="card">
+
+<h2>🔎 AI Configurations</h2>
+
+<div class="toolbar">
+
+<input
+id="search"
+placeholder="Search AI...">
+
+<select id="filterProvider">
+<option value="">All Providers</option>
+<option>OpenAI</option>
+<option>Google AI</option>
+<option>Anthropic</option>
+<option>Custom</option>
+</select>
+
+<select id="filterStatus">
+<option value="">All Status</option>
+<option value="enabled">Enabled</option>
+<option value="disabled">Disabled</option>
+</select>
+
+<button
+class="blue"
+onclick="loadAll()">
+↻ Refresh
+</button>
+
+</div>
+
+</div>
+
+
+<div id="list" class="grid">
+Loading...
+</div>
+
+</main>
+
+
+<script type="module">
+
+import{
+ initializeApp
+}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import{
+ getFirestore,
+ collection,
+ getDocs,
+ addDoc,
+ updateDoc,
+ deleteDoc,
+ doc,
+ serverTimestamp
+}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+const firebaseConfig={
+
+apiKey:"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+authDomain:
+"let-s-study-pro-course.firebaseapp.com",
+
+databaseURL:
+"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+projectId:
+"let-s-study-pro-course",
+
+storageBucket:
+"let-s-study-pro-course.firebasestorage.app",
+
+messagingSenderId:
+"474928293390",
+
+appId:
+"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+measurementId:
+"G-85B7V5H5J0"
+
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+let configs=[];
+let logs=[];
+let editing=null;
+
+const $=id=>
+document.getElementById(id);
+
+
+/* ESCAPE */
+
+function clean(x){
+
+return String(x??"")
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;")
+.replaceAll('"',"&quot;")
+.replaceAll("'","&#039;");
+
+}
+
+
+/* LOAD CONFIGS */
+
+async function loadConfigs(){
+
+const snap=
+await getDocs(
+collection(db,"aiConfigs")
+);
+
+configs=snap.docs.map(d=>({
+id:d.id,
+...d.data()
+}));
+
+}
+
+
+/* LOAD AI LOGS */
+
+async function loadLogs(){
+
+const snap=
+await getDocs(
+collection(db,"aiLogs")
+);
+
+logs=snap.docs.map(d=>({
+id:d.id,
+...d.data()
+}));
+
+}
+
+
+/* LOAD EVERYTHING */
+
+window.loadAll=async()=>{
+
+try{
+
+await Promise.all([
+loadConfigs(),
+loadLogs()
+]);
+
+stats();
+render();
+
+}catch(error){
+
+$("list").innerHTML=
+`<div class="card">
+${clean(error.message)}
+</div>`;
+
+}
+
+};
+
+
+/* STATS */
+
+function stats(){
+
+$("total").textContent=
+configs.length;
+
+$("enabled").textContent=
+configs.filter(
+x=>x.status==="enabled"
+).length;
+
+$("requests").textContent=
+logs.length;
+
+$("tokens").textContent=
+logs.reduce(
+(sum,x)=>
+sum+Number(x.tokens||0),
+0
+);
+
+}
+
+
+/* RENDER */
+
+function render(){
+
+const q=
+$("search").value
+.toLowerCase()
+.trim();
+
+const provider=
+$("filterProvider").value;
+
+const status=
+$("filterStatus").value;
+
+
+const data=
+configs.filter(x=>{
+
+const text=[
+
+x.name,
+x.provider,
+x.model,
+x.feature,
+x.description
+
+].join(" ").toLowerCase();
+
+
+return(
+
+(!q||text.includes(q))&&
+(!provider||x.provider===provider)&&
+(!status||x.status===status)
+
+);
+
+});
+
+
+if(!data.length){
+
+$("list").innerHTML=
+`<div class="card">
+No AI configurations found.
+</div>`;
+
+return;
+
+}
+
+
+$("list").innerHTML=
+data.map(x=>`
+
+<div class="item">
+
+<h3>
+🤖 ${clean(x.name)}
+</h3>
+
+<p>
+<b>Provider:</b>
+${clean(x.provider||"")}
+</p>
+
+<p>
+<b>Model:</b>
+${clean(x.model||"")}
+</p>
+
+<p>
+<b>Feature:</b>
+${clean(x.feature||"")}
+</p>
+
+<span class="badge ${
+x.status==="enabled"
+?"on":"off"
+}">
+${clean(x.status||"")}
+</span>
+
+<p>
+Daily Limit:
+<b>${Number(x.dailyLimit||0)}</b>
+</p>
+
+<p>
+Max Tokens:
+<b>${Number(x.maxTokens||0)}</b>
+</p>
+
+<p>
+Temperature:
+<b>${Number(x.temperature||0)}</b>
+</p>
+
+<p>
+${clean(x.description||"")}
+</p>
+
+<div class="actions">
+
+<button
+class="gray"
+onclick="editAI('${x.id}')">
+✏ Edit
+</button>
+
+<button
+class="orange"
+onclick="toggleAI('${x.id}')">
+${x.status==="enabled"
+?"Disable":"Enable"}
+</button>
+
+<button
+class="red"
+onclick="deleteAI('${x.id}')">
+🗑 Delete
+</button>
+
+</div>
+
+</div>
+
+`).join("");
+
+}
+
+
+/* SAVE */
+
+$("aiForm").onsubmit=async e=>{
+
+e.preventDefault();
+
+const data={
+
+name:
+$("name").value.trim(),
+
+provider:
+$("provider").value,
+
+model:
+$("model").value.trim(),
+
+status:
+$("status").value,
+
+dailyLimit:
+Number($("dailyLimit").value||0),
+
+maxTokens:
+Number($("maxTokens").value||0),
+
+temperature:
+Number($("temperature").value||0.7),
+
+feature:
+$("feature").value,
+
+instructions:
+$("instructions").value.trim(),
+
+description:
+$("description").value.trim(),
+
+updatedAt:
+serverTimestamp()
+
+};
+
+
+try{
+
+if(editing){
+
+await updateDoc(
+doc(db,"aiConfigs",editing),
+data
+);
+
+alert("AI configuration updated.");
+
+}else{
+
+await addDoc(
+collection(db,"aiConfigs"),
+{
+...data,
+requests:0,
+tokens:0,
+createdAt:
+serverTimestamp()
+}
+);
+
+alert("AI configuration added.");
+
+}
+
+clearForm();
+
+await loadAll();
+
+}catch(error){
+
+alert(error.message);
+
+}
+
+};
+
+
+/* EDIT */
+
+window.editAI=id=>{
+
+const x=
+configs.find(a=>a.id===id);
+
+if(!x)return;
+
+editing=id;
+
+$("id").value=id;
+
+$("name").value=
+x.name||"";
+
+$("provider").value=
+x.provider||"OpenAI";
+
+$("model").value=
+x.model||"";
+
+$("status").value=
+x.status||"enabled";
+
+$("dailyLimit").value=
+x.dailyLimit||1000;
+
+$("maxTokens").value=
+x.maxTokens||2000;
+
+$("temperature").value=
+x.temperature??0.7;
+
+$("feature").value=
+x.feature||"General";
+
+$("instructions").value=
+x.instructions||"";
+
+$("description").value=
+x.description||"";
+
+window.scrollTo({
+top:0,
+behavior:"smooth"
+});
+
+};
+
+
+/* CLEAR */
+
+window.clearForm=()=>{
+
+editing=null;
+
+$("aiForm").reset();
+
+$("id").value="";
+
+$("dailyLimit").value=1000;
+
+$("maxTokens").value=2000;
+
+$("temperature").value=0.7;
+
+};
+
+
+/* TOGGLE */
+
+window.toggleAI=async id=>{
+
+const x=
+configs.find(a=>a.id===id);
+
+if(!x)return;
+
+await updateDoc(
+doc(db,"aiConfigs",id),
+{
+status:
+x.status==="enabled"
+?"disabled"
+:"enabled",
+
+updatedAt:
+serverTimestamp()
+}
+);
+
+await loadAll();
+
+};
+
+
+/* DELETE */
+
+window.deleteAI=async id=>{
+
+const x=
+configs.find(a=>a.id===id);
+
+if(!confirm(
+`Delete "${x?.name||"AI configuration"}"?`
+))return;
+
+await deleteDoc(
+doc(db,"aiConfigs",id)
+);
+
+await loadAll();
+
+};
+
+
+/* FILTERS */
+
+$("search").oninput=render;
+
+$("filterProvider").onchange=render;
+
+$("filterStatus").onchange=render;
+
+
+/* START */
+
+loadAll();
+
+</script>
+
+</body>
+</html>
