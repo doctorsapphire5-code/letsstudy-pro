@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Activity Logs | LetsStudy Pro</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:Arial,sans-serif;
+ background:#f5f7fb;
+ color:#172033
+}
+header{
+ background:#111827;
+ color:#fff;
+ padding:16px 5%;
+ font-weight:700
+}
+main{
+ max-width:1150px;
+ margin:auto;
+ padding:20px
+}
+.stats{
+ display:grid;
+ grid-template-columns:repeat(4,1fr);
+ gap:10px;
+ margin-bottom:15px
+}
+.stat,.card,.log{
+ background:#fff;
+ border:1px solid #e5e7eb;
+ border-radius:12px;
+ padding:15px
+}
+.num{
+ font-size:25px;
+ font-weight:700;
+ margin-top:5px
+}
+.toolbar{
+ display:grid;
+ grid-template-columns:2fr 1fr 1fr auto;
+ gap:8px
+}
+input,select{
+ width:100%;
+ padding:10px;
+ border:1px solid #d1d5db;
+ border-radius:7px
+}
+button{
+ border:0;
+ border-radius:7px;
+ padding:9px 12px;
+ cursor:pointer
+}
+.blue{background:#2563eb;color:#fff}
+.red{background:#dc2626;color:#fff}
+.gray{background:#e5e7eb;color:#111827}
+.log{
+ margin-bottom:10px
+}
+.logtop{
+ display:flex;
+ justify-content:space-between;
+ gap:10px;
+ flex-wrap:wrap
+}
+.badge{
+ display:inline-block;
+ padding:4px 8px;
+ border-radius:20px;
+ background:#dbeafe;
+ color:#1e40af;
+ font-size:11px
+}
+small{color:#6b7280}
+pre{
+ white-space:pre-wrap;
+ word-break:break-word;
+ background:#f3f4f6;
+ padding:10px;
+ border-radius:7px;
+ font-size:12px
+}
+@media(max-width:750px){
+ .stats{grid-template-columns:1fr 1fr}
+ .toolbar{grid-template-columns:1fr}
+}
+@media(max-width:450px){
+ .stats{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+🛡️ LetsStudy Pro — Admin Activity Logs
+</header>
+
+<main>
+
+<h1>Admin Activity Logs</h1>
+
+<div class="stats">
+
+<div class="stat">
+Total Logs
+<div class="num" id="total">0</div>
+</div>
+
+<div class="stat">
+Today
+<div class="num" id="today">0</div>
+</div>
+
+<div class="stat">
+Admins
+<div class="num" id="admins">0</div>
+</div>
+
+<div class="stat">
+Actions
+<div class="num" id="actions">0</div>
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="toolbar">
+
+<input
+id="search"
+placeholder="Search admin, action, target...">
+
+<select id="actionFilter">
+<option value="">All Actions</option>
+<option>create</option>
+<option>update</option>
+<option>delete</option>
+<option>publish</option>
+<option>unpublish</option>
+<option>login</option>
+<option>logout</option>
+<option>approve</option>
+<option>reject</option>
+</select>
+
+<select id="targetFilter">
+<option value="">All Targets</option>
+<option>course</option>
+<option>lesson</option>
+<option>resource</option>
+<option>scholarship</option>
+<option>certificate</option>
+<option>user</option>
+<option>payment</option>
+<option>settings</option>
+</select>
+
+<button
+class="blue"
+onclick="loadLogs()">
+↻ Refresh
+</button>
+
+</div>
+
+</div>
+
+<div id="logs">
+Loading...
+</div>
+
+</main>
+
+<script type="module">
+
+import{
+ initializeApp
+}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import{
+ getFirestore,
+ collection,
+ getDocs,
+ deleteDoc,
+ doc
+}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+const firebaseConfig={
+
+apiKey:"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+authDomain:
+"let-s-study-pro-course.firebaseapp.com",
+
+databaseURL:
+"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+projectId:
+"let-s-study-pro-course",
+
+storageBucket:
+"let-s-study-pro-course.firebasestorage.app",
+
+messagingSenderId:
+"474928293390",
+
+appId:
+"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+measurementId:
+"G-85B7V5H5J0"
+
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+let logs=[];
+
+const $=id=>
+document.getElementById(id);
+
+
+/* ESCAPE */
+
+function clean(x){
+
+return String(x??"")
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;")
+.replaceAll('"',"&quot;")
+.replaceAll("'","&#039;");
+
+}
+
+
+/* DATE */
+
+function formatDate(value){
+
+if(!value)return "Unknown";
+
+try{
+
+const d=
+value.toDate
+?value.toDate()
+:new Date(value);
+
+return d.toLocaleString();
+
+}catch{
+
+return "Unknown";
+
+}
+
+}
+
+
+/* LOAD */
+
+window.loadLogs=async()=>{
+
+$("logs").innerHTML=
+"Loading...";
+
+try{
+
+const snap=
+await getDocs(
+collection(db,"adminLogs")
+);
+
+logs=snap.docs.map(d=>({
+
+id:d.id,
+...d.data()
+
+}));
+
+updateStats();
+render();
+
+}catch(error){
+
+$("logs").innerHTML=
+`<div class="card">
+Error: ${clean(error.message)}
+</div>`;
+
+}
+
+};
+
+
+/* STATS */
+
+function updateStats(){
+
+$("total").textContent=
+logs.length;
+
+const today=
+new Date().toDateString();
+
+$("today").textContent=
+logs.filter(l=>{
+
+if(!l.createdAt)return false;
+
+try{
+
+const d=
+l.createdAt.toDate
+?l.createdAt.toDate()
+:new Date(l.createdAt);
+
+return d.toDateString()===today;
+
+}catch{
+
+return false;
+
+}
+
+}).length;
+
+
+const adminSet=
+new Set(
+logs
+.map(l=>l.adminId)
+.filter(Boolean)
+);
+
+$("admins").textContent=
+adminSet.size;
+
+
+const actionSet=
+new Set(
+logs
+.map(l=>l.action)
+.filter(Boolean)
+);
+
+$("actions").textContent=
+actionSet.size;
+
+}
+
+
+/* RENDER */
+
+function render(){
+
+const q=
+$("search").value
+.toLowerCase()
+.trim();
+
+const action=
+$("actionFilter").value;
+
+const target=
+$("targetFilter").value;
+
+
+const filtered=
+logs.filter(l=>{
+
+const text=[
+
+l.adminName,
+l.adminId,
+l.action,
+l.targetType,
+l.targetId,
+l.description,
+l.ip
+
+].join(" ").toLowerCase();
+
+
+return(
+
+(!q||text.includes(q))&&
+(!action||l.action===action)&&
+(!target||l.targetType===target)
+
+);
+
+});
+
+
+if(!filtered.length){
+
+$("logs").innerHTML=
+`<div class="card">
+No activity logs found.
+</div>`;
+
+return;
+
+}
+
+
+$("logs").innerHTML=
+filtered.map(l=>`
+
+<div class="log">
+
+<div class="logtop">
+
+<div>
+
+<b>
+${clean(l.adminName||"Admin")}
+</b>
+
+<br>
+
+<small>
+Admin ID:
+${clean(l.adminId||"N/A")}
+</small>
+
+</div>
+
+<div>
+
+<span class="badge">
+${clean(l.action||"unknown")}
+</span>
+
+<span class="badge">
+${clean(l.targetType||"unknown")}
+</span>
+
+</div>
+
+</div>
+
+<hr>
+
+<p>
+<b>Description:</b><br>
+${clean(l.description||"No description")}
+</p>
+
+<p>
+<b>Target ID:</b>
+${clean(l.targetId||"N/A")}
+</p>
+
+<p>
+<b>IP:</b>
+${clean(l.ip||"N/A")}
+</p>
+
+<p>
+<b>User Agent:</b>
+${clean(l.userAgent||"N/A")}
+</p>
+
+<small>
+🕒 ${clean(formatDate(l.createdAt))}
+</small>
+
+<br><br>
+
+<button
+class="red"
+onclick="deleteLog('${l.id}')">
+Delete Log
+</button>
+
+</div>
+
+`).join("");
+
+}
+
+
+/* DELETE */
+
+window.deleteLog=async id=>{
+
+if(!confirm(
+"Delete this admin activity log?"
+))return;
+
+try{
+
+await deleteDoc(
+doc(db,"adminLogs",id)
+);
+
+await loadLogs();
+
+}catch(error){
+
+alert(error.message);
+
+}
+
+};
+
+
+/* FILTER EVENTS */
+
+$("search").oninput=render;
+
+$("actionFilter").onchange=render;
+
+$("targetFilter").onchange=render;
+
+
+/* START */
+
+loadLogs();
+
+</script>
+
+</body>
+</html>
