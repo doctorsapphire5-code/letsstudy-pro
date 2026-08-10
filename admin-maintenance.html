@@ -1608,34 +1608,12 @@ const activityLog =
    NORMALIZE ROLE
 ===================================== */
 
-function normalizeRole(role){
-
-  return String(
-    role || ""
-  )
-  .toLowerCase()
-  .trim()
-  .replace(/-/g,"_");
-
-}
 
 
 /* =====================================
    ACCESS DENIED
 ===================================== */
 
-function denyAccess(){
-
-  loading.style.display =
-    "none";
-
-  adminApp.style.display =
-    "none";
-
-  accessDenied.style.display =
-    "flex";
-
-}
 
 
 /* =====================================
@@ -2955,131 +2933,15 @@ if(year){
    ADMIN AUTHORIZATION
 ===================================== */
 
-onAuthStateChanged(
+
+        onAuthStateChanged(
   auth,
-  async user => {
+  async () => {
 
-    if(!user){
-
-      location.href =
-        "login.html";
-
-      return;
-
-    }
-
-
-    try{
-
-      const userRef =
-        doc(
-          db,
-          "users",
-          user.uid
-        );
-
-
-      const userSnap =
-        await getDoc(
-          userRef
-        );
-
-
-      if(
-        !userSnap.exists()
-      ){
-
-        denyAccess();
-
-        return;
-
-      }
-
-
-      const userData =
-        userSnap.data();
-
-
-      const role =
-        normalizeRole(
-          userData.role
-        );
-
-
-      const allowedRoles = [
-
-        "admin",
-        "superadmin",
-        "super_admin",
-        "administrator"
-
-      ];
-
-
-      if(
-        !allowedRoles.includes(
-          role
-        )
-      ){
-
-        denyAccess();
-
-        return;
-
-      }
-
-
-      currentAdmin = {
-
-        uid:
-          user.uid,
-
-        email:
-          user.email || "",
-
-        role:
-          role,
-
-        ...userData
-
-      };
-
-
-      loading.style.display =
-        "none";
-
-
-      adminApp.style.display =
-        "block";
-
-
-      await loadSettings();
-
-
-      addLog(
-        "Administrator authenticated: " +
-        (
-          currentAdmin.email ||
-          currentAdmin.uid
-        )
-      );
-
-    }
-    catch(error){
-
-      console.error(
-        "Authorization error:",
-        error
-      );
-
-
-            denyAccess();
-
-    }
+    await loadReports();
 
   }
 );
-
 
 /* =====================================
    PAGE INITIALIZATION
