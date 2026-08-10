@@ -16,385 +16,311 @@ body{
 header{
   background:#111827;
   color:white;
-  padding:18px 22px;
+  padding:18px 20px;
   display:flex;
   justify-content:space-between;
-  align-items:center
+  align-items:center;
 }
-main{max-width:1100px;margin:auto;padding:20px}
+header h1{margin:0;font-size:21px}
+.container{
+  max-width:1100px;
+  margin:auto;
+  padding:20px
+}
 .card{
   background:white;
   border-radius:14px;
   padding:20px;
   margin-bottom:20px;
-  box-shadow:0 3px 15px #0000000d
+  box-shadow:0 4px 18px #0000000d
 }
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
   gap:12px
 }
 input,select,textarea{
   width:100%;
   padding:12px;
-  border:1px solid #d6dbe5;
+  border:1px solid #d9dee8;
   border-radius:9px;
-  margin-top:6px
+  margin-top:6px;
 }
 textarea{min-height:100px;resize:vertical}
-label{font-size:13px;font-weight:bold}
+label{font-weight:600;font-size:13px}
 button{
   border:0;
   border-radius:9px;
-  padding:11px 15px;
+  padding:11px 16px;
   cursor:pointer;
-  font-weight:bold
+  font-weight:600;
 }
 .primary{background:#2563eb;color:white}
 .danger{background:#dc2626;color:white}
-.secondary{background:#e5e7eb}
-.success{background:#16a34a;color:white}
+.secondary{background:#e5e7eb;color:#111827}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
+.toolbar{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:15px
+}
+.toolbar input{margin:0;flex:1;min-width:220px}
 .resource{
   border:1px solid #e5e7eb;
   border-radius:12px;
-  padding:16px;
-  margin-top:12px
+  padding:15px;
+  margin-bottom:12px;
 }
-.actions{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin-top:12px
+.resource h3{margin:0 0 7px}
+.meta{
+  color:#6b7280;
+  font-size:13px;
+  margin:5px 0
 }
 .badge{
   display:inline-block;
   padding:4px 8px;
   border-radius:20px;
+  background:#eef2ff;
+  color:#3730a3;
   font-size:12px;
-  background:#e5e7eb
 }
-.published{background:#dcfce7;color:#166534}
-.draft{background:#fef3c7;color:#92400e}
-.stats{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-  margin-bottom:20px
+.empty{
+  text-align:center;
+  padding:40px;
+  color:#6b7280
 }
-.stat{
-  background:white;
-  padding:16px;
-  border-radius:12px
-}
-.stat strong{display:block;font-size:24px}
-.hidden{display:none}
 #toast{
   position:fixed;
-  bottom:20px;
   right:20px;
+  bottom:20px;
   background:#111827;
   color:white;
   padding:13px 18px;
   border-radius:10px;
-  display:none
+  display:none;
+  z-index:99
 }
+#loading{text-align:center;padding:25px}
 </style>
 </head>
 
 <body>
 
 <header>
-  <strong>LetsStudy Pro — Resources</strong>
-  <button class="secondary" id="logoutBtn">Logout</button>
+  <h1>📚 LetsStudy Pro — Admin Resources</h1>
+  <span id="count">0 Resources</span>
 </header>
 
-<main>
+<div class="container">
 
-<div id="authMessage" class="card">
-  Checking administrator access...
-</div>
+  <!-- FORM -->
+  <div class="card">
+    <h2 id="formTitle">Add Resource</h2>
 
-<section id="adminApp" class="hidden">
+    <form id="resourceForm">
 
-<div class="stats">
-  <div class="stat">
-    <small>Total Resources</small>
-    <strong id="totalResources">0</strong>
+      <input type="hidden" id="resourceId">
+
+      <div class="grid">
+
+        <div>
+          <label>Title</label>
+          <input id="title" required>
+        </div>
+
+        <div>
+          <label>Category</label>
+          <select id="category">
+            <option>Notes</option>
+            <option>Past Papers</option>
+            <option>Revision</option>
+            <option>Books</option>
+            <option>Videos</option>
+            <option>Guides</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Type</label>
+          <select id="type">
+            <option>PDF</option>
+            <option>Video</option>
+            <option>Document</option>
+            <option>Link</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Thumbnail URL</label>
+          <input id="thumbnail">
+        </div>
+
+        <div>
+          <label>File / Resource URL</label>
+          <input id="fileUrl" required>
+        </div>
+
+        <div>
+          <label>Size</label>
+          <input id="size" placeholder="Example: 2.5 MB">
+        </div>
+
+      </div>
+
+      <label>Description</label>
+      <textarea id="description"></textarea>
+
+      <div class="actions">
+        <button class="primary" type="submit">
+          Save Resource
+        </button>
+
+        <button
+          class="secondary"
+          type="button"
+          onclick="resetForm()">
+          Clear
+        </button>
+      </div>
+
+    </form>
   </div>
 
-  <div class="stat">
-    <small>Published</small>
-    <strong id="publishedResources">0</strong>
+  <!-- SEARCH -->
+  <div class="card">
+
+    <div class="toolbar">
+      <input
+        id="search"
+        placeholder="Search resources..."
+        oninput="renderResources()">
+
+      <select id="filterCategory"
+              onchange="renderResources()">
+        <option value="">All Categories</option>
+        <option>Notes</option>
+        <option>Past Papers</option>
+        <option>Revision</option>
+        <option>Books</option>
+        <option>Videos</option>
+        <option>Guides</option>
+        <option>Other</option>
+      </select>
+    </div>
+
+    <div id="loading">
+      Loading resources...
+    </div>
+
+    <div id="resources"></div>
+
   </div>
 
-  <div class="stat">
-    <small>Total Downloads</small>
-    <strong id="totalDownloads">0</strong>
-  </div>
 </div>
-
-<div class="card">
-
-<h2 id="formTitle">Add Resource</h2>
-
-<form id="resourceForm">
-
-<input type="hidden" id="resourceId">
-
-<div class="grid">
-
-<div>
-<label>Title</label>
-<input id="title" required>
-</div>
-
-<div>
-<label>Category</label>
-<select id="category">
-<option value="Biology">Biology</option>
-<option value="Chemistry">Chemistry</option>
-<option value="Physics">Physics</option>
-<option value="Mathematics">Mathematics</option>
-<option value="Geography">Geography</option>
-<option value="Technology">Technology</option>
-<option value="Business">Business</option>
-<option value="Other">Other</option>
-</select>
-</div>
-
-<div>
-<label>Type</label>
-<select id="type">
-<option value="PDF">PDF</option>
-<option value="Document">Document</option>
-<option value="Video">Video</option>
-<option value="Link">Link</option>
-<option value="Past Paper">Past Paper</option>
-<option value="Notes">Notes</option>
-</select>
-</div>
-
-<div>
-<label>Status</label>
-<select id="status">
-<option value="published">Published</option>
-<option value="draft">Draft</option>
-</select>
-</div>
-
-</div>
-
-<label>Description</label>
-<textarea id="description"></textarea>
-
-<div class="grid">
-
-<div>
-<label>File URL</label>
-<input id="fileUrl"
-       type="url"
-       placeholder="https://example.com/file.pdf"
-       required>
-</div>
-
-<div>
-<label>Thumbnail URL</label>
-<input id="thumbnailUrl"
-       type="url"
-       placeholder="https://example.com/image.jpg">
-</div>
-
-</div>
-
-<div class="actions">
-<button class="primary" type="submit">
-Save Resource
-</button>
-
-<button
-  class="secondary hidden"
-  type="button"
-  id="cancelEdit">
-Cancel Edit
-</button>
-</div>
-
-</form>
-</div>
-
-<div class="card">
-
-<div class="grid">
-
-<input
- id="search"
- placeholder="Search resources...">
-
-<select id="filterCategory">
-<option value="">All Categories</option>
-<option>Biology</option>
-<option>Chemistry</option>
-<option>Physics</option>
-<option>Mathematics</option>
-<option>Geography</option>
-<option>Technology</option>
-<option>Business</option>
-<option>Other</option>
-</select>
-
-</div>
-
-<div id="resourcesList"></div>
-
-</div>
-
-</section>
-</main>
 
 <div id="toast"></div>
 
 <script type="module">
 
 import {
- initializeApp
+  initializeApp
 } from
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 
 import {
- getAuth,
- onAuthStateChanged,
- signOut
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp
 } from
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-import {
- getFirestore,
- collection,
- addDoc,
- getDocs,
- doc,
- updateDoc,
- deleteDoc,
- serverTimestamp
-} from
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-
-/* =====================================
-   FIREBASE CONFIG
-===================================== */
-
-const firebaseConfig = {
-
-  apiKey:
-    "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
-
-  authDomain:
-    "let-s-study-pro-course.firebaseapp.com",
-
-  projectId:
-    "let-s-study-pro-course",
-
-  messagingSenderId:
-    "474928293390",
-
-  appId:
-    "1:474928293390:web:2bcc2aebf2351c12a9fe5f"
-
-};
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 
 /* =====================================
    FIREBASE
 ===================================== */
 
-const app =
-  initializeApp(firebaseConfig);
+const firebaseConfig = {
+  apiKey: "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+  authDomain: "let-s-study-pro-course.firebaseapp.com",
+  databaseURL:
+    "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId: "let-s-study-pro-course",
+  storageBucket:
+    "let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId: "474928293390",
+  appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId: "G-85B7V5H5J0"
+};
 
-const auth =
-  getAuth(app);
-
-const db =
-  getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 
 /* =====================================
-   ELEMENTS
+   STATE
 ===================================== */
-
-const adminApp =
-  document.getElementById("adminApp");
-
-const authMessage =
-  document.getElementById("authMessage");
-
-const form =
-  document.getElementById("resourceForm");
-
-const list =
-  document.getElementById("resourcesList");
-
-const search =
-  document.getElementById("search");
-
-const filterCategory =
-  document.getElementById("filterCategory");
-
-const toast =
-  document.getElementById("toast");
 
 let resources = [];
 
 
 /* =====================================
-   TOAST
+   HELPERS
 ===================================== */
 
+function escapeHTML(value){
+
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+}
+
+
 function showToast(message){
+
+  const toast =
+    document.getElementById("toast");
 
   toast.textContent = message;
   toast.style.display = "block";
 
-  setTimeout(
-    () => {
-      toast.style.display = "none";
-    },
-    2500
-  );
+  setTimeout(() => {
+    toast.style.display = "none";
+  },2500);
+
 }
 
 
-/* =====================================
-   AUTH
-===================================== */
+function resetForm(){
 
-onAuthStateChanged(
-  auth,
-  async user => {
+  document.getElementById(
+    "resourceForm"
+  ).reset();
 
-    if(!user){
+  document.getElementById(
+    "resourceId"
+  ).value = "";
 
-      authMessage.textContent =
-        "Please login first.";
+  document.getElementById(
+    "formTitle"
+  ).textContent = "Add Resource";
 
-      return;
-    }
+}
 
-    /*
-      UI access check.
 
-      IMPORTANT:
-      Real security must also be
-      enforced by Firestore Rules.
-    */
-
-    authMessage.classList.add("hidden");
-    adminApp.classList.remove("hidden");
-
-    await loadResources();
-
-  }
-);
+window.resetForm = resetForm;
 
 
 /* =====================================
@@ -403,23 +329,40 @@ onAuthStateChanged(
 
 async function loadResources(){
 
+  const loading =
+    document.getElementById("loading");
+
   try{
 
-    const snap =
+    const snapshot =
       await getDocs(
-        collection(
-          db,
-          "resources"
-        )
+        collection(db,"resources")
       );
 
-    resources =
-      snap.docs.map(
-        item => ({
-          id:item.id,
-          ...item.data()
-        })
-      );
+    resources = [];
+
+    snapshot.forEach(item => {
+
+      resources.push({
+        id:item.id,
+        ...item.data()
+      });
+
+    });
+
+    resources.sort((a,b) => {
+
+      const aTime =
+        a.createdAt?.seconds || 0;
+
+      const bTime =
+        b.createdAt?.seconds || 0;
+
+      return bTime - aTime;
+
+    });
+
+    loading.style.display = "none";
 
     renderResources();
 
@@ -427,6 +370,9 @@ async function loadResources(){
   catch(error){
 
     console.error(error);
+
+    loading.innerHTML =
+      "Unable to load resources.";
 
     showToast(
       "Failed to load resources"
@@ -441,205 +387,147 @@ async function loadResources(){
    RENDER
 ===================================== */
 
-function renderResources(){
+window.renderResources =
+function(){
 
-  const term =
-    search.value
-      .toLowerCase()
-      .trim();
-
-  const category =
-    filterCategory.value;
-
-  const filtered =
-    resources.filter(
-      resource => {
-
-        const matchesSearch =
-          !term ||
-          String(
-            resource.title || ""
-          )
-          .toLowerCase()
-          .includes(term) ||
-
-          String(
-            resource.description || ""
-          )
-          .toLowerCase()
-          .includes(term);
-
-        const matchesCategory =
-          !category ||
-          resource.category === category;
-
-        return (
-          matchesSearch &&
-          matchesCategory
-        );
-
-      }
+  const container =
+    document.getElementById(
+      "resources"
     );
 
+  const search =
+    document.getElementById(
+      "search"
+    ).value
+     .toLowerCase()
+     .trim();
 
-  list.innerHTML = "";
+  const category =
+    document.getElementById(
+      "filterCategory"
+    ).value;
 
+  const filtered =
+    resources.filter(resource => {
+
+      const text =
+        (
+          resource.title || ""
+        ).toLowerCase();
+
+      const matchesSearch =
+        !search ||
+        text.includes(search);
+
+      const matchesCategory =
+        !category ||
+        resource.category === category;
+
+      return (
+        matchesSearch &&
+        matchesCategory
+      );
+
+    });
+
+  document.getElementById(
+    "count"
+  ).textContent =
+    `${filtered.length} Resources`;
 
   if(!filtered.length){
 
-    list.innerHTML = `
-      <div class="resource">
+    container.innerHTML = `
+      <div class="empty">
         No resources found.
       </div>
     `;
 
-    updateStats();
-
     return;
+
   }
 
+  container.innerHTML =
+    filtered.map(resource => `
 
-  filtered.forEach(
-    resource => {
-
-      const div =
-        document.createElement("div");
-
-      div.className = "resource";
-
-
-      const statusClass =
-        resource.status === "published"
-          ? "published"
-          : "draft";
-
-
-      div.innerHTML = `
-
-        ${
-          resource.thumbnailUrl
-            ? `
-              <img
-                src="${escapeAttribute(
-                  resource.thumbnailUrl
-                )}"
-                style="
-                  width:90px;
-                  height:60px;
-                  object-fit:cover;
-                  border-radius:8px;
-                "
-              >
-            `
-            : ""
-        }
+      <div class="resource">
 
         <h3>
-          ${escapeHTML(
-            resource.title || "Untitled"
-          )}
+          ${escapeHTML(resource.title)}
         </h3>
 
-        <span class="badge">
-          ${escapeHTML(
-            resource.category || "Other"
-          )}
-        </span>
-
-        <span class="badge">
-          ${escapeHTML(
-            resource.type || "Resource"
-          )}
-        </span>
-
-        <span class="badge ${statusClass}">
-          ${escapeHTML(
-            resource.status || "draft"
-          )}
-        </span>
+        <div class="meta">
+          ${escapeHTML(resource.description || "No description")}
+        </div>
 
         <p>
-          ${escapeHTML(
-            resource.description || ""
-          )}
+          <span class="badge">
+            ${escapeHTML(resource.category || "Other")}
+          </span>
+
+          <span class="badge">
+            ${escapeHTML(resource.type || "File")}
+          </span>
         </p>
 
-        <small>
-          Views: ${Number(resource.views || 0)}
-          · Downloads:
+        <div class="meta">
+          Size:
+          ${escapeHTML(resource.size || "Unknown")}
+        </div>
+
+        <div class="meta">
+          Downloads:
           ${Number(resource.downloads || 0)}
-        </small>
+        </div>
 
         <div class="actions">
 
           <a
-            href="${escapeAttribute(
-              resource.fileUrl || "#"
-            )}"
+            href="${escapeHTML(resource.fileUrl || "#")}"
             target="_blank"
-            rel="noopener"
-          >
-            <button class="secondary">
+            rel="noopener">
+            <button class="primary">
               Open
             </button>
           </a>
 
           <button
-            class="primary"
-            onclick="editResource('${resource.id}')"
-          >
+            class="secondary"
+            onclick="editResource('${resource.id}')">
             Edit
           </button>
 
           <button
-            class="success"
-            onclick="togglePublished('${resource.id}')"
-          >
-            ${
-              resource.status === "published"
-                ? "Unpublish"
-                : "Publish"
-            }
-          </button>
-
-          <button
             class="danger"
-            onclick="deleteResource('${resource.id}')"
-          >
+            onclick="deleteResource('${resource.id}')">
             Delete
           </button>
 
         </div>
-      `;
 
+      </div>
 
-      list.appendChild(div);
+    `).join("");
 
-    }
-  );
-
-
-  updateStats();
-
-}
+};
 
 
 /* =====================================
-   SAVE / UPDATE
+   ADD / UPDATE
 ===================================== */
 
-form.addEventListener(
+document.getElementById(
+  "resourceForm"
+).addEventListener(
   "submit",
   async event => {
 
     event.preventDefault();
 
-
     const id =
       document.getElementById(
         "resourceId"
       ).value;
-
 
     const data = {
 
@@ -668,15 +556,15 @@ form.addEventListener(
           "fileUrl"
         ).value.trim(),
 
-      thumbnailUrl:
+      thumbnail:
         document.getElementById(
-          "thumbnailUrl"
+          "thumbnail"
         ).value.trim(),
 
-      status:
+      size:
         document.getElementById(
-          "status"
-        ).value,
+          "size"
+        ).value.trim(),
 
       updatedAt:
         serverTimestamp()
@@ -689,11 +577,7 @@ form.addEventListener(
       if(id){
 
         await updateDoc(
-          doc(
-            db,
-            "resources",
-            id
-          ),
+          doc(db,"resources",id),
           data
         );
 
@@ -705,23 +589,14 @@ form.addEventListener(
       else{
 
         await addDoc(
-          collection(
-            db,
-            "resources"
-          ),
+          collection(db,"resources"),
           {
-
             ...data,
-
             downloads:0,
             views:0,
-
-            uploadedBy:
-              auth.currentUser.uid,
-
+            status:"published",
             createdAt:
               serverTimestamp()
-
           }
         );
 
@@ -730,7 +605,6 @@ form.addEventListener(
         );
 
       }
-
 
       resetForm();
 
@@ -742,7 +616,7 @@ form.addEventListener(
       console.error(error);
 
       showToast(
-        "Save failed"
+        "Unable to save resource"
       );
 
     }
@@ -764,7 +638,6 @@ function(id){
     );
 
   if(!resource) return;
-
 
   document.getElementById(
     "resourceId"
@@ -796,27 +669,19 @@ function(id){
     resource.fileUrl || "";
 
   document.getElementById(
-    "thumbnailUrl"
+    "thumbnail"
   ).value =
-    resource.thumbnailUrl || "";
+    resource.thumbnail || "";
 
   document.getElementById(
-    "status"
+    "size"
   ).value =
-    resource.status || "draft";
-
+    resource.size || "";
 
   document.getElementById(
     "formTitle"
   ).textContent =
     "Edit Resource";
-
-  document.getElementById(
-    "cancelEdit"
-  ).classList.remove(
-    "hidden"
-  );
-
 
   window.scrollTo({
     top:0,
@@ -833,23 +698,21 @@ function(id){
 window.deleteResource =
 async function(id){
 
-  if(
-    !confirm(
-      "Delete this resource?"
-    )
-  ){
-    return;
-  }
+  const resource =
+    resources.find(
+      item => item.id === id
+    );
 
+  if(!resource) return;
+
+  if(!confirm(
+    `Delete "${resource.title || "this resource"}"?`
+  )) return;
 
   try{
 
     await deleteDoc(
-      doc(
-        db,
-        "resources",
-        id
-      )
+      doc(db,"resources",id)
     );
 
     showToast(
@@ -864,7 +727,7 @@ async function(id){
     console.error(error);
 
     showToast(
-      "Delete failed"
+      "Unable to delete resource"
     );
 
   }
@@ -873,185 +736,10 @@ async function(id){
 
 
 /* =====================================
-   PUBLISH / UNPUBLISH
+   START
 ===================================== */
 
-window.togglePublished =
-async function(id){
-
-  const resource =
-    resources.find(
-      item => item.id === id
-    );
-
-  if(!resource) return;
-
-
-  const newStatus =
-    resource.status === "published"
-      ? "draft"
-      : "published";
-
-
-  try{
-
-    await updateDoc(
-      doc(
-        db,
-        "resources",
-        id
-      ),
-      {
-        status:newStatus,
-        updatedAt:
-          serverTimestamp()
-      }
-    );
-
-
-    showToast(
-      newStatus === "published"
-        ? "Resource published"
-        : "Resource unpublished"
-    );
-
-
-    await loadResources();
-
-  }
-  catch(error){
-
-    console.error(error);
-
-    showToast(
-      "Status update failed"
-    );
-
-  }
-
-};
-
-
-/* =====================================
-   RESET
-===================================== */
-
-function resetForm(){
-
-  form.reset();
-
-  document.getElementById(
-    "resourceId"
-  ).value = "";
-
-  document.getElementById(
-    "formTitle"
-  ).textContent =
-    "Add Resource";
-
-  document.getElementById(
-    "cancelEdit"
-  ).classList.add(
-    "hidden"
-  );
-
-}
-
-
-document.getElementById(
-  "cancelEdit"
-).onclick =
-resetForm;
-
-
-/* =====================================
-   SEARCH
-===================================== */
-
-search.addEventListener(
-  "input",
-  renderResources
-);
-
-filterCategory.addEventListener(
-  "change",
-  renderResources
-);
-
-
-/* =====================================
-   STATISTICS
-===================================== */
-
-function updateStats(){
-
-  document.getElementById(
-    "totalResources"
-  ).textContent =
-    resources.length;
-
-
-  document.getElementById(
-    "publishedResources"
-  ).textContent =
-    resources.filter(
-      item =>
-        item.status === "published"
-    ).length;
-
-
-  document.getElementById(
-    "totalDownloads"
-  ).textContent =
-    resources.reduce(
-      (sum,item) =>
-        sum +
-        Number(
-          item.downloads || 0
-        ),
-      0
-    );
-
-}
-
-
-/* =====================================
-   SAFE HTML
-===================================== */
-
-function escapeHTML(value){
-
-  return String(value ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-
-}
-
-
-function escapeAttribute(value){
-
-  return escapeHTML(value);
-
-}
-
-
-/* =====================================
-   LOGOUT
-===================================== */
-
-document.getElementById(
-  "logoutBtn"
-).onclick =
-async function(){
-
-  await signOut(auth);
-
-  location.reload();
-
-};
+loadResources();
 
 </script>
 
