@@ -1,1593 +1,1048 @@
-<!-- =========================
-     ADMIN NOTIFICATIONS
-========================= -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Admin Notifications | LetsStudy Pro</title>
 
-<section class="admin-page">
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f5f7fb;
+  color:#172033
+}
+header{
+  background:#111827;
+  color:white;
+  padding:18px 22px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center
+}
+.container{
+  max-width:1200px;
+  margin:auto;
+  padding:22px
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:15px;
+  margin-bottom:20px
+}
+.card{
+  background:white;
+  border-radius:14px;
+  padding:18px;
+  box-shadow:0 3px 15px #00000010
+}
+.stat{
+  font-size:28px;
+  font-weight:bold;
+  margin-top:8px
+}
+.form{
+  display:grid;
+  gap:12px
+}
+input,textarea,select{
+  width:100%;
+  padding:12px;
+  border:1px solid #d8dee9;
+  border-radius:9px;
+  font-size:15px
+}
+textarea{min-height:110px;resize:vertical}
+button{
+  border:0;
+  border-radius:9px;
+  padding:11px 16px;
+  cursor:pointer;
+  font-weight:bold
+}
+.primary{background:#2563eb;color:white}
+.danger{background:#dc2626;color:white}
+.secondary{background:#e5e7eb;color:#111827}
+.actions{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap
+}
+.toolbar{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:10px;
+  margin-bottom:15px
+}
+.notification{
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  padding:15px;
+  margin-bottom:10px
+}
+.notification h3{
+  margin:0 0 7px
+}
+.meta{
+  color:#6b7280;
+  font-size:13px
+}
+.badge{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:20px;
+  background:#eef2ff;
+  color:#3730a3;
+  font-size:12px
+}
+#loading{
+  text-align:center;
+  padding:50px
+}
+.hidden{display:none}
+@media(max-width:800px){
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .toolbar{grid-template-columns:1fr}
+}
+@media(max-width:500px){
+  .grid{grid-template-columns:1fr}
+}
+</style>
+</head>
 
-  <div class="page-header">
+<body>
 
-    <div>
-      <h1>Notifications</h1>
+<header>
+  <strong>🔔 LetsStudy Pro — Notifications</strong>
+  <button class="secondary" onclick="logout()">Logout</button>
+</header>
 
-      <p>
-        Manage system notifications sent to users.
-      </p>
+<div id="loading">
+  Loading Notifications...
+</div>
+
+<main id="app" class="container hidden">
+
+  <div class="grid">
+
+    <div class="card">
+      <div>Total</div>
+      <div id="totalCount" class="stat">0</div>
     </div>
 
-    <button
-      type="button"
-      class="primary-btn"
-      id="addNotificationBtn"
-    >
-      + Add Notification
-    </button>
+    <div class="card">
+      <div>Unread</div>
+      <div id="unreadCount" class="stat">0</div>
+    </div>
+
+    <div class="card">
+      <div>Read</div>
+      <div id="readCount" class="stat">0</div>
+    </div>
+
+    <div class="card">
+      <div>Recipients</div>
+      <div id="recipientCount" class="stat">0</div>
+    </div>
 
   </div>
 
 
-  <!-- =========================
-       STATISTICS
-  ========================= -->
+  <section class="card">
 
-  <div class="stats-grid">
-
-    <div class="stat-card">
-      <span>Total Notifications</span>
-      <strong id="totalNotifications">0</strong>
-    </div>
-
-    <div class="stat-card">
-      <span>Unread</span>
-      <strong id="unreadNotifications">0</strong>
-    </div>
-
-    <div class="stat-card">
-      <span>Read</span>
-      <strong id="readNotifications">0</strong>
-    </div>
-
-    <div class="stat-card">
-      <span>Important</span>
-      <strong id="importantNotifications">0</strong>
-    </div>
-
-  </div>
-
-
-  <!-- =========================
-       FILTERS
-  ========================= -->
-
-  <div class="filter-card">
-
-    <input
-      type="search"
-      id="notificationSearch"
-      placeholder="Search notifications..."
-    >
-
-
-    <select id="notificationTypeFilter">
-
-      <option value="all">
-        All Types
-      </option>
-
-      <option value="system">
-        System
-      </option>
-
-      <option value="course">
-        Course
-      </option>
-
-      <option value="payment">
-        Payment
-      </option>
-
-      <option value="marketing">
-        Marketing
-      </option>
-
-      <option value="security">
-        Security
-      </option>
-
-    </select>
-
-
-    <select id="notificationStatusFilter">
-
-      <option value="all">
-        All Status
-      </option>
-
-      <option value="unread">
-        Unread
-      </option>
-
-      <option value="read">
-        Read
-      </option>
-
-      <option value="important">
-        Important
-      </option>
-
-    </select>
-
-  </div>
-
-
-  <!-- =========================
-       NOTIFICATIONS
-  ========================= -->
-
-  <div
-    class="notifications-list"
-    id="notificationsList"
-  >
-
-    <div class="loading-state">
-      Loading notifications...
-    </div>
-
-  </div>
-
-</section>
-
-
-<!-- =========================
-     MODAL
-========================= -->
-
-<div
-  class="modal"
-  id="notificationModal"
-  style="display:none;"
->
-
-  <div class="modal-content">
-
-    <button
-      type="button"
-      class="modal-close"
-      id="closeNotificationModal"
-    >
-      ×
-    </button>
-
-
-    <h2 id="notificationModalTitle">
-      Add Notification
+    <h2 id="formTitle">
+      Create Notification
     </h2>
 
+    <form id="notificationForm" class="form">
 
-    <form id="notificationForm">
-
-      <label>
-        Title
-
-        <input
-          type="text"
-          name="title"
-          id="notificationTitle"
-          required
-          maxlength="150"
-        >
-
-      </label>
-
-
-      <label>
-        Message
-
-        <textarea
-          name="message"
-          id="notificationMessage"
-          rows="5"
-          required
-        ></textarea>
-
-      </label>
-
-
-      <label>
-        Type
-
-        <select
-          name="type"
-          id="notificationType"
-        >
-
-          <option value="system">
-            System
-          </option>
-
-          <option value="course">
-            Course
-          </option>
-
-          <option value="payment">
-            Payment
-          </option>
-
-          <option value="marketing">
-            Marketing
-          </option>
-
-          <option value="security">
-            Security
-          </option>
-
-        </select>
-
-      </label>
-
-
-      <label>
-        Recipient
-
-        <select
-          name="recipientType"
-          id="recipientType"
-        >
-
-          <option value="all">
-            All Users
-          </option>
-
-          <option value="students">
-            Students
-          </option>
-
-          <option value="instructors">
-            Instructors
-          </option>
-
-          <option value="specific">
-            Specific User
-          </option>
-
-        </select>
-
-      </label>
-
-
-      <label
-        id="specificUserWrapper"
-        style="display:none;"
+      <input
+        id="title"
+        placeholder="Notification title"
+        required
       >
 
-        User ID
+      <textarea
+        id="message"
+        placeholder="Notification message"
+        required
+      ></textarea>
 
-        <input
-          type="text"
-          name="userId"
-          id="notificationUserId"
-          placeholder="Firebase User ID"
-        >
+      <select id="type">
 
-      </label>
+        <option value="general">
+          General
+        </option>
 
+        <option value="course">
+          Course
+        </option>
 
-      <label>
-        Priority
+        <option value="payment">
+          Payment
+        </option>
 
-        <select
-          name="priority"
-          id="notificationPriority"
-        >
+        <option value="community">
+          Community
+        </option>
 
-          <option value="normal">
-            Normal
-          </option>
+        <option value="system">
+          System
+        </option>
 
-          <option value="important">
-            Important
-          </option>
+        <option value="announcement">
+          Announcement
+        </option>
 
-          <option value="urgent">
-            Urgent
-          </option>
+      </select>
 
-        </select>
+      <select id="audience">
 
-      </label>
+        <option value="all">
+          All Users
+        </option>
 
+        <option value="student">
+          Students
+        </option>
 
-      <label>
-        Link
+        <option value="instructor">
+          Instructors
+        </option>
 
-        <input
-          type="text"
-          name="link"
-          id="notificationLink"
-          placeholder="/dashboard.html"
-        >
+        <option value="admin">
+          Admins
+        </option>
 
-      </label>
+        <option value="user">
+          Specific User
+        </option>
 
+      </select>
 
-      <div class="form-actions">
+      <input
+        id="userId"
+        placeholder="Specific User UID (optional)"
+      >
+
+      <input
+        id="link"
+        placeholder="Optional link e.g. course.html"
+      >
+
+      <div class="actions">
 
         <button
-          type="button"
-          class="secondary-btn"
-          id="cancelNotificationBtn"
+          class="primary"
+          type="submit"
         >
-          Cancel
+          <span id="submitText">
+            Send Notification
+          </span>
         </button>
 
         <button
-          type="submit"
-          class="primary-btn"
+          type="button"
+          class="secondary"
+          onclick="resetForm()"
         >
-          Send Notification
+          Clear
         </button>
 
       </div>
 
     </form>
 
-  </div>
+  </section>
 
-</div>
+
+  <br>
+
+
+  <section class="card">
+
+    <div class="toolbar">
+
+      <input
+        id="search"
+        placeholder="Search notifications..."
+      >
+
+      <select id="filter">
+
+        <option value="all">
+          All Types
+        </option>
+
+        <option value="general">
+          General
+        </option>
+
+        <option value="course">
+          Course
+        </option>
+
+        <option value="payment">
+          Payment
+        </option>
+
+        <option value="community">
+          Community
+        </option>
+
+        <option value="system">
+          System
+        </option>
+
+        <option value="announcement">
+          Announcement
+        </option>
+
+      </select>
+
+    </div>
+
+    <div id="notificationList"></div>
+
+  </section>
+
+</main>
 
 
 <script type="module">
 
-  /* =========================
-     FIREBASE
-  ========================= */
+import {
+  initializeApp
+} from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-  import {
-    initializeApp
-  } from
-  "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut
+} from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-  import {
-    getAuth,
-    onAuthStateChanged
-  } from
-  "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-  import {
-    getDatabase,
-    ref,
-    onValue,
-    push,
-    set,
-    update,
-    remove
-  } from
-  "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp
+} from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
-  /* =========================
-     FIREBASE CONFIG
-  ========================= */
+/* =====================================
+   FIREBASE
+===================================== */
 
-  const firebaseConfig = {
+const firebaseConfig = {
+  apiKey:"AIzaSyBcOYDfAVKXbjsyRgI_0rjodBn678tCc",
+  authDomain:"let-s-study-pro-course.firebaseapp.com",
+  databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId:"let-s-study-pro-course",
+  storageBucket:"let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId:"474928293390",
+  appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId:"G-85B7V5H5J0"
+};
 
-    apiKey:
-      "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+const app =
+  initializeApp(firebaseConfig);
 
-    authDomain:
-      "let-s-study-pro-course.firebaseapp.com",
+const auth =
+  getAuth(app);
 
-    databaseURL:
-      "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
-
-    projectId:
-      "let-s-study-pro-course",
-
-    storageBucket:
-      "let-s-study-pro-course.firebasestorage.app",
-
-    messagingSenderId:
-      "474928293390",
-
-    appId:
-      "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
-
-    measurementId:
-      "G-85B7V5H5J0"
-
-  };
+const db =
+  getFirestore(app);
 
 
-  /* =========================
-     INITIALIZE
-  ========================= */
+/* =====================================
+   STATE
+===================================== */
 
-  const app =
-    initializeApp(
-      firebaseConfig
+let notifications = [];
+
+let editingId = null;
+
+let currentUser = null;
+
+
+/* =====================================
+   ELEMENTS
+===================================== */
+
+const loading =
+  document.getElementById("loading");
+
+const adminApp =
+  document.getElementById("app");
+
+const form =
+  document.getElementById(
+    "notificationForm"
+  );
+
+const list =
+  document.getElementById(
+    "notificationList"
+  );
+
+
+/* =====================================
+   ESCAPE HTML
+===================================== */
+
+function escapeHTML(value){
+
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+
+}
+
+
+/* =====================================
+   AUTH
+===================================== */
+
+onAuthStateChanged(
+  auth,
+  async user => {
+
+    currentUser = user || null;
+
+    loading.classList.add(
+      "hidden"
     );
 
-  const auth =
-    getAuth(app);
-
-  const database =
-    getDatabase(app);
-
-
-  /* =========================
-     STATE
-  ========================= */
-
-  let notifications = {};
-
-  let editingId = null;
-
-
-  /* =========================
-     ELEMENTS
-  ========================= */
-
-  const list =
-    document.getElementById(
-      "notificationsList"
+    adminApp.classList.remove(
+      "hidden"
     );
 
-  const modal =
-    document.getElementById(
-      "notificationModal"
-    );
-
-  const form =
-    document.getElementById(
-      "notificationForm"
-    );
-
-  const search =
-    document.getElementById(
-      "notificationSearch"
-    );
-
-  const typeFilter =
-    document.getElementById(
-      "notificationTypeFilter"
-    );
-
-  const statusFilter =
-    document.getElementById(
-      "notificationStatusFilter"
-    );
-
-
-  /* =========================
-     ESCAPE
-  ========================= */
-
-  function escapeHtml(
-    value
-  ) {
-
-    return String(
-      value ?? ""
-    )
-
-      .replaceAll(
-        "&",
-        "&amp;"
-      )
-
-      .replaceAll(
-        "<",
-        "&lt;"
-      )
-
-      .replaceAll(
-        ">",
-        "&gt;"
-      )
-
-      .replaceAll(
-        '"',
-        "&quot;"
-      )
-
-      .replaceAll(
-        "'",
-        "&#039;"
-      );
+    await loadNotifications();
 
   }
+);
 
 
-  /* =========================
-     DATE
-  ========================= */
+/* =====================================
+   LOAD
+===================================== */
 
-  function formatDate(
-    timestamp
-  ) {
+async function loadNotifications(){
 
-    if (!timestamp) {
-      return "-";
-    }
+  try{
 
-    const date =
-      new Date(
-        timestamp
+    const snap =
+      await getDocs(
+        collection(
+          db,
+          "notifications"
+        )
       );
 
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
+    notifications =
+      snap.docs.map(
+        item => ({
 
-      return "-";
+          id:item.id,
 
-    }
+          ...item.data()
 
-    return date.toLocaleString();
-
-  }
-
-
-  /* =========================
-     LOAD NOTIFICATIONS
-  ========================= */
-
-  function loadNotifications() {
-
-    const notificationsRef =
-      ref(
-        database,
-        "notifications"
+        })
       );
 
+    notifications.sort(
+      (a,b) => {
 
-    onValue(
-      notificationsRef,
-      snapshot => {
+        const x =
+          a.createdAt?.seconds || 0;
 
-        notifications =
-          snapshot.val() || {};
+        const y =
+          b.createdAt?.seconds || 0;
 
-        renderNotifications();
-
-        updateStatistics();
-
-      },
-      error => {
-
-        console.error(
-          "Firebase error:",
-          error
-        );
-
-        list.innerHTML = `
-          <div class="error-state">
-            Failed to load notifications.
-          </div>
-        `;
+        return y - x;
 
       }
     );
 
+    render();
+
+    updateStats();
+
+  }
+  catch(error){
+
+    console.error(error);
+
+    list.innerHTML =
+      `<div class="notification">
+        Failed to load notifications.
+      </div>`;
+
   }
 
-
-  /* =========================
-     FILTER
-  ========================= */
-
-  function getFilteredNotifications() {
-
-    const query =
-      search.value
-        .trim()
-        .toLowerCase();
+}
 
 
-    const type =
-      typeFilter.value;
+/* =====================================
+   STATS
+===================================== */
 
-    const status =
-      statusFilter.value;
+function updateStats(){
 
+  const total =
+    notifications.length;
 
-    return Object.entries(
+  const unread =
+    notifications.filter(
+      n => n.read !== true
+    ).length;
+
+  const read =
+    notifications.filter(
+      n => n.read === true
+    ).length;
+
+  const recipients =
+    new Set(
       notifications
-    )
+        .map(n =>
+          n.userId ||
+          n.recipientId ||
+          n.audience
+        )
+    ).size;
 
-      .filter(
-        ([id, item]) => {
+  document.getElementById(
+    "totalCount"
+  ).textContent = total;
 
-          const searchable =
-            `
-              ${item.title || ""}
-              ${item.message || ""}
-              ${item.type || ""}
-              ${item.recipientType || ""}
-            `
-              .toLowerCase();
+  document.getElementById(
+    "unreadCount"
+  ).textContent = unread;
 
+  document.getElementById(
+    "readCount"
+  ).textContent = read;
 
-          if (
-            query &&
-            !searchable.includes(
-              query
-            )
-          ) {
+  document.getElementById(
+    "recipientCount"
+  ).textContent = recipients;
 
-            return false;
-
-          }
-
-
-          if (
-            type !== "all" &&
-            item.type !== type
-          ) {
-
-            return false;
-
-          }
+}
 
 
-          if (
-            status === "unread" &&
-            item.read === true
-          ) {
+/* =====================================
+   RENDER
+===================================== */
 
-            return false;
+function render(){
 
-          }
+  const search =
+    document.getElementById(
+      "search"
+    ).value
+      .toLowerCase()
+      .trim();
 
-
-          if (
-            status === "read" &&
-            item.read !== true
-          ) {
-
-            return false;
-
-          }
-
-
-          if (
-            status === "important" &&
-            item.priority !==
-              "important" &&
-            item.priority !==
-              "urgent"
-          ) {
-
-            return false;
-
-          }
+  const filter =
+    document.getElementById(
+      "filter"
+    ).value;
 
 
-          return true;
+  const filtered =
+    notifications.filter(
+      n => {
 
-        }
-      )
+        const text =
+          (
+            n.title || ""
+          ).toLowerCase()
+          + " " +
+          (
+            n.message || ""
+          ).toLowerCase();
 
-      .sort(
-        (
-          [, a],
-          [, b]
-        ) =>
-          (b.createdAt || 0) -
-          (a.createdAt || 0)
-      );
+        const matchesSearch =
+          !search ||
+          text.includes(search);
+
+        const matchesType =
+          filter === "all" ||
+          n.type === filter;
+
+        return (
+          matchesSearch &&
+          matchesType
+        );
+
+      }
+    );
+
+
+  if(!filtered.length){
+
+    list.innerHTML =
+      `<div class="notification">
+        No notifications found.
+      </div>`;
+
+    return;
 
   }
 
 
-  /* =========================
-     RENDER
-  ========================= */
+  list.innerHTML =
+    filtered.map(
+      n => `
 
-  function renderNotifications() {
+      <div class="notification">
 
-    const entries =
-      getFilteredNotifications();
+        <h3>
+          ${escapeHTML(
+            n.title ||
+            "Untitled"
+          )}
+        </h3>
 
+        <p>
+          ${escapeHTML(
+            n.message ||
+            ""
+          )}
+        </p>
 
-    if (!entries.length) {
+        <div class="meta">
 
-      list.innerHTML = `
+          <span class="badge">
+            ${escapeHTML(
+              n.type ||
+              "general"
+            )}
+          </span>
 
-        <div class="empty-state">
+          &nbsp;
 
-          <div class="empty-icon">
-            🔔
-          </div>
+          Audience:
+          ${escapeHTML(
+            n.audience ||
+            "all"
+          )}
 
-          <h3>
-            No notifications found
-          </h3>
+          &nbsp; • &nbsp;
 
-          <p>
-            There are no notifications
-            matching your filters.
-          </p>
+          ${n.read === true
+            ? "Read"
+            : "Unread"}
 
         </div>
 
-      `;
+        <br>
+
+        <div class="actions">
+
+          <button
+            class="secondary"
+            onclick="editNotification('${n.id}')"
+          >
+            Edit
+          </button>
+
+          <button
+            class="secondary"
+            onclick="markRead('${n.id}')"
+          >
+            ${n.read === true
+              ? "Mark Unread"
+              : "Mark Read"}
+          </button>
+
+          <button
+            class="danger"
+            onclick="deleteNotification('${n.id}')"
+          >
+            Delete
+          </button>
+
+        </div>
+
+      </div>
+
+      `
+    ).join("");
+
+}
+
+
+/* =====================================
+   CREATE / UPDATE
+===================================== */
+
+form.addEventListener(
+  "submit",
+  async event => {
+
+    event.preventDefault();
+
+
+    const title =
+      document.getElementById(
+        "title"
+      ).value.trim();
+
+    const message =
+      document.getElementById(
+        "message"
+      ).value.trim();
+
+    const type =
+      document.getElementById(
+        "type"
+      ).value;
+
+    const audience =
+      document.getElementById(
+        "audience"
+      ).value;
+
+    const userId =
+      document.getElementById(
+        "userId"
+      ).value.trim();
+
+    const link =
+      document.getElementById(
+        "link"
+      ).value.trim();
+
+
+    if(!title || !message){
+
+      alert(
+        "Title and message are required."
+      );
 
       return;
 
     }
 
 
-    list.innerHTML =
-      entries
-        .map(
-          ([id, item]) => {
+    const data = {
 
-            const unread =
-              item.read !== true;
+      title,
 
-            const important =
-              item.priority ===
-                "important" ||
-              item.priority ===
-                "urgent";
+      message,
 
+      type,
 
-            return `
+      audience,
 
-              <article
-                class="
-                  notification-card
-                  ${unread ? "unread" : ""}
-                  ${important ? "important" : ""}
-                "
-              >
+      userId:
+        userId || null,
 
-                <div
-                  class="notification-icon"
-                >
+      link:
+        link || null,
 
-                  ${
-                    item.type === "payment"
-                      ? "💳"
-                      : item.type === "course"
-                      ? "📚"
-                      : item.type === "security"
-                      ? "🔐"
-                      : item.type === "marketing"
-                      ? "📢"
-                      : "🔔"
-                  }
+      read:false,
 
-                </div>
+      updatedAt:
+        serverTimestamp()
+
+    };
 
 
-                <div
-                  class="notification-body"
-                >
+    try{
 
-                  <div
-                    class="notification-top"
-                  >
+      if(editingId){
 
-                    <h3>
-                      ${escapeHtml(
-                        item.title ||
-                        "Notification"
-                      )}
-                    </h3>
+        await updateDoc(
+          doc(
+            db,
+            "notifications",
+            editingId
+          ),
+          data
+        );
 
+        alert(
+          "Notification updated."
+        );
 
-                    <span
-                      class="notification-type"
-                    >
-                      ${escapeHtml(
-                        item.type ||
-                        "system"
-                      )}
-                    </span>
+      }
+      else{
 
-                  </div>
+        await addDoc(
+          collection(
+            db,
+            "notifications"
+          ),
+          {
 
+            ...data,
 
-                  <p>
-                    ${escapeHtml(
-                      item.message ||
-                      ""
-                    )}
-                  </p>
+            createdAt:
+              serverTimestamp(),
 
-
-                  <div
-                    class="notification-meta"
-                  >
-
-                    <span>
-                      👤
-                      ${escapeHtml(
-                        item.recipientType ||
-                        "all"
-                      )}
-                    </span>
-
-                    <span>
-                      ${
-                        important
-                          ? "⚠️ Important"
-                          : "Normal"
-                      }
-                    </span>
-
-                    <span>
-                      ${formatDate(
-                        item.createdAt
-                      )}
-                    </span>
-
-                  </div>
-
-
-                  <div
-                    class="notification-actions"
-                  >
-
-                    <button
-                      type="button"
-                      data-action="toggle-read"
-                      data-id="${escapeHtml(
-                        id
-                      )}"
-                    >
-
-                      ${
-                        unread
-                          ? "✓ Mark Read"
-                          : "↩ Mark Unread"
-                      }
-
-                    </button>
-
-
-                    <button
-                      type="button"
-                      data-action="edit"
-                      data-id="${escapeHtml(
-                        id
-                      )}"
-                    >
-                      ✏️ Edit
-                    </button>
-
-
-                    <button
-                      type="button"
-                      class="delete-btn"
-                      data-action="delete"
-                      data-id="${escapeHtml(
-                        id
-                      )}"
-                    >
-                      🗑 Delete
-                    </button>
-
-                  </div>
-
-                </div>
-
-              </article>
-
-            `;
+            createdBy:
+              currentUser?.uid ||
+              "admin"
 
           }
-        )
-        .join("");
+        );
 
-  }
+        alert(
+          "Notification created."
+        );
+
+      }
 
 
-  /* =========================
-     STATISTICS
-  ========================= */
+      resetForm();
 
-  function updateStatistics() {
+      await loadNotifications();
 
-    const values =
-      Object.values(
-        notifications
+    }
+    catch(error){
+
+      console.error(error);
+
+      alert(
+        "Failed: " +
+        error.message
       );
 
-
-    document.getElementById(
-      "totalNotifications"
-    ).textContent =
-      values.length;
-
-
-    document.getElementById(
-      "unreadNotifications"
-    ).textContent =
-      values.filter(
-        item =>
-          item.read !== true
-      ).length;
-
-
-    document.getElementById(
-      "readNotifications"
-    ).textContent =
-      values.filter(
-        item =>
-          item.read === true
-      ).length;
-
-
-    document.getElementById(
-      "importantNotifications"
-    ).textContent =
-      values.filter(
-        item =>
-          item.priority ===
-            "important" ||
-          item.priority ===
-            "urgent"
-      ).length;
+    }
 
   }
+);
 
 
-  /* =========================
-     OPEN MODAL
-  ========================= */
+/* =====================================
+   EDIT
+===================================== */
 
-  function openModal(
-    id = null
-  ) {
+window.editNotification =
+  function(id){
+
+    const n =
+      notifications.find(
+        x => x.id === id
+      );
+
+    if(!n) return;
+
 
     editingId = id;
 
 
-    if (id) {
+    document.getElementById(
+      "title"
+    ).value =
+      n.title || "";
 
-      const item =
-        notifications[id];
+    document.getElementById(
+      "message"
+    ).value =
+      n.message || "";
 
-      if (!item) return;
+    document.getElementById(
+      "type"
+    ).value =
+      n.type || "general";
 
+    document.getElementById(
+      "audience"
+    ).value =
+      n.audience || "all";
 
-      document.getElementById(
-        "notificationModalTitle"
-      ).textContent =
-        "Edit Notification";
+    document.getElementById(
+      "userId"
+    ).value =
+      n.userId || "";
 
+    document.getElementById(
+      "link"
+    ).value =
+      n.link || "";
 
-      document.getElementById(
-        "notificationTitle"
-      ).value =
-        item.title || "";
+    document.getElementById(
+      "formTitle"
+    ).textContent =
+      "Edit Notification";
 
+    document.getElementById(
+      "submitText"
+    ).textContent =
+      "Update Notification";
 
-      document.getElementById(
-        "notificationMessage"
-      ).value =
-        item.message || "";
+    window.scrollTo({
+      top:0,
+      behavior:"smooth"
+    });
 
-
-      document.getElementById(
-        "notificationType"
-      ).value =
-        item.type || "system";
-
-
-      document.getElementById(
-        "recipientType"
-      ).value =
-        item.recipientType ||
-        "all";
-
-
-      document.getElementById(
-        "notificationUserId"
-      ).value =
-        item.userId || "";
-
-
-      document.getElementById(
-        "notificationPriority"
-      ).value =
-        item.priority ||
-        "normal";
+  };
 
 
-      document.getElementById(
-        "notificationLink"
-      ).value =
-        item.link || "";
+/* =====================================
+   DELETE
+===================================== */
 
-    } else {
+window.deleteNotification =
+  async function(id){
 
-      form.reset();
+    if(
+      !confirm(
+        "Delete this notification?"
+      )
+    ){
 
-
-      document.getElementById(
-        "notificationModalTitle"
-      ).textContent =
-        "Add Notification";
+      return;
 
     }
 
 
-    updateSpecificUserField();
+    try{
+
+      await deleteDoc(
+        doc(
+          db,
+          "notifications",
+          id
+        )
+      );
+
+      await loadNotifications();
+
+    }
+    catch(error){
+
+      console.error(error);
+
+      alert(
+        "Delete failed."
+      );
+
+    }
+
+  };
 
 
-    modal.style.display =
-      "flex";
+/* =====================================
+   READ / UNREAD
+===================================== */
 
-  }
+window.markRead =
+  async function(id){
+
+    const n =
+      notifications.find(
+        x => x.id === id
+      );
+
+    if(!n) return;
 
 
-  /* =========================
-     CLOSE MODAL
-  ========================= */
+    try{
 
-  function closeModal() {
+      await updateDoc(
+        doc(
+          db,
+          "notifications",
+          id
+        ),
+        {
 
-    modal.style.display =
-      "none";
+          read:
+            n.read !== true,
 
-    form.reset();
+          updatedAt:
+            serverTimestamp()
+
+        }
+      );
+
+      await loadNotifications();
+
+    }
+    catch(error){
+
+      console.error(error);
+
+    }
+
+  };
+
+
+/* =====================================
+   RESET
+===================================== */
+
+window.resetForm =
+  function(){
 
     editingId = null;
 
-    updateSpecificUserField();
+    form.reset();
 
-  }
-
-
-  /* =========================
-     SPECIFIC USER
-  ========================= */
-
-  function updateSpecificUserField() {
-
-    const type =
-      document.getElementById(
-        "recipientType"
-      ).value;
-
-
-    const wrapper =
-      document.getElementById(
-        "specificUserWrapper"
-      );
-
-
-    wrapper.style.display =
-      type === "specific"
-        ? "block"
-        : "none";
-
-  }
-
-
-  document
-    .getElementById(
-      "recipientType"
-    )
-    .addEventListener(
-      "change",
-      updateSpecificUserField
-    );
-
-
-  /* =========================
-     SAVE
-  ========================= */
-
-  form.addEventListener(
-    "submit",
-    async event => {
-
-      event.preventDefault();
-
-
-      const title =
-        document.getElementById(
-          "notificationTitle"
-        ).value.trim();
-
-
-      const message =
-        document.getElementById(
-          "notificationMessage"
-        ).value.trim();
-
-
-      const type =
-        document.getElementById(
-          "notificationType"
-        ).value;
-
-
-      const recipientType =
-        document.getElementById(
-          "recipientType"
-        ).value;
-
-
-      const userId =
-        document.getElementById(
-          "notificationUserId"
-        ).value.trim();
-
-
-      const priority =
-        document.getElementById(
-          "notificationPriority"
-        ).value;
-
-
-      const link =
-        document.getElementById(
-          "notificationLink"
-        ).value.trim();
-
-
-      if (!title || !message) {
-
-        alert(
-          "Title and message are required."
-        );
-
-        return;
-
-      }
-
-
-      if (
-        recipientType ===
-          "specific" &&
-        !userId
-      ) {
-
-        alert(
-          "Enter the specific user ID."
-        );
-
-        return;
-
-      }
-
-
-      const data = {
-
-        title,
-
-        message,
-
-        type,
-
-        recipientType,
-
-        priority,
-
-        link,
-
-        read: false,
-
-        updatedAt:
-          Date.now()
-
-      };
-
-
-      if (
-        recipientType ===
-        "specific"
-      ) {
-
-        data.userId =
-          userId;
-
-      }
-
-
-      try {
-
-        if (editingId) {
-
-          await update(
-            ref(
-              database,
-              `notifications/${editingId}`
-            ),
-            data
-          );
-
-        } else {
-
-          const notificationRef =
-            push(
-              ref(
-                database,
-                "notifications"
-              )
-            );
-
-
-          data.createdAt =
-            Date.now();
-
-
-          await set(
-            notificationRef,
-            data
-          );
-
-        }
-
-
-        closeModal();
-
-      } catch (error) {
-
-        console.error(
-          "Save notification error:",
-          error
-        );
-
-        alert(
-          "Failed to save notification."
-        );
-
-      }
-
-    }
-  );
-
-
-  /* =========================
-     ACTIONS
-  =======
-  /* =========================
-     ACTIONS
-  ========================= */
-
-  list.addEventListener(
-    "click",
-    async (event) => {
-
-      const button =
-        event.target.closest(
-          "[data-action]"
-        );
-
-      if (!button) {
-        return;
-      }
-
-      const action =
-        button.dataset.action;
-
-      const id =
-        button.dataset.id;
-
-      if (!id || !notifications[id]) {
-        return;
-      }
-
-
-      /* =========================
-         MARK READ / UNREAD
-      ========================= */
-
-      if (
-        action === "toggle-read"
-      ) {
-
-        try {
-
-          await update(
-            ref(
-              database,
-              `notifications/${id}`
-            ),
-            {
-              read:
-                notifications[id].read !== true,
-
-              updatedAt:
-                Date.now()
-            }
-          );
-
-        } catch (error) {
-
-          console.error(
-            "Read status error:",
-            error
-          );
-
-          alert(
-            "Failed to update notification status."
-          );
-
-        }
-
-        return;
-      }
-
-
-      /* =========================
-         EDIT
-      ========================= */
-
-      if (
-        action === "edit"
-      ) {
-
-        openModal(id);
-
-        return;
-      }
-
-
-      /* =========================
-         DELETE
-      ========================= */
-
-      if (
-        action === "delete"
-      ) {
-
-        const confirmed =
-          window.confirm(
-            "Are you sure you want to delete this notification?"
-          );
-
-        if (!confirmed) {
-          return;
-        }
-
-        try {
-
-          await remove(
-            ref(
-              database,
-              `notifications/${id}`
-            )
-          );
-
-        } catch (error) {
-
-          console.error(
-            "Delete notification error:",
-            error
-          );
-
-          alert(
-            "Failed to delete notification."
-          );
-
-        }
-
-        return;
-      }
-
-    }
-  );
-
-
-  /* =========================
-     ADD NOTIFICATION
-  ========================= */
-
-  const addNotificationBtn =
     document.getElementById(
-      "addNotificationBtn"
-    );
+      "formTitle"
+    ).textContent =
+      "Create Notification";
 
-  if (addNotificationBtn) {
-
-    addNotificationBtn.addEventListener(
-      "click",
-      () => {
-
-        openModal();
-
-      }
-    );
-
-  }
-
-
-  /* =========================
-     CLOSE MODAL
-  ========================= */
-
-  const closeNotificationModal =
     document.getElementById(
-      "closeNotificationModal"
-    );
+      "submitText"
+    ).textContent =
+      "Send Notification";
 
-  const cancelNotificationBtn =
-    document.getElementById(
-      "cancelNotificationBtn"
-    );
+  };
 
 
-  if (closeNotificationModal) {
+/* =====================================
+   SEARCH
+===================================== */
 
-    closeNotificationModal.addEventListener(
-      "click",
-      closeModal
-    );
+document.getElementById(
+  "search"
+).addEventListener(
+  "input",
+  render
+);
 
-  }
 
+document.getElementById(
+  "filter"
+).addEventListener(
+  "change",
+  render
+);
 
-  if (cancelNotificationBtn) {
 
-    cancelNotificationBtn.addEventListener(
-      "click",
-      closeModal
-    );
+/* =====================================
+   LOGOUT
+===================================== */
 
-  }
+window.logout =
+  async function(){
 
+    await signOut(auth);
 
-  /* =========================
-     OUTSIDE MODAL CLICK
-  ========================= */
+    location.href =
+      "login.html";
 
-  if (modal) {
+  };
 
-    modal.addEventListener(
-      "click",
-      event => {
-
-        if (
-          event.target === modal
-        ) {
-
-          closeModal();
-
-        }
-
-      }
-    );
-
-  }
-
-
-  /* =========================
-     ESC KEY
-  ========================= */
-
-  document.addEventListener(
-    "keydown",
-    event => {
-
-      if (
-        event.key === "Escape" &&
-        modal &&
-        modal.style.display !== "none"
-      ) {
-
-        closeModal();
-
-      }
-
-    }
-  );
-
-
-  /* =========================
-     SEARCH
-  ========================= */
-
-  if (search) {
-
-    search.addEventListener(
-      "input",
-      () => {
-
-        renderNotifications();
-
-      }
-    );
-
-  }
-
-
-  /* =========================
-     TYPE FILTER
-  ========================= */
-
-  if (typeFilter) {
-
-    typeFilter.addEventListener(
-      "change",
-      () => {
-
-        renderNotifications();
-
-      }
-    );
-
-  }
-
-
-  /* =========================
-     STATUS FILTER
-  ========================= */
-
-  if (statusFilter) {
-
-    statusFilter.addEventListener(
-      "change",
-      () => {
-
-        renderNotifications();
-
-      }
-    );
-
-  }
-
-
-  /* =========================
-     AUTHENTICATION
-  ========================= */
-
-  onAuthStateChanged(
-    auth,
-    user => {
-
-      if (!user) {
-
-        window.location.href =
-          "login.html";
-
-        return;
-
-      }
-
-
-      console.log(
-        "Authenticated:",
-        user.uid
-      );
-
-
-      loadNotifications();
-
-    }
-  );
-
-
-  /* =========================
-     FIREBASE ERROR HANDLING
-  ========================= */
-
-  window.addEventListener(
-    "unhandledrejection",
-    event => {
-
-      console.error(
-        "Unhandled Firebase error:",
-        event.reason
-      );
-
-    }
-  );
-
-
-  /* =========================
-     INITIAL STATE
-  ========================= */
-
-  updateStatistics();
 </script>
 
 </body>
