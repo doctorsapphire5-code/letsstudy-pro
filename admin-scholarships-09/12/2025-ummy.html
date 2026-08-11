@@ -1465,147 +1465,88 @@ list.innerHTML = scholarships
    SAVE SCHOLARSHIP
 ========================= */
 
-form.addEventListener("submit", async (e) => {
+saveBtn.addEventListener("click", async (e) => {
 
   e.preventDefault();
-
-  const id =
-    document.getElementById("scholarshipId").value.trim();
-
-  const data = {
-
-    title:
-      document.getElementById("title").value.trim(),
-
-    slug:
-      document.getElementById("slug").value.trim()
-      ||
-      slugify(
-        document.getElementById("title").value
-      ),
-
-    university:
-      document.getElementById("university").value.trim(),
-
-    country:
-      document.getElementById("country").value.trim(),
-
-    location:
-      document.getElementById("location").value.trim(),
-
-    deadline:
-      document.getElementById("deadline").value,
-
-    amount:
-      document.getElementById("amount").value.trim(),
-
-    currency:
-      document.getElementById("currency").value,
-
-    level:
-      document.getElementById("level").value,
-
-    studyArea:
-      document.getElementById("studyArea").value.trim(),
-
-    category:
-      document.getElementById("category").value.trim(),
-
-    fundingType:
-      document.getElementById("fundingType").value,
-
-    status:
-      document.getElementById("status").value,
-
-    featured:
-      document.getElementById("featured").value === "true",
-
-    applicationUrl:
-      document.getElementById("applicationUrl").value.trim(),
-
-    imageUrl:
-      document.getElementById("imageUrl").value.trim(),
-
-    shortDescription:
-      document
-        .getElementById("shortDescription")
-        .value
-        .trim(),
-
-    description:
-      document
-        .getElementById("description")
-        .value
-        .trim(),
-
-    requirements:
-      document
-        .getElementById("requirements")
-        .value
-        .split("\n")
-        .map(x => x.trim())
-        .filter(Boolean),
-
-    benefits:
-      document
-        .getElementById("benefits")
-        .value
-        .split("\n")
-        .map(x => x.trim())
-        .filter(Boolean),
-
-    tags:
-      document
-        .getElementById("tags")
-        .value
-        .split(",")
-        .map(x => x.trim())
-        .filter(Boolean),
-
-    updatedAt: serverTimestamp()
-
-  };
 
   try {
 
     saveBtn.disabled = true;
     saveBtn.textContent = "Saving...";
 
-    if (id) {
+    const scholarship = {
 
-      await updateDoc(
-        doc(db, "scholarships", id),
-        data
-      );
+      title: titleInput.value.trim(),
 
-      alert("Scholarship updated successfully.");
+      slug: slugInput.value.trim(),
 
-    } else {
+      provider: providerInput.value.trim(),
 
-      data.createdAt = serverTimestamp();
+      country: countryInput.value.trim(),
 
-      if (data.status === "published") {
-        data.publishedAt = serverTimestamp();
-      }
+      location: locationInput.value.trim(),
 
-      await addDoc(
-        collection(db, "scholarships"),
-        data
-      );
+      deadline: deadlineInput.value,
 
-      alert("Scholarship created successfully.");
+      studyLevel: studyLevelInput.value,
 
-    }
+      fundingType: fundingTypeInput.value,
 
-    resetForm();
+      amount: Number(amountInput.value) || 0,
+
+      currency: currencyInput.value,
+
+      studyArea: studyAreaInput.value.trim(),
+
+      category: categoryInput.value,
+
+      status: statusInput.value,
+
+      featured: featuredInput.value === "Yes",
+
+      scholarshipUrl: scholarshipUrlInput.value.trim(),
+
+      applicationUrl: applicationUrlInput.value.trim(),
+
+      imageUrl: imageUrlInput.value.trim(),
+
+      shortDescription: shortDescriptionInput.value.trim(),
+
+      description: descriptionInput.value.trim(),
+
+      eligibility: eligibilityInput.value.trim(),
+
+      benefits: benefitsInput.value.trim(),
+
+      createdAt: serverTimestamp(),
+
+      updatedAt: serverTimestamp()
+
+    };
+
+    console.log("Saving scholarship:", scholarship);
+
+    const docRef = await addDoc(
+      collection(db, "scholarships"),
+      scholarship
+    );
+
+    console.log("Scholarship saved:", docRef.id);
+
+    alert("✅ Scholarship saved successfully!");
+
+    form.reset();
+
     await loadScholarships();
 
   } catch (error) {
 
-    console.error(error);
+    console.error("❌ Scholarship save error:", error);
 
     alert(
-      "Failed to save scholarship: " +
+      "❌ Failed to save scholarship:\n\n" +
+      error.code +
+      "\n" +
       error.message
     );
 
