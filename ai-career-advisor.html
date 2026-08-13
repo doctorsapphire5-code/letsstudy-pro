@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>AI Career Advisor</title>
+
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --secondary: #8b5cf6;
+      --success: #16a34a;
+      --warning: #f59e0b;
+      --danger: #dc2626;
+      --dark: #0f172a;
+      --text: #1e293b;
+      --muted: #64748b;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --shadow: 0 15px 40px rgba(15, 23, 42, .08);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    /* =========================================
+       HEADER
+    ========================================= */
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(15, 23, 42, .96);
+      backdrop-filter: blur(12px);
+      color: white;
+    }
+
+    .nav {
+      max-width: 1300px;
+      margin: auto;
+      min-height: 70px;
+      padding: 12px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .brand-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(
+          135deg,
+          var(--primary),
+          var(--secondary)
+        );
+      font-weight: 900;
+    }
+
+    .brand h1 {
+      font-size: 18px;
+    }
+
+    .brand small {
+      display: block;
+      color: #94a3b8;
+      font-size: 11px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 8px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: #cbd5e1;
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .nav-links a:hover {
+      background: rgba(255,255,255,.08);
+      color: white;
+    }
+
+    /* =========================================
+       HERO
+    ========================================= */
+
+    .hero {
+      background:
+        radial-gradient(
+          circle at top right,
+          rgba(139,92,246,.35),
+          transparent 35%
+        ),
+        linear-gradient(
+          135deg,
+          #0f172a,
+          #1e1b4b
+        );
+      color: white;
+      padding: 75px 22px;
+    }
+
+    .hero-content {
+      max-width: 1000px;
+      margin: auto;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      padding: 7px 12px;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 999px;
+      color: #c4b5fd;
+      background: rgba(255,255,255,.06);
+      font-size: 12px;
+      margin-bottom: 18px;
+    }
+
+    .hero h2 {
+      font-size: clamp(34px, 7vw, 64px);
+      line-height: 1.05;
+      margin-bottom: 18px;
+    }
+
+    .hero h2 span {
+      color: #a78bfa;
+    }
+
+    .hero p {
+      max-width: 720px;
+      margin: auto;
+      color: #cbd5e1;
+      font-size: 17px;
+    }
+
+    /* =========================================
+       MAIN
+    ========================================= */
+
+    main {
+      max-width: 1300px;
+      margin: auto;
+      padding: 35px 22px 70px;
+    }
+
+    .section-title {
+      margin-bottom: 20px;
+    }
+
+    .section-title h2 {
+      font-size: 27px;
+      margin-bottom: 5px;
+    }
+
+    .section-title p {
+      color: var(--muted);
+    }
+
+    /* =========================================
+       ASSESSMENT
+    ========================================= */
+
+    .assessment-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .steps-card,
+    .question-card,
+    .result-card,
+    .info-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .steps-card {
+      padding: 18px;
+      position: sticky;
+      top: 90px;
+    }
+
+    .step {
+      display: flex;
+      gap: 12px;
+      padding: 12px 8px;
+      border-radius: 10px;
+      margin-bottom: 7px;
+      color: var(--muted);
+    }
+
+    .step-number {
+      width: 32px;
+      height: 32px;
+      flex: 0 0 32px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #f1f5f9;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .step.active {
+      background: #eef2ff;
+      color: var(--primary-dark);
+    }
+
+    .step.active .step-number {
+      background: var(--primary);
+      color: white;
+    }
+
+    .step.done .step-number {
+      background: var(--success);
+      color: white;
+    }
+
+    .question-card {
+      padding: 25px;
+    }
+
+    .progress-area {
+      margin-bottom: 25px;
+    }
+
+    .progress-top {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 7px;
+    }
+
+    .progress {
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background:
+        linear-gradient(
+          90deg,
+          var(--primary),
+          var(--secondary)
+        );
+      transition: width .3s ease;
+    }
+
+    .question h3 {
+      font-size: 24px;
+      margin-bottom: 7px;
+    }
+
+    .question p {
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    .options {
+      display: grid;
+      gap: 11px;
+    }
+
+    .option {
+      border: 1px solid var(--border);
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      text-align: left;
+      transition: .2s ease;
+    }
+
+    .option:hover {
+      border-color: #a5b4fc;
+      transform: translateY(-1px);
+    }
+
+    .option.selected {
+      border-color: var(--primary);
+      background: #eef2ff;
+      box-shadow:
+        0 0 0 3px rgba(99,102,241,.08);
+    }
+
+    .option strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .option span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .question-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 25px;
+      gap: 10px;
+    }
+
+    /* =========================================
+       BUTTONS
+    ========================================= */
+
+    .btn {
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      padding: 11px 16px;
+      border-radius: 10px;
+      font-weight: 700;
+      transition: .2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-success {
+      background: var(--success);
+      border-color: var(--success);
+      color: white;
+    }
+
+    .btn-danger {
+      color: var(--danger);
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+
+    .btn:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* =========================================
+       RESULTS
+    ========================================= */
+
+    #resultsSection {
+      display: none;
+      margin-top: 45px;
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 20px;
+    }
+
+    .result-card {
+      padding: 22px;
+    }
+
+    .career-result {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: center;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      margin-bottom: 12px;
+    }
+
+    .career-main {
+      display: flex;
+      gap: 13px;
+      align-items: center;
+    }
+
+    .career-icon {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: #eef2ff;
+      font-size: 22px;
+    }
+
+    .career-result h3 {
+      font-size: 16px;
+    }
+
+    .career-result p {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .match {
+      min-width: 72px;
+      text-align: center;
+      padding: 8px;
+      border-radius: 10px;
+      background: #f0fdf4;
+      color: #15803d;
+      font-weight: 900;
+      font-size: 14px;
+    }
+
+    .analysis-item {
+      margin-bottom: 17px;
+    }
+
+    .analysis-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+
+    .analysis-bar {
+      height: 8px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #e2e8f0;
+    }
+
+    .analysis-fill {
+      height: 100%;
+      background:
+        linear-gradient(
+          90deg,
+          var(--primary),
+          var(--secondary)
+        );
+    }
+
+    /* =========================================
+       ROADMAP
+    ========================================= */
+
+    .roadmap {
+      margin-top: 20px;
+    }
+
+    .roadmap-item {
+      position: relative;
+      padding: 15px 15px 15px 50px;
+      border-left: 2px solid #c7d2fe;
+      margin-left: 14px;
+    }
+
+    .roadmap-dot {
+      position: absolute;
+      left: -9px;
+      top: 17px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 3px solid white;
+      box-shadow: 0 0 0 1px #c7d2fe;
+    }
+
+    .roadmap-item h4 {
+      margin-bottom: 3px;
+    }
+
+    .roadmap-item p {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* =========================================
+       INFO CARDS
+    ========================================= */
+
+    .info-section {
+      margin-top: 50px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .info-card {
+      padding: 22px;
+    }
+
+    .info-icon {
+      width: 45px;
+      height: 45px;
+      display: grid;
+      place-items: center;
+      background: #eef2ff;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+
+    .info-card h3 {
+      margin-bottom: 6px;
+    }
+
+    .info-card p {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* =========================================
+       MODAL
+    ========================================= */
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: rgba(15,23,42,.65);
+      z-index: 500;
+    }
+
+    .modal.active {
+      display: grid;
+    }
+
+    .modal-box {
+      width: min(520px, 100%);
+      background: white;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 30px 90px rgba(0,0,0,.3);
+    }
+
+    .modal-header {
+      padding: 17px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-body {
+      padding: 20px;
+      color: var(--muted);
+    }
+
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .close-modal {
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 9px;
+      background: #f1f5f9;
+      font-size: 18px;
+    }
+
+    /* =========================================
+       FOOTER
+    ========================================= */
+
+    footer {
+      background: var(--dark);
+      color: white;
+      margin-top: 40px;
+    }
+
+    .footer-inner {
+      max-width: 1300px;
+      margin: auto;
+      padding: 40px 22px;
+      display: flex;
+      justify-content: space-between;
+      gap: 30px;
+    }
+
+    .footer-inner p {
+      color: #94a3b8;
+      font-size: 13px;
+      max-width: 450px;
+    }
+
+    .footer-bottom {
+      border-top: 1px solid #1e293b;
+      padding: 15px 22px;
+      text-align: center;
+      color: #64748b;
+      font-size: 12px;
+    }
+
+    /* =========================================
+       RESPONSIVE
+    ========================================= */
+
+    @media (max-width: 900px) {
+
+      .assessment-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .steps-card {
+        position: static;
+      }
+
+      .steps-card {
+        display: flex;
+        overflow-x: auto;
+        gap: 5px;
+      }
+
+      .step {
+        min-width: 150px;
+        margin: 0;
+      }
+
+      .results-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+
+    }
+
+    @media (max-width: 650px) {
+
+      .nav-links {
+        display: none;
+      }
+
+      .hero {
+        padding: 55px 17px;
+      }
+
+      main {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .question-card {
+        padding: 18px;
+      }
+
+      .career-result {
+        align-items: flex-start;
+      }
+
+      .match {
+        min-width: 62px;
+      }
+
+      .footer-inner {
+        flex-direction: column;
+      }
+
+    }
+
+    @media print {
+
+      .topbar,
+      .hero,
+      .assessment-layout,
+      .info-section,
+      footer {
+        display: none !important;
+      }
+
+      #resultsSection {
+        display: block !important;
+      }
+
+      body {
+        background: white;
+      }
+
+      main {
+        padding: 0;
+      }
+
+      .result-card {
+        box-shadow: none;
+      }
+
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- =========================================
+       HEADER
+  ========================================= -->
+
+  <header class="topbar">
+
+    <nav class="nav">
+
+      <div class="brand">
+
+        <div class="brand-logo">
+          AI
+        </div>
+
+        <div>
+          <h1>AI Career Advisor</h1>
+          <small>Find your next career direction</small>
+        </div>
+
+      </div>
+
+      <ul class="nav-links">
+
+        <li>
+          <a href="#assessment">
+            Assessment
+          </a>
+        </li>
+
+        <li>
+          <a href="#resultsSection">
+            Results
+          </a>
+        </li>
+
+        <li>
+          <a href="#about">
+            About
+          </a>
+        </li>
+
+      </ul>
+
+    </nav>
+
+  </header>
+
+
+  <!-- =========================================
+       HERO
+  ========================================= -->
+
+  <section class="hero">
+
+    <div class="hero-content">
+
+      <div class="hero-badge">
+        🤖 AI-powered career guidance
+      </div>
+
+      <h2>
+        Discover a career that
+        <span>fits you.</span>
+      </h2>
+
+      <p>
+        Answer a few questions about your interests,
+        strengths and preferred work style. The advisor
+        will generate career suggestions and a practical
+        learning roadmap.
+      </p>
+
+    </div>
+
+  </section>
+
+
+  <main id="assessment">
+
+    <!-- =======================================
+         ASSESSMENT
+    ======================================== -->
+
+    <div class="section-title">
+
+      <h2>Career Assessment</h2>
+
+      <p>
+        There are no right or wrong answers.
+        Choose the option that describes you best.
+      </p>
+
+    </div>
+
+
+    <div class="assessment-layout">
+
+
+      <!-- STEPS -->
+
+      <aside class="steps-card">
+
+        <div
+          class="step active"
+          data-step="0"
+        >
+
+          <div class="step-number">
+            1
+          </div>
+
+          <div>
+            <strong>Interests</strong>
+            <small>What you enjoy</small>
+          </div>
+
+        </div>
+
+
+        <div
+          class="step"
+          data-step="1"
+        >
+
+          <div class="step-number">
+            2
+          </div>
+
+          <div>
+            <strong>Strengths</strong>
+            <small>What you do well</small>
+          </div>
+
+        </div>
+
+
+        <div
+          class="step"
+          data-step="2"
+        >
+
+          <div class="step-number">
+            3
+          </div>
+
+          <div>
+            <strong>Work Style</strong>
+            <small>How you work</small>
+          </div>
+
+        </div>
+
+
+        <div
+          class="step"
+          data-step="3"
+        >
+
+          <div class="step-number">
+            4
+          </div>
+
+          <div>
+            <strong>Goals</strong>
+            <small>What you want</small>
+          </div>
+
+        </div>
+
+      </aside>
+
+
+      <!-- QUESTIONS -->
+
+      <section class="question-card">
+
+        <div class="progress-area">
+
+          <div class="progress-top">
+
+            <span id="progressText">
+              Question 1 of 8
+            </span>
+
+            <span id="progressPercent">
+              13%
+            </span>
+
+          </div>
+
+          <div class="progress">
+
+            <div
+              class="progress-bar"
+              id="progressBar"
+            ></div>
+
+          </div>
+
+        </div>
+
+
+        <div
+          class="question"
+          id="questionContainer"
+        ></div>
+
+
+        <div class="question-actions">
+
+          <button
+            type="button"
+            class="btn"
+            id="backButton"
+          >
+            ← Back
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-primary"
+            id="nextButton"
+          >
+            Next →
+          </button>
+
+        </div>
+
+      </section>
+
+    </div>
+
+
+    <!-- =======================================
+         RESULTS
+    ======================================== -->
+
+    <section id="resultsSection">
+
+      <div class="section-title">
+
+        <h2>Your Career Results</h2>
+
+        <p>
+          These suggestions are based on the answers
+          you provided. Use them as guidance, not as
+          a final decision.
+        </p>
+
+      </div>
+
+
+      <div class="results-grid">
+
+
+        <!-- CAREERS -->
+
+        <div class="result-card">
+
+          <h3 style="margin-bottom:15px;">
+            🎯 Recommended Careers
+          </h3>
+
+          <div id="careerResults"></div>
+
+        </div>
+
+
+        <!-- ANALYSIS -->
+
+        <div class="result-card">
+
+          <h3 style="margin-bottom:15px;">
+            📊 Your Career Profile
+          </h3>
+
+          <div id="profileAnalysis"></div>
+
+        </div>
+
+      </div>
+
+
+      <!-- ROADMAP -->
+
+      <div
+        class="result-card roadmap"
+        style="margin-top:20px;"
+      >
+
+        <h3>
+          🗺️ Recommended Learning Roadmap
+        </h3>
+
+        <p
+          style="
+            color:var(--muted);
+            font-size:13px;
+            margin-top:3px;
+          "
+        >
+          A practical starting path based on your
+          strongest career direction.
+        </p>
+
+        <div id="roadmap"></div>
+
+      </div>
+
+
+      <div
+        style="
+          display:flex;
+          gap:10px;
+          flex-wrap:wrap;
+          margin-top:20px;
+        "
+      >
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          id="retakeButton"
+        >
+          🔄 Retake Assessment
+        </button>
+
+        <button
+          type="button"
+          class="btn"
+          id="printButton"
+        >
+          🖨 Print Results
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-success"
+          id="saveResults"
+        >
+          💾 Save Results
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- =======================================
+         FEATURES
+    ======================================== -->
+
+    <section
+      class="info-section"
+      id="about"
+    >
+
+      <div class="section-title">
+
+        <h2>How it works</h2>
+
+        <p>
+          A simple framework for exploring your
+          career options.
+        </p>
+
+      </div>
+
+
+      <div class="info-grid">
+
+  <article class="info-card">
+
+    <div class="info-icon">
+      🧠
+    </div>
+
+    <h3>
+      Discover Your Strengths
+    </h3>
+
+    <p>
+      Identify your natural strengths, interests,
+      personality and abilities to understand which
+      career paths may suit you best.
+    </p>
+
+    <button
+      type="button"
+      class="btn btn-primary"
+      onclick="document.getElementById('assessment').scrollIntoView({behavior:'smooth'})"
+    >
+      Start Assessment
+    </button>
+
+  </article>
+
+
+  <article class="info-card">
+
+    <div class="info-icon">
+      🎯
+    </div>
+
+    <h3>
+      Get Career Recommendations
+    </h3>
+
+    <p>
+      Receive personalized career suggestions based
+      on your answers, interests, strengths and
+      preferred working style.
+    </p>
+
+    <button
+      type="button"
+      class="btn btn-primary"
+      onclick="document.getElementById('assessment').scrollIntoView({behavior:'smooth'})"
+    >
+      Explore Careers
+    </button>
+
+  </article>
+
+
+  <article class="info-card">
+
+    <div class="info-icon">
+      🚀
+    </div>
+
+    <h3>
+      Build Your Career Roadmap
+    </h3>
+
+    <p>
+      Follow practical learning steps to develop
+      the skills you need for your recommended
+      career direction.
+    </p>
+
+    <button
+      type="button"
+      class="btn btn-primary"
+      onclick="document.getElementById('assessment').scrollIntoView({behavior:'smooth'})"
+    >
+      Build Roadmap
+    </button>
+
+  </article>
+
+</div>
+
+
+<!-- =========================================
+     CAREER TIPS
+========================================= -->
+
+<section class="info-section">
+
+  <div class="section-title">
+
+    <h2>
+      Career Tips
+    </h2>
+
+    <p>
+      Simple actions that can help you move
+      forward in your career journey.
+    </p>
+
+  </div>
+
+
+  <div class="info-grid">
+
+    <article class="info-card">
+
+      <div class="info-icon">
+        📚
+      </div>
+
+      <h3>
+        Keep Learning
+      </h3>
+
+      <p>
+        Develop useful skills through courses,
+        projects, books, tutorials and practical
+        experience.
+      </p>
+
+    </article>
+
+
+    <article class="info-card">
+
+      <div class="info-icon">
+        💼
+      </div>
+
+      <h3>
+        Build Experience
+      </h3>
+
+      <p>
+        Start with personal projects, volunteering,
+        internships or freelance work to demonstrate
+        what you can do.
+      </p>
+
+    </article>
+
+
+    <article class="info-card">
+
+      <div class="info-icon">
+        🌐
+      </div>
+
+      <h3>
+        Build Your Network
+      </h3>
+
+      <p>
+        Connect with professionals, mentors and
+        communities related to the career you want.
+      </p>
+
+    </article>
+
+  </div>
+
+</section>
+
+
+<!-- =========================================
+     FAQ
+========================================= -->
+
+<section class="info-section">
+
+  <div class="section-title">
+
+    <h2>
+      Frequently Asked Questions
+    </h2>
+
+    <p>
+      Learn more about the AI Career Advisor.
+    </p>
+
+  </div>
+
+
+  <div class="info-grid">
+
+    <article class="info-card">
+
+      <h3>
+        Is this assessment accurate?
+      </h3>
+
+      <p>
+        The assessment is designed as a career
+        exploration tool. It provides suggestions,
+        not a guaranteed career prediction.
+      </p>
+
+    </article>
+
+
+    <article class="info-card">
+
+      <h3>
+        Can I change my answers?
+      </h3>
+
+      <p>
+        Yes. Use the Back button during the
+        assessment or retake the assessment
+        whenever you want.
+      </p>
+
+    </article>
+
+
+    <article class="info-card">
+
+      <h3>
+        What should I do after the results?
+      </h3>
+
+      <p>
+        Research your recommended careers, compare
+        them with your goals and start developing
+        the relevant skills.
+      </p>
+
+    </article>
+
+  </div>
+
+</section>
+
+
+<!-- =========================================
+     FINAL CALL TO ACTION
+========================================= -->
+
+<section
+  style="
+    margin-top:50px;
+    padding:45px 25px;
+    border-radius:20px;
+    text-align:center;
+    background:
+      linear-gradient(
+        135deg,
+        #312e81,
+        #6d28d9
+      );
+    color:white;
+  "
+>
+
+  <h2
+    style="
+      font-size:32px;
+      margin-bottom:10px;
+    "
+  >
+    Ready to discover your career path?
+  </h2>
+
+  <p
+    style="
+      max-width:650px;
+      margin:0 auto 20px;
+      color:#ddd6fe;
+    "
+  >
+    Take the assessment and get a personalized
+    starting point for your career journey.
+  </p>
+
+  <button
+    type="button"
+    class="btn"
+    style="
+      background:white;
+      color:#4f46e5;
+      border-color:white;
+    "
+    onclick="
+      document
+        .getElementById('assessment')
+        .scrollIntoView({
+          behavior:'smooth'
+        });
+    "
+  >
+    🚀 Start Career Assessment
+  </button>
+
+</section>
+
+</main>
+
+
+<!-- =========================================
+     MODAL
+========================================= -->
+
+<div
+  class="modal"
+  id="modal"
+  aria-hidden="true"
+>
+
+  <div class="modal-box">
+
+    <div class="modal-header">
+
+      <strong id="modalTitle">
+        AI Career Advisor
+      </strong>
+
+      <button
+        type="button"
+        class="close-modal"
+        id="closeModal"
+        aria-label="Close"
+      >
+        ✕
+      </button>
+
+    </div>
+
+    <div
+      class="modal-body"
+      id="modalBody"
+    >
+      Welcome to AI Career Advisor.
+    </div>
+
+    <div class="modal-footer">
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        id="modalOk"
+      >
+        OK
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =========================================
+     FOOTER
+========================================= -->
+
+<footer>
+
+  <div class="footer-inner">
+
+    <div>
+
+      <h3>
+        🤖 AI Career Advisor
+      </h3>
+
+      <p>
+        Discover your strengths, explore career
+        options and build a practical learning path.
+      </p>
+
+    </div>
+
+
+    <div>
+
+      <p>
+        Explore your potential. Build your skills.
+        Create your future.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <div class="footer-bottom">
+
+    ©
+    <span id="year"></span>
+    AI Career Advisor.
+    All rights reserved.
+
+  </div>
+
+</footer>
+
+
+<!-- =========================================
+     JAVASCRIPT
+========================================= -->
+
+<script>
+
+  /* =========================================
+     YEAR
+  ========================================= */
+
+  const yearElement =
+    document.getElementById("year");
+
+  if (yearElement) {
+    yearElement.textContent =
+      new Date().getFullYear();
+  }
+
+
+  /* =========================================
+     MODAL
+  ========================================= */
+
+  const modal =
+    document.getElementById("modal");
+
+  const closeModalButton =
+    document.getElementById("closeModal");
+
+  const modalOk =
+    document.getElementById("modalOk");
+
+
+  function closeModal() {
+
+    if (!modal) return;
+
+    modal.classList.remove("active");
+
+    modal.setAttribute(
+      "aria-hidden",
+      "true"
+    );
+
+  }
+
+
+  if (closeModalButton) {
+
+    closeModalButton.addEventListener(
+      "click",
+      closeModal
+    );
+
+  }
+
+
+  if (modalOk) {
+
+    modalOk.addEventListener(
+      "click",
+      closeModal
+    );
+
+  }
+
+
+  if (modal) {
+
+    modal.addEventListener(
+      "click",
+      function(event) {
+
+        if (
+          event.target === modal
+        ) {
+
+          closeModal();
+
+        }
+
+      }
+    );
+
+  }
+
+
+  document.addEventListener(
+    "keydown",
+    function(event) {
+
+      if (
+        event.key === "Escape"
+      ) {
+
+        closeModal();
+
+      }
+
+    }
+  );
+
+</script>
+
+</body>
+</html>
