@@ -1,0 +1,3279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>AI Research Assistant</title>
+
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+  >
+
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #3730a3;
+      --secondary: #0ea5e9;
+      --success: #059669;
+      --warning: #d97706;
+      --danger: #dc2626;
+
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --soft: #f1f5f9;
+
+      --shadow:
+        0 12px 35px rgba(15, 23, 42, .08);
+
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .container {
+      width: min(1250px, 92%);
+      margin: 0 auto;
+    }
+
+    /* =========================================
+       HEADER
+    ========================================= */
+
+    header {
+      color: #fff;
+
+      background:
+        radial-gradient(
+          circle at 15% 20%,
+          rgba(255,255,255,.15),
+          transparent 25%
+        ),
+        radial-gradient(
+          circle at 90% 70%,
+          rgba(14,165,233,.2),
+          transparent 30%
+        ),
+        linear-gradient(
+          135deg,
+          #111827,
+          #312e81,
+          #4f46e5
+        );
+
+      padding: 65px 0 80px;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+
+      margin-bottom: 65px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+
+      font-weight: 800;
+      font-size: 1.1rem;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 12px;
+
+      background: rgba(255,255,255,.15);
+
+      backdrop-filter: blur(10px);
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 9px;
+    }
+
+    .nav-btn {
+      padding: 9px 13px;
+
+      color: #fff;
+      background: rgba(255,255,255,.1);
+
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 9px;
+    }
+
+    .nav-btn:hover {
+      background: rgba(255,255,255,.18);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.4fr .8fr;
+      gap: 45px;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+
+      padding: 8px 13px;
+      margin-bottom: 18px;
+
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 30px;
+
+      background: rgba(255,255,255,.1);
+
+      font-size: .8rem;
+      font-weight: 700;
+    }
+
+    .hero h1 {
+      margin: 0 0 18px;
+
+      font-size:
+        clamp(
+          2.5rem,
+          6vw,
+          4.7rem
+        );
+
+      line-height: 1;
+      letter-spacing: -2px;
+    }
+
+    .hero p {
+      max-width: 720px;
+
+      margin: 0;
+
+      color: #e0e7ff;
+
+      font-size: 1.05rem;
+      line-height: 1.75;
+    }
+
+    .hero-panel {
+      padding: 25px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.18);
+
+      border-radius: 22px;
+
+      background:
+        rgba(255,255,255,.1);
+
+      backdrop-filter: blur(12px);
+    }
+
+    .hero-panel-icon {
+      width: 62px;
+      height: 62px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      margin-bottom: 18px;
+
+      border-radius: 16px;
+
+      background: rgba(255,255,255,.12);
+
+      font-size: 1.6rem;
+    }
+
+    .hero-panel h3 {
+      margin: 0 0 8px;
+    }
+
+    .hero-panel p {
+      font-size: .87rem;
+      line-height: 1.6;
+    }
+
+    /* =========================================
+       MAIN
+    ========================================= */
+
+    main {
+      padding: 35px 0 70px;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: 275px 1fr;
+
+      gap: 24px;
+
+      align-items: start;
+    }
+
+    /* =========================================
+       SIDEBAR
+    ========================================= */
+
+    .sidebar {
+      position: sticky;
+      top: 18px;
+
+      padding: 20px;
+
+      border:
+        1px solid
+        var(--border);
+
+      border-radius: var(--radius);
+
+      background: var(--card);
+
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar h2 {
+      margin: 0 0 20px;
+
+      font-size: 1rem;
+    }
+
+    .field {
+      margin-bottom: 17px;
+    }
+
+    .field label {
+      display: block;
+
+      margin-bottom: 7px;
+
+      font-size: .78rem;
+      font-weight: 800;
+    }
+
+    select,
+    input {
+      width: 100%;
+
+      padding: 11px 12px;
+
+      color: var(--text);
+
+      background: #fff;
+
+      border:
+        1px solid
+        var(--border);
+
+      border-radius: 10px;
+
+      outline: none;
+    }
+
+    select:focus,
+    input:focus,
+    textarea:focus {
+      border-color: var(--primary);
+
+      box-shadow:
+        0 0 0 3px
+        rgba(79,70,229,.1);
+    }
+
+    .quick-topics {
+      display: grid;
+      gap: 7px;
+    }
+
+    .topic-btn {
+      width: 100%;
+
+      padding: 9px;
+
+      text-align: left;
+
+      color: var(--text);
+
+      background: #fff;
+
+      border:
+        1px solid
+        var(--border);
+
+      border-radius: 9px;
+
+      font-size: .78rem;
+    }
+
+    .topic-btn:hover {
+      color: var(--primary);
+
+      background: #eef2ff;
+
+      border-color: var(--primary);
+    }
+
+    .btn {
+      display: inline-flex;
+
+      align-items: center;
+      justify-content: center;
+
+      gap: 8px;
+
+      padding: 11px 15px;
+
+      border: 0;
+      border-radius: 10px;
+
+      font-weight: 800;
+
+      transition:
+        transform .2s ease,
+        background .2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      color: #fff;
+      background: var(--primary);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      color: var(--text);
+      background: var(--soft);
+    }
+
+    .btn-success {
+      color: #fff;
+      background: var(--success);
+    }
+
+    .btn-block {
+      width: 100%;
+    }
+
+    /* =========================================
+       SEARCH CARD
+    ========================================= */
+
+    .search-card {
+      padding: 22px;
+
+      margin-bottom: 20px;
+
+      border:
+        1px solid
+        var(--border);
+
+      border-radius: var(--radius);
+
+      background: var(--card);
+
+      box-shadow: var(--shadow);
+    }
+
+    .section-title {
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      gap: 15px;
+
+      margin-bottom: 15px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+
+      font-size: 1.05rem;
+    }
+
+    .section-title span {
+      color: var(--muted);
+
+      font-size: .75rem;
+    }
+
+    .search-row {
+      display: grid;
+
+      grid-template-columns:
+        1fr
+        auto;
+
+      gap: 10px;
+    }
+
+    .search-input {
+      position: relative;
+    }
+
+    .search-input i {
+      position: absolute;
+
+      top: 50%;
+      left: 14px;
+
+      color: var(--muted);
+
+      transform: translateY(-50%);
+    }
+
+    .search-input input {
+      padding-left: 40px;
+    }
+
+    /* =========================================
+       STATUS
+    ========================================= */
+
+    .status {
+      display: none;
+
+      align-items: center;
+
+      gap: 9px;
+
+      margin-top: 13px;
+
+      padding: 10px 12px;
+
+      color: var(--primary);
+
+      background: #eef2ff;
+
+      border-radius: 9px;
+
+      font-size: .78rem;
+    }
+
+    .status.active {
+      display: flex;
+    }
+
+    .spinner {
+      width: 15px;
+      height: 15px;
+
+      border:
+        2px solid
+        #c7d2fe;
+
+      border-top-color:
+        var(--primary);
+
+      border-radius: 50%;
+
+      animation:
+        spin .8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* =========================================
+       RESULTS
+    ========================================= */
+
+    .results-header {
+      display: flex;
+
+      justify-content: space-between;
+      align-items: center;
+
+      gap: 12px;
+
+      margin-bottom: 12px;
+    }
+
+    .results-header h2 {
+      margin: 0;
+
+      font-size: 1.1rem;
+    }
+
+    .result-count {
+      color: var(--muted);
+
+      font-size: .75rem;
+    }
+
+    .results {
+      display: grid;
+
+      gap: 13px;
+    }
+
+    .result-card {
+      padding: 18px;
+
+      border:
+        1px solid
+        var(--border);
+
+      border-radius: 14px;
+
+      background: #fff;
+
+      transition:
+        transform .2s ease,
+        box-shadow .2s ease;
+    }
+
+    .result-card:hover {
+      transform: translateY(-2px);
+
+      box-shadow:
+        0 10px 25px
+        rgba(15,23,42,.07);
+    }
+
+    .result-top {
+      display: flex;
+
+      justify-content: space-between;
+
+      gap: 15px;
+
+      margin-bottom: 9px;
+    }
+
+    .result-source {
+      display: inline-flex;
+
+      align-items: center;
+
+      gap: 6px;
+
+      color: var(--primary);
+
+      font-size: .72rem;
+
+      font-weight: 800;
+    }
+
+    .result-card h3 {
+      margin: 0 0 7px;
+
+      font-size: .97rem;
+    }
+
+    .result-card p {
+      margin: 0;
+
+      color: var(--muted);
+
+      font-size: .8rem;
+
+      line-height: 1.6;
+    }
+
+    .result-footer {
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+      gap: 10px;
+
+      margin-top: 13px;
+    }
+
+    .tags {
+      display: flex;
+
+      flex-wrap: wrap;
+
+      gap: 6px;
+    }
+
+    .tag {
+      padding: 5px 8px;
+
+      color: var(--muted);
+
+      background: var(--soft);
+
+      border-radius: 20px;
+
+      font-size: .67rem;
+    }
+
+    .result-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .small-btn {
+      padding: 7px 9px;
+
+      border:
+        1px solid
+        var(--border);
+
+      border-radius: 7px;
+
+      color: var(--text);
+
+      background: #fff;
+
+      font-size: .7rem;
+    }
+
+    .small-btn:hover {
+      color: var(--primary);
+
+      border-color: var(--primary);
+    }
+
+    /* =========================================
+       RESEARCH BOARD
+    ========================================= */
+
+    .research-grid {
+      display: grid;
+
+      grid-template-columns:
+        1fr
+        1fr;
+
+      gap: 20px;
+
+      margin-top: 22px;
+    }
+
+    .panel {
+      min-width: 0;
+
+      padding: 20px;
+
+      border:
+        1px solid
+        var(--border);
+
+      border-radius: var(--radius);
+
+      background: #fff;
+
+      box-shadow: var(--shadow);
+    }
+
+    .panel h2 {
+      margin: 0 0 15px;
+
+      font-size: 1rem;
+    }
+
+    .panel textarea {
+      width: 100%;
+
+      min-height: 260px;
+
+      resize: vertical;
+
+      padding: 14px;
+
+      color: var(--text);
+
+      background: #fff;
+
+      border:
+        1px solid
+        var(--border);
+
+      border-radius: 11px;
+
+      outline: none;
+
+      line-height: 1.65;
+    }
+
+    .panel-footer {
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+      gap: 10px;
+
+      margin-top: 10px;
+    }
+
+    .muted-text {
+      color: var(--muted);
+
+      font-size: .7rem;
+    }
+
+    /* =========================================
+       SOURCES
+    ========================================= */
+
+    .source-list {
+      display: grid;
+
+      gap: 9px;
+    }
+
+    .source-item {
+      display: grid;
+
+      grid-template-columns:
+        38px
+        1fr
+        auto;
+
+      align-items: center;
+
+      gap: 10px;
+
+      padding: 11px;
+
+      border:
+        1px solid
+        var(--border);
+
+      border-radius: 10px;
+    }
+
+    .source-icon {
+      width: 38px;
+      height: 38px;
+
+      display: flex;
+
+      align-items: center;
+      justify-content: center;
+
+      color: var(--primary);
+
+      background: #eef2ff;
+
+      border-radius: 9px;
+    }
+
+    .source-info strong {
+      display: block;
+
+      margin-bottom: 3px;
+
+      font-size: .78rem;
+    }
+
+    .source-info span {
+      color: var(--muted);
+
+      font-size: .68rem;
+    }
+
+    .remove-source {
+      width: 30px;
+      height: 30px;
+
+      border: 0;
+
+      border-radius: 7px;
+
+      color: var(--danger);
+
+      background: #fef2f2;
+    }
+
+    /* =========================================
+       SUMMARY
+    ========================================= */
+
+    .summary-panel {
+      margin-top: 20px;
+    }
+
+    .summary-box {
+      min-height: 170px;
+
+      padding: 16px;
+
+      color: #334155;
+
+      background: var(--soft);
+
+      border-radius: 11px;
+
+      line-height: 1.7;
+
+      font-size: .84rem;
+
+      white-space: pre-wrap;
+    }
+
+    /* =========================================
+       STATS
+    ========================================= */
+
+    .stats {
+      display: grid;
+
+      grid-template-columns:
+        repeat(4, 1fr);
+
+      gap: 12px;
+
+      margin-top: 20px;
+    }
+
+    .stat {
+      padding: 16px;
+
+      border:
+        1px solid
+        var(--border);
+
+      border-radius: 13px;
+
+      background: #fff;
+    }
+
+    .stat i {
+      color: var(--primary);
+
+      font-size: 1.1rem;
+    }
+
+    .stat strong {
+      display: block;
+
+      margin-top: 8px;
+
+      font-size: 1.3rem;
+    }
+
+    .stat span {
+      color: var(--muted);
+
+      font-size: .7rem;
+    }
+
+    /* =========================================
+       EMPTY STATE
+    ========================================= */
+
+    .empty {
+      padding: 45px 20px;
+
+      text-align: center;
+
+      border:
+        1px dashed
+        var(--border);
+
+      border-radius: 14px;
+
+      color: var(--muted);
+    }
+
+    .empty i {
+      margin-bottom: 12px;
+
+      color: #94a3b8;
+
+      font-size: 2rem;
+    }
+
+    .empty h3 {
+      margin: 0 0 7px;
+
+      color: var(--text);
+    }
+
+    .empty p {
+      margin: 0;
+
+      font-size: .8rem;
+    }
+
+    /* =========================================
+       MODAL
+    ========================================= */
+
+    .modal {
+      position: fixed;
+
+      inset: 0;
+
+      z-index: 999;
+
+      display: none;
+
+      align-items: center;
+      justify-content: center;
+
+      padding: 20px;
+
+      background:
+        rgba(15,23,42,.62);
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-box {
+      width: min(550px, 100%);
+
+      max-height: 90vh;
+
+      overflow-y: auto;
+
+      padding: 25px;
+
+      border-radius: 18px;
+
+      background: #fff;
+
+      box-shadow:
+        0 30px 70px
+        rgba(0,0,0,.22);
+    }
+
+    .modal-header {
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+      gap: 15px;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+
+      font-size: 1.1rem;
+    }
+
+    .close-modal {
+      width: 38px;
+      height: 38px;
+
+      border: 0;
+
+      border-radius: 9px;
+
+      background: var(--soft);
+    }
+
+    .modal-content {
+      margin-top: 18px;
+
+      color: var(--muted);
+
+      font-size: .86rem;
+
+      line-height: 1.7;
+
+      white-space: pre-wrap;
+    }
+
+    /* =========================================
+       FOOTER
+    ========================================= */
+
+    footer {
+      padding: 35px 20px;
+
+      text-align: center;
+
+      color: var(--muted);
+
+      font-size: .8rem;
+    }
+
+    /* =========================================
+       RESPONSIVE
+    ========================================= */
+
+    @media (max-width: 950px) {
+
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+      }
+
+      .research-grid {
+        grid-template-columns: 1fr;
+      }
+
+    }
+
+    @media (max-width: 650px) {
+
+      header {
+        padding-top: 40px;
+      }
+
+      .nav {
+        margin-bottom: 45px;
+      }
+
+      .nav-actions {
+        display: none;
+      }
+
+      .search-row {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        grid-template-columns:
+          repeat(2, 1fr);
+      }
+
+      .result-footer {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .source-item {
+        grid-template-columns:
+          36px
+          1fr;
+      }
+
+      .remove-source {
+        grid-column: 2;
+        justify-self: start;
+      }
+
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- =========================================
+     HEADER
+========================================= -->
+
+<header>
+
+  <div class="container">
+
+    <nav class="nav">
+
+      <div class="brand">
+
+        <div class="brand-icon">
+          <i class="fa-solid fa-microscope"></i>
+        </div>
+
+        <span>
+          AI Research
+        </span>
+
+      </div>
+
+
+      <div class="nav-actions">
+
+        <button
+          type="button"
+          class="nav-btn"
+          id="newResearch"
+        >
+          <i class="fa-solid fa-plus"></i>
+          New Research
+        </button>
+
+        <button
+          type="button"
+          class="nav-btn"
+          id="saveResearch"
+        >
+          <i class="fa-solid fa-floppy-disk"></i>
+          Save
+        </button>
+
+      </div>
+
+    </nav>
+
+
+    <div class="hero">
+
+      <div>
+
+        <div class="badge">
+
+          <i class="fa-solid fa-robot"></i>
+
+          Intelligent Research Workspace
+
+        </div>
+
+
+        <h1>
+          AI Research Assistant
+        </h1>
+
+
+        <p>
+          Explore research topics, organize sources,
+          collect notes, and create structured summaries
+          from one simple workspace.
+        </p>
+
+      </div>
+
+
+      <div class="hero-panel">
+
+        <div class="hero-panel-icon">
+
+          <i class="fa-solid fa-brain"></i>
+
+        </div>
+
+        <h3>
+          Research Smarter
+        </h3>
+
+        <p>
+          Turn a research question into useful
+          topics, source ideas, notes, and a
+          structured research summary.
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</header>
+
+
+<!-- =========================================
+     MAIN
+========================================= -->
+
+<main>
+
+  <div class="container">
+
+    <div class="dashboard">
+
+
+      <!-- =====================================
+           SIDEBAR
+      ====================================== -->
+
+      <aside class="sidebar">
+
+        <h2>
+          <i class="fa-solid fa-sliders"></i>
+          Research Settings
+        </h2>
+
+
+        <div class="field">
+
+          <label for="researchType">
+            Research Type
+          </label>
+
+          <select id="researchType">
+
+            <option>
+              General Research
+            </option>
+
+            <option>
+              Academic Research
+            </option>
+
+            <option>
+              Market Research
+            </option>
+
+            <option>
+              Technology Research
+            </option>
+
+            <option>
+              Scientific Research
+            </option>
+
+            <option>
+              Literature Review
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="depth">
+            Research Depth
+          </label>
+
+          <select id="depth">
+
+            <option value="basic">
+              Basic
+            </option>
+
+            <option
+              value="standard"
+              selected
+            >
+              Standard
+            </option>
+
+            <option value="deep">
+              Deep
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="language">
+            Language
+          </label>
+
+          <select id="language">
+
+            <option value="English">
+              English
+            </option>
+
+            <option value="Swahili">
+              Swahili
+            </option>
+       
+                        <option value="English">
+              English
+            </option>
+
+            <option value="French">
+              French
+            </option>
+
+            <option value="Spanish">
+              Spanish
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Quick Topics
+          </label>
+
+          <div class="quick-topics">
+
+            <button
+              type="button"
+              class="topic-btn"
+              data-topic="Artificial Intelligence in education"
+            >
+              <i class="fa-solid fa-graduation-cap"></i>
+              AI in Education
+            </button>
+
+            <button
+              type="button"
+              class="topic-btn"
+              data-topic="Cybersecurity threats and protection"
+            >
+              <i class="fa-solid fa-shield-halved"></i>
+              Cybersecurity
+            </button>
+
+            <button
+              type="button"
+              class="topic-btn"
+              data-topic="Machine learning applications"
+            >
+              <i class="fa-solid fa-network-wired"></i>
+              Machine Learning
+            </button>
+
+            <button
+              type="button"
+              class="topic-btn"
+              data-topic="Renewable energy and climate change"
+            >
+              <i class="fa-solid fa-leaf"></i>
+              Renewable Energy
+            </button>
+
+            <button
+              type="button"
+              class="topic-btn"
+              data-topic="Digital marketing trends"
+            >
+              <i class="fa-solid fa-chart-line"></i>
+              Digital Marketing
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <button
+          type="button"
+          class="btn btn-secondary btn-block"
+          id="clearWorkspace"
+        >
+          <i class="fa-solid fa-rotate-left"></i>
+          Clear Workspace
+        </button>
+
+      </aside>
+
+
+      <!-- =====================================
+           MAIN RESEARCH WORKSPACE
+      ====================================== -->
+
+      <section>
+
+
+        <!-- SEARCH -->
+        <div class="search-card">
+
+          <div class="section-title">
+
+            <h2>
+              <i class="fa-solid fa-magnifying-glass"></i>
+              Research Question
+            </h2>
+
+            <span>
+              Start with a clear question
+            </span>
+
+          </div>
+
+
+          <div class="search-row">
+
+            <div class="search-input">
+
+              <i class="fa-solid fa-search"></i>
+
+              <input
+                type="text"
+                id="researchInput"
+                placeholder="Example: How is AI changing education?"
+              >
+
+            </div>
+
+
+            <button
+              type="button"
+              class="btn btn-primary"
+              id="researchButton"
+            >
+
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+
+              Research
+
+            </button>
+
+          </div>
+
+
+          <div
+            class="status"
+            id="status"
+          >
+
+            <span class="spinner"></span>
+
+            <span>
+              Analyzing your research question...
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <!-- RESULTS -->
+        <div>
+
+          <div class="results-header">
+
+            <h2>
+              Research Results
+            </h2>
+
+            <span
+              class="result-count"
+              id="resultCount"
+            >
+              0 results
+            </span>
+
+          </div>
+
+
+          <div
+            class="results"
+            id="results"
+          >
+
+            <div class="empty">
+
+              <i class="fa-solid fa-book-open"></i>
+
+              <h3>
+                Start your research
+              </h3>
+
+              <p>
+                Enter a research question above
+                to generate research results.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- RESEARCH BOARD -->
+        <div class="research-grid">
+
+
+          <!-- NOTES -->
+          <div class="panel">
+
+            <h2>
+              <i class="fa-solid fa-note-sticky"></i>
+              Research Notes
+            </h2>
+
+
+            <textarea
+              id="notes"
+              placeholder="Write your research notes here..."
+            ></textarea>
+
+
+            <div class="panel-footer">
+
+              <span
+                class="muted-text"
+                id="notesCount"
+              >
+                0 words
+              </span>
+
+
+              <button
+                type="button"
+                class="btn btn-secondary"
+                id="clearNotes"
+              >
+                <i class="fa-solid fa-trash"></i>
+                Clear Notes
+              </button>
+
+            </div>
+
+          </div>
+
+
+          <!-- SOURCES -->
+          <div class="panel">
+
+            <h2>
+              <i class="fa-solid fa-book"></i>
+              Saved Sources
+            </h2>
+
+
+            <div
+              class="source-list"
+              id="sourceList"
+            >
+
+              <div class="empty">
+
+                <i class="fa-solid fa-link"></i>
+
+                <h3>
+                  No sources saved
+                </h3>
+
+                <p>
+                  Save useful research results
+                  to build your source list.
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- SUMMARY -->
+        <div class="panel summary-panel">
+
+          <div class="section-title">
+
+            <h2>
+              <i class="fa-solid fa-file-lines"></i>
+              Research Summary
+            </h2>
+
+
+            <button
+              type="button"
+              class="btn btn-primary"
+              id="generateSummary"
+            >
+
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              Generate Summary
+
+            </button>
+
+          </div>
+
+
+          <div
+            class="summary-box"
+            id="summary"
+          >
+            Your research summary will appear here.
+          </div>
+
+        </div>
+
+
+        <!-- STATISTICS -->
+        <div class="stats">
+
+          <div class="stat">
+
+            <i class="fa-solid fa-file-lines"></i>
+
+            <strong id="sourcesStat">
+              0
+            </strong>
+
+            <span>
+              Saved Sources
+            </span>
+
+          </div>
+
+
+          <div class="stat">
+
+            <i class="fa-solid fa-book-open"></i>
+
+            <strong id="resultsStat">
+              0
+            </strong>
+
+            <span>
+              Research Results
+            </span>
+
+          </div>
+
+
+          <div class="stat">
+
+            <i class="fa-solid fa-pen"></i>
+
+            <strong id="notesStat">
+              0
+            </strong>
+
+            <span>
+              Note Words
+            </span>
+
+          </div>
+
+
+          <div class="stat">
+
+            <i class="fa-solid fa-layer-group"></i>
+
+            <strong id="researchesStat">
+              0
+            </strong>
+
+            <span>
+              Research Sessions
+            </span>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  </div>
+
+</main>
+
+
+<!-- =========================================
+     DETAILS MODAL
+========================================= -->
+
+<div
+  class="modal"
+  id="modal"
+  aria-hidden="true"
+>
+
+  <div class="modal-box">
+
+    <div class="modal-header">
+
+      <h2 id="modalTitle">
+        Research Details
+      </h2>
+
+
+      <button
+        type="button"
+        class="close-modal"
+        id="closeModal"
+        title="Close"
+      >
+
+        <i class="fa-solid fa-xmark"></i>
+
+      </button>
+
+    </div>
+
+
+    <div
+      class="modal-content"
+      id="modalContent"
+    ></div>
+
+  </div>
+
+</div>
+
+
+<!-- =========================================
+     FOOTER
+========================================= -->
+
+<footer>
+
+  <p>
+    © 2026 AI Research Assistant.
+    Research smarter, organize better.
+  </p>
+
+</footer>
+
+
+<script>
+
+  /* =========================================
+     ELEMENTS
+  ========================================= */
+
+  const researchInput =
+    document.getElementById("researchInput");
+
+  const researchButton =
+    document.getElementById("researchButton");
+
+  const researchType =
+    document.getElementById("researchType");
+
+  const depth =
+    document.getElementById("depth");
+
+  const language =
+    document.getElementById("language");
+
+  const results =
+    document.getElementById("results");
+
+  const resultCount =
+    document.getElementById("resultCount");
+
+  const sourceList =
+    document.getElementById("sourceList");
+
+  const notes =
+    document.getElementById("notes");
+
+  const notesCount =
+    document.getElementById("notesCount");
+
+  const summary =
+    document.getElementById("summary");
+
+  const status =
+    document.getElementById("status");
+
+  const modal =
+    document.getElementById("modal");
+
+  const modalTitle =
+    document.getElementById("modalTitle");
+
+  const modalContent =
+    document.getElementById("modalContent");
+
+
+  let savedSources = [];
+
+  let currentResults = [];
+
+  let researchSessions = 0;
+
+
+  /* =========================================
+     ESCAPE HTML
+  ========================================= */
+
+  function escapeHTML(value) {
+
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+  }
+
+
+  /* =========================================
+     RESEARCH DATA
+  ========================================= */
+
+  const researchDatabase = [
+
+    {
+      keywords: [
+        "ai",
+        "artificial",
+        "intelligence",
+        "machine"
+      ],
+
+      title:
+        "Artificial Intelligence and Emerging Technologies",
+
+      source:
+        "AI Research Overview",
+
+      type:
+        "Technology",
+
+      description:
+        "Artificial intelligence uses computational systems to recognize patterns, analyze information, generate content and support decision-making.",
+
+      tags: [
+        "AI",
+        "Technology",
+        "Innovation"
+      ]
+
+    },
+
+
+    {
+      keywords: [
+        "education",
+        "learning",
+        "school",
+        "student"
+      ],
+
+      title:
+        "Artificial Intelligence in Education",
+
+      source:
+        "Education Technology Review",
+
+      type:
+        "Education",
+
+      description:
+        "AI can support personalized learning, automated feedback, tutoring, content creation and analysis of learning progress.",
+
+      tags: [
+        "Education",
+        "AI",
+        "Learning"
+      ]
+
+    },
+
+
+    {
+      keywords: [
+        "cyber",
+        "security",
+        "privacy",
+        "hacking",
+        "threat"
+      ],
+
+      title:
+        "Cybersecurity Threats and Protection",
+
+      source:
+        "Cybersecurity Research",
+
+      type:
+        "Cybersecurity",
+
+      description:
+        "Cybersecurity focuses on protecting systems, networks, applications and information from unauthorized access and malicious activity.",
+
+      tags: [
+        "Security",
+        "Privacy",
+        "Cybersecurity"
+      ]
+
+    },
+
+
+    {
+      keywords: [
+        "marketing",
+        "digital",
+        "advertising",
+        "social",
+        "customer"
+      ],
+
+      title:
+        "Digital Marketing and Consumer Behavior",
+
+      source:
+        "Marketing Research Review",
+
+      type:
+        "Marketing",
+
+      description:
+        "Digital marketing uses online channels to reach audiences, measure engagement and build relationships with customers.",
+
+      tags: [
+        "Marketing",
+        "Business",
+        "Digital"
+      ]
+
+    },
+
+
+    {
+      keywords: [
+        "climate",
+        "energy",
+        "renewable",
+        "solar",
+        "environment"
+      ],
+
+      title:
+        "Renewable Energy and Climate Change",
+
+      source:
+        "Environmental Research",
+
+      type:
+        "Environment",
+
+      description:
+        "Renewable energy research examines technologies such as solar, wind and hydropower and their role in sustainable development.",
+
+      tags: [
+        "Climate",
+        "Energy",
+        "Environment"
+      ]
+
+    }
+
+  ];
+
+
+  /* =========================================
+     SEARCH FUNCTION
+  ========================================= */
+
+  function searchResearch(query) {
+
+    const words =
+      query
+        .toLowerCase()
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+
+    let matches =
+      researchDatabase
+        .map(item => {
+
+          let score = 0;
+
+
+          words.forEach(word => {
+
+            item.keywords.forEach(
+              keyword => {
+
+                if (
+                  keyword.includes(word) ||
+                  word.includes(keyword)
+                ) {
+
+                  score++;
+
+                }
+
+              }
+            );
+
+          });
+
+
+          return {
+            ...item,
+            score
+          };
+
+        })
+        .filter(
+          item => item.score > 0
+        )
+        .sort(
+          (a, b) =>
+            b.score - a.score
+        );
+
+
+    if (!matches.length) {
+
+      matches =
+        researchDatabase
+          .slice(0, 3);
+
+    }
+
+
+    if (depth.value === "basic") {
+
+      matches =
+        matches.slice(0, 3);
+
+    }
+
+    else if (
+      depth.value === "standard"
+    ) {
+
+      matches =
+        matches.slice(0, 5);
+
+    }
+
+    else {
+
+      matches =
+        matches.slice(0, 10);
+
+    }
+
+
+    return matches;
+
+  }
+
+
+  /* =========================================
+     DISPLAY RESULTS
+  ========================================= */
+
+  function displayResults(query) {
+
+    currentResults =
+      searchResearch(query);
+
+
+    results.innerHTML = "";
+
+
+    currentResults.forEach(
+      (item, index) => {
+
+        const article =
+          document.createElement("article");
+
+
+        article.className =
+          "result-card";
+
+
+        article.innerHTML = `
+
+          <div class="result-top">
+
+            <span class="result-source">
+
+              <i class="fa-solid fa-book"></i>
+
+              ${escapeHTML(item.source)}
+
+            </span>
+
+          </div>
+
+
+          <h3>
+            ${escapeHTML(item.title)}
+          </h3>
+
+
+          <p>
+            ${escapeHTML(item.description)}
+          </p>
+
+
+          <div class="result-footer">
+
+            <div class="tags">
+
+              ${item.tags.map(
+                tag => `
+                  <span class="tag">
+                    ${escapeHTML(tag)}
+                  </span>
+                `
+              ).join("")}
+
+            </div>
+
+
+            <div class="result-actions">
+
+              <button
+                type="button"
+                class="small-btn"
+                data-view="${index}"
+              >
+                <i class="fa-solid fa-eye"></i>
+                View
+              </button>
+
+
+              <button
+                type="button"
+                class="small-btn"
+                data-save="${index}"
+              >
+                <i class="fa-solid fa-bookmark"></i>
+                Save
+              </button>
+
+            </div>
+
+          </div>
+
+        `;
+
+
+        results.appendChild(article);
+
+      }
+    );
+
+
+    resultCount.textContent =
+      `${currentResults.length} results`;
+
+
+    bindResultButtons();
+
+  }
+
+
+  /* =========================================
+     RESULT BUTTONS
+  ========================================= */
+
+  function bindResultButtons() {
+
+    document
+      .querySelectorAll("[data-view]")
+      .forEach(button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            const index =
+              Number(
+                button.dataset.view
+              );
+
+            const item =
+              currentResults[index];
+
+
+            showModal(
+              item.title,
+              `${item.description}
+
+Source:
+${item.source}
+
+Category:
+${item.type}
+
+Tags:
+${item.tags.join(", ")}
+
+Use this information as a starting point and verify important claims with reliable sources.`
+            );
+
+          }
+        );
+
+      });
+
+
+    document
+      .querySelectorAll("[data-save]")
+      .forEach(button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            const index =
+              Number(
+                button.dataset.save
+              );
+
+            saveSource(
+              currentResults[index]
+            );
+
+          }
+        );
+
+      });
+
+  }
+
+
+  /* =========================================
+     SAVE SOURCE
+  ========================================= */
+
+  function saveSource(item) {
+
+    const exists =
+      savedSources.some(
+        source =>
+          source.title === item.title
+      );
+
+
+    if (exists) {
+
+      showModal(
+        "Already Saved",
+        "This source is already in your research list."
+      );
+
+      return;
+
+    }
+
+
+    savedSources.push(item);
+
+    renderSources();
+
+    updateStats();
+
+  }
+
+
+  /* =========================================
+     RENDER SOURCES
+  ========================================= */
+
+  function renderSources() {
+
+    if (!savedSources.length) {
+
+      sourceList.innerHTML = `
+
+        <div class="empty">
+
+          <i class="fa-solid fa-link"></i>
+
+          <h3>
+            No sources saved
+          </h3>
+
+          <p>
+            Save useful research results
+            to build your source list.
+          </p>
+
+        </div>
+
+      `;
+
+      return;
+
+    }
+
+
+    sourceList.innerHTML = "";
+
+
+    savedSources.forEach(
+      (source, index) => {
+
+        const item =
+          document.createElement("div");
+
+
+        item.className =
+          "source-item";
+
+
+        item.innerHTML = `
+
+          <div class="source-icon">
+
+            <i class="fa-solid fa-bookmark"></i>
+
+          </div>
+
+
+          <div class="source-info">
+
+            <strong>
+              ${escapeHTML(source.title)}
+            </strong>
+
+            <span>
+              ${escapeHTML(source.source)}
+            </span>
+
+          </div>
+
+
+          <button
+            type="button"
+            class="remove-source"
+            data-remove="${index}"
+          >
+
+            <i class="fa-solid fa-trash"></i>
+
+          </button>
+
+        `;
+
+
+        sourceList.appendChild(item);
+
+      }
+    );
+
+
+    document
+      .querySelectorAll("[data-remove]")
+      .forEach(button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            savedSources.splice(
+              Number(button.dataset.remove),
+              1
+            );
+
+            renderSources();
+
+            updateStats();
+
+          }
+        );
+
+      });
+
+  }
+
+
+  /* =========================================
+     START RESEARCH
+  ========================================= */
+
+  researchButton.addEventListener(
+    "click",
+    () => {
+
+      const query =
+        researchInput.value.trim();
+
+
+      if (!query) {
+
+        researchInput.focus();
+
+        return;
+
+      }
+
+
+      status.classList.add("active");
+
+      researchButton.disabled = true;
+
+
+      setTimeout(() => {
+
+        displayResults(query);
+
+        researchSessions++;
+
+        updateStats();
+
+
+        status.classList.remove("active");
+
+        researchButton.disabled = false;
+
+      }, 700);
+
+    }
+  );
+
+
+  /* =========================================
+     ENTER KEY
+  ========================================= */
+
+  researchInput.addEventListener(
+    "keydown",
+    event => {
+
+      if (event.key === "Enter") {
+
+        event.preventDefault();
+
+        researchButton.click();
+
+      }
+
+    }
+  );
+
+
+  /* =========================================
+     QUICK TOPICS
+  ========================================= */
+
+  document
+    .querySelectorAll(".topic-btn")
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          researchInput.value =
+  button.dataset.topic;
+
+researchButton.click();
+
+        }
+      );
+
+    });
+
+
+/* =========================================
+   ENTER KEY TO SEARCH
+========================================= */
+
+researchInput.addEventListener(
+  "keydown",
+  function (event) {
+
+    if (event.key === "Enter") {
+
+      event.preventDefault();
+
+      researchButton.click();
+
+    }
+
+  }
+);
+
+
+/* =========================================
+   SEARCH BUTTON
+========================================= */
+
+researchButton.addEventListener(
+  "click",
+  function () {
+
+    const query =
+      researchInput.value.trim();
+
+
+    if (!query) {
+
+      showModal(
+        "Research Question Required",
+        "Please enter a research question before starting your research."
+      );
+
+      researchInput.focus();
+
+      return;
+
+    }
+
+
+    status.classList.add("active");
+
+    researchButton.disabled = true;
+
+
+    setTimeout(
+      function () {
+
+        displayResults(query);
+
+        researchSessions++;
+
+        updateStats();
+
+        status.classList.remove("active");
+
+        researchButton.disabled = false;
+
+      },
+      700
+    );
+
+  }
+);
+
+
+/* =========================================
+   NOTES WORD COUNTER
+========================================= */
+
+function updateNotesCount() {
+
+  const text =
+    notes.value.trim();
+
+
+  if (!text) {
+
+    notesCount.textContent =
+      "0 words";
+
+    return;
+
+  }
+
+
+  const words =
+    text.split(/\s+/);
+
+
+  notesCount.textContent =
+    `${words.length} words`;
+
+}
+
+
+notes.addEventListener(
+  "input",
+  function () {
+
+    updateNotesCount();
+
+    updateStats();
+
+    saveWorkspace();
+
+  }
+);
+
+
+/* =========================================
+   CLEAR NOTES
+========================================= */
+
+clearNotes.addEventListener(
+  "click",
+  function () {
+
+    notes.value = "";
+
+    updateNotesCount();
+
+    updateStats();
+
+    saveWorkspace();
+
+  }
+);
+
+
+/* =========================================
+   GENERATE SUMMARY
+========================================= */
+
+generateSummary.addEventListener(
+  "click",
+  function () {
+
+    const query =
+      researchInput.value.trim();
+
+
+    if (!query) {
+
+      showModal(
+        "No Research",
+        "Enter a research question first."
+      );
+
+      return;
+
+    }
+
+
+    const titles =
+      currentResults
+        .map(
+          item => item.title
+        );
+
+
+    let generatedSummary;
+
+
+    if (language.value === "Swahili") {
+
+      generatedSummary = `Muhtasari wa Utafiti
+
+Mada:
+${query}
+
+Aina ya Utafiti:
+${researchType.value}
+
+Matokeo Muhimu:
+${titles.length
+  ? titles.map(
+      title => "• " + title
+    ).join("\n")
+  : "Hakuna matokeo yaliyopatikana bado."
+}
+
+Utafiti huu unahitaji kuchunguza ushahidi kutoka vyanzo mbalimbali, kulinganisha taarifa, na kuthibitisha madai muhimu kabla ya kufikia hitimisho.
+
+Hatua Zinazofuata:
+• Tafuta vyanzo vinavyoaminika.
+• Linganisha taarifa kutoka vyanzo tofauti.
+• Thibitisha data na madai muhimu.
+• Hifadhi marejeo ya vyanzo.
+• Tambua mapungufu ya utafiti.`;
+
+    }
+
+    else {
+
+      generatedSummary = `Research Summary
+
+Topic:
+${query}
+
+Research Type:
+${researchType.value}
+
+Key Findings:
+${titles.length
+  ? titles.map(
+      title => "• " + title
+    ).join("\n")
+  : "No research results available yet."
+}
+
+This research should be supported by evidence from multiple reliable sources. Compare information, verify important claims, and consider different perspectives before reaching a conclusion.
+
+Next Steps:
+• Find reliable sources.
+• Compare information from multiple sources.
+• Verify important claims.
+• Record citations.
+• Identify research gaps.`;
+
+    }
+
+
+    summary.textContent =
+      generatedSummary;
+
+
+    saveWorkspace();
+
+  }
+);
+
+
+/* =========================================
+   SAVE SOURCE
+========================================= */
+
+function saveSource(item) {
+
+  const exists =
+    savedSources.some(
+      source =>
+        source.title === item.title
+    );
+
+
+  if (exists) {
+
+    showModal(
+      "Source Already Saved",
+      "This research source is already in your saved sources."
+    );
+
+    return;
+
+  }
+
+
+  savedSources.push(item);
+
+  renderSources();
+
+  updateStats();
+
+  saveWorkspace();
+
+
+  showModal(
+    "Source Saved",
+    "The research source has been added to your saved sources."
+  );
+
+}
+
+
+/* =========================================
+   RENDER SAVED SOURCES
+========================================= */
+
+function renderSources() {
+
+  if (!savedSources.length) {
+
+    sourceList.innerHTML = `
+
+      <div class="empty">
+
+        <i class="fa-solid fa-link"></i>
+
+        <h3>
+          No sources saved
+        </h3>
+
+        <p>
+          Save useful research results
+          to build your source list.
+        </p>
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  sourceList.innerHTML =
+    savedSources.map(
+      (source, index) => `
+
+        <div class="source-item">
+
+          <div class="source-icon">
+
+            <i class="fa-solid fa-bookmark"></i>
+
+          </div>
+
+
+          <div class="source-info">
+
+            <strong>
+              ${escapeHTML(source.title)}
+            </strong>
+
+            <span>
+              ${escapeHTML(source.source)}
+            </span>
+
+          </div>
+
+
+          <button
+            type="button"
+            class="remove-source"
+            data-remove-source="${index}"
+            title="Remove source"
+          >
+
+            <i class="fa-solid fa-trash"></i>
+
+          </button>
+
+        </div>
+
+      `
+    ).join("");
+
+
+  document
+    .querySelectorAll(
+      "[data-remove-source]"
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          function () {
+
+            const index =
+              Number(
+                this.dataset.removeSource
+              );
+
+
+            savedSources.splice(
+              index,
+              1
+            );
+
+
+            renderSources();
+
+            updateStats();
+
+            saveWorkspace();
+
+          }
+        );
+
+      }
+    );
+
+}
+
+
+/* =========================================
+   UPDATE STATISTICS
+========================================= */
+
+function updateStats() {
+
+  sourcesStat.textContent =
+    savedSources.length;
+
+
+  resultsStat.textContent =
+    currentResults.length;
+
+
+  const noteText =
+    notes.value.trim();
+
+
+  const wordCount =
+    noteText
+      ? noteText.split(/\s+/).length
+      : 0;
+
+
+  notesStat.textContent =
+    wordCount;
+
+
+  researchesStat.textContent =
+    researchSessions;
+
+}
+
+
+/* =========================================
+   CLEAR WORKSPACE
+========================================= */
+
+clearWorkspace.addEventListener(
+  "click",
+  function () {
+
+    researchInput.value = "";
+
+    notes.value = "";
+
+    summary.textContent =
+      "Your research summary will appear here.";
+
+    currentResults = [];
+
+    savedSources = [];
+
+    researchSessions = 0;
+
+
+    resultCount.textContent =
+      "0 results";
+
+
+    results.innerHTML = `
+
+      <div class="empty">
+
+        <i class="fa-solid fa-book-open"></i>
+
+        <h3>
+          Start your research
+        </h3>
+
+        <p>
+          Enter a research question above
+          to generate research results.
+        </p>
+
+      </div>
+
+    `;
+
+
+    renderSources();
+
+    updateNotesCount();
+
+    updateStats();
+
+    saveWorkspace();
+
+    researchInput.focus();
+
+  }
+);
+
+
+/* =========================================
+   MODAL
+========================================= */
+
+function showModal(
+  title,
+  content
+) {
+
+  modalTitle.textContent =
+    title;
+
+
+  modalContent.textContent =
+    content;
+
+
+  modal.classList.add(
+    "active"
+  );
+
+
+  modal.setAttribute(
+    "aria-hidden",
+    "false"
+  );
+
+}
+
+
+function closeModalWindow() {
+
+  modal.classList.remove(
+    "active"
+  );
+
+
+  modal.setAttribute(
+    "aria-hidden",
+    "true"
+  );
+
+}
+
+
+closeModal.addEventListener(
+  "click",
+  closeModalWindow
+);
+
+
+modal.addEventListener(
+  "click",
+  function (event) {
+
+    if (
+      event.target === modal
+    ) {
+
+      closeModalWindow();
+
+    }
+
+  }
+);
+
+
+document.addEventListener(
+  "keydown",
+  function (event) {
+
+    if (
+      event.key === "Escape"
+    ) {
+
+      closeModalWindow();
+
+    }
+
+  }
+);
+
+
+/* =========================================
+   SAVE WORKSPACE
+========================================= */
+
+function saveWorkspace() {
+
+  const workspace = {
+
+    question:
+      researchInput.value,
+
+    notes:
+      notes.value,
+
+    summary:
+      summary.textContent,
+
+    sources:
+      savedSources,
+
+    sessions:
+      researchSessions
+
+  };
+
+
+  localStorage.setItem(
+    "aiResearchWorkspace",
+    JSON.stringify(workspace)
+  );
+
+}
+
+
+/* =========================================
+   LOAD WORKSPACE
+========================================= */
+
+function loadWorkspace() {
+
+  const saved =
+    localStorage.getItem(
+      "aiResearchWorkspace"
+    );
+
+
+  if (!saved) {
+
+    return;
+
+  }
+
+
+  try {
+
+    const workspace =
+      JSON.parse(saved);
+
+
+    researchInput.value =
+      workspace.question || "";
+
+
+    notes.value =
+      workspace.notes || "";
+
+
+    summary.textContent =
+      workspace.summary ||
+      "Your research summary will appear here.";
+
+
+    savedSources =
+      Array.isArray(
+        workspace.sources
+      )
+        ? workspace.sources
+        : [];
+
+
+    researchSessions =
+      Number(
+        workspace.sessions || 0
+      );
+
+
+    renderSources();
+
+    updateNotesCount();
+
+    updateStats();
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "Unable to load saved workspace:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =========================================
+   NEW RESEARCH
+========================================= */
+
+newResearch.addEventListener(
+  "click",
+  function () {
+
+    researchInput.value = "";
+
+    currentResults = [];
+
+    resultCount.textContent =
+      "0 results";
+
+
+    results.innerHTML = `
+
+      <div class="empty">
+
+        <i class="fa-solid fa-book-open"></i>
+
+        <h3>
+          Start your research
+        </h3>
+
+        <p>
+          Enter a research question above
+          to generate research results.
+        </p>
+
+      </div>
+
+    `;
+
+
+    summary.textContent =
+      "Your research summary will appear here.";
+
+
+    researchInput.focus();
+
+  }
+);
+
+
+/* =========================================
+   SAVE RESEARCH BUTTON
+========================================= */
+
+saveResearch.addEventListener(
+  "click",
+  function () {
+
+    saveWorkspace();
+
+
+    showModal(
+      "Research Saved",
+      "Your AI Research workspace has been saved successfully in this browser."
+    );
+
+  }
+);
+
+
+/* =========================================
+   INITIALIZE
+========================================= */
+
+loadWorkspace();
+
+updateNotesCount();
+
+updateStats();
+
+renderSources();
+
+/* =========================================
+   INITIALIZE
+========================================= */
+
+loadWorkspace();
+
+updateNotesCount();
+
+updateStats();
+
+renderSources();
+
+</script>
+
+</body>
+</html>
