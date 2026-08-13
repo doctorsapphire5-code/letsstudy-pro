@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>AI CV Builder</title>
+
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --shadow: 0 15px 40px rgba(15, 23, 42, .08);
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    /* =========================================
+       HEADER
+    ========================================= */
+
+    header {
+      background: #0f172a;
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 5px 20px rgba(0,0,0,.15);
+    }
+
+    .header-inner {
+      max-width: 1400px;
+      margin: auto;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: linear-gradient(
+        135deg,
+        var(--primary),
+        #8b5cf6
+      );
+      font-weight: 800;
+    }
+
+    .brand h1 {
+      font-size: 19px;
+    }
+
+    .brand span {
+      display: block;
+      color: #94a3b8;
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* =========================================
+       BUTTONS
+    ========================================= */
+
+    .btn {
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      padding: 10px 15px;
+      border-radius: 10px;
+      font-weight: 600;
+      transition: .2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+      border-color: var(--success);
+    }
+
+    .btn-danger {
+      background: #fee2e2;
+      color: #b91c1c;
+      border-color: #fecaca;
+    }
+
+    /* =========================================
+       MAIN
+    ========================================= */
+
+    main {
+      max-width: 1400px;
+      margin: auto;
+      padding: 30px 24px 60px;
+    }
+
+    .hero {
+      margin-bottom: 25px;
+    }
+
+    .hero h2 {
+      font-size: clamp(28px, 5vw, 44px);
+      margin-bottom: 10px;
+    }
+
+    .hero h2 span {
+      color: var(--primary);
+    }
+
+    .hero p {
+      color: var(--muted);
+      max-width: 750px;
+      line-height: 1.7;
+    }
+
+    /* =========================================
+       GRID
+    ========================================= */
+
+    .builder-grid {
+      display: grid;
+      grid-template-columns: minmax(350px, .9fr) minmax(400px, 1.1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .panel-title {
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-body {
+      padding: 18px;
+    }
+
+    /* =========================================
+       FORM
+    ========================================= */
+
+    .form-section {
+      margin-bottom: 24px;
+    }
+
+    .form-section h3 {
+      font-size: 15px;
+      margin-bottom: 13px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 6px;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 11px 12px;
+      outline: none;
+      background: white;
+      color: var(--text);
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99,102,241,.1);
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .entry {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+      background: #f8fafc;
+    }
+
+    .entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .entry-header strong {
+      font-size: 13px;
+    }
+
+    .remove-entry {
+      border: 0;
+      background: transparent;
+      color: var(--danger);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .add-btn {
+      width: 100%;
+      border: 1px dashed #cbd5e1;
+      background: #f8fafc;
+      color: var(--primary);
+      padding: 11px;
+      border-radius: 9px;
+      font-weight: 700;
+    }
+
+    .skill-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .skill-row input {
+      flex: 1;
+    }
+
+    .remove-skill {
+      width: 40px;
+      border: 1px solid #fecaca;
+      background: #fee2e2;
+      color: #b91c1c;
+      border-radius: 9px;
+    }
+
+    /* =========================================
+       AI SUMMARY
+    ========================================= */
+
+    .ai-box {
+      padding: 15px;
+      border-radius: 12px;
+      background: linear-gradient(
+        135deg,
+        #eef2ff,
+        #f5f3ff
+      );
+      border: 1px solid #c7d2fe;
+      margin-bottom: 15px;
+    }
+
+    .ai-box h3 {
+      margin-bottom: 7px;
+      color: #4338ca;
+    }
+
+    .ai-box p {
+      color: #475569;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    /* =========================================
+       CV PREVIEW
+    ========================================= */
+
+    .preview-wrap {
+      background: #cbd5e1;
+      padding: 25px;
+      min-height: 700px;
+    }
+
+    .cv {
+      width: 100%;
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      min-height: 1050px;
+      padding: 45px;
+      color: #1e293b;
+      box-shadow: 0 15px 40px rgba(15,23,42,.16);
+    }
+
+    .cv-header {
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 18px;
+      margin-bottom: 20px;
+    }
+
+    .cv-name {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .cv-role {
+      color: var(--primary);
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .contact-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 18px;
+      color: #64748b;
+      font-size: 11px;
+    }
+
+    .cv-section {
+      margin-bottom: 20px;
+    }
+
+    .cv-section h2 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 1px solid #cbd5e1;
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+    }
+
+    .cv-section p {
+      font-size: 11px;
+      line-height: 1.7;
+    }
+
+    .cv-entry {
+      margin-bottom: 12px;
+    }
+
+    .cv-entry-title {
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    .cv-entry-subtitle {
+      color: var(--primary);
+      font-size: 11px;
+      margin: 2px 0 5px;
+    }
+
+    .cv-entry-date {
+      color: #64748b;
+      font-size: 10px;
+      margin-bottom: 4px;
+    }
+
+    .cv-skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .cv-skill {
+      background: #eef2ff;
+      color: #4338ca;
+      padding: 5px 8px;
+      border-radius: 5px;
+      font-size: 10px;
+    }
+
+    .empty-preview {
+      color: #94a3b8;
+      font-style: italic;
+    }
+
+    /* =========================================
+       TEMPLATE CONTROLS
+    ========================================= */
+
+    .template-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .template-btn {
+      padding: 8px 11px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: white;
+      font-size: 12px;
+    }
+
+    .template-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* =========================================
+       MODAL
+    ========================================= */
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: rgba(15,23,42,.65);
+      z-index: 500;
+    }
+
+    .modal.active {
+      display: grid;
+    }
+
+    .modal-box {
+      background: white;
+      width: min(550px, 100%);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 25px 80px rgba(0,0,0,.3);
+    }
+
+    .modal-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-body {
+      padding: 20px;
+      color: #475569;
+      line-height: 1.7;
+    }
+
+    .close-modal {
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 8px;
+      background: #f1f5f9;
+    }
+
+    /* =========================================
+       RESPONSIVE
+    ========================================= */
+
+    @media (max-width: 1050px) {
+      .builder-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 650px) {
+      .header-inner,
+      main {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .header-actions {
+        display: none;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-group.full {
+        grid-column: auto;
+      }
+
+      .cv {
+        padding: 28px 22px;
+      }
+
+      .preview-wrap {
+        padding: 10px;
+      }
+
+      .cv-name {
+        font-size: 25px;
+      }
+    }
+
+    /* =========================================
+       PRINT
+    ========================================= */
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+
+      #cvPreview,
+      #cvPreview * {
+        visibility: visible;
+      }
+
+      #cvPreview {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        box-shadow: none;
+      }
+
+      .cv {
+        box-shadow: none;
+        max-width: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="header-inner">
+
+    <div class="brand">
+      <div class="brand-icon">AI</div>
+
+      <div>
+        <h1>AI CV Builder</h1>
+        <span>Create a professional CV in minutes</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+
+      <button
+        type="button"
+        class="btn"
+        id="saveCV"
+      >
+        💾 Save
+      </button>
+
+      <button
+        type="button"
+        class="btn"
+        id="loadCV"
+      >
+        📂 Load
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        id="downloadCV"
+      >
+        🖨 Print / PDF
+      </button>
+
+    </div>
+
+  </div>
+</header>
+
+
+<main>
+
+  <section class="hero">
+
+    <h2>
+      Build your
+      <span>professional CV</span>
+      with AI.
+    </h2>
+
+    <p>
+      Enter your information, generate a professional
+      summary, choose a template and preview your CV
+      instantly. Your information stays in this browser
+      unless you connect this page to a backend service.
+    </p>
+
+  </section>
+
+
+  <div class="builder-grid">
+
+
+    <!-- =======================================
+         LEFT: FORM
+    ======================================== -->
+
+    <section class="panel">
+
+      <div class="panel-header">
+
+        <div class="panel-title">
+          📝 CV Information
+        </div>
+
+      </div>
+
+
+      <div class="panel-body">
+
+
+        <!-- PERSONAL -->
+
+        <div class="form-section">
+
+          <h3>
+            👤 Personal Information
+          </h3>
+
+          <div class="form-grid">
+
+            <div class="form-group">
+
+              <label for="fullName">
+                Full Name
+              </label>
+
+              <input
+                id="fullName"
+                type="text"
+                placeholder="John Doe"
+              >
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label for="jobTitle">
+                Professional Title
+              </label>
+
+              <input
+                id="jobTitle"
+                type="text"
+                placeholder="Web Developer"
+              >
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label for="email">
+                Email
+              </label>
+
+              <input
+                id="email"
+                type="email"
+                placeholder="john@example.com"
+              >
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label for="phone">
+                Phone
+              </label>
+
+              <input
+                id="phone"
+                type="text"
+                placeholder="+255 700 000 000"
+              >
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label for="location">
+                Location
+              </label>
+
+              <input
+                id="location"
+                type="text"
+                placeholder="Dar es Salaam, Tanzania"
+              >
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label for="website">
+                Website / LinkedIn
+              </label>
+
+              <input
+                id="website"
+                type="text"
+                placeholder="linkedin.com/in/johndoe"
+              >
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- SUMMARY -->
+
+        <div class="form-section">
+
+          <h3>
+            ✨ Professional Summary
+          </h3>
+
+          <div class="ai-box">
+
+            <h3>
+              🤖 AI Summary Generator
+            </h3>
+
+            <p>
+              Add your title, skills and experience,
+              then click the button below to create
+              a professional summary.
+            </p>
+
+          </div>
+
+          <textarea
+            id="summary"
+            placeholder="Write your professional summary..."
+          ></textarea>
+
+          <button
+            type="button"
+            class="btn btn-primary"
+            id="generateSummary"
+            style="margin-top:10px;width:100%;"
+          >
+            ✨ Generate AI Summary
+          </button>
+
+        </div>
+
+
+        <!-- EXPERIENCE -->
+
+        <div class="form-section">
+
+          <h3>
+            💼 Work Experience
+          </h3>
+
+          <div id="experienceList"></div>
+
+          <button
+            type="button"
+            class="add-btn"
+            id="addExperience"
+          >
+            + Add Work Experience
+          </button>
+
+        </div>
+
+
+        <!-- EDUCATION -->
+
+        <div class="form-section">
+
+          <h3>
+            🎓 Education
+          </h3>
+
+          <div id="educationList"></div>
+
+          <button
+            type="button"
+            class="add-btn"
+            id="addEducation"
+          >
+            + Add Education
+          </button>
+
+        </div>
+
+
+        <!-- SKILLS -->
+
+        <div class="form-section">
+
+          <h3>
+            🧠 Skills
+          </h3>
+
+          <div id="skillsList"></div>
+
+          <button
+            type="button"
+            class="add-btn"
+            id="addSkill"
+          >
+            + Add Skill
+          </button>
+
+        </div>
+
+
+        <!-- PROJECTS -->
+
+        <div class="form-section">
+
+          <h3>
+            🚀 Projects
+          </h3>
+
+          <div id="projectsList"></div>
+
+          <button
+            type="button"
+            class="add-btn"
+            id="addProject"
+          >
+            + Add Project
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =======================================
+         RIGHT: PREVIEW
+    ======================================== -->
+
+    <section class="panel">
+
+      <div class="panel-header">
+
+        <div class="panel-title">
+          👁 CV Preview
+        </div>
+
+        <div class="template-bar">
+
+          <button
+            type="button"
+            class="template-btn active"
+            data-template="modern"
+          >
+            Modern
+          </button>
+
+          <button
+            type="button"
+            class="template-btn"
+            data-template="classic"
+          >
+            Classic
+          </button>
+
+          <button
+            type="button"
+            class="template-btn"
+            data-template="minimal"
+          >
+            Minimal
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div class="preview-wrap">
+
+        <div
+          class="cv"
+          id="cvPreview"
+        >
+
+          <div class="cv-header">
+
+            <div
+              class="cv-name"
+              id="previewName"
+            >
+              Your Name
+            </div>
+
+            <div
+              class="cv-role"
+              id="previewRole"
+            >
+              Professional Title
+            </div>
+
+            <div
+              class="contact-line"
+              id="previewContact"
+            >
+              <span>Email</span>
+              <span>Phone</span>
+              <span>Location</span>
+            </div>
+
+          </div>
+
+
+          <section class="cv-section">
+
+            <h2>
+              Profile
+            </h2>
+
+            <p id="previewSummary">
+              <span class="empty-preview">
+                Your professional summary will
+                appear here.
+              </span>
+            </p>
+
+          </section>
+
+
+          <section
+            class="cv-section"
+            id="previewExperienceSection"
+          >
+
+            <h2>
+              Experience
+            </h2>
+
+            <div id="previewExperience">
+              <span class="empty-preview">
+                Your work experience will appear here.
+              </span>
+            </div>
+
+          </section>
+
+
+          <section
+            class="cv-section"
+            id="previewEducationSection"
+          >
+
+            <h2>
+              Education
+            </h2>
+
+            <div id="previewEducation">
+              <span class="empty-preview">
+                Your education will appear here.
+              </span>
+            </div>
+
+          </section>
+
+
+          <section
+            class="cv-section"
+            id="previewSkillsSection"
+          >
+
+            <h2>
+              Skills
+            </h2>
+
+            <div
+              class="cv-skills"
+              id="previewSkills"
+            >
+              <span class="empty-preview">
+                Add your skills.
+              </span>
+            </div>
+
+          </section>
+
+
+          <section
+            class="cv-section"
+            id="previewProjectsSection"
+          >
+
+            <h2>
+              Projects
+            </h2>
+
+            <div id="previewProjects">
+              <span class="empty-preview">
+                Your projects will appear here.
+              </span>
+            </div>
+
+          </section>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </div>
+
+</main>
+
+
+<!-- =========================================
+     MODAL
+==================================
+<!-- =========================================
+     MODAL
+========================================= -->
+
+<div
+  class="modal"
+  id="modal"
+  aria-hidden="true"
+>
+
+  <div class="modal-box">
+
+    <div class="modal-header">
+
+      <div>
+        <strong id="modalTitle">
+          AI CV Builder
+        </strong>
+      </div>
+
+      <button
+        type="button"
+        class="close-modal"
+        id="closeModal"
+        aria-label="Close"
+      >
+        &times;
+      </button>
+
+    </div>
+
+    <div
+      class="modal-body"
+      id="modalBody"
+    >
+      Welcome to AI CV Builder.
+    </div>
+
+    <div
+      class="modal-footer"
+    >
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        id="modalOk"
+      >
+        OK
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =========================================
+     FOOTER
+========================================= -->
+
+<footer class="site-footer">
+
+  <div class="footer-content">
+
+    <div>
+      <h3>AI CV Builder</h3>
+
+      <p>
+        Build a professional CV quickly,
+        simply and confidently.
+      </p>
+    </div>
+
+    <div class="footer-links">
+
+      <a href="#builder">
+        Builder
+      </a>
+
+      <a href="#preview">
+        Preview
+      </a>
+
+      <a href="#about">
+        About
+      </a>
+
+    </div>
+
+  </div>
+
+  <div class="footer-bottom">
+
+    <p>
+      &copy; 2026 AI CV Builder.
+      All rights reserved.
+    </p>
+
+  </div>
+
+</footer>
+
+
+<!-- =========================================
+     JAVASCRIPT
+========================================= -->
+
+<script>
+
+  /* =========================================
+     MODAL ELEMENTS
+  ========================================= */
+
+  const modal =
+    document.getElementById("modal");
+
+  const modalTitle =
+    document.getElementById("modalTitle");
+
+  const modalBody =
+    document.getElementById("modalBody");
+
+  const closeModalButton =
+    document.getElementById("closeModal");
+
+  const modalOk =
+    document.getElementById("modalOk");
+
+
+  /* =========================================
+     OPEN MODAL
+  ========================================= */
+
+  function openModal(title, message) {
+
+    modalTitle.textContent =
+      title;
+
+    modalBody.textContent =
+      message;
+
+    modal.classList.add("active");
+
+    modal.setAttribute(
+      "aria-hidden",
+      "false"
+    );
+
+  }
+
+
+  /* =========================================
+     CLOSE MODAL
+  ========================================= */
+
+  function closeModal() {
+
+    modal.classList.remove("active");
+
+    modal.setAttribute(
+      "aria-hidden",
+      "true"
+    );
+
+  }
+
+
+  closeModalButton.addEventListener(
+    "click",
+    closeModal
+  );
+
+  modalOk.addEventListener(
+    "click",
+    closeModal
+  );
+
+
+  /* =========================================
+     CLICK OUTSIDE MODAL
+  ========================================= */
+
+  modal.addEventListener(
+    "click",
+    function(event) {
+
+      if (
+        event.target === modal
+      ) {
+
+        closeModal();
+
+      }
+
+    }
+  );
+
+
+  /* =========================================
+     ESC KEY
+  ========================================= */
+
+  document.addEventListener(
+    "keydown",
+    function(event) {
+
+      if (
+        event.key === "Escape"
+      ) {
+
+        closeModal();
+
+      }
+
+    }
+  );
+
+
+  /* =========================================
+     SMOOTH NAVIGATION
+  ========================================= */
+
+  document
+    .querySelectorAll(
+      'a[href^="#"]'
+    )
+    .forEach(
+      link => {
+
+        link.addEventListener(
+          "click",
+          function(event) {
+
+            const target =
+              document.querySelector(
+                this.getAttribute("href")
+              );
+
+            if (target) {
+
+              event.preventDefault();
+
+              target.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+              });
+
+            }
+
+          }
+        );
+
+      }
+    );
+
+
+  /* =========================================
+     AUTO SAVE
+  ========================================= */
+
+  function autoSaveCV() {
+
+    try {
+
+      const inputs =
+        document.querySelectorAll(
+          "input, textarea, select"
+        );
+
+      const data = {};
+
+      inputs.forEach(
+        input => {
+
+          if (input.id) {
+
+            data[input.id] =
+              input.value;
+
+          }
+
+        }
+      );
+
+      localStorage.setItem(
+        "aiCVAutoSave",
+        JSON.stringify(data)
+      );
+
+    }
+
+    catch (error) {
+
+      console.warn(
+        "Auto-save failed:",
+        error
+      );
+
+    }
+
+  }
+
+
+  /* =========================================
+     AUTO SAVE ON INPUT
+  ========================================= */
+
+  document.addEventListener(
+    "input",
+    function() {
+
+      autoSaveCV();
+
+    }
+  );
+
+
+  /* =========================================
+     RESTORE AUTO SAVE
+  ========================================= */
+
+  function restoreAutoSave() {
+
+    const saved =
+      localStorage.getItem(
+        "aiCVAutoSave"
+      );
+
+    if (!saved) {
+      return;
+    }
+
+    try {
+
+      const data =
+        JSON.parse(saved);
+
+      Object.keys(data)
+        .forEach(
+          id => {
+
+            const element =
+              document.getElementById(id);
+
+            if (element) {
+
+              element.value =
+                data[id];
+
+            }
+
+          }
+        );
+
+    }
+
+    catch (error) {
+
+      console.warn(
+        "Could not restore auto-save:",
+        error
+      );
+
+    }
+
+  }
+
+
+  /* =========================================
+     CURRENT YEAR
+  ========================================= */
+
+  const yearElements =
+    document.querySelectorAll(
+      ".current-year"
+    );
+
+  yearElements.forEach(
+    element => {
+
+      element.textContent =
+        new Date().getFullYear();
+
+    }
+  );
+
+
+  /* =========================================
+     INITIALIZE
+  ========================================= */
+
+  restoreAutoSave();
+
+
+  /* =========================================
+     PAGE READY
+  ========================================= */
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    function() {
+
+      console.log(
+        "AI CV Builder is ready."
+      );
+
+    }
+  );
+
+</script>
+
+
+</body>
+</html>
