@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plugins Analytics</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  font-family:Arial,sans-serif;
+  background:#f5f7fb;
+  color:#172033
+}
+
+.container{
+  width:min(1180px,94%);
+  margin:auto
+}
+
+header{
+  background:#fff;
+  border-bottom:1px solid #e2e8f0;
+  padding:15px 0
+}
+
+.nav{
+  display:flex;
+  align-items:center;
+  justify-content:space-between
+}
+
+.logo{
+  color:#2563eb;
+  font-size:19px;
+  font-weight:900
+}
+
+.nav-actions{
+  display:flex;
+  gap:7px
+}
+
+.btn{
+  border:0;
+  border-radius:8px;
+  padding:10px 13px;
+  cursor:pointer;
+  font-size:9px;
+  font-weight:900;
+  text-decoration:none
+}
+
+.primary{
+  background:#2563eb;
+  color:#fff
+}
+
+.gray{
+  background:#f1f5f9;
+  color:#334155
+}
+
+main{
+  padding:28px 0 60px
+}
+
+.page-head{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  margin-bottom:20px
+}
+
+h1{
+  font-size:29px;
+  margin-bottom:6px
+}
+
+.subtitle{
+  color:#64748b;
+  font-size:10px
+}
+
+.filters{
+  display:flex;
+  gap:7px;
+  align-items:center
+}
+
+select{
+  border:1px solid #dbe2ea;
+  background:#fff;
+  border-radius:8px;
+  padding:9px;
+  font-size:9px;
+  outline:none
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin-bottom:18px
+}
+
+.stat{
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:12px;
+  padding:17px
+}
+
+.stat-label{
+  color:#64748b;
+  font-size:8px;
+  font-weight:800;
+  margin-bottom:7px
+}
+
+.stat-value{
+  font-size:24px;
+  font-weight:900;
+  margin-bottom:5px
+}
+
+.stat-change{
+  font-size:8px;
+  color:#16a34a;
+  font-weight:800
+}
+
+.stat-change.down{
+  color:#dc2626
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1.35fr .65fr;
+  gap:16px;
+  margin-bottom:16px
+}
+
+.card{
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:13px;
+  padding:18px
+}
+
+.card-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:16px
+}
+
+.card-head h2{
+  font-size:14px
+}
+
+.card-head span{
+  color:#64748b;
+  font-size:8px
+}
+
+.chart{
+  height:260px;
+  position:relative;
+  border-left:1px solid #cbd5e1;
+  border-bottom:1px solid #cbd5e1;
+  padding:10px 10px 0 28px
+}
+
+.grid-line{
+  position:absolute;
+  left:0;
+  right:0;
+  height:1px;
+  background:#eef2f7
+}
+
+.line{
+  position:absolute;
+  left:28px;
+  right:10px;
+  top:30px;
+  bottom:25px
+}
+
+svg{
+  width:100%;
+  height:100%;
+  overflow:visible
+}
+
+.chart-labels{
+  position:absolute;
+  left:0;
+  top:5px;
+  bottom:25px;
+  width:25px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  color:#94a3b8;
+  font-size:7px
+}
+
+.months{
+  display:flex;
+  justify-content:space-between;
+  margin-left:28px;
+  padding-top:7px;
+  color:#94a3b8;
+  font-size:7px
+}
+
+.donut-wrap{
+  height:260px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative
+}
+
+.donut{
+  width:170px;
+  height:170px;
+  border-radius:50%;
+  background:
+    conic-gradient(
+      #2563eb 0 38%,
+      #7c3aed 38% 63%,
+      #059669 63% 81%,
+      #f59e0b 81% 92%,
+      #e2e8f0 92% 100%
+    );
+  position:relative
+}
+
+.donut:after{
+  content:"";
+  position:absolute;
+  width:105px;
+  height:105px;
+  background:#fff;
+  border-radius:50%;
+  left:32.5px;
+  top:32.5px
+}
+
+.donut-center{
+  position:absolute;
+  z-index:2;
+  text-align:center
+}
+
+.donut-center strong{
+  display:block;
+  font-size:20px
+}
+
+.donut-center span{
+  color:#64748b;
+  font-size:8px
+}
+
+.legend{
+  margin-top:8px
+}
+
+.legend-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:7px 0;
+  font-size:8px
+}
+
+.legend-left{
+  display:flex;
+  align-items:center;
+  gap:7px
+}
+
+.legend-dot{
+  width:7px;
+  height:7px;
+  border-radius:50%
+}
+
+.table-card{
+  padding:0;
+  overflow:hidden
+}
+
+.table-head{
+  padding:17px;
+  border-bottom:1px solid #eef2f7
+}
+
+.table-head h2{
+  font-size:14px
+}
+
+table{
+  width:100%;
+  border-collapse:collapse
+}
+
+th{
+  text-align:left;
+  background:#f8fafc;
+  color:#64748b;
+  font-size:8px;
+  padding:11px 15px
+}
+
+td{
+  padding:13px 15px;
+  border-top:1px solid #eef2f7;
+  font-size:9px
+}
+
+.plugin{
+  display:flex;
+  align-items:center;
+  gap:9px
+}
+
+.plugin-icon{
+  width:31px;
+  height:31px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#eff6ff;
+  color:#2563eb;
+  border-radius:8px;
+  font-size:14px
+}
+
+.plugin-name{
+  font-weight:900;
+  margin-bottom:3px
+}
+
+.plugin-author{
+  color:#94a3b8;
+  font-size:7px
+}
+
+.status{
+  display:inline-block;
+  padding:5px 7px;
+  border-radius:20px;
+  font-size:7px;
+  font-weight:900
+}
+
+.active{
+  background:#dcfce7;
+  color:#166534
+}
+
+.warning{
+  background:#fef3c7;
+  color:#92400e
+}
+
+.performance{
+  min-width:100px
+}
+
+.bar{
+  height:5px;
+  background:#e2e8f0;
+  border-radius:20px;
+  overflow:hidden;
+  margin-top:5px
+}
+
+.bar span{
+  display:block;
+  height:100%;
+  background:#2563eb
+}
+
+.activity{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-top:16px
+}
+
+.activity-list{
+  list-style:none
+}
+
+.activity-list li{
+  display:flex;
+  gap:10px;
+  padding:11px 0;
+  border-bottom:1px solid #eef2f7;
+  font-size:9px
+}
+
+.activity-list li:last-child{
+  border-bottom:0
+}
+
+.activity-icon{
+  width:27px;
+  height:27px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#eff6ff;
+  color:#2563eb
+}
+
+.activity-text strong{
+  display:block;
+  margin-bottom:3px
+}
+
+.activity-text span{
+  color:#94a3b8;
+  font-size:7px
+}
+
+.no-data{
+  text-align:center;
+  color:#64748b;
+  font-size:9px;
+  padding:30px
+}
+
+@media(max-width:850px){
+  .grid{
+    grid-template-columns:1fr
+  }
+
+  .activity{
+    grid-template-columns:1fr
+  }
+
+  .stats{
+    grid-template-columns:repeat(2,1fr)
+  }
+}
+
+@media(max-width:600px){
+  .page-head{
+    align-items:start;
+    flex-direction:column;
+    gap:12px
+  }
+
+  .filters{
+    width:100%
+  }
+
+  select{
+    flex:1
+  }
+
+  .stats{
+    grid-template-columns:1fr 1fr
+  }
+
+  th:nth-child(4),
+  td:nth-child(4){
+    display:none
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="container nav">
+
+<div class="logo">
+🔌 Plugins Analytics
+</div>
+
+<div class="nav-actions">
+
+<a
+href="plugins.html"
+class="btn gray">
+Plugins
+</a>
+
+<a
+href="plugin-builder.html"
+class="btn primary">
++ Create Plugin
+</a>
+
+</div>
+
+</div>
+</header>
+
+
+<main class="container">
+
+<div class="page-head">
+
+<div>
+<h1>Plugin Analytics</h1>
+
+<p class="subtitle">
+Monitor plugin installs, usage, performance, users and revenue.
+</p>
+</div>
+
+<div class="filters">
+
+<select id="period" onchange="updateAnalytics()">
+<option value="7">Last 7 days</option>
+<option value="30" selected>Last 30 days</option>
+<option value="90">Last 90 days</option>
+<option value="365">Last year</option>
+</select>
+
+</div>
+
+</div>
+
+
+<!-- STATS -->
+
+<section class="stats">
+
+<div class="stat">
+
+<div class="stat-label">
+TOTAL INSTALLS
+</div>
+
+<div
+id="totalInstalls"
+class="stat-value">
+12,480
+</div>
+
+<div class="stat-change">
+↑ 18.4% vs previous period
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-label">
+ACTIVE USERS
+</div>
+
+<div
+id="activeUsers"
+class="stat-value">
+8,942
+</div>
+
+<div class="stat-change">
+↑ 12.7% vs previous period
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-label">
+PLUGIN REVENUE
+</div>
+
+<div
+id="revenue"
+class="stat-value">
+$4,860
+</div>
+
+<div class="stat-change">
+↑ 21.3% vs previous period
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-label">
+AVG. PERFORMANCE
+</div>
+
+<div
+id="performance"
+class="stat-value">
+94%
+</div>
+
+<div class="stat-change">
+↑ 3.2% improvement
+</div>
+
+</div>
+
+</section>
+
+
+<!-- CHARTS -->
+
+<div class="grid">
+
+<section class="card">
+
+<div class="card-head">
+
+<h2>Plugin Usage</h2>
+
+<span id="chartPeriod">
+Last 30 days
+</span>
+
+</div>
+
+
+<div class="chart">
+
+<div class="grid-line" style="top:25%"></div>
+<div class="grid-line" style="top:50%"></div>
+<div class="grid-line" style="top:75%"></div>
+
+<div class="chart-labels">
+<span>12k</span>
+<span>9k</span>
+<span>6k</span>
+<span>3k</span>
+<span>0</span>
+</div>
+
+<div class="line">
+
+<svg viewBox="0 0 600 220"
+preserveAspectRatio="none">
+
+<defs>
+<linearGradient
+id="fill"
+x1="0"
+x2="0"
+y1="0"
+y2="1">
+
+<stop
+offset="0%"
+stop-color="#2563eb"
+stop-opacity=".25"/>
+
+<stop
+offset="100%"
+stop-color="#2563eb"
+stop-opacity="0"/>
+
+</linearGradient>
+</defs>
+
+<path
+id="area"
+fill="url(#fill)"
+stroke="none"
+d="
+M0,175
+L60,160
+L120,165
+L180,130
+L240,145
+L300,105
+L360,115
+L420,80
+L480,95
+L540,60
+L600,45
+L600,220
+L0,220
+Z">
+</path>
+
+<path
+id="usageLine"
+d="
+M0,175
+L60,160
+L120,165
+L180,130
+L240,145
+L300,105
+L360,115
+L420,80
+L480,95
+L540,60
+L600,45"
+fill="none"
+stroke="#2563eb"
+stroke-width="3"
+vector-effect="non-scaling-stroke">
+</path>
+
+</svg>
+
+</div>
+
+<div class="months">
+<span>1</span>
+<span>7</span>
+<span>14</span>
+<span>21</span>
+<span>30</span>
+</div>
+
+</div>
+
+</section>
+
+
+<section class="card">
+
+<div class="card-head">
+
+<h2>Usage by Plugin</h2>
+
+<span>Share</span>
+
+</div>
+
+<div class="donut-wrap">
+
+<div class="donut"></div>
+
+<div class="donut-center">
+<strong>100%</strong>
+<span>Usage</span>
+</div>
+
+</div>
+
+<div class="legend">
+
+<div class="legend-item">
+<div class="legend-left">
+<span
+class="legend-dot"
+style="background:#2563eb">
+</span>
+<span>Analytics</span>
+</div>
+<strong>38%</strong>
+</div>
+
+<div class="legend-item">
+<div class="legend-left">
+<span
+class="legend-dot"
+style="background:#7c3aed">
+</span>
+<span>Payments</span>
+</div>
+<strong>25%</strong>
+</div>
+
+<div class="legend-item">
+<div class="legend-left">
+<span
+class="legend-dot"
+style="background:#059669">
+</span>
+<span>SEO Tools</span>
+</div>
+<strong>18%</strong>
+</div>
+
+<div class="legend-item">
+<div class="legend-left">
+<span
+class="legend-dot"
+style="background:#f59e0b">
+</span>
+<span>Other</span>
+</div>
+<strong>19%</strong>
+</div>
+
+</div>
+
+</section>
+
+</div>
+
+
+<!-- PLUGIN PERFORMANCE -->
+
+<section class="card table-card">
+
+<div class="table-head">
+<h2>Plugin Performance</h2>
+</div>
+
+<table>
+
+<thead>
+
+<tr>
+<th>PLUGIN</th>
+<th>INSTALLS</th>
+<th>ACTIVE USERS</th>
+<th>PERFORMANCE</th>
+<th>REVENUE</th>
+<th>STATUS</th>
+</tr>
+
+</thead>
+
+<tbody id="pluginTable">
+</tbody>
+
+</table>
+
+</section>
+
+
+<!-- ACTIVITY -->
+
+<div class="activity">
+
+<section class="card">
+
+<div class="card-head">
+<h2>Recent Activity</h2>
+<span>Latest events</span>
+</div>
+
+<ul
+id="activityList"
+class="activity-list">
+</ul>
+
+</section>
+
+
+<section class="card">
+
+<div class="card-head">
+<h2>Top Countries</h2>
+<span>Active users</span>
+</div>
+
+<ul class="activity-list">
+
+<li>
+<div class="activity-icon">🇺🇸</div>
+<div class="activity-text">
+<strong>United States</strong>
+<span>2,841 active users</span>
+</div>
+</li>
+
+<li>
+<div class="activity-icon">🇬🇧</div>
+<div class="activity-text">
+<strong>United Kingdom</strong>
+<span>1,240 active users</span>
+</div>
+</li>
+
+<li>
+<div class="activity-icon">🇹🇿</div>
+<div class="activity-text">
+<strong>Tanzania</strong>
+<span>984 active users</span>
+</div>
+</li>
+
+<li>
+<div class="activity-icon">🇰🇪</div>
+<div class="activity-text">
+<strong>Kenya</strong>
+<span>731 active users</span>
+</div>
+</li>
+
+<li>
+<div class="activity-icon">🇿🇦</div>
+<div class="activity-text">
+<strong>South Africa</strong>
+<span>512 active users</span>
+</div>
+</li>
+
+</ul>
+
+</section>
+
+</div>
+
+</main>
+
+
+<script>
+
+/*
+  Plugins Analytics
+  Data can be connected to Firebase later.
+  For now it uses localStorage so the page works immediately.
+*/
+
+
+const defaultPlugins=[
+
+{
+ id:"analytics",
+ name:"Analytics Pro",
+ author:"Your Studio",
+ installs:5240,
+ users:3840,
+ performance:98,
+ revenue:1840,
+ status:"Active",
+ icon:"📊"
+},
+
+{
+ id:"payments",
+ name:"Payment Gateway",
+ author:"Your Studio",
+ installs:3180,
+ users:2140,
+ performance:96,
+ revenue:1520,
+ status:"Active",
+ icon:"💳"
+},
+
+{
+ id:"seo",
+ name:"SEO Toolkit",
+ author:"Your Studio",
+ installs:2270,
+ users:1640,
+ performance:94,
+ revenue:820,
+ status:"Active",
+ icon:"🔍"
+},
+
+{
+ id:"forms",
+ name:"Smart Forms",
+ author:"Your Studio",
+ installs:1180,
+ users:820,
+ performance:91,
+ revenue:430,
+ status:"Active",
+ icon:"📝"
+},
+
+{
+ id:"chat",
+ name:"Live Chat",
+ author:"Your Studio",
+ installs:610,
+ users:502,
+ performance:88,
+ revenue:250,
+ status:"Warning",
+ icon:"💬"
+}
+
+];
+
+
+/* LOAD PLUGINS */
+
+let plugins=
+JSON.parse(
+localStorage.getItem("plugins") ||
+"null"
+);
+
+if(!Array.isArray(plugins) || !plugins.length){
+
+plugins=defaultPlugins;
+
+}
+
+
+/* NUMBER FORMAT */
+
+function number(value){
+
+return Number(value||0)
+.toLocaleString();
+
+}
+
+
+/* MONEY */
+
+function money(value){
+
+return "$"+
+Number(value||0)
+.toLocaleString(
+"en-US",
+{
+minimumFractionDigits:0,
+maximumFractionDigits:0
+}
+);
+
+}
+
+
+/* RENDER TABLE */
+
+function renderPlugins(){
+
+const table=
+document.getElementById(
+"pluginTable"
+);
+
+table.innerHTML="";
+
+
+plugins.forEach(plugin=>{
+
+const row=
+document.createElement("tr");
+
+const performance=
+Math.min(
+100,
+Math.max(
+0,
+Number(
+plugin.performance||0
+)
+)
+);
+
+const status=
+plugin.status ||
+"Active";
+
+row.innerHTML=`
+
+<td>
+
+<div class="plugin">
+
+<div class="plugin-icon">
+${escapeHTML(plugin.icon||"🔌")}
+</div>
+
+<div>
+
+<div class="plugin-name">
+${escapeHTML(plugin.name||"Plugin")}
+</div>
+
+<div class="plugin-author">
+${escapeHTML(plugin.author||"Developer")}
+</div>
+
+</div>
+
+</div>
+
+</td>
+
+
+<td>
+${number(plugin.installs)}
+</td>
+
+
+<td>
+${number(plugin.users)}
+</td>
+
+
+<td>
+
+<div class="performance">
+
+<strong>
+${performance}%
+</strong>
+
+<div class="bar">
+<span
+style="width:${performance}%">
+</span>
+</div>
+
+</div>
+
+</td>
+
+
+<td>
+${money(plugin.revenue)}
+</td>
+
+
+<td>
+
+<span class="status ${
+status.toLowerCase()==="active"
+?"active"
+:"warning"
+}">
+${escapeHTML(status)}
+</span>
+
+</td>
+
+`;
+
+table.appendChild(row);
+
+});
+
+}
+
+
+/* RECENT ACTIVITY */
+
+function renderActivity(){
+
+const list=
+document.getElementById(
+"activityList"
+);
+
+const activities=[
+
+[
+"📥",
+"Analytics Pro installed",
+"2 minutes ago"
+],
+
+[
+"⚡",
+"Payment Gateway processed 24 transactions",
+"18 minutes ago"
+],
+
+[
+"👤",
+"142 new active plugin users",
+"1 hour ago"
+],
+
+[
+"💰",
+"Plugin revenue increased by $240",
+"3 hours ago"
+],
+
+[
+"🔧",
+"SEO Toolkit updated to v2.4",
+"Yesterday"
+]
+
+];
+
+list.innerHTML="";
+
+activities.forEach(item=>{
+
+const li=
+document.createElement("li");
+
+li.innerHTML=`
+
+<div class="activity-icon">
+${item[0]}
+</div>
+
+<div class="activity-text">
+
+<strong>
+${item[1]}
+</strong>
+
+<span>
+${item[2]}
+</span>
+
+</div>
+`;
+
+list.appendChild(li);
+
+});
+
+}
+
+
+/* CALCULATE STATS */
+
+function updateAnalytics(){
+
+const period=
+Number(
+document.getElementById(
+"period"
+).value
+);
+
+
+let multiplier=1;
+
+if(period===7) multiplier=.31;
+if(period===30) multiplier=1;
+if(period===90) multiplier=2.72;
+if(period===365) multiplier=10.8;
+
+
+const installs=
+plugins.reduce(
+(sum,p)=>
+sum+Number(p.installs||0),
+0
+);
+
+const users=
+plugins.reduce(
+(sum,p)=>
+sum+Number(p.users||0),
+0
+);
+
+const revenue=
+plugins.reduce(
+(sum,p)=>
+sum+Number(p.revenue||0),
+0
+);
+
+const performance=
+plugins.length
+?
+Math.round(
+plugins.reduce(
+(sum,p)=>
+sum+Number(p.performance||0),
+0
+)/plugins.length
+)
+:0;
+
+
+document.getElementById(
+"totalInstalls"
+).textContent=
+number(
+installs*multiplier
+);
+
+document.getElementById(
+"activeUsers"
+).textContent=
+number(
+users*multiplier
+);
+
+document.getElementById(
+"revenue"
+).textContent=
+money(
+revenue*multiplier
+);
+
+document.getElementById(
+"performance"
+).textContent=
+performance+"%";
+
+
+const names={
+7:"Last 7 days",
+30:"Last 30 days",
+90:"Last 90 days",
+365:"Last year"
+};
+
+document.getElementById(
+"chartPeriod"
+).textContent=
+names[period];
+
+}
+
+
+/* ESCAPE */
+
+function escapeHTML(value){
+
+return String(value)
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+
+}
+
+
+/* START */
+
+renderPlugins();
+
+renderActivity();
+
+updateAnalytics();
+
+</script>
+
+</body>
+</html>
