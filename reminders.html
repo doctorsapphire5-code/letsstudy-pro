@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reminders</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:#f8fafc;
+    color:#172033;
+}
+
+.header{
+    height:64px;
+    background:#fff;
+    border-bottom:1px solid #e2e8f0;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 24px;
+}
+
+.header h1{
+    margin:0;
+    font-size:19px;
+}
+
+button{
+    border:0;
+    border-radius:7px;
+    padding:10px 14px;
+    cursor:pointer;
+    font-size:11px;
+    font-weight:800;
+}
+
+.primary{
+    background:#7c3aed;
+    color:#fff;
+}
+
+.secondary{
+    background:#e2e8f0;
+    color:#334155;
+}
+
+.danger{
+    background:#fee2e2;
+    color:#b91c1c;
+}
+
+.container{
+    max-width:1100px;
+    margin:auto;
+    padding:24px;
+}
+
+.toolbar{
+    display:flex;
+    gap:10px;
+    margin-bottom:20px;
+}
+
+.search{
+    flex:1;
+    padding:11px;
+    border:1px solid #cbd5e1;
+    border-radius:7px;
+    outline:none;
+}
+
+.filter{
+    border:1px solid #cbd5e1;
+    border-radius:7px;
+    padding:10px;
+    background:#fff;
+}
+
+.reminder-list{
+    display:grid;
+    gap:10px;
+}
+
+.reminder{
+    background:#fff;
+    border:1px solid #e2e8f0;
+    border-radius:10px;
+    padding:16px;
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
+.check{
+    width:20px;
+    height:20px;
+    cursor:pointer;
+}
+
+.reminder-main{
+    flex:1;
+}
+
+.reminder-title{
+    font-size:13px;
+    font-weight:800;
+    margin-bottom:6px;
+}
+
+.reminder.completed .reminder-title{
+    text-decoration:line-through;
+    color:#94a3b8;
+}
+
+.reminder-meta{
+    color:#64748b;
+    font-size:10px;
+}
+
+.priority{
+    padding:4px 8px;
+    border-radius:20px;
+    font-size:9px;
+    font-weight:900;
+}
+
+.high{
+    background:#fee2e2;
+    color:#b91c1c;
+}
+
+.medium{
+    background:#fef3c7;
+    color:#92400e;
+}
+
+.low{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.actions{
+    display:flex;
+    gap:6px;
+}
+
+.empty{
+    text-align:center;
+    padding:70px;
+    color:#64748b;
+}
+
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(15,23,42,.55);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+}
+
+.modal.show{
+    display:flex;
+}
+
+.modal-card{
+    width:min(500px,100%);
+    background:#fff;
+    border-radius:12px;
+    padding:22px;
+}
+
+.modal-card h2{
+    margin-top:0;
+}
+
+.form-group{
+    margin-bottom:14px;
+}
+
+.form-group label{
+    display:block;
+    color:#64748b;
+    font-size:9px;
+    font-weight:900;
+    margin-bottom:5px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select{
+    width:100%;
+    padding:10px;
+    border:1px solid #cbd5e1;
+    border-radius:7px;
+    outline:none;
+}
+
+.modal-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    margin-top:20px;
+}
+
+@media(max-width:650px){
+
+    .header{
+        padding:0 12px;
+    }
+
+    .container{
+        padding:12px;
+    }
+
+    .reminder{
+        align-items:flex-start;
+    }
+
+    .actions{
+        flex-direction:column;
+    }
+
+    .toolbar{
+        flex-direction:column;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+
+    <h1>Reminders</h1>
+
+    <button
+        class="primary"
+        onclick="openReminderModal()">
+        + New Reminder
+    </button>
+
+</header>
+
+
+<main class="container">
+
+    <div class="toolbar">
+
+        <input
+            id="search"
+            class="search"
+            type="search"
+            placeholder="Search reminders..."
+            oninput="renderReminders()">
+
+        <select
+            id="filter"
+            class="filter"
+            onchange="renderReminders()">
+
+            <option value="all">
+                All reminders
+            </option>
+
+            <option value="active">
+                Active
+            </option>
+
+            <option value="completed">
+                Completed
+            </option>
+
+            <option value="high">
+                High priority
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <section
+        id="reminderList"
+        class="reminder-list">
+    </section>
+
+
+    <div
+        id="empty"
+        class="empty"
+        style="display:none">
+
+        No reminders found.
+
+    </div>
+
+</main>
+
+
+<!-- =========================
+     MODAL
+========================= -->
+
+<div
+    id="reminderModal"
+    class="modal">
+
+    <div class="modal-card">
+
+        <h2>
+            New Reminder
+        </h2>
+
+        <div class="form-group">
+
+            <label>
+                TITLE
+            </label>
+
+            <input
+                id="reminderTitle"
+                placeholder="Enter reminder title">
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>
+                DATE
+            </label>
+
+            <input
+                id="reminderDate"
+                type="date">
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>
+                TIME
+            </label>
+
+            <input
+                id="reminderTime"
+                type="time">
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>
+                PRIORITY
+            </label>
+
+            <select id="reminderPriority">
+
+                <option value="low">
+                    Low
+                </option>
+
+                <option value="medium" selected>
+                    Medium
+                </option>
+
+                <option value="high">
+                    High
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>
+                NOTES
+            </label>
+
+            <textarea
+                id="reminderNotes"
+                rows="4"
+                placeholder="Optional notes..."></textarea>
+
+        </div>
+
+
+        <div class="modal-actions">
+
+            <button
+                class="secondary"
+                onclick="closeReminderModal()">
+                Cancel
+            </button>
+
+            <button
+                class="primary"
+                onclick="createReminder()">
+                Create
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const STORAGE_KEY =
+    "reminders-data";
+
+let reminders = [];
+
+
+/* =========================
+   LOAD
+========================= */
+
+function loadReminders(){
+
+    const saved =
+        localStorage.getItem(
+            STORAGE_KEY
+        );
+
+    if(saved){
+
+        try{
+
+            reminders =
+                JSON.parse(saved);
+
+        }catch(error){
+
+            reminders = [];
+
+        }
+
+    }
+
+    if(!Array.isArray(reminders)){
+        reminders = [];
+    }
+}
+
+
+/* =========================
+   SAVE
+========================= */
+
+function saveReminders(){
+
+    localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(
+            reminders
+        )
+    );
+
+}
+
+
+/* =========================
+   RENDER
+========================= */
+
+function renderReminders(){
+
+    const list =
+        document.getElementById(
+            "reminderList"
+        );
+
+    const empty =
+        document.getElementById(
+            "empty"
+        );
+
+    const query =
+        document.getElementById(
+            "search"
+        ).value
+        .toLowerCase()
+        .trim();
+
+    const filter =
+        document.getElementById(
+            "filter"
+        ).value;
+
+
+    list.innerHTML = "";
+
+
+    const filtered =
+        reminders
+            .filter(
+                reminder => {
+
+                    const text =
+                        (
+                            reminder.title +
+                            " " +
+                            reminder.notes
+                        )
+                        .toLowerCase();
+
+                    if(
+                        !text.includes(
+                            query
+                        )
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    if(
+                        filter === "active" &&
+                        reminder.completed
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    if(
+                        filter === "completed" &&
+                        !reminder.completed
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    if(
+                        filter === "high" &&
+                        reminder.priority !== "high"
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    return true;
+
+                }
+            )
+            .sort(
+                (a,b) =>
+                    new Date(
+                        a.date +
+                        "T" +
+                        a.time
+                    ) -
+                    new Date(
+                        b.date +
+                        "T" +
+                        b.time
+                    )
+            );
+
+
+    if(!filtered.length){
+
+        empty.style.display =
+            "block";
+
+        return;
+
+    }
+
+
+    empty.style.display =
+        "none";
+
+
+    filtered.forEach(
+        reminder => {
+
+            const article =
+                document.createElement(
+                    "article"
+                );
+
+            article.className =
+                "reminder" +
+                (
+                    reminder.completed
+                        ? " completed"
+                        : ""
+                );
+
+
+            const date =
+                formatDate(
+                    reminder.date
+                );
+
+
+            article.innerHTML = `
+
+                <input
+                    class="check"
+                    type="checkbox"
+                    ${
+                        reminder.completed
+                            ? "checked"
+                            : ""
+                    }
+                    onchange="toggleReminder(${reminder.id})">
+
+
+                <div class="reminder-main">
+
+                    <div class="reminder-title">
+                        ${escapeHTML(
+                            reminder.title
+                        )}
+                    </div>
+
+                    <div class="reminder-meta">
+
+                        ${date}
+
+                        ${
+                            reminder.time
+                                ? " · " +
+                                  escapeHTML(
+                                      reminder.time
+                                  )
+                                : ""
+                        }
+
+                        ${
+                            reminder.notes
+                                ? " · " +
+                                  escapeHTML(
+                                      reminder.notes
+                                  )
+                                : ""
+                        }
+
+                    </div>
+
+                </div>
+
+
+                <span
+                    class="priority ${reminder.priority}">
+
+                    ${escapeHTML(
+                        reminder.priority
+                            .toUpperCase()
+                    )}
+
+                </span>
+
+
+                <div class="actions">
+
+                    <button
+                        class="danger"
+                        onclick="deleteReminder(${reminder.id})">
+
+                        Delete
+
+                    </button>
+
+                </div>
+
+            `;
+
+
+            list.appendChild(
+                article
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================
+   MODAL
+========================= */
+
+function openReminderModal(){
+
+    document.getElementById(
+        "reminderModal"
+    ).classList.add(
+        "show"
+    );
+
+
+    const today =
+        new Date()
+            .toISOString()
+            .split("T")[0];
+
+
+    document.getElementById(
+        "reminderDate"
+    ).value =
+        today;
+
+}
+
+
+function closeReminderModal(){
+
+    document.getElementById(
+        "reminderModal"
+    ).classList.remove(
+        "show"
+    );
+
+}
+
+
+/* =========================
+   CREATE
+========================= */
+
+function createReminder(){
+
+    const title =
+        document.getElementById(
+            "reminderTitle"
+        ).value.trim();
+
+    const date =
+        document.getElementById(
+            "reminderDate"
+        ).value;
+
+    const time =
+        document.getElementById(
+            "reminderTime"
+        ).value;
+
+    const priority =
+        document.getElementById(
+            "reminderPriority"
+        ).value;
+
+    const notes =
+        document.getElementById(
+            "reminderNotes"
+        ).value.trim();
+
+
+    if(!title){
+
+        alert(
+            "Please enter a reminder title."
+        );
+
+        return;
+
+    }
+
+
+    reminders.push({
+
+        id:
+            Date.now(),
+
+        title,
+
+        date,
+
+        time,
+
+        priority,
+
+        notes,
+
+        completed:
+            false
+
+    });
+
+
+    saveReminders();
+
+    clearForm();
+
+    closeReminderModal();
+
+    renderReminders();
+
+}
+
+
+/* =========================
+   TOGGLE
+========================= */
+
+function toggleReminder(id){
+
+    const reminder =
+        reminders.find(
+            item =>
+                item.id === id
+        );
+
+
+    if(!reminder){
+        return;
+    }
+
+
+    reminder.completed =
+        !reminder.completed;
+
+
+    saveReminders();
+
+    renderReminders();
+
+}
+
+
+/* =========================
+   DELETE
+========================= */
+
+function deleteReminder(id){
+
+    if(
+        !confirm(
+            "Delete this reminder?"
+        )
+    ){
+
+        return;
+
+    }
+
+
+    reminders =
+        reminders.filter(
+            reminder =>
+                reminder.id !== id
+        );
+
+
+    saveReminders();
+
+    renderReminders();
+
+}
+
+
+/* =========================
+   CLEAR FORM
+========================= */
+
+function clearForm(){
+
+    document.getElementById(
+        "reminderTitle"
+    ).value = "";
+
+    document.getElementById(
+        "reminderTime"
+    ).value = "";
+
+    document.getElementById(
+        "reminderNotes"
+    ).value = "";
+
+    document.getElementById(
+        "reminderPriority"
+    ).value =
+        "medium";
+
+}
+
+
+/* =========================
+   DATE
+========================= */
+
+function formatDate(
+    value
+){
+
+    if(!value){
+        return "No date";
+    }
+
+
+    const date =
+        new Date(
+            value + "T00:00:00"
+        );
+
+
+    return date.toLocaleDateString(
+        undefined,
+        {
+            year:"numeric",
+            month:"short",
+            day:"numeric"
+        }
+    );
+
+}
+
+
+/* =========================
+   ESCAPE HTML
+========================= */
+
+function escapeHTML(
+    value
+){
+
+    return String(value ?? "")
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+/* =========================
+   START
+========================= */
+
+loadReminders();
+
+renderReminders();
+
+</script>
+
+</body>
+</html>
