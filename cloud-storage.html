@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Cloud Storage</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  background:#f5f7fb;
+  color:#172033;
+}
+
+.container{
+  width:min(1150px,94%);
+  margin:auto;
+}
+
+header{
+  background:#fff;
+  border-bottom:1px solid #e2e8f0;
+  padding:15px 0;
+}
+
+.nav{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.logo{
+  color:#2563eb;
+  font-size:18px;
+  font-weight:900;
+}
+
+.back{
+  text-decoration:none;
+  color:#64748b;
+  font-size:9px;
+  font-weight:900;
+}
+
+main{
+  padding:28px 0 60px;
+}
+
+h1{
+  font-size:28px;
+  margin-bottom:6px;
+}
+
+.subtitle{
+  color:#64748b;
+  font-size:10px;
+  margin-bottom:22px;
+}
+
+.layout{
+  display:grid;
+  grid-template-columns:1fr 300px;
+  gap:16px;
+}
+
+.card{
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:13px;
+  padding:18px;
+}
+
+.toolbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:15px;
+}
+
+.toolbar-title{
+  font-size:13px;
+  font-weight:900;
+}
+
+.actions{
+  display:flex;
+  gap:6px;
+}
+
+.btn{
+  border:0;
+  border-radius:8px;
+  padding:9px 12px;
+  font-size:8px;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.primary{
+  background:#2563eb;
+  color:#fff;
+}
+
+.gray{
+  background:#f1f5f9;
+  color:#334155;
+}
+
+.red{
+  background:#fee2e2;
+  color:#991b1b;
+}
+
+input[type="search"]{
+  width:100%;
+  border:1px solid #dbe2ea;
+  border-radius:8px;
+  padding:10px;
+  outline:none;
+  font-size:8px;
+  margin-bottom:12px;
+}
+
+input[type="search"]:focus{
+  border-color:#2563eb;
+}
+
+/* STORAGE */
+
+.storage-summary{
+  background:#f8fafc;
+  border-radius:10px;
+  padding:14px;
+  margin-bottom:15px;
+}
+
+.storage-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:8px;
+  margin-bottom:8px;
+}
+
+.storage-top strong{
+  font-size:10px;
+}
+
+.progress{
+  width:100%;
+  height:9px;
+  background:#e2e8f0;
+  border-radius:20px;
+  overflow:hidden;
+}
+
+.progress-fill{
+  width:38%;
+  height:100%;
+  background:#2563eb;
+  transition:.3s;
+}
+
+.storage-details{
+  display:flex;
+  justify-content:space-between;
+  margin-top:7px;
+  color:#64748b;
+  font-size:6px;
+}
+
+/* FILES */
+
+.file{
+  display:grid;
+  grid-template-columns:40px 1fr auto;
+  gap:10px;
+  align-items:center;
+  padding:12px 0;
+  border-bottom:1px solid #eef2f7;
+}
+
+.file:last-child{
+  border-bottom:0;
+}
+
+.file-icon{
+  width:38px;
+  height:38px;
+  border-radius:9px;
+  background:#eff6ff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+}
+
+.file-info strong{
+  display:block;
+  font-size:8px;
+  margin-bottom:4px;
+}
+
+.file-info span{
+  color:#64748b;
+  font-size:6px;
+}
+
+.file-actions{
+  display:flex;
+  gap:5px;
+}
+
+.empty{
+  text-align:center;
+  color:#64748b;
+  font-size:8px;
+  padding:35px 15px;
+}
+
+/* SIDEBAR */
+
+.side-title{
+  font-size:12px;
+  font-weight:900;
+  margin-bottom:6px;
+}
+
+.side-desc{
+  color:#64748b;
+  font-size:7px;
+  line-height:1.5;
+  margin-bottom:15px;
+}
+
+.stat{
+  display:flex;
+  justify-content:space-between;
+  padding:10px 0;
+  border-bottom:1px solid #eef2f7;
+  font-size:7px;
+}
+
+.stat:last-child{
+  border-bottom:0;
+}
+
+.stat span{
+  color:#64748b;
+}
+
+.stat strong{
+  font-size:8px;
+}
+
+.category{
+  margin-top:15px;
+}
+
+.category-row{
+  margin-bottom:12px;
+}
+
+.category-head{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:5px;
+  font-size:7px;
+}
+
+.category-bar{
+  height:6px;
+  background:#e2e8f0;
+  border-radius:20px;
+  overflow:hidden;
+}
+
+.category-fill{
+  height:100%;
+  background:#64748b;
+}
+
+/* MODAL */
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.45);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  z-index:100;
+}
+
+.modal.show{
+  display:flex;
+}
+
+.modal-box{
+  width:min(460px,100%);
+  background:#fff;
+  border-radius:13px;
+  padding:20px;
+}
+
+.modal-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:15px;
+}
+
+.modal-head h2{
+  font-size:14px;
+}
+
+.close{
+  width:28px;
+  height:28px;
+  border:0;
+  background:#f1f5f9;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.upload-area{
+  border:2px dashed #cbd5e1;
+  border-radius:10px;
+  padding:28px 15px;
+  text-align:center;
+  cursor:pointer;
+  margin-bottom:15px;
+}
+
+.upload-area:hover{
+  border-color:#2563eb;
+  background:#f8fbff;
+}
+
+.upload-icon{
+  font-size:30px;
+  margin-bottom:8px;
+}
+
+.upload-area strong{
+  display:block;
+  font-size:9px;
+  margin-bottom:5px;
+}
+
+.upload-area span{
+  color:#64748b;
+  font-size:7px;
+}
+
+.hidden{
+  display:none;
+}
+
+/* TOAST */
+
+.toast{
+  position:fixed;
+  right:18px;
+  bottom:18px;
+  background:#172033;
+  color:#fff;
+  padding:11px 15px;
+  border-radius:8px;
+  font-size:8px;
+  font-weight:900;
+  display:none;
+  z-index:200;
+}
+
+.toast.show{
+  display:block;
+}
+
+@media(max-width:800px){
+  .layout{
+    grid-template-columns:1fr;
+  }
+}
+
+@media(max-width:600px){
+  .toolbar{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .file{
+    grid-template-columns:38px 1fr;
+  }
+
+  .file-actions{
+    grid-column:2;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="container nav">
+
+<div class="logo">
+☁️ Cloud Storage
+</div>
+
+<a
+href="cloud-settings.html"
+class="back">
+← Cloud Settings
+</a>
+
+</div>
+</header>
+
+
+<main class="container">
+
+<h1>Cloud Storage</h1>
+
+<p class="subtitle">
+Manage files, folders and cloud storage usage.
+</p>
+
+
+<div class="layout">
+
+<!-- MAIN -->
+
+<section class="card">
+
+<div class="toolbar">
+
+<div class="toolbar-title">
+My Files
+</div>
+
+<div class="actions">
+
+<button
+class="btn gray"
+onclick="createFolder()">
++ Folder
+</button>
+
+<button
+class="btn primary"
+onclick="openUpload()">
+Upload
+</button>
+
+</div>
+
+</div>
+
+
+<input
+id="search"
+type="search"
+placeholder="Search files...">
+
+
+<div class="storage-summary">
+
+<div class="storage-top">
+
+<strong id="usedText">
+3.8 GB used
+</strong>
+
+<span id="limitText">
+of 10 GB
+</span>
+
+</div>
+
+<div class="progress">
+<div
+id="progressFill"
+class="progress-fill">
+</div>
+</div>
+
+<div class="storage-details">
+
+<span id="fileCount">
+0 files
+</span>
+
+<span id="freeText">
+6.2 GB available
+</span>
+
+</div>
+
+</div>
+
+
+<div id="fileList"></div>
+
+</section>
+
+
+<!-- SIDEBAR -->
+
+<aside>
+
+<div class="card">
+
+<div class="side-title">
+Storage Overview
+</div>
+
+<div class="side-desc">
+Monitor how your cloud storage is being used.
+</div>
+
+
+<div class="stat">
+<span>Total storage</span>
+<strong>10 GB</strong>
+</div>
+
+<div class="stat">
+<span>Used storage</span>
+<strong id="sideUsed">3.8 GB</strong>
+</div>
+
+<div class="stat">
+<span>Available</span>
+<strong id="sideFree">6.2 GB</strong>
+</div>
+
+<div class="stat">
+<span>Total files</span>
+<strong id="sideFiles">0</strong>
+</div>
+
+
+<div class="category">
+
+<div class="category-row">
+
+<div class="category-head">
+<span>Documents</span>
+<span id="documentsSize">1.2 GB</span>
+</div>
+
+<div class="category-bar">
+<div
+class="category-fill"
+style="width:31%">
+</div>
+</div>
+
+</div>
+
+
+<div class="category-row">
+
+<div class="category-head">
+<span>Images</span>
+<span id="imagesSize">1.5 GB</span>
+</div>
+
+<div class="category-bar">
+<div
+class="category-fill"
+style="width:39%">
+</div>
+</div>
+
+</div>
+
+
+<div class="category-row">
+
+<div class="category-head">
+<span>Videos</span>
+<span id="videosSize">0.8 GB</span>
+</div>
+
+<div class="category-bar">
+<div
+class="category-fill"
+style="width:21%">
+</div>
+</div>
+
+</div>
+
+
+<div class="category-row">
+
+<div class="category-head">
+<span>Other</span>
+<span id="otherSize">0.3 GB</span>
+</div>
+
+<div class="category-bar">
+<div
+class="category-fill"
+style="width:9%">
+</div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card" style="margin-top:15px">
+
+<div class="side-title">
+Storage Settings
+</div>
+
+<div class="side-desc">
+Configure cloud storage options.
+</div>
+
+<button
+class="btn gray"
+style="width:100%"
+onclick="window.location.href='cloud-settings.html'">
+Open Cloud Settings
+</button>
+
+</div>
+
+</aside>
+
+</div>
+
+</main>
+
+
+<!-- UPLOAD MODAL -->
+
+<div
+id="uploadModal"
+class="modal">
+
+<div class="modal-box">
+
+<div class="modal-head">
+
+<h2>
+Upload Files
+</h2>
+
+<button
+class="close"
+onclick="closeUpload()">
+×
+</button>
+
+</div>
+
+
+<label
+for="fileInput"
+class="upload-area">
+
+<div class="upload-icon">
+☁️
+</div>
+
+<strong>
+Choose files to upload
+</strong>
+
+<span>
+Files selected here are added to this browser demo.
+</span>
+
+</label>
+
+<input
+id="fileInput"
+class="hidden"
+type="file"
+multiple>
+
+
+<div class="actions">
+
+<button
+class="btn gray"
+onclick="closeUpload()">
+Cancel
+</button>
+
+<button
+class="btn primary"
+onclick="uploadFiles()">
+Upload Files
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div
+id="toast"
+class="toast">
+</div>
+
+
+<script>
+
+/*
+  CLOUD STORAGE PAGE
+
+  This frontend uses localStorage for demonstration.
+
+  IMPORTANT:
+  A real cloud storage application should upload
+  files to Firebase Cloud Storage / S3 / Azure Blob
+  or another trusted backend.
+
+  Do not treat localStorage as real cloud storage.
+*/
+
+
+const STORAGE_LIMIT = 10;
+
+
+const demoFiles = [
+
+{
+  id:"file_1",
+  name:"Business Report.pdf",
+  type:"document",
+  size:1.2,
+  updatedAt:new Date().toISOString()
+},
+
+{
+  id:"file_2",
+  name:"Company Logo.png",
+  type:"image",
+  size:0.8,
+  updatedAt:new Date(Date.now()-86400000).toISOString()
+},
+
+{
+  id:"file_3",
+  name:"Product Photos.zip",
+  type:"image",
+  size:0.7,
+  updatedAt:new Date(Date.now()-172800000).toISOString()
+},
+
+{
+  id:"file_4",
+  name:"Marketing Video.mp4",
+  type:"video",
+  size:0.8,
+  updatedAt:new Date(Date.now()-259200000).toISOString()
+},
+
+{
+  id:"file_5",
+  name:"Inventory.xlsx",
+  type:"document",
+  size:0.3,
+  updatedAt:new Date(Date.now()-345600000).toISOString()
+}
+
+];
+
+
+/* STORAGE */
+
+function getFiles(){
+
+let files =
+JSON.parse(
+localStorage.getItem("cloudFiles") || "null"
+);
+
+if(!Array.isArray(files)){
+
+files = demoFiles;
+
+saveFiles(files);
+
+}
+
+return files;
+
+}
+
+
+function saveFiles(files){
+
+localStorage.setItem(
+"cloudFiles",
+JSON.stringify(files)
+);
+
+}
+
+
+/* RENDER */
+
+function renderFiles(){
+
+const query =
+document.getElementById(
+"search"
+).value
+.toLowerCase()
+.trim();
+
+
+const files =
+getFiles().filter(
+file =>
+file.name
+.toLowerCase()
+.includes(query)
+);
+
+
+const list =
+document.getElementById("fileList");
+
+list.innerHTML="";
+
+
+if(!files.length){
+
+list.innerHTML=`
+<div class="empty">
+No files found.
+</div>
+`;
+
+updateStats();
+
+return;
+
+}
+
+
+files.forEach(file=>{
+
+const row =
+document.createElement("div");
+
+row.className="file";
+
+
+row.innerHTML=`
+
+<div class="file-icon">
+${getIcon(file.type)}
+</div>
+
+<div class="file-info">
+
+<strong>
+${escapeHTML(file.name)}
+</strong>
+
+<span>
+${formatSize(file.size)}
+· ${formatDate(file.updatedAt)}
+</span>
+
+</div>
+
+<div class="file-actions">
+
+<button
+class="btn gray"
+onclick="downloadFile('${safe(file.id)}')">
+Download
+</button>
+
+<button
+class="btn red"
+onclick="deleteFile('${safe(file.id)}')">
+Delete
+</button>
+
+</div>
+
+`;
+
+list.appendChild(row);
+
+});
+
+updateStats();
+
+}
+
+
+/* STATS */
+
+function updateStats(){
+
+const files =
+getFiles();
+
+const used =
+files.reduce(
+(sum,file)=>
+sum + Number(file.size || 0),
+0
+);
+
+
+const free =
+Math.max(
+STORAGE_LIMIT-used,
+0
+);
+
+
+const percent =
+Math.min(
+used / STORAGE_LIMIT * 100,
+100
+);
+
+
+document.getElementById(
+"usedText"
+).textContent =
+formatSize(used) +
+" used";
+
+
+document.getElementById(
+"freeText"
+).textContent =
+formatSize(free) +
+" available";
+
+
+document.getElementById(
+"progressFill"
+).style.width =
+percent+"%";
+
+
+document.getElementById(
+"fileCount"
+).textContent =
+files.length +
+(files.length === 1 ? " file" : " files");
+
+
+document.getElementById(
+"sideUsed"
+).textContent =
+formatSize(used);
+
+
+document.getElementById(
+"sideFree"
+).textContent =
+formatSize(free);
+
+
+document.getElementById(
+"sideFiles"
+).textContent =
+files.length;
+
+}
+
+
+/* UPLOAD */
+
+function openUpload(){
+
+document.getElementById(
+"uploadModal"
+).classList.add("show");
+
+}
+
+
+function closeUpload(){
+
+document.getElementById(
+"uploadModal"
+).classList.remove("show");
+
+document.getElementById(
+"fileInput"
+).value="";
+
+}
+
+
+function uploadFiles(){
+
+const input =
+document.getElementById(
+"fileInput"
+);
+
+
+const selected =
+Array.from(input.files);
+
+
+if(!selected.length){
+
+showToast(
+"Select at least one file."
+);
+
+return;
+
+}
+
+
+const files =
+getFiles();
+
+
+let used =
+files.reduce(
+(sum,file)=>
+sum + Number(file.size || 0),
+0
+);
+
+
+for(const file of selected){
+
+const size =
+file.size / (1024*1024*1024);
+
+
+if(
+used + size > STORAGE_LIMIT
+){
+
+showToast(
+"Not enough cloud storage."
+);
+
+break;
+
+}
+
+
+files.unshift({
+
+id:
+"file_"+Date.now()+"_"+Math.random(),
+
+name:file.name,
+
+type:getFileType(
+file.type,
+file.name
+),
+
+size:
+Math.max(size,0.0001),
+
+updatedAt:
+new Date().toISOString()
+
+});
+
+
+used += size;
+
+}
+
+
+saveFiles(files);
+
+renderFiles();
+
+closeUpload();
+
+showToast(
+"Files uploaded successfully."
+);
+
+}
+
+
+/* FILE TYPE */
+
+function getFileType(mime,name){
+
+if(mime.startsWith("image/"))
+return "image";
+
+if(mime.startsWith("video/"))
+return "video";
+
+if(
+mime.includes("pdf") ||
+mime.includes("document") ||
+mime.includes("spreadsheet") ||
+mime.includes("text")
+)
+return "document";
+
+
+const ext =
+name
+.split(".")
+.pop()
+.toLowerCase();
+
+
+if(
+["jpg","jpeg","png","gif","webp","svg"]
+.includes(ext)
+)
+return "image";
+
+
+if(
+["mp4","mov","avi","mkv","webm"]
+.includes(ext)
+)
+return "video";
+
+
+return "other";
+
+}
+
+
+/* ICON */
+
+function getIcon(type){
+
+const icons={
+document:"📄",
+image:"🖼️",
+video:"🎬",
+other:"📦"
+};
+
+return icons[type] || icons.other;
+
+}
+
+
+/* DELETE */
+
+function deleteFile(id){
+
+const files =
+getFiles();
+
+const file =
+files.find(
+item=>item.id===id
+);
+
+if(!file)
+return;
+
+
+if(!confirm(
+"Delete " +
+file.name +
+"?"
+))
+return;
+
+
+const updated =
+files.filter(
+item=>item.id!==id
+);
+
+saveFiles(updated);
+
+renderFiles();
+
+showToast(
+"File deleted."
+);
+
+}
+
+
+/* DOWNLOAD */
+
+function downloadFile(id){
+
+const file =
+getFiles().find(
+item=>item.id===id
+);
+
+if(!file)
+return;
+
+
+/*
+  Demo download.
+
+  Since the file contents are not stored in this
+  frontend example, create a small information file.
+*/
+
+const content =
+"Cloud Storage File\n\n"+
+"Name: "+file.name+"\n"+
+"Type: "+file.type+"\n"+
+"Size: "+formatSize(file.size)+"\n"+
+"Updated: "+formatDate(file.updatedAt);
+
+
+const blob =
+new Blob(
+[content],
+{type:"text/plain"}
+);
+
+
+const url =
+URL.createObjectURL(blob);
+
+
+const a =
+document.createElement("a");
+
+a.href=url;
+
+a.download=
+file.name +
+".info.txt";
+
+a.click();
+
+URL.revokeObjectURL(url);
+
+showToast(
+"Download started."
+);
+
+}
+
+
+/* CREATE FOLDER */
+
+function createFolder(){
+
+const name =
+prompt(
+"Enter folder name:"
+);
+
+
+if(!name)
+return;
+
+
+const files =
+getFiles();
+
+
+files.unshift({
+
+id:
+"folder_"+Date.now(),
+
+name:name,
+
+type:"other",
+
+size:0,
+
+updatedAt:
+new Date().toISOString(),
+
+folder:true
+
+});
+
+
+saveFiles(files);
+
+renderFiles();
+
+showToast(
+"Folder created."
+);
+
+}
+
+
+/* FORMAT */
+
+function formatSize(gb){
+
+if(gb < 0.001){
+
+return Math.max(
+gb * 1024,
+0
+).toFixed(1)+" MB";
+
+}
+
+return gb.toFixed(2)+" GB";
+
+}
+
+
+function formatDate(value){
+
+return new Date(value)
+.toLocaleDateString(
+"en-US",
+{
+month:"short",
+day:"numeric",
+year:"numeric"
+}
+);
+
+}
+
+
+/* SAFE HTML */
+
+function escapeHTML(value){
+
+return String(value)
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+
+}
+
+
+function safe(value){
+
+return String(value)
+.replace(/\\/g,"\\\\")
+.replace(/'/g,"\\'");
+
+}
+
+
+/* SEARCH */
+
+document.getElementById(
+"search"
+).addEventListener(
+"input",
+renderFiles
+);
+
+
+/* MODAL BACKDROP */
+
+document.getElementById(
+"uploadModal"
+).addEventListener(
+"click",
+event=>{
+
+if(event.target.id==="uploadModal"){
+closeUpload();
+}
+
+});
+
+
+/* TOAST */
+
+function showToast(text){
+
+const toast =
+document.getElementById("toast");
+
+toast.textContent=text;
+
+toast.classList.add("show");
+
+setTimeout(()=>{
+toast.classList.remove("show");
+},2400);
+
+}
+
+
+/* START */
+
+renderFiles();
+
+</script>
+
+</body>
+</html>
