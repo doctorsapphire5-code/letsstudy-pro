@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Form Responses</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:#f1f5f9;
+    color:#172033;
+}
+
+.header{
+    height:64px;
+    background:#ffffff;
+    border-bottom:1px solid #e2e8f0;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 24px;
+}
+
+.header h1{
+    font-size:18px;
+    margin:0;
+}
+
+.header-actions{
+    display:flex;
+    gap:8px;
+}
+
+button{
+    border:0;
+    border-radius:7px;
+    padding:9px 14px;
+    cursor:pointer;
+    font-weight:700;
+    font-size:12px;
+}
+
+.primary{
+    background:#7c3aed;
+    color:white;
+}
+
+.secondary{
+    background:#e2e8f0;
+    color:#334155;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+    padding:24px;
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:
+        repeat(4,1fr);
+    gap:14px;
+    margin-bottom:20px;
+}
+
+.stat{
+    background:white;
+    border:1px solid #e2e8f0;
+    border-radius:10px;
+    padding:18px;
+}
+
+.stat-label{
+    color:#64748b;
+    font-size:11px;
+    font-weight:700;
+}
+
+.stat-value{
+    margin-top:8px;
+    font-size:25px;
+    font-weight:800;
+}
+
+.toolbar{
+    background:white;
+    border:1px solid #e2e8f0;
+    border-radius:10px 10px 0 0;
+    padding:12px;
+    display:flex;
+    gap:10px;
+    align-items:center;
+}
+
+.search{
+    flex:1;
+    border:1px solid #cbd5e1;
+    border-radius:7px;
+    padding:10px;
+    outline:none;
+}
+
+.responses{
+    background:white;
+    border:1px solid #e2e8f0;
+    border-top:0;
+    overflow:auto;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:800px;
+}
+
+th,
+td{
+    padding:13px 14px;
+    border-bottom:1px solid #eef2f7;
+    text-align:left;
+    font-size:12px;
+}
+
+th{
+    background:#f8fafc;
+    color:#475569;
+    font-size:11px;
+}
+
+tr:hover td{
+    background:#fafafa;
+}
+
+.status{
+    display:inline-block;
+    padding:4px 8px;
+    border-radius:20px;
+    background:#dcfce7;
+    color:#166534;
+    font-size:10px;
+    font-weight:800;
+}
+
+.empty{
+    padding:50px;
+    text-align:center;
+    color:#64748b;
+}
+
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(15,23,42,.55);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+}
+
+.modal.show{
+    display:flex;
+}
+
+.modal-card{
+    width:min(650px,100%);
+    max-height:90vh;
+    overflow:auto;
+    background:white;
+    border-radius:12px;
+    padding:22px;
+}
+
+.modal-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:18px;
+}
+
+.modal-header h2{
+    margin:0;
+    font-size:18px;
+}
+
+.response-field{
+    border-bottom:1px solid #eef2f7;
+    padding:12px 0;
+}
+
+.response-field label{
+    display:block;
+    color:#64748b;
+    font-size:10px;
+    font-weight:800;
+    margin-bottom:5px;
+}
+
+.response-field div{
+    font-size:13px;
+    white-space:pre-wrap;
+    word-break:break-word;
+}
+
+.close{
+    background:#f1f5f9;
+}
+
+@media(max-width:800px){
+
+    .stats{
+        grid-template-columns:
+            repeat(2,1fr);
+    }
+
+    .header{
+        padding:0 12px;
+    }
+
+    .container{
+        padding:12px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+
+    <h1>Form Responses</h1>
+
+    <div class="header-actions">
+
+        <button
+            class="secondary"
+            onclick="exportResponses()">
+            Export
+        </button>
+
+        <button
+            class="primary"
+            onclick="clearResponses()">
+            Clear All
+        </button>
+
+    </div>
+
+</header>
+
+
+<main class="container">
+
+    <section class="stats">
+
+        <div class="stat">
+            <div class="stat-label">
+                TOTAL RESPONSES
+            </div>
+
+            <div
+                id="totalResponses"
+                class="stat-value">
+                0
+            </div>
+        </div>
+
+
+        <div class="stat">
+            <div class="stat-label">
+                TODAY
+            </div>
+
+            <div
+                id="todayResponses"
+                class="stat-value">
+                0
+            </div>
+        </div>
+
+
+        <div class="stat">
+            <div class="stat-label">
+                THIS WEEK
+            </div>
+
+            <div
+                id="weekResponses"
+                class="stat-value">
+                0
+            </div>
+        </div>
+
+
+        <div class="stat">
+            <div class="stat-label">
+                STATUS
+            </div>
+
+            <div
+                id="responseStatus"
+                class="stat-value">
+                Active
+            </div>
+        </div>
+
+    </section>
+
+
+    <section>
+
+        <div class="toolbar">
+
+            <input
+                id="search"
+                class="search"
+                type="search"
+                placeholder="Search responses..."
+                oninput="renderResponses()"
+            >
+
+            <button
+                class="secondary"
+                onclick="refreshResponses()">
+                Refresh
+            </button>
+
+        </div>
+
+
+        <div class="responses">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>#</th>
+
+                        <th>Name</th>
+
+                        <th>Email</th>
+
+                        <th>Message</th>
+
+                        <th>Date</th>
+
+                        <th>Status</th>
+
+                        <th>Action</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody
+                    id="responseTable">
+                </tbody>
+
+            </table>
+
+            <div
+                id="emptyState"
+                class="empty">
+                No responses yet.
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<div
+    id="responseModal"
+    class="modal">
+
+    <div class="modal-card">
+
+        <div class="modal-header">
+
+            <h2>
+                Response Details
+            </h2>
+
+            <button
+                class="close"
+                onclick="closeModal()">
+                Close
+            </button>
+
+        </div>
+
+        <div id="responseDetails"></div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const STORAGE_KEY =
+    "form-responses";
+
+
+let responses = [];
+
+
+/* =========================
+   LOAD RESPONSES
+========================= */
+
+function loadResponses(){
+
+    const saved =
+        localStorage.getItem(
+            STORAGE_KEY
+        );
+
+
+    if(!saved){
+
+        responses = [];
+
+        return;
+
+    }
+
+
+    try{
+
+        const data =
+            JSON.parse(saved);
+
+        responses =
+            Array.isArray(data)
+                ? data
+                : [];
+
+    }catch(error){
+
+        responses = [];
+
+    }
+
+}
+
+
+/* =========================
+   SAVE RESPONSES
+========================= */
+
+function saveResponses(){
+
+    localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(
+            responses
+        )
+    );
+
+}
+
+
+/* =========================
+   RENDER
+========================= */
+
+function renderResponses(){
+
+    const table =
+        document.getElementById(
+            "responseTable"
+        );
+
+    const empty =
+        document.getElementById(
+            "emptyState"
+        );
+
+    const search =
+        document.getElementById(
+            "search"
+        ).value
+        .toLowerCase()
+        .trim();
+
+
+    table.innerHTML = "";
+
+
+    const filtered =
+        responses.filter(
+            response => {
+
+                const text =
+                    JSON.stringify(
+                        response
+                    ).toLowerCase();
+
+                return text.includes(
+                    search
+                );
+
+            }
+        );
+
+
+    empty.style.display =
+        filtered.length
+            ? "none"
+            : "block";
+
+
+    filtered.forEach(
+        (response,index)=>{
+
+            const row =
+                document.createElement(
+                    "tr"
+                );
+
+
+            const name =
+                response.name ||
+                "—";
+
+            const email =
+                response.email ||
+                "—";
+
+            const message =
+                response.message ||
+                "—";
+
+            const date =
+                response.date ||
+                "—";
+
+
+            row.innerHTML = `
+
+                <td>
+                    ${index + 1}
+                </td>
+
+                <td>
+                    ${escapeHTML(name)}
+                </td>
+
+                <td>
+                    ${escapeHTML(email)}
+                </td>
+
+                <td>
+                    ${escapeHTML(
+                        message.length > 45
+                            ? message.slice(0,45) + "..."
+                            : message
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHTML(date)}
+                </td>
+
+                <td>
+                    <span class="status">
+                        Received
+                    </span>
+                </td>
+
+                <td>
+                    <button
+                        class="secondary"
+                        onclick="viewResponse(${responses.indexOf(response)})">
+                        View
+                    </button>
+                </td>
+
+            `;
+
+
+            table.appendChild(row);
+
+        }
+    );
+
+
+    updateStats();
+
+}
+
+
+/* =========================
+   STATS
+========================= */
+
+function updateStats(){
+
+    document.getElementById(
+        "totalResponses"
+    ).textContent =
+        responses.length;
+
+
+    const now =
+        new Date();
+
+
+    const today =
+        responses.filter(
+            response =>
+                isSameDay(
+                    new Date(response.date),
+                    now
+                )
+        ).length;
+
+
+    document.getElementById(
+        "todayResponses"
+    ).textContent =
+        today;
+
+
+    const weekStart =
+        new Date(now);
+
+    weekStart.setDate(
+        now.getDate() - 7
+    );
+
+
+    const week =
+        responses.filter(
+            response =>
+                new Date(response.date)
+                    >= weekStart
+        ).length;
+
+
+    document.getElementById(
+        "weekResponses"
+    ).textContent =
+        week;
+
+}
+
+
+function isSameDay(
+    first,
+    second
+){
+
+    return (
+        first.getFullYear() ===
+            second.getFullYear() &&
+
+        first.getMonth() ===
+            second.getMonth() &&
+
+        first.getDate() ===
+            second.getDate()
+    );
+
+}
+
+
+/* =========================
+   VIEW RESPONSE
+========================= */
+
+function viewResponse(index){
+
+    const response =
+        responses[index];
+
+
+    if(!response){
+        return;
+    }
+
+
+    const details =
+        document.getElementById(
+            "responseDetails"
+        );
+
+
+    details.innerHTML = "";
+
+
+    Object.entries(
+        response
+    ).forEach(
+        ([key,value])=>{
+
+            const field =
+                document.createElement(
+                    "div"
+                );
+
+            field.className =
+                "response-field";
+
+
+            field.innerHTML = `
+
+                <label>
+                    ${escapeHTML(
+                        formatLabel(key)
+                    )}
+                </label>
+
+                <div>
+                    ${escapeHTML(
+                        String(value ?? "")
+                    )}
+                </div>
+
+            `;
+
+
+            details.appendChild(
+                field
+            );
+
+        }
+    );
+
+
+    document.getElementById(
+        "responseModal"
+    ).classList.add(
+        "show"
+    );
+
+}
+
+
+function closeModal(){
+
+    document.getElementById(
+        "responseModal"
+    ).classList.remove(
+        "show"
+    );
+
+}
+
+
+/* =========================
+   DELETE ALL
+========================= */
+
+function clearResponses(){
+
+    if(!responses.length){
+        return;
+    }
+
+
+    const confirmed =
+        confirm(
+            "Delete all form responses?"
+        );
+
+
+    if(!confirmed){
+        return;
+    }
+
+
+    responses = [];
+
+    saveResponses();
+
+    renderResponses();
+
+}
+
+
+/* =========================
+   REFRESH
+========================= */
+
+function refreshResponses(){
+
+    loadResponses();
+
+    renderResponses();
+
+}
+
+
+/* =========================
+   EXPORT CSV
+========================= */
+
+function exportResponses(){
+
+    if(!responses.length){
+
+        alert(
+            "There are no responses to export."
+        );
+
+        return;
+
+    }
+
+
+    const headers =
+        Object.keys(
+            responses[0]
+        );
+
+
+    const rows =
+        responses.map(
+            response =>
+                headers.map(
+                    header =>
+                        csvEscape(
+                            response[header] ?? ""
+                        )
+                )
+        );
+
+
+    const csv =
+        [
+            headers.map(csvEscape),
+            ...rows
+        ]
+        .map(
+            row =>
+                row.join(",")
+        )
+        .join("\n");
+
+
+    const blob =
+        new Blob(
+            [csv],
+            {
+                type:
+                    "text/csv;charset=utf-8;"
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+
+    const link =
+        document.createElement(
+            "a"
+        );
+
+
+    link.href =
+        url;
+
+    link.download =
+        "form-responses.csv";
+
+
+    document.body.appendChild(
+        link
+    );
+
+    link.click();
+
+    link.remove();
+
+    URL.revokeObjectURL(
+        url
+    );
+
+}
+
+
+/* =========================
+   HELPERS
+========================= */
+
+function csvEscape(value){
+
+    const text =
+        String(value);
+
+    return `"${text
+        .replace(
+            /"/g,
+            '""'
+        )}"`;
+
+}
+
+
+function formatLabel(
+    key
+){
+
+    return key
+        .replace(
+            /([A-Z])/g,
+            " $1"
+        )
+        .replace(
+            /^./,
+            letter =>
+                letter.toUpperCase()
+        );
+
+}
+
+
+function escapeHTML(
+    value
+){
+
+    return String(value)
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+/* =========================
+   START
+========================= */
+
+loadResponses();
+
+renderResponses();
+
+</script>
+
+</body>
+</html>
