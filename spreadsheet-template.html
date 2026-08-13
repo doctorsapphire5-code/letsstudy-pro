@@ -1,0 +1,2923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Spreadsheet</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+font-family:Arial,Helvetica,sans-serif;
+background:#f5f7fb;
+color:#172033;
+height:100vh;
+overflow:hidden
+}
+
+button,input,select{
+font:inherit
+}
+
+header{
+height:56px;
+background:#fff;
+border-bottom:1px solid #dbe2ea;
+display:flex;
+align-items:center
+}
+
+.container{
+width:100%;
+padding:0 14px
+}
+
+.nav{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px
+}
+
+.logo{
+font-size:16px;
+font-weight:900;
+color:#16a34a
+}
+
+.actions{
+display:flex;
+align-items:center;
+gap:5px;
+flex-wrap:wrap
+}
+
+.btn{
+border:0;
+border-radius:7px;
+padding:8px 11px;
+font-size:8px;
+font-weight:900;
+cursor:pointer
+}
+
+.btn:hover{
+opacity:.9
+}
+
+.primary{
+background:#16a34a;
+color:#fff
+}
+
+.gray{
+background:#f1f5f9;
+color:#334155
+}
+
+.red{
+background:#fee2e2;
+color:#991b1b
+}
+
+.title-input{
+border:0;
+outline:0;
+font-size:15px;
+font-weight:900;
+background:transparent;
+width:220px
+}
+
+.toolbar{
+min-height:48px;
+background:#fff;
+border-bottom:1px solid #dbe2ea;
+display:flex;
+align-items:center;
+gap:4px;
+padding:7px 10px;
+flex-wrap:wrap
+}
+
+.tool{
+height:29px;
+min-width:29px;
+padding:0 8px;
+border:1px solid #e2e8f0;
+background:#fff;
+border-radius:5px;
+cursor:pointer;
+font-size:8px;
+font-weight:900
+}
+
+.tool:hover,
+.tool.active{
+background:#dcfce7;
+color:#166534
+}
+
+.divider{
+height:22px;
+width:1px;
+background:#dbe2ea;
+margin:0 3px
+}
+
+select{
+height:29px;
+border:1px solid #dbe2ea;
+border-radius:5px;
+background:#fff;
+padding:0 7px;
+font-size:7px;
+outline:none
+}
+
+.formula-bar{
+height:39px;
+display:flex;
+align-items:center;
+background:#fff;
+border-bottom:1px solid #dbe2ea
+}
+
+.name-box{
+width:72px;
+height:100%;
+display:flex;
+align-items:center;
+justify-content:center;
+border-right:1px solid #dbe2ea;
+font-size:8px;
+font-weight:900;
+color:#334155
+}
+
+.fx{
+width:35px;
+text-align:center;
+font-size:12px;
+font-style:italic;
+font-weight:900;
+color:#64748b
+}
+
+.formula-input{
+height:100%;
+flex:1;
+border:0;
+outline:0;
+padding:0 10px;
+font-size:9px;
+color:#172033
+}
+
+.sheet-area{
+height:calc(100vh - 182px);
+overflow:auto;
+background:#e2e8f0
+}
+
+table{
+border-collapse:separate;
+border-spacing:0;
+table-layout:fixed;
+background:#fff
+}
+
+th,
+td{
+height:27px;
+min-width:100px;
+border-right:1px solid #dbe2ea;
+border-bottom:1px solid #dbe2ea;
+font-size:8px;
+padding:0 6px;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+background:#fff
+}
+
+th{
+background:#f8fafc;
+font-weight:900;
+text-align:center;
+color:#475569;
+position:sticky;
+top:0;
+z-index:5
+}
+
+.row-header{
+width:45px;
+min-width:45px;
+max-width:45px;
+position:sticky;
+left:0;
+z-index:6;
+background:#f8fafc
+}
+
+.corner{
+width:45px;
+min-width:45px;
+position:sticky;
+top:0;
+left:0;
+z-index:10
+}
+
+td.selected{
+outline:2px solid #16a34a;
+outline-offset:-2px;
+background:#f0fdf4
+}
+
+td.editing{
+outline:2px solid #2563eb;
+outline-offset:-2px
+}
+
+td[contenteditable="true"]{
+cursor:text
+}
+
+.statusbar{
+height:39px;
+background:#fff;
+border-top:1px solid #dbe2ea;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 12px;
+font-size:7px;
+color:#64748b
+}
+
+.sheet-tabs{
+display:flex;
+align-items:center;
+gap:4px
+}
+
+.sheet-tab{
+border:0;
+background:#f1f5f9;
+padding:7px 12px;
+border-radius:6px;
+font-size:7px;
+font-weight:900;
+cursor:pointer
+}
+
+.sheet-tab.active{
+background:#dcfce7;
+color:#166534
+}
+
+.modal{
+position:fixed;
+inset:0;
+background:rgba(15,23,42,.45);
+display:none;
+align-items:center;
+justify-content:center;
+z-index:100;
+padding:20px
+}
+
+.modal.show{
+display:flex
+}
+
+.modal-box{
+width:min(480px,100%);
+background:#fff;
+border-radius:12px;
+padding:20px
+}
+
+.modal-title{
+font-size:14px;
+font-weight:900;
+margin-bottom:15px
+}
+
+.field{
+margin-bottom:12px
+}
+
+.field label{
+display:block;
+font-size:7px;
+font-weight:900;
+margin-bottom:6px
+}
+
+.field input,
+.field select{
+width:100%;
+height:36px;
+border:1px solid #dbe2ea;
+border-radius:7px;
+padding:0 9px;
+outline:none
+}
+
+.modal-actions{
+display:flex;
+justify-content:flex-end;
+gap:6px;
+margin-top:15px
+}
+
+.toast{
+position:fixed;
+right:18px;
+bottom:55px;
+background:#172033;
+color:#fff;
+padding:10px 14px;
+border-radius:7px;
+font-size:8px;
+font-weight:900;
+display:none;
+z-index:200
+}
+
+.toast.show{
+display:block
+}
+
+@media(max-width:700px){
+.title-input{
+width:140px
+}
+
+th,
+td{
+min-width:85px
+}
+
+.sheet-area{
+height:calc(100vh - 230px)
+}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="container nav">
+
+<div class="actions">
+
+<div class="logo">▦ Spreadsheet</div>
+
+<input
+id="sheetTitle"
+class="title-input"
+value="Untitled Spreadsheet"
+oninput="markUnsaved()">
+
+</div>
+
+<div class="actions">
+
+<button
+class="btn gray"
+onclick="newSpreadsheet()">
+New
+</button>
+
+<button
+class="btn gray"
+onclick="openImport()">
+Import
+</button>
+
+<button
+class="btn gray"
+onclick="downloadCSV()">
+Export CSV
+</button>
+
+<button
+class="btn primary"
+onclick="saveSpreadsheet()">
+Save
+</button>
+
+</div>
+
+</div>
+</header>
+
+
+<div class="toolbar">
+
+<select
+id="fontSize"
+onchange="setFontSize(this.value)">
+<option value="8">8px</option>
+<option value="10">10px</option>
+<option value="12" selected>12px</option>
+<option value="14">14px</option>
+<option value="16">16px</option>
+<option value="18">18px</option>
+</select>
+
+<button class="tool" onclick="formatCell('bold')"><b>B</b></button>
+<button class="tool" onclick="formatCell('italic')"><i>I</i></button>
+<button class="tool" onclick="formatCell('underline')"><u>U</u></button>
+
+<div class="divider"></div>
+
+<button class="tool" onclick="alignCell('left')">←</button>
+<button class="tool" onclick="alignCell('center')">↔</button>
+<button class="tool" onclick="alignCell('right')">→</button>
+
+<div class="divider"></div>
+
+<button class="tool" onclick="formatCell('currency')">$</button>
+<button class="tool" onclick="formatCell('percent')">%</button>
+<button class="tool" onclick="formatCell('number')">123</button>
+
+<div class="divider"></div>
+
+<button class="tool" onclick="addRow()">+ Row</button>
+<button class="tool" onclick="addColumn()">+ Column</button>
+<button class="tool" onclick="deleteSelectedRow()">− Row</button>
+<button class="tool" onclick="deleteSelectedColumn()">− Column</button>
+
+<div class="divider"></div>
+
+<button class="tool" onclick="sortSelectedColumn()">Sort A–Z</button>
+<button class="tool" onclick="clearCell()">Clear</button>
+<button class="tool" onclick="commandUndo()">↶</button>
+<button class="tool" onclick="commandRedo()">↷</button>
+
+</div>
+
+
+<div class="formula-bar">
+
+<div
+id="nameBox"
+class="name-box">
+A1
+</div>
+
+<div class="fx">fx</div>
+
+<input
+id="formulaInput"
+class="formula-input"
+placeholder="Enter value or formula, e.g. =SUM(A1:A5)"
+onkeydown="formulaKeydown(event)"
+oninput="markUnsaved()">
+
+</div>
+
+
+<div id="sheetArea" class="sheet-area">
+
+<table id="spreadsheet">
+
+<thead id="thead"></thead>
+
+<tbody id="tbody"></tbody>
+
+</table>
+
+</div>
+
+
+<div class="statusbar">
+
+<div id="statusText">
+Ready
+</div>
+
+<div class="sheet-tabs">
+
+<button
+id="sheet1"
+class="sheet-tab active"
+onclick="switchSheet(1)">
+Sheet 1
+</button>
+
+<button
+id="sheet2"
+class="sheet-tab"
+onclick="switchSheet(2)">
+Sheet 2
+</button>
+
+<button
+id="sheet3"
+class="sheet-tab"
+onclick="switchSheet(3)">
+Sheet 3
+</button>
+
+<button
+class="sheet-tab"
+onclick="addSheet()">
++
+</button>
+
+</div>
+
+<div id="selectionInfo">
+A1
+</div>
+
+</div>
+
+
+<div
+id="importModal"
+class="modal">
+
+<div class="modal-box">
+
+<div class="modal-title">
+Import CSV
+</div>
+
+<div class="field">
+
+<label>CSV FILE</label>
+
+<input
+id="csvFile"
+type="file"
+accept=".csv,text/csv">
+
+</div>
+
+<div class="modal-actions">
+
+<button
+class="btn gray"
+onclick="closeImport()">
+Cancel
+</button>
+
+<button
+class="btn primary"
+onclick="importCSV()">
+Import
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div
+id="toast"
+class="toast">
+Saved
+</div>
+
+
+<script>
+
+/*
+========================================================
+SPREADSHEET TEMPLATE
+========================================================
+
+Features:
+- Editable cells
+- Formula bar
+- Basic formulas
+- SUM / AVERAGE / MIN / MAX / COUNT
+- Row/column insertion
+- Row/column deletion
+- Sorting
+- Formatting
+- CSV import/export
+- LocalStorage persistence
+- Multiple sheets
+- Keyboard navigation
+- Undo/redo
+========================================================
+*/
+
+
+const ROWS=30;
+const COLS=12;
+
+let currentSheet=1;
+let selectedCell=null;
+let sheets={};
+let undoStack=[];
+let redoStack=[];
+let unsaved=false;
+
+
+/* ---------- STORAGE ---------- */
+
+function loadSpreadsheet(){
+
+const saved=
+localStorage.getItem("spreadsheetData");
+
+if(saved){
+
+try{
+
+const data=JSON.parse(saved);
+
+sheets=data.sheets||createSheets();
+
+document.getElementById("sheetTitle").value=
+data.title||
+"Untitled Spreadsheet";
+
+}catch{
+
+sheets=createSheets();
+
+}
+
+}else{
+
+sheets=createSheets();
+
+}
+
+renderSheet();
+
+}
+
+
+function createSheets(){
+
+const result={};
+
+for(let i=1;i<=3;i++){
+
+result[i]=createGrid();
+
+}
+
+return result;
+
+}
+
+
+function createGrid(){
+
+const grid=[];
+
+for(let r=0;r<ROWS;r++){
+
+const row=[];
+
+for(let c=0;c<COLS;c++){
+
+row.push({
+value:"",
+style:{
+bold:false,
+italic:false,
+underline:false,
+fontSize:"12px",
+align:"left"
+}
+});
+
+}
+
+grid.push(row);
+
+}
+
+return grid;
+
+}
+
+
+function saveSpreadsheet(){
+
+const data={
+title:
+document.getElementById("sheetTitle").value,
+sheets:sheets
+};
+
+localStorage.setItem(
+"spreadsheetData",
+JSON.stringify(data)
+);
+
+unsaved=false;
+
+document.getElementById("statusText")
+.textContent="Saved";
+
+showToast("Spreadsheet saved.");
+
+}
+
+
+/* ---------- RENDER ---------- */
+
+function renderSheet(){
+
+const grid=sheets[currentSheet];
+
+const thead=document.getElementById("thead");
+const tbody=document.getElementById("tbody");
+
+thead.innerHTML="";
+tbody.innerHTML="";
+
+
+let header="<tr>";
+
+header+=
+`<th class="corner">#</th>`;
+
+for(let c=0;c<grid[0].length;c++){
+
+header+=
+`<th>${columnName(c)}</th>`;
+
+}
+
+header+="</tr>";
+
+thead.innerHTML=header;
+
+
+for(let r=0;r<grid.length;r++){
+
+const tr=document.createElement("tr");
+
+const rowHeader=
+document.createElement("th");
+
+rowHeader.className="row-header";
+
+rowHeader.textContent=r+1;
+
+rowHeader.onclick=()=>{
+selectRow(r);
+};
+
+tr.appendChild(rowHeader);
+
+
+for(let c=0;c<grid[r].length;c++){
+
+const td=
+document.createElement("td");
+
+td.contentEditable=true;
+
+td.dataset.row=r;
+td.dataset.col=c;
+
+const cell=grid[r][c];
+
+td.textContent=
+displayValue(cell.value);
+
+
+applyStyle(td,cell.style);
+
+
+td.onclick=()=>{
+selectCell(r,c);
+};
+
+td.onfocus=()=>{
+selectCell(r,c);
+};
+
+td.oninput=()=>{
+updateCellFromDOM(td);
+};
+
+td.onkeydown=(event)=>{
+cellKeydown(event,td);
+};
+
+tr.appendChild(td);
+
+}
+
+tbody.appendChild(tr);
+
+}
+
+if(selectedCell){
+
+const cell=
+getCellElement(
+selectedCell.row,
+selectedCell.col
+);
+
+if(cell){
+
+cell.classList.add("selected");
+
+}
+
+}
+
+}
+
+
+function columnName(index){
+
+let name="";
+
+let n=index+1;
+
+while(n>0){
+
+let rem=(n-1)%26;
+
+name=
+String.fromCharCode(
+65+rem
+)+name;
+
+n=Math.floor(
+(n-1)/26
+);
+
+}
+
+return name;
+
+}
+
+
+function cellAddress(row,col){
+
+return columnName(col)+(row+1);
+
+}
+
+
+function getCellElement(row,col){
+
+return document.querySelector(
+`td[data-row="${row}"][data-col="${col}"]`
+);
+
+}
+
+
+/* ---------- CELL SELECTION ---------- */
+
+function selectCell(row,col){
+
+if(selectedCell){
+
+const old=
+getCellElement(
+selectedCell.row,
+selectedCell.col
+);
+
+if(old)
+old.classList.remove("selected");
+
+}
+
+selectedCell={row,col};
+
+const cell=
+getCellElement(row,col);
+
+if(cell)
+cell.classList.add("selected");
+
+document.getElementById(
+"nameBox"
+).textContent=
+cellAddress(row,col);
+
+document.getElementById(
+"selectionInfo"
+).textContent=
+cellAddress(row,col);
+
+
+const value=
+sheets[currentSheet][row][col].value;
+
+document.getElementById(
+"formulaInput"
+).value=value;
+
+
+document.getElementById(
+"statusText"
+).textContent=
+"Selected "+cellAddress(row,col);
+
+}
+
+
+function selectRow(row){
+
+selectCell(
+row,
+selectedCell?selectedCell.col:0
+);
+
+}
+
+
+function updateCellFromDOM(td){
+
+const row=
+Number(td.dataset.row);
+
+const col=
+Number(td.dataset.col);
+
+saveUndo();
+
+sheets[currentSheet][row][col].value=
+td.innerText.trim();
+
+markUnsaved();
+
+updateFormulaBar();
+
+}
+
+
+function updateFormulaBar(){
+
+if(!selectedCell)return;
+
+document.getElementById(
+"formulaInput"
+).value=
+sheets[currentSheet]
+[selectedCell.row]
+[selectedCell.col]
+.value;
+
+}
+
+
+/* ---------- KEYBOARD ---------- */
+
+function cellKeydown(event,td){
+
+const row=
+Number(td.dataset.row);
+
+const col=
+Number(td.dataset.col);
+
+
+if(event.key==="Enter"){
+
+event.preventDefault();
+
+saveCurrentCell();
+
+if(row+1<sheets[currentSheet].length){
+
+focusCell(row+1,col);
+
+}
+
+}
+
+
+if(event.key==="Tab"){
+
+event.preventDefault();
+
+saveCurrentCell();
+
+if(col+1<sheets[currentSheet][row].length){
+
+focusCell(row,col+1);
+
+}
+
+}
+
+
+if(event.key==="Escape"){
+
+td.textContent=
+displayValue(
+sheets[currentSheet][row][col].value
+);
+
+td.blur();
+
+}
+
+
+if(event.key==="Delete"){
+
+if(!window.getSelection().toString()){
+
+clearCell();
+
+}
+
+}
+
+}
+
+
+function focusCell(row,col){
+
+const cell=
+getCellElement(row,col);
+
+if(!cell)return;
+
+cell.focus();
+
+selectCell(row,col);
+
+}
+
+
+/* ---------- FORMULA BAR ---------- */
+
+function formulaKeydown(event){
+
+if(event.key!=="Enter")return;
+
+if(!selectedCell)return;
+
+saveUndo();
+
+sheets[currentSheet]
+[selectedCell.row]
+[selectedCell.col]
+.value=
+document.getElementById(
+"formulaInput"
+).value;
+
+renderSheet();
+
+selectCell(
+selectedCell.row,
+selectedCell.col
+);
+
+markUnsaved();
+
+}
+
+
+function saveCurrentCell(){
+
+if(!selectedCell)return;
+
+const cell=
+getCellElement(
+selectedCell.row,
+selectedCell.col
+);
+
+if(!cell)return;
+
+sheets[currentSheet]
+[selectedCell.row]
+[selectedCell.col]
+.value=
+cell.innerText.trim();
+
+}
+
+
+/* ---------- DISPLAY / FORMULAS ---------- */
+
+function displayValue(value){
+
+if(!value)return"";
+
+if(
+typeof value==="string" &&
+value.startsWith("=")
+){
+
+return calculateFormula(
+value
+);
+
+}
+
+return value;
+
+}
+
+
+function calculateFormula(formula){
+
+try{
+
+let expression=
+formula
+.substring(1)
+.trim();
+
+
+const rangePattern=
+/([A-Z]+[0-9]+):([A-Z]+[0-9]+)/g;
+
+
+expression=
+expression.replace(
+rangePattern,
+(_,start,end)=>{
+
+const values=
+getRangeValues(
+start,
+end
+);
+
+return JSON.stringify(values);
+
+}
+);
+
+
+const functions={
+SUM:values=>
+values.flat(Infinity)
+.reduce(
+(a,b)=>
+a+(Number(b)||0),
+0
+),
+
+AVERAGE:values=>{
+
+const nums=
+values
+.flat(Infinity)
+.map(Number)
+.filter(
+n=>!Number.isNaN(n)
+);
+
+return nums.length
+?nums.reduce((a,b)=>a+b,0)/nums.length
+:0;
+
+},
+
+MIN:values=>{
+
+const nums=
+values
+.flat(Infinity)
+.map(Number)
+.filter(
+n=>!Number.isNaN(n)
+);
+
+return nums.length
+?Math.min(...nums)
+:"";
+
+},
+
+MAX:values=>{
+
+const nums=
+values
+.flat(Infinity)
+.map(Number)
+.filter(
+n=>!Number.isNaN(n)
+);
+
+return nums.length
+?Math.max(...nums)
+:"";
+
+},
+
+COUNT:values=>
+values.flat(Infinity)
+.filter(
+v=>!Number.isNaN(Number(v))
+).length
+
+};
+
+
+const functionPattern=
+/(SUM|AVERAGE|MIN|MAX|COUNT)\((\[\[.*?\]\])\)/g;
+
+
+expression=
+expression.replace(
+functionPattern,
+(_,name,arrayText)=>{
+
+const values=
+JSON.parse(arrayText);
+
+return functions[name](
+values
+);
+
+}
+);
+
+
+if(
+/^[0-9+\-*/().\s]+$/.test(
+expression
+)
+){
+
+return Function(
+`"use strict";return(${expression})`
+)();
+
+}
+
+return "#ERROR!";
+
+}catch{
+
+return "#ERROR!";
+
+}
+
+}
+
+
+function getRangeValues(start,end){
+
+const a=parseAddress(start);
+const b=parseAddress(end);
+
+if(!a||!b)return[[]];
+
+const values=[];
+
+for(
+let r=a.row;
+r<=b.row;
+r++
+){
+
+const row=[];
+
+for(
+let c=a.col;
+c<=b.col;
+c++
+){
+
+let value=
+sheets[currentSheet][r]?.[c]?.value||"";
+
+if(
+String(value).startsWith("=")
+){
+
+value=
+calculateFormula(value);
+
+}
+
+row.push(value);
+
+}
+
+values.push(row);
+
+}
+
+return values;
+
+}
+
+
+function parseAddress(address){
+
+const match=
+String(address)
+.toUpperCase()
+.match(/^([A-Z]+)([0-9]+)$/);
+
+if(!match)return null;
+
+let col=0;
+
+for(
+const char of match[1]
+){
+
+col=
+col*26+
+char.charCodeAt(0)-64;
+
+}
+
+return{
+row:Number(match[2])-1,
+col:col-1
+};
+
+}
+
+
+/* ---------- FORMATTING ---------- */
+
+function formatCell(type){
+
+if(!selectedCell)return;
+
+saveUndo();
+
+const cell=
+sheets[currentSheet]
+[selectedCell.row]
+[selectedCell.col];
+
+if(type==="currency"){
+
+cell.style.format="currency";
+
+}
+
+else if(type==="percent"){
+
+cell.style.format="percent";
+
+}
+
+else if(type==="number"){
+
+cell.style.format="number";
+
+}
+
+else{
+
+cell.style[type]=
+!cell.style[type];
+
+}
+
+renderSheet();
+
+selectCell(
+selectedCell.row,
+selectedCell.col
+);
+
+markUnsaved();
+
+}
+
+
+function applyStyle(td,style){
+
+if(!style)return;
+
+td.style.fontWeight=
+style.bold?"bold":"normal";
+
+td.style.fontStyle=
+style.italic?"italic":"normal";
+
+td.style.textDecoration=
+style.underline
+?"underline"
+:"none";
+
+td.style.fontSize=
+style.fontSize||"12px";
+
+td.style.textAlign=
+style.align||"left";
+
+}
+
+
+function alignCell(align){
+
+if(!selectedCell)return;
+
+saveUndo();
+
+sheets[currentSheet]
+[selectedCell.row]
+[selectedCell.col]
+.style.align=align;
+
+renderSheet();
+
+selectCell(
+selectedCell.row,
+selectedCell.col
+);
+
+markUnsaved();
+
+}
+
+
+function setFontSize(size){
+
+if(!selectedCell)return;
+
+saveUndo();
+
+sheets[currentSheet]
+[selectedCell.row]
+[selectedCell.col]
+.style.fontSize=
+size+"px";
+
+renderSheet();
+
+selectCell(
+selectedCell.row,
+selectedCell.col
+);
+
+markUnsaved();
+
+}
+
+
+/* ---------- ROW / COLUMN ---------- */
+
+function addRow(){
+
+const grid=sheets[currentSheet];
+
+saveUndo();
+
+const cols=
+grid[0]?.length||COLS;
+
+grid.push(
+Array.from(
+{length:cols},
+()=>({
+value:"",
+style:{
+bold:false,
+italic:false,
+underline:false,
+fontSize:"12px",
+align:"left"
+}
+})
+)
+);
+
+renderSheet();
+
+markUnsaved();
+
+}
+
+
+function addColumn(){
+
+const grid=sheets[currentSheet];
+
+saveUndo();
+
+grid.forEach(row=>{
+row.push({
+value:"",
+style:{
+bold:false,
+italic:false,
+underline:false,
+fontSize:"12px",
+align:"left"
+}
+});
+});
+
+renderSheet();
+
+markUnsaved();
+
+}
+
+
+function deleteSelectedRow(){
+
+if(!selectedCell)return;
+
+const grid=sheets[currentSheet];
+
+if(grid.length<=1)return;
+
+saveUndo();
+
+grid.splice(
+selectedCell.row,
+1
+);
+
+selectedCell=null;
+
+renderSheet();
+
+markUnsaved();
+
+}
+
+
+function deleteSelectedColumn(){
+
+if(!selectedCell)return;
+
+const grid=sheets[currentSheet];
+
+if(grid[0].length<=1)return;
+
+saveUndo();
+
+grid.forEach(row=>{
+row.splice(
+selectedCell.col,
+1
+);
+});
+
+selectedCell=null;
+
+renderSheet();
+
+markUnsaved();
+
+}
+
+
+/* ---------- SORT ---------- */
+
+function sortSelectedColumn(){
+
+if(!selectedCell)return;
+
+const grid=sheets[currentSheet];
+
+saveUndo();
+
+const col=
+selectedCell.col;
+
+const header=grid[0];
+
+const rows=
+grid.slice(1);
+
+rows.sort(
+(a,b)=>
+String(a[col].value)
+.localeCompare(
+String(b[col].value),
+undefined,
+{
+numeric:true,
+sensitivity:"base"
+}
+)
+);
+
+sheets[currentSheet]=[
+header,
+...rows
+];
+
+renderSheet();
+
+markUnsaved();
+
+showToast(
+"Column sorted A–Z."
+);
+
+}
+
+
+/* ---------- CLEAR ---------- */
+
+function clearCell(){
+
+if(!selectedCell)return;
+
+saveUndo();
+
+sheets[currentSheet]
+[selectedCell.row]
+[selectedCell.col]
+.value="";
+
+renderSheet();
+
+selectCell(
+selectedCell.row,
+selectedCell.col
+);
+
+markUnsaved();
+
+}
+
+
+/* ---------- UNDO / REDO ---------- */
+
+function saveUndo(){
+
+undoStack.push(
+JSON.stringify(sheets)
+);
+
+if(undoStack.length>30){
+
+undoStack.shift();
+
+}
+
+redoStack=[];
+
+}
+
+
+function commandUndo(){
+
+if(!undoStack.length)return;
+
+redoStack.push(
+JSON.stringify(sheets)
+);
+
+sheets=
+JSON.parse(
+undoStack.pop()
+);
+
+renderSheet();
+
+markUnsaved();
+
+}
+
+
+function commandRedo(){
+
+if(!redoStack.length)return;
+
+undoStack.push(
+JSON.stringify(sheets)
+);
+
+sheets=
+JSON.parse(
+redoStack.pop()
+);
+
+renderSheet();
+
+markUnsaved();
+
+}
+
+
+/* ---------- SHEETS ---------- */
+
+function switchSheet(number){
+
+currentSheet=number;
+
+document.querySelectorAll(
+".sheet-tab"
+).forEach(
+tab=>tab.classList.remove("active")
+);
+
+const active=
+document.getElementById(
+"sheet"+number
+);
+
+if(active)
+active.classList.add("active");
+
+selectedCell=null;
+
+renderSheet();
+
+}
+
+
+function addSheet(){
+
+    const keys = Object.keys(sheets).map(Number);
+
+    const next = Math.max(...keys) + 1;
+
+    sheets[next] = createGrid();
+
+    const button = document.createElement("button");
+
+    button.id = "sheet" + next;
+
+    button.className = "sheet-tab";
+
+    button.textContent = "Sheet " + next;
+
+    button.onclick = () => switchSheet(next);
+
+    button.dataset.sheet = next;
+
+    const tabs = document.querySelector(".sheet-tabs");
+    const addButton = tabs.querySelector(".add-sheet");
+
+    if(addButton){
+        tabs.insertBefore(button, addButton);
+    }else{
+        tabs.appendChild(button);
+    }
+
+    switchSheet(next);
+
+    markUnsaved();
+
+    showToast("New sheet created.");
+}
+
+
+/* ---------- NEW SPREADSHEET ---------- */
+
+function newSpreadsheet(){
+
+    if(
+        unsaved &&
+        !confirm(
+            "You have unsaved changes. Create a new spreadsheet?"
+        )
+    ){
+        return;
+    }
+
+    sheets = createSheets();
+
+    currentSheet = 1;
+
+    selectedCell = null;
+
+    undoStack = [];
+
+    redoStack = [];
+
+    document.getElementById(
+        "sheetTitle"
+    ).value = "Untitled Spreadsheet";
+
+    renderSheet();
+
+    markUnsaved();
+
+    showToast("New spreadsheet created.");
+}
+
+
+/* ---------- CSV EXPORT ---------- */
+
+function downloadCSV(){
+
+    const grid = sheets[currentSheet];
+
+    if(!grid || !grid.length){
+        showToast("Nothing to export.");
+        return;
+    }
+
+    const rows = grid.map(row => {
+
+        return row.map(cell => {
+
+            return csvEscape(
+                cell.value
+            );
+
+        }).join(",");
+
+    });
+
+    const blob = new Blob(
+        [rows.join("\n")],
+        {
+            type:"text/csv;charset=utf-8"
+        }
+    );
+
+    const url =
+        URL.createObjectURL(blob);
+
+    const link =
+        document.createElement("a");
+
+    link.href = url;
+
+    link.download =
+        sanitizeFilename(
+            document.getElementById(
+                "sheetTitle"
+            ).value
+        ) + ".csv";
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    link.remove();
+
+    URL.revokeObjectURL(url);
+
+    showToast("CSV exported.");
+}
+
+
+function csvEscape(value){
+
+    const text =
+        String(value ?? "");
+
+    if(
+        /[",\n\r]/.test(text)
+    ){
+
+        return '"' +
+            text.replace(
+                /"/g,
+                '""'
+            ) +
+            '"';
+
+    }
+
+    return text;
+}
+
+
+/* ---------- IMPORT ---------- */
+
+function openImport(){
+
+    document.getElementById(
+        "importModal"
+    ).classList.add("show");
+
+}
+
+
+function closeImport(){
+
+    document.getElementById(
+        "importModal"
+    ).classList.remove("show");
+
+    document.getElementById(
+        "csvFile"
+    ).value = "";
+
+}
+
+
+function importCSV(){
+
+    const file =
+        document.getElementById(
+            "csvFile"
+        ).files[0];
+
+    if(!file){
+
+        showToast(
+            "Choose a CSV file first."
+        );
+
+        return;
+
+    }
+
+    const reader =
+        new FileReader();
+
+    reader.onload = function(event){
+
+        try{
+
+            const rows =
+                parseCSV(
+                    event.target.result
+                );
+
+            if(!rows.length){
+
+                showToast(
+                    "CSV file is empty."
+                );
+
+                return;
+
+            }
+
+            saveUndo();
+
+            sheets[currentSheet] =
+                rows.map(row => {
+
+                    return row.map(value => {
+
+                        return {
+                            value:value,
+                            style:{
+                                bold:false,
+                                italic:false,
+                                underline:false,
+                                fontSize:"12px",
+                                align:"left"
+                            }
+                        };
+
+                    });
+
+                });
+
+
+            renderSheet();
+
+            selectedCell = null;
+
+            closeImport();
+
+            markUnsaved();
+
+            showToast(
+                "CSV imported successfully."
+            );
+
+        }catch(error){
+
+            console.error(error);
+
+            showToast(
+                "Could not import CSV."
+            );
+
+        }
+
+    };
+
+    reader.onerror = function(){
+
+        showToast(
+            "Could not read the file."
+        );
+
+    };
+
+    reader.readAsText(file);
+
+}
+
+
+/* ---------- CSV PARSER ---------- */
+
+function parseCSV(text){
+
+    const rows = [];
+
+    let row = [];
+
+    let value = "";
+
+    let quoted = false;
+
+
+    for(
+        let i = 0;
+        i < text.length;
+        i++
+    ){
+
+        const char = text[i];
+
+
+        if(char === '"'){
+
+            if(
+                quoted &&
+                text[i + 1] === '"'
+            ){
+
+                value += '"';
+
+                i++;
+
+            }else{
+
+                quoted = !quoted;
+
+            }
+
+        }
+
+        else if(
+            char === "," &&
+            !quoted
+        ){
+
+            row.push(value);
+
+            value = "";
+
+        }
+
+        else if(
+            (
+                char === "\n" ||
+                char === "\r"
+            ) &&
+            !quoted
+        ){
+
+            if(
+                char === "\r" &&
+                text[i + 1] === "\n"
+            ){
+
+                i++;
+
+            }
+
+            row.push(value);
+
+            rows.push(row);
+
+            row = [];
+
+            value = "";
+
+        }
+
+        else{
+
+            value += char;
+
+        }
+
+    }
+
+
+    if(
+        value !== "" ||
+        row.length > 0
+    ){
+
+        row.push(value);
+
+        rows.push(row);
+
+    }
+
+
+    return rows;
+
+}
+
+
+/* ---------- CELL FORMATTING ---------- */
+
+function formatCell(type){
+
+    if(!selectedCell){
+
+        showToast(
+            "Select a cell first."
+        );
+
+        return;
+
+    }
+
+    saveUndo();
+
+    const cell =
+        sheets[currentSheet]
+        [selectedCell.row]
+        [selectedCell.col];
+
+
+    if(type === "currency"){
+
+        cell.style.format = "currency";
+
+    }
+
+    else if(type === "percent"){
+
+        cell.style.format = "percent";
+
+    }
+
+    else if(type === "number"){
+
+        cell.style.format = "number";
+
+    }
+
+    else{
+
+        cell.style[type] =
+            !cell.style[type];
+
+    }
+
+
+    renderSheet();
+
+    selectCell(
+        selectedCell.row,
+        selectedCell.col
+    );
+
+    markUnsaved();
+
+}
+
+
+function alignCell(align){
+
+    if(!selectedCell){
+
+        showToast(
+            "Select a cell first."
+        );
+
+        return;
+
+    }
+
+    saveUndo();
+
+    sheets[currentSheet]
+    [selectedCell.row]
+    [selectedCell.col]
+    .style.align = align;
+
+
+    renderSheet();
+
+    selectCell(
+        selectedCell.row,
+        selectedCell.col
+    );
+
+    markUnsaved();
+
+}
+
+
+function setFontSize(size){
+
+    if(!selectedCell){
+
+        showToast(
+            "Select a cell first."
+        );
+
+        return;
+
+    }
+
+    saveUndo();
+
+    sheets[currentSheet]
+    [selectedCell.row]
+    [selectedCell.col]
+    .style.fontSize =
+        size + "px";
+
+
+    renderSheet();
+
+    selectCell(
+        selectedCell.row,
+        selectedCell.col
+    );
+
+    markUnsaved();
+
+}
+
+
+/* ---------- ROWS ---------- */
+
+function addRow(){
+
+    const grid =
+        sheets[currentSheet];
+
+    saveUndo();
+
+    const columnCount =
+        grid[0]
+        ? grid[0].length
+        : COLS;
+
+
+    const newRow =
+        Array.from(
+            {
+                length:columnCount
+            },
+            createEmptyCell
+        );
+
+
+    grid.push(newRow);
+
+    renderSheet();
+
+    markUnsaved();
+
+    showToast(
+        "Row added."
+    );
+
+}
+
+
+function createEmptyCell(){
+
+    return {
+        value:"",
+        style:{
+            bold:false,
+            italic:false,
+            underline:false,
+            fontSize:"12px",
+            align:"left"
+        }
+    };
+
+}
+
+
+function addColumn(){
+
+    const grid =
+        sheets[currentSheet];
+
+    saveUndo();
+
+    grid.forEach(row => {
+
+        row.push(
+            createEmptyCell()
+        );
+
+    });
+
+    renderSheet();
+
+    markUnsaved();
+
+    showToast(
+        "Column added."
+    );
+
+}
+
+
+function deleteSelectedRow(){
+
+    if(!selectedCell){
+
+        showToast(
+            "Select a row first."
+        );
+
+        return;
+
+    }
+
+    const grid =
+        sheets[currentSheet];
+
+    if(grid.length <= 1){
+
+        showToast(
+            "Cannot delete the last row."
+        );
+
+        return;
+
+    }
+
+    saveUndo();
+
+    grid.splice(
+        selectedCell.row,
+        1
+    );
+
+    selectedCell = null;
+
+    renderSheet();
+
+    markUnsaved();
+
+    showToast(
+        "Row deleted."
+    );
+
+}
+
+
+function deleteSelectedColumn(){
+
+    if(!selectedCell){
+
+        showToast(
+            "Select a column first."
+        );
+
+        return;
+
+    }
+
+    const grid =
+        sheets[currentSheet];
+
+    if(
+        !grid[0] ||
+        grid[0].length <= 1
+    ){
+
+        showToast(
+            "Cannot delete the last column."
+        );
+
+        return;
+
+    }
+
+    saveUndo();
+
+    grid.forEach(row => {
+
+        row.splice(
+            selectedCell.col,
+            1
+        );
+
+    });
+
+    selectedCell = null;
+
+    renderSheet();
+
+    markUnsaved();
+
+    showToast(
+        "Column deleted."
+    );
+
+}
+
+
+/* ---------- SORT ---------- */
+
+function sortSelectedColumn(){
+
+    if(!selectedCell){
+
+        showToast(
+            "Select a column first."
+        );
+
+        return;
+
+    }
+
+    const grid =
+        sheets[currentSheet];
+
+    saveUndo();
+
+    const column =
+        selectedCell.col;
+
+    const header =
+        grid[0];
+
+    const rows =
+        grid.slice(1);
+
+
+    rows.sort(
+        (a,b) => {
+
+            const first =
+                String(
+                    a[column]?.value ?? ""
+                );
+
+            const second =
+                String(
+                    b[column]?.value ?? ""
+                );
+
+            return first.localeCompare(
+                second,
+                undefined,
+                {
+                    numeric:true,
+                    sensitivity:"base"
+                }
+            );
+
+        }
+    );
+
+
+    sheets[currentSheet] = [
+        header,
+        ...rows
+    ];
+
+
+    renderSheet();
+
+    markUnsaved();
+
+    showToast(
+        "Column sorted A–Z."
+    );
+
+}
+
+
+/* ---------- CLEAR ---------- */
+
+function clearCell(){
+
+    if(!selectedCell){
+
+        showToast(
+            "Select a cell first."
+        );
+
+        return;
+
+    }
+
+    saveUndo();
+
+    sheets[currentSheet]
+    [selectedCell.row]
+    [selectedCell.col]
+    .value = "";
+
+
+    renderSheet();
+
+    selectCell(
+        selectedCell.row,
+        selectedCell.col
+    );
+
+    markUnsaved();
+
+}
+
+
+/* ---------- UNDO ---------- */
+
+function saveUndo(){
+
+    undoStack.push(
+        JSON.stringify(sheets)
+    );
+
+    if(
+        undoStack.length > 30
+    ){
+
+        undoStack.shift();
+
+    }
+
+    redoStack = [];
+
+}
+
+
+function commandUndo(){
+
+    if(!undoStack.length){
+
+        showToast(
+            "Nothing to undo."
+        );
+
+        return;
+
+    }
+
+    redoStack.push(
+        JSON.stringify(sheets)
+    );
+
+    sheets =
+        JSON.parse(
+            undoStack.pop()
+        );
+
+    selectedCell = null;
+
+    renderSheet();
+
+    markUnsaved();
+
+}
+
+
+function commandRedo(){
+
+    if(!redoStack.length){
+
+        showToast(
+            "Nothing to redo."
+        );
+
+        return;
+
+    }
+
+    undoStack.push(
+        JSON.stringify(sheets)
+    );
+
+    sheets =
+        JSON.parse(
+            redoStack.pop()
+        );
+
+    selectedCell = null;
+
+    renderSheet();
+
+    markUnsaved();
+
+}
+
+
+/* ---------- SHEET SWITCH ---------- */
+
+function switchSheet(number){
+
+    if(!sheets[number]){
+
+        sheets[number] =
+            createGrid();
+
+    }
+
+    currentSheet = number;
+
+    document.querySelectorAll(
+        ".sheet-tab"
+    ).forEach(tab => {
+
+        tab.classList.remove(
+            "active"
+        );
+
+    });
+
+
+    const active =
+        document.getElementById(
+            "sheet" + number
+        );
+
+    if(active){
+
+        active.classList.add(
+            "active"
+        );
+
+    }
+
+
+    selectedCell = null;
+
+    renderSheet();
+
+    document.getElementById(
+        "statusText"
+    ).textContent =
+        "Sheet " + number;
+
+}
+
+
+/* ---------- NEW SHEET ---------- */
+
+function createSheetButton(number){
+
+    const button =
+        document.createElement(
+            "button"
+        );
+
+    button.id =
+        "sheet" + number;
+
+    button.className =
+        "sheet-tab";
+
+    button.textContent =
+        "Sheet " + number;
+
+    button.onclick =
+        () => switchSheet(number);
+
+    button.dataset.sheet =
+        number;
+
+    return button;
+
+}
+
+
+function addSheet(){
+
+    const keys =
+        Object.keys(sheets)
+        .map(Number)
+        .filter(
+            number =>
+                Number.isFinite(number)
+        );
+
+
+    const next =
+        keys.length
+        ? Math.max(...keys) + 1
+        : 1;
+
+
+    sheets[next] =
+        createGrid();
+
+
+    const button =
+        createSheetButton(next);
+
+
+    const tabs =
+        document.querySelector(
+            ".sheet-tabs"
+        );
+
+
+    const addButton =
+        tabs.querySelector(
+            ".add-sheet"
+        );
+
+
+    if(addButton){
+
+        tabs.insertBefore(
+            button,
+            addButton
+        );
+
+    }else{
+
+        tabs.appendChild(
+            button
+        );
+
+    }
+
+
+    switchSheet(next);
+
+    markUnsaved();
+
+    showToast(
+        "New sheet created."
+    );
+
+}
+
+
+/* ---------- STATUS ---------- */
+
+function markUnsaved(){
+
+    unsaved = true;
+
+    document.getElementById(
+        "statusText"
+    ).textContent =
+        "Unsaved changes";
+
+}
+
+
+function showToast(message){
+
+    const toast =
+        document.getElementById(
+            "toast"
+        );
+
+    toast.textContent =
+        message;
+
+    toast.classList.add(
+        "show"
+    );
+
+    clearTimeout(
+        window.toastTimer
+    );
+
+    window.toastTimer =
+        setTimeout(
+            () => {
+
+                toast.classList.remove(
+                    "show"
+                );
+
+            },
+            2200
+        );
+
+}
+
+
+/* ---------- FILENAME ---------- */
+
+function sanitizeFilename(name){
+
+    return String(name)
+        .replace(
+            /[\\/:*?"<>|]/g,
+            ""
+        )
+        .trim() ||
+        "spreadsheet";
+
+}
+
+
+/* ---------- GLOBAL KEYBOARD SHORTCUTS ---------- */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if(
+            (event.ctrlKey ||
+             event.metaKey) &&
+            event.key.toLowerCase() === "s"
+        ){
+
+            event.preventDefault();
+
+            saveSpreadsheet();
+
+        }
+
+
+        if(
+            (event.ctrlKey ||
+             event.metaKey) &&
+            event.key.toLowerCase() === "z"
+        ){
+
+            event.preventDefault();
+
+            commandUndo();
+
+        }
+
+
+        if(
+            (event.ctrlKey ||
+             event.metaKey) &&
+            event.key.toLowerCase() === "y"
+        ){
+
+            event.preventDefault();
+
+            commandRedo();
+
+        }
+
+    }
+);
+
+
+/* ---------- MODAL CLOSE ---------- */
+
+document.querySelectorAll(
+    ".modal"
+).forEach(modal => {
+
+    modal.addEventListener(
+        "click",
+        event => {
+
+            if(
+                event.target === modal
+            ){
+
+                modal.classList.remove(
+                    "show"
+                );
+
+            }
+
+        }
+    );
+
+});
+
+
+/* ---------- BEFORE LEAVING ---------- */
+
+window.addEventListener(
+    "beforeunload",
+    event => {
+
+        if(unsaved){
+
+            event.preventDefault();
+
+            event.returnValue = "";
+
+        }
+
+    }
+);
+
+
+/* ---------- INITIALIZE ---------- */
+
+loadSpreadsheet();
+
+Muhimu pia: kwenye HTML ya juu, button ya kuongeza sheet iwe na class hii ili "addSheet()" iweze kuiweka sheets mpya kabla yake:
+
+<button
+    class="sheet-tab add-sheet"
+    onclick="addSheet()">
+    +
+</button>
+
+</script>
+
+</body>
+</html>
