@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plugins Sales</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+.container{width:min(1180px,94%);margin:auto}
+header{background:#fff;border-bottom:1px solid #e2e8f0;padding:15px 0}
+.nav{display:flex;align-items:center;justify-content:space-between}
+.logo{color:#2563eb;font-size:19px;font-weight:900}
+.actions{display:flex;gap:7px}
+.btn{border:0;border-radius:8px;padding:10px 13px;font-size:9px;font-weight:900;text-decoration:none;cursor:pointer}
+.primary{background:#2563eb;color:#fff}
+.gray{background:#f1f5f9;color:#334155}
+main{padding:28px 0 60px}
+.head{display:flex;justify-content:space-between;align-items:end;margin-bottom:20px}
+h1{font-size:29px;margin-bottom:6px}
+.sub{color:#64748b;font-size:10px}
+select{border:1px solid #dbe2ea;background:#fff;border-radius:8px;padding:9px;font-size:9px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.stat{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:17px}
+.label{color:#64748b;font-size:8px;font-weight:800;margin-bottom:7px}
+.value{font-size:24px;font-weight:900;margin-bottom:5px}
+.change{font-size:8px;color:#16a34a;font-weight:800}
+.grid{display:grid;grid-template-columns:1.3fr .7fr;gap:16px;margin-bottom:16px}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:13px;padding:18px}
+.cardhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.cardhead h2{font-size:14px}
+.cardhead span{font-size:8px;color:#64748b}
+.chart{height:270px;position:relative;border-left:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1}
+.chart svg{width:100%;height:100%}
+.ylabels{position:absolute;left:-4px;top:5px;bottom:25px;transform:translateX(-100%);display:flex;flex-direction:column;justify-content:space-between;color:#94a3b8;font-size:7px}
+.xlabels{display:flex;justify-content:space-between;color:#94a3b8;font-size:7px;padding:7px 5px}
+.sales-total{text-align:center;padding:22px 0 8px}
+.sales-total strong{font-size:34px}
+.sales-total span{display:block;color:#64748b;font-size:8px;margin-top:5px}
+.mini-list{margin-top:10px}
+.mini{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eef2f7;font-size:9px}
+.mini:last-child{border:0}
+.table{padding:0;overflow:hidden}
+.tablehead{padding:17px;border-bottom:1px solid #eef2f7}
+.tablehead h2{font-size:14px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;background:#f8fafc;color:#64748b;font-size:8px;padding:11px 15px}
+td{padding:13px 15px;border-top:1px solid #eef2f7;font-size:9px}
+.plugin{display:flex;align-items:center;gap:9px}
+.icon{width:31px;height:31px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;font-size:14px}
+.name{font-weight:900;margin-bottom:3px}
+.author{color:#94a3b8;font-size:7px}
+.status{padding:5px 7px;border-radius:20px;font-size:7px;font-weight:900;background:#dcfce7;color:#166534}
+.revenue{font-weight:900}
+.bottom{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.empty{text-align:center;padding:30px;color:#64748b;font-size:9px}
+@media(max-width:850px){
+.grid,.bottom{grid-template-columns:1fr}
+.stats{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:600px){
+.head{align-items:start;flex-direction:column;gap:12px}
+.stats{grid-template-columns:1fr 1fr}
+th:nth-child(4),td:nth-child(4){display:none}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="container nav">
+<div class="logo">🔌 Plugin Sales</div>
+<div class="actions">
+<a href="plugins.html" class="btn gray">Plugins</a>
+<a href="plugin-builder.html" class="btn primary">+ Create Plugin</a>
+</div>
+</div>
+</header>
+
+<main class="container">
+
+<section class="head">
+<div>
+<h1>Plugin Sales</h1>
+<p class="sub">Track plugin purchases, revenue, orders and sales performance.</p>
+</div>
+
+<select id="period" onchange="render()">
+<option value="7">Last 7 days</option>
+<option value="30" selected>Last 30 days</option>
+<option value="90">Last 90 days</option>
+<option value="365">Last year</option>
+</select>
+</section>
+
+<section class="stats">
+
+<div class="stat">
+<div class="label">TOTAL REVENUE</div>
+<div id="revenue" class="value">$0</div>
+<div class="change">↑ 21.4%</div>
+</div>
+
+<div class="stat">
+<div class="label">TOTAL SALES</div>
+<div id="sales" class="value">0</div>
+<div class="change">↑ 16.8%</div>
+</div>
+
+<div class="stat">
+<div class="label">ORDERS</div>
+<div id="orders" class="value">0</div>
+<div class="change">↑ 12.2%</div>
+</div>
+
+<div class="stat">
+<div class="label">AVERAGE ORDER</div>
+<div id="average" class="value">$0</div>
+<div class="change">↑ 7.6%</div>
+</div>
+
+</section>
+
+<div class="grid">
+
+<section class="card">
+
+<div class="cardhead">
+<h2>Sales Revenue</h2>
+<span id="periodText">Last 30 days</span>
+</div>
+
+<div class="chart">
+
+<div class="ylabels">
+<span>$5k</span>
+<span>$4k</span>
+<span>$3k</span>
+<span>$2k</span>
+<span>$1k</span>
+<span>$0</span>
+</div>
+
+<svg viewBox="0 0 700 240" preserveAspectRatio="none">
+
+<defs>
+<linearGradient id="salesFill" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#2563eb" stop-opacity=".25"/>
+<stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+</linearGradient>
+</defs>
+
+<path
+d="M0 205 L70 190 L140 195 L210 160 L280 175 L350 135 L420 150 L490 105 L560 120 L630 75 L700 55 L700 240 L0 240 Z"
+fill="url(#salesFill)">
+</path>
+
+<path
+d="M0 205 L70 190 L140 195 L210 160 L280 175 L350 135 L420 150 L490 105 L560 120 L630 75 L700 55"
+fill="none"
+stroke="#2563eb"
+stroke-width="3">
+</path>
+
+</svg>
+
+</div>
+
+<div class="xlabels">
+<span>1</span>
+<span>5</span>
+<span>10</span>
+<span>15</span>
+<span>20</span>
+<span>25</span>
+<span>30</span>
+</div>
+
+</section>
+
+<section class="card">
+
+<div class="cardhead">
+<h2>Sales Summary</h2>
+<span>Current period</span>
+</div>
+
+<div class="sales-total">
+<strong id="summaryRevenue">$0</strong>
+<span>Total plugin revenue</span>
+</div>
+
+<div class="mini-list">
+
+<div class="mini">
+<span>Paid orders</span>
+<strong id="paidOrders">0</strong>
+</div>
+
+<div class="mini">
+<span>Refunds</span>
+<strong id="refunds">0</strong>
+</div>
+
+<div class="mini">
+<span>Net revenue</span>
+<strong id="netRevenue">$0</strong>
+</div>
+
+<div class="mini">
+<span>Conversion rate</span>
+<strong>8.4%</strong>
+</div>
+
+</div>
+
+</section>
+
+</div>
+
+<section class="card table">
+
+<div class="tablehead">
+<h2>Top Selling Plugins</h2>
+</div>
+
+<table>
+
+<thead>
+<tr>
+<th>PLUGIN</th>
+<th>PRICE</th>
+<th>SALES</th>
+<th>REVENUE</th>
+<th>STATUS</th>
+</tr>
+</thead>
+
+<tbody id="pluginTable"></tbody>
+
+</table>
+
+</section>
+
+<div class="bottom">
+
+<section class="card">
+
+<div class="cardhead">
+<h2>Recent Sales</h2>
+<span>Latest orders</span>
+</div>
+
+<div id="recentSales"></div>
+
+</section>
+
+<section class="card">
+
+<div class="cardhead">
+<h2>Payment Methods</h2>
+<span>Sales share</span>
+</div>
+
+<div class="mini">
+<span>Card</span>
+<strong>48%</strong>
+</div>
+
+<div class="mini">
+<span>Mobile Money</span>
+<strong>31%</strong>
+</div>
+
+<div class="mini">
+<span>PayPal</span>
+<strong>14%</strong>
+</div>
+
+<div class="mini">
+<span>Other</span>
+<strong>7%</strong>
+</div>
+
+</section>
+
+</div>
+
+</main>
+
+<script>
+
+const defaultPlugins=[
+{
+id:"analytics",
+name:"Analytics Pro",
+author:"Your Studio",
+price:29,
+sales:184,
+icon:"📊",
+status:"Active"
+},
+{
+id:"payments",
+name:"Payment Gateway",
+author:"Your Studio",
+price:39,
+sales:96,
+icon:"💳",
+status:"Active"
+},
+{
+id:"seo",
+name:"SEO Toolkit",
+author:"Your Studio",
+price:19,
+sales:72,
+icon:"🔍",
+status:"Active"
+},
+{
+id:"forms",
+name:"Smart Forms",
+author:"Your Studio",
+price:15,
+sales:43,
+icon:"📝",
+status:"Active"
+},
+{
+id:"chat",
+name:"Live Chat",
+author:"Your Studio",
+price:12,
+sales:31,
+icon:"💬",
+status:"Active"
+}
+];
+
+let plugins=JSON.parse(
+localStorage.getItem("plugins")||"null"
+);
+
+if(!Array.isArray(plugins)||!plugins.length){
+plugins=defaultPlugins;
+}
+
+function money(value){
+return "$"+Number(value||0).toLocaleString(
+"en-US",
+{minimumFractionDigits:0,maximumFractionDigits:0}
+);
+}
+
+function num(value){
+return Number(value||0).toLocaleString();
+}
+
+function render(){
+
+const days=Number(
+document.getElementById("period").value
+);
+
+let multiplier=1;
+
+if(days===7) multiplier=.31;
+if(days===30) multiplier=1;
+if(days===90) multiplier=2.72;
+if(days===365) multiplier=10.8;
+
+const baseSales=plugins.reduce(
+(sum,p)=>sum+Number(p.sales||0),0
+);
+
+const revenue=plugins.reduce(
+(sum,p)=>sum+
+Number(p.price||0)*Number(p.sales||0),0
+)*multiplier;
+
+const sales=Math.round(baseSales*multiplier);
+const orders=sales;
+const refunds=Math.round(orders*.025);
+const net=revenue-(refunds*(revenue/Math.max(orders,1)));
+
+document.getElementById("revenue").textContent=money(revenue);
+document.getElementById("sales").textContent=num(sales);
+document.getElementById("orders").textContent=num(orders);
+document.getElementById("average").textContent=
+money(orders?revenue/orders:0);
+
+document.getElementById("summaryRevenue").textContent=
+money(revenue);
+
+document.getElementById("paidOrders").textContent=
+num(orders);
+
+document.getElementById("refunds").textContent=
+num(refunds);
+
+document.getElementById("netRevenue").textContent=
+money(net);
+
+const labels={
+7:"Last 7 days",
+30:"Last 30 days",
+90:"Last 90 days",
+365:"Last year"
+};
+
+document.getElementById("periodText").textContent=
+labels[days];
+
+renderTable(multiplier);
+renderRecentSales();
+
+}
+
+function renderTable(multiplier){
+
+const table=document.getElementById("pluginTable");
+table.innerHTML="";
+
+const sorted=[...plugins].sort(
+(a,b)=>
+(Number(b.price||0)*Number(b.sales||0))-
+(Number(a.price||0)*Number(a.sales||0))
+);
+
+sorted.forEach(plugin=>{
+
+const sales=Math.round(
+Number(plugin.sales||0)*multiplier
+);
+
+const revenue=
+Number(plugin.price||0)*sales;
+
+const row=document.createElement("tr");
+
+row.innerHTML=`
+
+<td>
+<div class="plugin">
+<div class="icon">
+${escapeHTML(plugin.icon||"🔌")}
+</div>
+<div>
+<div class="name">
+${escapeHTML(plugin.name||"Plugin")}
+</div>
+<div class="author">
+${escapeHTML(plugin.author||"Developer")}
+</div>
+</div>
+</div>
+</td>
+
+<td>${money(plugin.price)}</td>
+
+<td>${num(sales)}</td>
+
+<td class="revenue">${money(revenue)}</td>
+
+<td>
+<span class="status">
+${escapeHTML(plugin.status||"Active")}
+</span>
+</td>
+`;
+
+table.appendChild(row);
+
+});
+
+}
+
+function renderRecentSales(){
+
+const box=document.getElementById("recentSales");
+
+const sales=[
+["Analytics Pro","$29","Today, 10:42"],
+["Payment Gateway","$39","Today, 09:18"],
+["SEO Toolkit","$19","Yesterday, 18:34"],
+["Smart Forms","$15","Yesterday, 15:20"],
+["Analytics Pro","$29","Yesterday, 11:07"]
+];
+
+box.innerHTML="";
+
+sales.forEach(item=>{
+
+const div=document.createElement("div");
+div.className="mini";
+
+div.innerHTML=`
+<span>
+${escapeHTML(item[0])}
+<small style="display:block;color:#94a3b8;margin-top:3px">
+${escapeHTML(item[2])}
+</small>
+</span>
+<strong>${escapeHTML(item[1])}</strong>
+`;
+
+box.appendChild(div);
+
+});
+
+}
+
+function escapeHTML(value){
+return String(value)
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+}
+
+render();
+
+</script>
+
+</body>
+</html>
