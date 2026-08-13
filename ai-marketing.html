@@ -1,0 +1,2124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>AI Marketing Advisor</title>
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --secondary: #7c3aed;
+      --success: #16a34a;
+      --warning: #f59e0b;
+      --danger: #dc2626;
+
+      --bg: #f6f8fc;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #64748b;
+      --border: #e2e8f0;
+
+      --shadow: 0 12px 35px rgba(15, 23, 42, .08);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .container {
+      width: min(1150px, 92%);
+      margin: auto;
+    }
+
+    /* =========================================
+       HEADER
+    ========================================= */
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+
+      background: rgba(255,255,255,.94);
+      backdrop-filter: blur(15px);
+
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav {
+      min-height: 72px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      font-size: 19px;
+      font-weight: 800;
+    }
+
+    .brand-icon {
+      width: 43px;
+      height: 43px;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 13px;
+
+      color: white;
+
+      background:
+        linear-gradient(
+          135deg,
+          var(--primary),
+          var(--secondary)
+        );
+    }
+
+    nav {
+      display: flex;
+      gap: 22px;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    nav a:hover {
+      color: var(--primary);
+    }
+
+    /* =========================================
+       BUTTONS
+    ========================================= */
+
+    .btn {
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+
+      padding: 11px 17px;
+
+      border-radius: 11px;
+
+      font-weight: 700;
+
+      transition:
+        transform .2s,
+        box-shadow .2s,
+        background .2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 8px 20px rgba(15,23,42,.1);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-success {
+      background: var(--success);
+      border-color: var(--success);
+      color: white;
+    }
+
+    /* =========================================
+       HERO
+    ========================================= */
+
+    .hero {
+      padding: 75px 0 60px;
+
+      background:
+        radial-gradient(
+          circle at top right,
+          rgba(124,58,237,.14),
+          transparent 35%
+        ),
+        radial-gradient(
+          circle at top left,
+          rgba(37,99,235,.12),
+          transparent 35%
+        );
+    }
+
+    .hero-content {
+      max-width: 850px;
+      margin: auto;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+
+      padding: 7px 13px;
+
+      border-radius: 999px;
+
+      background: #eff6ff;
+      color: var(--primary);
+
+      font-size: 13px;
+      font-weight: 800;
+
+      margin-bottom: 18px;
+    }
+
+    .hero h1 {
+      font-size: clamp(40px, 7vw, 68px);
+      line-height: 1.05;
+      letter-spacing: -2px;
+
+      margin-bottom: 20px;
+    }
+
+    .gradient {
+      background:
+        linear-gradient(
+          90deg,
+          var(--primary),
+          var(--secondary)
+        );
+
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero p {
+      max-width: 720px;
+      margin: auto;
+
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .hero-actions {
+      margin-top: 27px;
+
+      display: flex;
+      justify-content: center;
+
+      flex-wrap: wrap;
+      gap: 11px;
+    }
+
+    /* =========================================
+       SECTIONS
+    ========================================= */
+
+    .section {
+      padding: 55px 0;
+    }
+
+    .section-title {
+      max-width: 700px;
+      margin: 0 auto 30px;
+      text-align: center;
+    }
+
+    .section-title h2 {
+      font-size: 32px;
+      margin-bottom: 7px;
+    }
+
+    .section-title p {
+      color: var(--muted);
+    }
+
+    /* =========================================
+       DASHBOARD
+    ========================================= */
+
+    .dashboard {
+      display: grid;
+
+      grid-template-columns:
+        260px 1fr;
+
+      gap: 20px;
+    }
+
+    .sidebar {
+      background: white;
+
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+
+      padding: 14px;
+
+      box-shadow: var(--shadow);
+
+      height: fit-content;
+    }
+
+    .sidebar button {
+      width: 100%;
+
+      border: none;
+      background: transparent;
+
+      text-align: left;
+
+      padding: 13px;
+
+      border-radius: 10px;
+
+      color: var(--muted);
+
+      font-weight: 700;
+
+      margin-bottom: 5px;
+    }
+
+    .sidebar button:hover,
+    .sidebar button.active {
+      background: #eff6ff;
+      color: var(--primary);
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .panel-card {
+      background: white;
+
+      border: 1px solid var(--border);
+
+      border-radius: var(--radius);
+
+      padding: 25px;
+
+      box-shadow: var(--shadow);
+
+      margin-bottom: 18px;
+    }
+
+    .panel-card h3 {
+      margin-bottom: 6px;
+    }
+
+    .panel-card > p {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    /* =========================================
+       FORM
+    ========================================= */
+
+    .form-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(2, 1fr);
+
+      gap: 15px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    .field label {
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+
+      padding: 12px 13px;
+
+      border: 1px solid var(--border);
+
+      border-radius: 10px;
+
+      background: white;
+
+      outline: none;
+    }
+
+    .field textarea {
+      min-height: 125px;
+      resize: vertical;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--primary);
+
+      box-shadow:
+        0 0 0 3px
+        rgba(37,99,235,.08);
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+
+      gap: 10px;
+
+      margin-top: 18px;
+    }
+
+    /* =========================================
+       METRICS
+    ========================================= */
+
+    .metrics {
+      display: grid;
+
+      grid-template-columns:
+        repeat(4, 1fr);
+
+      gap: 14px;
+
+      margin-bottom: 20px;
+    }
+
+    .metric {
+      background: white;
+
+      border: 1px solid var(--border);
+
+      border-radius: 15px;
+
+      padding: 18px;
+    }
+
+    .metric-icon {
+      width: 40px;
+      height: 40px;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 10px;
+
+      background: #eff6ff;
+
+      margin-bottom: 10px;
+    }
+
+    .metric strong {
+      display: block;
+
+      font-size: 26px;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    /* =========================================
+       SCORE
+    ========================================= */
+
+    .score-layout {
+      display: grid;
+
+      grid-template-columns:
+        190px 1fr;
+
+      gap: 30px;
+
+      align-items: center;
+    }
+
+    .score-circle {
+      width: 160px;
+      height: 160px;
+
+      margin: auto;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 50%;
+
+      background:
+        conic-gradient(
+          var(--primary) var(--score,0%),
+          #e2e8f0 0
+        );
+
+      position: relative;
+    }
+
+    .score-circle::before {
+      content: "";
+
+      position: absolute;
+
+      width: 122px;
+      height: 122px;
+
+      background: white;
+
+      border-radius: 50%;
+    }
+
+    .score-content {
+      position: relative;
+      text-align: center;
+    }
+
+    .score-number {
+      font-size: 34px;
+      font-weight: 900;
+    }
+
+    .score-label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .score-message {
+      color: var(--muted);
+    }
+
+    /* =========================================
+       CHANNELS
+    ========================================= */
+
+    .channel-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .channel {
+      padding: 16px;
+
+      border: 1px solid var(--border);
+
+      border-radius: 13px;
+
+      display: grid;
+
+      grid-template-columns:
+        50px 1fr 70px;
+
+      gap: 12px;
+
+      align-items: center;
+    }
+
+    .channel-icon {
+      width: 45px;
+      height: 45px;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 11px;
+
+      background: #eff6ff;
+
+      font-size: 21px;
+    }
+
+    .channel h4 {
+      margin-bottom: 2px;
+    }
+
+    .channel p {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .channel-score {
+      text-align: center;
+
+      padding: 5px;
+
+      border-radius: 999px;
+
+      background: #ecfdf5;
+      color: #15803d;
+
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    /* =========================================
+       CONTENT OUTPUT
+    ========================================= */
+
+    .output {
+      background: #0f172a;
+      color: #e2e8f0;
+
+      border-radius: 14px;
+
+      padding: 20px;
+
+      white-space: pre-wrap;
+
+      min-height: 160px;
+
+      font-size: 14px;
+
+      line-height: 1.8;
+    }
+
+    .output-empty {
+      color: #94a3b8;
+    }
+
+    .copy-row {
+      display: flex;
+      justify-content: flex-end;
+
+      margin-top: 10px;
+    }
+
+    /* =========================================
+       AUDIENCE CARDS
+    ========================================= */
+
+    .audience-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(3, 1fr);
+
+      gap: 15px;
+    }
+
+    .audience-card {
+      padding: 20px;
+
+      border: 1px solid var(--border);
+
+      border-radius: 14px;
+
+      background: #fafcff;
+    }
+
+    .audience-card h4 {
+      margin-bottom: 7px;
+    }
+
+    .audience-card p {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* =========================================
+       PLAN
+    ========================================= */
+
+    .plan-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .plan-item {
+      display: flex;
+      gap: 13px;
+
+      padding: 16px;
+
+      border: 1px solid var(--border);
+
+      border-radius: 13px;
+    }
+
+    .plan-day {
+      min-width: 45px;
+      height: 45px;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 12px;
+
+      background: #eff6ff;
+      color: var(--primary);
+
+      font-weight: 900;
+    }
+
+    .plan-item h4 {
+      margin-bottom: 2px;
+    }
+
+    .plan-item p {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* =========================================
+       FEATURES
+    ========================================= */
+
+    .feature-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(3, 1fr);
+
+      gap: 18px;
+    }
+
+    .feature {
+      background: white;
+
+      border: 1px solid var(--border);
+
+      border-radius: var(--radius);
+
+      padding: 22px;
+
+      box-shadow:
+        0 8px 25px
+        rgba(15,23,42,.05);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 13px;
+
+      background: #eff6ff;
+
+      font-size: 22px;
+
+      margin-bottom: 13px;
+    }
+
+    .feature h3 {
+      margin-bottom: 6px;
+    }
+
+    .feature p {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* =========================================
+       MODAL
+    ========================================= */
+
+    .modal {
+      position: fixed;
+      inset: 0;
+
+      display: none;
+      place-items: center;
+
+      padding: 20px;
+
+      background: rgba(15,23,42,.6);
+
+      z-index: 3000;
+    }
+
+    .modal.active {
+      display: grid;
+    }
+
+    .modal-box {
+      width: min(480px,100%);
+
+      background: white;
+
+      border-radius: 18px;
+
+      overflow: hidden;
+
+      box-shadow:
+        0 25px 70px
+        rgba(0,0,0,.2);
+    }
+
+    .modal-header {
+      padding: 17px 20px;
+
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      border-bottom: 1px solid var(--border);
+    }
+
+    .close-modal {
+      width: 34px;
+      height: 34px;
+
+      border: none;
+
+      border-radius: 50%;
+
+      background: #f1f5f9;
+    }
+
+    .modal-body {
+      padding: 22px;
+
+      color: var(--muted);
+    }
+
+    .modal-footer {
+      padding: 14px 20px;
+
+      display: flex;
+      justify-content: flex-end;
+
+      border-top: 1px solid var(--border);
+    }
+
+    /* =========================================
+       CTA
+    ========================================= */
+
+    .cta {
+      margin-top: 40px;
+
+      padding: 50px 25px;
+
+      text-align: center;
+
+      color: white;
+
+      border-radius: 24px;
+
+      background:
+        linear-gradient(
+          135deg,
+          var(--primary-dark),
+          var(--secondary)
+        );
+    }
+
+    .cta h2 {
+      font-size: 32px;
+      margin-bottom: 7px;
+    }
+
+    .cta p {
+      color: #dbeafe;
+
+      max-width: 650px;
+
+      margin: 0 auto 20px;
+    }
+
+    .cta .btn {
+      background: white;
+      color: var(--primary);
+    }
+
+    /* =========================================
+       FOOTER
+    ========================================= */
+
+    footer {
+      background: #0f172a;
+      color: white;
+
+      padding: 40px 0 20px;
+    }
+
+    .footer-grid {
+      display: grid;
+
+      grid-template-columns:
+        1fr 1fr;
+
+      gap: 30px;
+    }
+
+    .footer-grid p {
+      color: #94a3b8;
+
+      font-size: 13px;
+
+      max-width: 550px;
+    }
+
+    .footer-bottom {
+      margin-top: 30px;
+      padding-top: 18px;
+
+      border-top: 1px solid #1e293b;
+
+      text-align: center;
+
+      color: #64748b;
+
+      font-size: 12px;
+    }
+
+    /* =========================================
+       RESPONSIVE
+    ========================================= */
+
+    @media(max-width:850px) {
+
+      nav {
+        display: none;
+      }
+
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: grid;
+
+        grid-template-columns:
+          repeat(2,1fr);
+
+        gap: 5px;
+      }
+
+      .metrics {
+        grid-template-columns:
+          repeat(2,1fr);
+      }
+
+      .feature-grid,
+      .audience-grid {
+        grid-template-columns:
+          repeat(2,1fr);
+      }
+
+    }
+
+    @media(max-width:600px) {
+
+      .hero h1 {
+        font-size: 42px;
+      }
+
+      .sidebar {
+        grid-template-columns: 1fr;
+      }
+
+      .metrics,
+      .feature-grid,
+      .audience-grid,
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .field.full {
+        grid-column: auto;
+      }
+
+      .score-layout {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+
+      .channel {
+        grid-template-columns:
+          45px 1fr;
+      }
+
+      .channel-score {
+        grid-column: 2;
+        width: 70px;
+      }
+
+      .footer-grid {
+        grid-template-columns: 1fr;
+      }
+
+    }
+
+    /* =========================================
+       PRINT
+    ========================================= */
+
+    @media print {
+
+      header,
+      .hero,
+      .sidebar,
+      .form-actions,
+      .cta,
+      footer,
+      .info-section {
+        display: none !important;
+      }
+
+      body {
+        background: white;
+      }
+
+      .dashboard {
+        display: block;
+      }
+
+      .panel {
+        display: block !important;
+      }
+
+      .panel-card {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- =========================================
+       HEADER
+  ========================================= -->
+
+  <header>
+
+    <div class="container nav">
+
+      <div class="brand">
+
+        <div class="brand-icon">
+          📣
+        </div>
+
+        <span>
+          AI Marketing
+        </span>
+
+      </div>
+
+      <nav>
+
+        <a href="#home">
+          Home
+        </a>
+
+        <a href="#marketing">
+          Marketing
+        </a>
+
+        <a href="#features">
+          Features
+        </a>
+
+      </nav>
+
+    </div>
+
+  </header>
+
+
+  <!-- =========================================
+       HERO
+  ========================================= -->
+
+  <section
+    class="hero"
+    id="home"
+  >
+
+    <div class="container">
+
+      <div class="hero-content">
+
+        <span class="badge">
+          ✨ AI-Powered Marketing Assistant
+        </span>
+
+        <h1>
+          Market Your Business
+          <span class="gradient">
+            Smarter
+          </span>
+        </h1>
+
+        <p>
+          Create marketing campaigns, understand
+          your audience, generate content and build
+          a practical marketing plan using one
+          simple AI-inspired workspace.
+        </p>
+
+        <div class="hero-actions">
+
+          <a
+            href="#marketing"
+            class="btn btn-primary"
+          >
+            🚀 Start Marketing
+          </a>
+
+          <a
+            href="#features"
+            class="btn"
+          >
+            Explore Features
+          </a>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <main>
+
+    <!-- =========================================
+         MARKETING DASHBOARD
+    ========================================= -->
+
+    <section
+      class="section"
+      id="marketing"
+    >
+
+      <div class="container">
+
+        <div class="section-title">
+
+          <h2>
+            AI Marketing Workspace
+          </h2>
+
+          <p>
+            Build your strategy from audience
+            research to campaign execution.
+          </p>
+
+        </div>
+
+
+        <div class="dashboard">
+
+          <!-- SIDEBAR -->
+
+          <aside class="sidebar">
+
+            <button
+              type="button"
+              class="tab-button active"
+              data-tab="overview"
+            >
+              📊 Overview
+            </button>
+
+            <button
+              type="button"
+              class="tab-button"
+              data-tab="campaign"
+            >
+              🚀 Campaign Planner
+            </button>
+
+            <button
+              type="button"
+              class="tab-button"
+              data-tab="audience"
+            >
+              🎯 Audience
+            </button>
+
+            <button
+              type="button"
+              class="tab-button"
+              data-tab="content"
+            >
+              ✍️ Content Generator
+            </button>
+
+            <button
+              type="button"
+              class="tab-button"
+              data-tab="plan"
+            >
+              🗓️ 30-Day Plan
+            </button>
+
+          </aside>
+
+
+          <!-- PANELS -->
+
+          <div>
+
+            <!-- =================================
+                 OVERVIEW
+            ================================= -->
+
+              ================================= -->
+            <div
+              class="panel active"
+              id="overview"
+            >
+
+              <div class="metrics">
+
+                <div class="metric">
+                  <div class="metric-icon">🎯</div>
+
+                  <strong id="overviewScore">
+                    78%
+                  </strong>
+
+                  <span>
+                    Marketing Score
+                  </span>
+                </div>
+
+
+                <div class="metric">
+                  <div class="metric-icon">👥</div>
+
+                  <strong>
+                    4
+                  </strong>
+
+                  <span>
+                    Target Segments
+                  </span>
+                </div>
+
+
+                <div class="metric">
+                  <div class="metric-icon">📣</div>
+
+                  <strong>
+                    5
+                  </strong>
+
+                  <span>
+                    Recommended Channels
+                  </span>
+                </div>
+
+
+                <div class="metric">
+                  <div class="metric-icon">💡</div>
+
+                  <strong>
+                    12
+                  </strong>
+
+                  <span>
+                    Content Ideas
+                  </span>
+                </div>
+
+              </div>
+
+
+              <div class="panel-card">
+
+                <div class="score-layout">
+
+                  <div
+                    class="score-circle"
+                    id="marketingScoreCircle"
+                  >
+
+                    <div class="score-content">
+
+                      <div
+                        class="score-number"
+                        id="marketingScore"
+                      >
+                        78%
+                      </div>
+
+                      <div class="score-label">
+                        Marketing Score
+                      </div>
+
+                    </div>
+
+                  </div>
+
+
+                  <div>
+
+                    <h3 id="scoreTitle">
+                      Good Marketing Foundation
+                    </h3>
+
+                    <p
+                      class="score-message"
+                      id="scoreMessage"
+                    >
+                      Your marketing foundation is
+                      promising. Focus on consistency,
+                      audience targeting and measurable
+                      campaigns.
+                    </p>
+
+                    <br>
+
+                    <button
+                      type="button"
+                      class="btn btn-primary"
+                      id="analyzeButton"
+                    >
+                      ✨ Analyze My Marketing
+                    </button>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              <div class="panel-card">
+
+                <h3>
+                  📡 Recommended Channels
+                </h3>
+
+                <p>
+                  Channels that may fit a typical
+                  small-business marketing strategy.
+                </p>
+
+                <div
+                  class="channel-list"
+                  id="channelList"
+                ></div>
+
+              </div>
+
+            </div>
+
+
+            <!-- =================================
+                 CAMPAIGN PLANNER
+            ================================= -->
+
+            <div
+              class="panel"
+              id="campaign"
+            >
+
+              <div class="panel-card">
+
+                <h3>
+                  🚀 Campaign Planner
+                </h3>
+
+                <p>
+                  Describe your campaign and generate
+                  a practical campaign structure.
+                </p>
+
+                <div class="form-grid">
+
+                  <div class="field">
+
+                    <label for="businessName">
+                      Business Name
+                    </label>
+
+                    <input
+                      type="text"
+                      id="businessName"
+                      placeholder="e.g. Bright Fashion"
+                    >
+
+                  </div>
+
+
+                  <div class="field">
+
+                    <label for="campaignGoal">
+                      Campaign Goal
+                    </label>
+
+                    <select id="campaignGoal">
+
+                      <option value="awareness">
+                        Brand Awareness
+                      </option>
+
+                      <option value="leads">
+                        Generate Leads
+                      </option>
+
+                      <option value="sales">
+                        Increase Sales
+                      </option>
+
+                      <option value="retention">
+                        Customer Retention
+                      </option>
+
+                    </select>
+
+                  </div>
+
+
+                  <div class="field">
+
+                    <label for="budget">
+                      Monthly Budget
+                    </label>
+
+                    <input
+                      type="number"
+                      id="budget"
+                      min="0"
+                      placeholder="e.g. 300"
+                    >
+
+                  </div>
+
+
+                  <div class="field">
+
+                    <label for="campaignChannel">
+                      Main Channel
+                    </label>
+
+                    <select id="campaignChannel">
+
+                      <option>
+                        Instagram
+                      </option>
+
+                      <option>
+                        Facebook
+                      </option>
+
+                      <option>
+                        TikTok
+                      </option>
+
+                      <option>
+                        Google
+                      </option>
+
+                      <option>
+                        WhatsApp
+                      </option>
+
+                      <option>
+                        Email
+                      </option>
+
+                    </select>
+
+                  </div>
+
+
+                  <div class="field full">
+
+                    <label for="campaignOffer">
+                      Product / Offer
+                    </label>
+
+                    <textarea
+                      id="campaignOffer"
+                      placeholder="Describe what you are promoting..."
+                    ></textarea>
+
+                  </div>
+
+                </div>
+
+
+                <div class="form-actions">
+
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="campaignButton"
+                  >
+                    ✨ Generate Campaign
+                  </button>
+
+                </div>
+
+              </div>
+
+
+              <div
+                class="panel-card"
+                id="campaignResultCard"
+                style="display:none;"
+              >
+
+                <h3>
+                  📋 Campaign Strategy
+                </h3>
+
+                <br>
+
+                <div
+                  class="output"
+                  id="campaignOutput"
+                ></div>
+
+              </div>
+
+            </div>
+                         <!-- =================================
+                 AUDIENCE ANALYZER
+            ================================= -->
+
+            <div
+              class="panel"
+              id="audience"
+            >
+
+              <div class="panel-card">
+
+                <h3>
+                  🎯 Audience Analyzer
+                </h3>
+
+                <p>
+                  Enter a product or service and
+                  generate practical audience segments.
+                </p>
+
+                <div class="form-grid">
+
+                  <div class="field full">
+
+                    <label for="audienceProduct">
+                      Product or Service
+                    </label>
+
+                    <input
+                      id="audienceProduct"
+                      type="text"
+                      placeholder="e.g. Online English Course"
+                    >
+
+                  </div>
+
+
+                  <div class="field">
+
+                    <label for="audienceLocation">
+                      Target Location
+                    </label>
+
+                    <input
+                      id="audienceLocation"
+                      type="text"
+                      placeholder="e.g. Tanzania"
+                    >
+
+                  </div>
+
+
+                  <div class="field">
+
+                    <label for="audiencePrice">
+                      Price Level
+                    </label>
+
+                    <select id="audiencePrice">
+
+                      <option>
+                        Budget
+                      </option>
+
+                      <option selected>
+                        Mid-range
+                      </option>
+
+                      <option>
+                        Premium
+                      </option>
+
+                    </select>
+
+                  </div>
+
+                </div>
+
+
+                <div class="form-actions">
+
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="audienceButton"
+                  >
+                    🎯 Analyze Audience
+                  </button>
+
+                </div>
+
+              </div>
+
+
+              <div
+                class="panel-card"
+                id="audienceResult"
+                style="display:none;"
+              >
+
+                <h3>
+                  👥 Suggested Audience Segments
+                </h3>
+
+                <br>
+
+                <div
+                  class="audience-grid"
+                  id="audienceGrid"
+                ></div>
+
+              </div>
+
+            </div>
+
+
+            <!-- =================================
+                 CONTENT GENERATOR
+            ================================= -->
+
+            <div
+              class="panel"
+              id="content"
+            >
+
+              <div class="panel-card">
+
+                <h3>
+                  ✍️ AI Content Generator
+                </h3>
+
+                <p>
+                  Generate a marketing caption,
+                  headline or promotional message.
+                </p>
+
+                <div class="form-grid">
+
+                  <div class="field">
+
+                    <label for="contentType">
+                      Content Type
+                    </label>
+
+                    <select id="contentType">
+
+                      <option value="caption">
+                        Social Media Caption
+                      </option>
+
+                      <option value="headline">
+                        Ad Headline
+                      </option>
+
+                      <option value="email">
+                        Marketing Email
+                      </option>
+
+                      <option value="whatsapp">
+                        WhatsApp Promotion
+                      </option>
+
+                    </select>
+
+                  </div>
+
+
+                  <div class="field">
+
+                    <label for="contentTone">
+                      Tone
+                    </label>
+
+                    <select id="contentTone">
+
+                      <option>
+                        Professional
+                      </option>
+
+                      <option>
+                        Friendly
+                      </option>
+
+                      <option>
+                        Bold
+                      </option>
+
+                      <option>
+                        Inspirational
+                      </option>
+
+                    </select>
+
+                  </div>
+
+
+                  <div class="field full">
+
+                    <label for="contentTopic">
+                      Product / Topic
+                    </label>
+
+                    <input
+                      id="contentTopic"
+                      type="text"
+                      placeholder="e.g. New online marketing course"
+                    >
+
+                  </div>
+
+                </div>
+
+
+                <div class="form-actions">
+
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="contentButton"
+                  >
+                    ✨ Generate Content
+                  </button>
+
+                </div>
+
+              </div>
+
+
+              <div class="panel-card">
+
+                <h3>
+                  📝 Generated Content
+                </h3>
+
+                <br>
+
+                <div
+                  class="output"
+                  id="contentOutput"
+                >
+
+                  <span class="output-empty">
+                    Your generated marketing content
+                    will appear here.
+                  </span>
+
+                </div>
+
+                <div class="copy-row">
+
+                  <button
+                    type="button"
+                    class="btn"
+                    id="copyContent"
+                  >
+                    📋 Copy
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <!-- =================================
+                 30 DAY MARKETING PLAN
+            ================================= -->
+
+            <div
+              class="panel"
+              id="plan"
+            >
+
+              <div class="panel-card">
+
+                <h3>
+                  🗓️ 30-Day Marketing Plan
+                </h3>
+
+                <p>
+                  A simple sequence for building
+                  consistency and measuring results.
+                </p>
+
+                <div
+                  class="plan-list"
+                  id="planList"
+                ></div>
+
+              </div>
+
+
+              <div class="form-actions">
+
+                <button
+                  type="button"
+                  class="btn"
+                  id="printPlan"
+                >
+                  🖨 Print Plan
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================================
+         FEATURES
+    ========================================= -->
+
+    <section
+      class="section info-section"
+      id="features"
+    >
+
+      <div class="container">
+
+        <div class="section-title">
+
+          <h2>
+            Everything You Need to Market Better
+          </h2>
+
+          <p>
+            Turn ideas into practical marketing
+            actions.
+          </p>
+
+        </div>
+
+
+        <div class="feature-grid">
+
+          <article class="feature">
+
+            <div class="feature-icon">
+              🎯
+            </div>
+
+            <h3>
+              Audience Research
+            </h3>
+
+            <p>
+              Understand who you are targeting,
+              what they need and how to reach them.
+            </p>
+
+          </article>
+
+
+          <article class="feature">
+
+            <div class="feature-icon">
+              🚀
+            </div>
+
+            <h3>
+              Campaign Planning
+            </h3>
+
+            <p>
+              Create campaign objectives,
+              messaging, channels and actions.
+            </p>
+
+          </article>
+
+
+          <article class="feature">
+
+            <div class="feature-icon">
+              ✍️
+            </div>
+
+            <h3>
+              Content Ideas
+            </h3>
+
+            <p>
+              Generate practical social media,
+              email and promotional content ideas.
+            </p>
+
+          </article>
+
+
+          <article class="feature">
+
+            <div class="feature-icon">
+              📊
+            </div>
+
+            <h3>
+              Marketing Score
+            </h3>
+
+            <p>
+              Use a simple score to identify areas
+              that deserve more attention.
+            </p>
+
+          </article>
+
+
+          <article class="feature">
+
+            <div class="feature-icon">
+              📣
+            </div>
+
+            <h3>
+              Channel Strategy
+            </h3>
+
+            <p>
+              Compare common channels and prioritize
+              the ones that fit your goals.
+            </p>
+
+          </article>
+
+
+          <article class="feature">
+
+            <div class="feature-icon">
+              🗓️
+            </div>
+
+            <h3>
+              Action Plan
+            </h3>
+
+            <p>
+              Follow a simple 30-day plan instead
+              of trying everything at once.
+            </p>
+
+          </article>
+
+        </div>
+
+
+        <div class="cta">
+
+          <h2>
+            Ready to market smarter?
+          </h2>
+
+          <p>
+            Start with your audience, create a
+            campaign and turn your strategy into
+            consistent action.
+          </p>
+
+          <a
+            href="#marketing"
+            class="btn"
+          >
+            🚀 Start Marketing
+          </a>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- =========================================
+       MODAL
+    ========================================= -->
+
+  <div
+    class="modal"
+    id="modal"
+    aria-hidden="true"
+  >
+
+    <div class="modal-box">
+
+      <div class="modal-header">
+
+        <strong id="modalTitle">
+          AI Marketing
+        </strong>
+
+        <button
+          type="button"
+          class="close-modal"
+          id="closeModal"
+        >
+          ✕
+        </button>
+
+      </div>
+
+
+      <div
+        class="modal-body"
+        id="modalBody"
+      ></div>
+
+
+      <div class="modal-footer">
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          id="modalOk"
+        >
+          OK
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================================
+       FOOTER
+  ========================================= -->
+
+  <footer>
+
+    <div class="container">
+
+      <div class="footer-grid">
+
+        <div>
+
+          <h3>
+            📣 AI Marketing
+          </h3>
+
+          <p>
+            A practical marketing workspace for
+            planning campaigns, understanding
+            audiences and creating content.
+          </p>
+
+        </div>
+
+
+        <div>
+
+          <p>
+            Marketing suggestions generated by
+            this page are educational and should
+            be tested against your real customers,
+            market data and business goals.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="footer-bottom">
+
+        ©
+        <span id="year"></span>
+        AI Marketing.
+        All rights reserved.
+
+      </div>
+
+    </div>
+
+  </footer>
