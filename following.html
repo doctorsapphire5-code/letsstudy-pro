@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Following</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+:root{
+    --primary:#7c3aed;
+    --primary-dark:#6d28d9;
+    --bg:#f8fafc;
+    --card:#ffffff;
+    --text:#172033;
+    --muted:#64748b;
+    --border:#e2e8f0;
+    --danger:#dc2626;
+}
+
+body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+}
+
+.header{
+    height:64px;
+    background:#fff;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 24px;
+}
+
+.header h1{
+    margin:0;
+    font-size:19px;
+}
+
+.count{
+    color:var(--muted);
+    font-size:10px;
+    margin-left:7px;
+}
+
+.container{
+    max-width:1100px;
+    margin:auto;
+    padding:24px;
+}
+
+.toolbar{
+    display:flex;
+    gap:10px;
+    margin-bottom:20px;
+}
+
+.search{
+    flex:1;
+    padding:11px 12px;
+    border:1px solid #cbd5e1;
+    border-radius:7px;
+    outline:none;
+}
+
+.search:focus{
+    border-color:var(--primary);
+}
+
+.sort{
+    min-width:150px;
+    border:1px solid #cbd5e1;
+    border-radius:7px;
+    padding:10px;
+    background:#fff;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:
+        repeat(3,minmax(0,1fr));
+    gap:14px;
+}
+
+.card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:11px;
+    padding:18px;
+}
+
+.profile{
+    display:flex;
+    align-items:center;
+    gap:11px;
+    margin-bottom:14px;
+}
+
+.avatar{
+    width:46px;
+    height:46px;
+    border-radius:50%;
+    background:#ede9fe;
+    color:#5b21b6;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+    font-weight:900;
+}
+
+.name{
+    font-size:12px;
+    font-weight:900;
+}
+
+.username{
+    margin-top:4px;
+    color:var(--muted);
+    font-size:9px;
+}
+
+.bio{
+    min-height:34px;
+    color:#475569;
+    font-size:10px;
+    line-height:1.6;
+    margin-bottom:14px;
+}
+
+.stats{
+    display:flex;
+    gap:20px;
+    padding:11px 0;
+    border-top:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+    margin-bottom:13px;
+}
+
+.stat strong{
+    display:block;
+    font-size:11px;
+}
+
+.stat span{
+    color:var(--muted);
+    font-size:8px;
+}
+
+.actions{
+    display:flex;
+    gap:7px;
+}
+
+button{
+    border:0;
+    border-radius:7px;
+    padding:9px 12px;
+    cursor:pointer;
+    font-size:10px;
+    font-weight:800;
+}
+
+.actions button{
+    flex:1;
+}
+
+.primary{
+    background:var(--primary);
+    color:#fff;
+}
+
+.primary:hover{
+    background:var(--primary-dark);
+}
+
+.secondary{
+    background:#e2e8f0;
+    color:#334155;
+}
+
+.danger{
+    background:#fee2e2;
+    color:#b91c1c;
+}
+
+.empty{
+    display:none;
+    text-align:center;
+    padding:70px 20px;
+    color:var(--muted);
+}
+
+.modal{
+    position:fixed;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:rgba(15,23,42,.55);
+    z-index:1000;
+}
+
+.modal.show{
+    display:flex;
+}
+
+.modal-card{
+    width:min(500px,100%);
+    background:#fff;
+    border-radius:12px;
+    padding:22px;
+}
+
+.modal-card h2{
+    margin:0 0 18px;
+}
+
+.form-group{
+    margin-bottom:14px;
+}
+
+.form-group label{
+    display:block;
+    margin-bottom:6px;
+    color:var(--muted);
+    font-size:9px;
+    font-weight:900;
+    text-transform:uppercase;
+}
+
+.form-group input,
+.form-group textarea{
+    width:100%;
+    padding:10px 11px;
+    border:1px solid #cbd5e1;
+    border-radius:7px;
+    outline:none;
+    font:inherit;
+}
+
+.form-group textarea{
+    min-height:100px;
+    resize:vertical;
+}
+
+.form-group input:focus,
+.form-group textarea:focus{
+    border-color:var(--primary);
+}
+
+.modal-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    margin-top:18px;
+}
+
+.toast{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    background:#172033;
+    color:#fff;
+    padding:11px 14px;
+    border-radius:8px;
+    font-size:10px;
+    opacity:0;
+    transform:translateY(10px);
+    pointer-events:none;
+    transition:.2s;
+}
+
+.toast.show{
+    opacity:1;
+    transform:translateY(0);
+}
+
+@media(max-width:900px){
+    .grid{
+        grid-template-columns:
+            repeat(2,minmax(0,1fr));
+    }
+}
+
+@media(max-width:650px){
+
+    .header{
+        padding:0 12px;
+    }
+
+    .container{
+        padding:12px;
+    }
+
+    .toolbar{
+        flex-direction:column;
+    }
+
+    .sort{
+        width:100%;
+    }
+
+    .grid{
+        grid-template-columns:1fr;
+    }
+
+    .modal-actions{
+        flex-direction:column-reverse;
+    }
+
+    .modal-actions button{
+        width:100%;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+
+    <h1>
+        Following
+        <span
+            id="count"
+            class="count">
+            0
+        </span>
+    </h1>
+
+    <button
+        class="primary"
+        onclick="openAddModal()">
+        + Add Account
+    </button>
+
+</header>
+
+
+<main class="container">
+
+    <div class="toolbar">
+
+        <input
+            id="search"
+            class="search"
+            type="search"
+            placeholder="Search accounts..."
+            oninput="renderFollowing()">
+
+        <select
+            id="sort"
+            class="sort"
+            onchange="renderFollowing()">
+
+            <option value="recent">
+                Recently Added
+            </option>
+
+            <option value="name">
+                Name
+            </option>
+
+            <option value="followers">
+                Most Followers
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <section
+        id="grid"
+        class="grid">
+    </section>
+
+
+    <div
+        id="empty"
+        class="empty">
+
+        <h2>
+            No accounts found
+        </h2>
+
+        <p>
+            Add an account or change your search.
+        </p>
+
+    </div>
+
+</main>
+
+
+<!-- ADD ACCOUNT MODAL -->
+
+<div
+    id="modal"
+    class="modal">
+
+    <div class="modal-card">
+
+        <h2>
+            Add Account
+        </h2>
+
+        <form
+            id="form"
+            onsubmit="addAccount(event)">
+
+            <div class="form-group">
+
+                <label for="name">
+                    Name
+                </label>
+
+                <input
+                    id="name"
+                    type="text"
+                    placeholder="John Doe"
+                    required>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="username">
+                    Username
+                </label>
+
+                <input
+                    id="username"
+                    type="text"
+                    placeholder="@johndoe"
+                    required>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="bio">
+                    Bio
+                </label>
+
+                <textarea
+                    id="bio"
+                    placeholder="Short bio..."></textarea>
+
+            </div>
+
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="secondary"
+                    onclick="closeModal()">
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="primary">
+                    Add Account
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<div
+    id="toast"
+    class="toast">
+</div>
+
+
+<script>
+
+const STORAGE_KEY =
+    "following-data";
+
+let following = [];
+
+
+/* =========================
+   LOAD
+========================= */
+
+function loadFollowing(){
+
+    const saved =
+        localStorage.getItem(
+            STORAGE_KEY
+        );
+
+
+    if(saved){
+
+        try{
+
+            const parsed =
+                JSON.parse(saved);
+
+            following =
+                Array.isArray(parsed)
+                    ? parsed
+                    : [];
+
+        }catch(error){
+
+            following = [];
+
+        }
+
+        return;
+
+    }
+
+
+    following = [
+
+        {
+            id:1,
+            name:"Alex Morgan",
+            username:"@alexmorgan",
+            bio:"Product designer and creative thinker.",
+            followers:1240,
+            following:320,
+            createdAt:"2026-08-01T09:00:00"
+        },
+
+        {
+            id:2,
+            name:"Sarah Wilson",
+            username:"@sarahwilson",
+            bio:"Building useful things for the web.",
+            followers:980,
+            following:210,
+            createdAt:"2026-08-02T10:30:00"
+        },
+
+        {
+            id:3,
+            name:"Maya Johnson",
+            username:"@mayaj",
+            bio:"Photography, travel, and storytelling.",
+            followers:1730,
+            following:390,
+            createdAt:"2026-08-04T14:00:00"
+        },
+
+        {
+            id:4,
+            name:"Emma Davis",
+            username:"@emmadavis",
+            bio:"Writer sharing ideas about creativity.",
+            followers:870,
+            following:190,
+            createdAt:"2026-08-06T16:40:00"
+        }
+
+    ];
+
+
+    saveFollowing();
+
+}
+
+
+/* =========================
+   SAVE
+========================= */
+
+function saveFollowing(){
+
+    localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(
+            following
+        )
+    );
+
+}
+
+
+/* =========================
+   RENDER
+========================= */
+
+function renderFollowing(){
+
+    const grid =
+        document.getElementById(
+            "grid"
+        );
+
+    const empty =
+        document.getElementById(
+            "empty"
+        );
+
+    const query =
+        document.getElementById(
+            "search"
+        ).value
+        .toLowerCase()
+        .trim();
+
+    const sort =
+        document.getElementById(
+            "sort"
+        ).value;
+
+
+    let filtered =
+        following.filter(
+            account => {
+
+                const content =
+                    (
+                        account.name +
+                        " " +
+                        account.username +
+                        " " +
+                        account.bio
+                    )
+                    .toLowerCase();
+
+                return content.includes(
+                    query
+                );
+
+            }
+        );
+
+
+    if(sort === "name"){
+
+        filtered.sort(
+            (a,b) =>
+                a.name.localeCompare(
+                    b.name
+                )
+        );
+
+    }
+
+
+    if(sort === "followers"){
+
+        filtered.sort(
+            (a,b) =>
+                Number(
+                    b.followers || 0
+                ) -
+                Number(
+                    a.followers || 0
+                )
+        );
+
+    }
+
+
+    if(sort === "recent"){
+
+        filtered.sort(
+            (a,b) =>
+                new Date(
+                    b.createdAt
+                ) -
+                new Date(
+                    a.createdAt
+                )
+        );
+
+    }
+
+
+    grid.innerHTML = "";
+
+
+    document.getElementById(
+        "count"
+    ).textContent =
+        following.length;
+
+
+    if(!filtered.length){
+
+        empty.style.display =
+            "block";
+
+        return;
+
+    }
+
+
+    empty.style.display =
+        "none";
+
+
+    filtered.forEach(
+        account => {
+
+            const card =
+                document.createElement(
+                    "article"
+                );
+
+            card.className =
+                "card";
+
+
+            const initial =
+                (
+                    account.name ||
+                    "U"
+                )
+                .charAt(0)
+                .toUpperCase();
+
+
+            card.innerHTML = `
+
+                <div class="profile">
+
+                    <div class="avatar">
+                        ${escapeHTML(
+                            initial
+                        )}
+                    </div>
+
+                    <div>
+
+                        <div class="name">
+                            ${escapeHTML(
+                                account.name
+                            )}
+                        </div>
+
+                        <div class="username">
+                            ${escapeHTML(
+                                account.username
+                            )}
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="bio">
+                    ${escapeHTML(
+                        account.bio ||
+                        "No bio available."
+                    )}
+                </div>
+
+
+                <div class="stats">
+
+                    <div class="stat">
+
+                        <strong>
+                            ${formatNumber(
+                                account.followers
+                            )}
+                        </strong>
+
+                        <span>
+                            Followers
+                        </span>
+
+                    </div>
+
+
+                    <div class="stat">
+
+                        <strong>
+                            ${formatNumber(
+                                account.following
+                            )}
+                        </strong>
+
+                        <span>
+                            Following
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="actions">
+
+                    <button
+                        class="secondary"
+                        onclick="viewProfile(${account.id})">
+                        View
+                    </button>
+
+                    <button
+                        class="danger"
+                        onclick="unfollow(${account.id})">
+                        Unfollow
+                    </button>
+
+                </div>
+
+            `;
+
+
+            grid.appendChild(
+                card
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================
+   VIEW PROFILE
+========================= */
+
+function viewProfile(id){
+
+    const account =
+        following.find(
+            item =>
+                String(item.id) ===
+                String(id)
+        );
+
+
+    if(!account){
+        return;
+    }
+
+
+    showToast(
+        "Opening " +
+        account.name +
+        "'s profile."
+    );
+
+}
+
+
+/* =========================
+   UNFOLLOW
+========================= */
+
+function unfollow(id){
+
+    const account =
+        following.find(
+            item =>
+                String(item.id) ===
+                String(id)
+        );
+
+
+    if(!account){
+        return;
+    }
+
+
+    if(
+        !confirm(
+            "Unfollow " +
+            account.name +
+            "?"
+        )
+    ){
+
+        return;
+
+    }
+
+
+    following =
+        following.filter(
+            item =>
+                String(item.id) !==
+                String(id)
+        );
+
+
+    saveFollowing();
+
+    renderFollowing();
+
+    showToast(
+        "You unfollowed " +
+        account.name
+    );
+
+}
+
+
+/* =========================
+   ADD ACCOUNT
+========================= */
+
+function openAddModal(){
+
+    document.getElementById(
+        "form"
+    ).reset();
+
+    document.getElementById(
+        "modal"
+    ).classList.add(
+        "show"
+    );
+
+}
+
+
+function closeModal(){
+
+    document.getElementById(
+        "modal"
+    ).classList.remove(
+        "show"
+    );
+
+}
+
+
+function addAccount(event){
+
+    event.preventDefault();
+
+
+    const name =
+        document.getElementById(
+            "name"
+        ).value.trim();
+
+
+    let username =
+        document.getElementById(
+            "username"
+        ).value.trim();
+
+
+    const bio =
+        document.getElementById(
+            "bio"
+        ).value.trim();
+
+
+    if(
+        !name ||
+        !username
+    ){
+
+        return;
+
+    }
+
+
+    if(
+        !username.startsWith("@")
+    ){
+
+        username =
+            "@" +
+            username;
+
+    }
+
+
+    following.unshift({
+
+        id:
+            Date.now(),
+
+        name,
+
+        username,
+
+        bio,
+
+        followers:0,
+
+        following:0,
+
+        createdAt:
+            new Date()
+            .toISOString()
+
+    });
+
+
+    saveFollowing();
+
+    closeModal();
+
+    renderFollowing();
+
+    showToast(
+        "Account added."
+    );
+
+}
+
+
+/* =========================
+   NUMBER FORMAT
+========================= */
+
+function formatNumber(
+    number
+){
+
+    return new Intl.NumberFormat(
+        "en-US",
+        {
+            notation:"compact",
+            maximumFractionDigits:1
+        }
+    ).format(
+        Number(number) || 0
+    );
+
+}
+
+
+/* =========================
+   ESCAPE HTML
+========================= */
+
+function escapeHTML(
+    value
+){
+
+    return String(
+        value ?? ""
+    )
+    .replace(
+        /&/g,
+        "&amp;"
+    )
+    .replace(
+        /</g,
+        "&lt;"
+    )
+    .replace(
+        />/g,
+        "&gt;"
+    )
+    .replace(
+        /"/g,
+        "&quot;"
+    )
+    .replace(
+        /'/g,
+        "&#039;"
+    );
+
+}
+
+
+/* =========================
+   TOAST
+========================= */
+
+let toastTimer = null;
+
+function showToast(
+    message
+){
+
+    const toast =
+        document.getElementById(
+            "toast"
+        );
+
+
+    toast.textContent =
+        message;
+
+
+    toast.classList.add(
+        "show"
+    );
+
+
+    clearTimeout(
+        toastTimer
+    );
+
+
+    toastTimer =
+        setTimeout(
+            () => {
+
+                toast.classList.remove(
+                    "show"
+                );
+
+            },
+            2200
+        );
+
+}
+
+
+/* =========================
+   MODAL EVENTS
+========================= */
+
+document.getElementById(
+    "modal"
+).addEventListener(
+    "click",
+    function(event){
+
+        if(
+            event.target === this
+        ){
+
+            closeModal();
+
+        }
+
+    }
+);
+
+
+document.addEventListener(
+    "keydown",
+    function(event){
+
+        if(
+            event.key === "Escape"
+        ){
+
+            closeModal();
+
+        }
+
+    }
+);
+
+
+/* =========================
+   START
+========================= */
+
+loadFollowing();
+
+renderFollowing();
+
+</script>
+
+</body>
+</html>
