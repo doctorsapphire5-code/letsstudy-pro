@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meetings</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:#f8fafc;
+    color:#172033;
+}
+
+.header{
+    height:64px;
+    background:#fff;
+    border-bottom:1px solid #e2e8f0;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 24px;
+}
+
+.header h1{
+    margin:0;
+    font-size:19px;
+}
+
+.actions{
+    display:flex;
+    gap:8px;
+}
+
+button{
+    border:0;
+    border-radius:7px;
+    padding:10px 14px;
+    cursor:pointer;
+    font-size:12px;
+    font-weight:800;
+}
+
+.primary{
+    background:#7c3aed;
+    color:#fff;
+}
+
+.secondary{
+    background:#e2e8f0;
+    color:#334155;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+    padding:24px;
+}
+
+.toolbar{
+    display:flex;
+    gap:10px;
+    margin-bottom:20px;
+}
+
+.search{
+    flex:1;
+    border:1px solid #cbd5e1;
+    border-radius:7px;
+    padding:11px;
+    outline:none;
+}
+
+.filter{
+    border:1px solid #cbd5e1;
+    border-radius:7px;
+    background:#fff;
+    padding:10px;
+}
+
+.meeting-list{
+    display:grid;
+    gap:12px;
+}
+
+.meeting{
+    background:#fff;
+    border:1px solid #e2e8f0;
+    border-radius:10px;
+    padding:18px;
+    display:grid;
+    grid-template-columns:90px 1fr auto;
+    gap:18px;
+    align-items:center;
+}
+
+.date{
+    text-align:center;
+    border-right:1px solid #e2e8f0;
+    padding-right:15px;
+}
+
+.date .day{
+    font-size:25px;
+    font-weight:900;
+}
+
+.date .month{
+    color:#7c3aed;
+    font-size:10px;
+    font-weight:900;
+    text-transform:uppercase;
+}
+
+.meeting h2{
+    margin:0 0 7px;
+    font-size:15px;
+}
+
+.details{
+    color:#64748b;
+    font-size:11px;
+    line-height:1.7;
+}
+
+.status{
+    display:inline-block;
+    padding:4px 8px;
+    border-radius:20px;
+    background:#dcfce7;
+    color:#166534;
+    font-size:9px;
+    font-weight:900;
+    margin-top:7px;
+}
+
+.meeting-actions{
+    display:flex;
+    gap:7px;
+}
+
+.empty{
+    text-align:center;
+    padding:70px;
+    color:#64748b;
+}
+
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(15,23,42,.55);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+}
+
+.modal.show{
+    display:flex;
+}
+
+.modal-card{
+    width:min(500px,100%);
+    background:#fff;
+    border-radius:12px;
+    padding:22px;
+}
+
+.modal-card h2{
+    margin-top:0;
+}
+
+.form-group{
+    margin-bottom:14px;
+}
+
+.form-group label{
+    display:block;
+    margin-bottom:5px;
+    color:#64748b;
+    font-size:9px;
+    font-weight:900;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select{
+    width:100%;
+    border:1px solid #cbd5e1;
+    border-radius:7px;
+    padding:10px;
+    outline:none;
+}
+
+.modal-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    margin-top:20px;
+}
+
+@media(max-width:700px){
+
+    .header{
+        padding:0 12px;
+    }
+
+    .container{
+        padding:12px;
+    }
+
+    .meeting{
+        grid-template-columns:1fr;
+    }
+
+    .date{
+        text-align:left;
+        border-right:0;
+        border-bottom:1px solid #e2e8f0;
+        padding-bottom:10px;
+    }
+
+    .meeting-actions{
+        justify-content:flex-start;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+
+    <h1>Meetings</h1>
+
+    <div class="actions">
+
+        <button
+            class="secondary"
+            onclick="goToCalendar()">
+            Calendar
+        </button>
+
+        <button
+            class="primary"
+            onclick="openMeetingModal()">
+            + New Meeting
+        </button>
+
+    </div>
+
+</header>
+
+
+<main class="container">
+
+    <div class="toolbar">
+
+        <input
+            id="search"
+            class="search"
+            type="search"
+            placeholder="Search meetings..."
+            oninput="renderMeetings()">
+
+        <select
+            id="filter"
+            class="filter"
+            onchange="renderMeetings()">
+
+            <option value="all">
+                All
+            </option>
+
+            <option value="upcoming">
+                Upcoming
+            </option>
+
+            <option value="completed">
+                Completed
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <section
+        id="meetingList"
+        class="meeting-list">
+    </section>
+
+
+    <div
+        id="empty"
+        class="empty"
+        style="display:none">
+
+        No meetings found.
+
+    </div>
+
+</main>
+
+
+<!-- =========================
+     NEW MEETING MODAL
+========================= -->
+
+<div
+    id="meetingModal"
+    class="modal">
+
+    <div class="modal-card">
+
+        <h2>
+            New Meeting
+        </h2>
+
+        <div class="form-group">
+
+            <label>
+                MEETING TITLE
+            </label>
+
+            <input
+                id="meetingTitle"
+                placeholder="Team meeting">
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>
+                DATE
+            </label>
+
+            <input
+                id="meetingDate"
+                type="date">
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>
+                TIME
+            </label>
+
+            <input
+                id="meetingTime"
+                type="time">
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>
+                PARTICIPANTS
+            </label>
+
+            <input
+                id="meetingParticipants"
+                placeholder="John, Jane, Alex">
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>
+                DESCRIPTION
+            </label>
+
+            <textarea
+                id="meetingDescription"
+                rows="4"
+                placeholder="Meeting details..."></textarea>
+
+        </div>
+
+
+        <div class="modal-actions">
+
+            <button
+                class="secondary"
+                onclick="closeMeetingModal()">
+                Cancel
+            </button>
+
+            <button
+                class="primary"
+                onclick="createMeeting()">
+                Create Meeting
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const STORAGE_KEY =
+    "meetings-data";
+
+
+let meetings = [];
+
+
+/* =========================
+   LOAD
+========================= */
+
+function loadMeetings(){
+
+    const saved =
+        localStorage.getItem(
+            STORAGE_KEY
+        );
+
+
+    if(saved){
+
+        try{
+
+            meetings =
+                JSON.parse(saved);
+
+        }catch(error){
+
+            meetings = [];
+
+        }
+
+    }
+
+
+    if(!Array.isArray(meetings)){
+        meetings = [];
+    }
+
+}
+
+
+/* =========================
+   SAVE
+========================= */
+
+function saveMeetings(){
+
+    localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(meetings)
+    );
+
+}
+
+
+/* =========================
+   RENDER
+========================= */
+
+function renderMeetings(){
+
+    const list =
+        document.getElementById(
+            "meetingList"
+        );
+
+    const empty =
+        document.getElementById(
+            "empty"
+        );
+
+    const query =
+        document.getElementById(
+            "search"
+        ).value
+        .toLowerCase()
+        .trim();
+
+    const filter =
+        document.getElementById(
+            "filter"
+        ).value;
+
+
+    list.innerHTML = "";
+
+
+    const now =
+        new Date();
+
+
+    const filtered =
+        meetings.filter(
+            meeting => {
+
+                const searchable =
+                    (
+                        meeting.title +
+                        " " +
+                        meeting.participants +
+                        " " +
+                        meeting.description
+                    )
+                    .toLowerCase();
+
+
+                if(
+                    !searchable.includes(
+                        query
+                    )
+                ){
+
+                    return false;
+
+                }
+
+
+                const date =
+                    new Date(
+                        meeting.date +
+                        "T" +
+                        meeting.time
+                    );
+
+
+                if(
+                    filter === "upcoming" &&
+                    date < now
+                ){
+
+                    return false;
+
+                }
+
+
+                if(
+                    filter === "completed" &&
+                    date >= now
+                ){
+
+                    return false;
+
+                }
+
+
+                return true;
+
+            }
+        )
+        .sort(
+            (a,b) =>
+                new Date(
+                    a.date + "T" + a.time
+                ) -
+                new Date(
+                    b.date + "T" + b.time
+                )
+        );
+
+
+    if(!filtered.length){
+
+        empty.style.display =
+            "block";
+
+        return;
+
+    }
+
+
+    empty.style.display =
+        "none";
+
+
+    filtered.forEach(
+        meeting => {
+
+            const date =
+                new Date(
+                    meeting.date +
+                    "T" +
+                    meeting.time
+                );
+
+
+            const isUpcoming =
+                date >= now;
+
+
+            const article =
+                document.createElement(
+                    "article"
+                );
+
+
+            article.className =
+                "meeting";
+
+
+            article.innerHTML = `
+
+                <div class="date">
+
+                    <div class="day">
+                        ${date.getDate()}
+                    </div>
+
+                    <div class="month">
+                        ${date.toLocaleString(
+                            "en",
+                            {month:"short"}
+                        )}
+                    </div>
+
+                </div>
+
+
+                <div>
+
+                    <h2>
+                        ${escapeHTML(
+                            meeting.title
+                        )}
+                    </h2>
+
+                    <div class="details">
+
+                        ${escapeHTML(
+                            meeting.time
+                        )}
+                        ·
+
+                        ${escapeHTML(
+                            meeting.participants ||
+                            "No participants"
+                        )}
+
+                        <br>
+
+                        ${escapeHTML(
+                            meeting.description ||
+                            "No description"
+                        )}
+
+                    </div>
+
+
+                    <span class="status">
+                        ${
+                            isUpcoming
+                                ? "Upcoming"
+                                : "Completed"
+                        }
+                    </span>
+
+                </div>
+
+
+                <div class="meeting-actions">
+
+                    ${
+                        isUpcoming
+                            ? `
+                                <button
+                                    class="primary"
+                                    onclick="joinMeeting(${meeting.id})">
+                                    Join
+                                </button>
+                              `
+                            : ""
+                    }
+
+                    <button
+                        class="secondary"
+                        onclick="deleteMeeting(${meeting.id})">
+                        Delete
+                    </button>
+
+                </div>
+
+            `;
+
+
+            list.appendChild(
+                article
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================
+   MODAL
+========================= */
+
+function openMeetingModal(){
+
+    document.getElementById(
+        "meetingModal"
+    ).classList.add("show");
+
+
+    const date =
+        new Date();
+
+
+    document.getElementById(
+        "meetingDate"
+    ).value =
+        date.toISOString()
+            .split("T")[0];
+
+}
+
+
+function closeMeetingModal(){
+
+    document.getElementById(
+        "meetingModal"
+    ).classList.remove("show");
+
+}
+
+
+/* =========================
+   CREATE
+========================= */
+
+function createMeeting(){
+
+    const title =
+        document.getElementById(
+            "meetingTitle"
+        ).value.trim();
+
+    const date =
+        document.getElementById(
+            "meetingDate"
+        ).value;
+
+    const time =
+        document.getElementById(
+            "meetingTime"
+        ).value;
+
+    const participants =
+        document.getElementById(
+            "meetingParticipants"
+        ).value.trim();
+
+    const description =
+        document.getElementById(
+            "meetingDescription"
+        ).value.trim();
+
+
+    if(
+        !title ||
+        !date ||
+        !time
+    ){
+
+        alert(
+            "Please enter a title, date and time."
+        );
+
+        return;
+
+    }
+
+
+    meetings.push({
+
+        id:
+            Date.now(),
+
+        title,
+
+        date,
+
+        time,
+
+        participants,
+
+        description
+
+    });
+
+
+    saveMeetings();
+
+    clearMeetingForm();
+
+    closeMeetingModal();
+
+    renderMeetings();
+
+}
+
+
+/* =========================
+   DELETE
+========================= */
+
+function deleteMeeting(id){
+
+    if(
+        !confirm(
+            "Delete this meeting?"
+        )
+    ){
+
+        return;
+
+    }
+
+
+    meetings =
+        meetings.filter(
+            meeting =>
+                meeting.id !== id
+        );
+
+
+    saveMeetings();
+
+    renderMeetings();
+
+}
+
+
+/* =========================
+   JOIN
+========================= */
+
+function joinMeeting(id){
+
+    const meeting =
+        meetings.find(
+            item =>
+                item.id === id
+        );
+
+
+    if(!meeting){
+        return;
+    }
+
+
+    alert(
+        "Joining: " +
+        meeting.title
+    );
+
+}
+
+
+/* =========================
+   CLEAR
+========================= */
+
+function clearMeetingForm(){
+
+    document.getElementById(
+        "meetingTitle"
+    ).value = "";
+
+    document.getElementById(
+        "meetingTime"
+    ).value = "";
+
+    document.getElementById(
+        "meetingParticipants"
+    ).value = "";
+
+    document.getElementById(
+        "meetingDescription"
+    ).value = "";
+
+}
+
+
+/* =========================
+   CALENDAR
+========================= */
+
+function goToCalendar(){
+
+    location.href =
+        "calendar.html";
+
+}
+
+
+/* =========================
+   ESCAPE
+========================= */
+
+function escapeHTML(
+    value
+){
+
+    return String(value ?? "")
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+/* =========================
+   START
+========================= */
+
+loadMeetings();
+
+renderMeetings();
+
+</script>
+
+</body>
+</html>
