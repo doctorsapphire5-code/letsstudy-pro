@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Cloud Trash</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  background:#f5f7fb;
+  color:#172033
+}
+
+.container{
+  width:min(1150px,94%);
+  margin:auto
+}
+
+header{
+  background:#fff;
+  border-bottom:1px solid #e2e8f0;
+  padding:15px 0
+}
+
+.nav{
+  display:flex;
+  justify-content:space-between;
+  align-items:center
+}
+
+.logo{
+  color:#2563eb;
+  font-size:18px;
+  font-weight:900
+}
+
+.back{
+  color:#64748b;
+  text-decoration:none;
+  font-size:9px;
+  font-weight:900
+}
+
+main{
+  padding:28px 0 60px
+}
+
+h1{
+  font-size:28px;
+  margin-bottom:6px
+}
+
+.subtitle{
+  color:#64748b;
+  font-size:10px;
+  margin-bottom:22px
+}
+
+.layout{
+  display:grid;
+  grid-template-columns:1fr 300px;
+  gap:16px
+}
+
+.card{
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:13px;
+  padding:18px
+}
+
+.toolbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:16px
+}
+
+.title{
+  font-size:13px;
+  font-weight:900
+}
+
+.description{
+  color:#64748b;
+  font-size:8px;
+  line-height:1.5;
+  margin:6px 0 16px
+}
+
+.actions{
+  display:flex;
+  gap:6px
+}
+
+.btn{
+  border:0;
+  border-radius:8px;
+  padding:9px 12px;
+  font-size:8px;
+  font-weight:900;
+  cursor:pointer
+}
+
+.primary{
+  background:#2563eb;
+  color:#fff
+}
+
+.gray{
+  background:#f1f5f9;
+  color:#334155
+}
+
+.red{
+  background:#dc2626;
+  color:#fff
+}
+
+.orange{
+  background:#f59e0b;
+  color:#fff
+}
+
+.search{
+  width:100%;
+  padding:10px;
+  border:1px solid #dbe2ea;
+  border-radius:8px;
+  outline:none;
+  font-size:8px;
+  margin-bottom:12px
+}
+
+.search:focus{
+  border-color:#2563eb
+}
+
+.item{
+  display:grid;
+  grid-template-columns:40px 1fr auto;
+  gap:10px;
+  align-items:center;
+  padding:13px 0;
+  border-bottom:1px solid #eef2f7
+}
+
+.item:last-child{
+  border-bottom:0
+}
+
+.icon{
+  width:38px;
+  height:38px;
+  border-radius:9px;
+  background:#fef2f2;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px
+}
+
+.info strong{
+  display:block;
+  font-size:8px;
+  margin-bottom:4px
+}
+
+.info span{
+  color:#64748b;
+  font-size:6px
+}
+
+.item-actions{
+  display:flex;
+  gap:5px
+}
+
+.badge{
+  display:inline-block;
+  padding:5px 8px;
+  background:#fef3c7;
+  color:#92400e;
+  border-radius:20px;
+  font-size:6px;
+  font-weight:900
+}
+
+.empty{
+  text-align:center;
+  color:#64748b;
+  font-size:8px;
+  padding:40px 15px
+}
+
+.stat{
+  display:flex;
+  justify-content:space-between;
+  padding:11px 0;
+  border-bottom:1px solid #eef2f7;
+  font-size:7px
+}
+
+.stat:last-child{
+  border-bottom:0
+}
+
+.stat span{
+  color:#64748b
+}
+
+.stat strong{
+  font-size:8px
+}
+
+.notice{
+  padding:11px;
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  border-radius:8px;
+  color:#9a3412;
+  font-size:7px;
+  line-height:1.5;
+  margin-top:14px
+}
+
+.toast{
+  position:fixed;
+  right:18px;
+  bottom:18px;
+  background:#172033;
+  color:#fff;
+  padding:11px 15px;
+  border-radius:8px;
+  font-size:8px;
+  font-weight:900;
+  display:none;
+  z-index:200
+}
+
+.toast.show{
+  display:block
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.45);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  z-index:100
+}
+
+.modal.show{
+  display:flex
+}
+
+.modal-box{
+  width:min(440px,100%);
+  background:#fff;
+  border-radius:13px;
+  padding:20px
+}
+
+.modal-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:14px
+}
+
+.modal-head h2{
+  font-size:14px
+}
+
+.close{
+  border:0;
+  width:28px;
+  height:28px;
+  border-radius:6px;
+  background:#f1f5f9;
+  cursor:pointer
+}
+
+.modal-text{
+  color:#64748b;
+  font-size:8px;
+  line-height:1.6
+}
+
+@media(max-width:800px){
+  .layout{
+    grid-template-columns:1fr
+  }
+}
+
+@media(max-width:600px){
+  .toolbar{
+    align-items:flex-start;
+    flex-direction:column
+  }
+
+  .item{
+    grid-template-columns:38px 1fr
+  }
+
+  .item-actions{
+    grid-column:2;
+    flex-wrap:wrap
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="container nav">
+
+<div class="logo">🗑️ Cloud Trash</div>
+
+<a
+href="cloud-settings.html"
+class="back">
+← Cloud Settings
+</a>
+
+</div>
+</header>
+
+
+<main class="container">
+
+<h1>Cloud Trash</h1>
+
+<p class="subtitle">
+Recover deleted cloud files or permanently remove them.
+</p>
+
+
+<div class="layout">
+
+<section class="card">
+
+<div class="toolbar">
+
+<div class="title">
+Recently Deleted
+</div>
+
+<div class="actions">
+
+<button
+class="btn gray"
+onclick="restoreAll()">
+Restore All
+</button>
+
+<button
+class="btn red"
+onclick="emptyTrash()">
+Empty Trash
+</button>
+
+</div>
+
+</div>
+
+
+<input
+id="search"
+class="search"
+type="search"
+placeholder="Search deleted files...">
+
+
+<div id="trashList"></div>
+
+</section>
+
+
+<aside>
+
+<div class="card">
+
+<div class="title">
+Trash Overview
+</div>
+
+<p class="description">
+Deleted files are retained temporarily before permanent deletion.
+</p>
+
+
+<div class="stat">
+<span>Deleted items</span>
+<strong id="itemCount">0</strong>
+</div>
+
+<div class="stat">
+<span>Trash size</span>
+<strong id="trashSize">0 MB</strong>
+</div>
+
+<div class="stat">
+<span>Retention period</span>
+<strong>30 days</strong>
+</div>
+
+
+<div class="notice">
+Files older than 30 days should be permanently removed by your production backend or scheduled cleanup job.
+</div>
+
+</div>
+
+
+<div class="card" style="margin-top:15px">
+
+<div class="title">
+Storage Actions
+</div>
+
+<p class="description">
+Manage deleted files and recover important data.
+</p>
+
+<button
+class="btn primary"
+style="width:100%;margin-bottom:7px"
+onclick="restoreAll()">
+Restore All Files
+</button>
+
+<button
+class="btn red"
+style="width:100%"
+onclick="emptyTrash()">
+Permanently Delete All
+</button>
+
+</div>
+
+</aside>
+
+</div>
+
+</main>
+
+
+<div
+id="modal"
+class="modal">
+
+<div class="modal-box">
+
+<div class="modal-head">
+
+<h2 id="modalTitle">
+Deleted File
+</h2>
+
+<button
+class="close"
+onclick="closeModal()">
+×
+</button>
+
+</div>
+
+<div
+id="modalText"
+class="modal-text">
+</div>
+
+<div class="actions" style="margin-top:15px">
+
+<button
+class="btn gray"
+onclick="closeModal()">
+Close
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div id="toast" class="toast"></div>
+
+
+<script>
+
+/*
+  CLOUD TRASH
+
+  Demo storage:
+  localStorage
+
+  Production architecture:
+  Firebase Storage -> deleted files
+  Firestore -> trash metadata
+  Cloud Functions -> automatic expiration
+  Security Rules -> authorization
+*/
+
+
+const demoTrash = [
+
+{
+  id:"trash_1",
+  name:"Old Business Report.pdf",
+  type:"document",
+  size:0.45,
+  deletedAt:new Date(Date.now()-2*86400000).toISOString()
+},
+
+{
+  id:"trash_2",
+  name:"Unused Logo.png",
+  type:"image",
+  size:0.12,
+  deletedAt:new Date(Date.now()-5*86400000).toISOString()
+},
+
+{
+  id:"trash_3",
+  name:"Old Inventory.xlsx",
+  type:"document",
+  size:0.08,
+  deletedAt:new Date(Date.now()-9*86400000).toISOString()
+}
+
+];
+
+
+function getTrash(){
+
+let trash =
+JSON.parse(
+localStorage.getItem("cloudTrash") || "null"
+);
+
+if(!Array.isArray(trash)){
+
+trash=demoTrash;
+
+saveTrash(trash);
+
+}
+
+return trash;
+
+}
+
+
+function saveTrash(trash){
+
+localStorage.setItem(
+"cloudTrash",
+JSON.stringify(trash)
+);
+
+}
+
+
+function renderTrash(){
+
+const query =
+document.getElementById("search")
+.value
+.toLowerCase()
+.trim();
+
+const trash =
+getTrash()
+.filter(item =>
+item.name
+.toLowerCase()
+.includes(query)
+);
+
+const list =
+document.getElementById("trashList");
+
+list.innerHTML="";
+
+
+if(!trash.length){
+
+list.innerHTML=`
+<div class="empty">
+🗑️
+<br><br>
+Trash is empty.
+</div>
+`;
+
+updateStats();
+
+return;
+
+}
+
+
+trash.forEach(item=>{
+
+const row =
+document.createElement("div");
+
+row.className="item";
+
+
+row.innerHTML=`
+
+<div class="icon">
+${getIcon(item.type)}
+</div>
+
+<div class="info">
+
+<strong>
+${escapeHTML(item.name)}
+</strong>
+
+<span>
+${formatSize(item.size)}
+· Deleted ${formatDate(item.deletedAt)}
+</span>
+
+</div>
+
+<div class="item-actions">
+
+<span class="badge">
+Deleted
+</span>
+
+<button
+class="btn gray"
+onclick="viewItem('${safe(item.id)}')">
+View
+</button>
+
+<button
+class="btn primary"
+onclick="restoreItem('${safe(item.id)}')">
+Restore
+</button>
+
+<button
+class="btn red"
+onclick="deleteForever('${safe(item.id)}')">
+Delete
+</button>
+
+</div>
+`;
+
+list.appendChild(row);
+
+});
+
+updateStats();
+
+}
+
+
+function restoreItem(id){
+
+const trash =
+getTrash();
+
+const item =
+trash.find(
+x=>x.id===id
+);
+
+if(!item)
+return;
+
+
+const files =
+JSON.parse(
+localStorage.getItem("cloudFiles") || "[]"
+);
+
+
+files.unshift({
+
+id:"restored_"+Date.now(),
+
+name:item.name,
+
+type:item.type,
+
+size:item.size,
+
+updatedAt:
+new Date().toISOString()
+
+});
+
+
+const updatedTrash =
+trash.filter(
+x=>x.id!==id
+);
+
+
+localStorage.setItem(
+"cloudFiles",
+JSON.stringify(files)
+);
+
+saveTrash(updatedTrash);
+
+renderTrash();
+
+showToast(
+"File restored successfully."
+);
+
+}
+
+
+function restoreAll(){
+
+const trash =
+getTrash();
+
+if(!trash.length){
+
+showToast("Trash is already empty.");
+
+return;
+
+}
+
+
+if(!confirm(
+"Restore all deleted files?"
+))
+return;
+
+
+const files =
+JSON.parse(
+localStorage.getItem("cloudFiles") || "[]"
+);
+
+
+trash.forEach(item=>{
+
+files.unshift({
+
+id:"restored_"+Date.now()+"_"+Math.random(),
+
+name:item.name,
+
+type:item.type,
+
+size:item.size,
+
+updatedAt:
+new Date().toISOString()
+
+});
+
+});
+
+
+localStorage.setItem(
+"cloudFiles",
+JSON.stringify(files)
+);
+
+saveTrash([]);
+
+renderTrash();
+
+showToast(
+"All files restored."
+);
+
+}
+
+
+function deleteForever(id){
+
+const trash =
+getTrash();
+
+const item =
+trash.find(
+x=>x.id===id
+);
+
+if(!item)
+return;
+
+
+if(!confirm(
+"Permanently delete " +
+item.name +
+"? This cannot be undone."
+))
+return;
+
+
+const updated =
+trash.filter(
+x=>x.id!==id
+);
+
+saveTrash(updated);
+
+renderTrash();
+
+showToast(
+"File permanently deleted."
+);
+
+}
+
+
+function emptyTrash(){
+
+const trash =
+getTrash();
+
+if(!trash.length){
+
+showToast(
+"Trash is already empty."
+);
+
+return;
+
+}
+
+
+if(!confirm(
+"Permanently delete all files in Trash? This cannot be undone."
+))
+return;
+
+
+saveTrash([]);
+
+renderTrash();
+
+showToast(
+"Trash emptied successfully."
+);
+
+}
+
+
+function viewItem(id){
+
+const item =
+getTrash().find(
+x=>x.id===id
+);
+
+if(!item)
+return;
+
+
+document.getElementById(
+"modalTitle"
+).textContent =
+item.name;
+
+
+document.getElementById(
+"modalText"
+).innerHTML=`
+
+<strong>Type:</strong>
+${escapeHTML(item.type)}
+<br>
+
+<strong>Size:</strong>
+${formatSize(item.size)}
+<br>
+
+<strong>Deleted:</strong>
+${formatDate(item.deletedAt)}
+<br>
+
+<strong>Retention:</strong>
+30 days
+
+`;
+
+
+document.getElementById(
+"modal"
+).classList.add("show");
+
+}
+
+
+function closeModal(){
+
+document.getElementById(
+"modal"
+).classList.remove("show");
+
+}
+
+
+function updateStats(){
+
+const trash =
+getTrash();
+
+const total =
+trash.reduce(
+(sum,item)=>
+sum + Number(item.size || 0),
+0
+);
+
+
+document.getElementById(
+"itemCount"
+).textContent =
+trash.length;
+
+
+document.getElementById(
+"trashSize"
+).textContent =
+formatSize(total);
+
+}
+
+
+function getIcon(type){
+
+if(type==="image")
+return "🖼️";
+
+if(type==="video")
+return "🎬";
+
+if(type==="document")
+return "📄";
+
+return "📦";
+
+}
+
+
+function formatSize(gb){
+
+if(gb < 0.001)
+return (gb*1024).toFixed(1)+" MB";
+
+return gb.toFixed(2)+" GB";
+
+}
+
+
+function formatDate(value){
+
+return new Date(value)
+.toLocaleDateString(
+"en-US",
+{
+month:"short",
+day:"numeric",
+year:"numeric"
+}
+);
+
+}
+
+
+function escapeHTML(value){
+
+return String(value)
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+
+}
+
+
+function safe(value){
+
+return String(value)
+.replace(/\\/g,"\\\\")
+.replace(/'/g,"\\'");
+
+}
+
+
+function showToast(message){
+
+const toast =
+document.getElementById("toast");
+
+toast.textContent=message;
+
+toast.classList.add("show");
+
+setTimeout(()=>{
+toast.classList.remove("show");
+},2400);
+
+}
+
+
+document.getElementById(
+"search"
+).addEventListener(
+"input",
+renderTrash
+);
+
+
+document.getElementById(
+"modal"
+).addEventListener(
+"click",
+event=>{
+
+if(event.target.id==="modal"){
+closeModal();
+}
+
+});
+
+
+/* INITIALIZE */
+
+renderTrash();
+
+</script>
+
+</body>
+</html>
