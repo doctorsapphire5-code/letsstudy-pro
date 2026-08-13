@@ -1,0 +1,1878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>AI Tutor</title>
+
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+  >
+
+  <style>
+    :root {
+      --primary: #7c3aed;
+      --primary-dark: #6d28d9;
+      --secondary: #2563eb;
+      --success: #059669;
+      --danger: #dc2626;
+      --warning: #d97706;
+
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+
+      --user-msg: #ede9fe;
+      --ai-msg: #f1f5f9;
+
+      --shadow:
+        0 10px 30px rgba(15, 23, 42, .08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family:
+        Inter,
+        Arial,
+        Helvetica,
+        sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .container {
+      width: min(1200px, 92%);
+      margin: auto;
+    }
+
+    /* =========================================
+       HEADER
+    ========================================= */
+
+    header {
+      color: #fff;
+      padding: 55px 0;
+      background:
+        radial-gradient(
+          circle at 90% 20%,
+          rgba(255,255,255,.18),
+          transparent 30%
+        ),
+        linear-gradient(
+          135deg,
+          #312e81,
+          #7c3aed,
+          #2563eb
+        );
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.5fr .8fr;
+      align-items: center;
+      gap: 35px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      margin-bottom: 18px;
+      border-radius: 30px;
+      background: rgba(255,255,255,.13);
+      border: 1px solid rgba(255,255,255,.2);
+      font-size: .85rem;
+      font-weight: 700;
+    }
+
+    header h1 {
+      margin: 0 0 15px;
+      font-size: clamp(2.4rem, 6vw, 4.3rem);
+      line-height: 1.05;
+    }
+
+    header p {
+      max-width: 720px;
+      margin: 0;
+      color: #ede9fe;
+      line-height: 1.75;
+      font-size: 1.05rem;
+    }
+
+    .hero-card {
+      padding: 28px;
+      border-radius: 22px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.18);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-icon {
+      width: 75px;
+      height: 75px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 18px;
+      border-radius: 20px;
+      background: rgba(255,255,255,.16);
+      font-size: 2rem;
+    }
+
+    .hero-card h3 {
+      margin: 0 0 8px;
+    }
+
+    .hero-card p {
+      color: #ddd6fe;
+      font-size: .92rem;
+    }
+
+    /* =========================================
+       MAIN
+    ========================================= */
+
+    main {
+      padding: 35px 0 60px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 330px 1fr;
+      gap: 25px;
+      align-items: start;
+    }
+
+    /* =========================================
+       CONTROL PANEL
+    ========================================= */
+
+    .panel {
+      position: sticky;
+      top: 20px;
+      padding: 22px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel h2 {
+      margin: 0 0 20px;
+      font-size: 1.15rem;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: .85rem;
+      font-weight: 700;
+    }
+
+    select,
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 13px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      outline: none;
+      background: #fff;
+      color: var(--text);
+    }
+
+    select:focus,
+    input[type="text"]:focus,
+    textarea:focus {
+      border-color: var(--primary);
+      box-shadow:
+        0 0 0 3px rgba(124,58,237,.1);
+    }
+
+    .quick-topics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .topic {
+      padding: 8px 11px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: #fff;
+      color: var(--muted);
+      font-size: .78rem;
+    }
+
+    .topic:hover {
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .progress-box {
+      margin-top: 25px;
+      padding: 16px;
+      border-radius: 13px;
+      background: #f5f3ff;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: .8rem;
+      font-weight: 700;
+    }
+
+    .progress {
+      height: 9px;
+      overflow: hidden;
+      border-radius: 20px;
+      background: #ddd6fe;
+    }
+
+    .progress-bar {
+      width: 35%;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--primary);
+      transition: width .3s ease;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-weight: 700;
+      transition: .2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      color: #fff;
+      background: var(--primary);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      color: var(--text);
+      background: #f1f5f9;
+    }
+
+    .btn-success {
+      color: #fff;
+      background: var(--success);
+    }
+
+    .btn-danger {
+      color: #fff;
+      background: var(--danger);
+    }
+
+    .btn-block {
+      width: 100%;
+    }
+
+    /* =========================================
+       TUTOR CARD
+    ========================================= */
+
+    .tutor-card {
+      overflow: hidden;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .tutor-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tutor-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 46px;
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      color: #fff;
+      background:
+        linear-gradient(
+          135deg,
+          #7c3aed,
+          #2563eb
+        );
+    }
+
+    .tutor-info h3 {
+      margin: 0 0 3px;
+    }
+
+    .online {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--success);
+      font-size: .78rem;
+    }
+
+    .online-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    /* =========================================
+       CHAT
+    ========================================= */
+
+    .chat {
+      height: 540px;
+      overflow-y: auto;
+      padding: 22px;
+      background:
+        linear-gradient(
+          rgba(248,250,252,.75),
+          rgba(248,250,252,.75)
+        );
+    }
+
+    .message {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+      animation: messageIn .2s ease;
+    }
+
+    @keyframes messageIn {
+      from {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message.user {
+      flex-direction: row-reverse;
+    }
+
+    .message-avatar {
+      flex: 0 0 34px;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--primary);
+      font-size: .8rem;
+    }
+
+    .message.user .message-avatar {
+      background: var(--secondary);
+    }
+
+    .bubble {
+      max-width: 78%;
+      padding: 13px 16px;
+      border-radius: 15px;
+      color: var(--text);
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .message.ai .bubble {
+      background: var(--ai-msg);
+      border-top-left-radius: 4px;
+    }
+
+    .message.user .bubble {
+      background: var(--user-msg);
+      border-top-right-radius: 4px;
+    }
+
+    .message-time {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: .68rem;
+    }
+
+    .typing {
+      display: none;
+      align-items: center;
+      gap: 5px;
+      width: fit-content;
+      margin: 0 0 18px 44px;
+      padding: 12px 16px;
+      border-radius: 14px;
+      background: var(--ai-msg);
+    }
+
+    .typing.active {
+      display: flex;
+    }
+
+    .typing span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+      animation: bounce 1s infinite;
+    }
+
+    .typing span:nth-child(2) {
+      animation-delay: .15s;
+    }
+
+    .typing span:nth-child(3) {
+      animation-delay: .3s;
+    }
+
+    @keyframes bounce {
+      0%, 60%, 100% {
+        transform: translateY(0);
+      }
+
+      30% {
+        transform: translateY(-5px);
+      }
+    }
+
+    /* =========================================
+       CHAT INPUT
+    ========================================= */
+
+    .chat-input {
+      padding: 18px;
+      border-top: 1px solid var(--border);
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 52px;
+      max-height: 140px;
+      resize: vertical;
+      padding: 13px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      outline: none;
+      color: var(--text);
+    }
+
+    .send-btn {
+      flex: 0 0 52px;
+      width: 52px;
+      height: 52px;
+      padding: 0;
+    }
+
+    .input-help {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: .72rem;
+    }
+
+    /* =========================================
+       FEATURE CARDS
+    ========================================= */
+
+    .features {
+      display: grid;
+      grid-template-columns:
+        repeat(3, 1fr);
+      gap: 15px;
+      margin-top: 25px;
+    }
+
+    .feature {
+      padding: 20px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+    }
+
+    .feature i {
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
+
+    .feature h3 {
+      margin: 12px 0 7px;
+      font-size: 1rem;
+    }
+
+    .feature p {
+      margin: 0;
+      color: var(--muted);
+      font-size: .84rem;
+      line-height: 1.5;
+    }
+
+    /* =========================================
+       QUIZ
+    ========================================= */
+
+    .quiz-section {
+      margin-top: 25px;
+      padding: 22px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .quiz-section h2 {
+      margin-top: 0;
+    }
+
+    .quiz-question {
+      padding: 18px;
+      margin-top: 15px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .quiz-options {
+      display: grid;
+      gap: 9px;
+      margin-top: 15px;
+    }
+
+    .quiz-option {
+      padding: 12px;
+      text-align: left;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: #fff;
+    }
+
+    .quiz-option:hover {
+      border-color: var(--primary);
+      background: #f5f3ff;
+    }
+
+    .quiz-result {
+      margin-top: 15px;
+      font-weight: 700;
+    }
+
+    /* =========================================
+       FOOTER
+    ========================================= */
+
+    footer {
+      padding: 35px 20px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    /* =========================================
+       RESPONSIVE
+    ========================================= */
+
+    @media (max-width: 900px) {
+
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        position: static;
+      }
+
+      .features {
+        grid-template-columns: 1fr;
+      }
+
+    }
+
+    @media (max-width: 600px) {
+
+      header {
+        padding: 45px 0;
+      }
+
+      .chat {
+        height: 470px;
+      }
+
+      .bubble {
+        max-width: 86%;
+      }
+
+      .tutor-header {
+        align-items: flex-start;
+      }
+
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- =========================================
+     HEADER
+========================================= -->
+
+<header>
+
+  <div class="container hero">
+
+    <div>
+
+      <div class="eyebrow">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        AI-Powered Learning
+      </div>
+
+      <h1>
+        AI Tutor
+      </h1>
+
+      <p>
+        Learn smarter with an interactive AI tutor.
+        Ask questions, get explanations, practice
+        lessons, and test your knowledge at your own pace.
+      </p>
+
+    </div>
+
+    <div class="hero-card">
+
+      <div class="hero-icon">
+        <i class="fa-solid fa-robot"></i>
+      </div>
+
+      <h3>
+        Your Personal Tutor
+      </h3>
+
+      <p>
+        Available whenever you need help with
+        your learning journey.
+      </p>
+
+    </div>
+
+  </div>
+
+</header>
+
+
+<!-- =========================================
+     MAIN
+========================================= -->
+
+<main>
+
+  <div class="container">
+
+    <div class="layout">
+
+      <!-- =====================================
+           SETTINGS PANEL
+      ====================================== -->
+
+      <aside class="panel">
+
+        <h2>
+          <i class="fa-solid fa-sliders"></i>
+          Tutor Settings
+        </h2>
+
+
+        <div class="field">
+
+          <label for="subject">
+            Subject
+          </label>
+
+          <select id="subject">
+
+            <option value="General">
+              General Learning
+            </option>
+
+            <option value="Programming">
+              Programming
+            </option>
+
+            <option value="Mathematics">
+              Mathematics
+            </option>
+
+            <option value="Science">
+              Science
+            </option>
+
+            <option value="English">
+              English
+            </option>
+
+            <option value="Finance">
+              Finance
+            </option>
+
+            <option value="Business">
+              Business
+            </option>
+
+            <option value="Digital Marketing">
+              Digital Marketing
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="level">
+            Difficulty Level
+          </label>
+
+          <select id="level">
+
+            <option value="Beginner">
+              Beginner
+            </option>
+
+            <option value="Intermediate">
+              Intermediate
+            </option>
+
+            <option value="Advanced">
+              Advanced
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="mode">
+            Learning Mode
+          </label>
+
+          <select id="mode">
+
+            <option value="explain">
+              Explain a Topic
+            </option>
+
+            <option value="practice">
+              Practice
+            </option>
+
+            <option value="quiz">
+              Quiz Me
+            </option>
+
+            <option value="examples">
+              Give Examples
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Quick Topics
+          </label>
+
+          <div class="quick-topics">
+
+            <button
+              type="button"
+              class="topic"
+              data-topic="Explain this topic simply"
+            >
+              Explain
+            </button>
+
+            <button
+              type="button"
+              class="topic"
+              data-topic="Give me a practical example"
+            >
+              Example
+            </button>
+
+            <button
+              type="button"
+              class="topic"
+              data-topic="Quiz me on this subject"
+            >
+              Quiz
+            </button>
+
+            <button
+              type="button"
+              class="topic"
+              data-topic="Give me a practice exercise"
+            >
+              Practice
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <button
+          type="button"
+          class="btn btn-secondary btn-block"
+          id="clearChat"
+        >
+          <i class="fa-solid fa-rotate-left"></i>
+          New Session
+        </button>
+
+
+        <div class="progress-box">
+
+          <div class="progress-header">
+
+            <span>
+              Learning Progress
+            </span>
+
+            <span id="progressText">
+              35%
+            </span>
+
+          </div>
+
+          <div class="progress">
+
+            <div
+              class="progress-bar"
+              id="progressBar"
+            ></div>
+
+          </div>
+
+        </div>
+
+      </aside>
+
+
+      <!-- =====================================
+           TUTOR
+      ====================================== -->
+
+      <section>
+
+        <div class="tutor-card">
+
+          <div class="tutor-header">
+
+            <div class="tutor-info">
+
+              <div class="avatar">
+                <i class="fa-solid fa-robot"></i>
+              </div>
+
+              <div>
+
+                <h3>
+                  AI Learning Assistant
+                </h3>
+
+                <div class="online">
+
+                  <span class="online-dot"></span>
+
+                  Ready to help
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <button
+              type="button"
+              class="btn btn-secondary"
+              id="voiceButton"
+              title="Voice input"
+            >
+              <i class="fa-solid fa-microphone"></i>
+            </button>
+
+          </div>
+
+
+          <!-- =================================
+               CHAT
+          ================================== -->
+
+          <div
+            class="chat"
+            id="chat"
+          >
+
+            <div class="message ai">
+
+              <div class="message-avatar">
+                <i class="fa-solid fa-robot"></i>
+              </div>
+
+              <div class="bubble">
+
+                Hi! I'm your AI Tutor. 👋
+
+                Tell me what you'd like to learn,
+                and I'll explain it step by step.
+
+                <span class="message-time">
+                  AI Tutor
+                </span>
+
+              </div>
+
+            </div>
+
+
+            <div
+              class="typing"
+              id="typing"
+            >
+
+              <span></span>
+              <span></span>
+              <span></span>
+
+            </div>
+
+          </div>
+
+
+          <!-- =================================
+               INPUT
+          ================================== -->
+
+          <div class="chat-input">
+
+            <div class="input-row">
+
+              <textarea
+                id="messageInput"
+                placeholder="Ask your AI tutor anything..."
+                rows="1"
+              ></textarea>
+
+              <button
+                type="button"
+                class="btn btn-primary send-btn"
+                id="sendButton"
+                aria-label="Send"
+              >
+
+                <i class="fa-solid fa-paper-plane"></i>
+
+              </button>
+
+            </div>
+
+            <div class="input-help">
+              Press Enter to send • Shift + Enter for a new line
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- =================================
+             FEATURES
+        ================================== -->
+
+        <div class="features">
+
+          <div class="feature">
+
+            <i class="fa-solid fa-lightbulb"></i>
+
+            <h3>
+              Smart Explanations
+            </h3>
+
+            <p>
+              Get concepts explained using
+              simple language and practical examples.
+            </p>
+
+          </div>
+
+
+        <div class="feature">
+
+            <i class="fa-solid fa-dumbbell"></i>
+
+            <h3>
+              Practice Exercises
+            </h3>
+
+            <p>
+              Practice what you've learned with
+              interactive exercises, challenges,
+              and step-by-step feedback.
+            </p>
+
+          </div>
+
+
+          <div class="feature">
+
+            <i class="fa-solid fa-chart-line"></i>
+
+            <h3>
+              Learning Progress
+            </h3>
+
+            <p>
+              Track your progress, identify weak
+              areas, and build confidence as you
+              continue learning.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <!-- =================================
+             QUICK KNOWLEDGE CHECK
+        ================================== -->
+
+        <section class="quiz-section">
+
+          <h2>
+            <i class="fa-solid fa-circle-question"></i>
+            Quick Knowledge Check
+          </h2>
+
+          <p>
+            Test your understanding with a quick
+            question.
+          </p>
+
+          <div class="quiz-question">
+
+            <strong id="quizQuestion">
+              What is the best way to learn a
+              new skill?
+            </strong>
+
+            <div
+              class="quiz-options"
+              id="quizOptions"
+            >
+
+              <button
+                type="button"
+                class="quiz-option"
+                data-answer="wrong"
+              >
+                Memorize everything without practice
+              </button>
+
+              <button
+                type="button"
+                class="quiz-option"
+                data-answer="correct"
+              >
+                Understand, practice, and apply it
+              </button>
+
+              <button
+                type="button"
+                class="quiz-option"
+                data-answer="wrong"
+              >
+                Avoid difficult topics
+              </button>
+
+              <button
+                type="button"
+                class="quiz-option"
+                data-answer="wrong"
+              >
+                Never ask questions
+              </button>
+
+            </div>
+
+            <div
+              class="quiz-result"
+              id="quizResult"
+            ></div>
+
+          </div>
+
+        </section>
+
+      </section>
+
+    </div>
+
+  </div>
+
+</main>
+
+
+<!-- =========================================
+     FOOTER
+========================================= -->
+
+<footer>
+
+  <p>
+    © 2026 AI Tutor.
+    Learn smarter. Practice better.
+  </p>
+
+</footer>
+
+
+<script>
+
+/* =========================================
+   DOM ELEMENTS
+========================================= */
+
+const chat =
+  document.getElementById("chat");
+
+const messageInput =
+  document.getElementById("messageInput");
+
+const sendButton =
+  document.getElementById("sendButton");
+
+const typing =
+  document.getElementById("typing");
+
+const subject =
+  document.getElementById("subject");
+
+const level =
+  document.getElementById("level");
+
+const mode =
+  document.getElementById("mode");
+
+const clearChat =
+  document.getElementById("clearChat");
+
+const progressBar =
+  document.getElementById("progressBar");
+
+const progressText =
+  document.getElementById("progressText");
+
+
+/* =========================================
+   ESCAPE HTML
+========================================= */
+
+function escapeHTML(value) {
+
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+}
+
+
+/* =========================================
+   CURRENT TIME
+========================================= */
+
+function getTime() {
+
+  return new Date().toLocaleTimeString(
+    [],
+    {
+      hour: "2-digit",
+      minute: "2-digit"
+    }
+  );
+
+}
+
+
+/* =========================================
+   ADD CHAT MESSAGE
+========================================= */
+
+function addMessage(
+  text,
+  type = "ai"
+) {
+
+  const message =
+    document.createElement("div");
+
+  message.className =
+    `message ${type}`;
+
+  const icon =
+    type === "ai"
+      ? "fa-solid fa-robot"
+      : "fa-solid fa-user";
+
+
+  message.innerHTML = `
+
+    <div class="message-avatar">
+
+      <i class="${icon}"></i>
+
+    </div>
+
+    <div class="bubble">
+
+      ${escapeHTML(text)}
+
+      <span class="message-time">
+
+        ${type === "ai"
+          ? "AI Tutor"
+          : "You"
+        }
+
+        • ${getTime()}
+
+      </span>
+
+    </div>
+
+  `;
+
+
+  chat.insertBefore(
+    message,
+    typing
+  );
+
+
+  chat.scrollTop =
+    chat.scrollHeight;
+
+}
+
+
+/* =========================================
+   AI RESPONSE GENERATOR
+========================================= */
+
+function generateResponse(question) {
+
+  const text =
+    question.toLowerCase();
+
+  const currentSubject =
+    subject.value;
+
+  const currentLevel =
+    level.value;
+
+  const currentMode =
+    mode.value;
+
+
+  if (
+    text.includes("hello") ||
+    text.includes("hi") ||
+    text.includes("habari")
+  ) {
+
+    return `
+Hello! 👋
+
+I'm your AI Tutor.
+
+Today we're studying:
+${currentSubject}
+
+Level:
+${currentLevel}
+
+Ask me a question and I'll explain
+it step by step using simple language.
+    `.trim();
+
+  }
+
+
+  if (
+    text.includes("example") ||
+    currentMode === "examples"
+  ) {
+
+    return `
+Let's use a practical example.
+
+Imagine you are learning ${currentSubject}.
+
+First, understand the basic idea.
+Then look at a real situation where
+the idea is used.
+
+After that, try the same thing yourself.
+
+This method helps you connect theory
+with real-world situations.
+    `.trim();
+
+  }
+
+
+  if (
+    text.includes("practice") ||
+    currentMode === "practice"
+  ) {
+
+    return `
+Practice Exercise — ${currentSubject}
+
+Your task:
+
+1. Choose one concept.
+2. Explain it using your own words.
+3. Give one practical example.
+4. Try a small exercise.
+5. Check your answer.
+
+When you're finished, send your answer
+and I'll give you feedback.
+    `.trim();
+
+  }
+
+
+  if (
+    text.includes("quiz") ||
+    currentMode === "quiz"
+  ) {
+
+    return `
+Quick Quiz — ${currentSubject}
+
+Question:
+
+What is the most effective way to
+master a new skill?
+
+A. Only read about it
+B. Understand and practice it
+C. Avoid making mistakes
+D. Memorize everything
+
+Reply with A, B, C, or D.
+    `.trim();
+
+  }
+
+
+  if (
+    currentSubject === "Programming" ||
+    text.includes("coding") ||
+    text.includes("programming")
+  ) {
+
+    return `
+Programming Tutor
+
+We'll solve programming problems
+in small steps:
+
+1. Understand the problem.
+2. Identify the input.
+3. Decide the expected output.
+4. Write the logic.
+5. Test the code.
+6. Fix errors.
+
+Send me your HTML, CSS, JavaScript,
+Python, or other code and I'll help
+you understand it.
+    `.trim();
+
+  }
+
+
+  if (
+    currentSubject === "Mathematics" ||
+    text.includes("math")
+  ) {
+
+    return `
+Mathematics Tutor
+
+Let's solve the problem step by step.
+
+First, identify what is being asked.
+
+Next, write down what you already know.
+
+Then choose the correct formula or
+method.
+
+Finally, calculate the answer and
+check whether it makes sense.
+
+Send me the exact math problem.
+    `.trim();
+
+  }
+
+
+  if (
+    currentSubject === "English" ||
+    text.includes("english")
+  ) {
+
+    return `
+English Tutor
+
+We can practice:
+
+• Grammar
+• Vocabulary
+• Speaking
+• Writing
+• Reading
+• Pronunciation
+• Conversation
+
+Send me a sentence or topic and
+I'll help you improve it.
+    `.trim();
+
+  }
+
+
+  if (
+    currentSubject === "Science"
+  ) {
+
+    return `
+Science Tutor
+
+We'll learn science by connecting
+theory with real-world examples.
+
+Tell me the science topic you want
+to understand and I'll explain it
+in simple language.
+    `.trim();
+
+  }
+
+
+  return `
+Good question! 👍
+
+Let's work on it together.
+
+Subject:
+${currentSubject}
+
+Level:
+${currentLevel}
+
+Learning mode:
+${currentMode}
+
+I'll break the topic into smaller
+parts, explain the important ideas,
+and give you a practical example.
+
+What specific part would you like
+to understand first?
+  `.trim();
+
+}
+
+
+/* =========================================
+   SEND MESSAGE
+========================================= */
+
+function sendMessage() {
+
+  const question =
+    messageInput.value.trim();
+
+
+  if (!question) {
+    return;
+  }
+
+
+  addMessage(
+    question,
+    "user"
+  );
+
+
+  messageInput.value = "";
+
+
+  typing.classList.add(
+    "active"
+  );
+
+
+  chat.scrollTop =
+    chat.scrollHeight;
+
+
+  setTimeout(
+    () => {
+
+      typing.classList.remove(
+        "active"
+      );
+
+
+      const answer =
+        generateResponse(question);
+
+
+      addMessage(
+        answer,
+        "ai"
+      );
+
+
+      updateProgress();
+
+    },
+    700
+  );
+
+}
+
+
+/* =========================================
+   SEND BUTTON
+========================================= */
+
+sendButton.addEventListener(
+  "click",
+  sendMessage
+);
+
+
+/* =========================================
+   ENTER KEY
+========================================= */
+
+messageInput.addEventListener(
+  "keydown",
+  event => {
+
+    if (
+      event.key === "Enter" &&
+      !event.shiftKey
+    ) {
+
+      event.preventDefault();
+
+      sendMessage();
+
+    }
+
+  }
+);
+
+
+/* =========================================
+   QUICK TOPICS
+========================================= */
+
+document
+  .querySelectorAll(".topic")
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        messageInput.value =
+          button.dataset.topic;
+
+        messageInput.focus();
+
+      }
+    );
+
+  });
+
+
+/* =========================================
+   PROGRESS
+========================================= */
+
+let progress = 35;
+
+
+function updateProgress() {
+
+  progress =
+    Math.min(
+      100,
+      progress + 5
+    );
+
+
+  progressBar.style.width =
+    `${progress}%`;
+
+
+  progressText.textContent =
+    `${progress}%`;
+
+}
+
+
+/* =========================================
+   NEW SESSION
+========================================= */
+
+clearChat.addEventListener(
+  "click",
+  () => {
+
+    chat.innerHTML = "";
+
+    chat.appendChild(
+      typing
+    );
+
+
+    typing.classList.remove(
+      "active"
+    );
+
+
+    addMessage(
+      `
+New learning session started! 👋
+
+I'm ready to help you learn
+${subject.value}.
+
+What would you like to learn today?
+      `.trim(),
+      "ai"
+    );
+
+
+    progress = 35;
+
+    progressBar.style.width =
+      "35%";
+
+    progressText.textContent =
+      "35%";
+
+  }
+);
+
+
+/* =========================================
+   SUBJECT CHANGE
+========================================= */
+
+subject.addEventListener(
+  "change",
+  () => {
+
+    addMessage(
+      `
+Great! Your subject is now
+${subject.value}.
+
+Tell me the topic you'd like
+to learn.
+      `.trim(),
+      "ai"
+    );
+
+  }
+);
+
+
+/* =========================================
+   LEVEL CHANGE
+========================================= */
+
+level.addEventListener(
+  "change",
+  () => {
+
+    addMessage(
+      `
+Learning level changed to
+${level.value}.
+
+I'll adjust the explanations
+to match your level.
+      `.trim(),
+      "ai"
+    );
+
+  }
+);
+
+
+/* =========================================
+   QUIZ
+========================================= */
+
+document
+  .querySelectorAll(".quiz-option")
+  .forEach(option => {
+
+    option.addEventListener(
+      "click",
+      () => {
+
+        const result =
+          document.getElementById(
+            "quizResult"
+          );
+
+
+        document
+          .querySelectorAll(".quiz-option")
+          .forEach(button => {
+
+            button.disabled =
+              true;
+
+          });
+
+
+        if (
+          option.dataset.answer ===
+          "correct"
+        ) {
+
+          result.textContent =
+            "✓ Correct! Excellent work.";
+
+          result.style.color =
+            "var(--success)";
+
+          updateProgress();
+
+        } else {
+
+          result.textContent =
+            "✗ Not quite. Review the concept and try again.";
+
+          result.style.color =
+            "var(--danger)";
+
+        }
+
+      }
+    );
+
+  });
+
+
+/* =========================================
+   INITIAL STATE
+========================================= */
+
+progressBar.style.width =
+  "35%";
+
+progressText.textContent =
+  "35%";
+
+messageInput.focus();
+
+</script>
+
+</body>
+</html>
