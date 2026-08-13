@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comments</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+:root{
+    --primary:#7c3aed;
+    --primary-dark:#6d28d9;
+    --bg:#f8fafc;
+    --card:#fff;
+    --text:#172033;
+    --muted:#64748b;
+    --border:#e2e8f0;
+    --danger:#dc2626;
+}
+
+body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+}
+
+.header{
+    height:64px;
+    background:#fff;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 24px;
+}
+
+.header h1{
+    margin:0;
+    font-size:19px;
+}
+
+.container{
+    max-width:950px;
+    margin:auto;
+    padding:24px;
+}
+
+.toolbar{
+    display:flex;
+    gap:10px;
+    margin-bottom:18px;
+}
+
+.search{
+    flex:1;
+    padding:11px 12px;
+    border:1px solid #cbd5e1;
+    border-radius:7px;
+    outline:none;
+}
+
+.search:focus{
+    border-color:var(--primary);
+}
+
+.filter{
+    min-width:140px;
+    border:1px solid #cbd5e1;
+    border-radius:7px;
+    background:#fff;
+    padding:10px;
+}
+
+button{
+    border:0;
+    border-radius:7px;
+    padding:9px 13px;
+    cursor:pointer;
+    font-size:10px;
+    font-weight:800;
+}
+
+.primary{
+    background:var(--primary);
+    color:#fff;
+}
+
+.primary:hover{
+    background:var(--primary-dark);
+}
+
+.secondary{
+    background:#e2e8f0;
+    color:#334155;
+}
+
+.danger{
+    background:#fee2e2;
+    color:#b91c1c;
+}
+
+.comments{
+    display:grid;
+    gap:12px;
+}
+
+.comment{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:17px;
+}
+
+.comment-header{
+    display:flex;
+    align-items:center;
+    gap:11px;
+}
+
+.avatar{
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    background:#ede9fe;
+    color:#5b21b6;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    font-weight:900;
+}
+
+.comment-author{
+    font-size:12px;
+    font-weight:900;
+}
+
+.comment-date{
+    margin-top:3px;
+    color:var(--muted);
+    font-size:9px;
+}
+
+.comment-text{
+    margin:14px 0;
+    font-size:11px;
+    line-height:1.7;
+    white-space:pre-wrap;
+}
+
+.comment-actions{
+    display:flex;
+    gap:7px;
+}
+
+.empty{
+    text-align:center;
+    padding:70px 20px;
+    color:var(--muted);
+    display:none;
+}
+
+.modal{
+    position:fixed;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background:rgba(15,23,42,.55);
+    padding:20px;
+    z-index:1000;
+}
+
+.modal.show{
+    display:flex;
+}
+
+.modal-card{
+    width:min(500px,100%);
+    background:#fff;
+    border-radius:12px;
+    padding:22px;
+}
+
+.modal-card h2{
+    margin:0 0 18px;
+}
+
+.form-group{
+    margin-bottom:14px;
+}
+
+.form-group label{
+    display:block;
+    margin-bottom:6px;
+    color:var(--muted);
+    font-size:9px;
+    font-weight:900;
+    text-transform:uppercase;
+}
+
+.form-group input,
+.form-group textarea{
+    width:100%;
+    padding:10px 11px;
+    border:1px solid #cbd5e1;
+    border-radius:7px;
+    outline:none;
+    font:inherit;
+}
+
+.form-group textarea{
+    resize:vertical;
+    min-height:130px;
+}
+
+.form-group input:focus,
+.form-group textarea:focus{
+    border-color:var(--primary);
+}
+
+.modal-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    margin-top:18px;
+}
+
+.toast{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    background:#172033;
+    color:#fff;
+    padding:11px 14px;
+    border-radius:8px;
+    font-size:10px;
+    opacity:0;
+    transform:translateY(10px);
+    pointer-events:none;
+    transition:.2s;
+}
+
+.toast.show{
+    opacity:1;
+    transform:translateY(0);
+}
+
+@media(max-width:600px){
+
+    .header{
+        padding:0 12px;
+    }
+
+    .container{
+        padding:12px;
+    }
+
+    .toolbar{
+        flex-direction:column;
+    }
+
+    .filter{
+        width:100%;
+    }
+
+    .modal-actions{
+        flex-direction:column-reverse;
+    }
+
+    .modal-actions button{
+        width:100%;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+
+    <h1>Comments</h1>
+
+    <button
+        class="primary"
+        onclick="openCreateModal()">
+        + Add Comment
+    </button>
+
+</header>
+
+
+<main class="container">
+
+    <div class="toolbar">
+
+        <input
+            id="search"
+            class="search"
+            type="search"
+            placeholder="Search comments..."
+            oninput="renderComments()">
+
+        <select
+            id="filter"
+            class="filter"
+            onchange="renderComments()">
+
+            <option value="all">
+                All Comments
+            </option>
+
+            <option value="recent">
+                Most Recent
+            </option>
+
+            <option value="oldest">
+                Oldest
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <section
+        id="comments"
+        class="comments">
+    </section>
+
+
+    <div
+        id="empty"
+        class="empty">
+
+        <h2>No comments found</h2>
+
+        <p>
+            Add a comment to get started.
+        </p>
+
+    </div>
+
+</main>
+
+
+<!-- COMMENT MODAL -->
+
+<div
+    id="modal"
+    class="modal">
+
+    <div class="modal-card">
+
+        <h2 id="modalTitle">
+            Add Comment
+        </h2>
+
+        <form
+            id="commentForm"
+            onsubmit="saveComment(event)">
+
+            <input
+                id="commentId"
+                type="hidden">
+
+            <div class="form-group">
+
+                <label for="author">
+                    Name
+                </label>
+
+                <input
+                    id="author"
+                    type="text"
+                    placeholder="Your name"
+                    required>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="text">
+                    Comment
+                </label>
+
+                <textarea
+                    id="text"
+                    placeholder="Write your comment..."
+                    required></textarea>
+
+            </div>
+
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="secondary"
+                    onclick="closeModal()">
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="primary">
+                    Save Comment
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<div
+    id="toast"
+    class="toast">
+</div>
+
+
+<script>
+
+const STORAGE_KEY =
+    "comments-data";
+
+let comments = [];
+
+
+/* =========================
+   STORAGE
+========================= */
+
+function loadComments(){
+
+    const saved =
+        localStorage.getItem(
+            STORAGE_KEY
+        );
+
+    if(!saved){
+
+        comments = [];
+
+        return;
+
+    }
+
+    try{
+
+        const parsed =
+            JSON.parse(saved);
+
+        comments =
+            Array.isArray(parsed)
+                ? parsed
+                : [];
+
+    }catch(error){
+
+        comments = [];
+
+    }
+
+}
+
+
+function saveComments(){
+
+    localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(comments)
+    );
+
+}
+
+
+/* =========================
+   MODAL
+========================= */
+
+function openCreateModal(){
+
+    document.getElementById(
+        "commentForm"
+    ).reset();
+
+    document.getElementById(
+        "commentId"
+    ).value = "";
+
+    document.getElementById(
+        "modalTitle"
+    ).textContent =
+        "Add Comment";
+
+    document.getElementById(
+        "modal"
+    ).classList.add(
+        "show"
+    );
+
+}
+
+
+function openEditModal(id){
+
+    const comment =
+        comments.find(
+            item =>
+                String(item.id) ===
+                String(id)
+        );
+
+    if(!comment){
+        return;
+    }
+
+    document.getElementById(
+        "commentId"
+    ).value =
+        comment.id;
+
+    document.getElementById(
+        "author"
+    ).value =
+        comment.author;
+
+    document.getElementById(
+        "text"
+    ).value =
+        comment.text;
+
+    document.getElementById(
+        "modalTitle"
+    ).textContent =
+        "Edit Comment";
+
+    document.getElementById(
+        "modal"
+    ).classList.add(
+        "show"
+    );
+
+}
+
+
+function closeModal(){
+
+    document.getElementById(
+        "modal"
+    ).classList.remove(
+        "show"
+    );
+
+}
+
+
+/* =========================
+   SAVE
+========================= */
+
+function saveComment(event){
+
+    event.preventDefault();
+
+    const id =
+        document.getElementById(
+            "commentId"
+        ).value;
+
+    const author =
+        document.getElementById(
+            "author"
+        ).value.trim();
+
+    const text =
+        document.getElementById(
+            "text"
+        ).value.trim();
+
+
+    if(!author || !text){
+        return;
+    }
+
+
+    if(id){
+
+        const index =
+            comments.findIndex(
+                item =>
+                    String(item.id) ===
+                    String(id)
+            );
+
+        if(index !== -1){
+
+            comments[index].author =
+                author;
+
+            comments[index].text =
+                text;
+
+            comments[index].updatedAt =
+                new Date()
+                .toISOString();
+
+        }
+
+        showToast(
+            "Comment updated."
+        );
+
+    }else{
+
+        comments.unshift({
+
+            id:
+                Date.now(),
+
+            author,
+
+            text,
+
+            createdAt:
+                new Date()
+                .toISOString()
+
+        });
+
+        showToast(
+            "Comment added."
+        );
+
+    }
+
+
+    saveComments();
+
+    closeModal();
+
+    renderComments();
+
+}
+
+
+/* =========================
+   RENDER
+========================= */
+
+function renderComments(){
+
+    const container =
+        document.getElementById(
+            "comments"
+        );
+
+    const empty =
+        document.getElementById(
+            "empty"
+        );
+
+    const query =
+        document.getElementById(
+            "search"
+        ).value
+        .toLowerCase()
+        .trim();
+
+    const filter =
+        document.getElementById(
+            "filter"
+        ).value;
+
+
+    let filtered =
+        comments.filter(
+            comment => {
+
+                const content =
+                    (
+                        comment.author +
+                        " " +
+                        comment.text
+                    )
+                    .toLowerCase();
+
+                return content.includes(
+                    query
+                );
+
+            }
+        );
+
+
+    if(filter === "recent"){
+
+        filtered.sort(
+            (a,b) =>
+                new Date(
+                    b.createdAt
+                ) -
+                new Date(
+                    a.createdAt
+                )
+        );
+
+    }
+
+    if(filter === "oldest"){
+
+        filtered.sort(
+            (a,b) =>
+                new Date(
+                    a.createdAt
+                ) -
+                new Date(
+                    b.createdAt
+                )
+        );
+
+    }
+
+
+    container.innerHTML = "";
+
+
+    if(!filtered.length){
+
+        empty.style.display =
+            "block";
+
+        return;
+
+    }
+
+
+    empty.style.display =
+        "none";
+
+
+    filtered.forEach(
+        comment => {
+
+            const article =
+                document.createElement(
+                    "article"
+                );
+
+            article.className =
+                "comment";
+
+
+            const initial =
+                (
+                    comment.author ||
+                    "U"
+                )
+                .charAt(0)
+                .toUpperCase();
+
+
+            const date =
+                formatDate(
+                    comment.createdAt
+                );
+
+
+            article.innerHTML = `
+
+                <div class="comment-header">
+
+                    <div class="avatar">
+                        ${escapeHTML(
+                            initial
+                        )}
+                    </div>
+
+                    <div>
+
+                        <div class="comment-author">
+                            ${escapeHTML(
+                                comment.author
+                            )}
+                        </div>
+
+                        <div class="comment-date">
+                            ${escapeHTML(
+                                date
+                            )}
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="comment-text">
+                    ${escapeHTML(
+                        comment.text
+                    )}
+                </div>
+
+
+                <div class="comment-actions">
+
+                    <button
+                        class="secondary"
+                        onclick="openEditModal(${comment.id})">
+                        Edit
+                    </button>
+
+                    <button
+                        class="danger"
+                        onclick="deleteComment(${comment.id})">
+                        Delete
+                    </button>
+
+                </div>
+
+            `;
+
+
+            container.appendChild(
+                article
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================
+   DELETE
+========================= */
+
+function deleteComment(id){
+
+    const comment =
+        comments.find(
+            item =>
+                String(item.id) ===
+                String(id)
+        );
+
+    if(!comment){
+        return;
+    }
+
+
+    if(
+        !confirm(
+            "Delete this comment?"
+        )
+    ){
+
+        return;
+
+    }
+
+
+    comments =
+        comments.filter(
+            item =>
+                String(item.id) !==
+                String(id)
+        );
+
+
+    saveComments();
+
+    renderComments();
+
+    showToast(
+        "Comment deleted."
+    );
+
+}
+
+
+/* =========================
+   DATE
+========================= */
+
+function formatDate(
+    value
+){
+
+    if(!value){
+        return "Unknown date";
+    }
+
+    const date =
+        new Date(value);
+
+    if(
+        Number.isNaN(
+            date.getTime()
+        )
+    ){
+
+        return "Unknown date";
+
+    }
+
+    return date.toLocaleString(
+        undefined,
+        {
+            dateStyle:"medium",
+            timeStyle:"short"
+        }
+    );
+
+}
+
+
+/* =========================
+   ESCAPE HTML
+========================= */
+
+function escapeHTML(
+    value
+){
+
+    return String(
+        value ?? ""
+    )
+    .replace(
+        /&/g,
+        "&amp;"
+    )
+    .replace(
+        /</g,
+        "&lt;"
+    )
+    .replace(
+        />/g,
+        "&gt;"
+    )
+    .replace(
+        /"/g,
+        "&quot;"
+    )
+    .replace(
+        /'/g,
+        "&#039;"
+    );
+
+}
+
+
+/* =========================
+   TOAST
+========================= */
+
+let toastTimer = null;
+
+function showToast(
+    message
+){
+
+    const toast =
+        document.getElementById(
+            "toast"
+        );
+
+    toast.textContent =
+        message;
+
+    toast.classList.add(
+        "show"
+    );
+
+    clearTimeout(
+        toastTimer
+    );
+
+    toastTimer =
+        setTimeout(
+            () => {
+
+                toast.classList.remove(
+                    "show"
+                );
+
+            },
+            2200
+        );
+
+}
+
+
+/* =========================
+   CLOSE MODAL
+========================= */
+
+document.getElementById(
+    "modal"
+).addEventListener(
+    "click",
+    function(event){
+
+        if(
+            event.target === this
+        ){
+
+            closeModal();
+
+        }
+
+    }
+);
+
+
+document.addEventListener(
+    "keydown",
+    function(event){
+
+        if(
+            event.key === "Escape"
+        ){
+
+            closeModal();
+
+        }
+
+    }
+);
+
+
+/* =========================
+   START
+========================= */
+
+loadComments();
+
+renderComments();
+
+</script>
+
+</body>
+</html>
