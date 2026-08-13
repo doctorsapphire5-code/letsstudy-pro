@@ -1,0 +1,2136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>AI Writer</title>
+
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+  >
+
+  <style>
+    :root {
+      --primary: #7c3aed;
+      --primary-dark: #6d28d9;
+      --secondary: #2563eb;
+      --success: #059669;
+      --danger: #dc2626;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --soft: #f1f5f9;
+      --shadow: 0 12px 35px rgba(15, 23, 42, .08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    button,
+    textarea,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .container {
+      width: min(1200px, 92%);
+      margin: auto;
+    }
+
+    /* =========================================
+       HEADER
+    ========================================= */
+
+    header {
+      padding: 55px 0;
+      color: #fff;
+      background:
+        radial-gradient(
+          circle at 85% 20%,
+          rgba(255,255,255,.18),
+          transparent 28%
+        ),
+        linear-gradient(
+          135deg,
+          #312e81,
+          #7c3aed,
+          #2563eb
+        );
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.5fr .7fr;
+      gap: 35px;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      margin-bottom: 18px;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 30px;
+      background: rgba(255,255,255,.12);
+      font-size: .82rem;
+      font-weight: 700;
+    }
+
+    header h1 {
+      margin: 0 0 15px;
+      font-size: clamp(2.5rem, 6vw, 4.4rem);
+      line-height: 1;
+    }
+
+    header p {
+      max-width: 700px;
+      margin: 0;
+      color: #ede9fe;
+      line-height: 1.7;
+      font-size: 1.05rem;
+    }
+
+    .hero-card {
+      padding: 28px;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 22px;
+      background: rgba(255,255,255,.12);
+      backdrop-filter: blur(12px);
+    }
+
+    .hero-icon {
+      width: 70px;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 18px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.15);
+      font-size: 2rem;
+    }
+
+    .hero-card h3 {
+      margin: 0 0 8px;
+    }
+
+    .hero-card p {
+      font-size: .9rem;
+    }
+
+    /* =========================================
+       MAIN
+    ========================================= */
+
+    main {
+      padding: 35px 0 60px;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 25px;
+      align-items: start;
+    }
+
+    /* =========================================
+       SIDEBAR
+    ========================================= */
+
+    .sidebar {
+      position: sticky;
+      top: 20px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar h2 {
+      margin: 0 0 20px;
+      font-size: 1.1rem;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: .82rem;
+      font-weight: 700;
+    }
+
+    select,
+    input {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      outline: none;
+      background: #fff;
+      color: var(--text);
+    }
+
+    select:focus,
+    input:focus,
+    textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(124,58,237,.1);
+    }
+
+    .templates {
+      display: grid;
+      gap: 8px;
+    }
+
+    .template-btn {
+      width: 100%;
+      padding: 10px;
+      text-align: left;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .template-btn:hover {
+      color: var(--primary);
+      border-color: var(--primary);
+      background: #f5f3ff;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 15px;
+      font-weight: 700;
+      transition: .2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      color: #fff;
+      background: var(--primary);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      color: var(--text);
+      background: var(--soft);
+    }
+
+    .btn-success {
+      color: #fff;
+      background: var(--success);
+    }
+
+    .btn-danger {
+      color: #fff;
+      background: var(--danger);
+    }
+
+    .btn-block {
+      width: 100%;
+    }
+
+    /* =========================================
+       WRITER
+    ========================================= */
+
+    .writer-card {
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+
+    .writer-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .writer-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .writer-title-icon {
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      color: #fff;
+      background: var(--primary);
+    }
+
+    .writer-title h2 {
+      margin: 0 0 3px;
+      font-size: 1rem;
+    }
+
+    .writer-title span {
+      color: var(--muted);
+      font-size: .75rem;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: #fff;
+      color: var(--muted);
+    }
+
+    .icon-btn:hover {
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    /* =========================================
+       INPUT
+    ========================================= */
+
+    .prompt-area {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .prompt-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: .82rem;
+      font-weight: 700;
+    }
+
+    #prompt {
+      width: 100%;
+      min-height: 130px;
+      padding: 15px;
+      resize: vertical;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      outline: none;
+      line-height: 1.6;
+    }
+
+    .prompt-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .prompt-hint {
+      color: var(--muted);
+      font-size: .72rem;
+    }
+
+    /* =========================================
+       OUTPUT
+    ========================================= */
+
+    .output-area {
+      padding: 20px;
+    }
+
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .output-header h3 {
+      margin: 0;
+      font-size: .95rem;
+    }
+
+    .output-tools {
+      display: flex;
+      gap: 6px;
+    }
+
+    #output {
+      width: 100%;
+      min-height: 360px;
+      padding: 20px;
+      resize: vertical;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      outline: none;
+      background: #fff;
+      color: var(--text);
+      line-height: 1.75;
+      font-size: .95rem;
+    }
+
+    .stats {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: .75rem;
+    }
+
+    /* =========================================
+       STATUS
+    ========================================= */
+
+    .status {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 9px;
+      background: #f5f3ff;
+      color: var(--primary);
+      font-size: .8rem;
+    }
+
+    .status.active {
+      display: flex;
+    }
+
+    .spinner {
+      width: 15px;
+      height: 15px;
+      border: 2px solid #ddd6fe;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* =========================================
+       FEATURES
+    ========================================= */
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-top: 25px;
+    }
+
+    .feature {
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      background: #fff;
+    }
+
+    .feature i {
+      color: var(--primary);
+      font-size: 1.5rem;
+    }
+
+    .feature h3 {
+      margin: 12px 0 7px;
+      font-size: 1rem;
+    }
+
+    .feature p {
+      margin: 0;
+      color: var(--muted);
+      font-size: .82rem;
+      line-height: 1.55;
+    }
+
+    /* =========================================
+       MODAL
+    ========================================= */
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(15,23,42,.6);
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-box {
+      width: min(500px, 100%);
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 25px;
+      border-radius: 18px;
+      background: #fff;
+      box-shadow: 0 25px 60px rgba(0,0,0,.2);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+    }
+
+    .close-modal {
+      width: 38px;
+      height: 38px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    .modal-box p {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    /* =========================================
+       FOOTER
+    ========================================= */
+
+    footer {
+      padding: 35px 20px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    /* =========================================
+       RESPONSIVE
+    ========================================= */
+
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+      }
+
+      .features {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      header {
+        padding: 45px 0;
+      }
+
+      .writer-toolbar,
+      .prompt-actions {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .toolbar-actions {
+        width: 100%;
+      }
+
+      .toolbar-actions .icon-btn {
+        flex: 1;
+      }
+
+      .modal-buttons {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- =========================================
+     HEADER
+========================================= -->
+
+<header>
+
+  <div class="container hero">
+
+    <div>
+
+      <div class="badge">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        AI-Powered Writing
+      </div>
+
+      <h1>
+        AI Writer
+      </h1>
+
+      <p>
+        Write better, faster, and more clearly.
+        Generate ideas, rewrite content, summarize
+        text, improve grammar, and create professional
+        content with your AI writing assistant.
+      </p>
+
+    </div>
+
+    <div class="hero-card">
+
+      <div class="hero-icon">
+        <i class="fa-solid fa-pen-nib"></i>
+      </div>
+
+      <h3>
+        Your Writing Assistant
+      </h3>
+
+      <p>
+        Turn simple ideas into polished content
+        in seconds.
+      </p>
+
+    </div>
+
+  </div>
+
+</header>
+
+
+<!-- =========================================
+     MAIN
+========================================= -->
+
+<main>
+
+  <div class="container">
+
+    <div class="workspace">
+
+      <!-- =====================================
+           SIDEBAR
+      ====================================== -->
+
+      <aside class="sidebar">
+
+        <h2>
+          <i class="fa-solid fa-sliders"></i>
+          Writing Settings
+        </h2>
+
+
+        <div class="field">
+
+          <label for="task">
+            Writing Task
+          </label>
+
+          <select id="task">
+
+            <option value="generate">
+              Generate Content
+            </option>
+
+            <option value="rewrite">
+              Rewrite
+            </option>
+
+            <option value="improve">
+              Improve Writing
+            </option>
+
+            <option value="summarize">
+              Summarize
+            </option>
+
+            <option value="grammar">
+              Fix Grammar
+            </option>
+
+            <option value="ideas">
+              Generate Ideas
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="tone">
+            Tone
+          </label>
+
+          <select id="tone">
+
+            <option value="Professional">
+              Professional
+            </option>
+
+            <option value="Friendly">
+              Friendly
+            </option>
+
+            <option value="Casual">
+              Casual
+            </option>
+
+            <option value="Academic">
+              Academic
+            </option>
+
+            <option value="Persuasive">
+              Persuasive
+            </option>
+
+            <option value="Creative">
+              Creative
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="length">
+            Length
+          </label>
+
+          <select id="length">
+
+            <option value="Short">
+              Short
+            </option>
+
+            <option value="Medium" selected>
+              Medium
+            </option>
+
+            <option value="Long">
+              Long
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="language">
+            Language
+          </label>
+
+          <select id="language">
+
+            <option value="English">
+              English
+            </option>
+
+            <option value="Swahili">
+              Swahili
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Templates
+          </label>
+
+          <div class="templates">
+
+            <button
+              type="button"
+              class="template-btn"
+              data-template="Write a professional cover letter for a job application."
+            >
+              <i class="fa-solid fa-envelope"></i>
+              Cover Letter
+            </button>
+
+            <button
+              type="button"
+              class="template-btn"
+              data-template="Write a professional business proposal."
+            >
+              <i class="fa-solid fa-briefcase"></i>
+              Business Proposal
+            </button>
+
+            <button
+              type="button"
+              class="template-btn"
+              data-template="Write an engaging social media post."
+            >
+              <i class="fa-solid fa-hashtag"></i>
+              Social Post
+            </button>
+
+            <button
+              type="button"
+              class="template-btn"
+              data-template="Write a professional email."
+            >
+              <i class="fa-solid fa-at"></i>
+              Email
+            </button>
+
+            <button
+              type="button"
+              class="template-btn"
+              data-template="Write an informative blog article."
+            >
+              <i class="fa-solid fa-blog"></i>
+              Blog Article
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <button
+          type="button"
+          class="btn btn-secondary btn-block"
+          id="clearAll"
+        >
+          <i class="fa-solid fa-rotate-left"></i>
+          Clear
+        </button>
+
+      </aside>
+
+
+      <!-- =====================================
+           WRITER
+      ====================================== -->
+
+      <section>
+
+        <div class="writer-card">
+
+          <div class="writer-toolbar">
+
+            <div class="writer-title">
+
+              <div class="writer-title-icon">
+                <i class="fa-solid fa-pen"></i>
+              </div>
+
+              <div>
+
+                <h2>
+                  Writing Workspace
+                </h2>
+
+                <span>
+                  Create and improve your content
+                </span>
+
+              </div>
+
+            </div>
+
+
+            <div class="toolbar-actions">
+
+              <button
+                type="button"
+                class="icon-btn"
+                id="copyOutput"
+                title="Copy"
+              >
+                <i class="fa-solid fa-copy"></i>
+              </button>
+
+              <button
+                type="button"
+                class="icon-btn"
+                id="downloadOutput"
+                title="Download"
+              >
+                <i class="fa-solid fa-download"></i>
+              </button>
+
+              <button
+                type="button"
+                class="icon-btn"
+                id="clearOutput"
+                title="Clear output"
+              >
+                <i class="fa-solid fa-trash"></i>
+              </button>
+
+            </div>
+
+          </div>
+
+
+          <!-- =================================
+               PROMPT
+          ================================== -->
+
+          <div class="prompt-area">
+
+            <div class="prompt-label">
+
+              <span>
+                What do you want to write?
+              </span>
+
+              <span id="promptCount">
+                0 characters
+              </span>
+
+            </div>
+
+
+            <textarea
+              id="prompt"
+              placeholder="Example: Write a professional introduction for a web developer portfolio..."
+            ></textarea>
+
+
+            <div class="prompt-actions">
+
+              <span class="prompt-hint">
+                Describe your idea clearly for better results.
+              </span>
+
+              <button
+                type="button"
+                class="btn btn-primary"
+                id="generateButton"
+              >
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                Generate
+              </button>
+
+            </div>
+
+
+            <div
+              class="status"
+              id="status"
+            >
+
+              <span class="spinner"></span>
+
+              <span>
+                AI is writing...
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <!-- =================================
+               OUTPUT
+          ================================== -->
+
+          <div class="output-area">
+
+            <div class="output-header">
+
+              <h3>
+                <i class="fa-solid fa-file-lines"></i>
+                Generated Content
+              </h3>
+
+              <div class="output-tools">
+
+                <button
+                  type="button"
+                  class="icon-btn"
+                  id="shortenButton"
+                  title="Shorten"
+                >
+                  <i class="fa-solid fa-compress"></i>
+                </button>
+
+                <button
+                  type="button"
+                  class="icon-btn"
+                  id="expandButton"
+                  title="Expand">
+                    <i class="fa-solid fa-expand"></i>
+                  </button>
+
+                </div>
+
+              </div>
+
+              <textarea
+                id="output"
+                placeholder="Your AI-generated content will appear here..."
+              ></textarea>
+
+              <div class="stats">
+
+                <span>
+                  Words:
+                  <strong id="wordCount">0</strong>
+                </span>
+
+                <span>
+                  Characters:
+                  <strong id="outputCount">0</strong>
+                </span>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- =================================
+               FEATURES
+          ================================== -->
+
+          <div class="features">
+
+            <div class="feature">
+
+              <i class="fa-solid fa-lightbulb"></i>
+
+              <h3>
+                Generate Ideas
+              </h3>
+
+              <p>
+                Turn a simple topic into useful
+                content ideas and writing outlines.
+              </p>
+
+            </div>
+
+
+            <div class="feature">
+
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+
+              <h3>
+                Improve Writing
+              </h3>
+
+              <p>
+                Make your writing clearer,
+                more professional, and engaging.
+              </p>
+
+            </div>
+
+
+            <div class="feature">
+
+              <i class="fa-solid fa-language"></i>
+
+              <h3>
+                Multiple Languages
+              </h3>
+
+              <p>
+                Create and transform content in
+                English or Swahili.
+              </p>
+
+            </div>
+
+          </div>
+
+        </section>
+
+      </div>
+
+    </div>
+
+  </main>
+
+
+  <!-- =========================================
+       MODAL
+  ========================================= -->
+
+  <div
+    class="modal"
+    id="modal"
+    aria-hidden="true"
+  >
+
+    <div class="modal-box">
+
+      <div class="modal-header">
+
+        <h2>
+          AI Writer
+        </h2>
+
+        <button
+          type="button"
+          class="close-modal"
+          id="closeModal"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+
+      </div>
+
+      <p id="modalText">
+        Content copied successfully.
+      </p>
+
+      <div class="modal-buttons">
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          id="modalOkay"
+        >
+          Okay
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================================
+       FOOTER
+  ========================================= -->
+
+  <footer>
+
+    <p>
+      © 2026 AI Writer • Write smarter, faster.
+    </p>
+
+  </footer>
+
+
+  <script>
+
+    /* =========================================
+       ELEMENTS
+    ========================================= */
+
+    const promptInput =
+      document.getElementById("prompt");
+
+    const output =
+      document.getElementById("output");
+
+    const task =
+      document.getElementById("task");
+
+    const tone =
+      document.getElementById("tone");
+
+    const length =
+      document.getElementById("length");
+
+    const language =
+      document.getElementById("language");
+
+    const generateButton =
+      document.getElementById("generateButton");
+
+    const status =
+      document.getElementById("status");
+
+    const promptCount =
+      document.getElementById("promptCount");
+
+    const wordCount =
+      document.getElementById("wordCount");
+
+    const outputCount =
+      document.getElementById("outputCount");
+
+    const copyOutput =
+      document.getElementById("copyOutput");
+
+    const downloadOutput =
+      document.getElementById("downloadOutput");
+
+    const clearOutput =
+      document.getElementById("clearOutput");
+
+    const clearAll =
+      document.getElementById("clearAll");
+
+    const shortenButton =
+      document.getElementById("shortenButton");
+
+    const expandButton =
+      document.getElementById("expandButton");
+
+    const modal =
+      document.getElementById("modal");
+
+    const modalText =
+      document.getElementById("modalText");
+
+    const closeModal =
+      document.getElementById("closeModal");
+
+    const modalOkay =
+      document.getElementById("modalOkay");
+
+
+    /* =========================================
+       TEXT STATISTICS
+    ========================================= */
+
+    function updatePromptStats() {
+
+      const count =
+        promptInput.value.length;
+
+      promptCount.textContent =
+        `${count} characters`;
+
+    }
+
+
+    function updateOutputStats() {
+
+      const text =
+        output.value.trim();
+
+      const words =
+        text
+          ? text.split(/\s+/).length
+          : 0;
+
+      wordCount.textContent =
+        words;
+
+      outputCount.textContent =
+        output.value.length;
+
+    }
+
+
+    promptInput.addEventListener(
+      "input",
+      updatePromptStats
+    );
+
+
+    output.addEventListener(
+      "input",
+      updateOutputStats
+    );
+
+
+    /* =========================================
+       CONTENT GENERATOR
+    ========================================= */
+
+    function generateContent() {
+
+      const topic =
+        promptInput.value.trim();
+
+      if (!topic) {
+
+        promptInput.focus();
+
+        return;
+
+      }
+
+      const selectedTask =
+        task.value;
+
+      const selectedTone =
+        tone.value;
+
+      const selectedLength =
+        length.value;
+
+      const selectedLanguage =
+        language.value;
+
+
+      status.classList.add(
+        "active"
+      );
+
+      generateButton.disabled =
+        true;
+
+
+      setTimeout(() => {
+
+        let content = "";
+
+
+        if (
+          selectedLanguage ===
+          "Swahili"
+        ) {
+
+          content = generateSwahili(
+            topic,
+            selectedTask,
+            selectedTone,
+            selectedLength
+          );
+
+        } else {
+
+          content = generateEnglish(
+            topic,
+            selectedTask,
+            selectedTone,
+            selectedLength
+          );
+
+        }
+
+
+        output.value =
+          content;
+
+
+        updateOutputStats();
+
+
+        status.classList.remove(
+          "active"
+        );
+
+        generateButton.disabled =
+          false;
+
+
+        output.focus();
+
+      }, 600);
+
+    }
+
+
+    /* =========================================
+       ENGLISH WRITER
+    ========================================= */
+
+    function generateEnglish(
+      topic,
+      selectedTask,
+      selectedTone,
+      selectedLength
+    ) {
+
+      if (
+        selectedTask ===
+        "ideas"
+      ) {
+
+        return `
+Content Ideas: ${topic}
+
+1. Introduction and background
+2. Why this topic matters
+3. Main benefits
+4. Common challenges
+5. Practical examples
+6. Useful tips
+7. Mistakes to avoid
+8. Frequently asked questions
+9. Final recommendations
+10. Conclusion
+        `.trim();
+
+      }
+
+
+      if (
+        selectedTask ===
+        "summarize"
+      ) {
+
+        return `
+Summary of the topic:
+
+${topic}
+
+The main idea is to present the most
+important information clearly and briefly.
+The focus should remain on the key points,
+practical meaning, and useful conclusions.
+        `.trim();
+
+      }
+
+
+      if (
+        selectedTask ===
+        "grammar"
+      ) {
+
+        return `
+Grammar-improved version:
+
+${topic}
+
+The wording has been adjusted to improve
+grammar, punctuation, sentence structure,
+clarity, and readability while preserving
+the original meaning.
+        `.trim();
+
+      }
+
+
+      if (
+        selectedTask ===
+        "rewrite"
+      ) {
+
+        return `
+Rewritten Version
+
+${topic}
+
+This version presents the same idea using
+clearer and smoother language. The tone is
+${selectedTone.toLowerCase()}, making the
+content easier for the intended audience
+to understand and follow.
+        `.trim();
+
+      }
+
+
+      if (
+        selectedTask ===
+        "improve"
+      ) {
+
+        return `
+Improved Version
+
+${topic}
+
+This content has been improved for clarity,
+structure, readability, and engagement.
+
+The main message is presented directly,
+the ideas follow a logical order, and the
+language is appropriate for a
+${selectedTone.toLowerCase()} audience.
+        `.trim();
+
+      }
+
+
+      if (
+        selectedLength ===
+        "Short"
+      ) {
+
+        return `
+${topic}
+
+A concise and ${selectedTone.toLowerCase()}
+message focused on the main idea, with
+clear language and practical value.
+        `.trim();
+
+      }
+
+
+      if (
+        selectedLength ===
+        "Long"
+      ) {
+
+        return `
+${topic}
+
+Introduction
+
+This topic provides an opportunity to
+understand an important idea and see how
+it can be applied in practical situations.
+
+Main Discussion
+
+A strong approach starts by understanding
+the purpose of the topic and the needs of
+the intended audience. Information should
+be organized into clear sections so that
+each idea naturally connects to the next.
+
+Key Points
+
+• Understand the main concept.
+• Identify the most important information.
+• Organize ideas logically.
+• Use practical examples.
+• Keep the reader's needs in mind.
+
+Practical Example
+
+Consider a real-world situation where
+this topic needs to be applied. Start with
+the problem, identify the available
+information, choose an appropriate solution,
+and then evaluate the result.
+
+Benefits
+
+• Better understanding
+• Clearer communication
+• Practical application
+• Improved decision-making
+• Greater engagement
+
+Conclusion
+
+The most effective content is clear,
+organized, useful, and appropriate for
+its intended audience.
+        `.trim();
+
+      }
+
+
+      return `
+${topic}
+
+Introduction
+
+This content is written in a
+${selectedTone.toLowerCase()} style.
+
+The purpose is to explain the topic
+clearly and provide information that
+the reader can understand and use.
+
+Key Points
+
+• Start with a clear message.
+• Organize ideas logically.
+• Use simple and precise language.
+• Include useful examples.
+• Focus on the reader.
+• End with a strong conclusion.
+
+Conclusion
+
+Good writing should be clear, useful,
+engaging, and focused on its purpose.
+      `.trim();
+
+    }
+
+
+    /* =========================================
+       SWAHILI WRITER
+    ========================================= */
+
+    function generateSwahili(
+      topic,
+      selectedTask,
+      selectedTone,
+      selectedLength
+    ) {
+
+      if (
+        selectedTask ===
+        "ideas"
+      ) {
+
+        return `
+Mawazo ya Maudhui: ${topic}
+
+1. Utangulizi wa mada
+2. Kwa nini mada ni muhimu
+3. Faida kuu
+4. Changamoto zinazoweza kujitokeza
+5. Mifano ya vitendo
+6. Vidokezo muhimu
+7. Makosa ya kuepuka
+8. Maswali yanayoulizwa mara kwa mara
+9. Mapendekezo
+10. Hitimisho
+        `.trim();
+
+      }
+
+
+      if (
+        selectedTask ===
+        "summarize"
+      ) {
+
+        return `
+Muhtasari:
+
+${topic}
+
+Wazo kuu ni kuwasilisha taarifa muhimu
+kwa ufupi na kwa uwazi. Maelezo yasiyo
+ya lazima yanaondolewa ili msomaji
+aelewe ujumbe muhimu haraka.
+        `.trim();
+
+      }
+
+
+      if (
+        selectedTask ===
+        "grammar"
+      ) {
+
+        return `
+Toleo lililoboreshwa kisarufi:
+
+${topic}
+
+Maandishi yameboreshwa kwa kuzingatia
+sarufi, mpangilio wa sentensi, alama
+za uandishi, na urahisi wa kusoma.
+        `.trim();
+
+      }
+
+
+      if (
+        selectedTask ===
+        "rewrite"
+      ) {
+
+        return `
+Toleo lililoandikwa upya:
+
+${topic}
+
+Ujumbe mkuu umehifadhiwa lakini maneno
+na mpangilio vimeboreshwa ili maandishi
+yawe rahisi kueleweka na kusomeka.
+        `.trim();
+
+      }
+
+
+      if (
+        selectedTask ===
+        "improve"
+      ) {
+
+        return `
+Toleo lililoboreshwa:
+
+${topic}
+
+Maudhui haya yameboreshwa ili yawe
+wazi zaidi, yenye mpangilio mzuri,
+na yenye mvuto kwa msomaji.
+
+Lengo ni kuwasilisha ujumbe kwa njia
+rahisi, yenye maana, na inayofaa
+kwa hadhira husika.
+        `.trim();
+
+      }
+
+
+      return `
+${topic}
+
+Utangulizi
+
+Mada hii ni muhimu kwa sababu inasaidia
+kuwasilisha mawazo kwa uwazi na kutoa
+taarifa yenye manufaa.
+
+Hoja Kuu
+
+• Eleza wazo kuu kwa lugha rahisi.
+• Panga mawazo kwa mpangilio mzuri.
+• Tumia mifano ya vitendo.
+• Epuka maneno yasiyo ya lazima.
+• Zingatia mahitaji ya msomaji.
+
+Mfano wa Vitendo
+
+Tumia hali halisi ili kuonyesha jinsi
+wazo hili linavyoweza kutumika katika
+maisha, masomo, au kazi.
+
+Hitimisho
+
+Maudhui bora yanapaswa kuwa rahisi,
+yenye maana, na yanayolenga mahitaji
+ya msomaji.
+      `.trim();
+
+    }
+
+
+    /* =========================================
+       GENERATE BUTTON
+    ========================================= */
+
+    generateButton.addEventListener(
+      "click",
+      generateContent
+    );
+
+
+    /* =========================================
+       CTRL + ENTER
+    ========================================= */
+
+    promptInput.addEventListener(
+      "keydown",
+      event => {
+
+        if (
+          event.key === "Enter" &&
+          (event.ctrlKey || event.metaKey)
+        ) {
+
+          event.preventDefault();
+
+          generateContent();
+
+        }
+
+      }
+    );
+
+
+    /* =========================================
+       TEMPLATES
+    ========================================= */
+
+    document
+      .querySelectorAll(".template-btn")
+      .forEach(button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            promptInput.value =
+              button.dataset.template;
+
+            updatePromptStats();
+
+            promptInput.focus();
+
+          }
+        );
+
+      });
+
+
+    /* =========================================
+       COPY OUTPUT
+    ========================================= */
+
+    copyOutput.addEventListener(
+      "click",
+      async () => {
+
+        if (!output.value.trim()) {
+          return;
+        }
+
+
+        try {
+
+          await navigator.clipboard.writeText(
+            output.value
+          );
+
+          showModal(
+            "Content copied successfully."
+          );
+
+        } catch {
+
+          output.select();
+
+          document.execCommand(
+            "copy"
+          );
+
+          showModal(
+            "Content copied successfully."
+          );
+
+        }
+
+      }
+    );
+
+
+    /* =========================================
+       DOWNLOAD
+    ========================================= */
+
+    downloadOutput.addEventListener(
+      "click",
+      () => {
+
+        if (!output.value.trim()) {
+          return;
+        }
+
+
+        const blob =
+          new Blob(
+            [output.value],
+            {
+              type: "text/plain"
+            }
+          );
+
+
+        const url =
+          URL.createObjectURL(blob);
+
+
+        const link =
+          document.createElement("a");
+
+
+        link.href =
+          url;
+
+        link.download =
+          "ai-writer-content.txt";
+
+
+        document.body.appendChild(
+          link
+        );
+
+        link.click();
+
+        link.remove();
+
+
+        URL.revokeObjectURL(
+          url
+        );
+
+      }
+    );
+
+
+    /* =========================================
+       CLEAR OUTPUT
+    ========================================= */
+
+    clearOutput.addEventListener(
+      "click",
+      () => {
+
+        output.value = "";
+
+        updateOutputStats();
+
+      }
+    );
+
+
+    /* =========================================
+       CLEAR ALL
+    ========================================= */
+
+    clearAll.addEventListener(
+      "click",
+      () => {
+
+        promptInput.value = "";
+
+        output.value = "";
+
+        updatePromptStats();
+
+        updateOutputStats();
+
+        promptInput.focus();
+
+      }
+    );
+
+
+    /* =========================================
+       SHORTEN
+    ========================================= */
+
+    shortenButton.addEventListener(
+      "click",
+      () => {
+
+        const text =
+          output.value.trim();
+
+
+        if (!text) {
+          return;
+        }
+
+
+        const sentences =
+          text.match(
+            /[^.!?]+[.!?]+/g
+          );
+
+
+        if (
+          sentences &&
+          sentences.length > 3
+        ) {
+
+          output.value =
+            sentences
+              .slice(
+                0,
+                Math.ceil(
+                  sentences.length / 2
+                )
+              )
+              .join(" ")
+              .trim();
+
+        } else {
+
+          output.value =
+            text.substring(
+              0,
+              Math.ceil(
+                text.length * 0.55
+              )
+            ) + "...";
+
+        }
+
+
+        updateOutputStats();
+
+      }
+    );
+
+
+    /* =========================================
+       EXPAND
+    ========================================= */
+
+    expandButton.addEventListener(
+      "click",
+      () => {
+
+        const text =
+          output.value.trim();
+
+
+        if (!text) {
+          return;
+        }
+
+
+        output.value =
+          `${text}
+
+Additional Details
+
+This topic can be explored further by
+connecting the main idea with practical
+examples and real-world situations.
+
+Practical Application
+
+Think about how the information can be
+used in a real situation. Breaking the
+topic into smaller steps makes it easier
+to understand and apply.
+
+Final Thought
+
+Clear communication focuses on the
+reader, uses appropriate language, and
+delivers the main message effectively.`;
+
+
+        updateOutputStats();
+
+      }
+    );
+
+
+    /* =========================================
+       MODAL
+    ========================================= */
+
+    function showModal(message) {
+
+      modalText.textContent =
+        message;
+
+      modal.classList.add(
+        "active"
+      );
+
+      modal.setAttribute(
+        "aria-hidden",
+        "false"
+      );
+
+    }
+
+
+    function hideModal() {
+
+      modal.classList.remove(
+        "active"
+      );
+
+      modal.setAttribute(
+        "aria-hidden",
+        "true"
+      );
+
+    }
+
+
+    closeModal.addEventListener(
+      "click",
+      hideModal
+    );
+
+
+    modalOkay.addEventListener(
+      "click",
+      hideModal
+    );
+
+
+    modal.addEventListener(
+      "click",
+      event => {
+
+        if (
+          event.target === modal
+        ) {
+
+          hideModal();
+
+        }
+
+      }
+    );
+
+
+    /* =========================================
+       ESCAPE KEY
+    ========================================= */
+
+    document.addEventListener(
+      "keydown",
+      event => {
+
+        if (
+          event.key === "Escape"
+        ) {
+
+          hideModal();
+
+        }
+
+      }
+    );
+
+
+    /* =========================================
+       INITIALIZE
+    ========================================= */
+
+    updatePromptStats();
+
+    updateOutputStats();
+
+  </script>
+
+</body>
+</html>
