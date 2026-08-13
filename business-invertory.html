@@ -1,0 +1,1940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business Inventory</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --primary:#2563eb;
+  --primary-dark:#1d4ed8;
+  --dark:#0f172a;
+  --text:#172033;
+  --muted:#64748b;
+  --bg:#f5f7fb;
+  --white:#fff;
+  --border:#e2e8f0;
+  --danger:#dc2626;
+  --success:#16a34a;
+  --warning:#d97706;
+}
+
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.container{
+  width:min(1180px,92%);
+  margin:auto;
+}
+
+header{
+  background:#fff;
+  border-bottom:1px solid var(--border);
+  position:sticky;
+  top:0;
+  z-index:50;
+}
+
+.nav{
+  min-height:70px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.logo{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:900;
+}
+
+.logo-icon{
+  width:42px;
+  height:42px;
+  border-radius:11px;
+  display:grid;
+  place-items:center;
+  background:var(--primary);
+  color:#fff;
+}
+
+.nav-links{
+  display:flex;
+  gap:20px;
+}
+
+.nav-links a{
+  text-decoration:none;
+  color:var(--muted);
+  font-size:14px;
+  font-weight:700;
+}
+
+main{
+  padding:35px 0 60px;
+}
+
+.hero{
+  margin-bottom:25px;
+}
+
+.eyebrow{
+  color:var(--primary);
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.12em;
+}
+
+h1{
+  margin-top:5px;
+  font-size:clamp(28px,5vw,42px);
+}
+
+.hero p{
+  color:var(--muted);
+  margin-top:7px;
+}
+
+.status{
+  padding:12px 15px;
+  border-radius:10px;
+  background:#eff6ff;
+  color:#1d4ed8;
+  font-size:13px;
+  font-weight:700;
+  margin-bottom:22px;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:15px;
+  margin-bottom:22px;
+}
+
+.stat{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:15px;
+  padding:20px;
+  box-shadow:0 8px 25px #00000008;
+}
+
+.stat-icon{
+  width:40px;
+  height:40px;
+  display:grid;
+  place-items:center;
+  border-radius:10px;
+  background:#eff6ff;
+}
+
+.stat-label{
+  display:block;
+  color:var(--muted);
+  font-size:12px;
+  margin-top:13px;
+}
+
+.stat-value{
+  display:block;
+  font-size:25px;
+  margin-top:3px;
+}
+
+.card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:23px;
+  margin-bottom:22px;
+  box-shadow:0 8px 25px #00000008;
+}
+
+.card h2{
+  font-size:19px;
+  margin-bottom:5px;
+}
+
+.card-sub{
+  color:var(--muted);
+  font-size:13px;
+  margin-bottom:20px;
+}
+
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:15px;
+}
+
+.form-group{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.full{
+  grid-column:1/-1;
+}
+
+label{
+  font-size:13px;
+  font-weight:800;
+}
+
+input,select,textarea{
+  width:100%;
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:9px;
+  outline:none;
+  font:inherit;
+  background:#fff;
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px #2563eb18;
+}
+
+.buttons{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:20px;
+}
+
+button{
+  border:0;
+  border-radius:9px;
+  padding:11px 17px;
+  cursor:pointer;
+  font:inherit;
+  font-weight:800;
+}
+
+.primary{
+  background:var(--primary);
+  color:#fff;
+}
+
+.primary:hover{
+  background:var(--primary-dark);
+}
+
+.secondary{
+  background:#eef2f7;
+  color:var(--text);
+}
+
+.danger{
+  background:#fee2e2;
+  color:#b91c1c;
+}
+
+.toolbar{
+  display:grid;
+  grid-template-columns:1fr 190px;
+  gap:12px;
+  margin-bottom:20px;
+}
+
+.inventory{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+}
+
+.product{
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:18px;
+  background:#fff;
+  position:relative;
+}
+
+.product-top{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+}
+
+.product-icon{
+  width:48px;
+  height:48px;
+  border-radius:12px;
+  background:#dbeafe;
+  display:grid;
+  place-items:center;
+  font-size:22px;
+}
+
+.product-name{
+  font-size:17px;
+  font-weight:900;
+}
+
+.sku{
+  color:var(--muted);
+  font-size:11px;
+  margin-top:3px;
+}
+
+.product-info{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+  margin-top:16px;
+}
+
+.info-box{
+  background:#f8fafc;
+  padding:10px;
+  border-radius:9px;
+}
+
+.info-box small{
+  display:block;
+  color:var(--muted);
+  font-size:10px;
+}
+
+.info-box strong{
+  display:block;
+  margin-top:3px;
+  font-size:13px;
+}
+
+.stock-badge{
+  display:inline-block;
+  margin-top:13px;
+  padding:6px 10px;
+  border-radius:20px;
+  font-size:11px;
+  font-weight:900;
+}
+
+.stock-ok{
+  background:#dcfce7;
+  color:#166534;
+}
+
+.stock-low{
+  background:#fef3c7;
+  color:#92400e;
+}
+
+.stock-out{
+  background:#fee2e2;
+  color:#991b1b;
+}
+
+.product-actions{
+  display:flex;
+  gap:8px;
+  margin-top:15px;
+}
+
+.small-btn{
+  flex:1;
+  padding:9px;
+  font-size:12px;
+}
+
+.empty{
+  grid-column:1/-1;
+  text-align:center;
+  padding:35px;
+  color:var(--muted);
+  border:1px dashed var(--border);
+  border-radius:12px;
+}
+
+footer{
+  background:var(--dark);
+  color:#fff;
+  padding:30px 0;
+}
+
+.footer{
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+}
+
+.footer p{
+  color:#94a3b8;
+  font-size:12px;
+}
+
+@media(max-width:950px){
+  .stats{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .inventory{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:650px){
+  .nav-links{
+    display:none;
+  }
+
+  .stats{
+    grid-template-columns:1fr;
+  }
+
+  .form-grid{
+    grid-template-columns:1fr;
+  }
+
+  .full{
+    grid-column:auto;
+  }
+
+  .toolbar{
+    grid-template-columns:1fr;
+  }
+
+  .inventory{
+    grid-template-columns:1fr;
+  }
+
+  .footer{
+    flex-direction:column;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="container nav">
+
+<div class="logo">
+<div class="logo-icon">📦</div>
+<span>Business Inventory</span>
+</div>
+
+<nav class="nav-links">
+<a href="#overview">Overview</a>
+<a href="#add">Add Product</a>
+<a href="#inventory">Inventory</a>
+</nav>
+
+</div>
+</header>
+
+
+<main class="container">
+
+<section class="hero">
+<span class="eyebrow">INVENTORY MANAGEMENT</span>
+<h1>Business Inventory</h1>
+<p>
+Track products, stock levels, prices and suppliers in one place.
+</p>
+</section>
+
+
+<div id="status" class="status">
+Connecting to Firebase...
+</div>
+
+
+<!-- =========================
+     STATISTICS
+========================= -->
+
+<section class="stats" id="overview">
+
+<div class="stat">
+<div class="stat-icon">📦</div>
+<span class="stat-label">Total Products</span>
+<strong
+class="stat-value"
+id="totalProducts">
+0
+</strong>
+</div>
+
+
+<div class="stat">
+<div class="stat-icon">📊</div>
+<span class="stat-label">Total Units</span>
+<strong
+class="stat-value"
+id="totalUnits">
+0
+</strong>
+</div>
+
+
+<div class="stat">
+<div class="stat-icon">⚠️</div>
+<span class="stat-label">Low Stock</span>
+<strong
+class="stat-value"
+id="lowStock">
+0
+</strong>
+</div>
+
+
+<div class="stat">
+<div class="stat-icon">💰</div>
+<span class="stat-label">Inventory Value</span>
+<strong
+class="stat-value"
+id="inventoryValue">
+$0.00
+</strong>
+</div>
+
+</section>
+
+
+<!-- =========================
+     ADD PRODUCT
+========================= -->
+
+<section class="card" id="add">
+
+<h2 id="formTitle">
+Add Product
+</h2>
+
+<p class="card-sub">
+Add a product to your business inventory.
+</p>
+
+
+<form id="productForm">
+
+<div class="form-grid">
+
+
+<div class="form-group">
+
+<label for="productName">
+Product Name *
+</label>
+
+<input
+id="productName"
+required
+placeholder="Laptop"
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="sku">
+SKU *
+</label>
+
+<input
+id="sku"
+required
+placeholder="LAP-001"
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="category">
+Category
+</label>
+
+<select id="category">
+
+<option value="General">
+General
+</option>
+
+<option value="Electronics">
+Electronics
+</option>
+
+<option value="Clothing">
+Clothing
+</option>
+
+<option value="Food">
+Food
+</option>
+
+<option value="Beauty">
+Beauty
+</option>
+
+<option value="Home">
+Home
+</option>
+
+<option value="Other">
+Other
+</option>
+
+</select>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="supplier">
+Supplier
+</label>
+
+<input
+id="supplier"
+placeholder="Supplier name"
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="quantity">
+Stock Quantity *
+</label>
+
+<input
+id="quantity"
+type="number"
+min="0"
+step="1"
+value="0"
+required
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="lowStockLimit">
+Low Stock Alert At
+</label>
+
+<input
+id="lowStockLimit"
+type="number"
+min="0"
+step="1"
+value="5"
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="buyingPrice">
+Buying Price *
+</label>
+
+<input
+id="buyingPrice"
+type="number"
+min="0"
+step="0.01"
+required
+placeholder="50"
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="sellingPrice">
+Selling Price *
+</label>
+
+<input
+id="sellingPrice"
+type="number"
+min="0"
+step="0.01"
+required
+placeholder="80"
+>
+
+</div>
+
+
+<div class="form-group full">
+
+<label for="description">
+Description
+</label>
+
+<textarea
+id="description"
+placeholder="Product description..."
+></textarea>
+
+</div>
+
+
+</div>
+
+
+<div class="buttons">
+
+<button
+type="submit"
+class="primary"
+id="saveBtn">
+➕ Add Product
+</button>
+
+<button
+type="button"
+class="secondary"
+id="cancelBtn"
+style="display:none">
+Cancel Edit
+</button>
+
+<button
+type="reset"
+class="secondary">
+Reset
+</button>
+
+</div>
+
+</form>
+
+</section>
+
+
+<!-- =========================
+     INVENTORY
+========================= -->
+
+<section
+class="card"
+id="inventory">
+
+<h2>Inventory Products</h2>
+
+<p class="card-sub">
+Search, filter and manage your products.
+</p>
+
+
+<div class="toolbar">
+
+<input
+id="search"
+placeholder="🔎 Search product, SKU or supplier..."
+>
+
+<select id="filterCategory">
+
+<option value="">
+All Categories
+</option>
+
+<option value="General">
+General
+</option>
+
+<option value="Electronics">
+Electronics
+</option>
+
+<option value="Clothing">
+Clothing
+</option>
+
+<option value="Food">
+Food
+</option>
+
+<option value="Beauty">
+Beauty
+</option>
+
+<option value="Home">
+Home
+</option>
+
+<option value="Other">
+Other
+</option>
+
+</select>
+
+</div>
+
+
+<div
+class="inventory"
+id="inventoryList">
+
+<div class="empty">
+Loading inventory...
+</div>
+
+</div>
+
+</section>
+
+</main>
+
+
+<footer>
+
+<div class="container footer">
+
+<strong>
+📦 Business Inventory
+</strong>
+
+<p>
+© <span id="year"></span> Business Inventory
+</p>
+
+</div>
+
+</footer>
+
+
+<script type="module">
+
+/* =========================
+   FIREBASE IMPORTS
+========================= */
+
+import {
+initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+
+import {
+getFirestore,
+collection,
+addDoc,
+doc,
+updateDoc,
+deleteDoc,
+onSnapshot,
+serverTimestamp
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/* =========================
+   FIREBASE CONFIG
+========================= */
+
+const firebaseConfig = {
+
+apiKey:
+"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+authDomain:
+"let-s-study-pro-course.firebaseapp.com",
+
+databaseURL:
+"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+projectId:
+"let-s-study-pro-course",
+
+storageBucket:
+"let-s-study-pro-course.firebasestorage.app",
+
+messagingSenderId:
+"474928293390",
+
+appId:
+"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+measurementId:
+"G-85B7V5H5J0"
+
+};
+
+
+/* =========================
+   INITIALIZE FIREBASE
+========================= */
+
+const app =
+initializeApp(firebaseConfig);
+
+const db =
+getFirestore(app);
+
+
+const inventoryRef =
+collection(
+db,
+"businessInventory"
+);
+
+
+/* =========================
+   ELEMENTS
+========================= */
+
+const form =
+document.getElementById(
+"productForm"
+);
+
+const inventoryList =
+document.getElementById(
+"inventoryList"
+);
+
+const statusBox =
+document.getElementById(
+"status"
+);
+
+const saveBtn =
+document.getElementById(
+"saveBtn"
+);
+
+const cancelBtn =
+document.getElementById(
+"cancelBtn"
+);
+
+const search =
+document.getElementById(
+"search"
+);
+
+const filterCategory =
+document.getElementById(
+"filterCategory"
+);
+
+
+let products = [];
+
+let editingId = null;
+
+
+/* =========================
+   STATUS MESSAGE
+========================= */
+
+function setStatus(
+text,
+error = false
+){
+
+statusBox.textContent =
+text;
+
+statusBox.style.background =
+error
+? "#fee2e2"
+: "#eff6ff";
+
+statusBox.style.color =
+error
+? "#b91c1c"
+: "#1d4ed8";
+
+}
+
+
+/* =========================
+   FORM DATA
+========================= */
+
+function getFormData(){
+
+const quantity =
+Number(
+document.getElementById(
+"quantity"
+).value
+) || 0;
+
+
+const lowStockLimit =
+Number(
+document.getElementById(
+"lowStockLimit"
+).value
+) || 0;
+
+
+const buyingPrice =
+Number(
+document.getElementById(
+"buyingPrice"
+).value
+) || 0;
+
+
+const sellingPrice =
+Number(
+document.getElementById(
+"sellingPrice"
+).value
+) || 0;
+
+
+return {
+
+name:
+document
+.getElementById("productName")
+.value
+.trim(),
+
+sku:
+document
+.getElementById("sku")
+.value
+.trim(),
+
+category:
+document
+.getElementById("category")
+.value,
+
+supplier:
+document
+.getElementById("supplier")
+.value
+.trim(),
+
+quantity,
+
+lowStockLimit,
+
+buyingPrice,
+
+sellingPrice,
+
+inventoryValue:
+quantity * buyingPrice,
+
+description:
+document
+.getElementById("description")
+.value
+.trim()
+
+};
+
+}
+
+
+/* =========================
+   ADD / UPDATE PRODUCT
+========================= */
+
+form.addEventListener(
+"submit",
+async event => {
+
+event.preventDefault();
+
+
+const data =
+getFormData();
+
+
+if(
+!data.name ||
+!data.sku
+){
+
+setStatus(
+"Product name and SKU are required.",
+true
+);
+
+return;
+
+}
+
+
+try{
+
+saveBtn.disabled =
+true;
+
+
+saveBtn.textContent =
+editingId
+? "Updating..."
+: "Adding...";
+
+
+if(editingId){
+
+await updateDoc(
+
+doc(
+db,
+"businessInventory",
+editingId
+),
+
+{
+
+...data,
+
+updatedAt:
+serverTimestamp()
+
+}
+
+);
+
+
+setStatus(
+"Product updated successfully."
+);
+
+
+}else{
+
+
+await addDoc(
+
+inventoryRef,
+
+{
+
+...data,
+
+createdAt:
+serverTimestamp(),
+
+updatedAt:
+serverTimestamp()
+
+}
+
+);
+
+
+setStatus(
+"Product added successfully."
+);
+
+}
+
+
+form.reset();
+
+
+document.getElementById(
+"quantity"
+).value = 0;
+
+
+document.getElementById(
+"lowStockLimit"
+).value = 5;
+
+
+editingId = null;
+
+
+document.getElementById(
+"formTitle"
+).textContent =
+"Add Product";
+
+
+saveBtn.textContent =
+"➕ Add Product";
+
+
+cancelBtn.style.display =
+"none";
+
+
+}catch(error){
+
+console.error(error);
+
+
+setStatus(
+"Operation failed: " +
+error.message,
+true
+);
+
+
+}finally{
+
+saveBtn.disabled =
+false;
+
+
+if(!editingId){
+
+saveBtn.textContent =
+"➕ Add Product";
+
+}
+
+}
+
+});
+
+
+/* =========================
+   REAL-TIME FIRESTORE
+========================= */
+
+onSnapshot(
+
+inventoryRef,
+
+snapshot => {
+
+products = [];
+
+
+snapshot.forEach(
+item => {
+
+products.push({
+
+id:item.id,
+
+...item.data()
+
+});
+
+});
+
+
+renderProducts();
+
+updateStats();
+
+
+setStatus(
+`${products.length} product(s) loaded from Firestore.`
+);
+
+
+},
+
+error => {
+
+console.error(error);
+
+
+setStatus(
+"Firestore error: " +
+error.message,
+true
+);
+
+}
+
+);
+
+
+/* =========================
+   RENDER PRODUCTS
+========================= */
+
+function renderProducts(){
+
+const query =
+search.value
+.trim()
+.toLowerCase();
+
+
+const category =
+filterCategory.value;
+
+
+const filtered =
+products.filter(
+product => {
+
+
+const searchable = [
+
+product.name,
+
+product.sku,
+
+product.supplier,
+
+product.category
+
+]
+.join(" ")
+.toLowerCase();
+
+
+const matchesSearch =
+searchable.includes(
+query
+);
+
+
+const matchesCategory =
+!category ||
+product.category === category;
+
+
+return (
+matchesSearch &&
+matchesCategory
+);
+
+});
+
+
+if(!filtered.length){
+
+inventoryList.innerHTML = `
+
+<div class="empty">
+
+No inventory products found.
+
+</div>
+
+`;
+
+return;
+
+}
+
+
+inventoryList.innerHTML =
+filtered.map(
+product => {
+
+
+const quantity =
+Number(
+product.quantity || 0
+);
+
+
+const limit =
+Number(
+product.lowStockLimit || 0
+);
+
+
+let stockClass =
+"stock-ok";
+
+
+let stockText =
+"In Stock";
+
+
+if(quantity === 0){
+
+stockClass =
+"stock-out";
+
+stockText =
+"Out of Stock";
+
+
+}else if(
+quantity <= limit
+){
+
+stockClass =
+"stock-low";
+
+stockText =
+"Low Stock";
+
+}
+
+
+return `
+
+<article class="product">
+
+
+<div class="product-top">
+
+
+<div class="product-icon">
+📦
+</div>
+
+
+<div>
+
+<div class="product-name">
+
+${escapeHTML(
+product.name ||
+"Unnamed Product"
+)}
+
+</div>
+
+
+<div class="sku">
+
+SKU:
+${escapeHTML(
+product.sku ||
+"—"
+)}
+
+</div>
+
+</div>
+
+
+</div>
+
+
+<div class="product-info">
+
+
+<div class="info-box">
+
+<small>Category</small>
+
+<strong>
+
+${escapeHTML(
+product.category ||
+"General"
+)}
+
+</strong>
+
+</div>
+
+
+<div class="info-box">
+
+<small>Supplier</small>
+
+<strong>
+
+${escapeHTML(
+product.supplier ||
+"—"
+)}
+
+</strong>
+
+</div>
+
+
+<div class="info-box">
+
+<small>Stock</small>
+
+<strong>
+
+${quantity.toLocaleString()}
+
+</strong>
+
+</div>
+
+
+<div class="info-box">
+
+<small>Buying Price</small>
+
+<strong>
+
+${money(
+product.buyingPrice
+)}
+
+</strong>
+
+</div>
+
+
+<div class="info-box">
+
+<small>Selling Price</small>
+
+<strong>
+
+${money(
+product.sellingPrice
+)}
+
+</strong>
+
+</div>
+
+
+<div class="info-box">
+
+<small>Stock Value</small>
+
+<strong>
+
+${money(
+quantity *
+Number(
+product.buyingPrice || 0
+)
+)}
+
+</strong>
+
+</div>
+
+
+</div>
+
+
+<span
+class="stock-badge ${stockClass}">
+
+${stockText}
+
+</span>
+
+
+<div class="product-actions">
+
+
+<button
+class="secondary small-btn"
+data-edit="${product.id}">
+
+✏️ Edit
+
+</button>
+
+
+<button
+class="danger small-btn"
+data-delete="${product.id}">
+
+🗑️ Delete
+
+</button>
+
+
+</div>
+
+
+</article>
+
+`;
+
+}
+).join("");
+
+
+document
+.querySelectorAll("[data-edit]")
+.forEach(button => {
+
+button.addEventListener(
+"click",
+() =>
+editProduct(
+button.dataset.edit
+)
+);
+
+});
+
+
+document
+.querySelectorAll("[data-delete]")
+.forEach(button => {
+
+button.addEventListener(
+"click",
+() =>
+deleteProduct(
+button.dataset.delete
+)
+);
+
+});
+
+}
+
+
+/* =========================
+   EDIT PRODUCT
+========================= */
+
+function editProduct(id){
+
+const product =
+products.find(
+item =>
+item.id === id
+);
+
+
+if(!product)return;
+
+
+document.getElementById(
+"productName"
+).value =
+product.name || "";
+
+
+document.getElementById(
+"sku"
+).value =
+product.sku || "";
+
+
+document.getElementById(
+"category"
+).value =
+product.category || "General";
+
+
+document.getElementById(
+"supplier"
+).value =
+product.supplier || "";
+
+
+document.getElementById(
+"quantity"
+).value =
+product.quantity || 0;
+
+
+document.getElementById(
+"lowStockLimit"
+).value =
+product.lowStockLimit ?? 5;
+
+
+document.getElementById(
+"buyingPrice"
+).value =
+product.buyingPrice || 0;
+
+
+document.getElementById(
+"sellingPrice"
+).value =
+product.sellingPrice || 0;
+
+
+document.getElementById(
+"description"
+).value =
+product.description || "";
+
+
+editingId =
+id;
+
+
+document.getElementById(
+"formTitle"
+).textContent =
+"Edit Product";
+
+
+saveBtn.textContent =
+"💾 Update Product";
+
+
+cancelBtn.style.display =
+"inline-block";
+
+
+document
+.getElementById("add")
+.scrollIntoView({
+behavior:"smooth"
+});
+
+}
+
+
+/* =========================
+   CANCEL EDIT
+========================= */
+
+cancelBtn.addEventListener(
+"click",
+() => {
+
+editingId =
+null;
+
+
+form.reset();
+
+
+document.getElementById(
+"quantity"
+).value = 0;
+
+
+document.getElementById(
+"lowStockLimit"
+).value = 5;
+
+
+document.getElementById(
+"formTitle"
+).textContent =
+"Add Product";
+
+
+saveBtn.textContent =
+"➕ Add Product";
+
+
+cancelBtn.style.display =
+"none";
+
+}
+);
+
+
+/* =========================
+   DELETE PRODUCT
+========================= */
+
+async function deleteProduct(id){
+
+const product =
+products.find(
+item =>
+item.id === id
+);
+
+
+if(!product)return;
+
+
+const confirmed =
+confirm(
+`Delete "${product.name}" from inventory?`
+);
+
+
+if(!confirmed)return;
+
+
+try{
+
+await deleteDoc(
+
+doc(
+db,
+"businessInventory",
+id
+)
+
+);
+
+
+setStatus(
+"Product deleted successfully."
+);
+
+
+}catch(error){
+
+console.error(error);
+
+
+setStatus(
+"Could not delete product: " +
+error.message,
+true
+);
+
+}
+
+}
+
+
+/* =========================
+   SEARCH / FILTER
+========================= */
+
+search.addEventListener(
+"input",
+renderProducts
+);
+
+
+filterCategory.addEventListener(
+"change",
+renderProducts
+);
+
+
+/* =========================
+   UPDATE STATS
+========================= */
+
+function updateStats(){
+
+const totalProducts =
+products.length;
+
+
+const totalUnits =
+products.reduce(
+(sum,product) =>
+sum +
+Number(
+product.quantity || 0
+),
+0
+);
+
+
+const lowStock =
+products.filter(
+product => {
+
+const quantity =
+Number(
+product.quantity || 0
+);
+
+const limit =
+Number(
+product.lowStockLimit || 0
+);
+
+return (
+quantity <= limit
+);
+
+}
+).length;
+
+
+const inventoryValue =
+products.reduce(
+(sum,product
+
+const inventoryValue =
+  products.reduce(
+    (sum, product) =>
+      sum +
+      (
+        Number(product.quantity || 0) *
+        Number(product.buyingPrice || 0)
+      ),
+    0
+  );
+
+document.getElementById(
+  "totalProducts"
+).textContent =
+  totalProducts.toLocaleString();
+
+document.getElementById(
+  "totalUnits"
+).textContent =
+  totalUnits.toLocaleString();
+
+document.getElementById(
+  "lowStock"
+).textContent =
+  lowStock.toLocaleString();
+
+document.getElementById(
+  "inventoryValue"
+).textContent =
+  money(inventoryValue);
+
+}
+
+
+/* =========================
+   MONEY FORMAT
+========================= */
+
+function money(value) {
+  return "$" +
+    Number(value || 0).toLocaleString(
+      "en-US",
+      {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }
+    );
+}
+
+
+/* =========================
+   ESCAPE HTML
+========================= */
+
+function escapeHTML(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+
+/* =========================
+   CURRENT YEAR
+========================= */
+
+document.getElementById(
+  "year"
+).textContent =
+  new Date().getFullYear();
+
+</script>
+
+</body>
+</html>
