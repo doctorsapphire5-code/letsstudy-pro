@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Discussion</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+:root{
+    --primary:#7c3aed;
+    --primary-dark:#6d28d9;
+    --bg:#f8fafc;
+    --card:#ffffff;
+    --text:#172033;
+    --muted:#64748b;
+    --border:#e2e8f0;
+    --online:#16a34a;
+    --danger:#dc2626;
+}
+
+body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+}
+
+.header{
+    height:64px;
+    background:#fff;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 22px;
+}
+
+.header-left{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.header h1{
+    margin:0;
+    font-size:18px;
+}
+
+.live-badge{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:5px 9px;
+    border-radius:20px;
+    background:#fee2e2;
+    color:#b91c1c;
+    font-size:8px;
+    font-weight:900;
+    text-transform:uppercase;
+}
+
+.live-dot{
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:#ef4444;
+    animation:pulse 1.3s infinite;
+}
+
+@keyframes pulse{
+    50%{
+        opacity:.35;
+    }
+}
+
+.layout{
+    max-width:1250px;
+    margin:auto;
+    padding:20px;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 290px;
+    gap:18px;
+}
+
+.chat-card,
+.side-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+}
+
+.chat-card{
+    min-height:calc(100vh - 105px);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+}
+
+.chat-header{
+    padding:17px 18px;
+    border-bottom:1px solid var(--border);
+}
+
+.chat-title{
+    font-size:13px;
+    font-weight:900;
+}
+
+.chat-subtitle{
+    color:var(--muted);
+    font-size:9px;
+    margin-top:5px;
+}
+
+.messages{
+    flex:1;
+    min-height:420px;
+    max-height:calc(100vh - 285px);
+    overflow-y:auto;
+    padding:18px;
+}
+
+.message{
+    display:flex;
+    gap:10px;
+    margin-bottom:17px;
+}
+
+.avatar{
+    width:35px;
+    height:35px;
+    border-radius:50%;
+    background:#ede9fe;
+    color:#5b21b6;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:11px;
+    font-weight:900;
+    flex-shrink:0;
+}
+
+.message-body{
+    max-width:78%;
+}
+
+.message-top{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:5px;
+}
+
+.author{
+    font-size:10px;
+    font-weight:900;
+}
+
+.time{
+    color:var(--muted);
+    font-size:8px;
+}
+
+.message-text{
+    font-size:10px;
+    line-height:1.6;
+    background:#f1f5f9;
+    border-radius:0 9px 9px 9px;
+    padding:9px 11px;
+    white-space:pre-wrap;
+}
+
+.message-actions{
+    display:flex;
+    gap:5px;
+    margin-top:5px;
+}
+
+.message-actions button{
+    border:0;
+    background:transparent;
+    color:var(--muted);
+    padding:3px 5px;
+    font-size:8px;
+    cursor:pointer;
+}
+
+.message-actions button:hover{
+    color:var(--primary);
+}
+
+.composer{
+    border-top:1px solid var(--border);
+    padding:12px;
+}
+
+.composer-row{
+    display:flex;
+    gap:8px;
+}
+
+.message-input{
+    flex:1;
+    min-height:42px;
+    max-height:120px;
+    resize:vertical;
+    padding:11px;
+    border:1px solid #cbd5e1;
+    border-radius:8px;
+    outline:none;
+    font:inherit;
+    font-size:10px;
+}
+
+.message-input:focus{
+    border-color:var(--primary);
+}
+
+button{
+    border:0;
+    border-radius:7px;
+    padding:9px 12px;
+    cursor:pointer;
+    font-size:9px;
+    font-weight:900;
+}
+
+.send{
+    background:var(--primary);
+    color:#fff;
+    min-width:70px;
+}
+
+.send:hover{
+    background:var(--primary-dark);
+}
+
+.reactions{
+    display:flex;
+    gap:5px;
+    margin-top:7px;
+}
+
+.reaction{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:4px 7px;
+    cursor:pointer;
+    font-size:10px;
+}
+
+.reaction:hover{
+    background:#f1f5f9;
+}
+
+.side-card{
+    padding:17px;
+    height:max-content;
+}
+
+.side-title{
+    font-size:11px;
+    font-weight:900;
+    margin-bottom:14px;
+}
+
+.participant{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:8px 0;
+}
+
+.participant-avatar{
+    width:32px;
+    height:32px;
+    border-radius:50%;
+    background:#f1f5f9;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:10px;
+    font-weight:900;
+    position:relative;
+}
+
+.online{
+    position:absolute;
+    right:-1px;
+    bottom:-1px;
+    width:8px;
+    height:8px;
+    background:var(--online);
+    border:2px solid #fff;
+    border-radius:50%;
+}
+
+.participant-name{
+    font-size:9px;
+    font-weight:800;
+}
+
+.participant-status{
+    color:var(--muted);
+    font-size:8px;
+    margin-top:3px;
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-bottom:18px;
+}
+
+.stat{
+    padding:11px;
+    background:#f8fafc;
+    border:1px solid var(--border);
+    border-radius:8px;
+}
+
+.stat strong{
+    display:block;
+    font-size:14px;
+}
+
+.stat span{
+    color:var(--muted);
+    font-size:8px;
+}
+
+.system-message{
+    text-align:center;
+    color:var(--muted);
+    font-size:8px;
+    margin:13px 0;
+}
+
+.toast{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    background:#172033;
+    color:#fff;
+    padding:11px 14px;
+    border-radius:8px;
+    font-size:9px;
+    opacity:0;
+    transform:translateY(10px);
+    pointer-events:none;
+    transition:.2s;
+}
+
+.toast.show{
+    opacity:1;
+    transform:translateY(0);
+}
+
+@media(max-width:850px){
+
+    .layout{
+        grid-template-columns:1fr;
+        padding:12px;
+    }
+
+    .side-card{
+        order:-1;
+    }
+
+    .messages{
+        max-height:none;
+    }
+}
+
+@media(max-width:600px){
+
+    .header{
+        padding:0 12px;
+    }
+
+    .header h1{
+        font-size:15px;
+    }
+
+    .layout{
+        padding:8px;
+    }
+
+    .chat-card{
+        min-height:calc(100vh - 80px);
+    }
+
+    .message-body{
+        max-width:85%;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+
+    <div class="header-left">
+
+        <h1>
+            Live Discussion
+        </h1>
+
+        <div class="live-badge">
+            <span class="live-dot"></span>
+            Live
+        </div>
+
+    </div>
+
+    <button
+        onclick="clearDiscussion()">
+        Clear Chat
+    </button>
+
+</header>
+
+
+<main class="layout">
+
+    <section class="chat-card">
+
+        <div class="chat-header">
+
+            <div class="chat-title">
+                Community Discussion
+            </div>
+
+            <div class="chat-subtitle">
+                Join the conversation and share your thoughts.
+            </div>
+
+        </div>
+
+
+        <div
+            id="messages"
+            class="messages">
+        </div>
+
+
+        <div class="composer">
+
+            <div class="composer-row">
+
+                <textarea
+                    id="messageInput"
+                    class="message-input"
+                    placeholder="Write a message..."
+                    onkeydown="handleInputKey(event)"></textarea>
+
+                <button
+                    class="send"
+                    onclick="sendMessage()">
+                    Send
+                </button>
+
+            </div>
+
+
+            <div class="reactions">
+
+                <button
+                    class="reaction"
+                    onclick="insertReaction('👍')">
+                    👍
+                </button>
+
+                <button
+                    class="reaction"
+                    onclick="insertReaction('❤️')">
+                    ❤️
+                </button>
+
+                <button
+                    class="reaction"
+                    onclick="insertReaction('😂')">
+                    😂
+                </button>
+
+                <button
+                    class="reaction"
+                    onclick="insertReaction('👏')">
+                    👏
+                </button>
+
+                <button
+                    class="reaction"
+                    onclick="insertReaction('🔥')">
+                    🔥
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <aside class="side-card">
+
+        <div class="side-title">
+            Discussion Stats
+        </div>
+
+
+        <div class="stats">
+
+            <div class="stat">
+
+                <strong
+                    id="messageCount">
+                    0
+                </strong>
+
+                <span>
+                    Messages
+                </span>
+
+            </div>
+
+
+            <div class="stat">
+
+                <strong
+                    id="participantCount">
+                    0
+                </strong>
+
+                <span>
+                    Participants
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="side-title">
+            Participants
+        </div>
+
+
+        <div
+            id="participants">
+        </div>
+
+    </aside>
+
+</main>
+
+
+<div
+    id="toast"
+    class="toast">
+</div>
+
+
+<script>
+
+const MESSAGE_KEY =
+    "live-discussion-messages";
+
+const PARTICIPANT_KEY =
+    "live-discussion-participants";
+
+
+let messages = [];
+
+let participants = [
+
+    {
+        id:1,
+        name:"Alex Morgan",
+        status:"Online"
+    },
+
+    {
+        id:2,
+        name:"Sarah Wilson",
+        status:"Online"
+    },
+
+    {
+        id:3,
+        name:"David Kim",
+        status:"Away"
+    },
+
+    {
+        id:4,
+        name:"Maya Johnson",
+        status:"Online"
+    }
+
+];
+
+
+/* =========================
+   LOAD
+========================= */
+
+function loadDiscussion(){
+
+    const savedMessages =
+        localStorage.getItem(
+            MESSAGE_KEY
+        );
+
+
+    if(savedMessages){
+
+        try{
+
+            messages =
+                JSON.parse(
+                    savedMessages
+                );
+
+        }catch(error){
+
+            messages = [];
+
+        }
+
+    }
+
+
+    const savedParticipants =
+        localStorage.getItem(
+            PARTICIPANT_KEY
+        );
+
+
+    if(savedParticipants){
+
+        try{
+
+            const parsed =
+                JSON.parse(
+                    savedParticipants
+                );
+
+            if(
+                Array.isArray(parsed)
+            ){
+
+                participants =
+                    parsed;
+
+            }
+
+        }catch(error){
+
+            // Keep defaults.
+        }
+
+    }
+
+
+    if(!messages.length){
+
+        messages = [
+
+            {
+                id:1,
+                author:"Alex Morgan",
+                text:"Welcome everyone! What do you think about the new project?",
+                time:"10:05 AM",
+                reactions:{
+                    "👍":3,
+                    "❤️":1
+                }
+            },
+
+            {
+                id:2,
+                author:"Sarah Wilson",
+                text:"I think the new direction looks promising. The interface is much cleaner.",
+                time:"10:07 AM",
+                reactions:{
+                    "👍":2
+                }
+            },
+
+            {
+                id:3,
+                author:"David Kim",
+                text:"Agreed. I especially like the simplified navigation.",
+                time:"10:09 AM",
+                reactions:{
+                    "👏":1
+                }
+            }
+
+        ];
+
+        saveMessages();
+
+    }
+
+}
+
+
+/* =========================
+   SAVE
+========================= */
+
+function saveMessages(){
+
+    localStorage.setItem(
+        MESSAGE_KEY,
+        JSON.stringify(
+            messages
+        )
+    );
+
+}
+
+
+function saveParticipants(){
+
+    localStorage.setItem(
+        PARTICIPANT_KEY,
+        JSON.stringify(
+            participants
+        )
+    );
+
+}
+
+
+/* =========================
+   RENDER MESSAGES
+========================= */
+
+function renderMessages(){
+
+    const container =
+        document.getElementById(
+            "messages"
+        );
+
+
+    container.innerHTML =
+        "";
+
+
+    messages.forEach(
+        message => {
+
+            const item =
+                document.createElement(
+                    "div"
+                );
+
+            item.className =
+                "message";
+
+
+            const initial =
+                (
+                    message.author ||
+                    "U"
+                )
+                .charAt(0)
+                .toUpperCase();
+
+
+            const reactionHTML =
+                Object.entries(
+                    message.reactions || {}
+                )
+                .map(
+                    ([emoji,count]) => `
+
+                        <button
+                            class="reaction"
+                            onclick="addReaction(
+                                ${message.id},
+                                '${emoji}'
+                            )">
+
+                            ${emoji}
+                            ${count}
+
+                        </button>
+
+                    `
+                )
+                .join("");
+
+
+            item.innerHTML = `
+
+                <div class="avatar">
+                    ${escapeHTML(
+                        initial
+                    )}
+                </div>
+
+
+                <div class="message-body">
+
+                    <div class="message-top">
+
+                        <span class="author">
+                            ${escapeHTML(
+                                message.author
+                            )}
+                        </span>
+
+                        <span class="time">
+                            ${escapeHTML(
+                                message.time
+                            )}
+                        </span>
+
+                    </div>
+
+
+                    <div class="message-text">
+                        ${escapeHTML(
+                            message.text
+                        )}
+                    </div>
+
+
+                    <div class="message-actions">
+
+                        <button
+                            onclick="replyTo(
+                                '${escapeAttribute(
+                                    message.author
+                                )}'
+                            )">
+                            Reply
+                        </button>
+
+                        <button
+                            onclick="deleteMessage(
+                                ${message.id}
+                            )">
+                            Delete
+                        </button>
+
+                    </div>
+
+
+                    <div class="reactions">
+
+                        ${reactionHTML}
+
+                    </div>
+
+                </div>
+
+            `;
+
+
+            container.appendChild(
+                item
+            );
+
+        }
+    );
+
+
+    document.getElementById(
+        "messageCount"
+    ).textContent =
+        messages.length;
+
+
+    document.getElementById(
+        "participantCount"
+    ).textContent =
+        participants.length;
+
+
+    container.scrollTop =
+        container.scrollHeight;
+
+}
+
+
+/* =========================
+   RENDER PARTICIPANTS
+========================= */
+
+function renderParticipants(){
+
+    const container =
+        document.getElementById(
+            "participants"
+        );
+
+
+    container.innerHTML =
+        "";
+
+
+    participants.forEach(
+        participant => {
+
+            const item =
+                document.createElement(
+                    "div"
+                );
+
+            item.className =
+                "participant";
+
+
+            const initial =
+                participant.name
+                    .charAt(0)
+                    .toUpperCase();
+
+
+            item.innerHTML = `
+
+                <div class="participant-avatar">
+
+                    ${escapeHTML(
+                        initial
+                    )}
+
+                    ${
+                        participant.status ===
+                        "Online"
+                            ? `
+                                <span class="online">
+                                </span>
+                              `
+                            : ""
+                    }
+
+                </div>
+
+
+                <div>
+
+                    <div class="participant-name">
+                        ${escapeHTML(
+                            participant.name
+                        )}
+                    </div>
+
+                    <div class="participant-status">
+                        ${escapeHTML(
+                            participant.status
+                        )}
+                    </div>
+
+                </div>
+
+            `;
+
+
+            container.appendChild(
+                item
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================
+   SEND MESSAGE
+========================= */
+
+function sendMessage(){
+
+    const input =
+        document.getElementById(
+            "messageInput"
+        );
+
+
+    const text =
+        input.value.trim();
+
+
+    if(!text){
+
+        showToast(
+            "Write a message first."
+        );
+
+        input.focus();
+
+        return;
+
+    }
+
+
+    messages.push({
+
+        id:
+            Date.now(),
+
+        author:
+            "You",
+
+        text,
+
+        time:
+            new Date()
+            .toLocaleTimeString(
+                [],
+                {
+                    hour:"numeric",
+                    minute:"2-digit"
+                }
+            ),
+
+        reactions:{}
+
+    });
+
+
+    saveMessages();
+
+    input.value = "";
+
+    renderMessages();
+
+}
+
+
+/* =========================
+   ENTER KEY
+========================= */
+
+function handleInputKey(
+    event
+){
+
+    if(
+        event.key === "Enter" &&
+        !event.shiftKey
+    ){
+
+        event.preventDefault();
+
+        sendMessage();
+
+    }
+
+}
+
+
+/* =========================
+   REACTION
+========================= */
+
+function addReaction(
+    id,
+    emoji
+){
+
+    const message =
+        messages.find(
+            item =>
+                item.id === id
+        );
+
+
+    if(!message){
+        return;
+    }
+
+
+    if(!message.reactions){
+
+        message.reactions = {};
+
+    }
+
+
+    message.reactions[emoji] =
+        (
+            message.reactions[emoji] ||
+            0
+        ) + 1;
+
+
+    saveMessages();
+
+    renderMessages();
+
+}
+
+
+function insertReaction(
+    emoji
+){
+
+    const input =
+        document.getElementById(
+            "messageInput"
+        );
+
+
+    input.value +=
+        emoji;
+
+
+    input.focus();
+
+}
+
+
+/* =========================
+   REPLY
+========================= */
+
+function replyTo(
+    author
+){
+
+    const input =
+        document.getElementById(
+            "messageInput"
+        );
+
+
+    input.value =
+        "@" +
+        author +
+        " ";
+
+
+    input.focus();
+
+}
+
+
+/* =========================
+   DELETE
+========================= */
+
+function deleteMessage(
+    id
+){
+
+    messages =
+        messages.filter(
+            message =>
+                message.id !== id
+        );
+
+
+    saveMessages();
+
+    renderMessages();
+
+    showToast(
+        "Message deleted."
+    );
+
+}
+
+
+/* =========================
+   CLEAR CHAT
+========================= */
+
+function clearDiscussion(){
+
+    if(
+        !confirm(
+            "Clear the entire discussion?"
+        )
+    ){
+
+        return;
+
+    }
+
+
+    messages = [];
+
+    saveMessages();
+
+    renderMessages();
+
+    showToast(
+        "Discussion cleared."
+    );
+
+}
+
+
+/* =========================
+   ESCAPE HTML
+========================= */
+
+function escapeHTML(
+    value
+){
+
+    return String(
+        value ?? ""
+    )
+    .replace(
+        /&/g,
+        "&amp;"
+    )
+    .replace(
+        /</g,
+        "&lt;"
+    )
+    .replace(
+        />/g,
+        "&gt;"
+    )
+    .replace(
+        /"/g,
+        "&quot;"
+    )
+    .replace(
+        /'/g,
+        "&#039;"
+    );
+
+}
+
+
+function escapeAttribute(
+    value
+){
+
+    return String(
+        value ?? ""
+    )
+    .replace(
+        /\\/g,
+        "\\\\"
+    )
+    .replace(
+        /'/g,
+        "\\'"
+    );
+
+}
+
+
+/* =========================
+   TOAST
+========================= */
+
+let toastTimer;
+
+function showToast(
+    message
+){
+
+    const toast =
+    document.getElementById(
+        "toast"
+    );
+
+
+toast.textContent =
+    message;
+
+
+toast.classList.add(
+    "show"
+);
+
+
+clearTimeout(
+    toastTimer
+);
+
+
+toastTimer =
+    setTimeout(
+        () => {
+
+            toast.classList.remove(
+                "show"
+            );
+
+        },
+        2200
+    );
+
+}
+
+
+/* =========================
+   START PAGE
+========================= */
+
+loadDiscussion();
+
+saveParticipants();
+
+renderMessages();
+
+renderParticipants();
+
+</script>
+
+</body>
+</html>
