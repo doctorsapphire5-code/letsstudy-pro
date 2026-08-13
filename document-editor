@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Document Editor</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  background:#f1f5f9;
+  color:#172033
+}
+
+button,input,select{
+  font:inherit
+}
+
+header{
+  height:58px;
+  background:#fff;
+  border-bottom:1px solid #e2e8f0;
+  display:flex;
+  align-items:center
+}
+
+.container{
+  width:min(1250px,96%);
+  margin:auto
+}
+
+.nav{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px
+}
+
+.logo{
+  color:#2563eb;
+  font-size:16px;
+  font-weight:900
+}
+
+.header-actions{
+  display:flex;
+  align-items:center;
+  gap:6px
+}
+
+.btn{
+  border:0;
+  border-radius:7px;
+  padding:9px 12px;
+  font-size:8px;
+  font-weight:900;
+  cursor:pointer
+}
+
+.btn:hover{
+  opacity:.9
+}
+
+.primary{
+  background:#2563eb;
+  color:#fff
+}
+
+.gray{
+  background:#f1f5f9;
+  color:#334155
+}
+
+.green{
+  background:#dcfce7;
+  color:#166534
+}
+
+main{
+  padding:20px 0 50px
+}
+
+.editor-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  margin-bottom:12px
+}
+
+.title-area{
+  flex:1
+}
+
+.title-input{
+  width:100%;
+  max-width:600px;
+  border:0;
+  background:transparent;
+  outline:none;
+  font-size:21px;
+  font-weight:900;
+  color:#172033
+}
+
+.status-line{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  margin-top:6px
+}
+
+.status{
+  font-size:6px;
+  font-weight:900;
+  padding:4px 7px;
+  border-radius:20px
+}
+
+.status.saved{
+  background:#dcfce7;
+  color:#166534
+}
+
+.status.unsaved{
+  background:#fef3c7;
+  color:#92400e
+}
+
+.editor-shell{
+  background:#fff;
+  border:1px solid #dbe2ea;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 5px 25px rgba(15,23,42,.05)
+}
+
+.toolbar{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:4px;
+  padding:9px;
+  background:#f8fafc;
+  border-bottom:1px solid #e2e8f0
+}
+
+.tool{
+  min-width:30px;
+  height:30px;
+  border:0;
+  border-radius:6px;
+  background:#fff;
+  color:#334155;
+  cursor:pointer;
+  font-size:9px;
+  font-weight:900
+}
+
+.tool:hover,
+.tool.active{
+  background:#dbeafe;
+  color:#1d4ed8
+}
+
+.divider{
+  width:1px;
+  height:22px;
+  background:#dbe2ea;
+  margin:0 3px
+}
+
+.select{
+  height:30px;
+  border:1px solid #dbe2ea;
+  border-radius:6px;
+  background:#fff;
+  padding:0 8px;
+  font-size:7px;
+  color:#334155;
+  outline:none
+}
+
+.editor{
+  width:100%;
+  min-height:700px;
+  padding:45px;
+  outline:none;
+  font-size:14px;
+  line-height:1.8;
+  color:#172033;
+  background:#fff
+}
+
+.editor:focus{
+  outline:none
+}
+
+.editor h1{
+  font-size:30px;
+  margin:0 0 15px
+}
+
+.editor h2{
+  font-size:23px;
+  margin:20px 0 10px
+}
+
+.editor h3{
+  font-size:18px;
+  margin:18px 0 8px
+}
+
+.editor p{
+  margin-bottom:10px
+}
+
+.editor blockquote{
+  border-left:4px solid #2563eb;
+  padding-left:15px;
+  margin:15px 0;
+  color:#64748b
+}
+
+.editor ul,
+.editor ol{
+  padding-left:30px;
+  margin-bottom:12px
+}
+
+.editor table{
+  width:100%;
+  border-collapse:collapse;
+  margin:15px 0
+}
+
+.editor td,
+.editor th{
+  border:1px solid #cbd5e1;
+  padding:8px;
+  text-align:left
+}
+
+.editor img{
+  max-width:100%;
+  height:auto
+}
+
+.bottom-bar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:8px 12px;
+  background:#f8fafc;
+  border-top:1px solid #e2e8f0;
+  color:#64748b;
+  font-size:7px
+}
+
+.word-info{
+  display:flex;
+  gap:12px
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.45);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  z-index:100
+}
+
+.modal.show{
+  display:flex
+}
+
+.modal-box{
+  width:min(500px,100%);
+  background:#fff;
+  border-radius:13px;
+  padding:20px
+}
+
+.modal-title{
+  font-size:14px;
+  font-weight:900;
+  margin-bottom:15px
+}
+
+.field{
+  margin-bottom:12px
+}
+
+.field label{
+  display:block;
+  font-size:7px;
+  font-weight:900;
+  margin-bottom:6px
+}
+
+.field input,
+.field select{
+  width:100%;
+  padding:10px;
+  border:1px solid #dbe2ea;
+  border-radius:7px;
+  outline:none;
+  font-size:8px
+}
+
+.field input:focus,
+.field select:focus{
+  border-color:#2563eb
+}
+
+.modal-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:6px;
+  margin-top:15px
+}
+
+.toast{
+  position:fixed;
+  right:18px;
+  bottom:18px;
+  padding:11px 15px;
+  border-radius:8px;
+  background:#172033;
+  color:#fff;
+  font-size:8px;
+  font-weight:900;
+  display:none;
+  z-index:200
+}
+
+.toast.show{
+  display:block
+}
+
+@media(max-width:700px){
+  .editor{
+    padding:25px 18px;
+    min-height:600px
+  }
+
+  .editor-top{
+    align-items:flex-start;
+    flex-direction:column
+  }
+
+  .header-actions{
+    flex-wrap:wrap
+  }
+
+  .title-input{
+    font-size:18px
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="container nav">
+
+<a href="documents.html" class="logo">
+📄 Documents
+</a>
+
+<div class="header-actions">
+
+<button class="btn gray" onclick="goBack()">
+← Back
+</button>
+
+<button class="btn gray" onclick="openSettings()">
+Settings
+</button>
+
+<button class="btn gray" onclick="printDocument()">
+Print
+</button>
+
+<button class="btn primary" onclick="saveDocument()">
+Save
+</button>
+
+</div>
+
+</div>
+</header>
+
+
+<main class="container">
+
+<div class="editor-top">
+
+<div class="title-area">
+
+<input
+id="title"
+class="title-input"
+value="Untitled Document"
+placeholder="Document title"
+autocomplete="off">
+
+<div class="status-line">
+
+<span
+id="saveStatus"
+class="status saved">
+Saved
+</span>
+
+<span id="lastSaved">
+Not saved yet
+</span>
+
+</div>
+
+</div>
+
+<div class="header-actions">
+
+<button
+class="btn gray"
+onclick="openShare()">
+Share
+</button>
+
+<button
+class="btn green"
+onclick="saveDocument()">
+✓ Save
+</button>
+
+</div>
+
+</div>
+
+
+<div class="editor-shell">
+
+<div class="toolbar">
+
+<select
+id="formatBlock"
+class="select"
+onchange="formatBlock(this.value)">
+
+<option value="p">Paragraph</option>
+<option value="h1">Heading 1</option>
+<option value="h2">Heading 2</option>
+<option value="h3">Heading 3</option>
+</select>
+
+
+<select
+class="select"
+onchange="changeFontSize(this.value)">
+
+<option value="3">Normal</option>
+<option value="4">Large</option>
+<option value="5">Larger</option>
+<option value="6">Huge</option>
+
+</select>
+
+
+<div class="divider"></div>
+
+
+<button class="tool" onclick="command('bold')" title="Bold">
+B
+</button>
+
+<button class="tool" onclick="command('italic')" title="Italic">
+I
+</button>
+
+<button class="tool" onclick="command('underline')" title="Underline">
+U
+</button>
+
+<button class="tool" onclick="command('strikeThrough')" title="Strike">
+S
+</button>
+
+
+<div class="divider"></div>
+
+
+<button class="tool" onclick="command('justifyLeft')">
+☰
+</button>
+
+<button class="tool" onclick="command('justifyCenter')">
+≡
+</button>
+
+<button class="tool" onclick="command('justifyRight')">
+☷
+</button>
+
+
+<div class="divider"></div>
+
+
+<button class="tool" onclick="command('insertUnorderedList')">
+☷
+</button>
+
+<button class="tool" onclick="command('insertOrderedList')">
+1.
+</button>
+
+
+<div class="divider"></div>
+
+
+<button class="tool" onclick="command('outdent')">
+←
+</button>
+
+<button class="tool" onclick="command('indent')">
+→
+</button>
+
+
+<div class="divider"></div>
+
+
+<button class="tool" onclick="insertLink()">
+🔗
+</button>
+
+<button class="tool" onclick="insertImage()">
+🖼️
+</button>
+
+<button class="tool" onclick="insertTable()">
+▦
+</button>
+
+
+<div class="divider"></div>
+
+
+<button class="tool" onclick="command('undo')">
+↶
+</button>
+
+<button class="tool" onclick="command('redo')">
+↷
+</button>
+
+
+<div class="divider"></div>
+
+
+<button class="tool" onclick="clearFormatting()">
+Tx
+</button>
+
+</div>
+
+
+<div
+id="editor"
+class="editor"
+contenteditable="true"
+spellcheck="true">
+
+<h1>Untitled Document</h1>
+
+<p>
+Start writing your document here...
+</p>
+
+</div>
+
+
+<div class="bottom-bar">
+
+<div class="word-info">
+
+<span id="wordCount">
+0 words
+</span>
+
+<span id="charCount">
+0 characters
+</span>
+
+</div>
+
+<span>
+Auto-save enabled
+</span>
+
+</div>
+
+</div>
+
+</main>
+
+
+<!-- SETTINGS -->
+
+<div
+id="settingsModal"
+class="modal">
+
+<div class="modal-box">
+
+<div class="modal-title">
+Document Settings
+</div>
+
+<div class="field">
+
+<label>
+FOLDER
+</label>
+
+<select id="folder">
+
+<option>Business</option>
+<option>Reports</option>
+<option>Plans</option>
+<option>Marketing</option>
+<option>Finance</option>
+<option>Other</option>
+
+</select>
+
+</div>
+
+<div class="field">
+
+<label>
+STATUS
+</label>
+
+<select id="status">
+
+<option>Draft</option>
+<option>Review</option>
+<option>Published</option>
+<option>Archived</option>
+
+</select>
+
+</div>
+
+<div class="modal-actions">
+
+<button
+class="btn gray"
+onclick="closeSettings()">
+Cancel
+</button>
+
+<button
+class="btn primary"
+onclick="saveSettings()">
+Apply
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- SHARE -->
+
+<div
+id="shareModal"
+class="modal">
+
+<div class="modal-box">
+
+<div class="modal-title">
+Share Document
+</div>
+
+<div class="field">
+
+<label>
+DOCUMENT LINK
+</label>
+
+<input
+id="shareLink"
+readonly>
+
+</div>
+
+<div class="modal-actions">
+
+<button
+class="btn gray"
+onclick="closeShare()">
+Close
+</button>
+
+<button
+class="btn primary"
+onclick="copyShareLink()">
+Copy Link
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div id="toast" class="toast"></div>
+
+
+<script>
+
+let documentId=null;
+let autoSaveTimer=null;
+let savedRange=null;
+
+
+/*
+  DOCUMENT EDITOR
+
+  Connects with documents.html through:
+
+  localStorage["documents"]
+
+  URL:
+  document-editor.html?id=doc_123
+
+  If no ID exists, a new document is created.
+*/
+
+
+function getDocuments(){
+
+const data=
+JSON.parse(
+localStorage.getItem("documents")||"[]"
+);
+
+return Array.isArray(data)?data:[];
+
+}
+
+
+function saveDocuments(data){
+
+localStorage.setItem(
+"documents",
+JSON.stringify(data)
+);
+
+}
+
+
+function getUrlId(){
+
+const params=
+new URLSearchParams(
+window.location.search
+);
+
+return params.get("id");
+
+}
+
+
+function initialize(){
+
+documentId=getUrlId();
+
+if(documentId){
+
+loadExistingDocument();
+
+}else{
+
+createNewDocument();
+
+}
+
+updateCounters();
+
+}
+
+
+function loadExistingDocument(){
+
+const documents=
+getDocuments();
+
+const doc=
+documents.find(
+item=>
+String(item.id)===
+String(documentId)
+);
+
+if(!doc){
+
+showToast(
+"Document not found."
+);
+
+createNewDocument();
+
+return;
+
+}
+
+
+document.getElementById(
+"title"
+).value=
+doc.title||"Untitled Document";
+
+
+document.getElementById(
+"editor"
+).innerHTML=
+doc.content||
+"<p>Start writing...</p>";
+
+
+document.getElementById(
+"folder"
+).value=
+doc.folder||"Business";
+
+
+document.getElementById(
+"status"
+).value=
+doc.status||"Draft";
+
+
+setSavedStatus();
+
+}
+
+
+function createNewDocument(){
+
+documentId=
+"doc_"+Date.now();
+
+document.getElementById(
+"title"
+).value=
+"Untitled Document";
+
+
+document.getElementById(
+"editor"
+).innerHTML=
+"<h1>Untitled Document</h1><p>Start writing your document here...</p>";
+
+
+document.getElementById(
+"folder"
+).value=
+"Business";
+
+
+document.getElementById(
+"status"
+).value=
+"Draft";
+
+
+setUnsavedStatus();
+
+}
+
+
+function saveDocument(){
+
+const title=
+document.getElementById(
+"title"
+).value.trim()||
+"Untitled Document";
+
+
+const content=
+document.getElementById(
+"editor"
+).innerHTML;
+
+
+const folder=
+document.getElementById(
+"folder"
+).value;
+
+
+const status=
+document.getElementById(
+"status"
+).value;
+
+
+const documents=
+getDocuments();
+
+const index=
+documents.findIndex(
+doc=>
+String(doc.id)===
+String(documentId)
+);
+
+
+const now=
+new Date().toISOString();
+
+
+const data={
+
+id:documentId,
+
+title,
+
+content,
+
+folder,
+
+status,
+
+updatedAt:now,
+
+createdAt:
+index>=0
+? documents[index].createdAt
+: now
+
+};
+
+
+if(index>=0){
+
+documents[index]={
+...documents[index],
+...data
+};
+
+}else{
+
+documents.unshift(data);
+
+}
+
+
+saveDocuments(documents);
+
+setSavedStatus();
+
+showToast(
+"Document saved."
+);
+
+}
+
+
+function autoSave(){
+
+clearTimeout(
+autoSaveTimer
+);
+
+setUnsavedStatus();
+
+autoSaveTimer=
+setTimeout(
+()=>{
+saveDocumentSilent();
+},
+1200
+);
+
+}
+
+
+function saveDocumentSilent(){
+
+const title=
+document.getElementById(
+"title"
+).value.trim()||
+"Untitled Document";
+
+
+const documents=
+getDocuments();
+
+
+const index=
+documents.findIndex(
+doc=>
+String(doc.id)===
+String(documentId)
+);
+
+
+const now=
+new Date().toISOString();
+
+
+const data={
+
+id:documentId,
+
+title,
+
+content:
+document.getElementById(
+"editor"
+).innerHTML,
+
+folder:
+document.getElementById(
+"folder"
+).value,
+
+status:
+document.getElementById(
+"status"
+).value,
+
+updatedAt:now
+
+};
+
+
+if(index>=0){
+
+documents[index]={
+...documents[index],
+...data
+};
+
+}else{
+
+documents.unshift({
+
+...data,
+createdAt:now
+
+});
+
+}
+
+
+saveDocuments(documents);
+
+setSavedStatus();
+
+}
+
+
+function setSavedStatus(){
+
+const status=
+document.getElementById(
+"saveStatus"
+);
+
+status.textContent=
+"Saved";
+
+status.className=
+"status saved";
+
+document.getElementById(
+"lastSaved"
+).textContent=
+"Last saved "+
+new Date().toLocaleTimeString(
+[],
+{
+hour:"2-digit",
+minute:"2-digit"
+}
+);
+
+}
+
+
+function setUnsavedStatus(){
+
+const status=
+document.getElementById(
+"saveStatus"
+);
+
+status.textContent=
+"Unsaved changes";
+
+status.className=
+"status unsaved";
+
+document.getElementById(
+"lastSaved"
+).textContent=
+"Changes detected";
+
+}
+
+
+/* FORMATTING */
+
+function command(action,value=null){
+
+document.execCommand(
+action,
+false,
+value
+);
+
+document.getElementById(
+"editor"
+).focus();
+
+autoSave();
+
+updateCounters();
+
+}
+
+
+function formatBlock(value){
+
+if(!value)return;
+
+document.execCommand(
+"formatBlock",
+false,
+value
+);
+
+document.getElementById(
+"editor"
+).focus();
+
+autoSave();
+
+}
+
+
+function changeFontSize(value){
+
+document.execCommand(
+"fontSize",
+false,
+value
+);
+
+document.getElementById(
+"editor"
+).focus();
+
+autoSave();
+
+}
+
+
+function clearFormatting(){
+
+document.execCommand(
+"removeFormat",
+false,
+null
+);
+
+document.getElementById(
+"editor"
+).focus();
+
+autoSave();
+
+}
+
+
+function insertLink(){
+
+const url=
+prompt(
+"Enter URL:",
+"https://"
+);
+
+if(!url)return;
+
+document.execCommand(
+"createLink",
+false,
+url
+);
+
+autoSave();
+
+}
+
+
+function insertImage(){
+
+const url=
+prompt(
+"Enter image URL:"
+);
+
+if(!url)return;
+
+document.execCommand(
+"insertImage",
+false,
+url
+);
+
+autoSave();
+
+}
+
+
+function insertTable(){
+
+const rows=
+parseInt(
+prompt(
+"Number of rows:",
+"3"
+)
+);
+
+const cols=
+parseInt(
+prompt(
+"Number of columns:",
+"3"
+)
+);
+
+
+if(
+!rows||
+!cols||
+rows>20||
+cols>10
+){
+
+showToast(
+"Invalid table size."
+);
+
+return;
+
+}
+
+
+let html=
+"<table>";
+
+
+for(let r=0;r<rows;r++){
+
+html+="<tr>";
+
+for(let c=0;c<cols;c++){
+
+html+=
+r===0
+? "<th>Header</th>"
+: "<td>Cell</td>";
+
+}
+
+html+="</tr>";
+
+}
+
+html+="</table>";
+
+
+document.execCommand(
+"insertHTML",
+false,
+html
+);
+
+autoSave();
+
+}
+
+
+function updateCounters(){
+
+const editor=
+document.getElementById(
+"editor"
+);
+
+const text=
+editor.innerText||
+"";
+
+const words=
+text
+.trim()
+.split(/\s+/)
+.filter(Boolean)
+.length;
+
+
+document.getElementById(
+"wordCount"
+).textContent=
+words+" "+
+(words===1?"word":"words");
+
+
+document.getElementById(
+"charCount"
+).textContent=
+text.length+
+" characters";
+
+}
+
+
+/* SETTINGS */
+
+function openSettings(){
+
+document.getElementById(
+"settingsModal"
+).classList.add("show");
+
+}
+
+
+function closeSettings(){
+
+document.getElementById(
+"settingsModal"
+).classList.remove("show");
+
+}
+
+
+function saveSettings(){
+
+closeSettings();
+
+autoSave();
+
+showToast(
+"Settings saved."
+);
+
+}
+
+
+/* SHARE */
+
+function openShare(){
+
+const url=
+window.location.href;
+
+document.getElementById(
+"shareLink"
+).value=
+url;
+
+document.getElementById(
+"shareModal"
+).classList.add("show");
+
+}
+
+
+function closeShare(){
+
+document.getElementById(
+"shareModal"
+).classList.remove("show");
+
+}
+
+
+function copyShareLink(){
+
+const input=
+document.getElementById(
+"shareLink"
+);
+
+
+if(navigator.clipboard){
+
+navigator.clipboard
+.writeText(input.value)
+.then(()=>{
+showToast(
+"Document link copied."
+);
+});
+
+}else{
+
+input.select();
+
+document.execCommand(
+"copy"
+);
+
+showToast(
+"Document link copied."
+);
+
+}
+
+}
+
+
+/* PRINT */
+
+function printDocument(){
+
+saveDocumentSilent();
+
+const title=
+escapeHTML(
+document.getElementById(
+"title"
+).value
+);
+
+const content=
+document.getElementById(
+"editor"
+).innerHTML;
+
+
+const win=
+window.open(
+"",
+"_blank",
+"width=900,height=700"
+);
+
+
+if(!win){
+
+showToast(
+"Allow pop-ups to print."
+);
+
+return;
+
+}
+
+
+win.document.write(`
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<title>${title}</title>
+
+<style>
+
+body{
+font-family:Arial,sans-serif;
+max-width:850px;
+margin:45px auto;
+color:#111827;
+line-height:1.8
+}
+
+h1{
+font-size:30px
+}
+
+h2{
+font-size:23px
+}
+
+h3{
+font-size:18px
+}
+
+img{
+max-width:100%
+}
+
+table{
+width:100%;
+border-collapse:collapse
+}
+
+td,th{
+border:1px solid #999;
+padding:8px
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>${title}</h1>
+
+${content}
+
+</body>
+
+</html>
+
+`);
+
+
+win.document.close();
+
+win.focus();
+
+setTimeout(
+()=>{
+win.print();
+},
+300
+);
+
+}
+
+
+function goBack(){
+
+saveDocumentSilent();
+
+window.location.href=
+"documents.html";
+
+}
+
+
+/* KEYBOARD SHORTCUTS */
+
+document.addEventListener(
+"keydown",
+event=>{
+
+if(
+(event.ctrlKey||event.metaKey)&&
+event.key.toLowerCase()==="s"
+){
+
+event.preventDefault();
+
+saveDocument();
+
+}
+
+});
+
+
+/* EDITOR EVENTS */
+
+const editor=
+document.getElementById(
+"editor"
+);
+
+editor.addEventListener(
+"input",
+()=>{
+
+updateCounters();
+autoSave();
+
+}
+);
+
+
+document.getElementById(
+"title"
+).addEventListener(
+"input",
+autoSave
+);
+
+
+/* CLOSE MODALS */
+
+document.querySelectorAll(
+".modal"
+).forEach(modal=>{
+
+modal.addEventListener(
+"click",
+event=>{
+
+if(event.target===modal){
+
+modal.classList.remove(
+"show"
+);
+
+}
+
+});
+
+});
+
+
+/* HELPERS */
+
+function escapeHTML(value){
+
+return String(value)
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+
+}
+
+
+function showToast(message){
+
+const toast=
+document.getElementById(
+"toast"
+);
+
+toast.textContent=
+message;
+
+toast.classList.add("show");
+
+setTimeout(
+()=>{
+toast.classList.remove("show");
+},
+2200
+);
+
+}
+
+
+/* START */
+
+initialize();
+
+</script>
+
+</body>
+</html>
