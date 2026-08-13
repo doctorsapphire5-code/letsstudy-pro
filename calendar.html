@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendar</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+:root{
+    --primary:#7c3aed;
+    --primary-dark:#6d28d9;
+    --bg:#f8fafc;
+    --card:#fff;
+    --text:#172033;
+    --muted:#64748b;
+    --border:#e2e8f0;
+}
+
+body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+}
+
+.header{
+    height:64px;
+    background:#fff;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 24px;
+}
+
+.header h1{
+    margin:0;
+    font-size:19px;
+}
+
+.header-actions{
+    display:flex;
+    gap:8px;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+    padding:24px;
+}
+
+button{
+    border:0;
+    border-radius:7px;
+    padding:10px 14px;
+    cursor:pointer;
+    font-size:11px;
+    font-weight:800;
+}
+
+.primary{
+    background:var(--primary);
+    color:#fff;
+}
+
+.primary:hover{
+    background:var(--primary-dark);
+}
+
+.secondary{
+    background:#e2e8f0;
+    color:#334155;
+}
+
+.calendar-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    overflow:hidden;
+}
+
+.calendar-toolbar{
+    min-height:70px;
+    padding:15px 18px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border-bottom:1px solid var(--border);
+}
+
+.month-title{
+    margin:0;
+    font-size:18px;
+    min-width:190px;
+    text-align:center;
+}
+
+.month-navigation{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.icon-button{
+    width:38px;
+    height:38px;
+    padding:0;
+    font-size:16px;
+}
+
+.weekdays{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    background:#f8fafc;
+    border-bottom:1px solid var(--border);
+}
+
+.weekday{
+    padding:12px 5px;
+    text-align:center;
+    color:var(--muted);
+    font-size:10px;
+    font-weight:900;
+    text-transform:uppercase;
+}
+
+.calendar-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+}
+
+.day-cell{
+    min-height:125px;
+    padding:8px;
+    border-right:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+    cursor:pointer;
+    background:#fff;
+}
+
+.day-cell:nth-child(7n){
+    border-right:0;
+}
+
+.day-cell:hover{
+    background:#faf5ff;
+}
+
+.day-cell.other-month{
+    background:#f8fafc;
+    color:#94a3b8;
+}
+
+.day-number{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:27px;
+    height:27px;
+    border-radius:50%;
+    font-size:11px;
+    font-weight:800;
+    margin-bottom:5px;
+}
+
+.today .day-number{
+    background:var(--primary);
+    color:#fff;
+}
+
+.event{
+    display:block;
+    margin-top:4px;
+    padding:5px 6px;
+    border-radius:5px;
+    background:#ede9fe;
+    color:#5b21b6;
+    font-size:9px;
+    font-weight:800;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.event.confirmed{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.event.completed{
+    background:#e2e8f0;
+    color:#475569;
+}
+
+.event.cancelled{
+    background:#fee2e2;
+    color:#b91c1c;
+}
+
+.event.draft{
+    background:#fef3c7;
+    color:#92400e;
+}
+
+.more-events{
+    margin-top:4px;
+    color:var(--muted);
+    font-size:9px;
+    font-weight:800;
+}
+
+.modal{
+    position:fixed;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:rgba(15,23,42,.55);
+    z-index:1000;
+}
+
+.modal.show{
+    display:flex;
+}
+
+.modal-card{
+    width:min(540px,100%);
+    max-height:92vh;
+    overflow:auto;
+    background:#fff;
+    border-radius:12px;
+    padding:22px;
+}
+
+.modal-card h2{
+    margin:0 0 20px;
+}
+
+.form-group{
+    margin-bottom:14px;
+}
+
+.form-group label{
+    display:block;
+    margin-bottom:6px;
+    color:var(--muted);
+    font-size:9px;
+    font-weight:900;
+    text-transform:uppercase;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select{
+    width:100%;
+    padding:10px 11px;
+    border:1px solid #cbd5e1;
+    border-radius:7px;
+    outline:none;
+    font:inherit;
+    background:#fff;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus{
+    border-color:var(--primary);
+}
+
+.form-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+}
+
+.modal-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    margin-top:20px;
+}
+
+.day-events{
+    max-height:60vh;
+    overflow:auto;
+}
+
+.day-event{
+    padding:12px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    margin-bottom:9px;
+}
+
+.day-event-title{
+    font-size:12px;
+    font-weight:900;
+    margin-bottom:5px;
+}
+
+.day-event-meta{
+    color:var(--muted);
+    font-size:10px;
+    line-height:1.7;
+}
+
+.empty{
+    padding:25px;
+    text-align:center;
+    color:var(--muted);
+    font-size:11px;
+}
+
+@media(max-width:800px){
+
+    .container{
+        padding:10px;
+    }
+
+    .header{
+        padding:0 12px;
+    }
+
+    .calendar-toolbar{
+        flex-wrap:wrap;
+        gap:12px;
+    }
+
+    .month-title{
+        order:-1;
+        width:100%;
+    }
+
+    .day-cell{
+        min-height:90px;
+        padding:5px;
+    }
+
+    .event{
+        font-size:8px;
+        padding:4px;
+    }
+}
+
+@media(max-width:550px){
+
+    .weekday{
+        font-size:8px;
+        padding:9px 2px;
+    }
+
+    .day-cell{
+        min-height:70px;
+    }
+
+    .day-number{
+        width:23px;
+        height:23px;
+        font-size:9px;
+    }
+
+    .event{
+        display:none;
+    }
+
+    .more-events{
+        display:block;
+    }
+
+    .form-row{
+        grid-template-columns:1fr;
+        gap:0;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+
+    <h1>Calendar</h1>
+
+    <div class="header-actions">
+
+        <button
+            class="secondary"
+            onclick="goToday()">
+            Today
+        </button>
+
+        <button
+            class="primary"
+            onclick="openCreateModal()">
+            + Event
+        </button>
+
+    </div>
+
+</header>
+
+
+<main class="container">
+
+    <section class="calendar-card">
+
+        <div class="calendar-toolbar">
+
+            <div class="month-navigation">
+
+                <button
+                    class="secondary icon-button"
+                    onclick="previousMonth()">
+                    ‹
+                </button>
+
+                <button
+                    class="secondary icon-button"
+                    onclick="nextMonth()">
+                    ›
+                </button>
+
+            </div>
+
+
+            <h2
+                id="monthTitle"
+                class="month-title">
+                Calendar
+            </h2>
+
+
+            <button
+                class="secondary"
+                onclick="goToday()">
+                Today
+            </button>
+
+        </div>
+
+
+        <div class="weekdays">
+
+            <div class="weekday">Sun</div>
+            <div class="weekday">Mon</div>
+            <div class="weekday">Tue</div>
+            <div class="weekday">Wed</div>
+            <div class="weekday">Thu</div>
+            <div class="weekday">Fri</div>
+            <div class="weekday">Sat</div>
+
+        </div>
+
+
+        <div
+            id="calendarGrid"
+            class="calendar-grid">
+        </div>
+
+    </section>
+
+</main>
+
+
+<!-- CREATE EVENT MODAL -->
+
+<div
+    id="eventModal"
+    class="modal">
+
+    <div class="modal-card">
+
+        <h2>
+            Create Event
+        </h2>
+
+
+        <form
+            id="eventForm"
+            onsubmit="createEvent(event)">
+
+
+            <div class="form-group">
+
+                <label for="eventTitle">
+                    Title
+                </label>
+
+                <input
+                    id="eventTitle"
+                    type="text"
+                    placeholder="Event title"
+                    required>
+
+            </div>
+
+
+            <div class="form-row">
+
+                <div class="form-group">
+
+                    <label for="eventDate">
+                        Date
+                    </label>
+
+                    <input
+                        id="eventDate"
+                        type="date"
+                        required>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="eventTime">
+                        Time
+                    </label>
+
+                    <input
+                        id="eventTime"
+                        type="time"
+                        required>
+
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="eventLocation">
+                    Location
+                </label>
+
+                <input
+                    id="eventLocation"
+                    type="text"
+                    placeholder="Office or online">
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="eventDescription">
+                    Description
+                </label>
+
+                <textarea
+                    id="eventDescription"
+                    rows="4"
+                    placeholder="Event description..."></textarea>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="eventStatus">
+                    Status
+                </label>
+
+                <select
+                    id="eventStatus">
+
+                    <option value="scheduled">
+                        Scheduled
+                    </option>
+
+                    <option value="confirmed">
+                        Confirmed
+                    </option>
+
+                    <option value="draft">
+                        Draft
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="secondary"
+                    onclick="closeModal()">
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="primary">
+                    Create Event
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- DAY DETAILS MODAL -->
+
+<div
+    id="dayModal"
+    class="modal">
+
+    <div class="modal-card">
+
+        <h2
+            id="dayModalTitle">
+            Events
+        </h2>
+
+
+        <div
+            id="dayEvents"
+            class="day-events">
+        </div>
+
+
+        <div class="modal-actions">
+
+            <button
+                class="secondary"
+                onclick="closeDayModal()">
+                Close
+            </button>
+
+            <button
+                class="primary"
+                onclick="createForSelectedDay()">
+                + Add Event
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const STORAGE_KEY =
+    "events-data";
+
+
+let events = [];
+
+let currentDate =
+    new Date();
+
+let selectedDate =
+    null;
+
+
+/* =========================
+   STORAGE
+========================= */
+
+function loadEvents(){
+
+    const saved =
+        localStorage.getItem(
+            STORAGE_KEY
+        );
+
+    if(!saved){
+
+        events = [];
+
+        return;
+
+    }
+
+    try{
+
+        const parsed =
+            JSON.parse(saved);
+
+        events =
+            Array.isArray(parsed)
+                ? parsed
+                : [];
+
+    }catch(error){
+
+        events = [];
+
+    }
+
+}
+
+
+/* =========================
+   SAVE
+========================= */
+
+function saveEvents(){
+
+    localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(events)
+    );
+
+}
+
+
+/* =========================
+   DATE HELPERS
+========================= */
+
+function dateKey(
+    date
+){
+
+    const year =
+        date.getFullYear();
+
+    const month =
+        String(
+            date.getMonth() + 1
+        ).padStart(
+            2,
+            "0"
+        );
+
+    const day =
+        String(
+            date.getDate()
+        ).padStart(
+            2,
+            "0"
+        );
+
+    return (
+        year +
+        "-" +
+        month +
+        "-" +
+        day
+    );
+
+}
+
+
+function parseDate(
+    value
+){
+
+    if(!value){
+        return null;
+    }
+
+    const parts =
+        value.split("-");
+
+    if(parts.length !== 3){
+        return null;
+    }
+
+    return new Date(
+        Number(parts[0]),
+        Number(parts[1]) - 1,
+        Number(parts[2])
+    );
+
+}
+
+
+/* =========================
+   RENDER CALENDAR
+========================= */
+
+function renderCalendar(){
+
+    const grid =
+        document.getElementById(
+            "calendarGrid"
+        );
+
+    const title =
+        document.getElementById(
+            "monthTitle"
+        );
+
+
+    title.textContent =
+        currentDate.toLocaleDateString(
+            undefined,
+            {
+                month:"long",
+                year:"numeric"
+            }
+        );
+
+
+    grid.innerHTML = "";
+
+
+    const year =
+        currentDate.getFullYear();
+
+    const month =
+        currentDate.getMonth();
+
+
+    const firstDay =
+        new Date(
+            year,
+            month,
+            1
+        ).getDay();
+
+
+    const daysInMonth =
+        new Date(
+            year,
+            month + 1,
+            0
+        ).getDate();
+
+
+    const previousDays =
+        new Date(
+            year,
+            month,
+            0
+        ).getDate();
+
+
+    const totalCells =
+        Math.ceil(
+            (
+                firstDay +
+                daysInMonth
+            ) / 7
+        ) * 7;
+
+
+    for(
+        let index = 0;
+        index < totalCells;
+        index++
+    ){
+
+        let dayNumber;
+
+        let cellDate;
+
+        let otherMonth =
+            false;
+
+
+        if(index < firstDay){
+
+            dayNumber =
+                previousDays -
+                firstDay +
+                index +
+                1;
+
+            cellDate =
+                new Date(
+                    year,
+                    month - 1,
+                    dayNumber
+                );
+
+            otherMonth = true;
+
+        }else if(
+            index >=
+            firstDay +
+            daysInMonth
+        ){
+
+            dayNumber =
+                index -
+                (
+                    firstDay +
+                    daysInMonth
+                ) +
+                1;
+
+            cellDate =
+                new Date(
+                    year,
+                    month + 1,
+                    dayNumber
+                );
+
+            otherMonth = true;
+
+        }else{
+
+            dayNumber =
+                index -
+                firstDay +
+                1;
+
+            cellDate =
+                new Date(
+                    year,
+                    month,
+                    dayNumber
+                );
+
+        }
+
+
+        const key =
+            dateKey(
+                cellDate
+            );
+
+
+        const cell =
+            document.createElement(
+                "div"
+            );
+
+        cell.className =
+            "day-cell";
+
+
+        if(otherMonth){
+
+            cell.classList.add(
+                "other-month"
+            );
+
+        }
+
+
+        const todayKey =
+            dateKey(
+                new Date()
+            );
+
+
+        if(key === todayKey){
+
+            cell.classList.add(
+                "today"
+            );
+
+        }
+
+
+        cell.onclick =
+            () =>
+                openDayModal(
+                    key,
+                    cellDate
+                );
+
+
+        const number =
+            document.createElement(
+                "div"
+            );
+
+        number.className =
+            "day-number";
+
+        number.textContent =
+            dayNumber;
+
+
+        cell.appendChild(
+            number
+        );
+
+
+        const dayEvents =
+            events
+            .filter(
+                event =>
+                    event.date === key
+            )
+            .sort(
+                (a,b) =>
+                    String(
+                        a.time || ""
+                    ).localeCompare(
+                        String(
+                            b.time || ""
+                        )
+                    )
+            );
+
+
+        const visibleEvents =
+            dayEvents.slice(
+                0,
+                3
+            );
+
+
+        visibleEvents.forEach(
+            event => {
+
+                const eventElement =
+                    document.createElement(
+                        "div"
+                    );
+
+                eventElement.className =
+                    "event " +
+                    safeStatus(
+                        event.status
+                    );
+
+
+                eventElement.textContent =
+                    (
+                        event.time
+                            ? event.time +
+                              " "
+                            : ""
+                    ) +
+                    (
+                        event.title ||
+                        "Untitled"
+                    );
+
+
+                eventElement.onclick =
+                    function(
+                        clickEvent
+                    ){
+
+                        clickEvent
+                            .stopPropagation();
+
+                        viewEvent(
+                            event.id
+                        );
+
+                    };
+
+
+                cell.appendChild(
+                    eventElement
+                );
+
+            }
+        );
+
+
+        if(
+            dayEvents.length >
+            visibleEvents.length
+        ){
+
+            const more =
+                document.createElement(
+                    "div"
+                );
+
+            more.className =
+                "more-events";
+
+            more.textContent =
+                "+" +
+                (
+                    dayEvents.length -
+                    visibleEvents.length
+                ) +
+                " more";
+
+
+            cell.appendChild(
+                more
+            );
+
+        }
+
+
+        grid.appendChild(
+            cell
+        );
+
+    }
+
+}
+
+
+/* =========================
+   NAVIGATION
+========================= */
+
+function previousMonth(){
+
+    currentDate =
+        new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth() - 1,
+            1
+        );
+
+    renderCalendar();
+
+}
+
+
+function nextMonth(){
+
+    currentDate =
+        new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth() + 1,
+            1
+        );
+
+    renderCalendar();
+
+}
+
+
+function goToday(){
+
+    currentDate =
+        new Date();
+
+    renderCalendar();
+
+}
+
+
+/* =========================
+   CREATE MODAL
+========================= */
+
+function openCreateModal(
+    selected = null
+){
+
+    const form =
+        document.getElementById(
+            "eventForm"
+        );
+
+
+    form.reset();
+
+
+    document.getElementById(
+        "eventDate"
+    ).value =
+        selected ||
+        dateKey(
+            currentDate
+        );
+
+
+    document.getElementById(
+        "eventModal"
+    ).classList.add(
+        "show"
+    );
+
+
+    setTimeout(
+        () => {
+
+            document.getElementById(
+                "eventTitle"
+            ).focus();
+
+        },
+        50
+    );
+
+}
+
+
+function closeModal(){
+
+    document.getElementById(
+        "eventModal"
+    ).classList.remove(
+        "show"
+    );
+
+}
+
+
+/* =========================
+   CREATE EVENT
+========================= */
+
+function createEvent(
+    event
+){
+
+    event.preventDefault();
+
+
+    const title =
+        document.getElementById(
+            "eventTitle"
+        ).value.trim();
+
+    const date =
+        document.getElementById(
+            "eventDate"
+        ).value;
+
+    const time =
+        document.getElementById(
+            "eventTime"
+        ).value;
+
+    const location =
+        document.getElementById(
+            "eventLocation"
+        ).value.trim();
+
+    const description =
+        document.getElementById(
+            "eventDescription"
+        ).value.trim();
+
+    const status =
+    document.getElementById(
+        "eventStatus"
+    ).value;
+
+
+if(
+    !title ||
+    !date ||
+    !time
+){
+
+    return;
+
+}
+
+
+events.push({
+
+    id:
+        Date.now(),
+
+    title,
+
+    date,
+
+    time,
+
+    location,
+
+    description,
+
+    status,
+
+    eventType:
+        "other",
+
+    attendees: [],
+
+    reminder: false,
+
+    createdAt:
+        new Date()
+        .toISOString()
+
+});
+
+
+saveEvents();
+
+closeModal();
+
+renderCalendar();
+
+
+/*
+  Keep the calendar on the
+  month containing the new event.
+*/
+
+const createdDate =
+    parseDate(
+        date
+    );
+
+
+if(createdDate){
+
+    currentDate =
+        new Date(
+            createdDate.getFullYear(),
+            createdDate.getMonth(),
+            1
+        );
+
+    renderCalendar();
+
+}
+
+
+/* =========================
+   DAY MODAL
+========================= */
+
+function openDayModal(
+    key,
+    date
+){
+
+    selectedDate =
+        key;
+
+
+    document.getElementById(
+        "dayModalTitle"
+    ).textContent =
+        date.toLocaleDateString(
+            undefined,
+            {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+                year: "numeric"
+            }
+        );
+
+
+    const container =
+        document.getElementById(
+            "dayEvents"
+        );
+
+
+    container.innerHTML =
+        "";
+
+
+    const dayEvents =
+        events
+        .filter(
+            event =>
+                event.date === key
+        )
+        .sort(
+            (a,b) =>
+                String(
+                    a.time || ""
+                ).localeCompare(
+                    String(
+                        b.time || ""
+                    )
+                )
+        );
+
+
+    if(!dayEvents.length){
+
+        container.innerHTML = `
+
+            <div class="empty">
+                No events scheduled for this day.
+            </div>
+
+        `;
+
+    }else{
+
+        dayEvents.forEach(
+            event => {
+
+                const item =
+                    document.createElement(
+                        "div"
+                    );
+
+                item.className =
+                    "day-event";
+
+
+                item.innerHTML = `
+
+                    <div class="day-event-title">
+                        ${escapeHTML(
+                            event.title
+                        )}
+                    </div>
+
+                    <div class="day-event-meta">
+
+                        ${
+                            event.time
+                                ? escapeHTML(
+                                    event.time
+                                  )
+                                : "No time"
+                        }
+
+                        ${
+                            event.location
+                                ? `
+                                    ·
+                                    ${escapeHTML(
+                                        event.location
+                                    )}
+                                  `
+                                : ""
+                        }
+
+                        <br>
+
+                        Status:
+                        ${escapeHTML(
+                            event.status ||
+                            "scheduled"
+                        )}
+
+                    </div>
+
+                    <br>
+
+                    <button
+                        class="secondary"
+                        onclick="viewEvent(${event.id})">
+                        View Event
+                    </button>
+
+                `;
+
+
+                container.appendChild(
+                    item
+                );
+
+            }
+        );
+
+    }
+
+
+    document.getElementById(
+        "dayModal"
+    ).classList.add(
+        "show"
+    );
+
+}
+
+
+function closeDayModal(){
+
+    document.getElementById(
+        "dayModal"
+    ).classList.remove(
+        "show"
+    );
+
+}
+
+
+function createForSelectedDay(){
+
+    closeDayModal();
+
+    openCreateModal(
+        selectedDate
+    );
+
+}
+
+
+/* =========================
+   VIEW EVENT
+========================= */
+
+function viewEvent(
+    id
+){
+
+    window.location.href =
+        "event-details.html?id=" +
+        encodeURIComponent(
+            id
+        );
+
+}
+
+
+/* =========================
+   STATUS
+========================= */
+
+function safeStatus(
+    status
+){
+
+    const allowed = [
+        "scheduled",
+        "confirmed",
+        "completed",
+        "cancelled",
+        "draft"
+    ];
+
+
+    return allowed.includes(
+        status
+    )
+        ? status
+        : "scheduled";
+
+}
+
+
+/* =========================
+   ESCAPE HTML
+========================= */
+
+function escapeHTML(
+    value
+){
+
+    return String(
+        value ?? ""
+    )
+    .replace(
+        /&/g,
+        "&amp;"
+    )
+    .replace(
+        /</g,
+        "&lt;"
+    )
+    .replace(
+        />/g,
+        "&gt;"
+    )
+    .replace(
+        /"/g,
+        "&quot;"
+    )
+    .replace(
+        /'/g,
+        "&#039;"
+    );
+
+}
+
+
+/* =========================
+   CLOSE MODALS
+========================= */
+
+document.getElementById(
+    "eventModal"
+).addEventListener(
+    "click",
+    function(event){
+
+        if(
+            event.target === this
+        ){
+
+            closeModal();
+
+        }
+
+    }
+);
+
+
+document.getElementById(
+    "dayModal"
+).addEventListener(
+    "click",
+    function(event){
+
+        if(
+            event.target === this
+        ){
+
+            closeDayModal();
+
+        }
+
+    }
+);
+
+
+/* =========================
+   ESC KEY
+========================= */
+
+document.addEventListener(
+    "keydown",
+    function(event){
+
+        if(
+            event.key === "Escape"
+        ){
+
+            closeModal();
+
+            closeDayModal();
+
+        }
+
+    }
+);
+
+
+/* =========================
+   START
+========================= */
+
+loadEvents();
+
+renderCalendar();
+
+</script>
+
+</body>
+</html>
