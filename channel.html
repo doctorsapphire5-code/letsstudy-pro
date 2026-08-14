@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Channels | Let's Study</title>
+
+    <style>
+        *{
+            box-sizing:border-box;
+            margin:0;
+            padding:0;
+        }
+
+        body{
+            font-family:Arial,Helvetica,sans-serif;
+            background:#f5f7fb;
+            color:#172033;
+            line-height:1.6;
+        }
+
+        a{
+            color:inherit;
+            text-decoration:none;
+        }
+
+        button,
+        input,
+        select{
+            font:inherit;
+        }
+
+        .header{
+            position:sticky;
+            top:0;
+            z-index:20;
+            background:#fff;
+            border-bottom:1px solid #e5e9f2;
+            padding:15px 5%;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:20px;
+        }
+
+        .brand{
+            font-size:22px;
+            font-weight:800;
+        }
+
+        .nav{
+            display:flex;
+            flex-wrap:wrap;
+            gap:18px;
+        }
+
+        .nav a{
+            color:#667085;
+            font-weight:600;
+        }
+
+        .nav a:hover,
+        .nav a.active{
+            color:#2563eb;
+        }
+
+        .container{
+            width:min(1200px,92%);
+            margin:32px auto;
+        }
+
+        .hero{
+            background:#fff;
+            border:1px solid #e4e8f0;
+            border-radius:18px;
+            padding:28px;
+            margin-bottom:25px;
+        }
+
+        .hero h1{
+            font-size:32px;
+            margin-bottom:7px;
+        }
+
+        .hero p{
+            color:#667085;
+            max-width:700px;
+        }
+
+        .toolbar{
+            display:flex;
+            flex-wrap:wrap;
+            gap:12px;
+            margin-top:22px;
+        }
+
+        .search{
+            flex:1;
+            min-width:240px;
+            padding:13px 15px;
+            border:1px solid #d8deea;
+            border-radius:10px;
+            outline:none;
+        }
+
+        .search:focus{
+            border-color:#2563eb;
+        }
+
+        .filter{
+            padding:13px 15px;
+            border:1px solid #d8deea;
+            border-radius:10px;
+            background:#fff;
+            outline:none;
+        }
+
+        .section-title{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:15px;
+            margin-bottom:16px;
+        }
+
+        .section-title h2{
+            font-size:22px;
+        }
+
+        .channel-grid{
+            display:grid;
+            grid-template-columns:
+                repeat(
+                    auto-fill,
+                    minmax(280px,1fr)
+                );
+            gap:18px;
+        }
+
+        .channel-card{
+            background:#fff;
+            border:1px solid #e5e9f2;
+            border-radius:16px;
+            overflow:hidden;
+            transition:.2s;
+        }
+
+        .channel-card:hover{
+            transform:translateY(-3px);
+            box-shadow:0 10px 30px rgba(20,30,50,.08);
+        }
+
+        .cover{
+            height:120px;
+            background:
+                linear-gradient(
+                    135deg,
+                    #2563eb,
+                    #7c3aed
+                );
+        }
+
+        .channel-body{
+            padding:18px;
+            position:relative;
+        }
+
+        .avatar{
+            width:70px;
+            height:70px;
+            border-radius:50%;
+            border:4px solid #fff;
+            background:#172033;
+            color:#fff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:23px;
+            font-weight:800;
+            margin-top:-52px;
+            margin-bottom:10px;
+        }
+
+        .channel-title{
+            display:flex;
+            align-items:center;
+            gap:7px;
+        }
+
+        .channel-title h3{
+            font-size:18px;
+        }
+
+        .verified{
+            color:#2563eb;
+            font-weight:800;
+        }
+
+        .handle{
+            color:#667085;
+            font-size:13px;
+            margin-bottom:8px;
+        }
+
+        .description{
+            color:#596579;
+            font-size:14px;
+            min-height:44px;
+        }
+
+        .stats{
+            display:flex;
+            gap:18px;
+            margin:14px 0;
+            color:#667085;
+            font-size:13px;
+        }
+
+        .actions{
+            display:flex;
+            gap:8px;
+        }
+
+        .btn{
+            flex:1;
+            border:0;
+            border-radius:9px;
+            padding:10px;
+            cursor:pointer;
+            font-weight:700;
+            text-align:center;
+        }
+
+        .btn-primary{
+            background:#2563eb;
+            color:#fff;
+        }
+
+        .btn-secondary{
+            background:#eef2f7;
+            color:#263247;
+        }
+
+        .empty{
+            display:none;
+            background:#fff;
+            border:1px dashed #cbd3df;
+            border-radius:15px;
+            padding:45px 20px;
+            text-align:center;
+            color:#667085;
+        }
+
+        .toast{
+            position:fixed;
+            right:20px;
+            bottom:20px;
+            background:#172033;
+            color:#fff;
+            padding:12px 18px;
+            border-radius:9px;
+            opacity:0;
+            transform:translateY(10px);
+            pointer-events:none;
+            transition:.25s;
+            z-index:100;
+        }
+
+        .toast.show{
+            opacity:1;
+            transform:translateY(0);
+        }
+
+        .footer{
+            margin-top:50px;
+            padding:30px 5%;
+            background:#fff;
+            border-top:1px solid #e5e9f2;
+            display:flex;
+            justify-content:space-between;
+            flex-wrap:wrap;
+            gap:20px;
+        }
+
+        .footer-links{
+            display:flex;
+            flex-wrap:wrap;
+            gap:18px;
+        }
+
+        @media(max-width:700px){
+
+            .header{
+                flex-direction:column;
+                align-items:flex-start;
+            }
+
+            .hero h1{
+                font-size:27px;
+            }
+
+            .channel-grid{
+                grid-template-columns:1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="header">
+
+    <a
+        href="dashboard.html"
+        class="brand">
+        Let's Study
+    </a>
+
+    <nav class="nav">
+
+        <a href="dashboard.html">
+            Dashboard
+        </a>
+
+        <a href="courses.html">
+            Courses
+        </a>
+
+        <a
+            href="video-dashboard.html"
+            class="active">
+            Videos
+        </a>
+
+        <a href="playlists.html">
+            Playlists
+        </a>
+
+        <a href="community.html">
+            Community
+        </a>
+
+    </nav>
+
+</header>
+
+
+<main class="container">
+
+    <section class="hero">
+
+        <h1>
+            Channels
+        </h1>
+
+        <p>
+            Discover educational channels,
+            creators and learning communities
+            that match your interests.
+        </p>
+
+        <div class="toolbar">
+
+            <input
+                id="channelSearch"
+                class="search"
+                type="search"
+                placeholder="Search channels..."
+                aria-label="Search channels">
+
+            <select
+                id="categoryFilter"
+                class="filter">
+
+                <option value="all">
+                    All categories
+                </option>
+
+                <option value="programming">
+                    Programming
+                </option>
+
+                <option value="technology">
+                    Technology
+                </option>
+
+                <option value="career">
+                    Career
+                </option>
+
+                <option value="business">
+                    Business
+                </option>
+
+                <option value="design">
+                    Design
+                </option>
+
+            </select>
+
+        </div>
+
+    </section>
+
+
+    <div class="section-title">
+
+        <h2>
+            Discover Channels
+        </h2>
+
+        <span id="channelCount">
+            0 channels
+        </span>
+
+    </div>
+
+
+    <section
+        id="channelGrid"
+        class="channel-grid">
+    </section>
+
+
+    <section
+        id="emptyState"
+        class="empty">
+
+        <h3>
+            No channels found
+        </h3>
+
+        <p>
+            Try another search or category.
+        </p>
+
+    </section>
+
+</main>
+
+
+<footer class="footer">
+
+    <div>
+        <strong>
+            Let's Study
+        </strong>
+
+        <div>
+            Learn. Practice. Grow.
+        </div>
+    </div>
+
+    <div class="footer-links">
+
+        <a href="courses.html">
+            Courses
+        </a>
+
+        <a href="video-dashboard.html">
+            Videos
+        </a>
+
+        <a href="playlists.html">
+            Playlists
+        </a>
+
+        <a href="live.html">
+            Live
+        </a>
+
+        <a href="community.html">
+            Community
+        </a>
+
+    </div>
+
+</footer>
+
+
+<div
+    id="toast"
+    class="toast"
+    role="status"
+    aria-live="polite">
+</div>
+
+
+<script>
+
+const channels = [
+
+    {
+        id:"channel-1",
+        name:"Let's Study",
+        handle:"@letsstudy",
+        category:"technology",
+        description:
+            "Technology, programming and practical digital skills.",
+        followers:12400,
+        videos:48,
+        verified:true
+    },
+
+    {
+        id:"channel-2",
+        name:"Code Academy",
+        handle:"@codeacademy",
+        category:"programming",
+        description:
+            "Programming tutorials and software development lessons.",
+        followers:8900,
+        videos:72,
+        verified:true
+    },
+
+    {
+        id:"channel-3",
+        name:"Career Skills Hub",
+        handle:"@careerskills",
+        category:"career",
+        description:
+            "Build professional skills and prepare for your career.",
+        followers:6300,
+        videos:35,
+        verified:false
+    },
+
+    {
+        id:"channel-4",
+        name:"Digital Business",
+        handle:"@digitalbusiness",
+        category:"business",
+        description:
+            "Entrepreneurship, business and digital marketing lessons.",
+        followers:5100,
+        videos:29,
+        verified:false
+    },
+
+    {
+        id:"channel-5",
+        name:"Creative Design",
+        handle:"@creativedesign",
+        category:"design",
+        description:
+            "Graphic design, UI design and creative workflows.",
+        followers:4200,
+        videos:31,
+        verified:true
+    },
+
+    {
+        id:"channel-6",
+        name:"Web Developers",
+        handle:"@webdevelopers",
+        category:"programming",
+        description:
+            "Modern HTML, CSS, JavaScript and web development.",
+        followers:7600,
+        videos:61,
+        verified:false
+    }
+
+];
+
+
+function escapeHTML(value){
+
+    return String(value)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+
+}
+
+
+function formatFollowers(number){
+
+    if(number >= 1000000){
+
+        return (
+            number / 1000000
+        ).toFixed(1) + "M";
+
+    }
+
+
+    if(number >= 1000){
+
+        return (
+            number / 1000
+        ).toFixed(1) + "K";
+
+    }
+
+
+    return String(number);
+
+}
+
+
+function showToast(message){
+
+    const toast =
+        document.getElementById(
+            "toast"
+        );
+
+    toast.textContent =
+        message;
+
+    toast.classList.add(
+        "show"
+    );
+
+    setTimeout(
+        function(){
+
+            toast.classList.remove(
+                "show"
+            );
+
+        },
+        2200
+    );
+
+}
+
+
+function renderChannels(){
+
+    const grid =
+        document.getElementById(
+            "channelGrid"
+        );
+
+    const empty =
+        document.getElementById(
+            "emptyState"
+        );
+
+    const search =
+        document.getElementById(
+            "channelSearch"
+        )
+        .value
+        .trim()
+        .toLowerCase();
+
+    const category =
+        document.getElementById(
+            "categoryFilter"
+        ).value;
+
+
+    const filtered =
+        channels.filter(
+            function(channel){
+
+                const matchesSearch =
+                    channel.name
+                        .toLowerCase()
+                        .includes(search)
+
+                    ||
+
+                    channel.handle
+                        .toLowerCase()
+                        .includes(search)
+
+                    ||
+
+                    channel.description
+                        .toLowerCase()
+                        .includes(search);
+
+
+                const matchesCategory =
+                    category === "all" ||
+                    channel.category === category;
+
+
+                return (
+                    matchesSearch &&
+                    matchesCategory
+                );
+
+            }
+        );
+
+
+    grid.innerHTML =
+        "";
+
+
+    document.getElementById(
+        "channelCount"
+    ).textContent =
+        filtered.length +
+        (
+            filtered.length === 1
+                ? " channel"
+                : " channels"
+        );
+
+
+    if(filtered.length === 0){
+
+        empty.style.display =
+            "block";
+
+        return;
+
+    }
+
+
+    empty.style.display =
+        "none";
+
+
+    filtered.forEach(
+        function(channel){
+
+            const card =
+                document.createElement(
+                    "article"
+                );
+
+            card.className =
+                "channel-card";
+
+
+            const initials =
+                channel.name
+                    .split(" ")
+                    .map(
+                        function(word){
+
+                            return word.charAt(0);
+
+                        }
+                    )
+                    .join("")
+                    .slice(0,2)
+                    .toUpperCase();
+
+
+            card.innerHTML = `
+
+                <div class="cover"></div>
+
+                <div class="channel-body">
+
+                    <div class="avatar">
+                        ${escapeHTML(
+                            initials
+                        )}
+                    </div>
+
+                    <div class="channel-title">
+
+                        <h3>
+                            ${escapeHTML(
+                                channel.name
+                            )}
+                        </h3>
+
+                        ${
+                            channel.verified
+                                ? '<span class="verified">✓</span>'
+                                : ''
+                        }
+
+                    </div>
+
+                    <div class="handle">
+                        ${escapeHTML(
+                            channel.handle
+                        )}
+                    </div>
+
+                    <p class="description">
+                        ${escapeHTML(
+                            channel.description
+                        )}
+                    </p>
+
+                    <div class="stats">
+
+                        <span>
+                            ${formatFollowers(
+                                channel.followers
+                            )}
+                            followers
+                        </span>
+
+                        <span>
+                            ${channel.videos}
+                            videos
+                        </span>
+
+                    </div>
+
+                    <div class="actions">
+
+                        <a
+                            class="btn btn-primary"
+                            href="channel-details.html?id=${encodeURIComponent(
+                                channel.id
+                            )}">
+                            View Channel
+                        </a>
+
+                        <button
+                            class="btn btn-secondary"
+                            type="button"
+                            onclick="followChannel('${channel.id}')">
+                            Follow
+                        </button>
+
+                    </div>
+
+                </div>
+
+            `;
+
+
+            grid.appendChild(
+                card
+            );
+
+        }
+    );
+
+}
+
+
+function followChannel(id){
+
+    const channel =
+        channels.find(
+            function(item){
+
+                return item.id === id;
+
+            }
+        );
+
+
+    if(!channel){
+
+        showToast(
+            "Channel not found."
+        );
+
+        return;
+
+    }
+
+
+    const key =
+        "following_" + id;
+
+
+    const following =
+        localStorage.getItem(
+            key
+        ) === "true";
+
+
+    localStorage.setItem(
+        key,
+        String(!following)
+    );
+
+
+    showToast(
+        following
+            ? "Channel unfollowed."
+            : "Channel followed."
+    );
+
+}
+
+
+document
+    .getElementById(
+        "channelSearch"
+    )
+    .addEventListener(
+        "input",
+        renderChannels
+    );
+
+
+document
+    .getElementById(
+        "categoryFilter"
+    )
+    .addEventListener(
+        "change",
+        renderChannels
+    );
+
+
+document.addEventListener(
+    "keydown",
+    function(event){
+
+        const active =
+            document.activeElement;
+
+        const typing =
+            active &&
+            (
+                active.tagName === "INPUT" ||
+                active.tagName === "TEXTAREA" ||
+                active.tagName === "SELECT"
+            );
+
+
+        if(
+            event.key === "/" &&
+            !typing
+        ){
+
+            event.preventDefault();
+
+            document
+                .getElementById(
+                    "channelSearch"
+                )
+                .focus();
+
+        }
+
+    }
+);
+
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function(){
+
+        renderChannels();
+
+    }
+);
+
+</script>
+
+</body>
+</html>
