@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Plugin Development | LetsStudy Pro</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+    font-family:Arial,sans-serif;
+    background:#f4f6fa;
+    color:#172033
+}
+.top{
+    height:64px;
+    background:#fff;
+    border-bottom:1px solid #e4e8f0;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 20px;
+    position:sticky;
+    top:0;
+    z-index:5
+}
+.brand{font-weight:800;font-size:18px}
+.actions{display:flex;gap:8px}
+button{
+    border:0;
+    padding:10px 14px;
+    border-radius:8px;
+    font-weight:700;
+    cursor:pointer
+}
+.primary{background:#2563eb;color:#fff}
+.secondary{background:#e8edf5;color:#172033}
+.success{background:#15803d;color:#fff}
+.danger{background:#dc2626;color:#fff}
+
+.layout{
+    display:grid;
+    grid-template-columns:220px 1fr;
+    min-height:calc(100vh - 64px)
+}
+.sidebar{
+    background:#fff;
+    border-right:1px solid #e4e8f0;
+    padding:18px 12px
+}
+.sidebar a{
+    display:block;
+    padding:11px;
+    color:#596478;
+    text-decoration:none;
+    border-radius:8px;
+    margin-bottom:4px
+}
+.sidebar a:hover,
+.sidebar a.active{
+    background:#edf3ff;
+    color:#2563eb
+}
+.main{
+    padding:25px;
+    max-width:1400px;
+    width:100%;
+    margin:auto
+}
+.header{
+    margin-bottom:20px
+}
+.header h1{font-size:28px;margin:6px 0}
+.muted{color:#737d90;font-size:13px}
+
+.grid{
+    display:grid;
+    grid-template-columns:1.2fr .8fr;
+    gap:18px
+}
+.card{
+    background:#fff;
+    border:1px solid #e4e8f0;
+    border-radius:14px;
+    padding:18px;
+    margin-bottom:18px
+}
+.card h2{
+    font-size:17px;
+    margin-bottom:15px
+}
+.group{margin-bottom:14px}
+label{
+    display:block;
+    font-size:12px;
+    font-weight:800;
+    margin-bottom:6px
+}
+input,textarea,select{
+    width:100%;
+    padding:11px;
+    border:1px solid #d8deea;
+    border-radius:8px;
+    outline:none;
+    background:#fff
+}
+textarea{
+    min-height:160px;
+    resize:vertical;
+    font-family:monospace
+}
+input:focus,
+textarea:focus,
+select:focus{
+    border-color:#2563eb
+}
+.row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px
+}
+.checks{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px
+}
+.check{
+    border:1px solid #e0e5ed;
+    padding:10px;
+    border-radius:8px;
+    font-size:13px
+}
+.check input{width:auto;margin-right:7px}
+.code{
+    background:#111827;
+    color:#d1fae5;
+    border-radius:10px;
+    padding:15px;
+    min-height:220px;
+    overflow:auto;
+    font-family:monospace;
+    font-size:12px;
+    white-space:pre-wrap
+}
+.preview{
+    border:1px solid #e1e6ef;
+    border-radius:12px;
+    padding:18px
+}
+.plugin-icon{
+    width:55px;
+    height:55px;
+    display:grid;
+    place-items:center;
+    border-radius:12px;
+    background:#2563eb;
+    color:#fff;
+    font-size:25px;
+    margin-bottom:12px
+}
+.status{
+    background:#f8fafc;
+    padding:13px;
+    border-radius:9px
+}
+.status div{
+    display:flex;
+    justify-content:space-between;
+    padding:6px 0;
+    font-size:13px
+}
+.stack{display:grid;gap:8px}
+.toast{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    background:#172033;
+    color:#fff;
+    padding:12px 16px;
+    border-radius:9px;
+    display:none
+}
+.toast.show{display:block}
+
+@media(max-width:900px){
+    .layout{display:block}
+    .sidebar{display:none}
+    .grid{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+    .main{padding:15px}
+    .row,.checks{grid-template-columns:1fr}
+    .top{padding:0 12px}
+    .actions button:first-child{display:none}
+}
+</style>
+</head>
+
+<body>
+
+<header class="top">
+
+<div class="brand">
+🧩 Plugin Development
+</div>
+
+<div class="actions">
+
+<button
+class="secondary"
+onclick="validatePlugin()">
+✓ Validate
+</button>
+
+<button
+class="primary"
+onclick="savePlugin()">
+💾 Save
+</button>
+
+</div>
+
+</header>
+
+
+<div class="layout">
+
+<aside class="sidebar">
+
+<a href="developer-settings.html">
+⚙ Developer Settings
+</a>
+
+<a href="theme-development.html">
+🎨 Theme Development
+</a>
+
+<a href="plugin-development.html"
+class="active">
+🧩 Plugin Development
+</a>
+
+<a href="app-builder.html">
+📱 App Builder
+</a>
+
+<a href="app-editor.html">
+✏️ App Editor
+</a>
+
+<a href="app-preview.html">
+👁 App Preview
+</a>
+
+<a href="app-publish.html">
+🚀 App Publish
+</a>
+
+</aside>
+
+
+<main class="main">
+
+<section class="header">
+
+<p class="muted">
+Developer Tools / Extensions
+</p>
+
+<h1>
+Plugin Development
+</h1>
+
+<p class="muted">
+Create, configure, test and export your LetsStudy Pro plugin.
+</p>
+
+</section>
+
+
+<div class="grid">
+
+<section>
+
+
+<div class="card">
+
+<h2>
+Plugin Information
+</h2>
+
+<div class="row">
+
+<div class="group">
+
+<label>
+Plugin Name
+</label>
+
+<input
+id="pluginName"
+type="text"
+placeholder="My Plugin"
+oninput="updatePreview()">
+
+</div>
+
+<div class="group">
+
+<label>
+Version
+</label>
+
+<input
+id="pluginVersion"
+type="text"
+value="1.0.0"
+oninput="updatePreview()">
+
+</div>
+
+</div>
+
+
+<div class="row">
+
+<div class="group">
+
+<label>
+Author
+</label>
+
+<input
+id="pluginAuthor"
+type="text"
+placeholder="Developer name">
+
+</div>
+
+<div class="group">
+
+<label>
+Category
+</label>
+
+<select id="pluginCategory">
+
+<option>Education</option>
+<option>AI</option>
+<option>Productivity</option>
+<option>Marketing</option>
+<option>Social</option>
+<option>Developer Tools</option>
+<option>Other</option>
+
+</select>
+
+</div>
+
+</div>
+
+
+<div class="group">
+
+<label>
+Description
+</label>
+
+<textarea
+id="pluginDescription"
+placeholder="Describe what your plugin does..."
+oninput="updatePreview()"></textarea>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+Permissions
+</h2>
+
+<div class="checks">
+
+<label class="check">
+<input
+type="checkbox"
+value="storage">
+Storage
+</label>
+
+<label class="check">
+<input
+type="checkbox"
+value="network">
+Network
+</label>
+
+<label class="check">
+<input
+type="checkbox"
+value="notifications">
+Notifications
+</label>
+
+<label class="check">
+<input
+type="checkbox"
+value="user">
+User Data
+</label>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+Plugin Code
+</h2>
+
+<textarea
+id="pluginCode"
+placeholder="// Write plugin JavaScript here
+
+export default {
+    name: 'My Plugin',
+
+    init() {
+        console.log('Plugin loaded');
+    }
+};"></textarea>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+Plugin Manifest
+</h2>
+
+<pre
+id="manifest"
+class="code"></pre>
+
+<div style="margin-top:10px;display:flex;gap:8px">
+
+<button
+class="secondary"
+onclick="copyManifest()">
+📋 Copy
+</button>
+
+<button
+class="success"
+onclick="downloadPlugin()">
+⬇ Export Plugin
+</button>
+
+</div>
+
+</div>
+
+
+</section>
+
+
+<aside>
+
+
+<div class="card">
+
+<h2>
+Live Preview
+</h2>
+
+<div class="preview">
+
+<div class="plugin-icon">
+🧩
+</div>
+
+<h2 id="previewName">
+My Plugin
+</h2>
+
+<p
+id="previewDescription"
+class="muted">
+Your plugin description will appear here.
+</p>
+
+<br>
+
+<p class="muted">
+Version:
+<strong id="previewVersion">
+1.0.0
+</strong>
+</p>
+
+<br>
+
+<p class="muted">
+Author:
+<strong id="previewAuthor">
+Developer
+</strong>
+</p>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+Plugin Status
+</h2>
+
+<div class="status">
+
+<div>
+<span>Status</span>
+<strong id="status">
+Draft
+</strong>
+</div>
+
+<div>
+<span>Version</span>
+<strong id="statusVersion">
+1.0.0
+</strong>
+</div>
+
+<div>
+<span>Permissions</span>
+<strong id="statusPermissions">
+0
+</strong>
+</div>
+
+<div>
+<span>Code</span>
+<strong id="statusCode">
+0 chars
+</strong>
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+Actions
+</h2>
+
+<div class="stack">
+
+<button
+class="primary"
+onclick="savePlugin()">
+💾 Save Plugin
+</button>
+
+<button
+class="secondary"
+onclick="validatePlugin()">
+✓ Validate Plugin
+</button>
+
+<button
+class="secondary"
+onclick="copyCode()">
+📋 Copy Code
+</button>
+
+<button
+class="danger"
+onclick="resetPlugin()">
+↩ Reset
+</button>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+Development
+</h2>
+
+<p class="muted">
+Use plugins to extend LetsStudy Pro with
+new tools, integrations and creator features.
+</p>
+
+</div>
+
+</aside>
+
+</div>
+
+</main>
+
+</div>
+
+
+<div
+id="toast"
+class="toast">
+</div>
+
+
+<script>
+
+const PLUGIN_KEY =
+"letsstudy_plugin_development";
+
+
+const get = id =>
+document.getElementById(id);
+
+
+function toast(message){
+
+const box =
+get("toast");
+
+box.textContent =
+message;
+
+box.classList.add("show");
+
+clearTimeout(
+window.toastTimer
+);
+
+window.toastTimer =
+setTimeout(
+() => box.classList.remove("show"),
+2200
+);
+
+}
+
+
+function permissions(){
+
+return [
+...document.querySelectorAll(
+'.check input:checked'
+)
+].map(
+item => item.value
+);
+
+}
+
+
+function getData(){
+
+return {
+
+name:
+get("pluginName").value.trim()
+|| "My Plugin",
+
+version:
+get("pluginVersion").value.trim()
+|| "1.0.0",
+
+author:
+get("pluginAuthor").value.trim()
+|| "Developer",
+
+category:
+get("pluginCategory").value,
+
+description:
+get("pluginDescription").value.trim(),
+
+permissions:
+permissions(),
+
+code:
+get("pluginCode").value,
+
+updated:
+Date.now().toString()
+
+};
+
+}
+
+
+function updatePreview(){
+
+const data =
+getData();
+
+get("previewName")
+.textContent =
+data.name;
+
+get("previewDescription")
+.textContent =
+data.description
+|| "Your plugin description will appear here.";
+
+get("previewVersion")
+.textContent =
+data.version;
+
+get("previewAuthor")
+.textContent =
+data.author;
+
+get("statusVersion")
+.textContent =
+data.version;
+
+get("statusPermissions")
+.textContent =
+data.permissions.length;
+
+get("statusCode")
+.textContent =
+data.code.length + " chars";
+
+updateManifest();
+
+}
+
+
+function updateManifest(){
+
+const data =
+getData();
+
+const manifest = {
+
+name:data.name,
+
+version:data.version,
+
+author:data.author,
+
+category:data.category,
+
+description:data.description,
+
+permissions:data.permissions,
+
+entry:"plugin.js"
+
+};
+
+get("manifest")
+.textContent =
+JSON.stringify(
+manifest,
+null,
+2
+);
+
+}
+
+
+function savePlugin(){
+
+const data =
+getData();
+
+localStorage.setItem(
+PLUGIN_KEY,
+JSON.stringify(data)
+);
+
+get("status")
+.textContent =
+"Saved";
+
+toast(
+"Plugin saved successfully."
+);
+
+}
+
+
+function validatePlugin(){
+
+const data =
+getData();
+
+let errors = [];
+
+if(!data.name)
+errors.push("Plugin name");
+
+if(!data.version)
+errors.push("Version");
+
+if(!data.description)
+errors.push("Description");
+
+if(!data.code)
+errors.push("Plugin code");
+
+if(errors.length){
+
+get("status")
+.textContent =
+"Invalid";
+
+toast(
+"Missing: " +
+errors.join(", ")
+);
+
+return false;
+
+}
+
+get("status")
+.textContent =
+"Valid";
+
+toast(
+"Plugin is valid."
+);
+
+return true;
+
+}
+
+
+async function copyCode(){
+
+const code =
+get("pluginCode").value;
+
+if(!code){
+
+toast(
+"No plugin code."
+);
+
+return;
+
+}
+
+await navigator.clipboard
+.writeText(code);
+
+toast(
+"Plugin code copied."
+);
+
+}
+
+
+async function copyManifest(){
+
+await navigator.clipboard
+.writeText(
+get("manifest").textContent
+);
+
+toast(
+"Manifest copied."
+);
+
+}
+
+
+function downloadPlugin(){
+
+if(!validatePlugin())
+return;
+
+const data =
+getData();
+
+const files = {
+
+"manifest.json":
+JSON.stringify(
+{
+name:data.name,
+version:data.version,
+author:data.author,
+category:data.category,
+description:data.description,
+permissions:data.permissions,
+entry:"plugin.js"
+},
+null,
+2
+),
+
+"plugin.js":
+data.code
+
+};
+
+const text =
+Object.entries(files)
+.map(
+([name,content]) =>
+`/* ===== ${name} ===== */\n${content}`
+)
+.join("\n\n");
+
+const blob =
+new Blob(
+[text],
+{
+type:"text/plain"
+}
+);
+
+const url =
+URL.createObjectURL(blob);
+
+const a =
+document.createElement("a");
+
+a.href =
+url;
+
+a.download =
+data.name
+.toLowerCase()
+.replace(
+/[^a-z0-9]+/g,
+"-"
+)
++ "-plugin.txt";
+
+a.click();
+
+URL.revokeObjectURL(url);
+
+toast(
+"Plugin exported."
+);
+
+}
+
+
+function resetPlugin(){
+
+localStorage.removeItem(
+PLUGIN_KEY
+);
+
+get("pluginName").value = "";
+get("pluginVersion").value = "1.0.0";
+get("pluginAuthor").value = "";
+get("pluginDescription").value = "";
+get("pluginCode").value = "";
+
+document
+.querySelectorAll(".check input")
+.forEach(
+item => item.checked = false
+);
+
+get("status")
+.textContent =
+"Draft";
+
+updatePreview();
+
+toast(
+"Plugin reset."
+);
+
+}
+
+
+function loadPlugin(){
+
+const saved =
+localStorage.getItem(
+PLUGIN_KEY
+);
+
+if(!saved){
+
+updatePreview();
+return;
+
+}
+
+try{
+
+const data =
+JSON.parse(saved);
+
+get("pluginName").value =
+data.name || "";
+
+get("pluginVersion").value =
+data.version || "1.0.0";
+
+get("pluginAuthor").value =
+data.author || "";
+
+get("pluginDescription").value =
+data.description || "";
+
+get("pluginCategory").value =
+data.category || "Education";
+
+get("pluginCode").value =
+data.code || "";
+
+document
+.querySelectorAll(".check input")
+.forEach(
+item =>
+item.checked =
+(data.permissions || [])
+.includes(item.value)
+);
+
+get("status")
+.textContent =
+"Saved";
+
+}catch(error){
+
+console.error(error);
+
+}
+
+updatePreview();
+
+}
+
+
+document.addEventListener(
+"input",
+updatePreview
+);
+
+document.addEventListener(
+"change",
+updatePreview
+);
+
+
+document.addEventListener(
+"DOMContentLoaded",
+loadPlugin
+);
+
+</script>
+
+</body>
+</html>
