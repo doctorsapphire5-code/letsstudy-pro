@@ -1,0 +1,2001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Webhooks | Developer Console</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+ --primary:#2563eb;
+ --dark:#172033;
+ --muted:#718096;
+ --bg:#f4f6fa;
+ --card:#fff;
+ --border:#e2e8f0;
+ --danger:#dc2626;
+ --success:#15803d;
+}
+
+body{
+ font-family:Arial,Helvetica,sans-serif;
+ background:var(--bg);
+ color:var(--dark);
+}
+
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+
+.topbar{
+ height:64px;
+ background:#fff;
+ border-bottom:1px solid var(--border);
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ padding:0 20px;
+ position:sticky;
+ top:0;
+ z-index:20;
+}
+
+.brand{
+ display:flex;
+ align-items:center;
+ gap:10px;
+ font-weight:900;
+}
+
+.logo{
+ width:38px;
+ height:38px;
+ border-radius:10px;
+ background:var(--dark);
+ color:#fff;
+ display:grid;
+ place-items:center;
+}
+
+.actions{
+ display:flex;
+ gap:8px;
+}
+
+.btn{
+ border:0;
+ border-radius:8px;
+ padding:10px 14px;
+ font-weight:800;
+}
+
+.primary{background:var(--primary);color:#fff}
+.secondary{background:#eaf0f7;color:var(--dark)}
+.danger{background:var(--danger);color:#fff}
+.success{background:var(--success);color:#fff}
+
+.layout{
+ display:grid;
+ grid-template-columns:230px 1fr;
+ min-height:calc(100vh - 64px);
+}
+
+.sidebar{
+ background:#fff;
+ border-right:1px solid var(--border);
+ padding:18px 12px;
+}
+
+.sidebar h4{
+ font-size:11px;
+ color:var(--muted);
+ text-transform:uppercase;
+ margin-bottom:10px;
+}
+
+.nav{
+ display:grid;
+ gap:4px;
+}
+
+.nav a{
+ text-decoration:none;
+ color:#596478;
+ padding:11px;
+ border-radius:8px;
+ font-weight:700;
+}
+
+.nav a:hover,
+.nav a.active{
+ background:#edf3ff;
+ color:var(--primary);
+}
+
+.main{
+ max-width:1350px;
+ width:100%;
+ margin:auto;
+ padding:24px;
+}
+
+.header{
+ display:flex;
+ justify-content:space-between;
+ align-items:flex-start;
+ gap:15px;
+ margin-bottom:20px;
+}
+
+.header h1{
+ font-size:28px;
+ margin:5px 0;
+}
+
+.muted{
+ color:var(--muted);
+ font-size:13px;
+}
+
+.stats{
+ display:grid;
+ grid-template-columns:repeat(4,1fr);
+ gap:12px;
+ margin-bottom:18px;
+}
+
+.stat{
+ background:#fff;
+ border:1px solid var(--border);
+ border-radius:12px;
+ padding:16px;
+}
+
+.stat strong{
+ display:block;
+ font-size:22px;
+ margin-top:7px;
+}
+
+.card{
+ background:#fff;
+ border:1px solid var(--border);
+ border-radius:12px;
+ padding:18px;
+ margin-bottom:18px;
+}
+
+.card h2{
+ font-size:17px;
+ margin-bottom:15px;
+}
+
+.webhooks{
+ display:grid;
+ gap:10px;
+}
+
+.webhook{
+ border:1px solid var(--border);
+ border-radius:10px;
+ padding:15px;
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:15px;
+}
+
+.webhook-info{
+ min-width:0;
+}
+
+.webhook-name{
+ font-weight:900;
+ margin-bottom:6px;
+}
+
+.endpoint{
+ font-family:monospace;
+ font-size:12px;
+ color:var(--muted);
+ word-break:break-all;
+}
+
+.badge{
+ display:inline-block;
+ padding:5px 8px;
+ border-radius:999px;
+ font-size:11px;
+ font-weight:800;
+}
+
+.active{
+ background:#dcfce7;
+ color:#166534;
+}
+
+.inactive{
+ background:#fee2e2;
+ color:#991b1b;
+}
+
+.events{
+ display:flex;
+ flex-wrap:wrap;
+ gap:5px;
+ margin-top:9px;
+}
+
+.event{
+ background:#f1f5f9;
+ border-radius:6px;
+ padding:4px 7px;
+ font-size:10px;
+}
+
+.webhook-actions{
+ display:flex;
+ gap:6px;
+ flex-wrap:wrap;
+}
+
+.small-btn{
+ border:0;
+ border-radius:7px;
+ padding:8px 10px;
+ font-weight:700;
+}
+
+.table-wrap{
+ overflow:auto;
+}
+
+table{
+ width:100%;
+ border-collapse:collapse;
+ min-width:650px;
+}
+
+th,td{
+ text-align:left;
+ padding:11px;
+ border-bottom:1px solid var(--border);
+ font-size:12px;
+}
+
+th{
+ background:#f8fafc;
+}
+
+.form{
+ display:grid;
+ gap:13px;
+}
+
+label{
+ font-size:12px;
+ font-weight:800;
+ margin-bottom:6px;
+ display:block;
+}
+
+input,textarea{
+ width:100%;
+ border:1px solid #d7deea;
+ border-radius:8px;
+ padding:11px;
+ outline:none;
+}
+
+input:focus,
+textarea:focus{
+ border-color:var(--primary);
+}
+
+textarea{
+ min-height:110px;
+ resize:vertical;
+ font-family:monospace;
+}
+
+.event-grid{
+ display:grid;
+ grid-template-columns:repeat(3,1fr);
+ gap:8px;
+}
+
+.event-option{
+ border:1px solid var(--border);
+ padding:10px;
+ border-radius:8px;
+ background:#fff;
+}
+
+.event-option label{
+ display:flex;
+ gap:8px;
+ margin:0;
+}
+
+.modal{
+ position:fixed;
+ inset:0;
+ background:rgba(0,0,0,.45);
+ display:none;
+ place-items:center;
+ padding:20px;
+ z-index:100;
+}
+
+.modal.show{
+ display:grid;
+}
+
+.modal-box{
+ background:#fff;
+ width:100%;
+ max-width:650px;
+ max-height:90vh;
+ overflow:auto;
+ border-radius:14px;
+ padding:20px;
+}
+
+.modal-head{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ margin-bottom:18px;
+}
+
+.close{
+ border:0;
+ background:#edf2f7;
+ border-radius:8px;
+ padding:8px 11px;
+}
+
+.empty{
+ padding:40px;
+ text-align:center;
+ color:var(--muted);
+}
+
+.toast{
+ position:fixed;
+ right:20px;
+ bottom:20px;
+ background:var(--dark);
+ color:#fff;
+ padding:12px 16px;
+ border-radius:9px;
+ opacity:0;
+ transform:translateY(10px);
+ transition:.2s;
+ z-index:200;
+}
+
+.toast.show{
+ opacity:1;
+ transform:translateY(0);
+}
+
+@media(max-width:900px){
+ .layout{display:block}
+ .sidebar{display:none}
+ .stats{grid-template-columns:repeat(2,1fr)}
+}
+
+@media(max-width:600px){
+ .main{padding:15px}
+ .header{flex-direction:column}
+ .webhook{align-items:flex-start;flex-direction:column}
+ .event-grid{grid-template-columns:1fr}
+ .stats{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+
+<div class="brand">
+ <div class="logo">🔗</div>
+ <span>Developer Webhooks</span>
+</div>
+
+<div class="actions">
+
+<button
+ class="btn secondary"
+ onclick="clearLogs()">
+ Clear Logs
+</button>
+
+<button
+ class="btn primary"
+ onclick="openWebhook()">
+ + Webhook
+</button>
+
+</div>
+
+</header>
+
+
+<div class="layout">
+
+<aside class="sidebar">
+
+<h4>Developer</h4>
+
+<nav class="nav">
+
+<a href="developer-market.html">
+🛒 Market
+</a>
+
+<a href="developer-storage.html">
+☁ Storage
+</a>
+
+<a href="database.html">
+🗄 Database
+</a>
+
+<a href="webhook.html" class="active">
+🔗 Webhooks
+</a>
+
+<a href="api-manager.html">
+🔌 API Manager
+</a>
+
+<a href="developer-settings.html">
+⚙ Settings
+</a>
+
+</nav>
+
+</aside>
+
+
+<main class="main">
+
+<section class="header">
+
+<div>
+
+<p class="muted">
+Developer / Integrations
+</p>
+
+<h1>
+Webhooks
+</h1>
+
+<p class="muted">
+Send application events to external services.
+</p>
+
+</div>
+
+<button
+ class="btn primary"
+ onclick="openWebhook()">
++ Create Webhook
+</button>
+
+</section>
+
+
+<section class="stats">
+
+<div class="stat">
+<span class="muted">Webhooks</span>
+<strong id="webhookCount">0</strong>
+</div>
+
+<div class="stat">
+<span class="muted">Active</span>
+<strong id="activeCount">0</strong>
+</div>
+
+<div class="stat">
+<span class="muted">Requests</span>
+<strong id="requestCount">0</strong>
+</div>
+
+<div class="stat">
+<span class="muted">Failures</span>
+<strong id="failureCount">0</strong>
+</div>
+
+</section>
+
+
+<section class="card">
+
+<h2>
+Configured Webhooks
+</h2>
+
+<div
+ id="webhooks"
+ class="webhooks">
+</div>
+
+</section>
+
+
+<section class="card">
+
+<h2>
+Webhook Logs
+</h2>
+
+<div class="table-wrap">
+
+<table>
+
+<thead>
+<tr>
+<th>Time</th>
+<th>Webhook</th>
+<th>Event</th>
+<th>Status</th>
+<th>Response</th>
+</tr>
+</thead>
+
+<tbody id="logs"></tbody>
+
+</table>
+
+</div>
+
+</section>
+
+</main>
+
+</div>
+
+
+<!-- WEBHOOK MODAL -->
+
+<div
+ id="webhookModal"
+ class="modal">
+
+<div class="modal-box">
+
+<div class="modal-head">
+
+<h2 id="modalTitle">
+Create Webhook
+</h2>
+
+<button
+ class="close"
+ onclick="closeModal()">
+✕
+</button>
+
+</div>
+
+
+<div class="form">
+
+<div>
+
+<label>
+Webhook Name
+</label>
+
+<input
+ id="webhookName"
+ placeholder="My Payment Webhook">
+</div>
+
+
+<div>
+
+<label>
+Endpoint URL
+</label>
+
+<input
+ id="webhookUrl"
+ type="url"
+ placeholder="https://example.com/webhook">
+</div>
+
+
+<div>
+
+<label>
+Secret
+</label>
+
+<input
+ id="webhookSecret"
+ placeholder="Webhook signing secret">
+</div>
+
+
+<div>
+
+<label>
+Events
+</label>
+
+<div class="event-grid">
+
+<div class="event-option">
+<label>
+<input
+ type="checkbox"
+ value="user.created"
+ class="event">
+user.created
+</label>
+</div>
+
+<div class="event-option">
+<label>
+<input
+ type="checkbox"
+ value="user.updated"
+ class="event">
+user.updated
+</label>
+</div>
+
+<div class="event-option">
+<label>
+<input
+ type="checkbox"
+ value="payment.created"
+ class="event">
+payment.created
+</label>
+</div>
+
+<div class="event-option">
+<label>
+<input
+ type="checkbox"
+ value="payment.completed"
+ class="event">
+payment.completed
+</label>
+</div>
+
+<div class="event-option">
+<label>
+<input
+ type="checkbox"
+ value="order.created"
+ class="event">
+order.created
+</label>
+</div>
+
+<div class="event-option">
+<label>
+<input
+ type="checkbox"
+ value="course.enrolled"
+ class="event">
+course.enrolled
+</label>
+</div>
+
+</div>
+
+</div>
+
+
+<div>
+
+<label>
+Custom Headers JSON
+</label>
+
+<textarea
+ id="webhookHeaders"
+ placeholder='{"Authorization":"Bearer token"}'></textarea>
+
+</div>
+
+
+<div style="
+display:flex;
+gap:8px">
+
+<button
+ class="btn primary"
+ style="flex:1"
+ onclick="saveWebhook()">
+Save Webhook
+</button>
+
+<button
+ class="btn secondary"
+ onclick="closeModal()">
+Cancel
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div id="toast" class="toast"></div>
+
+
+<script>
+
+const WEBHOOK_KEY =
+    "letsstudy_webhooks";
+
+const LOG_KEY =
+    "letsstudy_webhook_logs";
+
+
+let webhooks = [];
+
+let logs = [];
+
+let editingId = null;
+
+
+/* =========================
+   HELPERS
+========================= */
+
+function get(id){
+
+    return document.getElementById(id);
+
+}
+
+
+function escapeHTML(value){
+
+    return String(
+        value ?? ""
+    ).replace(
+        /[&<>"']/g,
+        char => ({
+            "&":"&amp;",
+            "<":"&lt;",
+            ">":"&gt;",
+            '"':"&quot;",
+            "'":"&#039;"
+        }[char])
+    );
+
+}
+
+
+function showToast(message){
+
+    const toast =
+        get("toast");
+
+    toast.textContent =
+        message;
+
+    toast.classList.add(
+        "show"
+    );
+
+    clearTimeout(
+        window.toastTimer
+    );
+
+    window.toastTimer =
+        setTimeout(
+            () =>
+                toast.classList.remove(
+                    "show"
+                ),
+            2200
+        );
+
+}
+
+
+/* =========================
+   LOAD
+========================= */
+
+function load(){
+
+    try{
+
+        webhooks =
+            JSON.parse(
+                localStorage.getItem(
+                    WEBHOOK_KEY
+                )
+            ) || [];
+
+        logs =
+            JSON.parse(
+                localStorage.getItem(
+                    LOG_KEY
+                )
+            ) || [];
+
+    }catch(error){
+
+        webhooks = [];
+
+        logs = [];
+
+    }
+
+}
+
+
+/* =========================
+   SAVE
+========================= */
+
+function save(){
+
+    localStorage.setItem(
+        WEBHOOK_KEY,
+        JSON.stringify(
+            webhooks
+        )
+    );
+
+    localStorage.setItem(
+        LOG_KEY,
+        JSON.stringify(
+            logs
+        )
+    );
+
+}
+
+
+/* =========================
+   RENDER
+========================= */
+
+function render(){
+
+    renderWebhooks();
+
+    renderLogs();
+
+    updateStats();
+
+}
+
+
+/* =========================
+   WEBHOOKS
+========================= */
+
+function renderWebhooks(){
+
+    const container =
+        get("webhooks");
+
+
+    if(!webhooks.length){
+
+        container.innerHTML = `
+
+        <div class="empty">
+
+            🔗
+
+            <h3 style="margin-top:10px">
+                No webhooks
+            </h3>
+
+            <p style="margin-top:6px">
+                Create your first webhook.
+            </p>
+
+        </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    container.innerHTML =
+        webhooks.map(
+            webhook => `
+
+        <div class="webhook">
+
+            <div class="webhook-info">
+
+                <div class="webhook-name">
+
+                    ${escapeHTML(
+                        webhook.name
+                    )}
+
+                    <span class="badge ${
+                        webhook.active
+                        ? "active"
+                        : "inactive"
+                    }">
+
+                        ${
+                            webhook.active
+                            ? "Active"
+                            : "Inactive"
+                        }
+
+                    </span>
+
+                </div>
+
+                <div class="endpoint">
+
+                    ${escapeHTML(
+                        webhook.url
+                    )}
+
+                </div>
+
+                <div class="events">
+
+                    ${
+                        webhook.events
+                        .map(
+                            event =>
+                                `<span class="event">
+                                    ${escapeHTML(event)}
+                                </span>`
+                        )
+                        .join("")
+                    }
+
+                </div>
+
+            </div>
+
+
+            <div class="webhook-actions">
+
+                <button
+                    class="small-btn secondary"
+                    onclick="testWebhook('${webhook.id}')">
+                    Test
+                </button>
+
+                <button
+                    class="small-btn secondary"
+                    onclick="editWebhook('${webhook.id}')">
+                    Edit
+                </button>
+
+                <button
+                    class="small-btn secondary"
+                    onclick="toggleWebhook('${webhook.id}')">
+                    ${webhook.active
+                        ? "Disable"
+                        : "Enable"}
+                </button>
+
+                <button
+                    class="small-btn danger"
+                    onclick="deleteWebhook('${webhook.id}')">
+                    Delete
+                </button>
+
+            </div>
+
+        </div>
+
+        `
+        ).join("");
+
+}
+
+
+/* =========================
+   CREATE
+========================= */
+
+function openWebhook(){
+
+    editingId = null;
+
+    get("modalTitle")
+        .textContent =
+        "Create Webhook";
+
+    get("webhookName")
+        .value = "";
+
+    get("webhookUrl")
+        .value = "";
+
+    get("webhookSecret")
+        .value = "";
+
+    get("webhookHeaders")
+        .value = "";
+
+
+    document
+    .querySelectorAll(
+        ".event"
+    )
+    .forEach(
+        checkbox =>
+            checkbox.checked = false
+    );
+
+
+    get("webhookModal")
+        .classList.add(
+            "show"
+        );
+
+}
+
+
+/* =========================
+   SAVE
+========================= */
+
+function saveWebhook(){
+
+    const name =
+        get("webhookName")
+        .value
+        .trim();
+
+    const url =
+        get("webhookUrl")
+        .value
+        .trim();
+
+    const secret =
+        get("webhookSecret")
+        .value
+        .trim();
+
+    const headersRaw =
+        get("webhookHeaders")
+        .value
+        .trim();
+
+
+    if(!name || !url){
+
+        showToast(
+            "Name and URL are required."
+        );
+
+        return;
+
+    }
+
+
+    try{
+
+        new URL(url);
+
+    }catch(error){
+
+        showToast(
+            "Enter a valid webhook URL."
+        );
+
+        return;
+
+    }
+
+
+    let headers = {};
+
+
+    if(headersRaw){
+
+        try{
+
+            headers =
+                JSON.parse(
+                    headersRaw
+                );
+
+        }catch(error){
+
+            showToast(
+                "Headers must be valid JSON."
+            );
+
+            return;
+
+        }
+
+    }
+
+
+    const events =
+        Array.from(
+            document.querySelectorAll(
+                ".event:checked"
+            )
+        ).map(
+            checkbox =>
+                checkbox.value
+        );
+
+
+    if(!events.length){
+
+        showToast(
+            "Select at least one event."
+        );
+
+        return;
+
+    }
+
+
+    if(editingId){
+
+        const webhook =
+            webhooks.find(
+                item =>
+                    item.id ===
+                    editingId
+            );
+
+
+        if(webhook){
+
+            webhook.name =
+                name;
+
+            webhook.url =
+                url;
+
+            webhook.secret =
+                secret;
+
+            webhook.headers =
+                headers;
+
+            webhook.events =
+                events;
+
+            webhook.updated =
+                Date.now();
+
+        }
+
+    }else{
+
+        webhooks.push({
+
+            id:
+                "wh_" +
+                Date.now(),
+
+            name,
+
+            url,
+
+            secret,
+
+            headers,
+
+            events,
+
+            active:true,
+
+            created:
+                Date.now(),
+
+            updated:
+                Date.now()
+
+        });
+
+    }
+
+
+    save();
+
+    closeModal();
+
+    render();
+
+    showToast(
+        editingId
+        ? "Webhook updated."
+        : "Webhook created."
+    );
+
+    editingId = null;
+
+}
+
+
+/* =========================
+   EDIT
+========================= */
+
+function editWebhook(id){
+
+    const webhook =
+        webhooks.find(
+            item =>
+                item.id === id
+        );
+
+
+    if(!webhook){
+        return;
+    }
+
+
+    editingId =
+        id;
+
+
+    get("modalTitle")
+        .textContent =
+        "Edit Webhook";
+
+
+    get("webhookName")
+        .value =
+        webhook.name;
+
+
+    get("webhookUrl")
+        .value =
+        webhook.url;
+
+
+    get("webhookSecret")
+        .value =
+        webhook.secret || "";
+
+
+    get("webhookHeaders")
+        .value =
+        JSON.stringify(
+            webhook.headers || {},
+            null,
+            2
+        );
+
+
+    document
+    .querySelectorAll(
+        ".event"
+    )
+    .forEach(
+        checkbox => {
+
+            checkbox.checked =
+                webhook.events
+                .includes(
+                    checkbox.value
+                );
+
+        }
+    );
+
+
+    get("webhookModal")
+        .classList.add(
+            "show"
+        );
+
+}
+
+
+/* =========================
+   TOGGLE
+========================= */
+
+function toggleWebhook(id){
+
+    const webhook =
+        webhooks.find(
+            item =>
+                item.id === id
+        );
+
+
+    if(!webhook){
+        return;
+    }
+
+
+    webhook.active =
+        !webhook.active;
+
+
+    webhook.updated =
+        Date.now();
+
+
+    save();
+
+    render();
+
+    showToast(
+        webhook.active
+        ? "Webhook enabled."
+        : "Webhook disabled."
+    );
+
+}
+
+
+/* =========================
+   DELETE
+========================= */
+
+function deleteWebhook(id){
+
+    const webhook =
+        webhooks.find(
+            item =>
+                item.id === id
+        );
+
+
+    if(!webhook){
+        return;
+    }
+
+
+    if(
+        !confirm(
+            `Delete "${webhook.name}"?`
+        )
+    ){
+
+        return;
+
+    }
+
+
+    webhooks =
+        webhooks.filter(
+            item =>
+                item.id !== id
+        );
+
+
+    save();
+
+    render();
+
+    showToast(
+        "Webhook deleted."
+    );
+
+}
+
+
+/* =========================
+   TEST WEBHOOK
+========================= */
+
+async function testWebhook(id){
+
+    const webhook =
+        webhooks.find(
+            item =>
+                item.id === id
+        );
+
+
+    if(!webhook){
+
+        showToast(
+            "Webhook not found."
+        );
+
+        return;
+
+    }
+
+
+    if(!webhook.active){
+
+        showToast(
+            "Enable the webhook first."
+        );
+
+        return;
+
+    }
+
+
+    const event =
+        webhook.events[0] ||
+        "test";
+
+
+    const payload = {
+
+        id:
+            "evt_" +
+            Date.now(),
+
+        event,
+
+        created:
+            new Date().toISOString(),
+
+        source:
+            "LetsStudy Pro",
+
+        test:true,
+
+        data:{
+
+            message:
+                "Webhook test event"
+
+        }
+
+    };
+
+
+    const headers = {
+
+        "Content-Type":
+            "application/json",
+
+        "X-Webhook-Event":
+            event,
+
+        ...(webhook.headers || {})
+
+    };
+
+
+    if(webhook.secret){
+
+        headers[
+            "X-Webhook-Secret"
+        ] =
+            webhook.secret;
+
+    }
+
+
+    const started =
+        Date.now();
+
+
+    try{
+
+    /*
+     * This sends directly from the browser.
+     * For production, proxy webhook delivery
+     * through Firebase Cloud Functions/Cloud Run
+     * to protect secrets and handle retries.
+     */
+
+    const response =
+        await fetch(
+            webhook.url,
+            {
+                method:"POST",
+
+                headers:{
+                    "Content-Type":
+                        "application/json",
+
+                    "X-Webhook-Event":
+                        event,
+
+                    "X-Webhook-ID":
+                        webhook.id,
+
+                    ...(webhook.headers || {})
+                },
+
+                body:
+                    JSON.stringify(
+                        payload
+                    )
+            }
+        );
+
+
+    const duration =
+        Date.now() -
+        started;
+
+
+    const responseText =
+        await response
+            .text()
+            .catch(
+                () => ""
+            );
+
+
+    logs.unshift({
+
+        id:
+            "log_" +
+            Date.now(),
+
+        webhookId:
+            webhook.id,
+
+        webhook:
+            webhook.name,
+
+        event:
+
+            event,
+
+        status:
+            response.ok
+            ? "success"
+            : "failed",
+
+        code:
+            response.status,
+
+        response:
+            responseText ||
+            `HTTP ${response.status}`,
+
+        duration:
+
+            duration,
+
+        created:
+            Date.now()
+
+    });
+
+
+    logs =
+        logs.slice(
+            0,
+            100
+        );
+
+
+    save();
+
+    render();
+
+
+    if(response.ok){
+
+        showToast(
+            "Webhook delivered successfully."
+        );
+
+    }else{
+
+        showToast(
+            `Webhook returned HTTP ${response.status}.`
+        );
+
+    }
+
+
+}catch(error){
+
+    console.error(
+        "Webhook delivery error:",
+        error
+    );
+
+
+    logs.unshift({
+
+        id:
+            "log_" +
+            Date.now(),
+
+        webhookId:
+            webhook.id,
+
+        webhook:
+            webhook.name,
+
+        event:
+            event,
+
+        status:
+            "failed",
+
+        code:
+            0,
+
+        response:
+            error.message ||
+            "Network error",
+
+        duration:
+            Date.now() -
+            started,
+
+        created:
+            Date.now()
+
+    });
+
+
+    logs =
+        logs.slice(
+            0,
+            100
+        );
+
+
+    save();
+
+    render();
+
+
+    showToast(
+        "Webhook delivery failed."
+    );
+
+}
+
+}
+
+
+/* =========================
+   LOGS
+========================= */
+
+function renderLogs(){
+
+    const tbody =
+        get("logs");
+
+
+    if(!tbody){
+        return;
+    }
+
+
+    if(!logs.length){
+
+        tbody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="5"
+                    style="
+                        text-align:center;
+                        padding:35px;
+                        color:#718096;
+                    "
+                >
+
+                    No webhook logs yet.
+
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+
+    }
+
+
+    tbody.innerHTML =
+        logs.map(
+            log => `
+
+                <tr>
+
+                    <td>
+                        ${new Date(
+                            log.created
+                        ).toLocaleString()}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            log.webhook
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            log.event
+                        )}
+                    </td>
+
+                    <td>
+
+                        <span class="badge ${
+                            log.status ===
+                            "success"
+                            ? "active"
+                            : "inactive"
+                        }">
+
+                            ${
+                                log.status ===
+                                "success"
+                                ? "Success"
+                                : "Failed"
+                            }
+
+                        </span>
+
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            log.response
+                        )}
+                    </td>
+
+                </tr>
+
+            `
+        ).join("");
+
+}
+
+
+/* =========================
+   STATS
+========================= */
+
+function updateStats(){
+
+    const webhookCount =
+        get("webhookCount");
+
+    const activeCount =
+        get("activeCount");
+
+    const requestCount =
+        get("requestCount");
+
+    const failureCount =
+        get("failureCount");
+
+
+    if(webhookCount){
+
+        webhookCount.textContent =
+            webhooks.length;
+
+    }
+
+
+    if(activeCount){
+
+        activeCount.textContent =
+            webhooks.filter(
+                webhook =>
+                    webhook.active
+            ).length;
+
+    }
+
+
+    if(requestCount){
+
+        requestCount.textContent =
+            logs.length;
+
+    }
+
+
+    if(failureCount){
+
+        failureCount.textContent =
+            logs.filter(
+                log =>
+                    log.status ===
+                    "failed"
+            ).length;
+
+    }
+
+}
+
+
+/* =========================
+   CLEAR LOGS
+========================= */
+
+function clearLogs(){
+
+    if(!logs.length){
+
+        showToast(
+            "No logs to clear."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        !confirm(
+            "Clear all webhook logs?"
+        )
+    ){
+
+        return;
+
+    }
+
+
+    logs = [];
+
+
+    save();
+
+    render();
+
+
+    showToast(
+        "Webhook logs cleared."
+    );
+
+}
+
+
+/* =========================
+   MODAL
+========================= */
+
+function closeModal(){
+
+    const modal =
+        get("webhookModal");
+
+
+    if(!modal){
+        return;
+    }
+
+
+    modal.classList.remove(
+        "show"
+    );
+
+}
+
+
+const webhookModal =
+    get("webhookModal");
+
+
+if(webhookModal){
+
+    webhookModal.addEventListener(
+        "click",
+        event => {
+
+            if(
+                event.target ===
+                webhookModal
+            ){
+
+                closeModal();
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================
+   KEYBOARD
+========================= */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if(
+            event.key ===
+            "Escape"
+        ){
+
+            closeModal();
+
+        }
+
+    }
+);
+
+
+/* =========================
+   INITIALIZATION
+========================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        load();
+
+        render();
+
+    }
+);
+
+
+/* =========================
+   GLOBAL FUNCTIONS
+========================= */
+
+window.openWebhook =
+    openWebhook;
+
+window.saveWebhook =
+    saveWebhook;
+
+window.editWebhook =
+    editWebhook;
+
+window.toggleWebhook =
+    toggleWebhook;
+
+window.deleteWebhook =
+    deleteWebhook;
+
+window.testWebhook =
+    testWebhook;
+
+window.clearLogs =
+    clearLogs;
+
+window.closeModal =
+    closeModal;
+
+window.renderWebhooks =
+    renderWebhooks;
+
+window.renderLogs =
+    renderLogs;
+
+window.updateStats =
+    updateStats;
+
+</script>
+
+</body>
+</html>
