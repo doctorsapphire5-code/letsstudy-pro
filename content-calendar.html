@@ -1,0 +1,2251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Content Calendar | LetsStudy Pro</title>
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Inter,Arial,sans-serif;
+  background:#f5f7fb;
+  color:#172033;
+}
+
+.container{
+  width:min(1200px,calc(100% - 28px));
+  margin:auto;
+}
+
+header{
+  background:#111827;
+  color:#fff;
+  padding:16px 0;
+}
+
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+}
+
+.logo{
+  font-size:20px;
+  font-weight:900;
+}
+
+nav{
+  display:flex;
+  gap:15px;
+  flex-wrap:wrap;
+}
+
+nav a{
+  color:#fff;
+  text-decoration:none;
+  font-size:14px;
+}
+
+.hero{
+  padding:45px 0 25px;
+}
+
+.hero h1{
+  margin:5px 0;
+  font-size:clamp(30px,6vw,48px);
+}
+
+.hero p{
+  color:#667085;
+  line-height:1.7;
+}
+
+.card{
+  background:#fff;
+  border:1px solid #e4e7ec;
+  border-radius:18px;
+  padding:22px;
+  margin-bottom:20px;
+  box-shadow:0 8px 30px rgba(0,0,0,.04);
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:360px 1fr;
+  gap:20px;
+}
+
+.form-group{
+  margin-bottom:15px;
+}
+
+label{
+  display:block;
+  font-weight:700;
+  margin-bottom:7px;
+}
+
+input,
+textarea,
+select{
+  width:100%;
+  padding:12px;
+  border:1px solid #d0d5dd;
+  border-radius:10px;
+  font:inherit;
+  outline:none;
+}
+
+textarea{
+  resize:vertical;
+}
+
+input:focus,
+textarea:focus,
+select:focus{
+  border-color:#111827;
+}
+
+button{
+  border:0;
+  border-radius:10px;
+  padding:11px 14px;
+  font:inherit;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.primary{
+  background:#111827;
+  color:#fff;
+}
+
+.secondary{
+  background:#eef2f6;
+  color:#172033;
+}
+
+.danger{
+  background:#fee4e2;
+  color:#b42318;
+}
+
+.buttons{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.calendar-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:18px;
+  flex-wrap:wrap;
+}
+
+.calendar-toolbar h2{
+  margin:0;
+}
+
+.calendar{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  border:1px solid #e4e7ec;
+  border-radius:15px;
+  overflow:hidden;
+}
+
+.day-name{
+  background:#f8fafc;
+  font-weight:800;
+  padding:12px 8px;
+  text-align:center;
+  border-right:1px solid #e4e7ec;
+  border-bottom:1px solid #e4e7ec;
+}
+
+.day{
+  min-height:125px;
+  padding:8px;
+  border-right:1px solid #e4e7ec;
+  border-bottom:1px solid #e4e7ec;
+  background:#fff;
+}
+
+.day-number{
+  font-weight:800;
+  font-size:13px;
+  margin-bottom:7px;
+}
+
+.today{
+  background:#f0f9ff;
+}
+
+.event{
+  background:#f2f4f7;
+  border-left:4px solid #111827;
+  border-radius:7px;
+  padding:7px;
+  margin-top:6px;
+  font-size:12px;
+  cursor:pointer;
+}
+
+.event strong{
+  display:block;
+  margin-bottom:3px;
+}
+
+.status-draft{
+  border-left-color:#667085;
+}
+
+.status-scheduled{
+  border-left-color:#175cd3;
+}
+
+.status-published{
+  border-left-color:#039855;
+}
+
+.status-cancelled{
+  border-left-color:#d92d20;
+}
+
+.list-item{
+  border:1px solid #e4e7ec;
+  border-radius:14px;
+  padding:16px;
+  margin-top:12px;
+}
+
+.list-item h3{
+  margin:0 0 7px;
+}
+
+.meta{
+  color:#667085;
+  font-size:13px;
+}
+
+.item-actions{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+
+.empty{
+  text-align:center;
+  padding:35px;
+  color:#667085;
+}
+
+.toast{
+  position:fixed;
+  right:18px;
+  bottom:18px;
+  background:#111827;
+  color:#fff;
+  padding:13px 18px;
+  border-radius:12px;
+  opacity:0;
+  transform:translateY(20px);
+  transition:.25s;
+  pointer-events:none;
+}
+
+.toast.show{
+  opacity:1;
+  transform:translateY(0);
+}
+
+@media(max-width:850px){
+
+  .grid{
+    grid-template-columns:1fr;
+  }
+
+}
+
+@media(max-width:600px){
+
+  .calendar{
+    font-size:11px;
+  }
+
+  .day{
+    min-height:90px;
+    padding:5px;
+  }
+
+  .event{
+    padding:5px;
+    font-size:10px;
+  }
+
+  .day-name{
+    padding:8px 3px;
+  }
+
+}
+</style>
+</head>
+
+<body>
+
+<header>
+
+<div class="container header">
+
+<div class="logo">
+LetsStudy Pro
+</div>
+
+<nav>
+<a href="dashboard.html">Dashboard</a>
+<a href="courses.html">Courses</a>
+<a href="community.html">Community</a>
+<a href="social-scheduler.html">Social Scheduler</a>
+<a href="email-campaigns.html">Email</a>
+</nav>
+
+</div>
+
+</header>
+
+
+<main>
+
+<section class="hero">
+
+<div class="container">
+
+<div class="meta">
+LETSSTUDY PRO • CONTENT MANAGEMENT
+</div>
+
+<h1>
+Content Calendar
+</h1>
+
+<p>
+Plan, organize, schedule and track your educational,
+marketing and social-media content from one place.
+</p>
+
+</div>
+
+</section>
+
+
+<section>
+
+<div class="container">
+
+<div class="grid">
+
+
+<!-- =========================
+     CREATE CONTENT
+========================= -->
+
+<div>
+
+<div class="card">
+
+<h2>
+Create Content
+</h2>
+
+<form id="contentForm">
+
+<input
+type="hidden"
+id="contentId"
+>
+
+
+<div class="form-group">
+
+<label for="contentTitle">
+Title
+</label>
+
+<input
+id="contentTitle"
+type="text"
+placeholder="e.g. Physics Revision Tips"
+required
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="contentType">
+Content Type
+</label>
+
+<select id="contentType">
+
+<option value="post">
+Social Post
+</option>
+
+<option value="article">
+Article
+</option>
+
+<option value="course">
+Course
+</option>
+
+<option value="video">
+Video
+</option>
+
+<option value="newsletter">
+Newsletter
+</option>
+
+<option value="scholarship">
+Scholarship
+</option>
+
+<option value="promotion">
+Promotion
+</option>
+
+<option value="event">
+Event
+</option>
+
+</select>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="platform">
+Platform
+</label>
+
+<select id="platform">
+
+<option value="website">
+Website
+</option>
+
+<option value="facebook">
+Facebook
+</option>
+
+<option value="instagram">
+Instagram
+</option>
+
+<option value="whatsapp">
+WhatsApp
+</option>
+
+<option value="linkedin">
+LinkedIn
+</option>
+
+<option value="youtube">
+YouTube
+</option>
+
+<option value="tiktok">
+TikTok
+</option>
+
+<option value="all">
+All Platforms
+</option>
+
+</select>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="contentDate">
+Date
+</label>
+
+<input
+id="contentDate"
+type="date"
+required
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="contentTime">
+Time
+</label>
+
+<input
+id="contentTime"
+type="time"
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="contentStatus">
+Status
+</label>
+
+<select id="contentStatus">
+
+<option value="draft">
+Draft
+</option>
+
+<option value="scheduled">
+Scheduled
+</option>
+
+<option value="published">
+Published
+</option>
+
+<option value="cancelled">
+Cancelled
+</option>
+
+</select>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="contentLink">
+Content URL
+</label>
+
+<input
+id="contentLink"
+type="url"
+placeholder="https://letsstudy.pro/..."
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="contentText">
+Content / Notes
+</label>
+
+<textarea
+id="contentText"
+rows="7"
+maxlength="10000"
+placeholder="Write your content or campaign notes..."
+></textarea>
+
+<div class="meta">
+<span id="charCount">0</span>/10000
+</div>
+
+</div>
+
+
+<div class="buttons">
+
+<button
+type="submit"
+class="primary"
+id="saveBtn"
+>
+Save Content
+</button>
+
+<button
+type="button"
+class="secondary"
+id="resetBtn"
+>
+Reset
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+
+<!-- FILTER -->
+
+<div class="card">
+
+<h2>
+Filters
+</h2>
+
+<div class="form-group">
+
+<label for="searchInput">
+Search
+</label>
+
+<input
+id="searchInput"
+type="search"
+placeholder="Search content..."
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="filterStatus">
+Status
+</label>
+
+<select id="filterStatus">
+
+<option value="all">
+All
+</option>
+
+<option value="draft">
+Draft
+</option>
+
+<option value="scheduled">
+Scheduled
+</option>
+
+<option value="published">
+Published
+</option>
+
+<option value="cancelled">
+Cancelled
+</option>
+
+</select>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="filterPlatform">
+Platform
+</label>
+
+<select id="filterPlatform">
+
+<option value="all">
+All Platforms
+</option>
+
+<option value="website">
+Website
+</option>
+
+<option value="facebook">
+Facebook
+</option>
+
+<option value="instagram">
+Instagram
+</option>
+
+<option value="whatsapp">
+WhatsApp
+</option>
+
+<option value="linkedin">
+LinkedIn
+</option>
+
+<option value="youtube">
+YouTube
+</option>
+
+<option value="tiktok">
+TikTok
+</option>
+
+</select>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- =========================
+     CALENDAR
+========================= -->
+
+<div>
+
+<div class="card">
+
+<div class="calendar-toolbar">
+
+<button
+class="secondary"
+id="previousMonth"
+>
+← Previous
+</button>
+
+<h2 id="monthTitle">
+Loading...
+</h2>
+
+<button
+class="secondary"
+id="nextMonth"
+>
+Next →
+</button>
+
+</div>
+
+
+<div
+id="calendar"
+class="calendar"
+>
+</div>
+
+</div>
+
+
+<!-- CONTENT LIST -->
+
+<div class="card">
+
+<h2>
+Scheduled Content
+</h2>
+
+<div
+id="loading"
+class="empty"
+>
+Loading content...
+</div>
+
+<div
+id="contentList"
+>
+</div>
+
+<div
+id="emptyList"
+class="empty"
+style="display:none"
+>
+No content found.
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+</main>
+
+
+<div
+id="toast"
+class="toast"
+>
+
+<span id="toastMessage">
+Done
+</span>
+
+</div>
+
+
+<script type="module">
+
+/* =========================
+   FIREBASE
+========================= */
+
+import {
+initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+
+import {
+getAuth,
+onAuthStateChanged
+}
+from
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
+import {
+getFirestore,
+collection,
+addDoc,
+getDocs,
+query,
+where,
+orderBy,
+doc,
+updateDoc,
+deleteDoc,
+serverTimestamp
+}
+from
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+
+/* =========================
+   FIREBASE CONFIG
+========================= */
+
+const firebaseConfig = {
+
+apiKey:
+"YOUR_FIREBASE_API_KEY",
+
+authDomain:
+"YOUR_PROJECT.firebaseapp.com",
+
+projectId:
+"YOUR_PROJECT_ID",
+
+storageBucket:
+"YOUR_PROJECT.firebasestorage.app",
+
+messagingSenderId:
+"YOUR_MESSAGING_SENDER_ID",
+
+appId:
+"YOUR_FIREBASE_APP_ID"
+
+};
+
+
+const app =
+initializeApp(
+firebaseConfig
+);
+
+const auth =
+getAuth(app);
+
+const db =
+getFirestore(app);
+
+
+/* =========================
+   HELPERS
+========================= */
+
+const $ =
+id =>
+document.getElementById(id);
+
+let currentUser = null;
+
+let contents = [];
+
+let currentDate =
+new Date();
+
+
+/* =========================
+   FORM ELEMENTS
+========================= */
+
+const form =
+$("contentForm");
+
+const contentId =
+$("contentId");
+
+const titleInput =
+$("contentTitle");
+
+const typeInput =
+$("contentType");
+
+const platformInput =
+$("platform");
+
+const dateInput =
+$("contentDate");
+
+const timeInput =
+$("contentTime");
+
+const statusInput =
+$("contentStatus");
+
+const linkInput =
+$("contentLink");
+
+const textInput =
+$("contentText");
+
+
+/* =========================
+   AUTH
+========================= */
+
+onAuthStateChanged(
+auth,
+user => {
+
+currentUser =
+user;
+
+if(user){
+
+loadContents();
+
+}else{
+
+$("loading")
+.style.display =
+"none";
+
+$("emptyList")
+.style.display =
+"block";
+
+$("emptyList")
+.textContent =
+"Sign in to manage your content calendar.";
+
+}
+
+}
+);
+
+
+/* =========================
+   LOAD CONTENT
+========================= */
+
+async function loadContents(){
+
+if(!currentUser)
+return;
+
+$("loading")
+.style.display =
+"block";
+
+try{
+
+const q =
+query(
+collection(
+db,
+"contentCalendar"
+),
+where(
+"uid",
+"==",
+currentUser.uid
+),
+orderBy(
+"contentDate",
+"asc"
+)
+);
+
+const snapshot =
+await getDocs(q);
+
+contents =
+snapshot.docs.map(
+item => ({
+id:item.id,
+...item.data()
+})
+);
+
+renderCalendar();
+
+renderList();
+
+$("loading")
+.style.display =
+"none";
+
+}catch(error){
+
+console.error(
+"Content loading error:",
+error
+);
+
+$("loading")
+.style.display =
+"none";
+
+showToast(
+"Unable to load content."
+);
+
+}
+
+}
+
+
+/* =========================
+   SAVE CONTENT
+========================= */
+
+form.addEventListener(
+"submit",
+async event => {
+
+event.preventDefault();
+
+if(!currentUser){
+
+showToast(
+"Please sign in first."
+);
+
+return;
+
+}
+
+
+const title =
+titleInput.value.trim();
+
+const date =
+dateInput.value;
+
+if(
+!title ||
+!date
+){
+
+showToast(
+"Title and date are required."
+);
+
+return;
+
+}
+
+
+const data = {
+
+uid:
+currentUser.uid,
+
+title,
+
+type:
+typeInput.value,
+
+platform:
+platformInput.value,
+
+contentDate:
+date,
+
+contentTime:
+timeInput.value,
+
+status:
+statusInput.value,
+
+link:
+linkInput.value.trim(),
+
+text:
+textInput.value.trim(),
+
+updatedAt:
+serverTimestamp()
+
+};
+
+
+const btn =
+$("saveBtn");
+
+btn.disabled =
+true;
+
+btn.textContent =
+"Saving...";
+
+
+try{
+
+if(contentId.value){
+
+await updateDoc(
+
+doc(
+db,
+"contentCalendar",
+contentId.value
+),
+
+data
+
+);
+
+showToast(
+"Content updated."
+);
+
+}else{
+
+await addDoc(
+
+collection(
+db,
+"contentCalendar"
+),
+
+{
+
+...data,
+
+createdAt:
+serverTimestamp()
+
+}
+
+);
+
+showToast(
+"Content added."
+);
+
+}
+
+resetForm();
+
+await loadContents();
+
+}catch(error){
+
+console.error(error);
+
+showToast(
+"Unable to save content."
+);
+
+}finally{
+
+btn.disabled =
+false;
+
+btn.textContent =
+"Save Content";
+
+}
+
+}
+);
+
+
+/* =========================
+   CALENDAR
+========================= */
+
+function renderCalendar(){
+
+const calendar =
+$("calendar");
+
+calendar.innerHTML =
+"";
+
+
+const year =
+currentDate.getFullYear();
+
+const month =
+currentDate.getMonth();
+
+
+$("monthTitle")
+.textContent =
+new Intl.DateTimeFormat(
+"en-US",
+{
+month:"long",
+year:"numeric"
+}
+).format(
+currentDate
+);
+
+
+const days = [
+"Sun",
+"Mon",
+"Tue",
+"Wed",
+"Thu",
+"Fri",
+"Sat"
+];
+
+
+days.forEach(
+day => {
+
+const element =
+document.createElement(
+"div"
+);
+
+element.className =
+"day-name";
+
+element.textContent =
+day;
+
+calendar.appendChild(
+element
+);
+
+}
+);
+
+
+const firstDay =
+new Date(
+year,
+month,
+1
+).getDay();
+
+
+const totalDays =
+new Date(
+year,
+month + 1,
+0
+).getDate();
+
+
+for(
+let i = 0;
+i < firstDay;
+i++
+){
+
+const blank =
+document.createElement(
+"div"
+);
+
+blank.className =
+"day";
+
+calendar.appendChild(
+blank
+);
+
+}
+
+
+for(
+let day = 1;
+day <= totalDays;
+day++
+){
+
+const cell =
+document.createElement(
+"div"
+);
+
+cell.className =
+"day";
+
+
+const number =
+document.createElement(
+"div"
+);
+
+number.className =
+"day-number";
+
+number.textContent =
+day;
+
+cell.appendChild(
+number
+);
+
+
+const dateString =
+`${year}-${String(month+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+
+
+const today =
+new Date();
+
+
+if(
+today.getFullYear() === year &&
+today.getMonth() === month &&
+today.getDate() === day
+){
+
+cell.classList.add(
+"today"
+);
+
+}
+
+
+const events =
+getFilteredContents()
+.filter(
+item =>
+item.contentDate ===
+dateString
+);
+
+
+events.forEach(
+item => {
+
+const event =
+document.createElement(
+"div"
+);
+
+event.className =
+`event status-${item.status || "draft"}`;
+
+event.innerHTML = `
+
+<strong>
+${escapeHtml(
+item.title
+)}
+</strong>
+
+<span>
+${escapeHtml(
+item.contentTime ||
+""
+)}
+</span>
+
+`;
+
+event.addEventListener(
+"click",
+() => {
+
+editContent(
+item.id
+);
+
+});
+
+cell.appendChild(
+event
+);
+
+}
+);
+
+
+calendar.appendChild(
+cell
+);
+
+}
+
+}
+
+
+/* =========================
+   FILTER
+========================= */
+
+function getFilteredContents(){
+
+const search =
+$("searchInput")
+.value
+.trim()
+.toLowerCase();
+
+const status =
+$("filterStatus")
+.value;
+
+const platform =
+$("filterPlatform")
+.value;
+
+
+return contents.filter(
+item => {
+
+const matchesSearch =
+!search ||
+String(
+item.title || ""
+)
+.toLowerCase()
+.includes(
+search
+) ||
+String(
+item.text || ""
+)
+.toLowerCase()
+.includes(
+search
+);
+
+
+const matchesStatus =
+status === "all" ||
+item.status ===
+status;
+
+
+const matchesPlatform =
+platform === "all" ||
+item.platform ===
+platform;
+
+
+return (
+matchesSearch &&
+matchesStatus &&
+matchesPlatform
+);
+
+}
+);
+
+}
+
+
+/* =========================
+   RENDER LIST
+========================= */
+
+function renderList(){
+
+const list =
+$("contentList");
+
+list.innerHTML =
+"";
+
+
+const filtered =
+getFilteredContents();
+
+
+if(!filtered.length){
+
+$("emptyList")
+.style.display =
+"block";
+
+return;
+
+}
+
+
+$("emptyList")
+.style.display =
+"none";
+
+
+filtered
+.sort(
+(a,b) =>
+String(a.contentDate || "")
+.localeCompare(
+String(b.contentDate || "")
+)
+)
+.forEach(
+item => {
+
+const element =
+document.createElement(
+"div"
+);
+
+element.className =
+"list-item";
+
+
+element.innerHTML = `
+
+<h3>
+${escapeHtml(
+item.title
+)}
+</h3>
+
+<div class="meta">
+
+${escapeHtml(
+item.contentDate || ""
+)}
+
+${item.contentTime
+? " • " +
+escapeHtml(
+item.contentTime
+)
+: ""}
+
+•
+
+${escapeHtml(
+item.platform ||
+"website"
+)}
+
+•
+
+${escapeHtml(
+item.status ||
+"draft"
+)}
+
+</div>
+
+<p>
+${escapeHtml(
+item.text || ""
+)}
+</p>
+
+<div class="item-actions">
+
+<button
+data-action="edit"
+>
+Edit
+</button>
+
+<button
+data-action="share"
+>
+📤 Share
+</button>
+
+<button
+data-action="whatsapp"
+>
+WhatsApp
+</button>
+
+<button
+data-action="facebook"
+>
+Facebook
+</button>
+
+<button
+data-action="copy"
+>
+Copy Link
+</button>
+
+<button
+class="danger"
+data-action="delete"
+>
+Delete
+</button>
+
+</div>
+
+`;
+
+
+element
+.querySelector(
+'[data-action="edit"]'
+)
+.addEventListener(
+"click",
+() =>
+editContent(
+item.id
+)
+);
+
+
+element
+.querySelector(
+'[data-action="share"]'
+)
+.addEventListener(
+"click",
+() =>
+shareContent(
+item
+)
+);
+
+
+element
+.querySelector(
+'[data-action="whatsapp"]'
+)
+.addEventListener(
+"click",
+() =>
+shareWhatsApp(
+item
+)
+);
+
+
+element
+.querySelector(
+'[data-action="facebook"]'
+)
+.addEventListener(
+"click",
+() =>
+shareFacebook(
+item
+)
+);
+
+
+element
+.querySelector(
+'[data-action="copy"]'
+)
+.addEventListener(
+"click",
+() =>
+copyContentLink(
+item
+)
+);
+
+
+element
+.querySelector(
+'[data-action="delete"]'
+)
+.addEventListener(
+"click",
+() =>
+deleteContent(
+item.id
+)
+);
+
+
+list.appendChild(
+element
+);
+
+}
+);
+
+}
+
+
+/* =========================
+   EDIT
+========================= */
+
+function editContent(
+id
+){
+
+const item =
+contents.find(
+content =>
+content.id === id
+);
+
+if(!item)
+return;
+
+
+contentId.value =
+item.id;
+
+titleInput.value =
+item.title || "";
+
+typeInput.value =
+item.type || "post";
+
+platformInput.value =
+item.platform || "website";
+
+dateInput.value =
+item.contentDate || "";
+
+timeInput.value =
+item.contentTime || "";
+
+statusInput.value =
+item.status || "draft";
+
+linkInput.value =
+item.link || "";
+
+textInput.value =
+item.text || "";
+
+
+$("saveBtn")
+.textContent =
+"Update Content";
+
+
+window.scrollTo({
+top:0,
+behavior:"smooth"
+});
+
+}
+
+
+/* =========================
+   RESET
+========================= */
+
+$("resetBtn")
+.addEventListener(
+"click",
+resetForm
+);
+
+
+function resetForm(){
+
+form.reset();
+
+contentId.value =
+"";
+
+$("saveBtn")
+.textContent =
+"Save Content";
+
+}
+
+
+/* =========================
+   DELETE
+========================= */
+
+async function deleteContent(
+id
+){
+
+if(!currentUser)
+return;
+
+
+if(
+!confirm(
+"Delete this content?"
+)
+)
+return;
+
+
+try{
+
+await deleteDoc(
+doc(
+db,
+"contentCalendar",
+id
+)
+);
+
+showToast(
+"Content deleted."
+);
+
+await loadContents();
+
+}catch(error){
+
+console.error(error);
+
+showToast(
+"Unable to delete content."
+);
+
+}
+
+}
+
+
+/* =========================
+   SHARE
+========================= */
+
+async function shareContent(
+item
+){
+
+const text =
+buildShareText(
+item
+);
+
+
+if(
+typeof navigator.share ===
+"function"
+){
+
+try{
+
+await navigator.share({
+
+title:
+item.title ||
+"LetsStudy Pro Content",
+
+text
+
+});
+
+}catch(error){
+
+if(
+error.name !==
+"AbortError"
+){
+
+copyText(
+text
+);
+
+}
+
+}
+
+}else{
+
+copyText(
+text
+);
+
+}
+
+}
+
+
+/* =========================
+   WHATSAPP
+========================= */
+
+function shareWhatsApp(
+item
+){
+
+const text =
+encodeURIComponent(
+buildShareText(
+item
+)
+);
+
+window.open(
+`https://wa.me/?text=${text}`,
+"_blank"
+);
+
+}
+
+
+/* =========================
+   FACEBOOK
+========================= */
+
+function shareFacebook(
+item
+){
+
+const url =
+item.link ||
+window.location.href;
+
+window.open(
+
+`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+
+"_blank"
+
+);
+
+}
+
+
+/* =========================
+   COPY LINK
+========================= */
+
+function copyContentLink(
+item
+){
+
+const link =
+item.link ||
+window.location.href;
+
+copyText(
+link
+);
+
+}
+
+
+/* =========================
+   BUILD SHARE TEXT
+========================= */
+
+function buildShareText(
+item
+){
+
+return (
+
+item.title ||
+"LetsStudy Pro"
+
+)
++
+"\n\n"
++
+(
+item.text ||
+""
+)
++
+(
+item.link
+? `\n\n${item.link}`
+: ""
+);
+
+}
+
+
+/* =========================
+   COPY
+========================= */
+
+async function copyText(
+text
+){
+
+try{
+
+if(
+navigator.clipboard &&
+window.isSecureContext
+){
+
+await navigator.clipboard.writeText(
+text
+);
+
+}else{
+
+const textarea =
+document.createElement(
+"textarea"
+);
+
+textarea.value =
+text;
+
+textarea.style.position =
+"fixed";
+
+textarea.style.opacity =
+"0";
+
+document.body.appendChild(
+  textarea
+);
+
+textarea.focus();
+
+textarea.select();
+
+try{
+
+  document.execCommand(
+    "copy"
+  );
+
+}catch(error){
+
+  console.error(
+    "Fallback copy failed:",
+    error
+  );
+
+  showToast(
+    "Unable to copy content."
+  );
+
+  textarea.remove();
+
+  return false;
+
+}
+
+textarea.remove();
+
+}
+
+showToast(
+  "Copied successfully."
+);
+
+return true;
+
+}
+
+
+/* =========================
+   ESCAPE HTML
+========================= */
+
+function escapeHtml(
+  value
+){
+
+return String(
+  value ?? ""
+)
+.replaceAll(
+  "&",
+  "&amp;"
+)
+.replaceAll(
+  "<",
+  "&lt;"
+)
+.replaceAll(
+  ">",
+  "&gt;"
+)
+.replaceAll(
+  '"',
+  "&quot;"
+)
+.replaceAll(
+  "'",
+  "&#039;"
+);
+
+}
+
+
+/* =========================
+   TOAST
+========================= */
+
+let toastTimer = null;
+
+function showToast(
+  message
+){
+
+const toast =
+  $("toast");
+
+const toastMessage =
+  $("toastMessage");
+
+if(!toast)
+  return;
+
+if(toastMessage){
+
+  toastMessage.textContent =
+    message;
+
+}
+
+toast.classList.add(
+  "show"
+);
+
+clearTimeout(
+  toastTimer
+);
+
+toastTimer =
+  setTimeout(
+    () => {
+
+      toast.classList.remove(
+        "show"
+      );
+
+    },
+    3000
+  );
+
+}
+
+
+/* =========================
+   INITIAL DATE
+========================= */
+
+if(dateInput){
+
+dateInput.value =
+  new Date()
+    .toISOString()
+    .split("T")[0];
+
+}
+
+
+/* =========================
+   INITIAL CHARACTER COUNT
+========================= */
+
+if(textInput){
+
+$("charCount")
+  .textContent =
+  textInput.value.length;
+
+}
+
+
+/* =========================
+   INITIAL CALENDAR
+========================= */
+
+renderCalendar();
+
+
+/* =========================
+   KEYBOARD SHORTCUT
+========================= */
+
+document.addEventListener(
+  "keydown",
+  event => {
+
+    if(
+      (event.ctrlKey ||
+       event.metaKey) &&
+      event.key === "Enter"
+    ){
+
+      event.preventDefault();
+
+      form.requestSubmit();
+
+    }
+
+  }
+);
+
+
+/* =========================
+   PAGE VISIBILITY
+========================= */
+
+document.addEventListener(
+  "visibilitychange",
+  () => {
+
+    if(
+      document.visibilityState ===
+      "visible" &&
+      currentUser
+    ){
+
+      loadContents();
+
+    }
+
+  }
+);
+
+
+/* =========================
+   BEFORE UNLOAD
+========================= */
+
+window.addEventListener(
+  "beforeunload",
+  () => {
+
+    /*
+     * Content is stored in
+     * Firestore, not localStorage.
+     */
+
+  }
+);
+
+</script>
+
+</body>
+</html>
