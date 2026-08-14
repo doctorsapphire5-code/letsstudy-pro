@@ -1,0 +1,2261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<title>App Editor | Creator Studio</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+:root{
+    --primary:#2563eb;
+    --dark:#172033;
+    --muted:#737d90;
+    --border:#e4e8f0;
+    --bg:#f4f6fa;
+    --card:#fff;
+    --success:#15803d;
+    --danger:#dc2626;
+}
+
+body{
+    font-family:Arial,Helvetica,sans-serif;
+    background:var(--bg);
+    color:var(--dark);
+}
+
+button,
+input,
+textarea,
+select{
+    font:inherit;
+}
+
+button{
+    cursor:pointer;
+}
+
+a{
+    color:inherit;
+    text-decoration:none;
+}
+
+.topbar{
+    height:66px;
+    background:#fff;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 20px;
+    position:sticky;
+    top:0;
+    z-index:50;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:900;
+}
+
+.brand-icon{
+    width:38px;
+    height:38px;
+    border-radius:10px;
+    background:var(--dark);
+    color:#fff;
+    display:grid;
+    place-items:center;
+}
+
+.top-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+}
+
+.btn{
+    border:0;
+    border-radius:9px;
+    padding:10px 15px;
+    font-weight:800;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+}
+
+.primary{
+    background:var(--primary);
+    color:#fff;
+}
+
+.secondary{
+    background:#eaf0f7;
+    color:var(--dark);
+}
+
+.success{
+    background:var(--success);
+    color:#fff;
+}
+
+.danger{
+    background:var(--danger);
+    color:#fff;
+}
+
+.layout{
+    display:grid;
+    grid-template-columns:225px 1fr;
+    min-height:calc(100vh - 66px);
+}
+
+.sidebar{
+    background:#fff;
+    border-right:1px solid var(--border);
+    padding:18px 12px;
+}
+
+.sidebar-title{
+    font-size:11px;
+    color:#8992a4;
+    font-weight:900;
+    text-transform:uppercase;
+    padding:8px;
+}
+
+.nav{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+}
+
+.nav a{
+    padding:11px;
+    border-radius:8px;
+    color:#596478;
+    font-weight:700;
+    font-size:13px;
+}
+
+.nav a:hover,
+.nav a.active{
+    background:#edf3ff;
+    color:var(--primary);
+}
+
+.main{
+    width:100%;
+    max-width:1450px;
+    margin:auto;
+    padding:25px;
+}
+
+.page-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:20px;
+    margin-bottom:20px;
+}
+
+.page-header h1{
+    font-size:28px;
+    margin:5px 0;
+}
+
+.muted{
+    color:var(--muted);
+    font-size:13px;
+}
+
+.workspace{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 380px;
+    gap:20px;
+}
+
+.card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:18px;
+    margin-bottom:18px;
+}
+
+.card h2{
+    font-size:17px;
+    margin-bottom:15px;
+}
+
+.form-group{
+    margin-bottom:15px;
+}
+
+label{
+    display:block;
+    font-size:12px;
+    font-weight:900;
+    margin-bottom:7px;
+}
+
+input,
+textarea,
+select{
+    width:100%;
+    border:1px solid #d8deea;
+    border-radius:8px;
+    padding:11px;
+    background:#fff;
+    color:var(--dark);
+    outline:none;
+}
+
+input:focus,
+textarea:focus,
+select:focus{
+    border-color:var(--primary);
+}
+
+textarea{
+    min-height:130px;
+    resize:vertical;
+    line-height:1.5;
+}
+
+.row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+}
+
+.icon-row{
+    display:flex;
+    gap:14px;
+    align-items:center;
+}
+
+.app-icon{
+    width:82px;
+    height:82px;
+    border-radius:20px;
+    background:#2563eb;
+    color:#fff;
+    display:grid;
+    place-items:center;
+    font-size:27px;
+    font-weight:900;
+    overflow:hidden;
+    flex-shrink:0;
+}
+
+.app-icon img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.upload{
+    border:2px dashed #cbd5e1;
+    border-radius:10px;
+    padding:15px;
+}
+
+.option-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+}
+
+.option{
+    border:1px solid #d8deea;
+    border-radius:10px;
+    padding:13px;
+    background:#fff;
+}
+
+.option.active{
+    border-color:var(--primary);
+    background:#edf3ff;
+}
+
+.option input{
+    width:auto;
+    margin-right:7px;
+}
+
+.feature-list{
+    display:grid;
+    gap:8px;
+}
+
+.feature-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border:1px solid var(--border);
+    padding:11px;
+    border-radius:9px;
+}
+
+.feature-item span{
+    font-size:13px;
+    font-weight:700;
+}
+
+.switch{
+    position:relative;
+    width:42px;
+    height:23px;
+}
+
+.switch input{
+    opacity:0;
+    width:0;
+    height:0;
+}
+
+.slider{
+    position:absolute;
+    inset:0;
+    background:#cbd5e1;
+    border-radius:20px;
+    transition:.2s;
+}
+
+.slider:before{
+    content:"";
+    position:absolute;
+    width:17px;
+    height:17px;
+    left:3px;
+    top:3px;
+    background:#fff;
+    border-radius:50%;
+    transition:.2s;
+}
+
+.switch input:checked + .slider{
+    background:var(--primary);
+}
+
+.switch input:checked + .slider:before{
+    transform:translateX(19px);
+}
+
+.preview-card{
+    position:sticky;
+    top:86px;
+}
+
+.phone-wrap{
+    display:flex;
+    justify-content:center;
+    padding:5px;
+}
+
+.phone{
+    width:285px;
+    height:570px;
+    background:#111827;
+    border-radius:35px;
+    padding:10px;
+    box-shadow:0 20px 45px rgba(0,0,0,.2);
+}
+
+.screen{
+    height:100%;
+    background:#fff;
+    border-radius:27px;
+    overflow:hidden;
+}
+
+.status{
+    height:27px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 14px;
+    font-size:9px;
+    font-weight:900;
+}
+
+.appbar{
+    height:55px;
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:0 14px;
+    border-bottom:1px solid #eef0f4;
+    font-weight:900;
+}
+
+.mini-icon{
+    width:30px;
+    height:30px;
+    border-radius:8px;
+    background:#2563eb;
+    color:#fff;
+    display:grid;
+    place-items:center;
+    overflow:hidden;
+    font-size:10px;
+    font-weight:900;
+}
+
+.mini-icon img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.screen-body{
+    padding:14px;
+    height:calc(100% - 82px);
+    overflow:auto;
+}
+
+.hero{
+    padding:18px;
+    border-radius:16px;
+    background:#edf3ff;
+    margin-bottom:12px;
+}
+
+.hero h3{
+    font-size:19px;
+    margin-bottom:7px;
+}
+
+.hero p{
+    font-size:10px;
+    color:#64748b;
+    line-height:1.5;
+}
+
+.preview-card-item{
+    border:1px solid #e5e7eb;
+    padding:12px;
+    border-radius:11px;
+    margin-bottom:8px;
+    font-size:10px;
+}
+
+.preview-card-item strong{
+    display:block;
+    margin-bottom:4px;
+}
+
+.status-box{
+    background:#f8fafc;
+    border-radius:10px;
+    padding:13px;
+}
+
+.status-line{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    font-size:12px;
+    margin-bottom:9px;
+}
+
+.status-line:last-child{
+    margin-bottom:0;
+}
+
+.ready{
+    color:var(--success);
+}
+
+.toast{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    background:var(--dark);
+    color:#fff;
+    padding:12px 16px;
+    border-radius:9px;
+    opacity:0;
+    transform:translateY(10px);
+    transition:.2s;
+    z-index:100;
+}
+
+.toast.show{
+    opacity:1;
+    transform:translateY(0);
+}
+
+@media(max-width:1050px){
+
+    .workspace{
+        grid-template-columns:1fr;
+    }
+
+    .preview-card{
+        position:static;
+    }
+
+}
+
+@media(max-width:850px){
+
+    .layout{
+        display:block;
+    }
+
+    .sidebar{
+        display:none;
+    }
+
+}
+
+@media(max-width:600px){
+
+    .main{
+        padding:16px;
+    }
+
+    .page-header{
+        flex-direction:column;
+    }
+
+    .row{
+        grid-template-columns:1fr;
+    }
+
+    .option-grid{
+        grid-template-columns:1fr;
+    }
+
+    .top-actions .secondary{
+        display:none;
+    }
+
+}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+
+<a href="creator.html" class="brand">
+
+<span class="brand-icon">
+CS
+</span>
+
+<span>
+Creator Studio
+</span>
+
+</a>
+
+<div class="top-actions">
+
+<a
+    href="app-preview.html"
+    class="btn secondary"
+>
+👁 Preview
+</a>
+
+<button
+    class="btn secondary"
+    onclick="resetEditor()"
+>
+↩ Reset
+</button>
+
+<button
+    class="btn primary"
+    onclick="saveApp()"
+>
+💾 Save App
+</button>
+
+<a
+    href="app-publish.html"
+    class="btn success"
+>
+🚀 Publish
+</a>
+
+</div>
+
+</header>
+
+
+<div class="layout">
+
+<aside class="sidebar">
+
+<div class="sidebar-title">
+App Studio
+</div>
+
+<nav class="nav">
+
+<a href="creator.html">
+🧑 Creator Home
+</a>
+
+<a href="creator-dashboard.html">
+📊 Dashboard
+</a>
+
+<a href="app-editor.html" class="active">
+✏️ App Editor
+</a>
+
+<a href="app-preview.html">
+👁 App Preview
+</a>
+
+<a href="app-build.html">
+🔨 App Build
+</a>
+
+<a href="app-publish.html">
+🚀 App Publish
+</a>
+
+<a href="app-analytics.html">
+📈 App Analytics
+</a>
+
+<a href="content-library.html">
+🗂 Content Library
+</a>
+
+<a href="design.html">
+🎨 Design Studio
+</a>
+
+<a href="creator-settings.html">
+⚙ Settings
+</a>
+
+</nav>
+
+</aside>
+
+
+<main class="main">
+
+<section class="page-header">
+
+<div>
+
+<p class="muted">
+Creator Studio / App Development
+</p>
+
+<h1>
+App Editor
+</h1>
+
+<p class="muted">
+Configure your application before building and publishing it.
+</p>
+
+</div>
+
+</section>
+
+
+<div class="workspace">
+
+<section>
+
+
+<div class="card">
+
+<h2>
+Basic Information
+</h2>
+
+<div class="form-group">
+
+<label for="appName">
+App Name
+</label>
+
+<input
+    id="appName"
+    type="text"
+    maxlength="80"
+    value="LetsStudy Pro"
+    placeholder="Enter app name"
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="packageName">
+Package Name
+</label>
+
+<input
+    id="packageName"
+    type="text"
+    value="com.letsstudy.pro"
+    placeholder="com.example.app"
+>
+
+</div>
+
+
+<div class="row">
+
+<div class="form-group">
+
+<label for="version">
+Version
+</label>
+
+<input
+    id="version"
+    type="text"
+    value="1.0.0"
+>
+
+</div>
+
+<div class="form-group">
+
+<label for="buildNumber">
+Build Number
+</label>
+
+<input
+    id="buildNumber"
+    type="number"
+    min="1"
+    value="1"
+>
+
+</div>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="description">
+Description
+</label>
+
+<textarea
+    id="description"
+    maxlength="1000"
+>Learn, create, connect and grow with LetsStudy Pro.</textarea>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+App Icon
+</h2>
+
+<div class="icon-row">
+
+<div
+    id="appIcon"
+    class="app-icon"
+>
+LS
+</div>
+
+<div style="flex:1">
+
+<div class="upload">
+
+<input
+    id="iconFile"
+    type="file"
+    accept="image/*"
+>
+
+<p class="muted" style="margin-top:7px">
+Recommended: square PNG, 512×512 or larger.
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+Appearance
+</h2>
+
+<div class="row">
+
+<div class="form-group">
+
+<label for="theme">
+Theme
+</label>
+
+<select id="theme">
+
+<option value="light">
+Light
+</option>
+
+<option value="dark">
+Dark
+</option>
+
+<option value="system">
+System
+</option>
+
+</select>
+
+</div>
+
+
+<div class="form-group">
+
+<label for="accentColor">
+Accent Color
+</label>
+
+<input
+    id="accentColor"
+    type="color"
+    value="#2563eb"
+    style="height:43px;padding:4px"
+>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+Application Features
+</h2>
+
+<div class="feature-list">
+
+
+<div class="feature-item">
+
+<span>
+📚 Courses
+</span>
+
+<label class="switch">
+
+<input
+    id="featureCourses"
+    type="checkbox"
+    checked
+>
+
+<span class="slider"></span>
+
+</label>
+
+</div>
+
+
+<div class="feature-item">
+
+<span>
+📄 Resources
+</span>
+
+<label class="switch">
+
+<input
+    id="featureResources"
+    type="checkbox"
+    checked
+>
+
+<span class="slider"></span>
+
+</label>
+
+</div>
+
+
+<div class="feature-item">
+
+<span>
+👥 Community
+</span>
+
+<label class="switch">
+
+<input
+    id="featureCommunity"
+    type="checkbox"
+    checked
+>
+
+<span class="slider"></span>
+
+</label>
+
+</div>
+
+
+<div class="feature-item">
+
+<span>
+🤖 AI Assistant
+</span>
+
+<label class="switch">
+
+<input
+    id="featureAI"
+    type="checkbox"
+    checked
+>
+
+<span class="slider"></span>
+
+</label>
+
+</div>
+
+
+<div class="feature-item">
+
+<span>
+💳 Wallet & Payments
+</span>
+
+<label class="switch">
+
+<input
+    id="featureWallet"
+    type="checkbox"
+    checked
+>
+
+<span class="slider"></span>
+
+</label>
+
+</div>
+
+
+<div class="feature-item">
+
+<span>
+🏆 Certificates
+</span>
+
+<label class="switch">
+
+<input
+    id="featureCertificates"
+    type="checkbox"
+    checked
+>
+
+<span class="slider"></span>
+
+</label>
+
+</div>
+
+
+<div class="feature-item">
+
+<span>
+🔔 Notifications
+</span>
+
+<label class="switch">
+
+<input
+    id="featureNotifications"
+    type="checkbox"
+    checked
+>
+
+<span class="slider"></span>
+
+</label>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+Backend & Services
+</h2>
+
+<div class="feature-list">
+
+<div class="feature-item">
+
+<span>
+🔥 Firebase
+</span>
+
+<label class="switch">
+
+<input
+    id="firebase"
+    type="checkbox"
+    checked
+>
+
+<span class="slider"></span>
+
+</label>
+
+</div>
+
+
+<div class="feature-item">
+
+<span>
+📊 Analytics
+</span>
+
+<label class="switch">
+
+<input
+    id="analytics"
+    type="checkbox"
+    checked
+>
+
+<span class="slider"></span>
+
+</label>
+
+</div>
+
+
+<div class="feature-item">
+
+<span>
+☁ Cloud Sync
+</span>
+
+<label class="switch">
+
+<input
+    id="cloudSync"
+    type="checkbox"
+    checked
+>
+
+<span class="slider"></span>
+
+</label>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+Platform
+</h2>
+
+<div class="option-grid">
+
+<label class="option active">
+
+<input
+    type="checkbox"
+    class="platform"
+    value="Android"
+    checked
+>
+
+Android
+
+</label>
+
+
+<label class="option">
+
+<input
+    type="checkbox"
+    class="platform"
+    value="iOS"
+>
+
+iOS
+
+</label>
+
+
+<label class="option">
+
+<input
+    type="checkbox"
+    class="platform"
+    value="Web"
+    checked
+>
+
+Web
+
+</label>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+Navigation
+</h2>
+
+<div class="form-group">
+
+<label for="navigationStyle">
+Navigation Style
+</label>
+
+<select id="navigationStyle">
+
+<option value="bottom">
+Bottom Navigation
+</option>
+
+<option value="sidebar">
+Sidebar
+</option>
+
+<option value="tabs">
+Top Tabs
+</option>
+
+</select>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+Editor Actions
+</h2>
+
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+
+<button
+    class="btn primary"
+    onclick="saveApp()"
+>
+💾 Save Configuration
+</button>
+
+<button
+    class="btn secondary"
+    onclick="loadApp()"
+>
+↻ Reload
+</button>
+
+<button
+    class="btn danger"
+    onclick="resetEditor()"
+>
+🗑 Reset
+</button>
+
+<a
+    href="app-preview.html"
+    class="btn secondary"
+>
+👁 Preview
+</a>
+
+</div>
+
+</div>
+
+</section>
+
+
+<aside>
+
+<div class="card preview-card">
+
+<h2>
+Live App Preview
+</h2>
+
+<div class="phone-wrap">
+
+<div class="phone">
+
+<div class="screen">
+
+<div class="status">
+
+<span>
+9:41
+</span>
+
+<span>
+● ● ●
+</span>
+
+</div>
+
+
+<div class="appbar">
+
+<div
+    id="miniIcon"
+    class="mini-icon"
+>
+LS
+</div>
+
+<span id="previewAppName">
+LetsStudy Pro
+</span>
+
+</div>
+
+
+<div class="screen-body">
+
+<div class="hero">
+
+<h3 id="previewTitle">
+LetsStudy Pro
+</h3>
+
+<p id="previewDescription">
+Learn, create, connect and grow with LetsStudy Pro.
+</p>
+
+</div>
+
+
+<div
+    id="previewFeatures"
+>
+
+<div class="preview-card-item">
+
+<strong>
+📚 Courses
+</strong>
+
+Learn with structured courses.
+
+</div>
+
+
+<div class="preview-card-item">
+
+<strong>
+📄 Resources
+</strong>
+
+Access study resources.
+
+</div>
+
+
+<div class="preview-card-item">
+
+<strong>
+👥 Community
+</strong>
+
+Connect with learners.
+
+</div>
+
+
+<div class="preview-card-item">
+
+<strong>
+🤖 AI Assistant
+</strong>
+
+Get smart learning help.
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+App Status
+</h2>
+
+<div class="status-box">
+
+<div class="status-line">
+
+<span>
+Name
+</span>
+
+<strong id="statusName">
+LetsStudy Pro
+</strong>
+
+</div>
+
+
+<div class="status-line">
+
+<span>
+Version
+</span>
+
+<strong id="statusVersion">
+1.0.0
+</strong>
+
+</div>
+
+
+<div class="status-line">
+
+<span>
+Platform
+</span>
+
+<strong id="statusPlatform">
+Android, Web
+</strong>
+
+</div>
+
+
+<div class="status-line">
+
+<span>
+Backend
+</span>
+
+<strong
+    id="statusBackend"
+    class="ready"
+>
+Firebase
+</strong>
+
+</div>
+
+
+<div class="status-line">
+
+<span>
+Configuration
+</span>
+
+<strong
+    id="statusConfiguration"
+    class="ready"
+>
+Ready
+</strong>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>
+Next Step
+</h2>
+
+<div style="display:grid;gap:8px">
+
+<a
+    href="app-preview.html"
+    class="btn secondary"
+>
+👁 App Preview
+</a>
+
+<a
+    href="app-build.html"
+    class="btn primary"
+>
+🔨 Build App
+</a>
+
+<a
+    href="app-publish.html"
+    class="btn success"
+>
+🚀 Publish App
+</a>
+
+</div>
+
+</div>
+
+</aside>
+
+</div>
+
+</main>
+
+</div>
+
+
+<div
+    id="toast"
+    class="toast"
+></div>
+
+
+<script>
+
+const APP_KEY =
+    "letsstudy_app_editor";
+
+let iconData = "";
+
+
+/* =========================
+   GET ELEMENT
+========================= */
+
+function get(id){
+
+    return document.getElementById(id);
+
+}
+
+
+/* =========================
+   TOAST
+========================= */
+
+function showToast(message){
+
+    const toast =
+        get("toast");
+
+    if(!toast){
+        return;
+    }
+
+    toast.textContent =
+        message;
+
+    toast.classList.add(
+        "show"
+    );
+
+    clearTimeout(
+        window.toastTimer
+    );
+
+    window.toastTimer =
+        setTimeout(
+            function(){
+
+                toast.classList.remove(
+                    "show"
+                );
+
+            },
+            2200
+        );
+
+}
+
+
+/* =========================
+   GET APP DATA
+========================= */
+
+function getAppData(){
+
+    const platforms =
+        Array.from(
+            document.querySelectorAll(
+                ".platform:checked"
+            )
+        ).map(
+            item =>
+                item.value
+        );
+
+
+    return {
+
+        appName:
+            get("appName")
+                ?.value
+                .trim() ||
+            "LetsStudy Pro",
+
+        packageName:
+            get("packageName")
+                ?.value
+                .trim() ||
+            "com.letsstudy.pro",
+
+        version:
+            get("version")
+                ?.value
+                .trim() ||
+            "1.0.0",
+
+        buildNumber:
+            Number(
+                get("buildNumber")
+                    ?.value ||
+                1
+            ),
+
+        description:
+            get("description")
+                ?.value
+                .trim() ||
+            "",
+
+        theme:
+            get("theme")
+                ?.value ||
+            "light",
+
+        accentColor:
+            get("accentColor")
+                ?.value ||
+            "#2563eb",
+
+        navigationStyle:
+            get("navigationStyle")
+                ?.value ||
+            "bottom",
+
+        icon:
+            iconData,
+
+        platforms,
+
+        features:{
+
+            courses:
+                get("featureCourses")
+                    ?.checked ||
+                false,
+
+            resources:
+                get("featureResources")
+                    ?.checked ||
+                false,
+
+            community:
+                get("featureCommunity")
+                    ?.checked ||
+                false,
+
+            ai:
+                get("featureAI")
+                    ?.checked ||
+                false,
+
+            wallet:
+                get("featureWallet")
+                    ?.checked ||
+                false,
+
+            certificates:
+                get("featureCertificates")
+                    ?.checked ||
+                false,
+
+            notifications:
+                get("featureNotifications")
+                    ?.checked ||
+                false
+
+        },
+
+        services:{
+
+            firebase:
+                get("firebase")
+                    ?.checked ||
+                false,
+
+            analytics:
+                get("analytics")
+                    ?.checked ||
+                false,
+
+            cloudSync:
+                get("cloudSync")
+                    ?.checked ||
+                false
+
+        },
+
+        updatedAt:
+            new Date().toISOString()
+
+    };
+
+}
+
+
+/* =========================
+   UPDATE PREVIEW
+========================= */
+
+function updatePreview(){
+
+    const data =
+        getAppData();
+
+
+    get("previewAppName")
+    .textContent =
+    data.appName;
+
+
+/* =========================
+   PREVIEW TITLE
+========================= */
+
+const previewTitle =
+    get("previewTitle");
+
+if(previewTitle){
+
+    previewTitle.textContent =
+        data.appName ||
+        "LetsStudy Pro";
+
+}
+
+
+/* =========================
+   PREVIEW DESCRIPTION
+========================= */
+
+const previewDescription =
+    get("previewDescription");
+
+if(previewDescription){
+
+    previewDescription.textContent =
+        data.description ||
+        "Your app description will appear here.";
+
+}
+
+
+/* =========================
+   STATUS NAME
+========================= */
+
+const statusName =
+    get("statusName");
+
+if(statusName){
+
+    statusName.textContent =
+        data.appName;
+
+}
+
+
+/* =========================
+   STATUS VERSION
+========================= */
+
+const statusVersion =
+    get("statusVersion");
+
+if(statusVersion){
+
+    statusVersion.textContent =
+        data.version;
+
+}
+
+
+/* =========================
+   STATUS PLATFORM
+========================= */
+
+const statusPlatform =
+    get("statusPlatform");
+
+if(statusPlatform){
+
+    statusPlatform.textContent =
+        data.platforms.length
+            ? data.platforms.join(", ")
+            : "None";
+
+}
+
+
+/* =========================
+   STATUS BACKEND
+========================= */
+
+const statusBackend =
+    get("statusBackend");
+
+if(statusBackend){
+
+    statusBackend.textContent =
+        data.services.firebase
+            ? "Firebase"
+            : "Local";
+
+    statusBackend.className =
+        data.services.firebase
+            ? "ready"
+            : "";
+
+}
+
+
+/* =========================
+   CONFIGURATION STATUS
+========================= */
+
+const statusConfiguration =
+    get("statusConfiguration");
+
+if(statusConfiguration){
+
+    const valid =
+        Boolean(
+            data.appName &&
+            data.packageName &&
+            data.version &&
+            data.platforms.length
+        );
+
+    statusConfiguration.textContent =
+        valid
+            ? "Ready"
+            : "Incomplete";
+
+    statusConfiguration.className =
+        valid
+            ? "ready"
+            : "";
+
+}
+
+
+/* =========================
+   ICON
+========================= */
+
+updateIcon(
+    data.appName
+);
+
+
+/* =========================
+   FEATURES
+========================= */
+
+updateFeatures(
+    data.features
+);
+
+
+/* =========================
+   ACCENT COLOR
+========================= */
+
+document.documentElement
+    .style
+    .setProperty(
+        "--primary",
+        data.accentColor ||
+        "#2563eb"
+    );
+
+
+/* =========================
+   PREVIEW THEME
+========================= */
+
+const screen =
+    document.querySelector(
+        ".screen"
+    );
+
+if(screen){
+
+    if(data.theme === "dark"){
+
+        screen.style.background =
+            "#111827";
+
+        screen.style.color =
+            "#fff";
+
+    }else{
+
+        screen.style.background =
+            "#fff";
+
+        screen.style.color =
+            "#172033";
+
+    }
+
+}
+
+
+/* =========================
+   AUTO SAVE
+========================= */
+
+try{
+
+    localStorage.setItem(
+        "letsstudy_app_editor_preview",
+        JSON.stringify(
+            data
+        )
+    );
+
+}catch(error){
+
+    console.warn(
+        "Preview cache error:",
+        error
+    );
+
+}
+
+}
+
+
+/* =========================
+   AUTO UPDATE
+========================= */
+
+function scheduleAutoSave(){
+
+    clearTimeout(
+        window.appEditorTimer
+    );
+
+    window.appEditorTimer =
+        setTimeout(
+            function(){
+
+                const data =
+                    getAppData();
+
+                try{
+
+                    localStorage.setItem(
+                        APP_KEY,
+                        JSON.stringify(
+                            data
+                        )
+                    );
+
+                    get(
+                        "statusConfiguration"
+                    ).textContent =
+                        "Auto-saved";
+
+                }catch(error){
+
+                    console.warn(
+                        "Auto-save failed:",
+                        error
+                    );
+
+                }
+
+            },
+            700
+        );
+
+}
+
+
+/* =========================
+   FORM EVENTS
+========================= */
+
+document.addEventListener(
+    "input",
+    function(event){
+
+        if(
+            event.target.matches(
+                "input, textarea, select"
+            )
+        ){
+
+            updatePreview();
+
+            scheduleAutoSave();
+
+        }
+
+    }
+);
+
+
+document.addEventListener(
+    "change",
+    function(event){
+
+        if(
+            event.target.matches(
+                "input, textarea, select"
+            )
+        ){
+
+            updateOptionStates();
+
+            updatePreview();
+
+            scheduleAutoSave();
+
+        }
+
+    }
+);
+
+
+/* =========================
+   ICON UPLOAD
+========================= */
+
+const iconFile =
+    get("iconFile");
+
+if(iconFile){
+
+    iconFile.addEventListener(
+        "change",
+        function(event){
+
+            const file =
+                event.target.files &&
+                event.target.files[0];
+
+            if(!file){
+                return;
+            }
+
+            if(
+                !file.type.startsWith(
+                    "image/"
+                )
+            ){
+
+                showToast(
+                    "Please select an image."
+                );
+
+                return;
+
+            }
+
+            const reader =
+                new FileReader();
+
+            reader.onload =
+                function(){
+
+                    iconData =
+                        reader.result;
+
+                    updatePreview();
+
+                    scheduleAutoSave();
+
+                    showToast(
+                        "App icon updated."
+                    );
+
+                };
+
+            reader.onerror =
+                function(){
+
+                    showToast(
+                        "Unable to read image."
+                    );
+
+                };
+
+            reader.readAsDataURL(
+                file
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================
+   INITIALIZATION
+========================= */
+
+function initializeAppEditor(){
+
+    try{
+
+        loadApp();
+
+    }catch(error){
+
+        console.warn(
+            "No saved app configuration.",
+            error
+        );
+
+    }
+
+    updateOptionStates();
+
+    updatePreview();
+
+}
+
+
+document.addEventListener(
+    "DOMContentLoaded",
+    initializeAppEditor
+);
+
+
+/* =========================
+   GLOBAL API
+========================= */
+
+window.getAppData =
+    getAppData;
+
+window.updatePreview =
+    updatePreview;
+
+window.saveApp =
+    saveApp;
+
+window.loadApp =
+    loadApp;
+
+window.resetEditor =
+    resetEditor;
+
+window.scheduleAutoSave =
+    scheduleAutoSave;
+
+window.updateOptionStates =
+    updateOptionStates;
+
+
+/* =========================
+   GLOBAL EDITOR API
+========================= */
+
+window.updateIcon =
+    updateIcon;
+
+window.updateFeatures =
+    updateFeatures;
+
+window.setChecked =
+    setChecked;
+
+window.get =
+    get;
+
+window.showToast =
+    showToast;
+
+
+/* =========================
+   AUTO REFRESH
+========================= */
+
+setInterval(
+    function(){
+
+        const active =
+            document.activeElement;
+
+        if(
+            active &&
+            active.matches(
+                "input, textarea, select"
+            )
+        ){
+
+            return;
+
+        }
+
+        updatePreview();
+
+    },
+    3000
+);
+
+
+/* =========================
+   PAGE VISIBILITY
+========================= */
+
+document.addEventListener(
+    "visibilitychange",
+    function(){
+
+        if(
+            !document.hidden
+        ){
+
+            updatePreview();
+
+        }
+
+    }
+);
+
+
+/* =========================
+   BEFORE LEAVING
+========================= */
+
+window.addEventListener(
+    "beforeunload",
+    function(){
+
+        try{
+
+            const data =
+                getAppData();
+
+            localStorage.setItem(
+                APP_KEY,
+                JSON.stringify(
+                    data
+                )
+            );
+
+        }catch(error){
+
+            console.warn(
+                "Unable to save before leaving:",
+                error
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================
+   FINAL INITIALIZATION
+========================= */
+
+if(
+    document.readyState ===
+    "loading"
+){
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function(){
+
+            initializeAppEditor();
+
+        }
+    );
+
+}else{
+
+    initializeAppEditor();
+
+}
+
+
+console.log(
+    "LetsStudy Pro App Editor ready."
+);
+
+</script>
+
+</body>
+</html>
