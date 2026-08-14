@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Content Editor | Creator Studio</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+a{text-decoration:none;color:inherit}
+button,input,textarea,select{font:inherit}
+.topbar{height:64px;background:#fff;border-bottom:1px solid #e5e9f2;display:flex;align-items:center;justify-content:space-between;padding:0 22px;position:sticky;top:0;z-index:20}
+.brand{font-weight:800;display:flex;gap:10px;align-items:center}
+.brand-icon{background:#172033;color:#fff;padding:10px;border-radius:9px}
+.top-actions{display:flex;gap:8px}
+.layout{display:grid;grid-template-columns:225px 1fr;min-height:calc(100vh - 64px)}
+.sidebar{background:#fff;border-right:1px solid #e5e9f2;padding:18px 12px}
+.sidebar-title{font-size:11px;color:#8992a4;font-weight:800;padding:8px;text-transform:uppercase}
+.nav{display:flex;flex-direction:column;gap:4px}
+.nav a{padding:11px;border-radius:8px;color:#596478;font-weight:600}
+.nav a:hover,.nav a.active{background:#edf3ff;color:#2563eb}
+.main{max-width:1200px;width:100%;margin:auto;padding:28px}
+.header{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;margin-bottom:22px}
+.eyebrow{font-size:11px;color:#2563eb;font-weight:800;text-transform:uppercase}
+h1{font-size:30px;margin:5px 0}
+.muted{color:#737d90}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:0;border-radius:8px;padding:10px 15px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.primary{background:#2563eb;color:#fff}
+.secondary{background:#eaf0f7;color:#172033}
+.success{background:#15803d;color:#fff}
+.danger{background:#dc2626;color:#fff}
+.editor{display:grid;grid-template-columns:minmax(0,2fr) 330px;gap:20px}
+.panel{background:#fff;border:1px solid #e5e9f2;border-radius:13px;padding:20px;margin-bottom:18px}
+.panel h2{font-size:18px;margin-bottom:17px}
+.field{margin-bottom:17px}
+label{display:block;font-size:13px;font-weight:800;margin-bottom:7px}
+input,textarea,select{width:100%;border:1px solid #d9deea;border-radius:8px;padding:11px;background:#fff;color:#172033;outline:none}
+input:focus,textarea:focus,select:focus{border-color:#2563eb}
+textarea{resize:vertical;min-height:170px;line-height:1.6}
+.counter{text-align:right;color:#8a93a5;font-size:11px;margin-top:4px}
+.media-preview{height:270px;background:#172033;border-radius:11px;display:grid;place-items:center;color:#fff;font-size:65px;overflow:hidden;position:relative}
+.media-preview img{width:100%;height:100%;object-fit:cover}
+.media-preview video{width:100%;height:100%;object-fit:cover}
+.upload-box{margin-top:12px;border:1px dashed #cbd3e1;border-radius:9px;padding:14px}
+.check{display:flex;align-items:center;gap:8px;margin:11px 0;color:#596478}
+.check input{width:auto}
+.status{padding:12px;border-radius:9px;background:#f8fafc;margin-bottom:15px}
+.status small{display:block;color:#737d90;margin-bottom:4px}
+.status strong{font-size:15px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tag{background:#edf3ff;color:#2563eb;padding:6px 8px;border-radius:20px;font-size:12px}
+.tag button{border:0;background:none;color:inherit;margin-left:4px}
+.meta-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #edf0f5}
+.meta-row:last-child{border:0}
+.notice{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:12px;border-radius:9px;font-size:13px}
+.toast{position:fixed;right:20px;bottom:20px;background:#172033;color:#fff;padding:12px 16px;border-radius:9px;opacity:0;transform:translateY(10px);transition:.2s}
+.toast.show{opacity:1;transform:translateY(0)}
+@media(max-width:900px){.editor{grid-template-columns:1fr}.layout{grid-template-columns:190px 1fr}}
+@media(max-width:700px){.layout{display:block}.sidebar{display:none}.main{padding:18px}.header{flex-direction:column}.top-actions a:first-child{display:none}}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+<a href="dashboard.html" class="brand">
+<span class="brand-icon">CS</span>
+Creator Studio
+</a>
+
+<div class="top-actions">
+<a href="content-library.html" class="btn secondary">← Library</a>
+<a href="content-preview.html" id="previewLink" class="btn secondary">👁 Preview</a>
+</div>
+</header>
+
+<div class="layout">
+
+<aside class="sidebar">
+<div class="sidebar-title">Creator</div>
+
+<nav class="nav">
+<a href="dashboard.html">🏠 Dashboard</a>
+<a href="content-library.html">🗂 Content Library</a>
+<a href="video.html">🎬 Videos</a>
+<a href="playlists.html">📚 Playlists</a>
+<a href="upload-video.html">⬆ Upload Video</a>
+<a href="live.html">🔴 Live</a>
+<a href="content-publish.html" class="active">🚀 Publish</a>
+<a href="video-analytics.html">📊 Analytics</a>
+<a href="channel.html">👤 Channel</a>
+<a href="creator-products.html">🛍 Products</a>
+<a href="creator-services.html">🧰 Services</a>
+<a href="creator-earnings.html">💰 Earnings</a>
+<a href="creator-payouts.html">💸 Payouts</a>
+<a href="creator-settings.html">⚙ Settings</a>
+</nav>
+</aside>
+
+
+<main class="main">
+
+<section class="header">
+<div>
+<span class="eyebrow">Creator Studio</span>
+<h1>Content Editor</h1>
+<p class="muted">Edit your content information and publishing settings.</p>
+</div>
+
+<div class="actions">
+<button class="btn secondary" onclick="saveDraft()">💾 Save Draft</button>
+<button class="btn success" onclick="saveAndPublish()">🚀 Publish</button>
+</div>
+</section>
+
+
+<div class="editor">
+
+<section>
+
+<div class="panel">
+
+<h2>Basic Information</h2>
+
+<div class="field">
+<label for="title">Title</label>
+<input id="title" maxlength="120" placeholder="Enter content title">
+<div class="counter"><span id="titleCount">0</span>/120</div>
+</div>
+
+<div class="field">
+<label for="description">Description</label>
+<textarea id="description" maxlength="5000" placeholder="Describe your content..."></textarea>
+<div class="counter"><span id="descriptionCount">0</span>/5000</div>
+</div>
+
+<div class="field">
+<label for="category">Category</label>
+<select id="category">
+<option value="">Select category</option>
+<option>Education</option>
+<option>Entertainment</option>
+<option>Gaming</option>
+<option>Music</option>
+<option>Technology</option>
+<option>Business</option>
+<option>Lifestyle</option>
+<option>News</option>
+<option>Other</option>
+</select>
+</div>
+
+<div class="field">
+<label for="language">Language</label>
+<select id="language">
+<option value="en">English</option>
+<option value="sw">Swahili</option>
+<option value="fr">French</option>
+<option value="es">Spanish</option>
+</select>
+</div>
+
+</div>
+
+
+<div class="panel">
+
+<h2>Media</h2>
+
+<div id="mediaPreview" class="media-preview">▶</div>
+
+<div class="upload-box">
+<label for="mediaUrl">Media URL</label>
+<input id="mediaUrl" placeholder="https://example.com/video.mp4">
+</div>
+
+<div class="upload-box">
+<label for="thumbnail">Thumbnail URL</label>
+<input id="thumbnail" placeholder="https://example.com/thumbnail.jpg">
+</div>
+
+</div>
+
+
+<div class="panel">
+
+<h2>Tags</h2>
+
+<div class="field">
+<label for="tagInput">Add tags</label>
+
+<div style="display:flex;gap:8px">
+<input id="tagInput" placeholder="e.g. tutorial">
+<button class="btn primary" type="button" onclick="addTag()">Add</button>
+</div>
+
+<div id="tags" class="tags"></div>
+</div>
+
+</div>
+
+
+<div class="panel">
+
+<h2>Publishing Settings</h2>
+
+<div class="field">
+<label for="visibility">Visibility</label>
+<select id="visibility">
+<option value="public">Public</option>
+<option value="unlisted">Unlisted</option>
+<option value="private">Private</option>
+</select>
+</div>
+
+<div class="field">
+<label for="publishDate">Schedule publication</label>
+<input type="datetime-local" id="publishDate">
+</div>
+
+<label class="check">
+<input type="checkbox" id="comments">
+Allow comments
+</label>
+
+<label class="check">
+<input type="checkbox" id="likes">
+Show likes
+</label>
+
+<label class="check">
+<input type="checkbox" id="notifications">
+Notify subscribers
+</label>
+
+</div>
+
+</section>
+
+
+<aside>
+
+<div class="panel">
+
+<div class="status">
+<small>Current status</small>
+<strong id="status">Draft</strong>
+</div>
+
+<h2>Content Details</h2>
+
+<div class="meta-row">
+<span class="muted">Type</span>
+<strong id="type">Content</strong>
+</div>
+
+<div class="meta-row">
+<span class="muted">ID</span>
+<strong id="contentId">New</strong>
+</div>
+
+<div class="meta-row">
+<span class="muted">Created</span>
+<strong id="created">—</strong>
+</div>
+
+<div class="meta-row">
+<span class="muted">Updated</span>
+<strong id="updated">—</strong>
+</div>
+
+</div>
+
+
+<div class="panel">
+
+<h2>Quick Actions</h2>
+
+<div class="actions" style="display:grid">
+
+<a id="previewSide" href="#" class="btn secondary">👁 Preview Content</a>
+
+<a href="content-library.html" class="btn secondary">🗂 Content Library</a>
+
+<button class="btn danger" onclick="deleteContent()">🗑 Delete Content</button>
+
+</div>
+
+</div>
+
+
+<div class="panel">
+
+<h2>Publishing Checklist</h2>
+
+<div id="checklist"></div>
+
+</div>
+
+
+<div class="panel">
+<div class="notice">
+Make sure your title, description, thumbnail and visibility settings are correct before publishing.
+</div>
+</div>
+
+</aside>
+
+</div>
+</main>
+</div>
+
+
+<div id="toast" class="toast"></div>
+
+
+<script>
+
+const STORAGE_KEY = "creator_content_library";
+
+let contentId = null;
+let tags = [];
+
+
+/* =========================
+   HELPERS
+========================= */
+
+function escapeHTML(value){
+return String(value ?? "").replace(/[&<>"']/g,char=>({
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+'"':"&quot;",
+"'":"&#039;"
+}[char]));
+}
+
+function showToast(message){
+const toast=document.getElementById("toast");
+toast.textContent=message;
+toast.classList.add("show");
+
+clearTimeout(window.toastTimer);
+
+window.toastTimer=setTimeout(()=>{
+toast.classList.remove("show");
+},2200);
+}
+
+function getId(){
+return new URLSearchParams(location.search).get("id");
+}
+
+function loadLibrary(){
+try{
+return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+}catch(e){
+return [];
+}
+}
+
+function saveLibrary(items){
+localStorage.setItem(STORAGE_KEY,JSON.stringify(items));
+}
+
+
+/* =========================
+   LOAD EDITOR
+========================= */
+
+function loadEditor(){
+
+contentId=getId();
+
+const library=loadLibrary();
+
+if(!contentId){
+
+createNew();
+
+return;
+}
+
+const item=library.find(
+x=>String(x.id)===String(contentId)
+);
+
+if(!item){
+
+createNew();
+
+showToast("Content not found. Creating new content.");
+
+return;
+}
+
+fillForm(item);
+
+}
+
+
+/* =========================
+   NEW CONTENT
+========================= */
+
+function createNew(){
+
+contentId=Date.now();
+
+tags=[];
+
+document.getElementById("contentId").textContent="New";
+document.getElementById("status").textContent="Draft";
+document.getElementById("created").textContent="—";
+document.getElementById("updated").textContent="—";
+
+document.getElementById("comments").checked=true;
+document.getElementById("likes").checked=true;
+document.getElementById("notifications").checked=true;
+
+updateLinks();
+renderTags();
+renderChecklist();
+
+}
+
+
+/* =========================
+   FILL FORM
+========================= */
+
+function fillForm(item){
+
+document.getElementById("title").value=item.title || "";
+document.getElementById("description").value=item.description || "";
+document.getElementById("category").value=item.category || "";
+document.getElementById("language").value=item.language || "en";
+document.getElementById("visibility").value=item.visibility || "public";
+document.getElementById("mediaUrl").value=item.video || item.media || "";
+document.getElementById("thumbnail").value=item.thumbnail || "";
+
+document.getElementById("comments").checked=item.comments !== false;
+document.getElementById("likes").checked=item.likes !== false;
+document.getElementById("notifications").checked=item.notifications !== false;
+
+document.getElementById("publishDate").value=item.scheduledAt || "";
+
+tags=Array.isArray(item.tags) ? [...item.tags] : [];
+
+document.getElementById("contentId").textContent=item.id;
+document.getElementById("status").textContent=item.status || "Draft";
+document.getElementById("created").textContent=item.created || "—";
+document.getElementById("updated").textContent=item.updated || "—";
+
+updateCounters();
+updateMedia();
+renderTags();
+renderChecklist();
+updateLinks();
+
+}
+
+
+/* =========================
+   FORM DATA
+========================= */
+
+function getFormData(status){
+
+const now=new Date().toISOString();
+
+return {
+
+id:contentId,
+
+title:document.getElementById("title").value.trim(),
+
+description:document.getElementById("description").value.trim(),
+
+category:document.getElementById("category").value,
+
+language:document.getElementById("language").value,
+
+visibility:document.getElementById("visibility").value,
+
+video:document.getElementById("mediaUrl").value.trim(),
+
+thumbnail:document.getElementById("thumbnail").value.trim(),
+
+tags:[...tags],
+
+type:"video",
+
+status:status,
+
+scheduledAt:document.getElementById("publishDate").value,
+
+comments:document.getElementById("comments").checked,
+
+likes:document.getElementById("likes").checked,
+
+notifications:document.getElementById("notifications").checked,
+
+created:new Date().toISOString(),
+
+updated:now
+
+};
+
+}
+
+
+/* =========================
+   SAVE DRAFT
+========================= */
+
+function saveDraft(){
+
+const library=loadLibrary();
+
+const existing=library.findIndex(
+x=>String(x.id)===String(contentId)
+);
+
+const old=existing>=0 ? library[existing] : null;
+
+const data=getFormData("draft");
+
+if(old){
+data.created=old.created || data.created;
+}
+
+if(existing>=0){
+library[existing]=data;
+}else{
+library.push(data);
+}
+
+saveLibrary(library);
+
+showToast("Draft saved.");
+
+document.getElementById("status").textContent="Draft";
+
+updateLinks();
+
+}
+
+
+/* =========================
+   SAVE & PUBLISH
+========================= */
+
+function saveAndPublish(){
+
+const title=document.getElementById("title").value.trim();
+
+if(!title){
+showToast("Please enter a title first.");
+document.getElementById("title").focus();
+return;
+}
+
+const library=loadLibrary();
+
+const existing=library.findIndex(
+x=>String(x.id)===String(contentId)
+);
+
+const old=existing>=0 ? library[existing] : null;
+
+const data=getFormData(
+document.getElementById("publishDate").value
+? "scheduled"
+: "published"
+);
+
+if(old){
+data.created=old.created || data.created;
+}
+
+if(existing>=0){
+library[existing]=data;
+}else{
+library.push(data);
+}
+
+saveLibrary(library);
+
+document.getElementById("status").textContent=data.status;
+
+showToast(
+data.status==="scheduled"
+? "Content scheduled."
+: "Content published."
+);
+
+updateLinks();
+
+renderChecklist();
+
+}
+
+
+/* =========================
+   DELETE
+========================= */
+
+function deleteContent(){
+
+if(!getId()){
+showToast("There is no saved content to delete.");
+return;
+}
+
+if(!confirm("Delete this content permanently?")){
+return;
+}
+
+const library=loadLibrary().filter(
+x=>String(x.id)!==String(contentId)
+);
+
+saveLibrary(library);
+
+showToast("Content deleted.");
+
+setTimeout(()=>{
+location.href="content-library.html";
+},700);
+
+}
+
+
+/* =========================
+   TAGS
+========================= */
+
+function addTag(){
+
+const input=document.getElementById("tagInput");
+
+const value=input.value.trim();
+
+if(!value)return;
+
+if(!tags.includes(value)){
+tags.push(value);
+}
+
+input.value="";
+
+renderTags();
+renderChecklist();
+
+}
+
+
+function removeTag(index){
+
+tags.splice(index,1);
+
+renderTags();
+renderChecklist();
+
+}
+
+
+function renderTags(){
+
+const container=document.getElementById("tags");
+
+if(!tags.length){
+
+container.innerHTML=
+'<span class="muted">No tags added.</span>';
+
+return;
+}
+
+container.innerHTML=tags.map(
+(tag,index)=>`
+<span class="tag">
+${escapeHTML(tag)}
+<button type="button" onclick="removeTag(${index})">×</button>
+</span>
+`
+).join("");
+
+}
+
+
+/* =========================
+   MEDIA PREVIEW
+========================= */
+
+function updateMedia(){
+
+const container=document.getElementById("mediaPreview");
+
+const video=document.getElementById("mediaUrl").value.trim();
+
+const image=document.getElementById("thumbnail").value.trim();
+
+container.innerHTML="";
+
+if(video){
+
+const el=document.createElement("video");
+
+el.src=video;
+el.controls=true;
+el.poster=image;
+
+container.appendChild(el);
+
+return;
+}
+
+if(image){
+
+const img=document.createElement("img");
+
+img.src=image;
+
+img.alt="Thumbnail preview";
+
+container.appendChild(img);
+
+return;
+}
+
+container.textContent="▶";
+
+}
+
+
+/* =========================
+   CHECKLIST
+========================= */
+
+function renderChecklist(){
+
+const title=document.getElementById("title").value.trim();
+const description=document.getElementById("description").value.trim();
+const category=document.getElementById("category").value;
+const thumbnail=document.getElementById("thumbnail").value.trim();
+const visibility=document.getElementById("visibility").value;
+
+const checks=[
+["Title added",!!title],
+["Description added",!!description],
+["Category selected",!!category],
+["Thumbnail added",!!thumbnail],
+["Visibility selected",!!visibility],
+["Tags added",tags.length>0]
+];
+
+document.getElementById("checklist").innerHTML=
+checks.map(
+item=>`
+<div class="check">
+<span>${item[1] ? "✅" : "○"}</span>
+<span>${escapeHTML(item[0])}</span>
+</div>
+`
+).join("");
+
+}
+
+
+/* =========================
+   COUNTERS
+========================= */
+
+function updateCounters(){
+
+document.getElementById("titleCount").textContent=
+document.getElementById("title").value.length;
+
+document.getElementById("descriptionCount").textContent=
+document.getElementById("description").value.length;
+
+}
+
+
+/* =========================
+   LINKS
+========================= */
+
+function updateLinks(){
+
+const id=encodeURIComponent(contentId);
+
+const url=`content-preview.html?id=${id}`;
+
+document.getElementById("previewLink").href=url;
+document.getElementById("previewSide").href=url;
+
+}
+
+
+/* =========================
+   LIVE UPDATES
+========================= */
+
+["title","description","category","visibility","thumbnail","mediaUrl"]
+.forEach(id=>{
+
+const element=document.getElementById(id);
+
+element.addEventListener("input",()=>{
+updateCounters();
+updateMedia();
+renderChecklist();
+});
+
+element.addEventListener("change",()=>{
+updateCounters();
+updateMedia();
+renderChecklist();
+});
+
+});
+
+
+document.getElementById("tagInput")
+.addEventListener("keydown",function(event){
+
+if(event.key==="Enter"){
+event.preventDefault();
+addTag();
+}
+
+});
+
+
+/* =========================
+   INIT
+========================= */
+
+document.addEventListener(
+"DOMContentLoaded",
+loadEditor
+);
+
+</script>
+
+</body>
+</html>
