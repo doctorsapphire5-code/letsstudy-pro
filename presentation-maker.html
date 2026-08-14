@@ -1,0 +1,3165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Presentation Maker | Creator Studio</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+:root{
+    --primary:#2563eb;
+    --dark:#172033;
+    --muted:#737d90;
+    --border:#e4e8f0;
+    --bg:#f4f6fa;
+}
+
+body{
+    font-family:Arial,Helvetica,sans-serif;
+    background:var(--bg);
+    color:var(--dark);
+}
+
+button,input,textarea,select{
+    font:inherit;
+}
+
+button{
+    cursor:pointer;
+}
+
+a{
+    color:inherit;
+    text-decoration:none;
+}
+
+.topbar{
+    height:66px;
+    background:#fff;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 20px;
+    position:sticky;
+    top:0;
+    z-index:50;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:800;
+}
+
+.brand-icon{
+    width:38px;
+    height:38px;
+    border-radius:10px;
+    background:var(--dark);
+    color:#fff;
+    display:grid;
+    place-items:center;
+}
+
+.top-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+}
+
+.btn{
+    border:0;
+    border-radius:9px;
+    padding:10px 14px;
+    font-weight:800;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+}
+
+.primary{
+    background:var(--primary);
+    color:#fff;
+}
+
+.secondary{
+    background:#eaf0f7;
+    color:var(--dark);
+}
+
+.danger{
+    background:#dc2626;
+    color:#fff;
+}
+
+.success{
+    background:#15803d;
+    color:#fff;
+}
+
+.layout{
+    display:grid;
+    grid-template-columns:220px 1fr;
+    min-height:calc(100vh - 66px);
+}
+
+.sidebar{
+    background:#fff;
+    border-right:1px solid var(--border);
+    padding:18px 12px;
+}
+
+.sidebar-title{
+    font-size:11px;
+    color:#8992a4;
+    font-weight:800;
+    text-transform:uppercase;
+    padding:8px;
+}
+
+.nav{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+}
+
+.nav a{
+    padding:11px;
+    border-radius:8px;
+    color:#596478;
+    font-weight:600;
+}
+
+.nav a:hover,
+.nav a.active{
+    background:#edf3ff;
+    color:var(--primary);
+}
+
+.main{
+    padding:22px;
+    max-width:1500px;
+    width:100%;
+    margin:auto;
+}
+
+.page-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:20px;
+    margin-bottom:18px;
+}
+
+.page-header h1{
+    font-size:28px;
+    margin:5px 0;
+}
+
+.muted{
+    color:var(--muted);
+    font-size:13px;
+}
+
+.workspace{
+    display:grid;
+    grid-template-columns:250px minmax(500px,1fr) 320px;
+    gap:16px;
+    align-items:start;
+}
+
+.panel{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:14px;
+}
+
+.panel-title{
+    font-size:15px;
+    font-weight:800;
+    margin-bottom:12px;
+}
+
+.slide-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    max-height:calc(100vh - 170px);
+    overflow:auto;
+}
+
+.slide-item{
+    border:2px solid transparent;
+    border-radius:9px;
+    padding:6px;
+    background:#f8fafc;
+    cursor:pointer;
+}
+
+.slide-item.active{
+    border-color:var(--primary);
+}
+
+.slide-number{
+    font-size:10px;
+    color:var(--muted);
+    margin-bottom:4px;
+}
+
+.slide-mini{
+    width:100%;
+    aspect-ratio:16/9;
+    background:#fff;
+    border:1px solid #d8deea;
+    border-radius:5px;
+    overflow:hidden;
+    padding:10px;
+    font-size:8px;
+}
+
+.slide-mini h3{
+    font-size:11px;
+    margin-bottom:5px;
+}
+
+.slide-mini p{
+    color:#64748b;
+}
+
+.slide-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:7px;
+    margin-top:10px;
+}
+
+.canvas-panel{
+    min-width:0;
+}
+
+.canvas-toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    margin-bottom:12px;
+    flex-wrap:wrap;
+}
+
+.toolbar-group{
+    display:flex;
+    gap:7px;
+    flex-wrap:wrap;
+}
+
+.stage{
+    background:#dfe4ec;
+    border-radius:12px;
+    min-height:650px;
+    padding:35px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:auto;
+}
+
+.slide{
+    width:960px;
+    height:540px;
+    flex-shrink:0;
+    background:#fff;
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 18px 45px rgba(0,0,0,.18);
+    transform-origin:center;
+}
+
+.slide-inner{
+    position:absolute;
+    inset:0;
+    padding:60px;
+}
+
+.slide-title{
+    font-size:42px;
+    font-weight:900;
+    margin-bottom:20px;
+    line-height:1.1;
+}
+
+.slide-subtitle{
+    font-size:22px;
+    color:#64748b;
+    line-height:1.4;
+}
+
+.slide-body{
+    font-size:22px;
+    line-height:1.55;
+    white-space:pre-line;
+}
+
+.slide-image{
+    position:absolute;
+    right:55px;
+    bottom:55px;
+    width:280px;
+    height:190px;
+    border-radius:12px;
+    object-fit:cover;
+    display:none;
+}
+
+.slide-image.show{
+    display:block;
+}
+
+.slide-footer{
+    position:absolute;
+    left:60px;
+    right:60px;
+    bottom:20px;
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    color:#94a3b8;
+}
+
+.theme-blue{
+    background:linear-gradient(135deg,#fff 0%,#eff6ff 100%);
+}
+
+.theme-dark{
+    background:#111827;
+    color:#fff;
+}
+
+.theme-dark .slide-subtitle,
+.theme-dark .slide-footer{
+    color:#cbd5e1;
+}
+
+.theme-green{
+    background:linear-gradient(135deg,#fff 0%,#ecfdf5 100%);
+}
+
+.theme-purple{
+    background:linear-gradient(135deg,#fff 0%,#f5f3ff 100%);
+}
+
+.theme-minimal{
+    background:#fff;
+}
+
+.form-group{
+    margin-bottom:14px;
+}
+
+label{
+    display:block;
+    font-size:12px;
+    font-weight:800;
+    margin-bottom:6px;
+}
+
+input,
+textarea,
+select{
+    width:100%;
+    border:1px solid #d8deea;
+    border-radius:8px;
+    padding:10px;
+    outline:none;
+    background:#fff;
+    color:var(--dark);
+}
+
+input:focus,
+textarea:focus,
+select:focus{
+    border-color:var(--primary);
+}
+
+textarea{
+    min-height:130px;
+    resize:vertical;
+}
+
+.row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:9px;
+}
+
+.template-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+}
+
+.template{
+    padding:9px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:#fff;
+    font-weight:800;
+    font-size:12px;
+}
+
+.template.active{
+    border-color:var(--primary);
+    color:var(--primary);
+    background:#edf3ff;
+}
+
+.upload{
+    border:2px dashed #cbd5e1;
+    padding:14px;
+    border-radius:9px;
+    text-align:center;
+}
+
+.stack{
+    display:grid;
+    gap:8px;
+}
+
+.small{
+    font-size:11px;
+    color:var(--muted);
+}
+
+.toast{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    background:#172033;
+    color:#fff;
+    padding:12px 16px;
+    border-radius:9px;
+    opacity:0;
+    transform:translateY(10px);
+    transition:.2s;
+    z-index:100;
+}
+
+.toast.show{
+    opacity:1;
+    transform:translateY(0);
+}
+
+@media(max-width:1200px){
+    .workspace{
+        grid-template-columns:220px 1fr;
+    }
+
+    .settings-panel{
+        grid-column:1/-1;
+    }
+}
+
+@media(max-width:850px){
+    .layout{
+        display:block;
+    }
+
+    .sidebar{
+        display:none;
+    }
+
+    .workspace{
+        grid-template-columns:1fr;
+    }
+
+    .slide-list{
+        max-height:220px;
+        flex-direction:row;
+    }
+
+    .slide-item{
+        min-width:150px;
+    }
+
+    .settings-panel{
+        grid-column:auto;
+    }
+
+    .stage{
+        padding:10px;
+        min-height:500px;
+    }
+
+    .slide{
+        transform:scale(.7);
+        margin:-80px -140px;
+    }
+}
+
+@media(max-width:600px){
+    .main{
+        padding:12px;
+    }
+
+    .page-header{
+        flex-direction:column;
+    }
+
+    .row{
+        grid-template-columns:1fr;
+    }
+
+    .slide{
+        transform:scale(.48);
+        margin:-140px -250px;
+    }
+}
+
+@media print{
+    .topbar,
+    .sidebar,
+    .page-header,
+    .settings-panel,
+    .slide-list,
+    .canvas-toolbar,
+    .no-print{
+        display:none!important;
+    }
+
+    body,
+    .main,
+    .workspace,
+    .canvas-panel,
+    .stage{
+        background:#fff!important;
+        padding:0!important;
+        margin:0!important;
+    }
+
+    .layout{
+        display:block;
+    }
+
+    .slide{
+        width:960px;
+        height:540px;
+        transform:none!important;
+        box-shadow:none;
+        page-break-after:always;
+        margin:0;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+
+<a href="creator.html" class="brand">
+    <span class="brand-icon">CS</span>
+    Creator Studio
+</a>
+
+<div class="top-actions">
+
+<a href="creator.html" class="btn secondary">
+    🏠 Creator
+</a>
+
+<a href="content-library.html" class="btn secondary">
+    🗂 Library
+</a>
+
+<button class="btn primary" onclick="savePresentation()">
+    💾 Save
+</button>
+
+<button class="btn success" onclick="printPresentation()">
+    🖨 Export
+</button>
+
+</div>
+
+</header>
+
+
+<div class="layout">
+
+<aside class="sidebar">
+
+<div class="sidebar-title">
+    Creator
+</div>
+
+<nav class="nav">
+
+<a href="creator.html">
+    🧑 Creator Home
+</a>
+
+<a href="creator-dashboard.html">
+    📊 Dashboard
+</a>
+
+<a href="content-library.html">
+    🗂 Content Library
+</a>
+
+<a href="create-content.html">
+    ➕ Create Content
+</a>
+
+<a href="cv-designer.html">
+    📄 CV Designer
+</a>
+
+<a href="business-card-maker.html">
+    💼 Business Card
+</a>
+
+<a href="certificate-maker.html">
+    🏆 Certificate
+</a>
+
+<a href="presentation-maker.html" class="active">
+    📊 Presentation Maker
+</a>
+
+<a href="image-editor.html">
+    🖼 Image Editor
+</a>
+
+<a href="video-editor.html">
+    🎬 Video Editor
+</a>
+
+<a href="content-publish.html">
+    🚀 Publish
+</a>
+
+<a href="playlists.html">
+    📚 Playlists
+</a>
+
+<a href="live.html">
+    🔴 Live
+</a>
+
+<a href="video-analytics.html">
+    📈 Analytics
+</a>
+
+<a href="channel.html">
+    📺 Channel
+</a>
+
+<a href="creator-profile.html">
+    👤 Profile
+</a>
+
+<a href="creator-products.html">
+    🛍 Products
+</a>
+
+<a href="creator-services.html">
+    🧰 Services
+</a>
+
+<a href="creator-earnings.html">
+    💰 Earnings
+</a>
+
+<a href="creator-payouts.html">
+    💸 Payouts
+</a>
+
+<a href="creator-settings.html">
+    ⚙ Settings
+</a>
+
+</nav>
+
+</aside>
+
+
+<main class="main">
+
+<section class="page-header">
+
+<div>
+
+<p class="muted">
+    Creator Studio / Presentation Maker
+</p>
+
+<h1>
+    Presentation Maker
+</h1>
+
+<p class="muted">
+    Create, edit, organize and preview presentation slides.
+</p>
+
+</div>
+
+<div class="top-actions">
+
+<button class="btn secondary" onclick="newPresentation()">
+    ↩ New
+</button>
+
+<button class="btn primary" onclick="savePresentation()">
+    💾 Save Draft
+</button>
+
+<button class="btn success" onclick="printPresentation()">
+    🖨 Export
+</button>
+
+</div>
+
+</section>
+
+
+<div class="workspace">
+
+
+<!-- SLIDES -->
+
+<section class="panel">
+
+<div class="panel-title">
+    Slides
+</div>
+
+<div class="stack" style="margin-bottom:12px">
+
+<button class="btn primary" onclick="addSlide()">
+    ＋ Add Slide
+</button>
+
+</div>
+
+<div
+    id="slideList"
+    class="slide-list"
+></div>
+
+</section>
+
+
+<!-- CANVAS -->
+
+<section class="canvas-panel">
+
+<div class="panel">
+
+<div class="canvas-toolbar">
+
+<div class="toolbar-group">
+
+<button class="btn secondary" onclick="previousSlide()">
+    ← Previous
+</button>
+
+<button class="btn secondary" onclick="nextSlide()">
+    Next →
+</button>
+
+</div>
+
+<div class="toolbar-group">
+
+<button class="btn secondary" onclick="duplicateSlide()">
+    ⧉ Duplicate
+</button>
+
+<button class="btn danger" onclick="deleteSlide()">
+    🗑 Delete
+</button>
+
+</div>
+
+</div>
+
+
+<div class="stage">
+
+<div
+    id="slideCanvas"
+    class="slide theme-blue"
+>
+
+<div class="slide-inner">
+
+<div
+    id="previewTitle"
+    class="slide-title"
+>
+    Presentation Title
+</div>
+
+<div
+    id="previewSubtitle"
+    class="slide-subtitle"
+>
+    Add a subtitle or short introduction.
+</div>
+
+<div
+    id="previewBody"
+    class="slide-body"
+    style="margin-top:25px"
+></div>
+
+<img
+    id="previewImage"
+    class="slide-image"
+    alt="Slide image"
+>
+
+<div class="slide-footer">
+
+<span id="previewFooter">
+    Creator Studio
+</span>
+
+<span id="previewNumber">
+    1
+</span>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- SETTINGS -->
+
+<section class="panel settings-panel">
+
+<div class="panel-title">
+    Slide Settings
+</div>
+
+
+<div class="form-group">
+
+<label>
+    Presentation Title
+</label>
+
+<input
+    id="presentationTitle"
+    type="text"
+    placeholder="My Presentation"
+    oninput="updateCurrentSlide()"
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label>
+    Slide Title
+</label>
+
+<input
+    id="slideTitle"
+    type="text"
+    placeholder="Slide title"
+    oninput="updateCurrentSlide()"
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label>
+    Subtitle
+</label>
+
+<input
+    id="slideSubtitle"
+    type="text"
+    placeholder="Short subtitle"
+    oninput="updateCurrentSlide()"
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label>
+    Body Text
+</label>
+
+<textarea
+    id="slideBody"
+    placeholder="Write the main content of this slide..."
+    oninput="updateCurrentSlide()"
+></textarea>
+
+</div>
+
+
+<div class="form-group">
+
+<label>
+    Footer
+</label>
+
+<input
+    id="slideFooter"
+    type="text"
+    placeholder="Creator Studio"
+    oninput="updateCurrentSlide()"
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label>
+    Theme
+</label>
+
+<div class="template-grid">
+
+<button
+    class="template active"
+    data-theme="blue"
+    onclick="setTheme('blue',this)"
+>
+    Blue
+</button>
+
+<button
+    class="template"
+    data-theme="dark"
+    onclick="setTheme('dark',this)"
+>
+    Dark
+</button>
+
+<button
+    class="template"
+    data-theme="green"
+    onclick="setTheme('green',this)"
+>
+    Green
+</button>
+
+<button
+    class="template"
+    data-theme="purple"
+    onclick="setTheme('purple',this)"
+>
+    Purple
+</button>
+
+<button
+    class="template"
+    data-theme="minimal"
+    onclick="setTheme('minimal',this)"
+>
+    Minimal
+</button>
+
+</div>
+
+</div>
+
+
+<div class="form-group">
+
+<label>
+    Slide Image
+</label>
+
+<div class="upload">
+
+<input
+    id="imageFile"
+    type="file"
+    accept="image/*"
+>
+
+<p class="small" style="margin-top:7px">
+    Image is stored locally with the presentation.
+</p>
+
+</div>
+
+</div>
+
+
+<div class="form-group">
+
+<label>
+    Image URL
+</label>
+
+<input
+    id="imageUrl"
+    type="url"
+    placeholder="https://example.com/image.jpg"
+    oninput="updateImageFromURL()"
+>
+
+</div>
+
+
+<div class="row">
+
+<button
+    class="btn secondary"
+    onclick="removeSlideImage()"
+>
+    Remove Image
+</button>
+
+<button
+    class="btn secondary"
+    onclick="clearSlideText()"
+>
+    Clear Text
+</button>
+
+</div>
+
+
+<div class="status" style="margin-top:14px">
+
+<p class="small">
+    Current slide:
+    <strong id="currentSlideStatus">
+        1
+    </strong>
+</p>
+
+<p class="small" style="margin-top:5px">
+    Changes are saved automatically in your browser.
+</p>
+
+</div>
+
+</section>
+
+</div>
+
+</main>
+
+</div>
+
+
+<div
+    id="toast"
+    class="toast"
+></div>
+
+
+<script>
+
+const PRESENTATION_KEY =
+    "creator_presentation_draft";
+
+
+let slides = [];
+
+let currentSlide =
+    0;
+
+let presentationTitle =
+    "My Presentation";
+
+let autoSaveTimer =
+    null;
+
+
+/* =========================
+   HELPERS
+========================= */
+
+function get(id){
+
+    return document.getElementById(
+        id
+    );
+
+}
+
+
+function escapeHTML(value){
+
+    return String(
+        value ?? ""
+    ).replace(
+        /[&<>"']/g,
+        char => ({
+            "&":"&amp;",
+            "<":"&lt;",
+            ">":"&gt;",
+            '"':"&quot;",
+            "'":"&#039;"
+        }[char])
+    );
+
+}
+
+
+function showToast(message){
+
+    const toast =
+        get("toast");
+
+    toast.textContent =
+        message;
+
+    toast.classList.add(
+        "show"
+    );
+
+    clearTimeout(
+        window.toastTimer
+    );
+
+    window.toastTimer =
+        setTimeout(
+            () => {
+
+                toast.classList.remove(
+                    "show"
+                );
+
+            },
+            2200
+        );
+
+}
+
+
+/* =========================
+   DEFAULT SLIDE
+========================= */
+
+function createSlide(){
+
+    return {
+
+        title:
+            "New Slide",
+
+        subtitle:
+            "Add a subtitle or short introduction.",
+
+        body:
+            "",
+
+        footer:
+            "Creator Studio",
+
+        theme:
+            "blue",
+
+        image:
+            ""
+
+    };
+
+}
+
+
+/* =========================
+   ADD SLIDE
+========================= */
+
+function addSlide(){
+
+    slides.push(
+        createSlide()
+    );
+
+    currentSlide =
+        slides.length - 1;
+
+    render();
+
+    scheduleAutoSave();
+
+    showToast(
+        "Slide added."
+    );
+
+}
+
+
+/* =========================
+   DELETE SLIDE
+========================= */
+
+function deleteSlide(){
+
+    if(
+        slides.length <= 1
+    ){
+
+        showToast(
+            "A presentation needs at least one slide."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        !confirm(
+            "Delete the current slide?"
+        )
+    ){
+
+        return;
+
+    }
+
+
+    slides.splice(
+        currentSlide,
+        1
+    );
+
+
+    currentSlide =
+        Math.max(
+            0,
+            currentSlide - 1
+        );
+
+
+    render();
+
+    scheduleAutoSave();
+
+    showToast(
+        "Slide deleted."
+    );
+
+}
+
+
+/* =========================
+   DUPLICATE
+========================= */
+
+function duplicateSlide(){
+
+    const source =
+        slides[currentSlide];
+
+
+    if(!source){
+        return;
+    }
+
+
+    const copy =
+        JSON.parse(
+            JSON.stringify(
+                source
+            )
+        );
+
+
+    copy.title +=
+        " Copy";
+
+
+    slides.splice(
+        currentSlide + 1,
+        0,
+        copy
+    );
+
+
+    currentSlide++;
+
+    render();
+
+    scheduleAutoSave();
+
+    showToast(
+        "Slide duplicated."
+    );
+
+}
+
+
+/* =========================
+   SELECT SLIDE
+========================= */
+
+function selectSlide(index){
+
+    if(
+        index < 0 ||
+        index >= slides.length
+    ){
+
+        return;
+
+    }
+
+
+    currentSlide =
+        index;
+
+    render();
+
+}
+
+
+/* =========================
+   NAVIGATION
+========================= */
+
+function previousSlide(){
+
+    selectSlide(
+        currentSlide - 1
+    );
+
+}
+
+
+function nextSlide(){
+
+    selectSlide(
+        currentSlide + 1
+    );
+
+}
+
+
+/* =========================
+   UPDATE CURRENT SLIDE
+========================= */
+
+function updateCurrentSlide(){
+
+    const slide =
+        slides[currentSlide];
+
+
+    if(!slide){
+        return;
+    }
+
+
+    presentationTitle =
+        get(
+            "presentationTitle"
+        ).value ||
+        "My Presentation";
+
+
+    slide.title =
+        get("slideTitle").value;
+
+
+    slide.subtitle =
+        get("slideSubtitle").value;
+
+
+    slide.body =
+        get("slideBody").value;
+
+
+    slide.footer =
+        get("slideFooter").value;
+
+
+    renderCanvasOnly();
+
+    renderSlideList();
+
+    scheduleAutoSave();
+
+}
+
+
+/* =========================
+   THEME
+========================= */
+
+function setTheme(
+    theme,
+    button
+){
+
+    const slide =
+        slides[currentSlide];
+
+
+    if(!slide){
+        return;
+    }
+
+
+    slide.theme =
+        theme;
+
+
+    document
+        .querySelectorAll(
+            "[data-theme]"
+        )
+        .forEach(
+            item =>
+                item.classList.remove(
+                    "active"
+                )
+        );
+
+
+    if(button){
+
+        button.classList.add(
+            "active"
+        );
+
+    }
+
+
+    renderCanvasOnly();
+
+    renderSlideList();
+
+    scheduleAutoSave();
+
+}
+
+
+/* =========================
+   IMAGE UPLOAD
+========================= */
+
+get("imageFile")
+.addEventListener(
+    "change",
+    function(event){
+
+        const file =
+            event.target.files[0];
+
+
+        if(!file){
+            return;
+        }
+
+
+        if(
+            !file.type.startsWith(
+                "image/"
+            )
+        ){
+
+            showToast(
+                "Please select an image."
+            );
+
+            return;
+
+        }
+
+
+        const reader =
+            new FileReader();
+
+
+        reader.onload =
+            function(e){
+
+                slides[currentSlide].image =
+                    e.target.result;
+
+
+                        get("imageUrl").value =
+            slide.imageUrl || "";
+
+        get("imageAlt").value =
+            slide.imageAlt || "";
+
+        get("backgroundColor").value =
+            slide.backgroundColor || "#ffffff";
+
+        get("textColor").value =
+            slide.textColor || "#172033";
+
+        get("accentColor").value =
+            slide.accentColor || "#2563eb";
+
+        get("fontSize").value =
+            slide.fontSize || "32";
+
+        get("textAlign").value =
+            slide.textAlign || "center";
+
+        get("slideLayout").value =
+            slide.layout || "title-content";
+
+        renderSlides();
+        renderEditor();
+        updateSlideCounter();
+
+    } catch(error) {
+
+        console.error(
+            "Presentation loading error:",
+            error
+        );
+
+        slides = [
+            createDefaultSlide()
+        ];
+
+        currentSlide = 0;
+
+        renderSlides();
+        renderEditor();
+        updateSlideCounter();
+
+    }
+
+}
+
+
+/* =========================
+   NEW SLIDE
+========================= */
+
+function addSlide(){
+
+    saveCurrentSlide();
+
+    const newSlide =
+        createDefaultSlide();
+
+    newSlide.title =
+        "New Slide";
+
+    newSlide.content =
+        "Add your presentation content here.";
+
+    slides.push(
+        newSlide
+    );
+
+    currentSlide =
+        slides.length - 1;
+
+    renderSlides();
+    renderEditor();
+    updateSlideCounter();
+
+    showToast(
+        "New slide added."
+    );
+
+}
+
+
+/* =========================
+   DELETE SLIDE
+========================= */
+
+function deleteSlide(){
+
+    if(
+        slides.length <= 1
+    ){
+
+        showToast(
+            "A presentation needs at least one slide."
+        );
+
+        return;
+
+    }
+
+
+    const confirmed =
+        window.confirm(
+            "Delete the current slide?"
+        );
+
+
+    if(!confirmed){
+        return;
+    }
+
+
+    slides.splice(
+        currentSlide,
+        1
+    );
+
+
+    currentSlide =
+        Math.max(
+            0,
+            currentSlide - 1
+        );
+
+
+    renderSlides();
+    renderEditor();
+    updateSlideCounter();
+
+    savePresentation();
+
+    showToast(
+        "Slide deleted."
+    );
+
+}
+
+
+/* =========================
+   DUPLICATE SLIDE
+========================= */
+
+function duplicateSlide(){
+
+    saveCurrentSlide();
+
+    const copy =
+        JSON.parse(
+            JSON.stringify(
+                slides[currentSlide]
+            )
+        );
+
+
+    copy.id =
+        Date.now();
+
+
+    slides.splice(
+        currentSlide + 1,
+        0,
+        copy
+    );
+
+
+    currentSlide += 1;
+
+
+    renderSlides();
+    renderEditor();
+    updateSlideCounter();
+
+    showToast(
+        "Slide duplicated."
+    );
+
+}
+
+
+/* =========================
+   MOVE SLIDE
+========================= */
+
+function moveSlide(
+    direction
+){
+
+    saveCurrentSlide();
+
+    const target =
+        currentSlide +
+        direction;
+
+
+    if(
+        target < 0 ||
+        target >= slides.length
+    ){
+
+        return;
+
+    }
+
+
+    [
+        slides[currentSlide],
+        slides[target]
+    ] = [
+        slides[target],
+        slides[currentSlide]
+    ];
+
+
+    currentSlide =
+        target;
+
+
+    renderSlides();
+    renderEditor();
+    updateSlideCounter();
+
+    showToast(
+        "Slide moved."
+    );
+
+}
+
+
+/* =========================
+   SELECT SLIDE
+========================= */
+
+function selectSlide(
+    index
+){
+
+    saveCurrentSlide();
+
+    if(
+        index < 0 ||
+        index >= slides.length
+    ){
+
+        return;
+
+    }
+
+
+    currentSlide =
+        index;
+
+
+    renderSlides();
+    renderEditor();
+    updateSlideCounter();
+
+}
+
+
+/* =========================
+   SAVE CURRENT SLIDE
+========================= */
+
+function saveCurrentSlide(){
+
+    if(
+        !slides[currentSlide]
+    ){
+
+        return;
+
+    }
+
+
+    const slide =
+        slides[currentSlide];
+
+
+    const title =
+        get("slideTitle");
+
+
+    const content =
+        get("slideContent");
+
+
+    const imageUrl =
+        get("imageUrl");
+
+
+    const imageAlt =
+        get("imageAlt");
+
+
+    const backgroundColor =
+        get("backgroundColor");
+
+
+    const textColor =
+        get("textColor");
+
+
+    const accentColor =
+        get("accentColor");
+
+
+    const fontSize =
+        get("fontSize");
+
+
+    const textAlign =
+        get("textAlign");
+
+
+    const slideLayout =
+        get("slideLayout");
+
+
+    if(title){
+
+        slide.title =
+            title.value;
+
+    }
+
+
+    if(content){
+
+        slide.content =
+            content.value;
+
+    }
+
+
+    if(imageUrl){
+
+        slide.imageUrl =
+            imageUrl.value;
+
+    }
+
+
+    if(imageAlt){
+
+        slide.imageAlt =
+            imageAlt.value;
+
+    }
+
+
+    if(backgroundColor){
+
+        slide.backgroundColor =
+            backgroundColor.value;
+
+    }
+
+
+    if(textColor){
+
+        slide.textColor =
+            textColor.value;
+
+    }
+
+
+    if(accentColor){
+
+        slide.accentColor =
+            accentColor.value;
+
+    }
+
+
+    if(fontSize){
+
+        slide.fontSize =
+            Number(
+                fontSize.value
+            ) || 32;
+
+    }
+
+
+    if(textAlign){
+
+        slide.textAlign =
+            textAlign.value;
+
+    }
+
+
+    if(slideLayout){
+
+        slide.layout =
+            slideLayout.value;
+
+    }
+
+}
+
+
+/* =========================
+   RENDER SLIDE LIST
+========================= */
+
+function renderSlides(){
+
+    const container =
+        get("slidesList");
+
+
+    if(!container){
+        return;
+    }
+
+
+    container.innerHTML = "";
+
+
+    slides.forEach(
+        (slide, index) => {
+
+            const item =
+                document.createElement(
+                    "button"
+                );
+
+
+            item.type =
+                "button";
+
+
+            item.className =
+                "slide-item" +
+                (
+                    index === currentSlide
+                        ? " active"
+                        : ""
+                );
+
+
+            item.innerHTML = `
+                <span class="slide-number">
+                    ${index + 1}
+                </span>
+
+                <span class="slide-mini">
+                    <strong>
+                        ${escapeHTML(
+                            slide.title ||
+                            "Untitled Slide"
+                        )}
+                    </strong>
+
+                    <small>
+                        ${escapeHTML(
+                            slide.content ||
+                            "Empty slide"
+                        ).slice(
+                            0,
+                            55
+                        )}
+                    </small>
+                </span>
+            `;
+
+
+            item.addEventListener(
+                "click",
+                () =>
+                    selectSlide(index)
+            );
+
+
+            container.appendChild(
+                item
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================
+   RENDER EDITOR
+========================= */
+
+function renderEditor(){
+
+    const slide =
+        slides[currentSlide];
+
+
+    if(!slide){
+        return;
+    }
+
+
+    const fields = {
+
+        slideTitle:
+            slide.title || "",
+
+        slideContent:
+            slide.content || "",
+
+        imageUrl:
+            slide.imageUrl || "",
+
+        imageAlt:
+            slide.imageAlt || "",
+
+        backgroundColor:
+            slide.backgroundColor ||
+            "#ffffff",
+
+        textColor:
+            slide.textColor ||
+            "#172033",
+
+        accentColor:
+            slide.accentColor ||
+            "#2563eb",
+
+        fontSize:
+            slide.fontSize || 32,
+
+        textAlign:
+            slide.textAlign || "center",
+
+        slideLayout:
+            slide.layout ||
+            "title-content"
+
+    };
+
+
+    Object.keys(fields)
+        .forEach(
+            id => {
+
+                const element =
+                    get(id);
+
+
+                if(element){
+
+                    element.value =
+                        fields[id];
+
+                }
+
+            }
+        );
+
+
+    renderPreview();
+
+}
+
+
+/* =========================
+   RENDER PREVIEW
+========================= */
+
+function renderPreview(){
+
+    saveCurrentSlide();
+
+
+    const slide =
+        slides[currentSlide];
+
+
+    const preview =
+        get("presentationPreview");
+
+
+    if(
+        !preview ||
+        !slide
+    ){
+
+        return;
+
+    }
+
+
+    const safeTitle =
+        escapeHTML(
+            slide.title ||
+            "Untitled Slide"
+        );
+
+
+    const safeContent =
+        escapeHTML(
+            slide.content ||
+            ""
+        )
+        .replace(
+            /\n/g,
+            "<br>"
+        );
+
+
+    let imageHTML = "";
+
+
+    if(
+        slide.imageUrl
+    ){
+
+        imageHTML = `
+            <img
+                class="presentation-image"
+                src="${escapeHTML(
+                    slide.imageUrl
+                )}"
+                alt="${escapeHTML(
+                    slide.imageAlt ||
+                    slide.title ||
+                    "Presentation image"
+                )}"
+                onerror="
+                    this.style.display='none';
+                "
+            >
+        `;
+
+    }
+
+
+    let layoutClass =
+        slide.layout ||
+        "title-content";
+
+
+    preview.innerHTML = `
+        <div
+            class="presentation-slide ${escapeHTML(
+                layoutClass
+            )}"
+            style="
+                background:${escapeHTML(
+                    slide.backgroundColor ||
+                    "#ffffff"
+                )};
+                color:${escapeHTML(
+                    slide.textColor ||
+                    "#172033"
+                )};
+            "
+        >
+
+            <div
+                class="slide-accent"
+                style="
+                    background:${escapeHTML(
+                        slide.accentColor ||
+                        "#2563eb"
+                    )};
+                "
+            ></div>
+
+            <div class="slide-inner">
+
+                <h1
+                    class="preview-title"
+                    style="
+                        font-size:${Number(
+                            slide.fontSize || 32
+                        )}px;
+                        text-align:${escapeHTML(
+                            slide.textAlign ||
+                            "center"
+                        )};
+                    "
+                >
+                    ${safeTitle}
+                </h1>
+
+                ${
+                    imageHTML
+                }
+
+                <div
+                    class="preview-content"
+                    style="
+                        text-align:${escapeHTML(
+                            slide.textAlign ||
+                            "center"
+                        )};
+                    "
+                >
+                    ${safeContent}
+                </div>
+
+            </div>
+
+            <div class="slide-footer">
+                ${currentSlide + 1}
+            </div>
+
+        </div>
+    `;
+
+}
+
+
+/* =========================
+   PRESENTATION COUNTER
+========================= */
+
+function updateSlideCounter(){
+
+    const counter =
+        get("slideCounter");
+
+
+    if(counter){
+
+        counter.textContent =
+            `${currentSlide + 1} / ${slides.length}`;
+
+    }
+
+}
+
+
+/* =========================
+   SAVE PRESENTATION
+========================= */
+
+function savePresentation(){
+
+    saveCurrentSlide();
+
+
+    const data = {
+
+        title:
+            get("presentationTitle")
+                ?.value ||
+            "My Presentation",
+
+        slides,
+
+        currentSlide,
+
+        updated:
+            new Date().toISOString()
+
+    };
+
+
+    try{
+
+        localStorage.setItem(
+            PRESENTATION_KEY,
+            JSON.stringify(
+                data
+            )
+        );
+
+
+        const status =
+            get("saveStatus");
+
+
+        if(status){
+
+            status.textContent =
+                "Saved just now.";
+
+        }
+
+
+        showToast(
+            "Presentation saved."
+        );
+
+
+    }catch(error){
+
+        console.error(
+            "Save error:",
+            error
+        );
+
+
+        showToast(
+            "Unable to save presentation."
+        );
+
+    }
+
+}
+
+
+/* =========================
+   AUTO SAVE
+========================= */
+
+let autoSaveTimer =
+    null;
+
+
+function scheduleAutoSave(){
+
+    clearTimeout(
+        autoSaveTimer
+    );
+
+
+    autoSaveTimer =
+        setTimeout(
+            () => {
+
+                saveCurrentSlide();
+
+
+                try{
+
+                    localStorage.setItem(
+                        PRESENTATION_KEY,
+                        JSON.stringify({
+                            title:
+                                get(
+                                    "presentationTitle"
+                                )?.value ||
+                                "My Presentation",
+
+                            slides,
+
+                            currentSlide,
+
+                            updated:
+                                new Date()
+                                    .toISOString()
+                        })
+                    );
+
+                }catch(error){
+
+                    console.warn(
+                        "Auto-save failed:",
+                        error
+                    );
+
+                }
+
+            },
+            700
+        );
+
+}
+
+
+/* =========================
+   LOAD PRESENTATION
+========================= */
+
+function loadPresentation(){
+
+    const saved =
+        localStorage.getItem(
+            PRESENTATION_KEY
+        );
+
+
+    if(!saved){
+
+        slides = [
+            createDefaultSlide()
+        ];
+
+        currentSlide = 0;
+
+        renderSlides();
+        renderEditor();
+        updateSlideCounter();
+
+        return;
+
+    }
+
+
+    try{
+
+        const data =
+            JSON.parse(
+                saved
+            );
+
+
+        if(
+            Array.isArray(
+                data.slides
+            ) &&
+            data.slides.length
+        ){
+
+            slides =
+                data.slides;
+
+        }else{
+
+            slides = [
+                createDefaultSlide()
+            ];
+
+        }
+
+
+        currentSlide =
+            Number(
+                data.currentSlide || 0
+            );
+
+
+        if(
+            currentSlide < 0 ||
+            currentSlide >= slides.length
+        ){
+
+            currentSlide = 0;
+
+        }
+
+
+        const title =
+            get(
+                "presentationTitle"
+            );
+
+
+        if(
+            title &&
+            data.title
+        ){
+
+            title.value =
+                data.title;
+
+        }
+
+
+        renderSlides();
+        renderEditor();
+        updateSlideCounter();
+
+
+    }catch(error){
+
+        console.error(
+            "Presentation load error:",
+            error
+        );
+
+
+        slides = [
+            createDefaultSlide()
+        ];
+
+        currentSlide = 0;
+
+        renderSlides();
+        renderEditor();
+        updateSlideCounter();
+
+    }
+
+}
+
+
+/* =========================
+   IMAGE URL PREVIEW
+========================= */
+
+function updateImagePreview(){
+
+    renderPreview();
+
+}
+
+
+/* =========================
+   IMAGE FILE UPLOAD
+========================= */
+
+get("imageFile")
+?.addEventListener(
+    "change",
+    function(event){
+
+        const file =
+            event.target.files[0];
+
+
+        if(!file){
+            return;
+        }
+
+
+        if(
+            !file.type.startsWith(
+                "image/"
+            )
+        ){
+
+            showToast(
+                "Please select an image file."
+            );
+
+            return;
+
+        }
+
+
+        const reader =
+            new FileReader();
+
+
+        reader.onload =
+            function(e){
+
+                const imageUrl =
+                    get("imageUrl");
+
+
+                if(imageUrl){
+
+                    imageUrl.value =
+                        e.target.result;
+
+                }
+
+
+                saveCurrentSlide();
+
+                renderPreview();
+
+                scheduleAutoSave();
+
+
+                showToast(
+                    "Image added."
+                );
+
+            };
+
+
+        reader.readAsDataURL(
+            file
+        );
+
+    }
+);
+
+
+/* =========================
+   EXPORT JSON
+========================= */
+
+function exportPresentation(){
+
+    saveCurrentSlide();
+
+
+    const data = {
+
+        title:
+            get("presentationTitle")
+                ?.value ||
+            "My Presentation",
+
+        slides,
+
+        exported:
+            new Date().toISOString()
+
+    };
+
+
+    const blob =
+        new Blob(
+            [
+                JSON.stringify(
+                    data,
+                    null,
+                    2
+                )
+            ],
+            {
+                type:
+                    "application/json"
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+
+    const link =
+        document.createElement(
+            "a"
+        );
+
+
+    link.href =
+        url;
+
+
+    link.download =
+        "presentation.json";
+
+
+    document.body.appendChild(
+        link
+    );
+
+
+    link.click();
+
+
+    link.remove();
+
+
+    URL.revokeObjectURL(
+        url
+    );
+
+
+    showToast(
+        "Presentation exported."
+    );
+
+}
+
+
+/* =========================
+   IMPORT JSON
+========================= */
+
+get("importFile")
+?.addEventListener(
+    "change",
+    function(event){
+
+        const file =
+            event.target.files[0];
+
+
+        if(!file){
+            return;
+        }
+
+
+        const reader =
+            new FileReader();
+
+
+        reader.onload =
+            function(e){
+
+                try{
+
+                    const data =
+                        JSON.parse(
+                            e.target.result
+                        );
+
+
+                    if(
+                        !Array.isArray(
+                            data.slides
+                        ) ||
+                        !data.slides.length
+                    ){
+
+                        throw new Error(
+                            "Invalid presentation"
+                        );
+
+                    }
+
+
+                    slides =
+                        data.slides;
+
+
+                    currentSlide = 0;
+
+
+                    if(
+                        get(
+                            "presentationTitle"
+                        ) &&
+                        data.title
+                    ){
+
+                        get(
+                            "presentationTitle"
+                        ).value =
+                            data.title;
+
+                    }
+
+
+                    renderSlides();
+                    renderEditor();
+                    updateSlideCounter();
+
+                    scheduleAutoSave();
+
+
+                    showToast(
+                        "Presentation imported."
+                    );
+
+
+                }catch(error){
+
+                    console.error(
+                        error
+                    );
+
+
+                    showToast(
+                        "Invalid presentation file."
+                    );
+
+                }
+
+            };
+
+
+        reader.readAsText(
+            file
+        );
+
+    }
+);
+
+
+/* =========================
+   PRINT / PDF
+========================= */
+
+function printPresentation(){
+
+    saveCurrentSlide();
+
+
+    const original =
+        currentSlide;
+
+
+    let index = 0;
+
+
+    function printNext(){
+
+        if(
+            index >= slides.length
+        ){
+
+            currentSlide =
+                original;
+
+            renderSlides();
+            renderEditor();
+            updateSlideCounter();
+
+            window.print();
+
+            return;
+
+        }
+
+
+        currentSlide =
+            index;
+
+
+        renderPreview();
+
+
+        index += 1;
+
+
+        setTimeout(
+            printNext,
+            50
+        );
+
+    }
+
+
+    printNext();
+
+}
+
+
+/* =========================
+   KEYBOARD SHORTCUTS
+========================= */
+
+document.addEventListener(
+    "keydown",
+    function(event){
+
+        // Ctrl + S → Save
+        if(
+            event.ctrlKey &&
+            event.key.toLowerCase() === "s"
+        ){
+
+            event.preventDefault();
+
+            savePresentation();
+
+            return;
+
+        }
+
+
+        // Ctrl + D → Duplicate current slide
+        if(
+            event.ctrlKey &&
+            event.key.toLowerCase() === "d"
+        ){
+
+            event.preventDefault();
+
+            duplicateSlide();
+
+            return;
+
+        }
+
+
+        // Escape → close any open modal
+        if(
+            event.key === "Escape"
+        ){
+
+            document
+                .querySelectorAll(
+                    ".modal.open"
+                )
+                .forEach(
+                    modal =>
+                        modal.classList.remove(
+                            "open"
+                        )
+                );
+
+            return;
+
+        }
+
+
+        // Don't trigger slide shortcuts
+        // while typing in an input.
+        if(
+            isTypingTarget(
+                event.target
+            )
+        ){
+
+            return;
+
+        }
+
+
+        // Previous slide
+        if(
+            event.key === "ArrowLeft"
+        ){
+
+            event.preventDefault();
+
+            if(
+                currentSlide > 0
+            ){
+
+                selectSlide(
+                    currentSlide - 1
+                );
+
+            }
+
+            return;
+
+        }
+
+
+        // Next slide
+        if(
+            event.key === "ArrowRight"
+        ){
+
+            event.preventDefault();
+
+            if(
+                currentSlide <
+                slides.length - 1
+            ){
+
+                selectSlide(
+                    currentSlide + 1
+                );
+
+            }
+
+            return;
+
+        }
+
+
+        // Delete current slide
+        if(
+            event.key === "Delete"
+        ){
+
+            event.preventDefault();
+
+            deleteSlide();
+
+            return;
+
+        }
+
+    }
+);
+
+
+/* =========================
+   TYPING TARGET CHECK
+========================= */
+
+function isTypingTarget(
+    target
+){
+
+    if(!target){
+        return false;
+    }
+
+
+    const tag =
+        target.tagName
+            ?.toLowerCase();
+
+
+    return (
+        tag === "input" ||
+        tag === "textarea" ||
+        tag === "select" ||
+        target.isContentEditable
+    );
+
+}
+
+
+/* =========================
+   SLIDE NAVIGATION
+========================= */
+
+function previousSlide(){
+
+    saveCurrentSlide();
+
+
+    if(
+        currentSlide <= 0
+    ){
+
+        showToast(
+            "Already on the first slide."
+        );
+
+        return;
+
+    }
+
+
+    currentSlide -= 1;
+
+
+    renderSlides();
+    renderEditor();
+    updateSlideCounter();
+
+}
+
+
+function nextSlide(){
+
+    saveCurrentSlide();
+
+
+    if(
+        currentSlide >=
+        slides.length - 1
+    ){
+
+        showToast(
+            "Already on the last slide."
+        );
+
+        return;
+
+    }
+
+
+    currentSlide += 1;
+
+
+    renderSlides();
+    renderEditor();
+    updateSlideCounter();
+
+}
+
+
+/* =========================
+   FULLSCREEN PRESENTATION
+========================= */
+
+function startPresentation(){
+
+    saveCurrentSlide();
+
+
+    const presentation =
+        document.getElementById(
+            "presentationPreview"
+        );
+
+
+    if(!presentation){
+
+        showToast(
+            "Presentation preview is unavailable."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        presentation.requestFullscreen
+    ){
+
+        presentation
+            .requestFullscreen()
+            .catch(
+                () => {
+
+                    showToast(
+                        "Unable to enter fullscreen."
+                    );
+
+                }
+            );
+
+    }else{
+
+        showToast(
+            "Fullscreen is not supported by this browser."
+        );
+
+    }
+
+}
+
+
+/* =========================
+   COPY SLIDE TEXT
+========================= */
+
+async function copySlideText(){
+
+    saveCurrentSlide();
+
+
+    const slide =
+        slides[currentSlide];
+
+
+    const text = [
+
+        slide.title ||
+        "",
+
+        slide.content ||
+        ""
+
+    ]
+    .filter(
+        Boolean
+    )
+    .join(
+        "\n\n"
+    );
+
+
+    try{
+
+        await navigator.clipboard.writeText(
+            text
+        );
+
+
+        showToast(
+            "Slide text copied."
+        );
+
+    }catch(error){
+
+        console.error(
+            error
+        );
+
+
+        showToast(
+            "Unable to copy slide text."
+        );
+
+    }
+
+}
+
+
+/* =========================
+   INITIAL RENDER
+========================= */
+
+renderSlides();
+renderEditor();
+updateSlideCounter();
+
+</script>
+
+</body>
+</html>
