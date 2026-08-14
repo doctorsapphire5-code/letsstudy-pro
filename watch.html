@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Watch Video | Let's Study</title>
+
+    <style>
+        *{
+            box-sizing:border-box;
+            margin:0;
+            padding:0;
+        }
+
+        body{
+            font-family:Arial,Helvetica,sans-serif;
+            background:#f5f7fb;
+            color:#172033;
+            line-height:1.6;
+        }
+
+        a{
+            color:inherit;
+            text-decoration:none;
+        }
+
+        button,
+        input,
+        textarea{
+            font:inherit;
+        }
+
+        .header{
+            position:sticky;
+            top:0;
+            z-index:20;
+            background:#fff;
+            border-bottom:1px solid #e5e9f2;
+            padding:14px 5%;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:20px;
+        }
+
+        .brand{
+            font-size:22px;
+            font-weight:800;
+        }
+
+        .nav{
+            display:flex;
+            flex-wrap:wrap;
+            gap:18px;
+        }
+
+        .nav a{
+            color:#667085;
+            font-weight:600;
+        }
+
+        .nav a:hover{
+            color:#2563eb;
+        }
+
+        .container{
+            width:min(1250px,92%);
+            margin:28px auto;
+        }
+
+        .watch-layout{
+            display:grid;
+            grid-template-columns:minmax(0,1fr) 350px;
+            gap:24px;
+        }
+
+        .video-section{
+            min-width:0;
+        }
+
+        .player{
+            background:#090d16;
+            border-radius:16px;
+            overflow:hidden;
+            position:relative;
+            aspect-ratio:16/9;
+        }
+
+        .player video{
+            width:100%;
+            height:100%;
+            display:block;
+            object-fit:contain;
+            background:#090d16;
+        }
+
+        .player-placeholder{
+            position:absolute;
+            inset:0;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            flex-direction:column;
+            color:#fff;
+            background:
+                linear-gradient(
+                    135deg,
+                    #111827,
+                    #312e81
+                );
+        }
+
+        .play-icon{
+            width:70px;
+            height:70px;
+            border-radius:50%;
+            background:#2563eb;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:28px;
+            margin-bottom:12px;
+        }
+
+        .video-info{
+            background:#fff;
+            border:1px solid #e5e9f2;
+            border-radius:15px;
+            padding:20px;
+            margin-top:16px;
+        }
+
+        .video-title{
+            font-size:25px;
+            line-height:1.3;
+            margin-bottom:8px;
+        }
+
+        .video-meta{
+            color:#667085;
+            font-size:14px;
+        }
+
+        .action-row{
+            display:flex;
+            flex-wrap:wrap;
+            gap:9px;
+            margin-top:18px;
+            padding-top:16px;
+            border-top:1px solid #edf0f5;
+        }
+
+        .btn{
+            border:0;
+            border-radius:9px;
+            padding:10px 15px;
+            cursor:pointer;
+            font-weight:700;
+        }
+
+        .btn-primary{
+            background:#2563eb;
+            color:#fff;
+        }
+
+        .btn-secondary{
+            background:#eef2f7;
+            color:#263247;
+        }
+
+        .channel-box{
+            display:flex;
+            align-items:center;
+            gap:14px;
+            margin-top:20px;
+            padding-top:20px;
+            border-top:1px solid #edf0f5;
+        }
+
+        .channel-avatar{
+            width:52px;
+            height:52px;
+            border-radius:50%;
+            background:#172033;
+            color:#fff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-weight:800;
+        }
+
+        .channel-info{
+            flex:1;
+        }
+
+        .channel-info strong{
+            display:block;
+        }
+
+        .channel-info span{
+            color:#667085;
+            font-size:13px;
+        }
+
+        .description{
+            margin-top:18px;
+            color:#596579;
+            white-space:pre-line;
+        }
+
+        .comments{
+            margin-top:22px;
+            background:#fff;
+            border:1px solid #e5e9f2;
+            border-radius:15px;
+            padding:20px;
+        }
+
+        .comments h2{
+            margin-bottom:15px;
+        }
+
+        .comment-form{
+            display:flex;
+            gap:10px;
+            margin-bottom:20px;
+        }
+
+        .comment-input{
+            flex:1;
+            border:1px solid #d8deea;
+            border-radius:9px;
+            padding:11px 13px;
+            outline:none;
+        }
+
+        .comment{
+            padding:14px 0;
+            border-top:1px solid #edf0f5;
+        }
+
+        .comment strong{
+            display:block;
+        }
+
+        .comment p{
+            color:#596579;
+            font-size:14px;
+        }
+
+        .sidebar{
+            min-width:0;
+        }
+
+        .sidebar-box{
+            background:#fff;
+            border:1px solid #e5e9f2;
+            border-radius:15px;
+            padding:18px;
+        }
+
+        .sidebar-box h2{
+            font-size:19px;
+            margin-bottom:14px;
+        }
+
+        .playlist-item{
+            display:flex;
+            gap:10px;
+            padding:10px 0;
+            border-bottom:1px solid #edf0f5;
+        }
+
+        .playlist-item:last-child{
+            border-bottom:0;
+        }
+
+        .playlist-thumb{
+            width:105px;
+            height:62px;
+            flex-shrink:0;
+            border-radius:8px;
+            background:
+                linear-gradient(
+                    135deg,
+                    #dbeafe,
+                    #ddd6fe
+                );
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+
+        .playlist-item h3{
+            font-size:14px;
+            line-height:1.35;
+        }
+
+        .playlist-item span{
+            display:block;
+            color:#667085;
+            font-size:12px;
+            margin-top:3px;
+        }
+
+        .recommended{
+            margin-top:20px;
+        }
+
+        .recommended-card{
+            display:flex;
+            gap:10px;
+            padding:11px 0;
+            border-bottom:1px solid #edf0f5;
+        }
+
+        .recommended-card:last-child{
+            border-bottom:0;
+        }
+
+        .recommended-thumb{
+            width:110px;
+            height:65px;
+            flex-shrink:0;
+            border-radius:8px;
+            background:
+                linear-gradient(
+                    135deg,
+                    #bfdbfe,
+                    #e9d5ff
+                );
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:20px;
+        }
+
+        .recommended-card h3{
+            font-size:14px;
+            line-height:1.35;
+        }
+
+        .recommended-card p{
+            color:#667085;
+            font-size:12px;
+        }
+
+        .toast{
+            position:fixed;
+            right:20px;
+            bottom:20px;
+            background:#172033;
+            color:#fff;
+            padding:12px 18px;
+            border-radius:9px;
+            opacity:0;
+            transform:translateY(10px);
+            transition:.25s;
+            pointer-events:none;
+            z-index:100;
+        }
+
+        .toast.show{
+            opacity:1;
+            transform:translateY(0);
+        }
+
+        .footer{
+            margin-top:50px;
+            padding:30px 5%;
+            background:#fff;
+            border-top:1px solid #e5e9f2;
+            display:flex;
+            justify-content:space-between;
+            flex-wrap:wrap;
+            gap:20px;
+        }
+
+        .footer-links{
+            display:flex;
+            flex-wrap:wrap;
+            gap:18px;
+        }
+
+        @media(max-width:900px){
+            .watch-layout{
+                grid-template-columns:1fr;
+            }
+
+            .sidebar{
+                order:2;
+            }
+        }
+
+        @media(max-width:650px){
+            .header{
+                flex-direction:column;
+                align-items:flex-start;
+            }
+
+            .video-title{
+                font-size:21px;
+            }
+
+            .comment-form{
+                flex-direction:column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="header">
+
+    <a
+        href="dashboard.html"
+        class="brand">
+        Let's Study
+    </a>
+
+    <nav class="nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="courses.html">Courses</a>
+        <a href="video-dashboard.html">Videos</a>
+        <a href="channels.html">Channels</a>
+        <a href="playlists.html">Playlists</a>
+        <a href="community.html">Community</a>
+    </nav>
+
+</header>
+
+
+<main class="container">
+
+    <div class="watch-layout">
+
+        <section class="video-section">
+
+            <div class="player">
+
+                <video
+                    id="videoPlayer"
+                    controls
+                    preload="metadata">
+                </video>
+
+                <div
+                    id="playerPlaceholder"
+                    class="player-placeholder">
+
+                    <div class="play-icon">
+                        ▶
+                    </div>
+
+                    <strong>
+                        Video Player
+                    </strong>
+
+                    <span>
+                        Select a video to start watching
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <article class="video-info">
+
+                <h1
+                    id="videoTitle"
+                    class="video-title">
+                    HTML & CSS Complete Beginner Guide
+                </h1>
+
+                <div
+                    id="videoMeta"
+                    class="video-meta">
+                    2.4K views • 18:42 • Published today
+                </div>
+
+
+                <div class="action-row">
+
+                    <button
+                        id="likeButton"
+                        class="btn btn-secondary"
+                        onclick="toggleLike()">
+                        👍 Like
+                    </button>
+
+                    <button
+                        id="saveButton"
+                        class="btn btn-secondary"
+                        onclick="saveVideo()">
+                        🔖 Save
+                    </button>
+
+                    <button
+                        class="btn btn-secondary"
+                        onclick="shareVideo()">
+                        ↗ Share
+                    </button>
+
+                    <a
+                        href="playlists.html"
+                        class="btn btn-secondary">
+                        + Playlist
+                    </a>
+
+                </div>
+
+
+                <div class="channel-box">
+
+                    <a
+                        href="channel-details.html"
+                        class="channel-avatar">
+                        LS
+                    </a>
+
+                    <div class="channel-info">
+
+                        <strong>
+                            Let's Study ✓
+                        </strong>
+
+                        <span>
+                            @letsstudy • 12.4K followers
+                        </span>
+
+                    </div>
+
+                    <button
+                        id="followButton"
+                        class="btn btn-primary"
+                        onclick="toggleFollow()">
+                        Follow
+                    </button>
+
+                </div>
+
+
+                <p
+                    id="videoDescription"
+                    class="description">
+                    Learn the foundations of HTML and CSS
+                    and understand how to build your first
+                    responsive website.
+                </p>
+
+            </article>
+
+
+            <section class="comments">
+
+                <h2>
+                    Comments
+                    <span id="commentCount">
+                        (2)
+                    </span>
+                </h2>
+
+                <form
+                    id="commentForm"
+                    class="comment-form">
+
+                    <input
+                        id="commentInput"
+                        class="comment-input"
+                        type="text"
+                        maxlength="500"
+                        placeholder="Add a comment..."
+                        required>
+
+                    <button
+                        class="btn btn-primary"
+                        type="submit">
+                        Comment
+                    </button>
+
+                </form>
+
+
+                <div id="commentsList">
+
+                    <div class="comment">
+
+                        <strong>
+                            JM
+                        </strong>
+
+                        <p>
+                            Very useful explanation.
+                        </p>
+
+                    </div>
+
+                    <div class="comment">
+
+                        <strong>
+                            Amina
+                        </strong>
+
+                        <p>
+                            The examples made the topic easy
+                            to understand.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </section>
+
+
+        <aside class="sidebar">
+
+            <div class="sidebar-box">
+
+                <h2>
+                    Playlist
+                </h2>
+
+                <div id="playlistList">
+
+                    <a
+                        href="watch.html?id=video-1"
+                        class="playlist-item">
+
+                        <div class="playlist-thumb">
+                            ▶
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                HTML & CSS Complete Guide
+                            </h3>
+
+                            <span>
+                                18:42
+                            </span>
+
+                        </div>
+
+                    </a>
+
+
+                    <a
+                        href="watch.html?id=video-2"
+                        class="playlist-item">
+
+                        <div class="playlist-thumb">
+                            ▶
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                JavaScript Basics
+                            </h3>
+
+                            <span>
+                                24:15
+                            </span>
+
+                        </div>
+
+                    </a>
+
+
+                    <a
+                        href="watch.html?id=video-3"
+                        class="playlist-item">
+
+                        <div class="playlist-thumb">
+                            ▶
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Build Your First Website
+                            </h3>
+
+                            <span>
+                                31:08
+                            </span>
+
+                        </div>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <div class="sidebar-box recommended">
+
+                <h2>
+                    Recommended
+                </h2>
+
+                <div id="recommendedList">
+
+                    <a
+                        href="watch.html?id=video-4"
+                        class="recommended-card">
+
+                        <div class="recommended-thumb">
+                            ▶
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Introduction to AI
+                            </h3>
+
+                            <p>
+                                4.7K views
+                            </p>
+
+                        </div>
+
+                    </a>
+
+
+                    <a
+                        href="watch.html?id=video-5"
+                        class="recommended-card">
+
+                        <div class="recommended-thumb">
+                            ▶
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Career Skills Every Student Needs
+                            </h3>
+
+                            <p>
+                                1.2K views
+                            </p>
+
+                        </div>
+
+                    </a>
+
+
+                    <a
+                        href="watch.html?id=video-6"
+                        class="recommended-card">
+
+                        <div class="recommended-thumb">
+                            ▶
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                How to Learn Programming
+                            </h3>
+
+                            <p>
+                                5.3K views
+                            </p>
+
+                        </div>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </aside>
+
+    </div>
+
+</main>
+
+
+<footer class="footer">
+
+    <div>
+        <strong>
+            Let's Study
+        </strong>
+
+        <div>
+            Learn. Practice. Grow.
+        </div>
+    </div>
+
+    <div class="footer-links">
+
+        <a href="courses.html">
+            Courses
+        </a>
+
+        <a href="video-dashboard.html">
+            Videos
+        </a>
+
+        <a href="channels.html">
+            Channels
+        </a>
+
+        <a href="playlists.html">
+            Playlists
+        </a>
+
+        <a href="live.html">
+            Live
+        </a>
+
+        <a href="community.html">
+            Community
+        </a>
+
+    </div>
+
+</footer>
+
+
+<div
+    id="toast"
+    class="toast"
+    role="status"
+    aria-live="polite">
+</div>
+
+
+<script>
+
+const videos = {
+
+    "video-1": {
+        title:
+            "HTML & CSS Complete Beginner Guide",
+        description:
+            "Learn the foundations of HTML and CSS and understand how to build your first responsive website.",
+        views:
+            "2.4K",
+        duration:
+            "18:42",
+        video:
+            ""
+    },
+
+    "video-2": {
+        title:
+            "JavaScript Basics",
+        description:
+            "Learn variables, functions, conditions, loops and other JavaScript fundamentals.",
+        views:
+            "3.1K",
+        duration:
+            "24:15",
+        video:
+            ""
+    },
+
+    "video-3": {
+        title:
+            "Build Your First Website",
+        description:
+            "Create a responsive website from scratch using modern web development techniques.",
+        views:
+            "1.8K",
+        duration:
+            "31:08",
+        video:
+            ""
+    },
+
+    "video-4": {
+        title:
+            "Introduction to Artificial Intelligence",
+        description:
+            "Understand artificial intelligence concepts and how modern AI systems work.",
+        views:
+            "4.7K",
+        duration:
+            "21:33",
+        video:
+            ""
+    },
+
+    "video-5": {
+        title:
+            "Career Skills Every Student Needs",
+        description:
+            "Practical skills that help students prepare for education, work and professional growth.",
+        views:
+            "1.2K",
+        duration:
+            "16:20",
+        video:
+            ""
+    }
+    }
+};
+
+
+/* =========================
+   GET VIDEO ID
+========================= */
+
+function getVideoId(){
+
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
+
+    return (
+        params.get("id") ||
+        "video-1"
+    );
+
+}
+
+
+/* =========================
+   LOAD VIDEO
+========================= */
+
+function loadVideo(){
+
+    const id =
+        getVideoId();
+
+    const video =
+        videos[id] ||
+        videos["video-1"];
+
+
+    document.getElementById(
+        "videoTitle"
+    ).textContent =
+        video.title;
+
+
+    document.getElementById(
+        "videoDescription"
+    ).textContent =
+        video.description;
+
+
+    document.getElementById(
+        "videoMeta"
+    ).textContent =
+        video.views +
+        " views • " +
+        video.duration +
+        " • Published today";
+
+
+    const player =
+        document.getElementById(
+            "videoPlayer"
+        );
+
+    const placeholder =
+        document.getElementById(
+            "playerPlaceholder"
+        );
+
+
+    if(video.video){
+
+        player.src =
+            video.video;
+
+        placeholder.style.display =
+            "none";
+
+    }else{
+
+        player.removeAttribute(
+            "src"
+        );
+
+        placeholder.style.display =
+            "flex";
+
+    }
+
+}
+
+
+/* =========================
+   TOAST
+========================= */
+
+function showToast(message){
+
+    const toast =
+        document.getElementById(
+            "toast"
+        );
+
+
+    toast.textContent =
+        message;
+
+
+    toast.classList.add(
+        "show"
+    );
+
+
+    setTimeout(
+        function(){
+
+            toast.classList.remove(
+                "show"
+            );
+
+        },
+        2200
+    );
+
+}
+
+
+/* =========================
+   LIKE VIDEO
+========================= */
+
+function toggleLike(){
+
+    const key =
+        "liked_" +
+        getVideoId();
+
+
+    const liked =
+        localStorage.getItem(
+            key
+        ) === "true";
+
+
+    localStorage.setItem(
+        key,
+        String(!liked)
+    );
+
+
+    document.getElementById(
+        "likeButton"
+    ).textContent =
+        liked
+            ? "👍 Like"
+            : "👍 Liked";
+
+
+    showToast(
+        liked
+            ? "Like removed."
+            : "Video liked."
+    );
+
+}
+
+
+/* =========================
+   SAVE VIDEO
+========================= */
+
+function saveVideo(){
+
+    const key =
+        "saved_" +
+        getVideoId();
+
+
+    const saved =
+        localStorage.getItem(
+            key
+        ) === "true";
+
+
+    localStorage.setItem(
+        key,
+        String(!saved)
+    );
+
+
+    document.getElementById(
+        "saveButton"
+    ).textContent =
+        saved
+            ? "🔖 Save"
+            : "🔖 Saved";
+
+
+    showToast(
+        saved
+            ? "Removed from saved videos."
+            : "Video saved."
+    );
+
+}
+
+
+/* =========================
+   FOLLOW CHANNEL
+========================= */
+
+function toggleFollow(){
+
+    const followed =
+        localStorage.getItem(
+            "letsStudyFollowed"
+        ) === "true";
+
+
+    localStorage.setItem(
+        "letsStudyFollowed",
+        String(!followed)
+    );
+
+
+    document.getElementById(
+        "followButton"
+    ).textContent =
+        followed
+            ? "Follow"
+            : "Following";
+
+
+    showToast(
+        followed
+            ? "Channel unfollowed."
+            : "Channel followed."
+    );
+
+}
+
+
+/* =========================
+   SHARE VIDEO
+========================= */
+
+function shareVideo(){
+
+    const url =
+        window.location.href;
+
+
+    const title =
+        document.getElementById(
+            "videoTitle"
+        ).textContent;
+
+
+    if(
+        navigator.share
+    ){
+
+        navigator.share({
+
+            title:
+                title,
+
+            text:
+                "Watch this video on Let's Study.",
+
+            url:
+                url
+
+        }).catch(
+            function(){}
+        );
+
+        return;
+
+    }
+
+
+    if(
+        navigator.clipboard
+    ){
+
+        navigator.clipboard
+            .writeText(
+                url
+            )
+            .then(
+                function(){
+
+                    showToast(
+                        "Video link copied."
+                    );
+
+                }
+            )
+            .catch(
+                function(){
+
+                    showToast(
+                        "Unable to copy link."
+                    );
+
+                }
+            );
+
+        return;
+
+    }
+
+
+    showToast(
+        "Copy the video URL from your browser."
+    );
+
+}
+
+
+/* =========================
+   COMMENTS
+========================= */
+
+document
+    .getElementById(
+        "commentForm"
+    )
+    .addEventListener(
+        "submit",
+        function(event){
+
+            event.preventDefault();
+
+
+            const input =
+                document.getElementById(
+                    "commentInput"
+                );
+
+
+            const text =
+                input.value.trim();
+
+
+            if(!text){
+
+                return;
+
+            }
+
+
+            const comment =
+                document.createElement(
+                    "div"
+                );
+
+
+            comment.className =
+                "comment";
+
+
+            const strong =
+                document.createElement(
+                    "strong"
+                );
+
+
+            strong.textContent =
+                "You";
+
+
+            const paragraph =
+                document.createElement(
+                    "p"
+                );
+
+
+            paragraph.textContent =
+                text;
+
+
+            comment.appendChild(
+                strong
+            );
+
+
+            comment.appendChild(
+                paragraph
+            );
+
+
+            document
+                .getElementById(
+                    "commentsList"
+                )
+                .prepend(
+                    comment
+                );
+
+
+            input.value =
+                "";
+
+
+            updateCommentCount();
+
+
+            showToast(
+                "Comment added."
+            );
+
+        }
+    );
+
+
+function updateCommentCount(){
+
+    const list =
+        document.getElementById(
+            "commentsList"
+        );
+
+
+    const count =
+        list.children.length;
+
+
+    document.getElementById(
+        "commentCount"
+    ).textContent =
+        "(" + count + ")";
+
+}
+
+
+/* =========================
+   RESTORE USER ACTIONS
+========================= */
+
+function restoreActions(){
+
+    const videoId =
+        getVideoId();
+
+
+    const liked =
+        localStorage.getItem(
+            "liked_" +
+            videoId
+        ) === "true";
+
+
+    const saved =
+        localStorage.getItem(
+            "saved_" +
+            videoId
+        ) === "true";
+
+
+    const followed =
+        localStorage.getItem(
+            "letsStudyFollowed"
+        ) === "true";
+
+
+    const likeButton =
+        document.getElementById(
+            "likeButton"
+        );
+
+
+    const saveButton =
+        document.getElementById(
+            "saveButton"
+        );
+
+
+    const followButton =
+        document.getElementById(
+            "followButton"
+        );
+
+
+    if(likeButton){
+
+        likeButton.textContent =
+            liked
+                ? "👍 Liked"
+                : "👍 Like";
+
+    }
+
+
+    if(saveButton){
+
+        saveButton.textContent =
+            saved
+                ? "🔖 Saved"
+                : "🔖 Save";
+
+    }
+
+
+    if(followButton){
+
+        followButton.textContent =
+            followed
+                ? "Following"
+                : "Follow";
+
+    }
+
+}
+
+
+/* =========================
+   KEYBOARD SHORTCUTS
+========================= */
+
+document.addEventListener(
+    "keydown",
+    function(event){
+
+        const active =
+            document.activeElement;
+
+
+        const typing =
+            active &&
+            (
+                active.tagName === "INPUT" ||
+                active.tagName === "TEXTAREA" ||
+                active.tagName === "SELECT"
+            );
+
+
+        if(
+            event.key === "/" &&
+            !typing
+        ){
+
+            event.preventDefault();
+
+
+            const commentInput =
+                document.getElementById(
+                    "commentInput"
+                );
+
+
+            if(commentInput){
+
+                commentInput.focus();
+
+            }
+
+        }
+
+
+        if(
+            event.key === " " &&
+            !typing
+        ){
+
+            event.preventDefault();
+
+
+            const player =
+                document.getElementById(
+                    "videoPlayer"
+                );
+
+
+            if(
+                player &&
+                player.src
+            ){
+
+                if(player.paused){
+
+                    player.play();
+
+                }else{
+
+                    player.pause();
+
+                }
+
+            }
+
+        }
+
+    }
+);
+
+
+/* =========================
+   VIDEO ERROR HANDLER
+========================= */
+
+document
+    .getElementById(
+        "videoPlayer"
+    )
+    .addEventListener(
+        "error",
+        function(){
+
+            const placeholder =
+                document.getElementById(
+                    "playerPlaceholder"
+                );
+
+
+            placeholder.style.display =
+                "flex";
+
+
+            showToast(
+                "Unable to load this video."
+            );
+
+        }
+    );
+
+
+/* =========================
+   INITIALIZE PAGE
+========================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function(){
+
+        loadVideo();
+
+        restoreActions();
+
+        updateCommentCount();
+
+    }
+);
+
+
+/* =========================
+   END
+========================= */
+
+</script>
+
+</body>
+</html>
