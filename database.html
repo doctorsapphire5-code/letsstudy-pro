@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Database | Developer Console</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+ --primary:#2563eb;
+ --dark:#172033;
+ --muted:#718096;
+ --bg:#f4f6fa;
+ --card:#fff;
+ --border:#e2e8f0;
+ --danger:#dc2626;
+}
+
+body{
+ font-family:Arial,Helvetica,sans-serif;
+ background:var(--bg);
+ color:var(--dark);
+}
+
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+
+.topbar{
+ height:64px;
+ background:#fff;
+ border-bottom:1px solid var(--border);
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ padding:0 20px;
+ position:sticky;
+ top:0;
+ z-index:20;
+}
+
+.brand{
+ display:flex;
+ align-items:center;
+ gap:10px;
+ font-weight:900;
+}
+
+.logo{
+ width:38px;
+ height:38px;
+ border-radius:10px;
+ background:var(--dark);
+ color:#fff;
+ display:grid;
+ place-items:center;
+}
+
+.actions{
+ display:flex;
+ gap:8px;
+}
+
+.btn{
+ border:0;
+ border-radius:8px;
+ padding:10px 14px;
+ font-weight:800;
+}
+
+.primary{background:var(--primary);color:#fff}
+.secondary{background:#eaf0f7;color:var(--dark)}
+.danger{background:var(--danger);color:#fff}
+
+.layout{
+ display:grid;
+ grid-template-columns:230px 1fr;
+ min-height:calc(100vh - 64px);
+}
+
+.sidebar{
+ background:#fff;
+ border-right:1px solid var(--border);
+ padding:18px 12px;
+}
+
+.sidebar h4{
+ font-size:11px;
+ color:var(--muted);
+ text-transform:uppercase;
+ margin-bottom:10px;
+}
+
+.nav{
+ display:grid;
+ gap:4px;
+}
+
+.nav a{
+ text-decoration:none;
+ color:#596478;
+ padding:11px;
+ border-radius:8px;
+ font-weight:700;
+}
+
+.nav a:hover,
+.nav a.active{
+ background:#edf3ff;
+ color:var(--primary);
+}
+
+.main{
+ max-width:1400px;
+ width:100%;
+ margin:auto;
+ padding:24px;
+}
+
+.header{
+ display:flex;
+ justify-content:space-between;
+ align-items:flex-start;
+ gap:15px;
+ margin-bottom:20px;
+}
+
+.header h1{
+ font-size:28px;
+ margin:5px 0;
+}
+
+.muted{
+ color:var(--muted);
+ font-size:13px;
+}
+
+.stats{
+ display:grid;
+ grid-template-columns:repeat(4,1fr);
+ gap:12px;
+ margin-bottom:18px;
+}
+
+.stat{
+ background:#fff;
+ border:1px solid var(--border);
+ border-radius:12px;
+ padding:16px;
+}
+
+.stat strong{
+ display:block;
+ font-size:22px;
+ margin-top:7px;
+}
+
+.workspace{
+ display:grid;
+ grid-template-columns:260px 1fr;
+ gap:16px;
+}
+
+.card{
+ background:#fff;
+ border:1px solid var(--border);
+ border-radius:12px;
+ padding:16px;
+}
+
+.collections{
+ display:grid;
+ gap:6px;
+ margin-top:12px;
+}
+
+.collection{
+ width:100%;
+ border:0;
+ background:#f8fafc;
+ padding:11px;
+ border-radius:8px;
+ text-align:left;
+ font-weight:700;
+ display:flex;
+ justify-content:space-between;
+}
+
+.collection.active{
+ background:#edf3ff;
+ color:var(--primary);
+}
+
+.toolbar{
+ display:flex;
+ gap:8px;
+ margin-bottom:15px;
+}
+
+.search{
+ flex:1;
+}
+
+input,textarea,select{
+ width:100%;
+ border:1px solid #d7deea;
+ border-radius:8px;
+ padding:10px;
+ outline:none;
+}
+
+textarea{
+ min-height:230px;
+ resize:vertical;
+ font-family:monospace;
+}
+
+input:focus,
+textarea:focus,
+select:focus{
+ border-color:var(--primary);
+}
+
+.table-wrap{
+ overflow:auto;
+ border:1px solid var(--border);
+ border-radius:9px;
+}
+
+table{
+ width:100%;
+ border-collapse:collapse;
+ min-width:650px;
+}
+
+th,td{
+ padding:12px;
+ border-bottom:1px solid var(--border);
+ text-align:left;
+ font-size:13px;
+}
+
+th{
+ background:#f8fafc;
+}
+
+.actions-cell{
+ display:flex;
+ gap:5px;
+}
+
+.small-btn{
+ border:0;
+ border-radius:6px;
+ padding:7px 9px;
+ font-weight:700;
+}
+
+.empty{
+ padding:45px;
+ text-align:center;
+ color:var(--muted);
+}
+
+.modal{
+ position:fixed;
+ inset:0;
+ background:rgba(0,0,0,.45);
+ display:none;
+ place-items:center;
+ padding:20px;
+ z-index:100;
+}
+
+.modal.show{display:grid}
+
+.modal-box{
+ background:#fff;
+ width:100%;
+ max-width:650px;
+ border-radius:14px;
+ padding:20px;
+}
+
+.modal-head{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ margin-bottom:15px;
+}
+
+.close{
+ border:0;
+ background:#edf2f7;
+ border-radius:8px;
+ padding:8px 11px;
+}
+
+.form{
+ display:grid;
+ gap:12px;
+}
+
+.toast{
+ position:fixed;
+ right:20px;
+ bottom:20px;
+ background:var(--dark);
+ color:#fff;
+ padding:12px 16px;
+ border-radius:9px;
+ opacity:0;
+ transform:translateY(10px);
+ transition:.2s;
+ z-index:200;
+}
+
+.toast.show{
+ opacity:1;
+ transform:translateY(0);
+}
+
+@media(max-width:900px){
+ .layout{display:block}
+ .sidebar{display:none}
+ .workspace{grid-template-columns:1fr}
+ .stats{grid-template-columns:repeat(2,1fr)}
+}
+
+@media(max-width:600px){
+ .main{padding:15px}
+ .header{flex-direction:column}
+ .toolbar{flex-direction:column}
+ .stats{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+
+<div class="brand">
+ <div class="logo">🗄️</div>
+ <span>Developer Database</span>
+</div>
+
+<div class="actions">
+
+<button
+ class="btn secondary"
+ onclick="exportDatabase()">
+ Export
+</button>
+
+<button
+ class="btn primary"
+ onclick="openDocument()">
+ + Document
+</button>
+
+</div>
+
+</header>
+
+
+<div class="layout">
+
+<aside class="sidebar">
+
+<h4>Developer</h4>
+
+<nav class="nav">
+
+<a href="developer-market.html">
+🛒 Market
+</a>
+
+<a href="extension.html">
+🧩 Extensions
+</a>
+
+<a href="developer-storage.html">
+☁ Storage
+</a>
+
+<a href="database.html"
+ class="active">
+🗄️ Database
+</a>
+
+<a href="api-manager.html">
+🔌 API Manager
+</a>
+
+<a href="developer-settings.html">
+⚙ Settings
+</a>
+
+</nav>
+
+</aside>
+
+
+<main class="main">
+
+<section class="header">
+
+<div>
+
+<p class="muted">
+Developer / Database
+</p>
+
+<h1>
+Database
+</h1>
+
+<p class="muted">
+Manage collections and documents.
+</p>
+
+</div>
+
+<button
+ class="btn primary"
+ onclick="createCollection()">
++ Collection
+</button>
+
+</section>
+
+
+<section class="stats">
+
+<div class="stat">
+<span class="muted">Collections</span>
+<strong id="collectionCount">0</strong>
+</div>
+
+<div class="stat">
+<span class="muted">Documents</span>
+<strong id="documentCount">0</strong>
+</div>
+
+<div class="stat">
+<span class="muted">Fields</span>
+<strong id="fieldCount">0</strong>
+</div>
+
+<div class="stat">
+<span class="muted">Status</span>
+<strong>Online</strong>
+</div>
+
+</section>
+
+
+<div class="workspace">
+
+
+<div class="card">
+
+<strong>
+Collections
+</strong>
+
+<div
+ id="collections"
+ class="collections">
+</div>
+
+</div>
+
+
+<div class="card">
+
+<div class="toolbar">
+
+<input
+ id="search"
+ class="search"
+ placeholder="Search documents..."
+>
+
+<button
+ class="btn secondary"
+ onclick="importDatabase()">
+Import
+</button>
+
+</div>
+
+
+<div id="table"></div>
+
+</div>
+
+</div>
+
+</main>
+
+</div>
+
+
+<!-- DOCUMENT MODAL -->
+
+<div
+ id="documentModal"
+ class="modal">
+
+<div class="modal-box">
+
+<div class="modal-head">
+
+<h2 id="documentTitle">
+New Document
+</h2>
+
+<button
+ class="close"
+ onclick="closeModal('documentModal')">
+✕
+</button>
+
+</div>
+
+
+<div class="form">
+
+<input
+ id="documentId"
+ placeholder="Document ID (optional)"
+>
+
+<textarea
+ id="documentData"
+ placeholder='{"name":"John","role":"student"}'
+></textarea>
+
+
+<div style="
+ display:flex;
+ gap:8px">
+
+<button
+ class="btn primary"
+ style="flex:1"
+ onclick="saveDocument()">
+Save
+</button>
+
+<button
+ class="btn secondary"
+ onclick="closeModal('documentModal')">
+Cancel
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- COLLECTION MODAL -->
+
+<div
+ id="collectionModal"
+ class="modal">
+
+<div class="modal-box">
+
+<div class="modal-head">
+
+<h2>
+Create Collection
+</h2>
+
+<button
+ class="close"
+ onclick="closeModal('collectionModal')">
+✕
+</button>
+
+</div>
+
+<div class="form">
+
+<input
+ id="collectionName"
+ placeholder="Collection name"
+>
+
+<button
+ class="btn primary"
+ onclick="saveCollection()">
+Create Collection
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div id="toast" class="toast"></div>
+
+
+<script>
+
+/* =========================
+   DATABASE STATE
+========================= */
+
+const DB_KEY =
+    "letsstudy_developer_database";
+
+
+let database = {};
+
+let activeCollection =
+    "users";
+
+let editingId = null;
+
+
+/* =========================
+   DEFAULT DATABASE
+========================= */
+
+const defaultDatabase = {
+
+    users:{
+
+        "demo-user":{
+
+            name:"Demo User",
+
+            role:"developer",
+
+            status:"active"
+
+        }
+
+    },
+
+    courses:{
+
+        "course-001":{
+
+            title:"Web Development",
+
+            status:"published",
+
+            price:0
+
+        }
+
+    },
+
+    products:{
+
+        "product-001":{
+
+            name:"Developer Toolkit",
+
+            price:30000,
+
+            status:"active"
+
+        }
+
+    }
+
+};
+
+
+/* =========================
+   HELPERS
+========================= */
+
+function get(id){
+
+    return document.getElementById(id);
+
+}
+
+
+function escapeHTML(value){
+
+    return String(
+        value ?? ""
+    ).replace(
+        /[&<>"']/g,
+        char => ({
+            "&":"&amp;",
+            "<":"&lt;",
+            ">":"&gt;",
+            '"':"&quot;",
+            "'":"&#039;"
+        }[char])
+    );
+
+}
+
+
+function toast(message){
+
+    const el =
+        get("toast");
+
+    el.textContent =
+        message;
+
+    el.classList.add(
+        "show"
+    );
+
+    clearTimeout(
+        window.toastTimer
+    );
+
+    window.toastTimer =
+        setTimeout(
+            () =>
+                el.classList.remove(
+                    "show"
+                ),
+            2200
+        );
+
+}
+
+
+/* =========================
+   LOAD DATABASE
+========================= */
+
+function loadDatabase(){
+
+    try{
+
+        const saved =
+            localStorage.getItem(
+                DB_KEY
+            );
+
+
+        database =
+            saved
+            ? JSON.parse(saved)
+            : structuredClone(
+                defaultDatabase
+            );
+
+
+    }catch(error){
+
+        database =
+            structuredClone(
+                defaultDatabase
+            );
+
+    }
+
+
+    if(
+        !database[activeCollection]
+    ){
+
+        activeCollection =
+            Object.keys(
+                database
+            )[0] ||
+            "users";
+
+    }
+
+}
+
+
+/* =========================
+   SAVE DATABASE
+========================= */
+
+function saveDatabase(){
+
+    localStorage.setItem(
+        DB_KEY,
+        JSON.stringify(database)
+    );
+
+}
+
+
+/* =========================
+   COLLECTIONS
+========================= */
+
+function renderCollections(){
+
+    const container =
+        get("collections");
+
+
+    const names =
+        Object.keys(
+            database
+        );
+
+
+    get("collectionCount")
+        .textContent =
+        names.length;
+
+
+    container.innerHTML =
+        names.map(
+            name => `
+
+            <button
+                class="collection ${
+                    name === activeCollection
+                    ? "active"
+                    : ""
+                }"
+                onclick="selectCollection('${escapeHTML(
+                    name
+                )}')"
+            >
+
+                <span>
+                    🗂 ${escapeHTML(name)}
+                </span>
+
+                <span>
+                    ${
+                        Object.keys(
+                            database[name]
+                        ).length
+                    }
+                </span>
+
+            </button>
+
+        `
+        ).join("");
+
+}
+
+
+/* =========================
+   SELECT COLLECTION
+========================= */
+
+function selectCollection(name){
+
+    activeCollection =
+        name;
+
+    editingId =
+        null;
+
+    renderCollections();
+
+    renderDocuments();
+
+}
+
+
+/* =========================
+   CREATE COLLECTION
+========================= */
+
+function createCollection(){
+
+    get("collectionName")
+        .value = "";
+
+    get("collectionModal")
+        .classList.add(
+            "show"
+        );
+
+}
+
+
+function saveCollection(){
+
+    const name =
+        get("collectionName")
+        .value
+        .trim();
+
+
+    if(!name){
+
+        toast(
+            "Enter collection name."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        !/^[a-zA-Z0-9_-]+$/
+            .test(name)
+    ){
+
+        toast(
+            "Use letters, numbers, _ or -."
+        );
+
+        return;
+
+    }
+
+
+    if(database[name]){
+
+        toast(
+            "Collection already exists."
+        );
+
+        return;
+
+    }
+
+
+    database[name] = {};
+
+
+    saveDatabase();
+
+    activeCollection =
+        name;
+
+
+    closeModal(
+        "collectionModal"
+    );
+
+    render();
+
+    toast(
+        "Collection created."
+    );
+
+}
+
+
+/* =========================
+   DOCUMENTS
+========================= */
+
+function renderDocuments(){
+
+    const container =
+        get("table");
+
+
+    const collection =
+        database[
+            activeCollection
+        ] || {};
+
+
+    const search =
+        get("search")
+        .value
+        .toLowerCase()
+        .trim();
+
+
+    let entries =
+        Object.entries(
+            collection
+        );
+
+
+    if(search){
+
+        entries =
+            entries.filter(
+                ([id,data]) =>
+                    id
+                    .toLowerCase()
+                    .includes(search) ||
+
+                    JSON.stringify(data)
+                    .toLowerCase()
+                    .includes(search)
+            );
+
+    }
+
+
+    const ids =
+        Object.keys(
+            collection
+        );
+
+
+    get("documentCount")
+        .textContent =
+        Object.values(
+            database
+        ).reduce(
+            (total,col) =>
+                total +
+                Object.keys(col).length,
+            0
+        );
+
+
+    get("fieldCount")
+        .textContent =
+        Object.values(
+            database
+        ).reduce(
+            (total,col) =>
+                total +
+                Object.values(col)
+                .reduce(
+                    (sum,data) =>
+                        sum +
+                        (
+                            data &&
+                            typeof data ===
+                            "object"
+                            ? Object.keys(data).length
+                            : 0
+                        ),
+                    0
+                ),
+            0
+        );
+
+
+    if(!entries.length){
+
+        container.innerHTML = `
+
+            <div class="empty">
+
+                🗄️
+
+                <h3 style="margin-top:10px">
+                    No documents
+                </h3>
+
+                <p style="margin-top:6px">
+                    Add your first document.
+                </p>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    const allFields =
+        new Set();
+
+
+    entries.forEach(
+        ([id,data]) => {
+
+            if(
+                data &&
+                typeof data ===
+                "object"
+            ){
+
+                Object.keys(data)
+                    .forEach(
+                        key =>
+                            allFields.add(key)
+                    );
+
+            }
+
+        }
+    );
+
+
+    const fields =
+        Array.from(
+            allFields
+        ).slice(0,8);
+
+
+    container.innerHTML = `
+
+    <div class="table-wrap">
+
+    <table>
+
+    <thead>
+
+    <tr>
+
+        <th>
+            ID
+        </th>
+
+        ${
+            fields
+            .map(
+                field =>
+                    `<th>${escapeHTML(
+                        field
+                    )}</th>`
+            )
+            .join("")
+        }
+
+        <th>
+            Actions
+        </th>
+
+    </tr>
+
+    </thead>
+
+    <tbody>
+
+    ${
+        entries.map(
+            ([id,data]) => `
+
+            <tr>
+
+                <td>
+                    <strong>
+                        ${escapeHTML(id)}
+                    </strong>
+                </td>
+
+                ${
+                    fields.map(
+                        field => `
+
+                        <td>
+                            ${escapeHTML(
+                                formatValue(
+                                    data?.[field]
+                                )
+                            )}
+                        </td>
+
+                        `
+                    ).join("")
+                }
+
+                <td>
+
+                    <div class="actions-cell">
+
+                        <button
+                            class="small-btn secondary"
+                            onclick="editDocument('${escapeHTML(
+                                id
+                            )}')"
+                        >
+                            Edit
+                        </button>
+
+                        <button
+                            class="small-btn danger"
+                            onclick="deleteDocument('${escapeHTML(
+                                id
+                            )}')"
+                        >
+                            Delete
+                        </button>
+
+                    </div>
+
+                </td>
+
+            </tr>
+
+            `
+        ).join("")
+    }
+
+    </tbody>
+
+    </table>
+
+    </div>
+
+    `;
+
+}
+
+
+function formatValue(value){
+
+    if(
+        value === null ||
+        value === undefined
+    ){
+
+        return "—";
+
+    }
+
+
+    if(
+        typeof value ===
+        "object"
+    ){
+
+        return JSON.stringify(
+            value
+        );
+
+    }
+
+
+    return String(value);
+
+}
+
+
+/* =========================
+   NEW DOCUMENT
+========================= */
+
+function openDocument(){
+
+    editingId =
+        null;
+
+
+    get("documentTitle")
+        .textContent =
+        "New Document";
+
+
+    get("documentId")
+        .value = "";
+
+
+    get("documentData")
+        .value =
+`{
+  "name": "",
+  "status": "active"
+}`;
+
+
+    get("documentModal")
+        .classList.add(
+            "show"
+        );
+
+}
+
+
+/* =========================
+   EDIT DOCUMENT
+========================= */
+
+function editDocument(id){
+
+    const data =
+        database[
+            activeCollection
+        ][id];
+
+
+    if(!data){
+        return;
+    }
+
+
+    editingId =
+        id;
+
+
+    get("documentTitle")
+        .textContent =
+        "Edit Document";
+
+
+    get("documentId")
+        .value =
+        id;
+
+
+    get("documentData")
+        .value =
+        JSON.stringify(
+            data,
+            null,
+            2
+        );
+
+
+    get("documentModal")
+        .classList.add(
+            "show"
+        );
+
+}
+
+
+/* =========================
+   SAVE DOCUMENT
+========================= */
+
+function saveDocument(){
+
+    const id =
+        get("documentId")
+        .value
+        .trim();
+
+
+    const raw =
+        get("documentData")
+        .value
+        .trim();
+
+
+    if(!id){
+
+        toast(
+            "Document ID is required."
+        );
+
+        return;
+
+    }
+
+
+    let data;
+
+
+    try{
+
+        data =
+            JSON.parse(
+                raw
+            );
+
+    }catch(error){
+
+        toast(
+            "Invalid JSON."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        typeof data !==
+        "object" ||
+        Array.isArray(data)
+    ){
+
+        toast(
+            "Document must be a JSON object."
+        );
+
+        return;
+
+    }
+
+
+    const collection =
+        database[
+            activeCollection
+        ];
+
+
+    if(
+        editingId &&
+        editingId !== id
+    ){
+
+        delete collection[
+            editingId
+        ];
+
+    }
+
+
+    collection[id] =
+        data;
+
+
+    saveDatabase();
+
+    closeModal(
+        "documentModal"
+    );
+
+    render();
+
+    toast(
+        editingId
+        ? "Document updated."
+        : "Document created."
+    );
+
+
+    editingId =
+        null;
+
+}
+
+
+/* =========================
+   DELETE DOCUMENT
+========================= */
+
+function deleteDocument(id){
+
+    if(
+        !confirm(
+            `Delete document "${id}"?`
+        )
+    ){
+
+        return;
+
+    }
+
+
+    delete database[
+        activeCollection
+    ][id];
+
+
+    saveDatabase();
+
+    render();
+
+    toast(
+        "Document deleted."
+    );
+
+}
+
+
+/* =========================
+   EXPORT
+========================= */
+
+function exportDatabase(){
+
+    const blob =
+        new Blob(
+            [
+                JSON.stringify(
+                    database,
+                    null,
+                    2
+                )
+            ],
+            {
+                type:
+                    "application/json"
+            }
+        );
+
+
+    const url =
+    URL.createObjectURL(
+        blob
+    );
+
+
+const link =
+    document.createElement(
+        "a"
+    );
+
+
+link.href =
+    url;
+
+link.download =
+    "letsstudy-database.json";
+
+
+document.body.appendChild(
+    link
+);
+
+link.click();
+
+link.remove();
+
+
+setTimeout(
+    () => {
+        URL.revokeObjectURL(
+            url
+        );
+    },
+    100
+);
+
+
+toast(
+    "Database exported successfully."
+);
+
+
+/* =========================
+   IMPORT DATABASE
+========================= */
+
+function importDatabase(){
+
+    const input =
+        document.createElement(
+            "input"
+        );
+
+
+    input.type =
+        "file";
+
+    input.accept =
+        ".json,application/json";
+
+
+    input.addEventListener(
+        "change",
+        event => {
+
+            const file =
+                event
+                .target
+                .files?.[0];
+
+
+            if(!file){
+                return;
+            }
+
+
+            const reader =
+                new FileReader();
+
+
+            reader.onload =
+                function(){
+
+                    try{
+
+                        const imported =
+                            JSON.parse(
+                                reader.result
+                            );
+
+
+                        if(
+                            !imported ||
+                            typeof imported !==
+                            "object" ||
+                            Array.isArray(
+                                imported
+                            )
+                        ){
+
+                            throw new Error(
+                                "Invalid database"
+                            );
+
+                        }
+
+
+                        database =
+                            imported;
+
+
+                        const collections =
+                            Object.keys(
+                                database
+                            );
+
+
+                        activeCollection =
+                            collections[0] ||
+                            "";
+
+
+                        saveDatabase();
+
+                        render();
+
+
+                        toast(
+                            "Database imported successfully."
+                        );
+
+
+                    }catch(error){
+
+                        console.error(
+                            "Import error:",
+                            error
+                        );
+
+
+                        toast(
+                            "Invalid JSON database."
+                        );
+
+                    }
+
+                };
+
+
+            reader.onerror =
+                function(){
+
+                    toast(
+                        "Unable to read file."
+                    );
+
+                };
+
+
+            reader.readAsText(
+                file
+            );
+
+        }
+    );
+
+
+    input.click();
+
+}
+
+
+/* =========================
+   SEARCH
+========================= */
+
+const searchInput =
+    get("search");
+
+
+if(searchInput){
+
+    searchInput.addEventListener(
+        "input",
+        () => {
+
+            renderDocuments();
+
+        }
+    );
+
+}
+
+
+/* =========================
+   MODAL
+========================= */
+
+function closeModal(id){
+
+    const modal =
+        get(id);
+
+
+    if(!modal){
+        return;
+    }
+
+
+    modal.classList.remove(
+        "show"
+    );
+
+}
+
+
+document
+.querySelectorAll(
+    ".modal"
+)
+.forEach(
+    modal => {
+
+        modal.addEventListener(
+            "click",
+            event => {
+
+                if(
+                    event.target ===
+                    modal
+                ){
+
+                    modal.classList.remove(
+                        "show"
+                    );
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+/* =========================
+   ESC KEY
+========================= */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if(
+            event.key ===
+            "Escape"
+        ){
+
+            document
+            .querySelectorAll(
+                ".modal.show"
+            )
+            .forEach(
+                modal => {
+
+                    modal.classList.remove(
+                        "show"
+                    );
+
+                }
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================
+   RENDER
+========================= */
+
+function render(){
+
+    renderCollections();
+
+    renderDocuments();
+
+}
+
+
+/* =========================
+   INITIALIZATION
+========================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        loadDatabase();
+
+        render();
+
+    }
+);
+
+
+/* =========================
+   GLOBAL FUNCTIONS
+========================= */
+
+window.selectCollection =
+    selectCollection;
+
+window.createCollection =
+    createCollection;
+
+window.saveCollection =
+    saveCollection;
+
+window.openDocument =
+    openDocument;
+
+window.editDocument =
+    editDocument;
+
+window.saveDocument =
+    saveDocument;
+
+window.deleteDocument =
+    deleteDocument;
+
+window.exportDatabase =
+    exportDatabase;
+
+window.importDatabase =
+    importDatabase;
+
+window.closeModal =
+    closeModal;
+
+window.render =
+    render;
+
+</script>
+
+</body>
+</html>
