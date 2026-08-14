@@ -1,0 +1,2157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Developer Storage | LetsStudy Pro</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+:root{
+    --primary:#2563eb;
+    --dark:#172033;
+    --muted:#718096;
+    --bg:#f4f6fa;
+    --card:#fff;
+    --border:#e2e8f0;
+    --danger:#dc2626;
+    --success:#15803d;
+}
+
+body{
+    font-family:Arial,Helvetica,sans-serif;
+    background:var(--bg);
+    color:var(--dark);
+}
+
+button,input,select{
+    font:inherit;
+}
+
+button{
+    cursor:pointer;
+}
+
+.topbar{
+    height:64px;
+    background:#fff;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 20px;
+    position:sticky;
+    top:0;
+    z-index:20;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:900;
+}
+
+.logo{
+    width:38px;
+    height:38px;
+    border-radius:10px;
+    background:var(--dark);
+    color:#fff;
+    display:grid;
+    place-items:center;
+}
+
+.actions{
+    display:flex;
+    gap:8px;
+}
+
+.btn{
+    border:0;
+    border-radius:8px;
+    padding:10px 14px;
+    font-weight:800;
+}
+
+.primary{
+    background:var(--primary);
+    color:#fff;
+}
+
+.secondary{
+    background:#eaf0f7;
+    color:var(--dark);
+}
+
+.danger{
+    background:var(--danger);
+    color:#fff;
+}
+
+.layout{
+    display:grid;
+    grid-template-columns:220px 1fr;
+    min-height:calc(100vh - 64px);
+}
+
+.sidebar{
+    background:#fff;
+    border-right:1px solid var(--border);
+    padding:18px 12px;
+}
+
+.sidebar h4{
+    font-size:11px;
+    color:var(--muted);
+    text-transform:uppercase;
+    margin-bottom:10px;
+}
+
+.nav{
+    display:grid;
+    gap:4px;
+}
+
+.nav a{
+    text-decoration:none;
+    color:#596478;
+    padding:11px;
+    border-radius:8px;
+    font-weight:700;
+}
+
+.nav a:hover,
+.nav a.active{
+    background:#edf3ff;
+    color:var(--primary);
+}
+
+.main{
+    width:100%;
+    max-width:1400px;
+    margin:auto;
+    padding:24px;
+}
+
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:15px;
+    margin-bottom:20px;
+}
+
+.header h1{
+    font-size:28px;
+    margin:5px 0;
+}
+
+.muted{
+    color:var(--muted);
+    font-size:13px;
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+    margin-bottom:18px;
+}
+
+.stat{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px;
+}
+
+.stat strong{
+    display:block;
+    font-size:22px;
+    margin-top:7px;
+}
+
+.storage-bar{
+    height:8px;
+    background:#e5e7eb;
+    border-radius:20px;
+    overflow:hidden;
+    margin-top:12px;
+}
+
+.storage-fill{
+    height:100%;
+    width:0;
+    background:var(--primary);
+    transition:.3s;
+}
+
+.toolbar{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:14px;
+    display:flex;
+    gap:10px;
+    margin-bottom:18px;
+}
+
+.search{
+    flex:1;
+}
+
+input,
+select{
+    border:1px solid #d7deea;
+    border-radius:8px;
+    padding:11px;
+    outline:none;
+    background:#fff;
+}
+
+input:focus,
+select:focus{
+    border-color:var(--primary);
+}
+
+.dropzone{
+    background:#fff;
+    border:2px dashed #cbd5e1;
+    border-radius:13px;
+    padding:30px;
+    text-align:center;
+    margin-bottom:18px;
+    transition:.2s;
+}
+
+.dropzone.drag{
+    border-color:var(--primary);
+    background:#edf3ff;
+}
+
+.dropzone-icon{
+    font-size:35px;
+    margin-bottom:10px;
+}
+
+.file-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:13px;
+}
+
+.file{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:14px;
+}
+
+.file-icon{
+    width:55px;
+    height:55px;
+    border-radius:12px;
+    background:#eef2ff;
+    display:grid;
+    place-items:center;
+    font-size:27px;
+    margin-bottom:12px;
+}
+
+.file-name{
+    font-weight:800;
+    word-break:break-word;
+}
+
+.file-meta{
+    color:var(--muted);
+    font-size:11px;
+    margin-top:5px;
+}
+
+.file-actions{
+    display:flex;
+    gap:6px;
+    margin-top:12px;
+}
+
+.file-actions button{
+    flex:1;
+    padding:8px;
+    border:0;
+    border-radius:7px;
+    font-weight:700;
+}
+
+.empty{
+    background:#fff;
+    border:1px dashed var(--border);
+    border-radius:12px;
+    padding:45px;
+    text-align:center;
+    color:var(--muted);
+    grid-column:1/-1;
+}
+
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.45);
+    display:none;
+    place-items:center;
+    padding:20px;
+    z-index:100;
+}
+
+.modal.show{
+    display:grid;
+}
+
+.modal-box{
+    background:#fff;
+    border-radius:14px;
+    width:100%;
+    max-width:500px;
+    padding:20px;
+}
+
+.modal-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:15px;
+}
+
+.close{
+    border:0;
+    background:#edf2f7;
+    border-radius:8px;
+    padding:8px 11px;
+}
+
+.form{
+    display:grid;
+    gap:12px;
+}
+
+.preview{
+    max-height:350px;
+    max-width:100%;
+    display:block;
+    margin:auto;
+    border-radius:8px;
+}
+
+.toast{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    background:var(--dark);
+    color:#fff;
+    padding:12px 16px;
+    border-radius:9px;
+    opacity:0;
+    transform:translateY(10px);
+    transition:.2s;
+    z-index:200;
+}
+
+.toast.show{
+    opacity:1;
+    transform:translateY(0);
+}
+
+@media(max-width:1100px){
+    .file-grid{
+        grid-template-columns:repeat(3,1fr);
+    }
+}
+
+@media(max-width:850px){
+    .layout{
+        display:block;
+    }
+
+    .sidebar{
+        display:none;
+    }
+
+    .stats{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .file-grid{
+        grid-template-columns:repeat(2,1fr);
+    }
+}
+
+@media(max-width:600px){
+    .main{
+        padding:15px;
+    }
+
+    .header{
+        flex-direction:column;
+    }
+
+    .toolbar{
+        flex-direction:column;
+    }
+
+    .file-grid{
+        grid-template-columns:1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+
+<div class="brand">
+    <div class="logo">☁</div>
+    <span>Developer Storage</span>
+</div>
+
+<div class="actions">
+
+<button
+    class="btn secondary"
+    onclick="createFolder()"
+>
+    📁 New Folder
+</button>
+
+<button
+    class="btn primary"
+    onclick="openUpload()"
+>
+    ⬆ Upload
+</button>
+
+</div>
+
+</header>
+
+
+<div class="layout">
+
+<aside class="sidebar">
+
+<h4>Developer</h4>
+
+<nav class="nav">
+
+<a href="developer-market.html">
+    🛒 Developer Market
+</a>
+
+<a href="extension.html">
+    🧩 Extensions
+</a>
+
+<a href="plugin-development.html">
+    🔌 Plugins
+</a>
+
+<a href="theme-development.html">
+    🎨 Themes
+</a>
+
+<a href="developer-storage.html"
+   class="active">
+    ☁ Storage
+</a>
+
+<a href="developer-settings.html">
+    ⚙ Settings
+</a>
+
+</nav>
+
+</aside>
+
+
+<main class="main">
+
+<section class="header">
+
+<div>
+
+<p class="muted">
+Developer / Storage
+</p>
+
+<h1>
+Developer Storage
+</h1>
+
+<p class="muted">
+Manage your project files, assets and folders.
+</p>
+
+</div>
+
+<button
+    class="btn primary"
+    onclick="openUpload()"
+>
+    ⬆ Upload Files
+</button>
+
+</section>
+
+
+<section class="stats">
+
+<div class="stat">
+
+<span class="muted">
+Files
+</span>
+
+<strong id="fileCount">
+0
+</strong>
+
+</div>
+
+
+<div class="stat">
+
+<span class="muted">
+Storage Used
+</span>
+
+<strong id="storageUsed">
+0 B
+</strong>
+
+</div>
+
+
+<div class="stat">
+
+<span class="muted">
+Folders
+</span>
+
+<strong id="folderCount">
+0
+</strong>
+
+</div>
+
+
+<div class="stat">
+
+<span class="muted">
+Storage Limit
+</span>
+
+<strong>
+50 MB
+</strong>
+
+<div class="storage-bar">
+
+<div
+    id="storageFill"
+    class="storage-fill"
+></div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<div class="toolbar">
+
+<input
+    id="search"
+    class="search"
+    placeholder="Search files..."
+>
+
+<select id="filter">
+
+<option value="all">
+All Files
+</option>
+
+<option value="image">
+Images
+</option>
+
+<option value="document">
+Documents
+</option>
+
+<option value="code">
+Code
+</option>
+
+<option value="other">
+Other
+</option>
+
+</select>
+
+<select id="sort">
+
+<option value="newest">
+Newest
+</option>
+
+<option value="oldest">
+Oldest
+</option>
+
+<option value="name">
+Name
+</option>
+
+<option value="size">
+Size
+</option>
+
+</select>
+
+</div>
+
+
+<section
+    id="dropzone"
+    class="dropzone"
+>
+
+<div class="dropzone-icon">
+☁️
+</div>
+
+<h3>
+Drop files here
+</h3>
+
+<p class="muted"
+   style="margin-top:7px">
+or select files from your device
+</p>
+
+<button
+    class="btn primary"
+    style="margin-top:14px"
+    onclick="openUpload()"
+>
+    Choose Files
+</button>
+
+</section>
+
+
+<section
+    id="fileGrid"
+    class="file-grid"
+></section>
+
+</main>
+
+</div>
+
+
+<!-- UPLOAD MODAL -->
+
+<div
+    id="uploadModal"
+    class="modal"
+>
+
+<div class="modal-box">
+
+<div class="modal-head">
+
+<h2>
+Upload Files
+</h2>
+
+<button
+    class="close"
+    onclick="closeModal('uploadModal')"
+>
+    ✕
+</button>
+
+</div>
+
+<div class="form">
+
+<input
+    id="fileInput"
+    type="file"
+    multiple
+>
+
+<select id="uploadFolder">
+
+<option value="/">
+Root</option>
+
+</select>
+
+<button
+    class="btn primary"
+    onclick="uploadFiles()"
+>
+    Upload
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- PREVIEW MODAL -->
+
+<div
+    id="previewModal"
+    class="modal"
+>
+
+<div class="modal-box">
+
+<div class="modal-head">
+
+<h2 id="previewTitle">
+Preview
+</h2>
+
+<button
+    class="close"
+    onclick="closeModal('previewModal')"
+>
+    ✕
+</button>
+
+</div>
+
+<div id="previewContent"></div>
+
+</div>
+
+</div>
+
+
+<!-- RENAME MODAL -->
+
+<div
+    id="renameModal"
+    class="modal"
+>
+
+<div class="modal-box">
+
+<div class="modal-head">
+
+<h2>
+Rename File
+</h2>
+
+<button
+    class="close"
+    onclick="closeModal('renameModal')"
+>
+    ✕
+</button>
+
+</div>
+
+<div class="form">
+
+<input
+    id="renameInput"
+    placeholder="New file name"
+>
+
+<button
+    class="btn primary"
+    onclick="renameFile()"
+>
+    Save
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div
+    id="toast"
+    class="toast"
+></div>
+
+
+<script>
+
+/* =========================
+   STORAGE SYSTEM
+========================= */
+
+const FILES_KEY =
+    "letsstudy_developer_files";
+
+const FOLDERS_KEY =
+    "letsstudy_developer_folders";
+
+const STORAGE_LIMIT =
+    50 * 1024 * 1024;
+
+
+let files = [];
+
+let folders = ["/"];
+
+let renameId = null;
+
+
+/* =========================
+   HELPERS
+========================= */
+
+function get(id){
+    return document.getElementById(id);
+}
+
+
+function escapeHTML(value){
+
+    return String(value ?? "")
+        .replace(
+            /[&<>"']/g,
+            char => ({
+                "&":"&amp;",
+                "<":"&lt;",
+                ">":"&gt;",
+                '"':"&quot;",
+                "'":"&#039;"
+            }[char])
+        );
+
+}
+
+
+function formatBytes(bytes){
+
+    if(!bytes){
+        return "0 B";
+    }
+
+    const units =
+        ["B","KB","MB","GB"];
+
+    const index =
+        Math.floor(
+            Math.log(bytes) /
+            Math.log(1024)
+        );
+
+    return (
+        bytes /
+        Math.pow(1024,index)
+    ).toFixed(
+        index ? 2 : 0
+    ) +
+    " " +
+    units[index];
+
+}
+
+
+function showToast(message){
+
+    const toast =
+        get("toast");
+
+    toast.textContent =
+        message;
+
+    toast.classList.add(
+        "show"
+    );
+
+    clearTimeout(
+        window.toastTimer
+    );
+
+    window.toastTimer =
+        setTimeout(
+            () =>
+                toast.classList.remove(
+                    "show"
+                ),
+            2200
+        );
+
+}
+
+
+/* =========================
+   FILE TYPE
+========================= */
+
+function getType(file){
+
+    const name =
+        file.name ||
+        "";
+
+    const ext =
+        name
+        .split(".")
+        .pop()
+        .toLowerCase();
+
+
+    if([
+        "jpg",
+        "jpeg",
+        "png",
+        "gif",
+        "webp",
+        "svg"
+    ].includes(ext)){
+
+        return "image";
+
+    }
+
+
+    if([
+        "html",
+        "css",
+        "js",
+        "json",
+        "php",
+        "py",
+        "java",
+        "ts"
+    ].includes(ext)){
+
+        return "code";
+
+    }
+
+
+    if([
+        "pdf",
+        "doc",
+        "docx",
+        "txt",
+        "csv",
+        "xls",
+        "xlsx"
+    ].includes(ext)){
+
+        return "document";
+
+    }
+
+
+    return "other";
+
+}
+
+
+function fileIcon(type){
+
+    return {
+
+        image:"🖼️",
+
+        code:"💻",
+
+        document:"📄",
+
+        other:"📦"
+
+    }[type] || "📦";
+
+}
+
+
+/* =========================
+   SAVE / LOAD
+========================= */
+
+function save(){
+
+    localStorage.setItem(
+        FILES_KEY,
+        JSON.stringify(files)
+    );
+
+    localStorage.setItem(
+        FOLDERS_KEY,
+        JSON.stringify(folders)
+    );
+
+}
+
+
+function load(){
+
+    try{
+
+        const savedFiles =
+            localStorage.getItem(
+                FILES_KEY
+            );
+
+        const savedFolders =
+            localStorage.getItem(
+                FOLDERS_KEY
+            );
+
+
+        files =
+            savedFiles
+            ? JSON.parse(savedFiles)
+            : [];
+
+
+        folders =
+            savedFolders
+            ? JSON.parse(savedFolders)
+            : ["/"];
+
+
+    }catch(error){
+
+        files = [];
+
+        folders = ["/"];
+
+    }
+
+}
+
+
+/* =========================
+   RENDER
+========================= */
+
+function render(){
+
+    const grid =
+        get("fileGrid");
+
+
+    const search =
+        get("search")
+        .value
+        .toLowerCase()
+        .trim();
+
+
+    const filter =
+        get("filter")
+        .value;
+
+
+    const sort =
+        get("sort")
+        .value;
+
+
+    let list =
+        files.filter(file => {
+
+            const matchesSearch =
+                !search ||
+                file.name
+                    .toLowerCase()
+                    .includes(search);
+
+
+            const matchesFilter =
+                filter === "all" ||
+                file.type === filter;
+
+
+            return (
+                matchesSearch &&
+                matchesFilter
+            );
+
+        });
+
+
+    if(sort === "newest"){
+
+        list.sort(
+            (a,b) =>
+                b.created -
+                a.created
+        );
+
+    }
+
+
+    if(sort === "oldest"){
+
+        list.sort(
+            (a,b) =>
+                a.created -
+                b.created
+        );
+
+    }
+
+
+    if(sort === "name"){
+
+        list.sort(
+            (a,b) =>
+                a.name.localeCompare(
+                    b.name
+                )
+        );
+
+    }
+
+
+    if(sort === "size"){
+
+        list.sort(
+            (a,b) =>
+                b.size -
+                a.size
+        );
+
+    }
+
+
+    updateStats();
+
+
+    if(!list.length){
+
+        grid.innerHTML = `
+
+        <div class="empty">
+
+            <div style="font-size:38px">
+                📂
+            </div>
+
+            <strong>
+                No files found
+            </strong>
+
+            <p style="margin-top:7px">
+                Upload your first developer file.
+            </p>
+
+        </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    grid.innerHTML =
+        list.map(
+            fileCard
+        ).join("");
+
+}
+
+
+/* =========================
+   FILE CARD
+========================= */
+
+function fileCard(file){
+
+    return `
+
+    <article class="file">
+
+        <div class="file-icon">
+
+            ${fileIcon(file.type)}
+
+        </div>
+
+
+        <div class="file-name">
+
+            ${escapeHTML(file.name)}
+
+        </div>
+
+
+        <div class="file-meta">
+
+            ${formatBytes(file.size)}
+            ·
+            ${escapeHTML(file.folder)}
+
+        </div>
+
+
+        <div class="file-meta">
+
+            ${new Date(
+                file.created
+            ).toLocaleString()}
+
+        </div>
+
+
+        <div class="file-actions">
+
+            <button
+                onclick="previewFile('${file.id}')"
+            >
+                👁
+            </button>
+
+            <button
+                onclick="rename('${file.id}')"
+            >
+                ✏
+            </button>
+
+            <button
+                onclick="downloadFile('${file.id}')"
+            >
+                ⬇
+            </button>
+
+            <button
+                onclick="deleteFile('${file.id}')"
+                style="
+                    color:#dc2626
+                "
+            >
+                🗑
+            </button>
+
+        </div>
+
+    </article>
+
+    `;
+
+}
+
+
+/* =========================
+   STATS
+========================= */
+
+function updateStats(){
+
+    const total =
+        files.reduce(
+            (sum,file) =>
+                sum +
+                Number(file.size || 0),
+            0
+        );
+
+
+    get("fileCount")
+        .textContent =
+        files.length;
+
+
+    get("storageUsed")
+        .textContent =
+        formatBytes(total);
+
+
+    get("folderCount")
+        .textContent =
+        Math.max(
+            0,
+            folders.length - 1
+        );
+
+
+    get("storageFill")
+        .style.width =
+        Math.min(
+            100,
+            total /
+            STORAGE_LIMIT *
+            100
+        ) + "%";
+
+}
+
+
+/* =========================
+   UPLOAD
+========================= */
+
+function openUpload(){
+
+    updateFolderSelect();
+
+    get("uploadModal")
+        .classList.add(
+            "show"
+        );
+
+}
+
+
+function uploadFiles(){
+
+    const input =
+        get("fileInput");
+
+
+    if(!input.files.length){
+
+        showToast(
+            "Choose files first."
+        );
+
+        return;
+
+    }
+
+
+    const folder =
+        get("uploadFolder")
+        .value;
+
+
+    let used =
+        files.reduce(
+            (sum,file) =>
+                sum + file.size,
+            0
+        );
+
+
+    Array.from(
+        input.files
+    ).forEach(file => {
+
+        if(
+            used + file.size >
+            STORAGE_LIMIT
+        ){
+
+            showToast(
+                "Storage limit reached."
+            );
+
+            return;
+
+        }
+
+
+        const reader =
+            new FileReader();
+
+
+        reader.onload = function(event){
+
+            files.unshift({
+
+                id:
+                    "file-" +
+                    Date.now() +
+                    "-" +
+                    Math.random()
+                    .toString(36)
+                    .slice(2),
+
+                name:
+                    file.name,
+
+                size:
+                    file.size,
+
+                type:
+                    getType(file),
+
+                folder:
+                    folder,
+
+                mime:
+                    file.type,
+
+                data:
+                    event.target.result,
+
+                created:
+                    Date.now()
+
+            });
+
+
+            save();
+
+            render();
+
+        };
+
+
+        reader.readAsDataURL(file);
+
+        used += file.size;
+
+    });
+
+
+    closeModal(
+        "uploadModal"
+    );
+
+    input.value = "";
+
+    showToast(
+        "Upload completed."
+    );
+
+}
+
+
+/* =========================
+   DOWNLOAD
+========================= */
+
+function downloadFile(id){
+
+    const file =
+        files.find(
+            item =>
+                item.id === id
+        );
+
+
+    if(!file){
+        return;
+    }
+
+
+    const link =
+        document.createElement(
+            "a"
+        );
+
+    link.href =
+        file.data;
+
+    link.download =
+        file.name;
+
+    document.body.appendChild(
+        link
+    );
+
+    link.click();
+
+    link.remove();
+
+}
+
+
+/* =========================
+   PREVIEW
+========================= */
+
+function previewFile(id){
+
+    const file =
+        files.find(
+            item =>
+                item.id === id
+        );
+
+
+    if(!file){
+        return;
+    }
+
+
+    get("previewTitle")
+        .textContent =
+        file.name;
+
+
+    const content =
+        get("previewContent");
+
+
+    if(file.type === "image"){
+
+        content.innerHTML = `
+
+            <img
+                class="preview"
+                src="${file.data}"
+                alt="${escapeHTML(
+                    file.name
+                )}"
+            >
+
+        `;
+
+    }else if(
+        file.type === "code" ||
+        file.type === "document"
+    ){
+
+        content.innerHTML = `
+
+            <p class="muted">
+                ${escapeHTML(
+    file.mime ||
+    "File"
+)}
+</p>
+
+<p style="
+    margin-top:12px;
+    line-height:1.6
+">
+
+    Size:
+    <strong>
+        ${formatBytes(file.size)}
+    </strong>
+
+    <br>
+
+    Folder:
+    <strong>
+        ${escapeHTML(
+            file.folder || "/"
+        )}
+    </strong>
+
+    <br>
+
+    Uploaded:
+    <strong>
+        ${new Date(
+            file.created
+        ).toLocaleString()}
+    </strong>
+
+</p>
+
+<div style="
+    display:flex;
+    gap:8px;
+    margin-top:18px
+">
+
+    <button
+        class="btn primary"
+        onclick="downloadFile('${escapeHTML(
+            file.id
+        )}')"
+    >
+        ⬇ Download
+    </button>
+
+    <button
+        class="btn secondary"
+        onclick="closeModal('previewModal')"
+    >
+        Close
+    </button>
+
+</div>
+
+`;
+
+    }
+
+
+    get("previewModal")
+        .classList.add(
+            "show"
+        );
+
+}
+
+
+/* =========================
+   RENAME FILE
+========================= */
+
+function rename(id){
+
+    const file =
+        files.find(
+            item =>
+                item.id === id
+        );
+
+
+    if(!file){
+        return;
+    }
+
+
+    renameId =
+        id;
+
+
+    get("renameInput")
+        .value =
+        file.name;
+
+
+    get("renameModal")
+        .classList.add(
+            "show"
+        );
+
+}
+
+
+function renameFile(){
+
+    const input =
+        get("renameInput");
+
+    const newName =
+        input
+        ?.value
+        .trim();
+
+
+    if(!newName){
+
+        showToast(
+            "Enter a file name."
+        );
+
+        return;
+
+    }
+
+
+    const file =
+        files.find(
+            item =>
+                item.id === renameId
+        );
+
+
+    if(!file){
+
+        showToast(
+            "File not found."
+        );
+
+        return;
+
+    }
+
+
+    file.name =
+        newName;
+
+
+    file.updated =
+        Date.now();
+
+
+    save();
+
+    render();
+
+    closeModal(
+        "renameModal"
+    );
+
+
+    showToast(
+        "File renamed successfully."
+    );
+
+}
+
+
+/* =========================
+   DELETE FILE
+========================= */
+
+function deleteFile(id){
+
+    const file =
+        files.find(
+            item =>
+                item.id === id
+        );
+
+
+    if(!file){
+        return;
+    }
+
+
+    const confirmed =
+        confirm(
+            `Delete "${file.name}"?`
+        );
+
+
+    if(!confirmed){
+        return;
+    }
+
+
+    files =
+        files.filter(
+            item =>
+                item.id !== id
+        );
+
+
+    save();
+
+    render();
+
+
+    showToast(
+        "File deleted."
+    );
+
+}
+
+
+/* =========================
+   CREATE FOLDER
+========================= */
+
+function createFolder(){
+
+    const name =
+        prompt(
+            "Enter folder name:"
+        );
+
+
+    if(name === null){
+        return;
+    }
+
+
+    const cleanName =
+        name.trim()
+            .replace(
+                /[\/\\]/g,
+                "-"
+            );
+
+
+    if(!cleanName){
+
+        showToast(
+            "Folder name is required."
+        );
+
+        return;
+
+    }
+
+
+    const folder =
+        "/" + cleanName;
+
+
+    if(
+        folders.includes(folder)
+    ){
+
+        showToast(
+            "Folder already exists."
+        );
+
+        return;
+
+    }
+
+
+    folders.push(
+        folder
+    );
+
+
+    save();
+
+    updateFolderSelect();
+
+    render();
+
+
+    showToast(
+        "Folder created."
+    );
+
+}
+
+
+/* =========================
+   UPDATE FOLDER SELECT
+========================= */
+
+function updateFolderSelect(){
+
+    const select =
+        get("uploadFolder");
+
+
+    if(!select){
+        return;
+    }
+
+
+    select.innerHTML =
+        folders
+        .map(
+            folder => `
+
+                <option
+                    value="${escapeHTML(
+                        folder
+                    )}"
+                >
+
+                    ${escapeHTML(
+                        folder
+                    )}
+
+                </option>
+
+            `
+        )
+        .join("");
+
+}
+
+
+/* =========================
+   DRAG & DROP
+========================= */
+
+const dropzone =
+    get("dropzone");
+
+
+if(dropzone){
+
+    dropzone.addEventListener(
+        "dragover",
+        event => {
+
+            event.preventDefault();
+
+            dropzone.classList.add(
+                "drag"
+            );
+
+        }
+    );
+
+
+    dropzone.addEventListener(
+        "dragleave",
+        () => {
+
+            dropzone.classList.remove(
+                "drag"
+            );
+
+        }
+    );
+
+
+    dropzone.addEventListener(
+        "drop",
+        event => {
+
+            event.preventDefault();
+
+            dropzone.classList.remove(
+                "drag"
+            );
+
+
+            const droppedFiles =
+                event
+                .dataTransfer
+                .files;
+
+
+            if(
+                !droppedFiles ||
+                !droppedFiles.length
+            ){
+
+                return;
+
+            }
+
+
+            const input =
+                get("fileInput");
+
+
+            /*
+             * FileList is read-only in many
+             * browsers, therefore use DataTransfer.
+             */
+
+            try{
+
+                const transfer =
+                    new DataTransfer();
+
+
+                Array.from(
+                    droppedFiles
+                ).forEach(
+                    file =>
+                        transfer.items
+                            .add(file)
+                );
+
+
+                input.files =
+                    transfer.files;
+
+
+                openUpload();
+
+            }catch(error){
+
+                console.error(
+                    error
+                );
+
+                openUpload();
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================
+   MODAL HANDLING
+========================= */
+
+function closeModal(id){
+
+    const modal =
+        get(id);
+
+
+    if(modal){
+
+        modal.classList.remove(
+            "show"
+        );
+
+    }
+
+}
+
+
+document
+.querySelectorAll(".modal")
+.forEach(
+    modal => {
+
+        modal.addEventListener(
+            "click",
+            event => {
+
+                if(
+                    event.target ===
+                    modal
+                ){
+
+                    modal.classList.remove(
+                        "show"
+                    );
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+/* =========================
+   ESC KEY
+========================= */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if(
+            event.key ===
+            "Escape"
+        ){
+
+            document
+            .querySelectorAll(
+                ".modal.show"
+            )
+            .forEach(
+                modal =>
+                    modal.classList.remove(
+                        "show"
+                    )
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================
+   SEARCH
+========================= */
+
+const search =
+    get("search");
+
+
+if(search){
+
+    search.addEventListener(
+        "input",
+        render
+    );
+
+}
+
+
+/* =========================
+   FILTER
+========================= */
+
+const filter =
+    get("filter");
+
+
+if(filter){
+
+    filter.addEventListener(
+        "change",
+        render
+    );
+
+}
+
+
+/* =========================
+   SORT
+========================= */
+
+const sort =
+    get("sort");
+
+
+if(sort){
+
+    sort.addEventListener(
+        "change",
+        render
+    );
+
+}
+
+
+/* =========================
+   INITIALIZATION
+========================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        load();
+
+        updateFolderSelect();
+
+        render();
+
+    }
+);
+
+
+/* =========================
+   GLOBAL API
+========================= */
+
+window.openUpload =
+    openUpload;
+
+window.uploadFiles =
+    uploadFiles;
+
+window.previewFile =
+    previewFile;
+
+window.downloadFile =
+    downloadFile;
+
+window.rename =
+    rename;
+
+window.renameFile =
+    renameFile;
+
+window.deleteFile =
+    deleteFile;
+
+window.createFolder =
+    createFolder;
+
+window.closeModal =
+    closeModal;
+
+window.updateFolderSelect =
+    updateFolderSelect;
+
+</script>
+
+</body>
+</html>
