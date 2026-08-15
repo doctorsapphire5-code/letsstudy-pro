@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>University & Higher Education | LetsStudy Pro</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+ margin:0;
+ font-family:Inter,Arial,sans-serif;
+ background:#f5f7fb;
+ color:#172033
+}
+
+header{
+ background:#111827;
+ color:#fff;
+ padding:18px 5%;
+ display:flex;
+ justify-content:space-between;
+ align-items:center
+}
+
+.logo{
+ font-size:20px;
+ font-weight:800
+}
+
+.container{
+ max-width:1200px;
+ margin:auto;
+ padding:30px 18px
+}
+
+.hero{
+ background:linear-gradient(135deg,#1d4ed8,#4f46e5);
+ color:white;
+ padding:45px 30px;
+ border-radius:22px;
+ margin-bottom:25px
+}
+
+.hero h1{
+ margin:0 0 10px;
+ font-size:clamp(30px,5vw,52px)
+}
+
+.hero p{
+ max-width:700px;
+ line-height:1.7
+}
+
+.toolbar{
+ display:flex;
+ gap:10px;
+ flex-wrap:wrap;
+ margin:20px 0
+}
+
+input,select{
+ padding:13px;
+ border:1px solid #dbe1ea;
+ border-radius:10px;
+ background:#fff
+}
+
+.search{
+ flex:1;
+ min-width:230px
+}
+
+.grid{
+ display:grid;
+ grid-template-columns:
+ repeat(auto-fill,minmax(260px,1fr));
+ gap:20px
+}
+
+.course{
+ background:#fff;
+ border-radius:18px;
+ overflow:hidden;
+ box-shadow:0 8px 25px #0000000b
+}
+
+.course img{
+ width:100%;
+ height:170px;
+ object-fit:cover
+}
+
+.content{
+ padding:18px
+}
+
+.content h3{
+ margin:0 0 8px
+}
+
+.meta{
+ color:#6b7280;
+ font-size:13px;
+ margin-bottom:12px
+}
+
+.price{
+ font-weight:800;
+ margin:12px 0
+}
+
+.badge{
+ display:inline-block;
+ padding:5px 9px;
+ border-radius:20px;
+ font-size:11px;
+ font-weight:800
+}
+
+.free{
+ background:#dcfce7;
+ color:#15803d
+}
+
+.paid{
+ background:#dbeafe;
+ color:#1d4ed8
+}
+
+button{
+ border:0;
+ border-radius:10px;
+ padding:11px 15px;
+ cursor:pointer;
+ font-weight:700
+}
+
+.primary{
+ width:100%;
+ background:#2563eb;
+ color:white
+}
+
+.empty{
+ text-align:center;
+ padding:50px;
+ color:#6b7280
+}
+
+@media(max-width:600px){
+ .hero{padding:30px 20px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+ <div class="logo">
+  LetsStudy Pro
+ </div>
+
+ <a href="cart.html"
+    style="color:white;text-decoration:none">
+   🛒 Cart
+ </a>
+</header>
+
+
+<main class="container">
+
+<section class="hero">
+
+ <h1>
+  University & Higher Education
+ </h1>
+
+ <p>
+  Learn smarter. Build stronger academic skills.
+  Explore university courses, research skills,
+  professional programs and higher education resources
+  from LetsStudy Pro.
+ </p>
+
+</section>
+
+
+<div class="toolbar">
+
+ <input
+   id="search"
+   class="search"
+   placeholder="Search university courses..."
+ >
+
+ <select id="level">
+   <option value="">All Levels</option>
+   <option value="Undergraduate">
+     Undergraduate
+   </option>
+   <option value="Postgraduate">
+     Postgraduate
+   </option>
+   <option value="Masters">
+     Masters
+   </option>
+   <option value="PhD">
+     PhD
+   </option>
+   <option value="Professional">
+     Professional
+   </option>
+ </select>
+
+ <select id="priceFilter">
+   <option value="">All Prices</option>
+   <option value="free">Free</option>
+   <option value="paid">Paid</option>
+ </select>
+
+</div>
+
+
+<div id="courses"
+     class="grid">
+
+</div>
+
+</main>
+
+
+<script type="module">
+
+import{
+ initializeApp
+}from
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+
+import{
+ getFirestore,
+ collection,
+ getDocs
+}from
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+
+const firebaseConfig={
+
+ apiKey:
+ "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+ authDomain:
+ "let-s-study-pro-course.firebaseapp.com",
+
+ projectId:
+ "let-s-study-pro-course",
+
+ storageBucket:
+ "let-s-study-pro-course.firebasestorage.app",
+
+ messagingSenderId:
+ "474928293390",
+
+ appId:
+ "1:474928293390:web:2bcc2aebf2351c12a9fe5f"
+
+};
+
+
+const app=
+ initializeApp(firebaseConfig);
+
+const db=
+ getFirestore(app);
+
+
+let courses=[];
+
+
+const $=id=>
+ document.getElementById(id);
+
+
+/* LOAD */
+
+async function loadCourses(){
+
+ const snapshot=
+  await getDocs(
+   collection(db,"courses")
+  );
+
+
+ courses=
+  snapshot.docs
+   .map(doc=>({
+    id:doc.id,
+    ...doc.data()
+   }))
+   .filter(course=>
+    (
+     course.categoryName||
+     ""
+    )
+    .toLowerCase()
+    .includes(
+     "university"
+    )
+    ||
+    (
+     course.categoryName||
+     ""
+    )
+    .toLowerCase()
+    .includes(
+     "higher education"
+    )
+   );
+
+
+ render();
+
+}
+
+
+/* RENDER */
+
+function render(){
+
+ const search=
+  $("search")
+   .value
+   .toLowerCase()
+   .trim();
+
+ const level=
+  $("level").value;
+
+ const price=
+  $("priceFilter").value;
+
+
+ const data=
+  courses.filter(course=>{
+
+   const text=(
+    course.title||
+    ""
+   ).toLowerCase();
+
+
+   const free=
+    course.isFree===true||
+    Number(course.price||0)===0;
+
+
+   return(
+    (!search||
+     text.includes(search))
+    &&
+    (!level||
+     course.level===level)
+    &&
+    (!price||
+     (price==="free"&&free)||
+     (price==="paid"&&!free))
+   );
+
+  });
+
+
+ const box=
+  $("courses");
+
+
+ if(!data.length){
+
+  box.innerHTML=`
+   <div class="empty">
+    <h3>No courses found</h3>
+    <p>
+     Try another search or filter.
+    </p>
+   </div>
+  `;
+
+  return;
+
+ }
+
+
+ box.innerHTML=
+  data.map(course=>{
+
+   const free=
+    course.isFree===true||
+    Number(course.price||0)===0;
+
+
+   return`
+
+   <article class="course">
+
+    <img
+     src="${course.thumbnail||
+     'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=700'}"
+     alt=""
+    >
+
+    <div class="content">
+
+     <span class="badge ${free?'free':'paid'}">
+      ${free?'FREE':'PAID'}
+     </span>
+
+     <h3>
+      ${escapeHTML(course.title)}
+     </h3>
+
+     <div class="meta">
+      ${escapeHTML(
+       course.level||
+       "Higher Education"
+      )}
+      •
+      ${escapeHTML(
+       course.language||
+       "English"
+      )}
+     </div>
+
+     <p>
+      ${escapeHTML(
+       course.shortDescription||
+       course.description||
+       "University course"
+      ).slice(0,120)}
+     </p>
+
+     <div class="price">
+
+      ${
+       free
+       ? "Free"
+       :
+       `${course.currency||"TZS"}
+       ${Number(
+        course.discountPrice??
+        course.price
+       ).toLocaleString()}`
+      }
+
+     </div>
+
+     <button
+      class="primary"
+      onclick="openCourse('${course.id}')">
+
+      ${
+       free
+       ? "Start Learning"
+       : "Add to Cart"
+      }
+
+     </button>
+
+    </div>
+
+   </article>
+
+   `;
+
+  }).join("");
+
+}
+
+
+/* OPEN COURSE */
+
+window.openCourse=id=>{
+
+ const course=
+  courses.find(
+   c=>c.id===id
+  );
+
+ if(!course)return;
+
+
+ const free=
+  course.isFree===true||
+  Number(course.price||0)===0;
+
+
+ /*
+  FREE COURSE
+  → direct access
+ */
+
+ if(free){
+
+  location.href=
+   `course-details.html?id=${encodeURIComponent(id)}`;
+
+  return;
+
+ }
+
+
+ /*
+  PAID COURSE
+  → CART
+ */
+
+ let cart=[];
+
+ try{
+
+  cart=
+   JSON.parse(
+    localStorage.getItem(
+     "letsStudyCart"
+    )||"[]"
+   );
+
+ }catch{
+
+  cart=[];
+
+ }
+
+
+ const item={
+
+  id:course.id,
+
+  courseId:course.id,
+
+  productId:course.id,
+
+  productType:"course",
+
+  title:course.title,
+
+  name:course.title,
+
+  price:Number(
+   course.discountPrice??
+   course.price??
+   0
+  ),
+
+  currency:
+   course.currency||
+   "TZS",
+
+  quantity:1,
+
+  thumbnail:
+   course.thumbnail||
+   "",
+
+  category:
+   course.categoryName||
+   "University & Higher Education"
+
+ };
+
+
+ if(!cart.some(
+  item=>
+   item.courseId===course.id
+ )){
+
+  cart.push(item);
+
+ }
+
+
+ localStorage.setItem(
+  "letsStudyCart",
+  JSON.stringify(cart)
+ );
+
+
+ location.href="cart.html";
+
+};
+
+
+/* ESCAPE */
+
+function escapeHTML(value){
+
+ return String(value||"")
+  .replaceAll("&","&amp;")
+  .replaceAll("<","&lt;")
+  .replaceAll(">","&gt;")
+  .replaceAll('"',"&quot;")
+  .replaceAll("'","&#039;");
+
+}
+
+
+/* FILTER EVENTS */
+
+$("search")
+ .addEventListener(
+  "input",
+  render
+ );
+
+$("level")
+ .addEventListener(
+  "change",
+  render
+ );
+
+$("priceFilter")
+ .addEventListener(
+  "change",
+  render
+ );
+
+
+/* START */
+
+loadCourses();
+
+</script>
+
+</body>
+</html>
