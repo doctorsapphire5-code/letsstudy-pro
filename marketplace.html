@@ -1469,278 +1469,781 @@ class="products-grid">
 <!-- PRODUCT 1 -->
 
 <article
-class="product"
-data-title="Digital Marketing Masterclass"
-data-type="course"
-data-price="50000">
 
-<div class="product-image">
+<div id="marketplaceProducts"></div>
 
-<div class="image-placeholder">
-🎓
-</div>
+<script type="module">
 
-<span class="badge">
-COURSE
-</span>
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 
-<button
-class="favorite"
-type="button">
-♡
-</button>
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-</div>
 
+/* ================================
+   FIREBASE
+================================ */
 
-<div class="product-body">
+const firebaseConfig = {
 
-<div class="product-type">
-Course
-</div>
+  apiKey:
+    "YOUR_API_KEY",
 
-<div class="product-title">
-Digital Marketing Masterclass
-</div>
+  authDomain:
+    "YOUR_PROJECT.firebaseapp.com",
 
-<div class="product-seller">
-LetsStudy Pro Academy
-</div>
+  projectId:
+    "YOUR_PROJECT_ID",
 
-<div class="rating">
-⭐ 4.9
-</div>
+  storageBucket:
+    "YOUR_PROJECT.firebasestorage.app",
 
-<div class="product-bottom">
+  messagingSenderId:
+    "YOUR_SENDER_ID",
 
-<div class="price">
-TZS 50,000
-</div>
+  appId:
+    "YOUR_APP_ID"
 
-<button
-class="add-btn"
-data-name="Digital Marketing Masterclass"
-data-price="50000"
-type="button">
+};
 
-Add
+const app =
+  initializeApp(firebaseConfig);
 
-</button>
+const db =
+  getFirestore(app);
 
-</div>
 
-</div>
+/* ================================
+   CATEGORY CONFIG
+================================ */
 
-</article>
+const categories = {
 
+  ebook: {
+    name: "eBooks",
+    icon: "📚",
+    color: "#d97706"
+  },
 
-<!-- PRODUCT 2 -->
+  product: {
+    name: "Products",
+    icon: "📦",
+    color: "#059669"
+  },
 
-<article
-class="product"
-data-title="Business Startup eBook"
-data-type="ebook"
-data-price="10000">
+  course: {
+    name: "Courses",
+    icon: "🎓",
+    color: "#2563eb"
+  },
 
-<div class="product-image">
+  software: {
+    name: "Software",
+    icon: "💻",
+    color: "#7c3aed"
+  },
 
-<div class="image-placeholder">
-🎓
-</div>
+  graphics: {
+    name: "Graphics",
+    icon: "🎨",
+    color: "#db2777"
+  },
 
-<span class="badge">
-COURSE
-</span>
+  freelance: {
+    name: "Freelance",
+    icon: "🧑‍💻",
+    color: "#0891b2"
+  }
 
-<button
-    class="favorite"
-    type="button"
-    aria-label="Add to favorites">
-    ♡
-</button>
+};
 
-</div>
 
+/* ================================
+   HELPERS
+================================ */
 
-<div class="product-body">
+const $ =
+  id =>
+  document.getElementById(id);
 
-<div class="product-type">
-Course
-</div>
 
-<div class="product-title">
-Digital Marketing Masterclass
-</div>
+function escapeHTML(value){
 
-<div class="product-seller">
-LetsStudy Pro Academy
-</div>
+  return String(value || "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 
-<div class="rating">
-⭐ 4.9
-</div>
+}
 
-<div class="product-bottom">
 
-<div class="price">
-TZS 50,000
-</div>
+function money(
+  value,
+  currency = "USD"
+){
 
-<button
-    class="add-btn"
-    data-name="Digital Marketing Masterclass"
-    data-price="50000"
-    type="button">
+  try{
 
-Add
+    return new Intl.NumberFormat(
+      undefined,
+      {
+        style:"currency",
+        currency:currency || "USD",
+        maximumFractionDigits:0
+      }
+    ).format(
+      Number(value || 0)
+    );
 
-</button>
+  }catch{
 
-</div>
+    return `${currency} ${value || 0}`;
 
-</div>
+  }
 
-</article>
+}
 
 
-<!-- =========================
-     PRODUCT 2
-========================= -->
+/* ================================
+   GET MARKETPLACE PRODUCTS
+================================ */
 
-<article
-    class="product"
-    data-title="Business Startup Guide"
-    data-type="ebook"
-    data-price="10000">
+async function getMarketplaceProducts(){
 
-<div class="product-image">
+  const q =
+    query(
+      collection(
+        db,
+        "marketplace"
+      ),
 
-<div class="image-placeholder">
-📚
-</div>
+      where(
+        "status",
+        "==",
+        "published"
+      )
+    );
 
-<span class="badge">
-eBOOK
-</span>
 
-<button
-    class="favorite"
-    type="button"
-    aria-label="Add to favorites">
-    ♡
-</button>
+  const snapshot =
+    await getDocs(q);
 
-</div>
 
+  return snapshot.docs.map(
+    doc => ({
 
-<div class="product-body">
+      id:doc.id,
 
-<div class="product-type">
-eBook
-</div>
+      ...doc.data()
 
-<div class="product-title">
-Business Startup Guide
-</div>
+    })
+  );
 
-<div class="product-seller">
-LetsStudy Pro
-</div>
+}
 
-<div class="rating">
-⭐ 4.8
-</div>
 
-<div class="product-bottom">
+/* ================================
+   NORMALIZE TYPE
+================================ */
 
-<div class="price">
-TZS 10,000
-</div>
+function normalizeType(product){
 
-<button
-    class="add-btn"
-    data-name="Business Startup Guide"
-    data-price="10000"
-    type="button">
+  const type =
+    String(
+      product.type ||
+      product.category ||
+      ""
+    )
+    .toLowerCase()
+    .trim();
 
-Add
 
-</button>
+  if(
+    type.includes("ebook") ||
+    type.includes("e-book") ||
+    type.includes("book")
+  ){
 
-</div>
+    return "ebook";
 
-</div>
+  }
 
-</article>
 
+  if(
+    type.includes("course") ||
+    type.includes("learning")
+  ){
 
-<!-- =========================
-     PRODUCT 3
-========================= -->
+    return "course";
 
-<article
-    class="product"
-    data-title="Social Media Template Pack"
-    data-type="graphics"
-    data-price="15000">
+  }
 
-<div class="product-image">
 
-<div class="image-placeholder">
-🎨
-</div>
+  if(
+    type.includes("software") ||
+    type.includes("app") ||
+    type.includes("saas")
+  ){
 
-<span class="badge">
-GRAPHICS
-</span>
+    return "software";
 
-<button
-    class="favorite"
-    type="button"
-    aria-label="Add to favorites">
-    ♡
-</button>
+  }
 
-</div>
 
+  if(
+    type.includes("graphic") ||
+    type.includes("design") ||
+    type.includes("template")
+  ){
 
-<div class="product-body">
+    return "graphics";
 
-<div class="product-type">
-Graphics
-</div>
+  }
 
-<div class="product-title">
-Social Media Template Pack
-</div>
 
-<div class="product-seller">
-Creative Studio
-</div>
+  if(
+    type.includes("freelance") ||
+    type.includes("service")
+  ){
 
-<div class="rating">
-⭐ 4.7
-</div>
+    return "freelance";
 
-<div class="product-bottom">
+  }
 
-<div class="price">
-TZS 15,000
-</div>
 
-<button
-    class="add-btn"
-    data-name="Social Media Template Pack"
-    data-price="15000"
-    type="button">
+  return "product";
 
-Add
+}
 
-</button>
 
-</div>
+/* ================================
+   PRODUCT CARD
+================================ */
 
-</div>
+function productCard(product){
+
+  const type =
+    normalizeType(product);
+
+
+  const category =
+    categories[type] ||
+    categories.product;
+
+
+  const image =
+    product.thumbnail ||
+    product.imageUrl ||
+    "";
+
+
+  const price =
+    Number(
+      product.discountPrice > 0 &&
+      product.discountPrice < product.price
+
+      ?
+
+      product.discountPrice
+
+      :
+
+      product.price || 0
+    );
+
+
+  return `
+
+    <article
+      class="market-card"
+      data-type="${type}"
+    >
+
+      ${
+        image
+
+        ?
+
+        `
+        <img
+          src="${escapeHTML(image)}"
+          alt="${escapeHTML(
+            product.title
+          )}"
+          class="market-image"
+          loading="lazy"
+        >
+        `
+
+        :
+
+        `
+        <div class="market-image-placeholder">
+          ${category.icon}
+        </div>
+        `
+      }
+
+
+      <div class="market-body">
+
+        <span
+          class="market-category"
+          style="
+            background:${category.color}18;
+            color:${category.color};
+          "
+        >
+
+          ${category.icon}
+
+          ${category.name}
+
+        </span>
+
+
+        <h3>
+
+          ${escapeHTML(
+            product.title ||
+            "Untitled Product"
+          )}
+
+        </h3>
+
+
+        <p>
+
+          ${escapeHTML(
+            product.shortDescription ||
+            product.description ||
+            "Digital product"
+          )}
+
+        </p>
+
+
+        <div class="market-bottom">
+
+          <strong>
+
+            ${money(
+              price,
+              product.currency
+            )}
+
+          </strong>
+
+
+          <a
+            href="marketplace-product.html?productId=${encodeURIComponent(
+              product.id
+            )}"
+            class="view-product"
+          >
+
+            View →
+
+          </a>
+
+        </div>
+
+      </div>
+
+    </article>
+
+  `;
+
+}
+
+
+/* ================================
+   LOAD & RENDER
+================================ */
+
+async function loadMarketplace(){
+
+  const container =
+    $("marketplaceProducts");
+
+
+  if(!container)
+    return;
+
+
+  container.innerHTML = `
+
+    <div class="market-loading">
+
+      Loading marketplace...
+
+    </div>
+
+  `;
+
+
+  try{
+
+    const products =
+      await getMarketplaceProducts();
+
+
+    if(!products.length){
+
+      container.innerHTML = `
+
+        <div class="market-empty">
+
+          No products available.
+
+        </div>
+
+      `;
+
+      return;
+
+    }
+
+
+    /* ============================
+       GROUP PRODUCTS
+    ============================ */
+
+    const grouped = {
+
+      ebook:[],
+      product:[],
+      course:[],
+      software:[],
+      graphics:[],
+      freelance:[]
+
+    };
+
+
+    products.forEach(
+      product => {
+
+        const type =
+          normalizeType(product);
+
+
+        if(
+          grouped[type]
+        ){
+
+          grouped[type].push(
+            product
+          );
+
+        }
+
+      }
+    );
+
+
+    /* ============================
+       RENDER CATEGORIES
+    ============================ */
+
+    container.innerHTML =
+      Object.entries(
+        grouped
+      )
+
+      .filter(
+        ([type,items]) =>
+          items.length > 0
+      )
+
+      .map(
+        ([type,items]) => {
+
+          const category =
+            categories[type];
+
+
+          return `
+
+            <section
+              class="market-section"
+            >
+
+              <div
+                class="market-section-head"
+              >
+
+                <div>
+
+                  <span>
+
+                    ${category.icon}
+
+                  </span>
+
+                  <h2>
+
+                    ${category.name}
+
+                  </h2>
+
+                </div>
+
+
+                <button
+                  class="view-all"
+                  data-type="${type}"
+                >
+
+                  View All →
+
+                </button>
+
+              </div>
+
+
+              <div
+                class="market-grid"
+              >
+
+                ${
+
+                  items
+                    .slice(0,6)
+                    .map(productCard)
+                    .join("")
+
+                }
+
+              </div>
+
+            </section>
+
+          `;
+
+        }
+      )
+
+      .join("");
+
+
+    /* ============================
+       VIEW ALL
+    ============================ */
+
+    container
+      .querySelectorAll(
+        ".view-all"
+      )
+      .forEach(
+        button => {
+
+          button.addEventListener(
+            "click",
+            () => {
+
+              const type =
+                button.dataset.type;
+
+
+              location.href =
+                `marketplace-search.html?type=${encodeURIComponent(
+                  type
+                )}`;
+
+            }
+          );
+
+        }
+      );
+
+
+  }catch(error){
+
+    console.error(
+      "Marketplace error:",
+      error
+    );
+
+
+    container.innerHTML = `
+
+      <div class="market-empty">
+
+        Unable to load marketplace.
+
+      </div>
+
+    `;
+
+  }
+
+}
+
+
+/* ================================
+   START
+================================ */
+
+loadMarketplace();
+
+</script>
+
+<style>
+
+.market-section{
+  margin:25px 0;
+}
+
+.market-section-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:12px;
+}
+
+.market-section-head div{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.market-section-head h2{
+  margin:0;
+  font-size:18px;
+}
+
+.market-section-head span{
+  font-size:20px;
+}
+
+.view-all{
+  border:0;
+  background:transparent;
+  color:#059669;
+  font-size:9px;
+  font-weight:950;
+  cursor:pointer;
+}
+
+.market-grid{
+  display:grid;
+  grid-template-columns:
+    repeat(3,1fr);
+  gap:12px;
+}
+
+.market-card{
+  background:#fff;
+  border:1px solid #e5e9ee;
+  border-radius:14px;
+  overflow:hidden;
+  transition:.25s;
+}
+
+.market-card:hover{
+  transform:translateY(-4px);
+  box-shadow:
+    0 15px 35px #17203312;
+}
+
+.market-image,
+.market-image-placeholder{
+  width:100%;
+  height:160px;
+  object-fit:cover;
+}
+
+.market-image-placeholder{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#f8fafc;
+  font-size:45px;
+}
+
+.market-body{
+  padding:14px;
+}
+
+.market-category{
+  display:inline-block;
+  padding:5px 7px;
+  border-radius:6px;
+  font-size:7px;
+  font-weight:950;
+}
+
+.market-body h3{
+  margin:9px 0 5px;
+  font-size:11px;
+}
+
+.market-body p{
+  margin:0;
+  color:#667085;
+  font-size:8px;
+  line-height:1.6;
+
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+.market-bottom{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:14px;
+}
+
+.market-bottom strong{
+  color:#059669;
+  font-size:10px;
+}
+
+.view-product{
+  color:#059669;
+  font-size:8px;
+  font-weight:950;
+}
+
+.market-loading,
+.market-empty{
+  padding:45px;
+  text-align:center;
+  color:#667085;
+  font-size:9px;
+}
+
+@media(max-width:800px){
+
+.market-grid{
+  grid-template-columns:
+    repeat(2,1fr);
+}
+
+}
+
+@media(max-width:550px){
+
+.market-grid{
+  grid-template-columns:1fr;
+}
+
+}
+
+</style>
 
 </article>
 
@@ -1749,75 +2252,7 @@ Add
      PRODUCT 4
 ========================= -->
 
-<article
-    class="product"
-    data-title="Professional Website Development"
-    data-type="freelance"
-    data-price="150000">
 
-<div class="product-image">
-
-<div class="image-placeholder">
-👨‍💻
-</div>
-
-<span class="badge">
-FREELANCE
-</span>
-
-<button
-    class="favorite"
-    type="button"
-    aria-label="Add to favorites">
-    ♡
-</button>
-
-</div>
-
-
-<div class="product-body">
-
-<div class="product-type">
-Freelance
-</div>
-
-<div class="product-title">
-Professional Website Development
-</div>
-
-<div class="product-seller">
-Developer Pro
-</div>
-
-<div class="rating">
-⭐ 5.0
-</div>
-
-<div class="product-bottom">
-
-<div class="price">
-TZS 150,000
-</div>
-
-<button
-    class="add-btn"
-    data-name="Professional Website Development"
-    data-price="150000"
-    type="button">
-
-Add
-
-</button>
-
-</div>
-
-</div>
-
-</article>
-
-</div>
-
-</section>
 
 
 <!-- =========================
