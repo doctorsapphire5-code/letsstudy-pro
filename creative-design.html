@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Creative & Design Courses | LetsStudy Pro</title>
+<meta name="description" content="Learn graphic design, UI/UX, illustration, photography, video editing, branding and creative design with LetsStudy Pro.">
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,Arial,sans-serif;
+  background:#f7f7fb;
+  color:#172033
+}
+header{
+  background:#111827;
+  color:#fff;
+  padding:17px 5%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between
+}
+.logo{font-size:20px;font-weight:900}
+header a{color:#fff;text-decoration:none;font-weight:800}
+
+.container{
+  max-width:1200px;
+  margin:auto;
+  padding:28px 18px
+}
+
+.hero{
+  background:linear-gradient(135deg,#581c87,#db2777);
+  color:#fff;
+  padding:48px 30px;
+  border-radius:24px;
+  margin-bottom:25px
+}
+.hero h1{
+  margin:0 0 12px;
+  font-size:clamp(30px,5vw,52px)
+}
+.hero p{
+  max-width:760px;
+  line-height:1.7;
+  margin:0
+}
+
+.toolbar{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin:22px 0
+}
+input,select{
+  padding:13px;
+  border:1px solid #d9dfeb;
+  border-radius:10px;
+  background:#fff;
+  outline:none
+}
+input:focus,select:focus{border-color:#db2777}
+.search{flex:1;min-width:230px}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(270px,1fr));
+  gap:20px
+}
+.course{
+  background:#fff;
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:0 7px 25px #0000000b;
+  transition:.2s
+}
+.course:hover{transform:translateY(-4px)}
+.course img{
+  width:100%;
+  height:175px;
+  object-fit:cover
+}
+.content{padding:18px}
+
+.badge{
+  display:inline-block;
+  padding:5px 9px;
+  border-radius:20px;
+  font-size:11px;
+  font-weight:900
+}
+.free{background:#dcfce7;color:#15803d}
+.paid{background:#fce7f3;color:#be185d}
+
+.content h3{
+  margin:10px 0 8px;
+  line-height:1.35
+}
+.meta{
+  color:#6b7280;
+  font-size:13px;
+  margin-bottom:10px
+}
+.desc{
+  color:#667085;
+  font-size:14px;
+  line-height:1.5
+}
+.price{
+  margin:15px 0;
+  font-size:18px;
+  font-weight:900
+}
+.btn{
+  width:100%;
+  padding:12px;
+  border:0;
+  border-radius:10px;
+  background:#db2777;
+  color:#fff;
+  cursor:pointer;
+  font-weight:800
+}
+.btn:hover{background:#be185d}
+
+.loading,.empty{
+  grid-column:1/-1;
+  text-align:center;
+  padding:60px 20px;
+  color:#667085
+}
+.error{color:#b91c1c}
+
+@media(max-width:600px){
+  .hero{padding:32px 20px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">LetsStudy Pro</div>
+
+  <a href="cart.html">🛒 Cart</a>
+</header>
+
+
+<main class="container">
+
+<section class="hero">
+
+  <h1>Creative & Design</h1>
+
+  <p>
+    Develop your creative skills with courses in
+    graphic design, UI/UX, illustration, photography,
+    video editing, branding, animation and visual
+    communication.
+  </p>
+
+</section>
+
+
+<div class="toolbar">
+
+  <input
+    id="search"
+    class="search"
+    type="search"
+    placeholder="Search Creative & Design courses..."
+  >
+
+  <select id="level">
+    <option value="">All Levels</option>
+    <option value="Beginner">Beginner</option>
+    <option value="Intermediate">Intermediate</option>
+    <option value="Advanced">Advanced</option>
+    <option value="Professional">Professional</option>
+  </select>
+
+  <select id="priceFilter">
+    <option value="">All Prices</option>
+    <option value="free">Free</option>
+    <option value="paid">Paid</option>
+  </select>
+
+</div>
+
+
+<div id="courses" class="grid">
+
+  <div class="loading">
+    Loading courses...
+  </div>
+
+</div>
+
+</main>
+
+
+<script type="module">
+
+import {
+  initializeApp
+} from
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  getDocs
+} from
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+
+/* =========================
+   FIREBASE
+========================= */
+
+const firebaseConfig = {
+
+  apiKey:
+    "AIzaSyBcOYDfAVKXbkljsyRgI_0rj0odBn678tCc",
+
+  authDomain:
+    "let-s-study-pro-course.firebaseapp.com",
+
+  projectId:
+    "let-s-study-pro-course",
+
+  storageBucket:
+    "let-s-study-pro-course.firebasestorage.app",
+
+  messagingSenderId:
+    "474928293390",
+
+  appId:
+    "1:474928293390:web:2bcc2aebf2351c12a9fe5f"
+
+};
+
+
+const app =
+  initializeApp(firebaseConfig);
+
+const db =
+  getFirestore(app);
+
+let courses = [];
+
+const $ = id =>
+  document.getElementById(id);
+
+
+/* =========================
+   ESCAPE HTML
+========================= */
+
+function escapeHTML(value){
+
+  return String(value || "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+}
+
+
+/* =========================
+   LOAD COURSES
+========================= */
+
+async function loadCourses(){
+
+  try{
+
+    const snapshot =
+      await getDocs(
+        collection(db,"courses")
+      );
+
+
+    courses =
+      snapshot.docs
+        .map(doc => ({
+          id:doc.id,
+          ...doc.data()
+        }))
+        .filter(course => {
+
+          const category =
+            String(
+              course.categoryName || ""
+            ).toLowerCase();
+
+          const title =
+            String(
+              course.title || ""
+            ).toLowerCase();
+
+          const description =
+            String(
+              course.description || ""
+            ).toLowerCase();
+
+          const tags =
+            Array.isArray(course.tags)
+              ? course.tags.join(" ").toLowerCase()
+              : String(
+                  course.tags || ""
+                ).toLowerCase();
+
+
+          return (
+
+            category.includes("creative") ||
+
+            category.includes("design") ||
+
+            category.includes("graphic") ||
+
+            category.includes("ui/ux") ||
+
+            category.includes("illustration") ||
+
+            category.includes("photography") ||
+
+            category.includes("animation") ||
+
+            category.includes("video editing") ||
+
+            title.includes("graphic design") ||
+
+            title.includes("ui/ux") ||
+
+            title.includes("ux design") ||
+
+            title.includes("illustration") ||
+
+            title.includes("photography") ||
+
+            title.includes("video editing") ||
+
+            title.includes("animation") ||
+
+            description.includes(
+              "creative design"
+            ) ||
+
+            tags.includes("design") ||
+
+            tags.includes("creative")
+
+          );
+
+        });
+
+
+    render();
+
+  }catch(error){
+
+    console.error(error);
+
+    $("courses").innerHTML = `
+
+      <div class="empty error">
+
+        <h3>
+          Unable to load courses
+        </h3>
+
+        <p>
+          Please try again later.
+        </p>
+
+      </div>
+
+    `;
+
+  }
+
+}
+
+
+/* =========================
+   RENDER
+========================= */
+
+function render(){
+
+  const query =
+    $("search")
+      .value
+      .toLowerCase()
+      .trim();
+
+  const level =
+    $("level").value;
+
+  const priceFilter =
+    $("priceFilter").value;
+
+
+  const filtered =
+    courses.filter(course => {
+
+      const searchable = `
+
+        ${course.title || ""}
+        ${course.description || ""}
+        ${course.shortDescription || ""}
+        ${course.categoryName || ""}
+        ${course.level || ""}
+        ${course.tags || ""}
+
+      `.toLowerCase();
+
+
+      const isFree =
+        course.isFree === true ||
+        Number(course.price || 0) === 0;
+
+
+      return (
+
+        (!query ||
+          searchable.includes(query))
+
+        &&
+
+        (!level ||
+          course.level === level)
+
+        &&
+
+        (!priceFilter ||
+
+          (
+            priceFilter === "free" &&
+            isFree
+          )
+
+          ||
+
+          (
+            priceFilter === "paid" &&
+            !isFree
+          )
+
+        )
+
+      );
+
+    });
+
+
+  if(!filtered.length){
+
+    $("courses").innerHTML = `
+
+      <div class="empty">
+
+        <h3>
+          No Creative & Design courses found
+        </h3>
+
+        <p>
+          Try another search or filter.
+        </p>
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  $("courses").innerHTML =
+    filtered.map(course => {
+
+      const isFree =
+        course.isFree === true ||
+        Number(course.price || 0) === 0;
+
+
+      const price =
+        Number(
+          course.discountPrice ??
+          course.price ??
+          0
+        );
+
+
+      const image =
+        course.thumbnail ||
+
+        "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800";
+
+
+      return `
+
+        <article class="course">
+
+          <img
+            src="${escapeHTML(image)}"
+            alt="${escapeHTML(course.title)}"
+            loading="lazy"
+          >
+
+
+          <div class="content">
+
+            <span class="badge ${
+              isFree ? "free" : "paid"
+            }">
+
+              ${
+                isFree
+                  ? "FREE"
+                  : "PAID"
+              }
+
+            </span>
+
+
+            <h3>
+              ${escapeHTML(
+                course.title
+              )}
+            </h3>
+
+
+            <div class="meta">
+
+              ${escapeHTML(
+                course.categoryName ||
+                "Creative & Design"
+              )}
+
+              •
+
+              ${escapeHTML(
+                course.level ||
+                "Beginner"
+              )}
+
+            </div>
+
+
+            <div class="desc">
+
+              ${escapeHTML(
+                course.shortDescription ||
+                course.description ||
+                "Develop practical creative and design skills."
+              ).slice(0,155)}
+
+            </div>
+
+
+            <div class="price">
+
+              ${
+                isFree
+
+                  ? "Free"
+
+                  :
+
+                  `${escapeHTML(
+                    course.currency || "TZS"
+                  )} ${price.toLocaleString()}`
+              }
+
+            </div>
+
+
+            <button
+              class="btn"
+              onclick="selectCourse('${course.id}')">
+
+              ${
+                isFree
+                  ? "Start Learning"
+                  : "Add to Cart"
+              }
+
+            </button>
+
+          </div>
+
+        </article>
+
+      `;
+
+    }).join("");
+
+}
+
+
+/* =========================
+   COURSE ACTION
+========================= */
+
+window.selectCourse = id => {
+
+  const course =
+    courses.find(
+      c => c.id === id
+    );
+
+  if(!course) return;
+
+
+  const isFree =
+    course.isFree === true ||
+    Number(course.price || 0) === 0;
+
+
+  /* FREE → DIRECT ACCESS */
+
+  if(isFree){
+
+    location.href =
+      "course-details.html?id=" +
+      encodeURIComponent(id);
+
+    return;
+
+  }
+
+
+  /* PAID → CART */
+
+  let cart = [];
+
+  try{
+
+    cart =
+      JSON.parse(
+        localStorage.getItem(
+          "letsStudyCart"
+        ) || "[]"
+      );
+
+  }catch{
+
+    cart = [];
+
+  }
+
+
+  const exists =
+    cart.some(
+      item =>
+        item.courseId === id
+    );
+
+
+  if(!exists){
+
+    cart.push({
+
+      id:id,
+
+      courseId:id,
+
+      productId:id,
+
+      productType:"course",
+
+      title:
+        course.title,
+
+      name:
+        course.title,
+
+      price:Number(
+        course.discountPrice ??
+        course.price ??
+        0
+      ),
+
+      currency:
+        course.currency ||
+        "TZS",
+
+      quantity:1,
+
+      thumbnail:
+        course.thumbnail ||
+        "",
+
+      category:
+        course.categoryName ||
+        "Creative & Design"
+
+    });
+
+  }
+
+
+  localStorage.setItem(
+    "letsStudyCart",
+    JSON.stringify(cart)
+  );
+
+
+  location.href =
+    "cart.html";
+
+};
+
+
+/* =========================
+   FILTERS
+========================= */
+
+$("search").addEventListener(
+  "input",
+  render
+);
+
+$("level").addEventListener(
+  "change",
+  render
+);
+
+$("priceFilter").addEventListener(
+  "change",
+  render
+);
+
+
+/* =========================
+   START
+========================= */
+
+loadCourses();
+
+</script>
+
+</body>
+</html>
