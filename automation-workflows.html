@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Automation Workflows | LetsStudy Pro</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f5f7fb;color:#172033;font-family:Arial,sans-serif}
+header{background:#111827;color:#fff;padding:14px 5%;display:flex;align-items:center;justify-content:space-between;gap:15px}
+.logo{font-weight:900}.logo span{color:#fbbf24}
+nav{display:flex;gap:12px;flex-wrap:wrap}
+nav a{color:#d1d5db;text-decoration:none;font-size:11px}
+main{width:min(1100px,92%);margin:25px auto 60px}
+.hero,.card,.stat{background:#fff;border:1px solid #e5e7eb;border-radius:16px}
+.hero{background:#111827;color:#fff;padding:20px;margin-bottom:16px}
+.hero h1{margin:5px 0}.hero p{color:#cbd5e1;font-size:12px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.stat{padding:15px;font-size:10px}.stat b{display:block;font-size:22px;margin-top:5px}
+.card{padding:18px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px}
+input,select,button{font:inherit}
+input,select{padding:10px;border:1px solid #ddd;border-radius:8px}
+.search{flex:1;min-width:200px}
+button{border:0;padding:10px 13px;border-radius:8px;font-size:10px;font-weight:800;cursor:pointer}
+.primary{background:#2563eb;color:#fff}.success{background:#dcfce7;color:#166534}
+.warning{background:#fef3c7;color:#92400e}.danger{background:#fee2e2;color:#991b1b}
+.dark{background:#111827;color:#fff}
+.wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:850px}
+th,td{padding:11px;border-bottom:1px solid #eee;text-align:left;font-size:11px}
+th{font-size:9px;color:#667085;text-transform:uppercase}
+.badge{padding:4px 8px;border-radius:20px;font-size:9px;font-weight:900}
+.on{background:#dcfce7;color:#166534}.off{background:#f3f4f6;color:#6b7280}
+.empty{text-align:center;padding:35px;color:#667085}
+.actions{display:flex;gap:5px;flex-wrap:wrap}
+.modal{display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;padding:15px}
+.modal.show{display:flex}
+.modal-box{width:min(550px,100%);background:#fff;border-radius:16px;padding:20px;max-height:90vh;overflow:auto}
+.form{display:grid;gap:10px}.form label{font-size:10px;font-weight:800}
+.form input,.form select,.form textarea{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px}
+textarea{min-height:80px;resize:vertical}
+.steps{display:grid;gap:7px}
+.step{border:1px solid #e5e7eb;padding:10px;border-radius:9px;background:#f9fafb}
+.toast{display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:11px 17px;border-radius:8px;font-size:11px}
+.toast.show{display:block}
+@media(max-width:700px){
+.stats{grid-template-columns:repeat(2,1fr)}
+nav{display:none}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">LetsStudy <span>Pro</span></div>
+
+  <nav>
+    <a href="marketing.html">Marketing</a>
+    <a href="automation-triggers.html">Triggers</a>
+    <a href="automation-actions.html">Actions</a>
+    <a href="automation-schedules.html">Schedules</a>
+    <a href="automation-integrations.html">Integrations</a>
+    <a href="automation-logs.html">Logs</a>
+  </nav>
+
+  <small id="userEmail">Loading...</small>
+</header>
+
+<main>
+
+<section class="hero">
+  <small>AUTOMATION SYSTEM</small>
+  <h1>Automation Workflows</h1>
+  <p>
+    Connect triggers and actions to build automated
+    workflows across LetsStudy Pro.
+  </p>
+
+  <button class="primary" id="newBtn">
+    + New Workflow
+  </button>
+</section>
+
+<section class="stats">
+
+  <div class="stat">
+    Total Workflows
+    <b id="total">0</b>
+  </div>
+
+  <div class="stat">
+    Active
+    <b id="active">0</b>
+  </div>
+
+  <div class="stat">
+    Disabled
+    <b id="disabled">0</b>
+  </div>
+
+  <div class="stat">
+    Executions
+    <b id="executions">0</b>
+  </div>
+
+</section>
+
+<section class="card">
+
+  <div class="toolbar">
+
+    <input
+      class="search"
+      id="search"
+      placeholder="Search workflows..."
+    >
+
+    <select id="statusFilter">
+      <option value="all">All Status</option>
+      <option value="active">Active</option>
+      <option value="disabled">Disabled</option>
+    </select>
+
+    <button class="dark" id="refreshBtn">
+      Refresh
+    </button>
+
+  </div>
+
+  <div class="wrap">
+
+    <table>
+
+      <thead>
+        <tr>
+          <th>Workflow</th>
+          <th>Trigger</th>
+          <th>Steps</th>
+          <th>Status</th>
+          <th>Executions</th>
+          <th>Updated</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody id="list">
+        <tr>
+          <td colspan="7" class="empty">
+            Loading...
+          </td>
+        </tr>
+      </tbody>
+
+    </table>
+
+  </div>
+
+</section>
+
+</main>
+
+
+<div class="modal" id="modal">
+
+<div class="modal-box">
+
+<h2 id="modalTitle">
+  New Workflow
+</h2>
+
+<form class="form" id="form">
+
+<input type="hidden" id="editId">
+
+<label>Workflow Name</label>
+
+<input
+  id="name"
+  required
+  placeholder="Welcome New Students"
+/>
+
+<label>Trigger</label>
+
+<select id="trigger" required>
+
+  <option value="user.created">
+    User Created
+  </option>
+
+  <option value="user.login">
+    User Login
+  </option>
+
+  <option value="course.enrolled">
+    Course Enrolled
+  </option>
+
+  <option value="payment.completed">
+    Payment Completed
+  </option>
+
+  <option value="order.created">
+    Order Created
+  </option>
+
+  <option value="custom">
+    Custom Trigger
+  </option>
+
+</select>
+
+<label>Action</label>
+
+<select id="action" required>
+
+  <option value="send_email">
+    Send Email
+  </option>
+
+  <option value="send_notification">
+    Send Notification
+  </option>
+
+  <option value="webhook">
+    Call Webhook
+  </option>
+
+  <option value="update_database">
+    Update Database
+  </option>
+
+  <option value="custom">
+    Custom Action
+  </option>
+
+</select>
+
+<label>Description</label>
+
+<textarea
+  id="description"
+  placeholder="Describe what this workflow does..."
+></textarea>
+
+<label>
+  <input
+    type="checkbox"
+    id="activeCheck"
+    checked
+    style="width:auto"
+  >
+  Active workflow
+</label>
+
+<div class="actions">
+
+  <button
+    type="submit"
+    class="primary"
+  >
+    Save Workflow
+  </button>
+
+  <button
+    type="button"
+    id="closeBtn"
+  >
+    Cancel
+  </button>
+
+</div>
+
+</form>
+
+</div>
+</div>
+
+
+<div class="toast" id="toast">
+  Done
+</div>
+
+
+<script type="module">
+
+import {
+  initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged
+}
+from
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  doc,
+  serverTimestamp
+}
+from
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+
+/* =========================
+   FIREBASE
+========================= */
+
+const firebaseConfig = {
+
+  apiKey:
+    "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+  authDomain:
+    "let-s-study-pro-course.firebaseapp.com",
+
+  databaseURL:
+    "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+  projectId:
+    "let-s-study-pro-course",
+
+  storageBucket:
+    "let-s-study-pro-course.firebasestorage.app",
+
+  messagingSenderId:
+    "474928293390",
+
+  appId:
+    "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+  measurementId:
+    "G-85B7V5H5J0"
+
+};
+
+
+const app =
+  initializeApp(
+    firebaseConfig
+  );
+
+const auth =
+  getAuth(app);
+
+const db =
+  getFirestore(app);
+
+
+/* =========================
+   STATE
+========================= */
+
+let user = null;
+let workflows = [];
+
+
+/* =========================
+   HELPERS
+========================= */
+
+const $ =
+  id =>
+  document.getElementById(id);
+
+
+function escapeHTML(value){
+
+  return String(
+    value ?? ""
+  )
+  .replace(/&/g,"&amp;")
+  .replace(/</g,"&lt;")
+  .replace(/>/g,"&gt;")
+  .replace(/"/g,"&quot;")
+  .replace(/'/g,"&#039;");
+
+}
+
+
+function toast(message){
+
+  const el =
+    $("toast");
+
+  el.textContent =
+    message;
+
+  el.classList.add(
+    "show"
+  );
+
+  setTimeout(
+    () =>
+      el.classList.remove(
+        "show"
+      ),
+    1800
+  );
+
+}
+
+
+function dateValue(value){
+
+  try{
+
+    if(
+      value &&
+      typeof value.toDate ===
+      "function"
+    ){
+
+      return value
+        .toDate()
+        .toLocaleString();
+
+    }
+
+    if(value){
+
+      return new Date(
+        value
+      ).toLocaleString();
+
+    }
+
+  }catch(e){}
+
+  return "—";
+
+}
+
+
+/* =========================
+   AUTH
+========================= */
+
+onAuthStateChanged(
+  auth,
+  currentUser => {
+
+    user =
+      currentUser;
+
+    $("userEmail")
+      .textContent =
+      user?.email ||
+      "Guest";
+
+    loadWorkflows();
+
+  }
+);
+
+
+/* =========================
+   LOAD WORKFLOWS
+========================= */
+
+async function loadWorkflows(){
+
+  try{
+
+    const snap =
+      await getDocs(
+        collection(
+          db,
+          "automationWorkflows"
+        )
+      );
+
+    workflows =
+      snap.docs.map(
+        item => ({
+          id:item.id,
+          ...item.data()
+        })
+      );
+
+    workflows.sort(
+      (a,b) =>
+        String(
+          a.name || ""
+        ).localeCompare(
+          String(
+            b.name || ""
+          )
+        )
+    );
+
+    render();
+
+  }catch(error){
+
+    console.error(
+      "Workflow load error:",
+      error
+    );
+
+    workflows = [];
+
+    render();
+
+    toast(
+      "Unable to load workflows"
+    );
+
+  }
+
+}
+
+
+/* =========================
+   RENDER
+========================= */
+
+function render(){
+
+  const search =
+    $("search")
+      .value
+      .toLowerCase()
+      .trim();
+
+  const status =
+    $("statusFilter")
+      .value;
+
+
+  const list =
+    workflows.filter(
+      workflow => {
+
+        const text =
+          [
+            workflow.name,
+            workflow.trigger,
+            workflow.description
+          ]
+          .join(" ")
+          .toLowerCase();
+
+        const active =
+          workflow.active !== false;
+
+        return (
+
+          (
+            !search ||
+            text.includes(search)
+          )
+
+          &&
+
+          (
+            status === "all" ||
+            (
+              status === "active" &&
+              active
+            ) ||
+            (
+              status === "disabled" &&
+              !active
+            )
+          )
+
+        );
+
+      }
+    );
+
+
+  $("total")
+    .textContent =
+    workflows.length;
+
+
+  $("active")
+    .textContent =
+    workflows.filter(
+      w =>
+        w.active !== false
+    ).length;
+
+
+  $("disabled")
+    .textContent =
+    workflows.filter(
+      w =>
+        w.active === false
+    ).length;
+
+
+  $("executions")
+    .textContent =
+    workflows.reduce(
+      (
+        total,
+        workflow
+      ) =>
+        total +
+        Number(
+          workflow.executions ||
+          0
+        ),
+      0
+    );
+
+
+  if(!list.length){
+
+    $("list").innerHTML = `
+      <tr>
+        <td
+          colspan="7"
+          class="empty"
+        >
+          No workflows found.
+        </td>
+      </tr>
+    `;
+
+    return;
+
+  }
+
+
+  $("list").innerHTML =
+    list.map(
+      workflow => {
+
+        const active =
+          workflow.active !== false;
+
+        const steps =
+          Array.isArray(
+            workflow.steps
+          )
+            ? workflow.steps.length
+            : (
+                workflow.action
+                  ? 1
+                  : 0
+              );
+
+        return `
+
+          <tr>
+
+            <td>
+
+              <b>
+                ${escapeHTML(
+                  workflow.name ||
+                  "Untitled"
+                )}
+              </b>
+
+              ${
+                workflow.description
+                  ? `
+                    <div style="
+                      color:#667085;
+                      font-size:9px;
+                      margin-top:3px
+                    ">
+                      ${escapeHTML(
+                        workflow.description
+                      )}
+                    </div>
+                  `
+                  : ""
+              }
+
+            </td>
+
+            <td>
+              ${escapeHTML(
+                workflow.trigger ||
+                "custom"
+              )}
+            </td>
+
+            <td>
+              ${steps}
+            </td>
+
+            <td>
+
+              <span
+                class="
+                  badge
+                  ${
+                    active
+                      ? "on"
+                      : "off"
+                  }
+                "
+              >
+                ${
+                  active
+                    ? "ACTIVE"
+                    : "DISABLED"
+                }
+              </span>
+
+            </td>
+
+            <td>
+              ${Number(
+                workflow.executions ||
+                0
+              )}
+            </td>
+
+            <td>
+              ${escapeHTML(
+                dateValue(
+                  workflow.updatedAt
+                )
+              )}
+            </td>
+
+            <td>
+
+              <div class="actions">
+
+                <button
+                  class="primary"
+                  data-edit="${escapeHTML(
+                    workflow.id
+                  )}"
+                >
+                  Edit
+                </button>
+
+                <button
+                  class="success"
+                  data-run="${escapeHTML(
+                    workflow.id
+                  )}"
+                >
+                  Run
+                </button>
+
+                <button
+                  class="warning"
+                  data-toggle="${escapeHTML(
+                    workflow.id
+                  )}"
+                >
+                  ${
+                    active
+                      ? "Disable"
+                      : "Enable"
+                  }
+                </button>
+
+                <button
+                  class="danger"
+                  data-delete="${escapeHTML(
+                    workflow.id
+                  )}"
+                >
+                  Delete
+                </button>
+
+              </div>
+
+            </td>
+
+          </tr>
+
+        `;
+
+      }
+    )
+    .join("");
+
+
+  bindButtons();
+
+}
+
+
+/* =========================
+   BUTTONS
+========================= */
+
+function bindButtons(){
+
+  document
+    .querySelectorAll(
+      "[data-edit]"
+    )
+    .forEach(
+      button => {
+
+        button.onclick =
+          () =>
+            editWorkflow(
+              button.dataset.edit
+            );
+
+      }
+    );
+
+
+  document
+    .querySelectorAll(
+      "[data-run]"
+    )
+    .forEach(
+      button => {
+
+        button.onclick =
+          () =>
+            runWorkflow(
+              button.dataset.run
+            );
+
+      }
+    );
+
+
+  document
+    .querySelectorAll(
+      "[data-toggle]"
+    )
+    .forEach(
+      button => {
+
+        button.onclick =
+          () =>
+            toggleWorkflow(
+              button.dataset.toggle
+            );
+
+      }
+    );
+
+
+  document
+    .querySelectorAll(
+      "[data-delete]"
+    )
+    .forEach(
+      button => {
+
+        button.onclick =
+          () =>
+            deleteWorkflow(
+              button.dataset.delete
+            );
+
+      }
+    );
+
+}
+
+
+/* =========================
+   MODAL
+========================= */
+
+function openModal(){
+
+  $("modal")
+    .classList.add(
+      "show"
+    );
+
+}
+
+
+function closeModal(){
+
+  $("modal")
+    .classList.remove(
+      "show"
+    );
+
+}
+
+
+$("newBtn")
+  .onclick =
+  () => {
+
+    $("form").reset();
+
+    $("editId")
+      .value = "";
+
+    $("activeCheck")
+      .checked = true;
+
+    $("modalTitle")
+      .textContent =
+      "New Workflow";
+
+    openModal();
+
+  };
+
+
+$("closeBtn")
+  .onclick =
+  closeModal;
+
+
+/* =========================
+   EDIT
+========================= */
+
+function editWorkflow(id){
+
+  const workflow =
+    workflows.find(
+      item =>
+        item.id === id
+    );
+
+  if(!workflow){
+    return;
+  }
+
+
+  $("editId")
+    .value =
+    id;
+
+  $("name")
+    .value =
+    workflow.name ||
+    "";
+
+  $("trigger")
+    .value =
+    workflow.trigger ||
+    "custom";
+
+  $("action")
+    .value =
+    workflow.action ||
+    "send_email";
+
+  $("description")
+    .value =
+    workflow.description ||
+    "";
+
+  $("activeCheck")
+    .checked =
+    workflow.active !== false;
+
+  $("modalTitle")
+    .textContent =
+    "Edit Workflow";
+
+  openModal();
+
+}
+
+
+/* =========================
+   SAVE
+========================= */
+
+$("form")
+  .addEventListener(
+    "submit",
+    async event => {
+
+      event.preventDefault();
+
+
+      if(!user){
+
+        toast(
+          "Please login first"
+        );
+
+        return;
+
+      }
+
+
+      const id =
+        $("editId")
+          .value;
+
+
+      const data = {
+
+        name:
+          $("name")
+            .value
+            .trim(),
+
+        trigger:
+          $("trigger")
+            .value,
+
+        action:
+          $("action")
+            .value,
+
+        description:
+          $("description")
+            .value
+            .trim(),
+
+        active:
+          $("activeCheck")
+            .checked,
+
+        ownerId:
+          user.uid,
+
+        ownerEmail:
+          user.email ||
+          "",
+
+        updatedAt:
+          serverTimestamp()
+
+      };
+
+
+      try{
+
+        if(id){
+
+          await updateDoc(
+            doc(
+              db,
+              "automationWorkflows",
+              id
+            ),
+            data
+          );
+
+          toast(
+            "Workflow updated"
+          );
+
+        }else{
+
+          data.steps = [
+            {
+              action:
+                data.action
+            }
+          ];
+
+          data.executions =
+            0;
+
+          data.createdAt =
+            serverTimestamp();
+
+          await addDoc(
+            collection(
+              db,
+              "automationWorkflows"
+            ),
+            data
+          );
+
+          toast(
+            "Workflow created"
+          );
+
+        }
+
+
+        closeModal();
+
+        await loadWorkflows();
+
+      }catch(error){
+
+        console.error(
+          "Save workflow error:",
+          error
+        );
+
+        toast(
+          "Unable to save workflow"
+        );
+
+      }
+
+    }
+  );
+
+
+/* =========================
+   TOGGLE
+========================= */
+
+async function toggleWorkflow(id){
+
+  const workflow =
+    workflows.find(
+      item =>
+        item.id === id
+    );
+
+  if(!workflow){
+    return;
+  }
+
+
+  try{
+
+    await updateDoc(
+      doc(
+        db,
+        "automationWorkflows",
+        id
+      ),
+      {
+
+        active:
+          workflow.active === false,
+
+        updatedAt:
+          serverTimestamp()
+
+      }
+    );
+
+
+    toast(
+      workflow.active === false
+        ? "Workflow enabled"
+        : "Workflow disabled"
+    );
+
+
+    await loadWorkflows();
+
+  }catch(error){
+
+    console.error(
+      "Toggle workflow error:",
+      error
+    );
+
+    toast(
+      "Unable to update workflow"
+    );
+
+  }
+
+}
+
+
+/* =========================
+   RUN
+========================= */
+
+async function runWorkflow(id){
+
+  const workflow =
+    workflows.find(
+      item =>
+        item.id === id
+    );
+
+  if(!workflow){
+    return;
+  }
+
+
+  if(
+    workflow.active === false
+  ){
+
+    toast(
+      "Enable workflow first"
+    );
+
+    return;
+
+  }
+
+
+  try{
+
+    await updateDoc(
+      doc(
+        db,
+        "automationWorkflows",
+        id
+      ),
+      {
+
+        executions:
+          Number(
+            workflow.executions ||
+            0
+          ) + 1,
+
+        lastRunAt:
+          serverTimestamp(),
+
+        lastRunStatus:
+          "success",
+
+        updatedAt:
+          serverTimestamp()
+
+      }
+    );
+
+
+    toast(
+      "Workflow executed"
+    );
+
+
+    await loadWorkflows();
+
+  }catch(error){
+
+    console.error(
+      "Workflow run error:",
+      error
+    );
+
+    toast(
+      "Workflow execution failed"
+    );
+
+  }
+
+}
+
+
+/* =========================
+   DELETE
+========================= */
+
+async function deleteWorkflow(id){
+
+  const workflow =
+        workflows.find(
+      item =>
+        item.id === id
+    );
+
+  if(!workflow){
+
+    toast(
+      "Workflow not found"
+    );
+
+    return;
+
+  }
+
+  $("workflowModalTitle")
+    .textContent =
+    workflow.name ||
+    "Workflow Details";
+
+  $("workflowModalContent")
+    .innerHTML = `
+
+      <div class="detail-grid">
+
+        <div class="detail">
+
+          <div class="detail-label">
+            Status
+          </div>
+
+          <div class="detail-value">
+
+            <span
+              class="
+                status
+                ${escapeHTML(
+                  workflow.status ||
+                  "active"
+                )}
+            ">
+              ${escapeHTML(
+                workflow.status ||
+                "active"
+              )}
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="detail">
+
+          <div class="detail-label">
+            Workflow ID
+          </div>
+
+          <div class="detail-value">
+            ${escapeHTML(
+              workflow.id ||
+              "—"
+            )}
+          </div>
+
+        </div>
+
+
+        <div class="detail">
+
+          <div class="detail-label">
+            Trigger
+          </div>
+
+          <div class="detail-value">
+            ${escapeHTML(
+              workflow.trigger ||
+              workflow.triggerType ||
+              "Manual"
+            )}
+          </div>
+
+        </div>
+
+
+        <div class="detail">
+
+          <div class="detail-label">
+            Action
+          </div>
+
+          <div class="detail-value">
+            ${escapeHTML(
+              workflow.action ||
+              workflow.actionType ||
+              "—"
+            )}
+          </div>
+
+        </div>
+
+
+        <div class="detail">
+
+          <div class="detail-label">
+            Executions
+          </div>
+
+          <div class="detail-value">
+            ${Number(
+              workflow.executions ||
+              0
+            ).toLocaleString()}
+          </div>
+
+        </div>
+
+
+        <div class="detail">
+
+          <div class="detail-label">
+            Last Run
+          </div>
+
+          <div class="detail-value">
+            ${escapeHTML(
+              workflow.lastRun
+                ? formatDate(
+                    workflow.lastRun
+                  )
+                : "Never"
+            )}
+          </div>
+
+        </div>
+
+
+        <div class="detail full">
+
+          <div class="detail-label">
+            Description
+          </div>
+
+          <div class="detail-value">
+            ${escapeHTML(
+              workflow.description ||
+              "No description available."
+            )}
+          </div>
+
+        </div>
+
+
+        <div class="detail full">
+
+          <div class="detail-label">
+            Created
+          </div>
+
+          <div class="detail-value">
+            ${escapeHTML(
+              workflow.createdAt
+                ? formatDate(
+                    workflow.createdAt
+                  )
+                : "Unknown"
+            )}
+          </div>
+
+        </div>
+
+      </div>
+
+    `;
+
+  $("workflowModal")
+    .classList.add(
+      "show"
+    );
+
+}
+
+
+/* =========================
+   CLOSE WORKFLOW MODAL
+========================= */
+
+function closeWorkflowModal(){
+
+  const modal =
+    $("workflowModal");
+
+  if(modal){
+
+    modal.classList.remove(
+      "show"
+    );
+
+  }
+
+}
+
+
+$("workflowModalClose")
+  ?.addEventListener(
+    "click",
+    closeWorkflowModal
+  );
+
+
+$("workflowModal")
+  ?.addEventListener(
+    "click",
+    event => {
+
+      if(
+        event.target ===
+        $("workflowModal")
+      ){
+
+        closeWorkflowModal();
+
+      }
+
+    }
+  );
+
+
+/* =========================
+   EDIT WORKFLOW
+========================= */
+
+async function editWorkflow(id){
+
+  const workflow =
+    workflows.find(
+      item =>
+        item.id === id
+    );
+
+  if(!workflow){
+
+    toast(
+      "Workflow not found"
+    );
+
+    return;
+
+  }
+
+  const name =
+    prompt(
+      "Workflow name:",
+      workflow.name ||
+      ""
+    );
+
+  if(
+    name === null
+  ){
+
+    return;
+
+  }
+
+  const description =
+    prompt(
+      "Description:",
+      workflow.description ||
+      ""
+    );
+
+  if(
+    description === null
+  ){
+
+    return;
+
+  }
+
+  try{
+
+    await updateDoc(
+      doc(
+        db,
+        "automationWorkflows",
+        id
+      ),
+      {
+
+        name:
+          name.trim(),
+
+        description:
+          description.trim(),
+
+        updatedAt:
+          serverTimestamp()
+
+      }
+    );
+
+    toast(
+      "Workflow updated"
+    );
+
+    await loadWorkflows();
+
+  }catch(error){
+
+    console.error(
+      "Workflow update error:",
+      error
+    );
+
+    toast(
+      "Unable to update workflow"
+    );
+
+  }
+
+}
+
+
+/* =========================
+   TOGGLE WORKFLOW
+========================= */
+
+async function toggleWorkflow(id){
+
+  const workflow =
+    workflows.find(
+      item =>
+        item.id === id
+    );
+
+  if(!workflow){
+
+    toast(
+      "Workflow not found"
+    );
+
+    return;
+
+  }
+
+  const active =
+    workflow.active !== false &&
+    workflow.status !== "paused";
+
+
+  try{
+
+    await updateDoc(
+      doc(
+        db,
+        "automationWorkflows",
+        id
+      ),
+      {
+
+        active:
+          !active,
+
+        status:
+          active
+            ? "paused"
+            : "active",
+
+        updatedAt:
+          serverTimestamp()
+
+      }
+    );
+
+    toast(
+      active
+        ? "Workflow paused"
+        : "Workflow activated"
+    );
+
+    await loadWorkflows();
+
+  }catch(error){
+
+    console.error(
+      "Workflow toggle error:",
+      error
+    );
+
+    toast(
+      "Unable to change workflow status"
+    );
+
+  }
+
+}
+
+
+/* =========================
+   DELETE WORKFLOW
+========================= */
+
+async function deleteWorkflow(id){
+
+  const workflow =
+    workflows.find(
+      item =>
+        item.id === id
+    );
+
+  if(!workflow){
+
+    return;
+
+  }
+
+  const confirmed =
+    confirm(
+      `Delete "${workflow.name || "this workflow"}"?`
+    );
+
+  if(!confirmed){
+
+    return;
+
+  }
+
+  try{
+
+    await deleteDoc(
+      doc(
+        db,
+        "automationWorkflows",
+        id
+      )
+    );
+
+    toast(
+      "Workflow deleted"
+    );
+
+    await loadWorkflows();
+
+  }catch(error){
+
+    console.error(
+      "Workflow delete error:",
+      error
+    );
+
+    toast(
+      "Unable to delete workflow"
+    );
+
+  }
+
+}
+
+
+/* =========================
+   CREATE WORKFLOW
+========================= */
+
+async function createWorkflow(data){
+
+  if(!currentUser){
+
+    toast(
+      "Please login first"
+    );
+
+    return null;
+
+  }
+
+  try{
+
+    const workflowData = {
+
+      name:
+        data.name ||
+        "Untitled Workflow",
+
+      description:
+        data.description ||
+        "",
+
+      trigger:
+        data.trigger ||
+        "manual",
+
+      action:
+        data.action ||
+        "custom",
+
+      status:
+        "active",
+
+      active:
+        true,
+
+      executions:
+        0,
+
+      ownerId:
+        currentUser.uid,
+
+      ownerEmail:
+        currentUser.email ||
+        "",
+
+      createdAt:
+        serverTimestamp(),
+
+      updatedAt:
+        serverTimestamp()
+
+    };
+
+
+    const reference =
+      await addDoc(
+        collection(
+          db,
+          "automationWorkflows"
+        ),
+        workflowData
+      );
+
+
+    toast(
+      "Workflow created"
+    );
+
+    await loadWorkflows();
+
+    return reference.id;
+
+  }catch(error){
+
+    console.error(
+      "Workflow creation error:",
+      error
+    );
+
+    toast(
+      "Unable to create workflow"
+    );
+
+    return null;
+
+  }
+
+}
+
+
+/* =========================
+   GLOBAL WORKFLOW API
+========================= */
+
+window.viewWorkflow =
+  viewWorkflow;
+
+window.editWorkflow =
+  editWorkflow;
+
+window.toggleWorkflow =
+  toggleWorkflow;
+
+window.deleteWorkflow =
+  deleteWorkflow;
+
+window.createWorkflow =
+  createWorkflow;
+
+
+/* =========================
+   ESCAPE KEY
+========================= */
+
+document.addEventListener(
+  "keydown",
+  event => {
+
+    if(
+      event.key ===
+      "Escape"
+    ){
+
+      closeWorkflowModal();
+
+    }
+
+  }
+);
+
+
+/* =========================
+   INITIAL LOAD
+========================= */
+
+if(
+  currentUser
+){
+
+  loadWorkflows();
+
+}
+
+
+/* =========================
+   COMPLETE
+========================= */
+
+console.log(
+  "LetsStudy Pro Automation Workflows initialized."
+);
+
+</script>
+
+</body>
+</html>
