@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>University & Higher Education | LetsStudy Pro</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:Inter,Arial,sans-serif;
+ background:#f5f7fb;
+ color:#172033
+}
+header{
+ background:#111827;color:#fff;padding:18px 5%;
+ display:flex;justify-content:space-between;
+ align-items:center
+}
+.logo{font-weight:800;font-size:20px}
+.container{max-width:1200px;margin:30px auto;padding:0 18px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0}
+input,select,textarea{
+ width:100%;padding:12px;border:1px solid #d8dee9;
+ border-radius:10px;background:#fff
+}
+.search{flex:1;min-width:220px}
+button{
+ border:0;border-radius:10px;padding:11px 16px;
+ cursor:pointer;font-weight:700
+}
+.primary{background:#2563eb;color:#fff}
+.secondary{background:#e5e7eb}
+.danger{background:#fee2e2;color:#b91c1c}
+
+.stats{
+ display:grid;
+ grid-template-columns:repeat(4,1fr);
+ gap:15px
+}
+.card{
+ background:#fff;padding:20px;border-radius:16px;
+ box-shadow:0 5px 20px #0000000a
+}
+.stat b{display:block;font-size:28px;margin-top:5px}
+
+.table{
+ background:#fff;border-radius:16px;
+ overflow:auto;box-shadow:0 5px 20px #0000000a
+}
+table{width:100%;border-collapse:collapse;min-width:850px}
+th,td{padding:14px;border-bottom:1px solid #eee;text-align:left}
+.course{display:flex;gap:10px;align-items:center}
+.thumb{
+ width:60px;height:45px;object-fit:cover;
+ border-radius:8px
+}
+.badge{
+ display:inline-block;padding:5px 9px;
+ border-radius:20px;font-size:12px;font-weight:700
+}
+.free{background:#dcfce7;color:#15803d}
+.paid{background:#dbeafe;color:#1d4ed8}
+.published{background:#dcfce7;color:#166534}
+.draft{background:#f3f4f6;color:#374151}
+.actions{display:flex;gap:5px;flex-wrap:wrap}
+
+.modal{
+ display:none;position:fixed;inset:0;
+ background:#0008;z-index:100;
+ align-items:center;justify-content:center;
+ padding:15px
+}
+.modal.show{display:flex}
+.box{
+ background:#fff;border-radius:18px;
+ padding:22px;width:700px;max-width:100%;
+ max-height:90vh;overflow:auto
+}
+.grid{
+ display:grid;grid-template-columns:1fr 1fr;
+ gap:12px
+}
+.full{grid-column:1/-1}
+label{font-size:13px;font-weight:700}
+textarea{min-height:100px;resize:vertical}
+.modal-footer{
+ display:flex;justify-content:flex-end;
+ gap:10px;margin-top:20px
+}
+.toast{
+ display:none;position:fixed;
+ right:20px;bottom:20px;
+ background:#111827;color:#fff;
+ padding:13px 18px;border-radius:10px;
+ z-index:200
+}
+.toast.show{display:block}
+
+@media(max-width:700px){
+ .stats{grid-template-columns:1fr 1fr}
+ .grid{grid-template-columns:1fr}
+ .full{grid-column:auto}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+ <div class="logo">
+  LetsStudy Pro • University & Higher Education
+ </div>
+
+ <button id="logout" class="secondary">
+  Logout
+ </button>
+</header>
+
+
+<main class="container">
+
+<h1>University & Higher Education</h1>
+
+<p>
+ Manage university, college and higher education courses.
+</p>
+
+
+<div class="stats">
+
+ <div class="card stat">
+  Total Courses
+  <b id="total">0</b>
+ </div>
+
+ <div class="card stat">
+  Published
+  <b id="published">0</b>
+ </div>
+
+ <div class="card stat">
+  Free
+  <b id="free">0</b>
+ </div>
+
+ <div class="card stat">
+  Paid
+  <b id="paid">0</b>
+ </div>
+
+</div>
+
+
+<div class="toolbar">
+
+ <input
+  id="search"
+  class="search"
+  placeholder="Search university courses..."
+ >
+
+ <select id="filter">
+  <option value="">All Courses</option>
+  <option value="free">Free</option>
+  <option value="paid">Paid</option>
+  <option value="published">Published</option>
+  <option value="draft">Draft</option>
+ </select>
+
+ <select id="levelFilter">
+  <option value="">All Levels</option>
+  <option>Certificate</option>
+  <option>Diploma</option>
+  <option>Bachelor</option>
+  <option>Master</option>
+  <option>PhD</option>
+ </select>
+
+ <button id="add" class="primary">
+  + Add Course
+ </button>
+
+</div>
+
+
+<div class="table">
+
+<table>
+
+<thead>
+<tr>
+ <th>Course</th>
+ <th>Level</th>
+ <th>Faculty</th>
+ <th>Price</th>
+ <th>Status</th>
+ <th>Actions</th>
+</tr>
+</thead>
+
+<tbody id="list"></tbody>
+
+</table>
+
+</div>
+
+</main>
+
+
+<!-- MODAL -->
+
+<div class="modal" id="modal">
+
+<div class="box">
+
+<h2 id="modalTitle">
+ Add University Course
+</h2>
+
+<form id="form">
+
+<div class="grid">
+
+<div>
+<label>Course Title</label>
+<input id="title" required>
+</div>
+
+
+<div>
+<label>Faculty / Category</label>
+<input
+ id="faculty"
+ placeholder="Computer Science"
+>
+</div>
+
+
+<div>
+<label>Education Level</label>
+
+<select id="level">
+
+<option>Certificate</option>
+<option>Diploma</option>
+<option>Bachelor</option>
+<option>Master</option>
+<option>PhD</option>
+
+</select>
+
+</div>
+
+
+<div>
+<label>University / Institution</label>
+<input
+ id="institution"
+ placeholder="University name"
+>
+</div>
+
+
+<div>
+<label>Price (TZS)</label>
+<input
+ id="price"
+ type="number"
+ min="0"
+ value="0"
+>
+</div>
+
+
+<div>
+<label>Discount Price</label>
+<input
+ id="discount"
+ type="number"
+ min="0"
+>
+</div>
+
+
+<div>
+<label>Duration</label>
+<input
+ id="duration"
+ placeholder="e.g. 3 Years"
+>
+</div>
+
+
+<div>
+<label>Language</label>
+
+<select id="language">
+<option>English</option>
+<option>Swahili</option>
+</select>
+
+</div>
+
+
+<div class="full">
+<label>Thumbnail URL</label>
+<input id="thumbnail" type="url">
+</div>
+
+
+<div class="full">
+<label>Short Description</label>
+<textarea id="shortDescription"></textarea>
+</div>
+
+
+<div class="full">
+<label>Course Description</label>
+<textarea id="description"></textarea>
+</div>
+
+
+<div>
+<label>Instructor</label>
+<input id="instructor"
+ value="LetsStudy Pro">
+</div>
+
+
+<div>
+<label>Status</label>
+
+<select id="status">
+<option value="draft">Draft</option>
+<option value="published">Published</option>
+</select>
+
+</div>
+
+</div>
+
+
+<div class="modal-footer">
+
+<button
+ type="button"
+ id="cancel"
+ class="secondary">
+ Cancel
+</button>
+
+<button class="primary">
+ Save Course
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+
+<div id="toast" class="toast"></div>
+
+
+<script type="module">
+
+import{
+ initializeApp
+}from
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+
+import{
+ getAuth,
+ onAuthStateChanged,
+ signOut
+}from
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
+import{
+ getFirestore,
+ collection,
+ getDocs,
+ getDoc,
+ addDoc,
+ updateDoc,
+ deleteDoc,
+ doc,
+ serverTimestamp
+}from
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+
+const firebaseConfig={
+
+ apiKey:
+ "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+ authDomain:
+ "let-s-study-pro-course.firebaseapp.com",
+
+ databaseURL:
+ "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+ projectId:
+ "let-s-study-pro-course",
+
+ storageBucket:
+ "let-s-study-pro-course.firebasestorage.app",
+
+ messagingSenderId:
+ "474928293390",
+
+ appId:
+ "1:474928293390:web:2bcc2aebf2351c12a9fe5f"
+
+};
+
+
+const app=initializeApp(firebaseConfig);
+
+const auth=getAuth(app);
+
+const db=getFirestore(app);
+
+
+const $=id=>
+ document.getElementById(id);
+
+
+let courses=[];
+
+let editing=null;
+
+
+/* AUTH */
+
+onAuthStateChanged(
+ auth,
+ async user=>{
+
+  if(!user){
+
+   location.href="login.html";
+   return;
+
+  }
+
+
+  const snap=
+   await getDoc(
+    doc(
+     db,
+     "users",
+     user.uid
+    )
+   );
+
+
+  if(!snap.exists()){
+
+   await signOut(auth);
+
+   location.href="login.html";
+
+   return;
+
+  }
+
+
+  const role=snap.data().role;
+
+
+  if(![
+   "admin",
+   "superAdmin",
+   "courseAdmin",
+   "contentAdmin"
+  ].includes(role)){
+
+   alert("Access denied");
+
+   location.href="index.html";
+
+   return;
+
+  }
+
+
+  load();
+
+ });
+
+
+/* LOAD */
+
+async function load(){
+
+ const snap=
+  await getDocs(
+   collection(
+    db,
+    "courses"
+   )
+  );
+
+
+ courses=
+  snap.docs.map(
+   d=>({
+    id:d.id,
+    ...d.data()
+   })
+  );
+
+
+ render();
+
+}
+
+
+/* RENDER */
+
+function render(){
+
+ const q=
+  $("search")
+   .value
+   .toLowerCase();
+
+
+ const filter=
+  $("filter").value;
+
+
+ const levelFilter=
+  $("levelFilter").value;
+
+
+ const data=
+ courses.filter(c=>{
+
+  const text=
+   (
+    c.title+" "+
+    c.faculty+" "+
+    c.institution+" "+
+    c.level
+   ).toLowerCase();
+
+
+  const free=
+   c.isFree===true ||
+   Number(c.price||0)===0;
+
+
+  return (
+
+   (!q||text.includes(q)) &&
+
+   (
+    !filter ||
+
+    (filter==="free"&&free) ||
+
+    (filter==="paid"&&!free) ||
+
+    (
+     filter==="published" &&
+     c.status==="published"
+    ) ||
+
+    (
+     filter==="draft" &&
+     c.status==="draft"
+    )
+   ) &&
+
+   (
+    !levelFilter ||
+    c.level===levelFilter
+   )
+
+  );
+
+ });
+
+
+ $("total").textContent=
+  courses.length;
+
+
+ $("published").textContent=
+  courses.filter(
+   c=>c.status==="published"
+  ).length;
+
+
+ $("free").textContent=
+  courses.filter(
+   c=>c.isFree===true||
+   Number(c.price||0)===0
+  ).length;
+
+
+ $("paid").textContent=
+  courses.filter(
+   c=>c.isFree!==true&&
+   Number(c.price||0)>0
+  ).length;
+
+
+ $("list").innerHTML=
+ data.map(c=>{
+
+  const free=
+   c.isFree===true||
+   Number(c.price||0)===0;
+
+
+  return `
+
+  <tr>
+
+   <td>
+
+    <div class="course">
+
+     <img
+      class="thumb"
+      src="${c.thumbnail||'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=300'}"
+     >
+
+     <div>
+
+      <b>${esc(c.title)}</b>
+
+      <br>
+
+      <small>
+       ${esc(c.institution||"Higher Education")}
+      </small>
+
+     </div>
+
+    </div>
+
+   </td>
+
+
+   <td>
+    ${esc(c.level||"Bachelor")}
+   </td>
+
+
+   <td>
+    ${esc(c.faculty||"General")}
+   </td>
+
+
+   <td>
+
+    <span class="badge ${free?'free':'paid'}">
+
+     ${
+      free
+      ?"FREE"
+      :
+      `${c.currency||"TZS"}
+       ${Number(
+        c.discountPrice??
+        c.price
+       ).toLocaleString()}`
+     }
+
+    </span>
+
+   </td>
+
+
+   <td>
+
+    <span class="badge ${
+     c.status==="published"
+     ?"published"
+     :"draft"
+    }">
+
+     ${esc(c.status||"draft")}
+
+    </span>
+
+   </td>
+
+
+   <td>
+
+    <div class="actions">
+
+     <button
+      class="secondary"
+      onclick="editCourse('${c.id}')">
+      Edit
+     </button>
+
+     <button
+      class="danger"
+      onclick="deleteCourse('${c.id}')">
+      Delete
+     </button>
+
+     <button
+      class="primary"
+      onclick="openCourse('${c.id}')">
+      Open
+     </button>
+
+    </div>
+
+   </td>
+
+  </tr>
+
+  `;
+
+ }).join("");
+
+}
+
+
+function esc(v){
+
+ return String(v||"")
+  .replaceAll("&","&amp;")
+  .replaceAll("<","&lt;")
+  .replaceAll(">","&gt;")
+  .replaceAll('"',"&quot;");
+
+}
+
+
+/* ADD */
+
+$("add").onclick=()=>{
+
+ editing=null;
+
+ $("form").reset();
+
+ $("modalTitle").textContent=
+  "Add University Course";
+
+ $("faculty").value=
+  "University & Higher Education";
+
+ $("instructor").value=
+  "LetsStudy Pro";
+
+ $("price").value=0;
+
+ $("modal")
+  .classList
+  .add("show");
+
+};
+
+
+/* EDIT */
+
+window.editCourse=id=>{
+
+ const c=
+  courses.find(x=>x.id===id);
+
+ if(!c)return;
+
+ editing=id;
+
+ $("title").value=
+  c.title||"";
+
+ $("faculty").value=
+  c.faculty||"";
+
+ $("level").value=
+  c.level||"Bachelor";
+
+ $("institution").value=
+  c.institution||"";
+
+ $("price").value=
+  c.price||0;
+
+ $("discount").value=
+  c.discountPrice??"";
+
+ $("duration").value=
+  c.duration||"";
+
+ $("language").value=
+  c.language||"English";
+
+ $("thumbnail").value=
+  c.thumbnail||"";
+
+ $("shortDescription").value=
+  c.shortDescription||"";
+
+ $("description").value=
+  c.description||"";
+
+ $("instructor").value=
+  c.instructorName||
+  "LetsStudy Pro";
+
+ $("status").value=
+  c.status||"draft";
+
+
+ $("modalTitle").textContent=
+  "Edit University Course";
+
+
+ $("modal")
+  .classList
+  .add("show");
+
+};
+
+
+/* SAVE */
+
+$("form").onsubmit=
+ async e=>{
+
+  e.preventDefault();
+
+
+  const price=
+   Number(
+    $("price").value||0
+   );
+
+
+  const data={
+
+   title:
+    $("title").value.trim(),
+
+   categoryName:
+    "University & Higher Education",
+
+   categoryId:
+    "university-higher-education",
+
+   faculty:
+    $("faculty").value.trim(),
+
+   level:
+    $("level").value,
+
+   institution:
+    $("institution").value.trim(),
+
+   price,
+
+   currency:"TZS",
+
+   discountPrice:
+    $("discount").value
+    ?Number($("discount").value)
+    :null,
+
+   isFree:
+    price===0,
+
+   duration:
+    $("duration").value.trim(),
+
+   language:
+    $("language").value,
+
+   thumbnail:
+    $("thumbnail").value.trim(),
+
+   shortDescription:
+    $("shortDescription")
+     .value.trim(),
+
+   description:
+    $("description")
+     .value.trim(),
+
+   instructorName:
+    $("instructor")
+     .value.trim(),
+
+   status:
+    $("status").value,
+
+   published:
+    $("status").value==="published",
+
+   updatedAt:
+    serverTimestamp()
+
+  };
+
+
+  try{
+
+   if(editing){
+
+    await updateDoc(
+     doc(
+      db,
+      "courses",
+      editing
+     ),
+     data
+    );
+
+    toast(
+     "Course updated successfully"
+    );
+
+   }else{
+
+    data.slug=
+     data.title
+      .toLowerCase()
+      .replace(
+       /[^a-z0-9]+/g,
+       "-"
+      );
+
+    data.createdAt=
+     serverTimestamp();
+
+    data.enrollmentCount=0;
+
+    data.rating=0;
+
+    data.ratingCount=0;
+
+
+    await addDoc(
+     collection(
+      db,
+      "courses"
+     ),
+     data
+    );
+
+
+    toast(
+     "University course added"
+    );
+
+   }
+
+
+   close();
+
+   load();
+
+
+  }catch(error){
+
+   console.error(error);
+
+   toast(
+    "Unable to save course"
+   );
+
+  }
+
+ };
+
+
+/* DELETE */
+
+window.deleteCourse=
+ async id=>{
+
+  const c=
+   courses.find(x=>x.id===id);
+
+  if(!c)return;
+
+
+  if(!confirm(
+   `Delete "${c.title}"?`
+  ))return;
+
+
+  try{
+
+   await deleteDoc(
+    doc(
+     db,
+     "courses",
+     id
+    )
+   );
+
+   toast(
+    "Course deleted"
+   );
+
+   load();
+
+  }catch(error){
+
+   console.error(error);
+
+   toast(
+    "Delete failed"
+   );
+
+  }
+
+ };
+
+
+/* OPEN */
+
+window.openCourse=id=>{
+
+ const c=
+  courses.find(x=>x.id===id);
+
+ if(!c)return;
+
+
+ const free=
+  c.isFree===true||
+  Number(c.price||0)===0;
+
+
+ /* FREE COURSE */
+
+ if(free){
+
+  location.href=
+   `course-details.html?id=${encodeURIComponent(id)}`;
+
+  return;
+
+ }
+
+
+ /* PAID COURSE → CART */
+
+ let cart=[];
+
+ try{
+
+  cart=
+   JSON.parse(
+    localStorage.getItem(
+     "letsStudyCart"
+    )||"[]"
+   );
+
+ }catch{
+
+  cart=[];
+
+ }
+
+
+ const item={
+
+  id,
+
+  courseId:id,
+
+  productId:id,
+
+  productType:"course",
+
+  title:c.title,
+
+  name:c.title,
+
+  price:Number(
+   c.discountPrice??
+   c.price??
+   0
+  ),
+
+  currency:
+   c.currency||"TZS",
+
+  quantity:1,
+
+  thumbnail:
+   c.thumbnail||"",
+
+  category:
+   "University & Higher Education"
+
+ };
+
+
+ if(!cart.some(
+  x=>x.courseId===id
+ )){
+
+  cart.push(item);
+
+ }
+
+
+ localStorage.setItem(
+  "letsStudyCart",
+  JSON.stringify(cart)
+ );
+
+
+ location.href=
+  "cart.html";
+
+};
+
+
+/* CLOSE */
+
+function close(){
+
+ $("modal")
+  .classList
+  .remove("show");
+
+ editing=null;
+
+}
+
+$("cancel").onclick=
+ close;
+
+
+/* FILTER */
+
+$("search").oninput=
+ render;
+
+$("filter").onchange=
+ render;
+
+$("levelFilter").onchange=
+ render;
+
+
+/* LOGOUT */
+
+$("logout").onclick=
+ async()=>{
+
+  await signOut(auth);
+
+  location.href=
+   "login.html";
+
+ };
+
+
+/* TOAST */
+
+function toast(message){
+
+ $("toast").textContent=
+  message;
+
+ $("toast")
+  .classList
+  .add("show");
+
+ setTimeout(
+  ()=>
+   $("toast")
+    .classList
+    .remove("show"),
+  2500
+ );
+
+}
+
+</script>
+
+</body>
+</html>
