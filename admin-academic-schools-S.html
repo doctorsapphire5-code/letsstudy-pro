@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Academic & Schools | LetsStudy Pro Admin</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:Inter,Arial,sans-serif;
+ background:#f5f7fb;
+ color:#172033
+}
+header{
+ background:#111827;
+ color:#fff;
+ padding:18px 5%;
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:15px
+}
+.logo{font-size:20px;font-weight:800}
+.container{max-width:1200px;margin:30px auto;padding:0 18px}
+.toolbar{
+ display:flex;gap:10px;flex-wrap:wrap;
+ margin:20px 0
+}
+input,select,textarea{
+ width:100%;padding:12px;border:1px solid #d8dee9;
+ border-radius:10px;background:#fff
+}
+.search{flex:1;min-width:220px}
+button{
+ border:0;border-radius:10px;padding:11px 16px;
+ cursor:pointer;font-weight:700
+}
+.primary{background:#2563eb;color:white}
+.danger{background:#fee2e2;color:#b91c1c}
+.secondary{background:#e5e7eb}
+.stats{
+ display:grid;
+ grid-template-columns:repeat(3,1fr);
+ gap:15px
+}
+.card{
+ background:#fff;border-radius:16px;padding:20px;
+ box-shadow:0 5px 20px #0000000a
+}
+.stat b{display:block;font-size:28px;margin-top:5px}
+.table-wrap{
+ background:#fff;border-radius:16px;
+ overflow:auto;box-shadow:0 5px 20px #0000000a
+}
+table{width:100%;border-collapse:collapse;min-width:800px}
+th,td{padding:14px;border-bottom:1px solid #eee;text-align:left}
+.thumb{
+ width:55px;height:40px;object-fit:cover;
+ border-radius:8px
+}
+.course{display:flex;gap:10px;align-items:center}
+.badge{
+ padding:5px 9px;border-radius:20px;
+ font-size:12px;font-weight:700
+}
+.free{background:#dcfce7;color:#15803d}
+.paid{background:#dbeafe;color:#1d4ed8}
+.actions{display:flex;gap:6px}
+.modal{
+ display:none;position:fixed;inset:0;
+ background:#0008;z-index:20;
+ align-items:center;justify-content:center;
+ padding:15px
+}
+.modal.show{display:flex}
+.modal-box{
+ background:#fff;width:650px;max-width:100%;
+ max-height:90vh;overflow:auto;
+ border-radius:18px;padding:22px
+}
+.form-grid{
+ display:grid;grid-template-columns:1fr 1fr;gap:12px
+}
+.full{grid-column:1/-1}
+.form-grid label{font-size:13px;font-weight:700}
+.form-grid input,.form-grid select,.form-grid textarea{
+ margin-top:5px
+}
+textarea{min-height:90px;resize:vertical}
+.modal-footer{
+ display:flex;justify-content:flex-end;
+ gap:10px;margin-top:18px
+}
+.toast{
+ position:fixed;right:20px;bottom:20px;
+ background:#111827;color:#fff;
+ padding:13px 18px;border-radius:10px;
+ display:none;z-index:50
+}
+.toast.show{display:block}
+@media(max-width:700px){
+ .stats{grid-template-columns:1fr}
+ .form-grid{grid-template-columns:1fr}
+ .full{grid-column:auto}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">LetsStudy Pro • Academic & Schools</div>
+  <button id="logout" class="secondary">Logout</button>
+</header>
+
+<main class="container">
+
+<h1>Academic & Schools Courses</h1>
+<p>Manage school, academic and examination courses.</p>
+
+<section class="stats">
+  <div class="card stat">
+    Total Courses
+    <b id="total">0</b>
+  </div>
+  <div class="card stat">
+    Published
+    <b id="published">0</b>
+  </div>
+  <div class="card stat">
+    Free Courses
+    <b id="free">0</b>
+  </div>
+</section>
+
+<div class="toolbar">
+  <input id="search" class="search"
+         placeholder="Search courses...">
+
+  <select id="filter">
+    <option value="">All Courses</option>
+    <option value="free">Free</option>
+    <option value="paid">Paid</option>
+    <option value="published">Published</option>
+    <option value="draft">Draft</option>
+  </select>
+
+  <button class="primary" id="add">
+    + Add Course
+  </button>
+</div>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Course</th>
+<th>Category</th>
+<th>Price</th>
+<th>Status</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="list"></tbody>
+</table>
+</div>
+
+</main>
+
+
+<!-- MODAL -->
+
+<div class="modal" id="modal">
+<div class="modal-box">
+
+<h2 id="modalTitle">Add Course</h2>
+
+<form id="form">
+
+<input type="hidden" id="id">
+
+<div class="form-grid">
+
+<div>
+<label>Course Title</label>
+<input id="title" required>
+</div>
+
+<div>
+<label>Category</label>
+<input id="category"
+       value="Academic & Schools">
+</div>
+
+<div>
+<label>Level</label>
+<select id="level">
+<option>O-Level</option>
+<option>A-Level</option>
+<option>Primary</option>
+<option>University</option>
+<option>Professional</option>
+</select>
+</div>
+
+<div>
+<label>Language</label>
+<select id="language">
+<option>English</option>
+<option>Swahili</option>
+</select>
+</div>
+
+<div>
+<label>Price (TZS)</label>
+<input id="price" type="number" min="0" value="0">
+</div>
+
+<div>
+<label>Discount Price</label>
+<input id="discount" type="number" min="0">
+</div>
+
+<div class="full">
+<label>Thumbnail URL</label>
+<input id="thumbnail" type="url">
+</div>
+
+<div class="full">
+<label>Short Description</label>
+<textarea id="shortDescription"></textarea>
+</div>
+
+<div class="full">
+<label>Description</label>
+<textarea id="description"></textarea>
+</div>
+
+<div>
+<label>Instructor</label>
+<input id="instructor" value="LetsStudy Pro">
+</div>
+
+<div>
+<label>Status</label>
+<select id="status">
+<option value="draft">Draft</option>
+<option value="published">Published</option>
+</select>
+</div>
+
+</div>
+
+<div class="modal-footer">
+<button type="button" id="cancel" class="secondary">
+Cancel
+</button>
+<button class="primary">
+Save Course
+</button>
+</div>
+
+</form>
+</div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+
+<script type="module">
+
+import{initializeApp}
+from"https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+
+import{
+ getAuth,onAuthStateChanged,signOut
+}from"https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
+import{
+ getFirestore,collection,getDocs,
+ addDoc,doc,updateDoc,deleteDoc,
+ getDoc,serverTimestamp
+}from"https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+
+const firebaseConfig={
+ apiKey:"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+ authDomain:"let-s-study-pro-course.firebaseapp.com",
+ databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+ projectId:"let-s-study-pro-course",
+ storageBucket:"let-s-study-pro-course.firebasestorage.app",
+ messagingSenderId:"474928293390",
+ appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+const $=id=>document.getElementById(id);
+
+let courses=[];
+let editing=null;
+
+
+/* AUTH */
+
+onAuthStateChanged(auth,async user=>{
+
+ if(!user){
+  location.href="login.html";
+  return;
+ }
+
+ const snap=await getDoc(
+  doc(db,"users",user.uid)
+ );
+
+ if(!snap.exists()){
+  await signOut(auth);
+  location.href="login.html";
+  return;
+ }
+
+ const role=snap.data().role;
+
+ if(![
+  "admin",
+  "superAdmin",
+  "courseAdmin",
+  "contentAdmin"
+ ].includes(role)){
+  alert("Access denied");
+  location.href="index.html";
+  return;
+ }
+
+ load();
+
+});
+
+
+/* LOAD */
+
+async function load(){
+
+ const snap=await getDocs(
+  collection(db,"courses")
+ );
+
+ courses=snap.docs.map(d=>({
+  id:d.id,...d.data()
+ }));
+
+ render();
+
+}
+
+
+/* RENDER */
+
+function render(){
+
+ const q=$("search").value.toLowerCase();
+ const f=$("filter").value;
+
+ let data=courses.filter(c=>{
+
+  const text=(
+   c.title+" "+
+   c.categoryName+" "+
+   c.level
+  ).toLowerCase();
+
+  const free=
+   c.isFree===true||
+   Number(c.price||0)===0;
+
+  const okSearch=!q||text.includes(q);
+
+  const okFilter=
+   !f||
+   (f==="free"&&free)||
+   (f==="paid"&&!free)||
+   (f==="published"&&c.status==="published")||
+   (f==="draft"&&c.status==="draft");
+
+  return okSearch&&okFilter;
+
+ });
+
+
+ $("total").textContent=courses.length;
+
+ $("published").textContent=
+  courses.filter(c=>c.status==="published").length;
+
+ $("free").textContent=
+  courses.filter(c=>
+   c.isFree===true||
+   Number(c.price||0)===0
+  ).length;
+
+
+ $("list").innerHTML=data.map(c=>{
+
+  const free=
+   c.isFree===true||
+   Number(c.price||0)===0;
+
+  return `
+  <tr>
+
+   <td>
+    <div class="course">
+
+     <img class="thumb"
+      src="${c.thumbnail||'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=200'}">
+
+     <div>
+      <b>${esc(c.title)}</b><br>
+      <small>${esc(c.level||"Academic")}</small>
+     </div>
+
+    </div>
+   </td>
+
+   <td>${esc(c.categoryName||"Academic")}</td>
+
+   <td>
+    <span class="badge ${free?'free':'paid'}">
+     ${free?"FREE":
+     `${c.currency||"TZS"} ${Number(c.discountPrice??c.price).toLocaleString()}`}
+    </span>
+   </td>
+
+   <td>
+    ${esc(c.status||"draft")}
+   </td>
+
+   <td>
+    <div class="actions">
+
+     <button
+      class="secondary"
+      onclick="editCourse('${c.id}')">
+      Edit
+     </button>
+
+     <button
+      class="danger"
+      onclick="removeCourse('${c.id}')">
+      Delete
+     </button>
+
+     <button
+      class="primary"
+      onclick="openCourse('${c.id}')">
+      Open
+     </button>
+
+    </div>
+   </td>
+
+  </tr>`;
+ }).join("");
+
+}
+
+
+function esc(v){
+ return String(v||"")
+ .replaceAll("&","&amp;")
+ .replaceAll("<","&lt;")
+ .replaceAll(">","&gt;")
+ .replaceAll('"',"&quot;");
+}
+
+
+/* ADD */
+
+$("add").onclick=()=>{
+
+ editing=null;
+
+ $("form").reset();
+
+ $("category").value=
+  "Academic & Schools";
+
+ $("instructor").value=
+  "LetsStudy Pro";
+
+ $("price").value=0;
+
+ $("modalTitle").textContent=
+  "Add Academic Course";
+
+ $("modal").classList.add("show");
+
+};
+
+
+/* EDIT */
+
+window.editCourse=id=>{
+
+ const c=courses.find(x=>x.id===id);
+
+ if(!c)return;
+
+ editing=id;
+
+ $("id").value=id;
+ $("title").value=c.title||"";
+ $("category").value=c.categoryName||"";
+ $("level").value=c.level||"O-Level";
+ $("language").value=c.language||"English";
+ $("price").value=c.price||0;
+ $("discount").value=c.discountPrice??"";
+ $("thumbnail").value=c.thumbnail||"";
+ $("shortDescription").value=
+  c.shortDescription||"";
+ $("description").value=
+  c.description||"";
+ $("instructor").value=
+  c.instructorName||"LetsStudy Pro";
+ $("status").value=
+  c.status||"draft";
+
+ $("modalTitle").textContent=
+  "Edit Course";
+
+ $("modal").classList.add("show");
+
+};
+
+
+/* SAVE */
+
+$("form").onsubmit=async e=>{
+
+ e.preventDefault();
+
+ const price=
+  Number($("price").value||0);
+
+ const data={
+
+  title:$("title").value.trim(),
+
+  slug:$("title").value
+   .toLowerCase()
+   .trim()
+   .replace(/[^a-z0-9]+/g,"-"),
+
+  categoryName:
+   $("category").value,
+
+  categoryId:
+   $("category").value
+    .toLowerCase()
+    .replace(/\s+/g,"-"),
+
+  level:$("level").value,
+
+  language:$("language").value,
+
+  price,
+
+  currency:"TZS",
+
+  discountPrice:
+   $("discount").value?
+   Number($("discount").value):null,
+
+  isFree:price===0,
+
+  thumbnail:
+   $("thumbnail").value.trim(),
+
+  shortDescription:
+   $("shortDescription").value.trim(),
+
+  description:
+   $("description").value.trim(),
+
+  instructorName:
+   $("instructor").value.trim(),
+
+  status:$("status").value,
+
+  published:
+   $("status").value==="published",
+
+  updatedAt:serverTimestamp()
+
+ };
+
+
+ try{
+
+  if(editing){
+
+   await updateDoc(
+    doc(db,"courses",editing),
+    data
+   );
+
+   toast("Course updated");
+
+  }else{
+
+   data.createdAt=serverTimestamp();
+   data.enrollmentCount=0;
+   data.rating=0;
+   data.ratingCount=0;
+
+   await addDoc(
+    collection(db,"courses"),
+    data
+   );
+
+   toast("Course added");
+
+  }
+
+  close();
+  load();
+
+ }catch(err){
+
+  console.error(err);
+  toast("Save failed");
+
+ }
+
+};
+
+
+/* DELETE */
+
+window.removeCourse=async id=>{
+
+ const c=courses.find(x=>x.id===id);
+
+ if(!c)return;
+
+ if(!confirm(
+  `Delete "${c.title}"?`
+ ))return;
+
+ try{
+
+  await deleteDoc(
+   doc(db,"courses",id)
+  );
+
+  toast("Course deleted");
+
+  load();
+
+ }catch(e){
+
+  console.error(e);
+  toast("Delete failed");
+
+ }
+
+};
+
+
+/* OPEN COURSE */
+
+window.openCourse=id=>{
+
+ const c=courses.find(x=>x.id===id);
+
+ if(!c)return;
+
+ const free=
+  c.isFree===true||
+  Number(c.price||0)===0;
+
+
+ /* FREE = OPEN DIRECTLY */
+
+ if(free){
+
+  location.href=
+   `course-details.html?id=${encodeURIComponent(id)}`;
+
+  return;
+
+ }
+
+
+ /* PAID = CART */
+
+ let cart=[];
+
+ try{
+  cart=JSON.parse(
+   localStorage.getItem("letsStudyCart")||"[]"
+  );
+ }catch{
+  cart=[];
+ }
+
+
+ const product={
+  id:id,
+  courseId:id,
+  productId:id,
+  productType:"course",
+  title:c.title,
+  name:c.title,
+  price:Number(
+   c.discountPrice??c.price??0
+  ),
+  currency:c.currency||"TZS",
+  quantity:1,
+  thumbnail:c.thumbnail||"",
+  category:c.categoryName||"Academic"
+ };
+
+
+ const exists=cart.find(
+  x=>x.courseId===id
+ );
+
+ if(!exists)cart.push(product);
+
+ localStorage.setItem(
+  "letsStudyCart",
+  JSON.stringify(cart)
+ );
+
+
+ location.href="cart.html";
+
+};
+
+
+/* CLOSE */
+
+function close(){
+ $("modal").classList.remove("show");
+ editing=null;
+}
+
+$("cancel").onclick=close;
+
+
+/* SEARCH */
+
+$("search").oninput=render;
+$("filter").onchange=render;
+
+
+/* LOGOUT */
+
+$("logout").onclick=async()=>{
+ await signOut(auth);
+ location.href="login.html";
+};
+
+
+/* TOAST */
+
+function toast(msg){
+
+ $("toast").textContent=msg;
+ $("toast").classList.add("show");
+
+ setTimeout(()=>
+  $("toast").classList.remove("show"),
+ 2500
+ );
+
+}
+
+</script>
+
+</body>
+</html>
