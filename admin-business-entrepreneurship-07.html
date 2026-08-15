@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin • Business & Entrepreneurship</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+ margin:0;
+ font-family:Inter,Arial,sans-serif;
+ background:#f5f7fb;
+ color:#172033
+}
+
+header{
+ background:#111827;
+ color:#fff;
+ padding:18px 5%;
+ display:flex;
+ justify-content:space-between;
+ align-items:center
+}
+
+.logo{
+ font-size:19px;
+ font-weight:900
+}
+
+.container{
+ max-width:1200px;
+ margin:auto;
+ padding:28px 18px
+}
+
+h1{margin-bottom:6px}
+
+.toolbar{
+ display:flex;
+ gap:10px;
+ flex-wrap:wrap;
+ margin:22px 0
+}
+
+input,select,textarea{
+ width:100%;
+ padding:12px;
+ border:1px solid #d9dfeb;
+ border-radius:9px;
+ background:#fff;
+ outline:none
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+ border-color:#059669
+}
+
+.search{
+ flex:1;
+ min-width:230px
+}
+
+button{
+ border:0;
+ border-radius:9px;
+ padding:11px 15px;
+ font-weight:800;
+ cursor:pointer
+}
+
+.primary{
+ background:#059669;
+ color:#fff
+}
+
+.gray{
+ background:#e5e7eb;
+ color:#111827
+}
+
+.danger{
+ background:#fee2e2;
+ color:#b91c1c
+}
+
+.stats{
+ display:grid;
+ grid-template-columns:repeat(3,1fr);
+ gap:15px
+}
+
+.stat{
+ background:#fff;
+ padding:20px;
+ border-radius:16px;
+ box-shadow:0 5px 20px #00000009
+}
+
+.stat b{
+ display:block;
+ font-size:28px;
+ margin-top:7px
+}
+
+.table{
+ background:#fff;
+ border-radius:16px;
+ overflow:auto;
+ box-shadow:0 5px 20px #00000009
+}
+
+table{
+ width:100%;
+ min-width:850px;
+ border-collapse:collapse
+}
+
+th,td{
+ padding:14px;
+ border-bottom:1px solid #eee;
+ text-align:left
+}
+
+.course{
+ display:flex;
+ align-items:center;
+ gap:10px
+}
+
+.thumb{
+ width:58px;
+ height:45px;
+ border-radius:8px;
+ object-fit:cover
+}
+
+.badge{
+ display:inline-block;
+ padding:5px 9px;
+ border-radius:20px;
+ font-size:11px;
+ font-weight:900
+}
+
+.free{
+ background:#dcfce7;
+ color:#15803d
+}
+
+.paid{
+ background:#d1fae5;
+ color:#047857
+}
+
+.published{
+ background:#dcfce7;
+ color:#15803d
+}
+
+.draft{
+ background:#fef3c7;
+ color:#92400e
+}
+
+.modal{
+ display:none;
+ position:fixed;
+ inset:0;
+ background:#0008;
+ align-items:center;
+ justify-content:center;
+ padding:15px;
+ z-index:100
+}
+
+.modal.show{
+ display:flex
+}
+
+.box{
+ width:680px;
+ max-width:100%;
+ max-height:92vh;
+ overflow:auto;
+ background:#fff;
+ padding:23px;
+ border-radius:18px
+}
+
+.grid{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:13px
+}
+
+.full{
+ grid-column:1/-1
+}
+
+label{
+ display:block;
+ font-size:13px;
+ font-weight:800
+}
+
+label input,
+label select,
+label textarea{
+ margin-top:6px
+}
+
+textarea{
+ min-height:95px;
+ resize:vertical
+}
+
+.footer{
+ display:flex;
+ justify-content:flex-end;
+ gap:10px;
+ margin-top:20px
+}
+
+.toast{
+ position:fixed;
+ right:20px;
+ bottom:20px;
+ background:#111827;
+ color:#fff;
+ padding:13px 18px;
+ border-radius:10px;
+ display:none;
+ z-index:200
+}
+
+.toast.show{
+ display:block
+}
+
+.loading{
+ text-align:center;
+ padding:50px
+}
+
+@media(max-width:650px){
+
+ .stats{
+  grid-template-columns:1fr
+ }
+
+ .grid{
+  grid-template-columns:1fr
+ }
+
+ .full{
+  grid-column:auto
+ }
+
+}
+</style>
+</head>
+
+<body>
+
+<header>
+
+ <div class="logo">
+  LetsStudy Pro • Admin
+ </div>
+
+ <button id="logout" class="gray">
+  Logout
+ </button>
+
+</header>
+
+
+<main class="container">
+
+<h1>Business & Entrepreneurship</h1>
+
+<p>
+Manage business, entrepreneurship, startup,
+leadership, finance and management courses.
+</p>
+
+
+<div class="stats">
+
+ <div class="stat">
+  Total Courses
+  <b id="total">0</b>
+ </div>
+
+ <div class="stat">
+  Published
+  <b id="published">0</b>
+ </div>
+
+ <div class="stat">
+  Free Courses
+  <b id="free">0</b>
+ </div>
+
+</div>
+
+
+<div class="toolbar">
+
+ <input
+  id="search"
+  class="search"
+  placeholder="Search business courses..."
+ >
+
+ <select id="filter">
+
+  <option value="">
+   All Courses
+  </option>
+
+  <option value="free">
+   Free
+  </option>
+
+  <option value="paid">
+   Paid
+  </option>
+
+  <option value="published">
+   Published
+  </option>
+
+  <option value="draft">
+   Draft
+  </option>
+
+ </select>
+
+
+ <button
+  id="add"
+  class="primary">
+
+  + Add Course
+
+ </button>
+
+</div>
+
+
+<div class="table">
+
+<table>
+
+<thead>
+
+<tr>
+<th>Course</th>
+<th>Category</th>
+<th>Price</th>
+<th>Status</th>
+<th>Actions</th>
+</tr>
+
+</thead>
+
+<tbody id="list">
+
+<tr>
+<td colspan="5" class="loading">
+Loading courses...
+</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</main>
+
+
+<!-- MODAL -->
+
+<div id="modal" class="modal">
+
+<div class="box">
+
+<h2 id="modalTitle">
+Add Business Course
+</h2>
+
+
+<form id="form">
+
+<div class="grid">
+
+
+<div class="full">
+
+<label>
+Course Title
+
+<input
+ id="title"
+ required
+ placeholder="e.g. Entrepreneurship Fundamentals"
+>
+
+</label>
+
+</div>
+
+
+<div>
+
+<label>
+Category
+
+<select id="category">
+
+<option>
+Business & Entrepreneurship
+</option>
+
+<option>
+Entrepreneurship
+</option>
+
+<option>
+Business Management
+</option>
+
+<option>
+Startup & Innovation
+</option>
+
+<option>
+Leadership
+</option>
+
+<option>
+Finance
+</option>
+
+<option>
+Marketing
+</option>
+
+<option>
+Small Business
+</option>
+
+<option>
+Business Strategy
+</option>
+
+<option>
+Personal Finance
+</option>
+
+</select>
+
+</label>
+
+</div>
+
+
+<div>
+
+<label>
+Level
+
+<select id="level">
+
+<option>Beginner</option>
+<option>Intermediate</option>
+<option>Advanced</option>
+<option>Professional</option>
+
+</select>
+
+</label>
+
+</div>
+
+
+<div>
+
+<label>
+Price (TZS)
+
+<input
+ id="price"
+ type="number"
+ min="0"
+ value="0"
+>
+
+</label>
+
+</div>
+
+
+<div>
+
+<label>
+Discount Price
+
+<input
+ id="discountPrice"
+ type="number"
+ min="0"
+>
+
+</label>
+
+</div>
+
+
+<div>
+
+<label>
+Currency
+
+<select id="currency">
+
+<option value="TZS">
+TZS
+</option>
+
+<option value="USD">
+USD
+</option>
+
+</select>
+
+</label>
+
+</div>
+
+
+<div>
+
+<label>
+Instructor
+
+<input
+ id="instructor"
+ value="LetsStudy Pro"
+>
+
+</label>
+
+</div>
+
+
+<div class="full">
+
+<label>
+Thumbnail URL
+
+<input
+ id="thumbnail"
+ type="url"
+ placeholder="https://..."
+>
+
+</label>
+
+</div>
+
+
+<div class="full">
+
+<label>
+Short Description
+
+<textarea
+ id="shortDescription"
+ placeholder="Short course description..."
+></textarea>
+
+</label>
+
+</div>
+
+
+<div class="full">
+
+<label>
+Description
+
+<textarea
+ id="description"
+ placeholder="Full course description..."
+></textarea>
+
+</label>
+
+</div>
+
+
+<div>
+
+<label>
+Status
+
+<select id="status">
+
+<option value="draft">
+Draft
+</option>
+
+<option value="published">
+Published
+</option>
+
+</select>
+
+</label>
+
+</div>
+
+
+<div>
+
+<label>
+Certificate
+
+<select id="certificateEnabled">
+
+<option value="true">
+Enabled
+</option>
+
+<option value="false">
+Disabled
+</option>
+
+</select>
+
+</label>
+
+</div>
+
+
+</div>
+
+
+<div class="footer">
+
+<button
+ type="button"
+ id="cancel"
+ class="gray">
+
+ Cancel
+
+</button>
+
+<button
+ type="submit"
+ class="primary">
+
+ Save Course
+
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+
+<div id="toast" class="toast"></div>
+
+
+<script type="module">
+
+import{
+ initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+
+
+import{
+ getAuth,
+ onAuthStateChanged,
+ signOut
+}
+from
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
+
+import{
+ getFirestore,
+ collection,
+ getDocs,
+ getDoc,
+ doc,
+ addDoc,
+ updateDoc,
+ deleteDoc,
+ serverTimestamp
+}
+from
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+
+/* =========================
+ FIREBASE
+========================= */
+
+const firebaseConfig={
+
+ apiKey:
+ "AIzaSyBcOYDfAVKXbkljsyRgI_0rj0odBn678tCc",
+
+ authDomain:
+ "let-s-study-pro-course.firebaseapp.com",
+
+ projectId:
+ "let-s-study-pro-course",
+
+ storageBucket:
+ "let-s-study-pro-course.firebasestorage.app",
+
+ messagingSenderId:
+ "474928293390",
+
+ appId:
+ "1:474928293390:web:2bcc2aebf2351c12a9fe5f"
+
+};
+
+
+const app=
+ initializeApp(firebaseConfig);
+
+const auth=
+ getAuth(app);
+
+const db=
+ getFirestore(app);
+
+
+const $=
+ id=>document.getElementById(id);
+
+let courses=[];
+let editingId=null;
+
+
+/* =========================
+ AUTH + ADMIN PROTECTION
+========================= */
+
+onAuthStateChanged(
+ auth,
+ async user=>{
+
+  if(!user){
+
+   location.href="login.html";
+   return;
+
+  }
+
+
+  try{
+
+   const snap=
+    await getDoc(
+     doc(
+      db,
+      "users",
+      user.uid
+     )
+    );
+
+
+   if(!snap.exists()){
+
+    alert("User profile not found.");
+    location.href="login.html";
+    return;
+
+   }
+
+
+   const role=
+    snap.data().role;
+
+
+   const allowed=[
+    "admin",
+    "superAdmin",
+    "courseAdmin",
+    "contentAdmin"
+   ];
+
+
+   if(!allowed.includes(role)){
+
+    alert("Access denied.");
+
+    location.href="index.html";
+
+    return;
+
+   }
+
+
+   loadCourses();
+
+  }catch(error){
+
+   console.error(error);
+
+   alert(
+    "Unable to verify admin access."
+   );
+
+  }
+
+ });
+
+
+/* =========================
+ LOAD COURSES
+========================= */
+
+async function loadCourses(){
+
+ try{
+
+  const snap=
+   await getDocs(
+    collection(
+     db,
+     "courses"
+    )
+   );
+
+
+  courses=
+   snap.docs
+    .map(d=>({
+     id:d.id,
+     ...d.data()
+    }))
+    .filter(isBusinessCourse);
+
+
+  render();
+
+ }catch(error){
+
+  console.error(error);
+
+  $("list").innerHTML=`
+
+   <tr>
+    <td colspan="5"
+     style="text-align:center;padding:40px">
+
+     Failed to load courses.
+
+    </td>
+   </tr>
+
+  `;
+
+ }
+
+}
+
+
+/* =========================
+ CATEGORY CHECK
+========================= */
+
+function isBusinessCourse(course){
+
+ const category=
+  String(
+   course.categoryName||
+   ""
+  ).toLowerCase();
+
+
+ const title=
+  String(
+   course.title||
+   ""
+  ).toLowerCase();
+
+
+ return(
+
+  category.includes("business")||
+  category.includes("entrepreneur")||
+  category.includes("management")||
+  category.includes("leadership")||
+  category.includes("startup")||
+  category.includes("finance")||
+
+  title.includes("business")||
+  title.includes("entrepreneur")||
+  title.includes("startup")||
+  title.includes("leadership")||
+  title.includes("management")
+
+ );
+
+}
+
+
+/* =========================
+ RENDER
+========================= */
+
+function render(){
+
+ const query=
+  $("search")
+   .value
+   .toLowerCase()
+   .trim();
+
+
+ const filter=
+  $("filter").value;
+
+
+ const filtered=
+  courses.filter(course=>{
+
+   const text=`
+
+    ${course.title||""}
+    ${course.categoryName||""}
+    ${course.level||""}
+    ${course.shortDescription||""}
+
+   `.toLowerCase();
+
+
+   const free=
+    course.isFree===true||
+    Number(course.price||0)===0;
+
+
+   return(
+
+    (!query||
+     text.includes(query))
+
+    &&
+
+    (!filter||
+
+     (
+      filter==="free"&&
+      free
+     )
+
+     ||
+
+     (
+      filter==="paid"&&
+      !free
+     )
+
+     ||
+
+     (
+      filter==="published"&&
+      course.status==="published"
+     )
+
+     ||
+
+     (
+      filter==="draft"&&
+      course.status==="draft"
+     )
+
+    )
+
+   );
+
+  });
+
+
+ $("total").textContent=
+  courses.length;
+
+
+ $("published").textContent=
+  courses.filter(
+   c=>c.status==="published"
+  ).length;
+
+
+ $("free").textContent=
+  courses.filter(
+   c=>
+    c.isFree===true||
+    Number(c.price||0)===0
+  ).length;
+
+
+ if(!filtered.length){
+
+  $("list").innerHTML=`
+
+   <tr>
+
+    <td colspan="5"
+     style="text-align:center;padding:45px">
+
+     No Business & Entrepreneurship
+     courses found.
+
+    </td>
+
+   </tr>
+
+  `;
+
+  return;
+
+ }
+
+
+ $("list").innerHTML=
+  filtered.map(course=>{
+
+   const free=
+    course.isFree===true||
+    Number(course.price||0)===0;
+
+
+   const image=
+    course.thumbnail||
+    "https://images.unsplash.com/photo-1556761175-b413da4baf72?w=400";
+
+
+   const price=
+    Number(
+     course.discountPrice??
+     course.price??
+     0
+    );
+
+
+   return`
+
+   <tr>
+
+    <td>
+
+     <div class="course">
+
+      <img
+       class="thumb"
+       src="${escapeHTML(image)}"
+       alt=""
+      >
+
+      <div>
+
+       <strong>
+        ${escapeHTML(course.title)}
+       </strong>
+
+       <br>
+
+       <small>
+        ${escapeHTML(
+         course.level||
+         "Beginner"
+        )}
+       </small>
+
+      </div>
+
+     </div>
+
+    </td>
+
+
+    <td>
+     ${escapeHTML(
+      course.categoryName||
+      "Business & Entrepreneurship"
+     )}
+    </td>
+
+
+    <td>
+
+     <span class="badge ${
+      free?"free":"paid"
+     }">
+
+      ${
+       free
+       ?"FREE"
+       :
+       `${escapeHTML(
+        course.currency||
+        "TZS"
+       )} ${price.toLocaleString()}`
+      }
+
+     </span>
+
+    </td>
+
+
+    <td>
+
+     <span class="badge ${
+      course.status==="published"
+      ?"published"
+      :"draft"
+     }">
+
+      ${escapeHTML(
+       course.status||
+       "draft"
+      )}
+
+     </span>
+
+    </td>
+
+
+    <td>
+
+     <button
+      class="gray"
+      onclick=
+      "editCourse('${course.id}')">
+
+      Edit
+
+     </button>
+
+
+     <button
+      class="danger"
+      onclick=
+      "deleteCourse('${course.id}')">
+
+      Delete
+
+     </button>
+
+    </td>
+
+   </tr>
+
+   `;
+
+  }).join("");
+
+}
+
+
+/* =========================
+ ESCAPE
+========================= */
+
+function escapeHTML(value){
+
+ return String(value||"")
+  .replaceAll("&","&amp;")
+  .replaceAll("<","&lt;")
+  .replaceAll(">","&gt;")
+  .replaceAll('"',"&quot;")
+  .replaceAll("'","&#039;");
+
+}
+
+
+/* =========================
+ ADD
+========================= */
+
+$("add").onclick=()=>{
+
+ editingId=null;
+
+ $("form").reset();
+
+ $("price").value=0;
+
+ $("currency").value="TZS";
+
+ $("instructor").value=
+  "LetsStudy Pro";
+
+ $("status").value=
+  "draft";
+
+ $("certificateEnabled").value=
+  "true";
+
+ $("modalTitle").textContent=
+  "Add Business & Entrepreneurship Course";
+
+ $("modal").classList.add(
+  "show"
+ );
+
+};
+
+
+/* =========================
+ EDIT
+========================= */
+
+window.editCourse=id=>{
+
+ const course=
+  courses.find(
+   c=>c.id===id
+  );
+
+ if(!course)return;
+
+
+ editingId=id;
+
+
+ $("title").value=
+  course.title||"";
+
+
+ $("category").value=
+  course.categoryName||
+  "Business & Entrepreneurship";
+
+
+ $("level").value=
+  course.level||
+  "Beginner";
+
+
+ $("price").value=
+  course.price||0;
+
+
+ $("discountPrice").value=
+  course.discountPrice??"";
+
+
+ $("currency").value=
+  course.currency||
+  "TZS";
+
+
+ $("instructor").value=
+  course.instructorName||
+  "LetsStudy Pro";
+
+
+ $("thumbnail").value=
+  course.thumbnail||"";
+
+
+ $("shortDescription").value=
+  course.shortDescription||"";
+
+
+ $("description").value=
+  course.description||"";
+
+
+ $("status").value=
+  course.status||
+  "draft";
+
+
+ $("certificateEnabled").value=
+  String(
+   course.certificateEnabled!==false
+  );
+
+
+ $("modalTitle").textContent=
+  "Edit Business Course";
+
+
+ $("modal").classList.add(
+  "show"
+ );
+
+};
+
+
+/* =========================
+ SAVE
+========================= */
+
+$("form").onsubmit=
+ async event=>{
+
+  event.preventDefault();
+
+
+  const title=
+   $("title")
+    .value
+    .trim();
+
+
+  const price=
+   Number(
+    $("price")
+     .value||0
+   );
+
+
+  const discount=
+   $("discountPrice")
+    .value;
+
+
+  const status=
+   $("status")
+    .value;
+
+
+  const category=
+   $("category")
+    .value;
+
+
+  const data={
+
+   title,
+
+   slug:
+    title
+     .toLowerCase()
+     .trim()
+     .replace(
+      /[^a-z0-9]+/g,
+      "-"
+     ),
+
+   categoryName:
+    category,
+
+   categoryId:
+    category
+     .toLowerCase()
+     .replace(
+      /[^a-z0-9]+/g,
+      "-"
+     ),
+
+   level:
+    $("level").value,
+
+   price,
+
+   currency:
+    $("currency").value,
+
+   discountPrice:
+    discount===""
+     ?null
+     :Number(discount),
+
+   isFree:
+    price===0,
+
+   thumbnail:
+    $("thumbnail")
+     .value
+     .trim(),
+
+   shortDescription:
+    $("shortDescription")
+     .value
+     .trim(),
+
+   description:
+    $("description")
+     .value
+     .trim(),
+
+   instructorName:
+    $("instructor")
+     .value
+     .trim(),
+
+   status,
+
+   published:
+    status==="published",
+
+   certificateEnabled:
+    $("certificateEnabled")
+     .value==="true",
+
+   updatedAt:
+    serverTimestamp()
+
+  };
+
+
+  try{
+
+   if(editingId){
+
+    await updateDoc(
+     doc(
+      db,
+      "courses",
+      editingId
+     ),
+     data
+    );
+
+
+    toast(
+     "Course updated successfully."
+    );
+
+   }else{
+
+    data.createdAt=
+     serverTimestamp();
+
+    data.publishedAt=
+     status==="published"
+      ?serverTimestamp()
+      :null;
+
+    data.enrollmentCount=0;
+
+    data.lessonCount=0;
+
+    data.rating=0;
+
+    data.ratingCount=0;
+
+    data.featured=false;
+
+
+    await addDoc(
+     collection(
+      db,
+      "courses"
+     ),
+     data
+    );
+
+
+    toast(
+     "Course added successfully."
+    );
+
+   }
+
+
+   closeModal();
+
+   await loadCourses();
+
+  }catch(error){
+
+   console.error(error);
+
+   toast(
+    "Could not save course."
+   );
+
+  }
+
+};
+
+
+/* =========================
+ DELETE
+========================= */
+
+window.deleteCourse=
+ async id=>{
+
+  const course=
+   courses.find(
+    c=>c.id===id
+   );
+
+  if(!course)return;
+
+
+  const confirmed=
+   confirm(
+    `Delete "${course.title}"?`
+   );
+
+
+  if(!confirmed)return;
+
+
+  try{
+
+   await deleteDoc(
+    doc(
+     db,
+     "courses",
+     id
+    )
+   );
+
+
+   toast(
+    "Course deleted."
+   );
+
+
+   await loadCourses();
+
+  }catch(error){
+
+   console.error(error);
+
+   toast(
+    "Could not delete course."
+   );
+
+  }
+
+};
+
+
+/* =========================
+ CLOSE MODAL
+========================= */
+
+function closeModal(){
+
+ $("modal")
+  .classList
+  .remove("show");
+
+ editingId=null;
+
+}
+
+$("cancel").onclick=
+ closeModal;
+
+
+/* =========================
+ SEARCH / FILTER
+========================= */
+
+$("search").oninput=
+ render;
+
+$("filter").onchange=
+ render;
+
+
+/* =========================
+ LOGOUT
+========================= */
+
+$("logout").onclick=
+ async()=>{
+
+  await signOut(auth);
+
+  location.href=
+   "login.html";
+
+};
+
+
+/* =========================
+ TOAST
+========================= */
+
+function toast(message){
+
+ $("toast").textContent=
+  message;
+
+ $("toast")
+  .classList
+  .add("show");
+
+
+ setTimeout(
+  ()=>{
+   $("toast")
+    .classList
+    .remove("show");
+  },
+  2500
+ );
+
+}
+
+</script>
+
+</body>
+</html>
