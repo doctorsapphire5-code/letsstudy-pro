@@ -1370,51 +1370,42 @@ textarea{
 <!-- =====================================================
      TOAST
 ===================================================== -->
+<!-- =====================================================
+     TOAST
+===================================================== -->
 
 <div
-  id="toast"
   class="toast"
->
-  <span id="toastIcon">✓</span>
-  <span id="toastMessage">Done</span>
-</div>
+  id="toast"
+  role="status"
+  aria-live="polite"
+></div>
 
 
-<!-- =========================================================
+<!-- =====================================================
      FIREBASE
-========================================================= -->
+===================================================== -->
 
 <script type="module">
 
 import {
   initializeApp
-} from
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-
-
-import {
-  getAuth,
-  onAuthStateChanged
-} from
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-
+}
+from
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 
 import {
-  getDatabase,
-  ref,
-  get,
-  set,
-  push,
-  update,
-  remove,
+  getFirestore,
+  collection,
+  getDocs,
+  doc,
+  setDoc,
+  deleteDoc,
   serverTimestamp
-} from
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+}
+from
+"https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-
-/* =========================================================
-   FIREBASE CONFIG
-========================================================= */
 
 const firebaseConfig = {
 
@@ -1445,328 +1436,93 @@ const firebaseConfig = {
 };
 
 
-/* =========================================================
-   INITIALIZE
-========================================================= */
-
 const app =
   initializeApp(
     firebaseConfig
   );
 
-
-const auth =
-  getAuth(app);
-
-
 const db =
-  getDatabase(app);
+  getFirestore(app);
+
+const COLLECTION =
+  "campaigns";
 
 
-/* =========================================================
-   GLOBAL VARIABLES
-========================================================= */
-
-let currentUser =
-  null;
-
-let campaigns =
-  {};
-
-let editingCampaignId =
-  null;
+let campaigns = [];
 
 
-/* =========================================================
+/* =====================================================
    ELEMENTS
-========================================================= */
+===================================================== */
 
-const campaignForm =
+const tableBody =
+  document.getElementById(
+    "tableBody"
+  );
+
+const empty =
+  document.getElementById(
+    "empty"
+  );
+
+const modal =
+  document.getElementById(
+    "modal"
+  );
+
+const form =
   document.getElementById(
     "campaignForm"
   );
 
-const campaignModal =
-  document.getElementById(
-    "campaignModal"
-  );
 
-const campaignTable =
-  document.getElementById(
-    "campaignTable"
-  );
-
-const searchInput =
-  document.getElementById(
-    "campaignSearch"
-  );
-
-const statusFilter =
-  document.getElementById(
-    "statusFilter"
-  );
-
-
-/* =========================================================
-   TOAST
-========================================================= */
-
-window.showToast =
-function(
-  message,
-  type = "success"
-){
-
-  const toast =
-    document.getElementById(
-      "toast"
-    );
-
-  const toastMessage =
-    document.getElementById(
-      "toastMessage"
-    );
-
-  const toastIcon =
-    document.getElementById(
-      "toastIcon"
-    );
-
-
-  if(!toast){
-
-    return;
-
-  }
-
-
-  toastMessage.textContent =
-    message;
-
-
-  toast.className =
-    "toast " +
-    type;
-
-
-  toastIcon.textContent =
-    type === "error"
-      ? "✕"
-      : type === "warning"
-        ? "!"
-        : "✓";
-
-
-  toast.classList.add(
-    "show"
-  );
-
-
-  setTimeout(
-    ()=>{
-
-      toast.classList.remove(
-        "show"
-      );
-
-    },
-    3000
-  );
-
-};
-
-
-/* =========================================================
-   MODAL
-========================================================= */
-
-window.openCampaignModal =
-function(){
-
-  if(!campaignModal){
-
-    return;
-
-  }
-
-  campaignModal.classList.add(
-    "active"
-  );
-
-};
-
-
-window.closeCampaignModal =
-function(){
-
-  if(!campaignModal){
-
-    return;
-
-  }
-
-  campaignModal.classList.remove(
-    "active"
-  );
-
-
-  editingCampaignId =
-    null;
-
-
-  if(campaignForm){
-
-    campaignForm.reset();
-
-  }
-
-
-  const title =
-    document.getElementById(
-      "modalTitle"
-    );
-
-  if(title){
-
-    title.textContent =
-      "Create Campaign";
-
-  }
-
-};
-
-
-/* =========================================================
-   AUTH CHECK
-========================================================= */
-
-onAuthStateChanged(
-  auth,
-  async user => {
-
-    if(!user){
-
-      window.location.href =
-        "login.html?redirect=admin-campaigns.html";
-
-      return;
-
-    }
-
-
-    currentUser =
-      user;
-
-
-    try{
-
-      const snapshot =
-        await get(
-          ref(
-            db,
-            "users/" +
-            user.uid
-          )
-        );
-
-
-      if(!snapshot.exists()){
-
-        window.location.href =
-          "access-denied.html";
-
-        return;
-
-      }
-
-
-      const data =
-        snapshot.val();
-
-
-      const allowedRoles =
-        [
-          "superadmin",
-          "super_admin",
-          "administrator"
-        ];
-
-
-      if(
-        !allowedRoles.includes(
-          data.role
-        )
-      ){
-
-        window.location.href =
-          "access-denied.html";
-
-        return;
-
-      }
-
-
-      loadCampaigns();
-
-
-    }catch(error){
-
-      console.error(
-        "Admin authorization error:",
-        error
-      );
-
-
-      showToast(
-        "Unable to verify administrator access.",
-        "error"
-      );
-
-    }
-
-  }
-);
-
-
-/* =========================================================
+/* =====================================================
    LOAD CAMPAIGNS
-========================================================= */
+===================================================== */
 
 async function loadCampaigns(){
 
   try{
 
     const snapshot =
-      await get(
-        ref(
+      await getDocs(
+        collection(
           db,
-          "campaigns"
+          COLLECTION
         )
       );
 
 
     campaigns =
-      snapshot.exists()
-        ? snapshot.val()
-        : {};
+      snapshot.docs.map(
+        item => ({
 
+          id:
+            item.id,
+
+          ...item.data()
+
+        })
+      );
+
+
+    updateStats();
 
     renderCampaigns();
 
-    updateStatistics();
+  }
 
-
-  }catch(error){
+  catch(error){
 
     console.error(
-      "Campaign loading error:",
+      "Load campaigns error:",
       error
     );
 
 
     showToast(
-      "Failed to load campaigns.",
-      "error"
+      "Unable to load campaigns.",
+      true
     );
 
   }
@@ -1774,46 +1530,150 @@ async function loadCampaigns(){
 }
 
 
-/* =========================================================
-   RENDER CAMPAIGNS
-========================================================= */
+/* =====================================================
+   STATS
+===================================================== */
+
+function updateStats(){
+
+  const active =
+    campaigns.filter(
+      item =>
+        item.status ===
+        "active"
+    ).length;
+
+
+  const impressions =
+    campaigns.reduce(
+      (
+        total,
+        item
+      ) =>
+        total +
+        Number(
+          item.impressions ||
+          0
+        ),
+      0
+    );
+
+
+  const clicks =
+    campaigns.reduce(
+      (
+        total,
+        item
+      ) =>
+        total +
+        Number(
+          item.clicks ||
+          0
+        ),
+      0
+    );
+
+
+  const conversions =
+    campaigns.reduce(
+      (
+        total,
+        item
+      ) =>
+        total +
+        Number(
+          item.conversions ||
+          0
+        ),
+      0
+    );
+
+
+  document.getElementById(
+    "campaignCount"
+  ).textContent =
+    campaigns.length;
+
+
+  document.getElementById(
+    "activeCount"
+  ).textContent =
+    active;
+
+
+  document.getElementById(
+    "impressionCount"
+  ).textContent =
+    formatNumber(
+      impressions
+    );
+
+
+  document.getElementById(
+    "clickCount"
+  ).textContent =
+    formatNumber(
+      clicks
+    );
+
+
+  document.getElementById(
+    "conversionCount"
+  ).textContent =
+    formatNumber(
+      conversions
+    );
+
+}
+
+
+/* =====================================================
+   RENDER
+===================================================== */
 
 function renderCampaigns(){
 
-  if(!campaignTable){
-
-    return;
-
-  }
-
-
   const search =
-    (
-      searchInput?.value ||
-      ""
-    )
-    .toLowerCase()
-    .trim();
+    document.getElementById(
+      "search"
+    ).value
+      .trim()
+      .toLowerCase();
 
 
-  const filter =
-    statusFilter?.value ||
-    "all";
+  const status =
+    document.getElementById(
+      "statusFilter"
+    ).value;
 
 
-  const entries =
-    Object.entries(
-      campaigns
-    )
-    .filter(
-      ([id,campaign])=>{
+  const type =
+    document.getElementById(
+      "typeFilter"
+    ).value;
 
-        const text =
-          (
-            campaign.name ||
-            ""
-          )
-          .toLowerCase();
+
+  const filtered =
+    campaigns.filter(
+      item => {
+
+        const text = [
+
+          item.title,
+
+          item.slug,
+
+          item.description,
+
+          item.audience,
+
+          item.channel,
+
+          item.type
+
+        ]
+        .join(" ")
+        .toLowerCase();
 
 
         const matchesSearch =
@@ -1824,306 +1684,684 @@ function renderCampaigns(){
 
 
         const matchesStatus =
-          filter === "all" ||
-          campaign.status ===
-            filter;
+          status === "all" ||
+          item.status === status;
+
+
+        const matchesType =
+          type === "all" ||
+          item.type === type;
 
 
         return (
           matchesSearch &&
-          matchesStatus
+          matchesStatus &&
+          matchesType
         );
 
       }
     );
 
 
-  if(!entries.length){
+  tableBody.innerHTML =
+    "";
 
-    campaignTable.innerHTML = `
 
-      <tr>
+  filtered.forEach(
+    campaign => {
 
-        <td
-          colspan="8"
-          style="text-align:center;padding:40px"
-        >
+      const row =
+        document.createElement(
+          "tr"
+        );
+
+
+      const campaignStatus =
+        campaign.status ||
+        "draft";
+
+
+      row.innerHTML = `
+
+        <td>
 
           <div
-            style="
-              font-size:40px;
-              margin-bottom:10px;
-            "
+            class="campaign-title"
           >
-            📢
+            ${escapeHTML(
+              campaign.title ||
+              "Untitled Campaign"
+            )}
           </div>
 
-          No campaigns found.
+          <div
+            class="muted"
+          >
+            ${escapeHTML(
+              campaign.audience ||
+              "General audience"
+            )}
+          </div>
 
         </td>
 
-      </tr>
 
-    `;
-
-    return;
-
-  }
-
-
-  campaignTable.innerHTML =
-    entries
-      .map(
-        ([id,campaign])=>{
-
-          const status =
-            campaign.status ||
-            "draft";
+        <td>
+          ${escapeHTML(
+            capitalize(
+              campaign.type ||
+              "general"
+            )
+          )}
+        </td>
 
 
-          const budget =
-            Number(
-              campaign.budget || 0
-            );
+        <td>
+          ${escapeHTML(
+            capitalize(
+              campaign.channel ||
+              "website"
+            )
+          )}
+        </td>
 
 
-          const clicks =
-            Number(
-              campaign.clicks || 0
-            );
+        <td>
+
+          ${escapeHTML(
+            campaign.currency ||
+            "TZS"
+          )}
+
+          ${formatNumber(
+            campaign.budget
+          )}
+
+        </td>
 
 
-          const impressions =
-            Number(
-              campaign.impressions || 0
-            );
+        <td>
+
+          <span
+            class="badge ${statusClass(
+              campaignStatus
+            )}"
+          >
+            ${escapeHTML(
+              capitalize(
+                campaignStatus
+              )
+            )}
+          </span>
+
+        </td>
 
 
-          return `
-
-            <tr>
-
-              <td>
-
-                <strong>
-                  ${
-                    escapeHTML(
-                      campaign.name ||
-                      "Untitled Campaign"
-                    )
-                  }
-                </strong>
-
-                <small
-                  style="
-                    display:block;
-                    opacity:.65;
-                    margin-top:4px;
-                  "
-                >
-                  ${
-                    escapeHTML(
-                      campaign.channel ||
-                      "General"
-                    )
-                  }
-                </small>
-
-              </td>
+        <td>
+          ${formatNumber(
+            campaign.impressions
+          )}
+        </td>
 
 
-              <td>
-                ${formatMoney(budget)}
-              </td>
+        <td>
+          ${formatNumber(
+            campaign.clicks
+          )}
+        </td>
 
 
-              <td>
-                ${impressions.toLocaleString()}
-              </td>
+        <td>
+          ${formatNumber(
+            campaign.conversions
+          )}
+        </td>
 
 
-              <td>
-                ${clicks.toLocaleString()}
-              </td>
+        <td>
+
+          <div
+            class="actions"
+          >
+
+            <button
+              class="action"
+              type="button"
+              data-edit="${escapeAttribute(
+                campaign.id
+              )}"
+            >
+              Edit
+            </button>
 
 
-              <td>
-                ${
-                  impressions
-                    ? (
-                        clicks /
-                        impressions *
-                        100
-                      ).toFixed(2)
-                    : "0.00"
-                }%
-              </td>
+            <button
+              class="action"
+              type="button"
+              data-view="${escapeAttribute(
+                campaign.id
+              )}"
+            >
+              View
+            </button>
 
 
-              <td>
+            <button
+              class="action delete"
+              type="button"
+              data-delete="${escapeAttribute(
+                campaign.id
+              )}"
+            >
+              Delete
+            </button>
 
-                <span
-                  class="
-                    status-badge
-                    ${status}
-                  "
-                >
-                  ${status}
-                </span>
+          </div>
 
-              </td>
+        </td>
 
-
-              <td>
-
-                ${
-                  formatDate(
-                    campaign.createdAt
-                  )
-                }
-
-              </td>
+      `;
 
 
-              <td>
+      tableBody.appendChild(
+        row
+      );
 
-                <div
-                  style="
-                    display:flex;
-                    gap:6px;
-                  "
-                >
-
-                  <button
-                    class="action-btn"
-                    onclick="
-                      editCampaign('${id}')
-                    "
-                    title="Edit"
-                  >
-                    ✏️
-                  </button>
+    }
+  );
 
 
-                  <button
-                    class="action-btn"
-                    onclick="
-                      toggleCampaign('${id}')
-                    "
-                    title="Toggle status"
-                  >
-                    ${
-                      status === "active"
-                        ? "⏸️"
-                        : "▶️"
-                    }
-                  </button>
-
-
-                  <button
-                    class="
-                      action-btn
-                      danger
-                    "
-                    onclick="
-                      deleteCampaign('${id}')
-                    "
-                    title="Delete"
-                  >
-                    🗑️
-                  </button>
-
-                </div>
-
-              </td>
-
-            </tr>
-
-          `;
-
-        }
-      )
-      .join("");
+  empty.style.display =
+    filtered.length
+      ? "none"
+      : "block";
 
 }
 
 
-/* =========================================================
-   CREATE / UPDATE CAMPAIGN
-========================================================= */
+/* =====================================================
+   ADD CAMPAIGN
+===================================================== */
 
-if(campaignForm){
+document.getElementById(
+  "addBtn"
+).addEventListener(
+  "click",
+  () => {
 
-  campaignForm.addEventListener(
-    "submit",
-    async event => {
-
-      event.preventDefault();
+    form.reset();
 
 
-      if(!currentUser){
+    document.getElementById(
+      "recordId"
+    ).value =
+      "";
+
+
+    document.getElementById(
+      "currency"
+    ).value =
+      "TZS";
+
+
+    document.getElementById(
+      "budget"
+    ).value =
+      "0";
+
+
+    document.getElementById(
+      "status"
+    ).value =
+      "draft";
+
+
+    document.getElementById(
+      "featured"
+    ).value =
+      "false";
+
+
+    document.getElementById(
+      "modalTitle"
+    ).textContent =
+      "Create Campaign";
+
+
+    document.getElementById(
+      "saveBtn"
+    ).textContent =
+      "Save Campaign";
+
+
+    modal.classList.add(
+      "show"
+    );
+
+  }
+);
+
+
+/* =====================================================
+   SAVE CAMPAIGN
+===================================================== */
+
+form.addEventListener(
+  "submit",
+  async event => {
+
+    event.preventDefault();
+
+
+    const button =
+      document.getElementById(
+        "saveBtn"
+      );
+
+
+    button.disabled =
+      true;
+
+
+    button.textContent =
+      "Saving...";
+
+
+    try{
+
+      const id =
+        getValue(
+          "recordId"
+        );
+
+
+      const title =
+        getValue(
+          "title"
+        );
+
+
+      if(
+        !title
+      ){
+
+        throw new Error(
+          "Campaign title is required."
+        );
+
+      }
+
+
+      const existing =
+        campaigns.find(
+          item =>
+            item.id === id
+        );
+
+
+      const data = {
+
+        title:
+
+          title,
+
+
+        slug:
+
+          getValue(
+            "slug"
+          ) ||
+          createSlug(
+            title
+          ),
+
+
+        description:
+
+          getValue(
+            "description"
+          ),
+
+
+        type:
+
+          getValue(
+            "type"
+          ) ||
+          "general",
+
+
+        channel:
+
+          getValue(
+            "channel"
+          ) ||
+          "website",
+
+
+        audience:
+
+          getValue(
+            "audience"
+          ),
+
+
+        budget:
+
+          Number(
+            getValue(
+              "budget"
+            ) ||
+            0
+          ),
+
+
+        currency:
+
+          getValue(
+            "currency"
+          ) ||
+          "TZS",
+
+
+        startDate:
+
+          getValue(
+            "startDate"
+          ),
+
+
+        endDate:
+
+          getValue(
+            "endDate"
+          ),
+
+
+        status:
+
+          getValue(
+            "status"
+          ) ||
+          "draft",
+
+
+        featured:
+
+          getValue(
+            "featured"
+          ) ===
+          "true",
+
+
+        impressions:
+
+          Number(
+            existing?.impressions ||
+            0
+          ),
+
+
+        clicks:
+
+          Number(
+            existing?.clicks ||
+            0
+          ),
+
+
+        conversions:
+
+          Number(
+            existing?.conversions ||
+            0
+          ),
+
+
+        revenue:
+
+          Number(
+            existing?.revenue ||
+            0
+          ),
+
+
+        imageUrl:
+
+          getValue(
+            "imageUrl"
+          ),
+
+
+        destinationUrl:
+
+          getValue(
+            "destinationUrl"
+          ),
+
+
+        createdBy:
+
+          existing?.createdBy ||
+          "admin",
+
+
+        updatedAt:
+
+          serverTimestamp()
+
+      };
+
+
+      if(
+        !id
+      ){
+
+        data.createdAt =
+          serverTimestamp();
+
+      }
+
+
+      const campaignId =
+        id ||
+        crypto.randomUUID();
+
+
+      await setDoc(
+
+        doc(
+          db,
+          COLLECTION,
+          campaignId
+        ),
+
+        data,
+
+        {
+          merge:true
+        }
+
+      );
+
+
+      closeModal();
+
+
+      await loadCampaigns();
+
+
+      showToast(
+
+        id
+          ? "Campaign updated successfully."
+          : "Campaign created successfully."
+
+      );
+
+    }
+
+    catch(error){
+
+      console.error(
+        "Save campaign error:",
+        error
+      );
+
+
+      showToast(
+        error.message ||
+        "Unable to save campaign.",
+        true
+      );
+
+    }
+
+    finally{
+
+      button.disabled =
+        false;
+
+
+      button.textContent =
+        "Save Campaign";
+
+    }
+
+  }
+);
+
+
+/* =====================================================
+   TABLE ACTIONS
+===================================================== */
+
+tableBody.addEventListener(
+  "click",
+  async event => {
+
+    const button =
+      event.target.closest(
+        "button"
+      );
+
+
+    if(
+      !button
+    ){
+
+      return;
+
+    }
+
+
+    const editId =
+      button.dataset.edit;
+
+
+    const viewId =
+      button.dataset.view;
+
+
+    const deleteId =
+      button.dataset.delete;
+
+
+    if(
+      editId
+    ){
+
+      const campaign =
+        campaigns.find(
+          item =>
+            item.id ===
+            editId
+        );
+
+
+      if(
+        campaign
+      ){
+
+        editCampaign(
+          campaign
+        );
+
+      }
+
+
+      return;
+
+    }
+
+
+    if(
+      viewId
+    ){
+
+      const campaign =
+        campaigns.find(
+          item =>
+            item.id ===
+            viewId
+        );
+
+
+      if(
+        campaign?.destinationUrl
+      ){
+
+        window.open(
+          campaign.destinationUrl,
+          "_blank",
+          "noopener,noreferrer"
+        );
+
+      }
+      else{
 
         showToast(
-          "Please login first.",
-          "error"
+          "This campaign has no destination URL."
         );
+
+      }
+
+
+      return;
+
+    }
+
+
+    if(
+      deleteId
+    ){
+
+      const campaign =
+        campaigns.find(
+          item =>
+            item.id ===
+            deleteId
+        );
+
+
+      if(
+        !campaign
+      ){
 
         return;
 
       }
 
 
-      const name =
-        document.getElementById(
-          "campaignName"
-        )?.value.trim();
-
-
-      const channel =
-        document.getElementById(
-          "campaignChannel"
-        )?.value;
-
-
-      const budget =
-        Number(
-          document.getElementById(
-            "campaignBudget"
-          )?.value || 0
+      const confirmed =
+        confirm(
+          `Delete "${campaign.title}"?`
         );
 
 
-      const startDate =
-        document.getElementById(
-          "campaignStart"
-        )?.value;
-
-
-      const endDate =
-        document.getElementById(
-          "campaignEnd"
-        )?.value;
-
-
-      const description =
-        document.getElementById(
-          "campaignDescription"
-        )?.value.trim();
-
-
-      const status =
-        document.getElementById(
-          "campaignStatus"
-        )?.value ||
-        "draft";
-
-
-      if(!name){
-
-        showToast(
-          "Campaign name is required.",
-          "error"
-        );
+      if(
+        !confirmed
+      ){
 
         return;
 
@@ -2132,578 +2370,258 @@ if(campaignForm){
 
       try{
 
-        if(
-          editingCampaignId
-        ){
+        await deleteDoc(
+          doc(
+            db,
+            COLLECTION,
+            deleteId
+          )
+        );
 
-          await update(
-            ref(
-              db,
-              "campaigns/" +
-              editingCampaignId
-            ),
-            {
-
-              name,
-
-              channel,
-
-              budget,
-
-              startDate,
-
-              endDate,
-
-              description,
-
-              status,
-
-              updatedAt:
-                serverTimestamp(),
-
-              updatedBy:
-                currentUser.uid
-
-            }
-          );
-
-
-          showToast(
-            "Campaign updated successfully."
-          );
-
-
-        }else{
-
-          const campaignRef =
-            push(
-              ref(
-                db,
-                "campaigns"
-              )
-            );
-
-
-          await set(
-            campaignRef,
-            {
-
-              id:
-                campaignRef.key,
-
-              name,
-
-              channel,
-
-              budget,
-
-              startDate,
-
-              endDate,
-
-              description,
-
-              status,
-
-              impressions:
-                0,
-
-              clicks:
-                0,
-
-              conversions:
-                0,
-
-              revenue:
-                0,
-
-              createdAt:
-                serverTimestamp(),
-
-              updatedAt:
-                serverTimestamp(),
-
-              createdBy:
-                currentUser.uid
-
-            }
-          );
-
-
-          showToast(
-            "Campaign created successfully."
-          );
-
-        }
-
-
-        closeCampaignModal();
 
         await loadCampaigns();
 
 
-      }catch(error){
+        showToast(
+          "Campaign deleted successfully."
+        );
+
+      }
+
+      catch(error){
 
         console.error(
-          "Campaign save error:",
+          "Delete error:",
           error
         );
 
 
         showToast(
-          "Failed to save campaign.",
-          "error"
+          "Unable to delete campaign.",
+          true
         );
 
       }
 
     }
-  );
-
-}
-
-
-/* =========================================================
-   EDIT CAMPAIGN
-========================================================= */
-
-window.editCampaign =
-function(id){
-
-  const campaign =
-    campaigns[id];
-
-
-  if(!campaign){
-
-    return;
 
   }
+);
 
 
-  editingCampaignId =
-    id;
+/* =====================================================
+   EDIT
+===================================================== */
 
+function editCampaign(
+  campaign
+){
 
-  const title =
-    document.getElementById(
-      "modalTitle"
-    );
-
-
-  if(title){
-
-    title.textContent =
-      "Edit Campaign";
-
-  }
+  document.getElementById(
+    "recordId"
+  ).value =
+    campaign.id;
 
 
   setValue(
-    "campaignName",
-    campaign.name
+    "title",
+    campaign.title
   );
 
 
   setValue(
-    "campaignChannel",
-    campaign.channel
+    "slug",
+    campaign.slug
   );
 
 
   setValue(
-    "campaignBudget",
-    campaign.budget
+    "type",
+    campaign.type ||
+    "general"
   );
 
 
   setValue(
-    "campaignStart",
-    campaign.startDate
+    "channel",
+    campaign.channel ||
+    "website"
   );
 
 
   setValue(
-    "campaignEnd",
-    campaign.endDate
+    "audience",
+    campaign.audience
   );
 
 
   setValue(
-    "campaignDescription",
-    campaign.description
-  );
-
-
-  setValue(
-    "campaignStatus",
+    "status",
     campaign.status ||
     "draft"
   );
 
 
-  openCampaignModal();
+  setValue(
+    "budget",
+    campaign.budget ||
+    0
+  );
 
-};
 
+  setValue(
+    "currency",
+    campaign.currency ||
+    "TZS"
+  );
 
-/* =========================================================
-   TOGGLE CAMPAIGN
-========================================================= */
 
-window.toggleCampaign =
-async function(id){
+  setValue(
+    "startDate",
+    campaign.startDate
+  );
 
-  const campaign =
-    campaigns[id];
 
+  setValue(
+    "endDate",
+    campaign.endDate
+  );
 
-  if(!campaign){
 
-    return;
+  setValue(
+    "description",
+    campaign.description
+  );
 
-  }
 
+  setValue(
+    "imageUrl",
+    campaign.imageUrl
+  );
 
-  const newStatus =
-    campaign.status === "active"
-      ? "paused"
-      : "active";
 
+  setValue(
+    "destinationUrl",
+    campaign.destinationUrl
+  );
 
-  try{
 
-    await update(
-      ref(
-        db,
-        "campaigns/" +
-        id
-      ),
-      {
+  setValue(
+    "featured",
+    campaign.featured
+      ? "true"
+      : "false"
+  );
 
-        status:
-          newStatus,
 
-        updatedAt:
-          serverTimestamp(),
+  document.getElementById(
+    "modalTitle"
+  ).textContent =
+    "Edit Campaign";
 
-        updatedBy:
-          currentUser.uid
 
-      }
-    );
+  document.getElementById(
+    "saveBtn"
+  ).textContent =
+    "Update Campaign";
 
 
-    showToast(
-      newStatus === "active"
-        ? "Campaign activated."
-        : "Campaign paused."
-    );
+  modal.classList.add(
+    "show"
+  );
 
+}
 
-    loadCampaigns();
 
+/* =====================================================
+   MODAL
+===================================================== */
 
-  }catch(error){
+function closeModal(){
 
-    console.error(
-      error
-    );
+  modal.classList.remove(
+    "show"
+  );
 
 
-    showToast(
-      "Unable to update campaign.",
-      "error"
-    );
+  form.reset();
 
-  }
 
-};
+  document.getElementById(
+    "recordId"
+  ).value =
+    "";
 
+}
 
-/* =========================================================
-   DELETE CAMPAIGN
-========================================================= */
 
-window.deleteCampaign =
-async function(id){
+document.getElementById(
+  "closeBtn"
+).addEventListener(
+  "click",
+  closeModal
+);
 
-  const campaign =
-    campaigns[id];
 
+document.getElementById(
+  "cancelBtn"
+).addEventListener(
+  "click",
+  closeModal
+);
 
-  if(!campaign){
 
-    return;
+modal.addEventListener(
+  "click",
+  event => {
 
-  }
+    if(
+      event.target ===
+      modal
+    ){
 
-
-  const confirmed =
-    confirm(
-      "Delete campaign \"" +
-      (
-        campaign.name ||
-        "Untitled"
-      ) +
-      "\"?"
-    );
-
-
-  if(!confirmed){
-
-    return;
-
-  }
-
-
-  try{
-
-    await remove(
-      ref(
-        db,
-        "campaigns/" +
-        id
-      )
-    );
-
-
-    showToast(
-      "Campaign deleted."
-    );
-
-
-    loadCampaigns();
-
-
-  }catch(error){
-
-    console.error(
-      "Campaign delete error:",
-      error
-    );
-
-
-    showToast(
-      "Failed to delete campaign.",
-      "error"
-    );
-
-  }
-
-};
-
-
-/* =========================================================
-   STATISTICS
-========================================================= */
-
-function updateStatistics(){
-
-  const list =
-    Object.values(
-      campaigns
-    );
-
-
-  let total =
-    list.length;
-
-
-  let active =
-    0;
-
-
-  let paused =
-    0;
-
-
-  let draft =
-    0;
-
-
-  let budget =
-    0;
-
-
-  let impressions =
-    0;
-
-
-  let clicks =
-    0;
-
-
-  let conversions =
-    0;
-
-
-  let revenue =
-    0;
-
-
-  list.forEach(
-    campaign => {
-
-      if(
-        campaign.status ===
-        "active"
-      ){
-
-        active++;
-
-      }
-
-
-      if(
-        campaign.status ===
-        "paused"
-      ){
-
-        paused++;
-
-      }
-
-
-      if(
-        campaign.status ===
-        "draft"
-      ){
-
-        draft++;
-
-      }
-
-
-      budget +=
-        Number(
-          campaign.budget ||
-          0
-        );
-
-
-      impressions +=
-        Number(
-          campaign.impressions ||
-          0
-        );
-
-
-      clicks +=
-        Number(
-          campaign.clicks ||
-          0
-        );
-
-
-      conversions +=
-        Number(
-          campaign.conversions ||
-          0
-        );
-
-
-      revenue +=
-        Number(
-          campaign.revenue ||
-          0
-        );
+      closeModal();
 
     }
-  );
+
+  }
+);
 
 
-  setText(
-    "totalCampaigns",
-    total
-  );
+/* =====================================================
+   SEARCH + FILTERS
+===================================================== */
+
+document.getElementById(
+  "search"
+).addEventListener(
+  "input",
+  renderCampaigns
+);
 
 
-  setText(
-    "activeCampaigns",
-    active
-  );
+document.getElementById(
+  "statusFilter"
+).addEventListener(
+  "change",
+  renderCampaigns
+);
 
 
-  setText(
-    "pausedCampaigns",
-    paused
-  );
+document.getElementById(
+  "typeFilter"
+).addEventListener(
+  "change",
+  renderCampaigns
+);
 
 
-  setText(
-    "draftCampaigns",
-    draft
-  );
-
-
-  setText(
-    "totalBudget",
-    formatMoney(
-      budget
-    )
-  );
-
-
-  setText(
-    "totalImpressions",
-    impressions.toLocaleString()
-  );
-
-
-  setText(
-    "totalClicks",
-    clicks.toLocaleString()
-  );
-
-
-  setText(
-    "totalConversions",
-    conversions.toLocaleString()
-  );
-
-
-  setText(
-    "campaignRevenue",
-    formatMoney(
-      revenue
-    )
-  );
-
-}
-
-
-/* =========================================================
-   SEARCH
-========================================================= */
-
-if(searchInput){
-
-  searchInput.addEventListener(
-    "input",
-    renderCampaigns
-  );
-
-}
-
-
-if(statusFilter){
-
-  statusFilter.addEventListener(
-    "change",
-    renderCampaigns
-  );
-
-}
-
-
-/* =========================================================
+/* =====================================================
    HELPERS
-========================================================= */
+===================================================== */
 
-function setText(
-  id,
-  value
+function getValue(
+  id
 ){
 
   const element =
@@ -2712,12 +2630,9 @@ function setText(
     );
 
 
-  if(element){
-
-    element.textContent =
-      value;
-
-  }
+  return element
+    ? element.value.trim()
+    : "";
 
 }
 
@@ -2733,92 +2648,64 @@ function setValue(
     );
 
 
-  if(element){
+  if(
+    element
+  ){
 
     element.value =
-      value ??
-      "";
+      value ?? "";
 
   }
 
 }
 
 
-function formatMoney(
+function createSlug(
   value
 ){
 
-  return new Intl.NumberFormat(
-    "en-TZ",
-    {
-
-      style:
-        "currency",
-
-      currency:
-        "TZS",
-
-      maximumFractionDigits:
-        0
-
-    }
-  ).format(
-    Number(value) || 0
-  );
-
-}
-
-
-function formatDate(
-  value
-){
-
-  if(!value){
-
-    return "—";
-
-  }
-
-
-  let date;
-
-
-  if(
-    typeof value ===
-    "object" &&
-    value.seconds
-  ){
-
-    date =
-      new Date(
-        value.seconds *
-        1000
-      );
-
-  }else{
-
-    date =
-      new Date(
-        value
-      );
-
-  }
-
-
-  if(
-    Number.isNaN(
-      date.getTime()
+  return String(
+    value || ""
+  )
+    .toLowerCase()
+    .trim()
+    .replace(
+      /[^a-z0-9]+/g,
+      "-"
     )
-  ){
+    .replace(
+      /^-+|-+$/g,
+      "");
 
-    return "—";
-
-  }
+}
 
 
-  return date.toLocaleDateString(
-    "en-GB"
-  );
+function capitalize(
+  value
+){
+
+  const text =
+    String(
+      value || ""
+    );
+
+
+  return (
+    text.charAt(0)
+      .toUpperCase()
+  ) +
+  text.slice(1);
+
+}
+
+
+function formatNumber(
+  value
+){
+
+  return Number(
+    value || 0
+  ).toLocaleString();
 
 }
 
@@ -2830,57 +2717,140 @@ function escapeHTML(
   return String(
     value ?? ""
   )
-  .replace(
-    /&/g,
-    "&amp;"
-  )
-  .replace(
-    /</g,
-    "&lt;"
-  )
-  .replace(
-    />/g,
-    "&gt;"
-  )
-  .replace(
-    /"/g,
-    "&quot;"
-  )
-  .replace(
-    /'/g,
-    "&#039;"
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+
+}
+
+
+function escapeAttribute(
+  value
+){
+
+  return escapeHTML(
+    value
   );
 
 }
 
 
-/* =========================================================
-   GLOBAL EVENTS
-========================================================= */
+function statusClass(
+  status
+){
 
-window.addEventListener(
-  "keydown",
-  event => {
+  if(
+    status ===
+    "active"
+  ){
 
-    if(
-      event.key ===
-      "Escape"
-    ){
-
-      closeCampaignModal();
-
-    }
+    return "active-badge";
 
   }
-);
 
 
-console.log(
-  "LetsStudy Pro Admin Campaigns initialized."
-);
+  if(
+    status ===
+    "paused"
+  ){
+
+    return "paused-badge";
+
+  }
+
+
+  if(
+    status ===
+    "completed"
+  ){
+
+    return "completed-badge";
+
+  }
+
+
+  return "draft-badge";
+
+}
+
+
+/* =====================================================
+   TOAST FUNCTION
+===================================================== */
+
+function showToast(
+  message,
+  isError = false
+){
+
+  const toast =
+    document.getElementById(
+      "toast"
+    );
+
+
+  toast.textContent =
+    message;
+
+
+  toast.className =
+    "toast show";
+
+
+  if(
+    isError
+  ){
+
+    toast.classList.add(
+      "error"
+    );
+
+  }
+
+
+  clearTimeout(
+    window.toastTimer
+  );
+
+
+  window.toastTimer =
+    setTimeout(
+      () => {
+
+        toast.className =
+          "toast";
+
+      },
+      3000
+    );
+
+}
+
+
+/* =====================================================
+   INITIALIZE
+===================================================== */
+
+loadCampaigns();
 
 </script>
-
 
 </body>
 </html>
