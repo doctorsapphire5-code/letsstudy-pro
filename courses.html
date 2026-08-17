@@ -1437,779 +1437,244 @@ async function loadCourse(){
         course = {
 
           id:
-            doc.id,
+                     doc.id,
 
-          ...doc.data()
+        ...doc.data()
 
-                };
+      };
 
-      }
-    }
+      return course;
 
-    /* =====================================================
-       FALLBACK: LOAD BY SLUG
-    ===================================================== */
+    });
+
+    console.log(
+      "Courses loaded:",
+      courses.length
+    );
+
+    updateStats();
+
+    filterCourses();
+
+  } catch(error) {
+
+    console.error(
+      "Unable to load courses:",
+      error
+    );
+
+    console.error(
+      "Firebase error code:",
+      error.code
+    );
+
+    console.error(
+      "Firebase error message:",
+      error.message
+    );
+
+    loadCachedCourses();
+
+  }
+
+}
+
+
+/* =====================================================
+   CACHE FALLBACK
+===================================================== */
+
+function loadCachedCourses() {
+
+  try {
+
+    const cached =
+      localStorage.getItem(
+        "letsStudyProCoursesCache"
+      );
+
+    courses =
+      cached
+        ? JSON.parse(cached)
+        : [];
 
     if(
-      !course &&
-      slug
-    ){
+      !Array.isArray(courses)
+    ) {
 
-      const snapshot =
-        await db
-          .collection("courses")
-          .where(
-            "slug",
-            "==",
-            slug
-          )
-          .limit(1)
-          .get();
-
-
-      if(
-        !snapshot.empty
-      ){
-
-        const doc =
-          snapshot.docs[0];
-
-
-        course = {
-
-          id:
-            doc.id,
-
-          ...doc.data()
-
-        };
-
-      }
+      courses = [];
 
     }
 
+    updateStats();
 
-    /* =====================================================
-       LOCAL STORAGE FALLBACK
-    ===================================================== */
+    filterCourses();
 
-    if(!course){
-
-      await loadCourseFromLocalStorage(
-        id,
-        slug
-      );
-
-    }
-
-
-    /* =====================================================
-       COURSE NOT FOUND
-    ===================================================== */
-
-    if(!course){
-
-      showError(
-        "This course could not be found."
-      );
-
-      return;
-
-    }
-
-
-    /* =====================================================
-       RENDER COURSE
-    ===================================================== */
-
-    renderCourse();
-
-
-  }catch(error){
+  } catch(error) {
 
     console.error(
-      "Course loading error:",
+      "Cache error:",
       error
     );
 
+    courses = [];
 
-    /* Try localStorage if Firebase fails */
+    courseGrid.innerHTML = `
 
-    await loadCourseFromLocalStorage(
-      id,
-      slug
-    );
+      <div class="state">
 
+        <div class="state-icon">
+          ⚠️
+        </div>
 
-    if(course){
+        <h3>
+          Unable to load courses
+        </h3>
 
-      renderCourse();
-
-    }else{
-
-      showError(
-        "Unable to load this course. Please try again."
-      );
-
-    }
-
-  }
-
-}
-
-
-/* =====================================================
-   LOCAL STORAGE COURSE FALLBACK
-===================================================== */
-
-async function loadCourseFromLocalStorage(
-  id,
-  slug
-){
-
-  try{
-
-    const storageKeys = [
-
-      "letsStudyProCourses",
-
-      "courses",
-
-      "adminCourses",
-
-      "courseData"
-
-    ];
-
-
-    for(
-      const key of storageKeys
-    ){
-
-      const raw =
-        localStorage.getItem(
-          key
-        );
-
-
-      if(!raw){
-
-        continue;
-
-      }
-
-
-      const data =
-        JSON.parse(
-          raw
-        );
-
-
-      if(
-        !Array.isArray(data)
-      ){
-
-        continue;
-
-      }
-
-
-      const found =
-        data.find(
-          item => {
-
-            const itemId =
-              String(
-                item.id ||
-                item.courseId ||
-                ""
-              );
-
-
-            const itemSlug =
-              String(
-                item.slug ||
-                ""
-              );
-
-
-            return (
-
-              (
-                id &&
-                itemId ===
-                String(id)
-              )
-
-              ||
-
-              (
-                slug &&
-                itemSlug ===
-                String(slug)
-              )
-
-            );
-
-          }
-        );
-
-
-      if(found){
-
-        course = {
-
-          id:
-            found.id ||
-            found.courseId,
-
-          ...found
-
-        };
-
-
-        console.log(
-          "Course loaded from localStorage:",
-          key
-        );
-
-
-        return;
-
-      }
-
-    }
-
-  }catch(error){
-
-    console.error(
-      "localStorage course error:",
-      error
-    );
-
-  }
-
-}
-
-
-/* =====================================================
-   RENDER COURSE
-===================================================== */
-
-function renderCourse(){
-
-  if(!course){
-
-    showError(
-      "Course information is unavailable."
-    );
-
-    return;
-
-  }
-
-
-  const title =
-    course.title ||
-    "Untitled Course";
-
-
-  const description =
-    course.description ||
-    course.shortDescription ||
-    "No course description available.";
-
-
-  const shortDescription =
-    course.shortDescription ||
-    description;
-
-
-  const category =
-    course.category ||
-    "General";
-
-
-  const level =
-    course.level ||
-    course.experienceLevel ||
-    "All Levels";
-
-
-  const currency =
-    course.currency ||
-    "TZS";
-
-
-  const price =
-    Number(
-      course.price || 0
-    );
-
-
-  const discountPrice =
-    Number(
-      course.discountPrice || 0
-    );
-
-
-  const finalPrice =
-    discountPrice > 0 &&
-    discountPrice < price
-
-      ? discountPrice
-
-      : price;
-
-
-  const image =
-    course.thumbnail ||
-    course.imageUrl ||
-    "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80";
-
-
-  /* =====================================================
-     SEO
-  ===================================================== */
-
-  document.title =
-    title +
-    " | LetsStudy Pro";
-
-
-  const metaDescription =
-    document.getElementById(
-      "metaDescription"
-    );
-
-
-  if(metaDescription){
-
-    metaDescription.setAttribute(
-      "content",
-      shortDescription
-    );
-
-  }
-
-
-  /* =====================================================
-     PAGE HTML
-  ===================================================== */
-
-  app.innerHTML = `
-
-    <div class="breadcrumb">
-
-      <a href="index.html">
-        Home
-      </a>
-
-      <span>›</span>
-
-      <a href="courses.html">
-        Courses
-      </a>
-
-      <span>›</span>
-
-      <span>
-        ${escapeHtml(title)}
-      </span>
-
-    </div>
-
-
-    <section class="course-hero">
-
-      <div class="hero-content">
-
-        <span class="category">
-
-          ${escapeHtml(
-            category
-          )}
-
-        </span>
-
-
-        <h1>
-
-          ${escapeHtml(
-            title
-          )}
-
-        </h1>
-
-
-        <p class="short-description">
-
-          ${escapeHtml(
-            shortDescription
-          )}
-
+        <p>
+          Please refresh the page and try again.
         </p>
 
-
-        <div class="course-meta">
-
-          <div class="meta-item">
-
-            📊
-
-            <strong>
-              ${escapeHtml(
-                level
-              )}
-            </strong>
-
-          </div>
-
-
-          ${
-            course.duration
-              ? `
-
-                <div class="meta-item">
-
-                  ⏱
-
-                  <strong>
-                    ${escapeHtml(
-                      course.duration
-                    )}
-                  </strong>
-
-                </div>
-
-              `
-              : ""
-          }
-
-
-          ${
-            course.lessons
-              ? `
-
-                <div class="meta-item">
-
-                  📚
-
-                  <strong>
-                    ${escapeHtml(
-                      course.lessons
-                    )}
-                  </strong>
-
-                  lessons
-
-                </div>
-
-              `
-              : ""
-          }
-
-
-          ${
-            course.language
-              ? `
-
-                <div class="meta-item">
-
-                  🌐
-
-                  <strong>
-                    ${escapeHtml(
-                      course.language
-                    )}
-                  </strong>
-
-                </div>
-
-              `
-              : ""
-          }
-
-
-          ${
-            course.instructor
-              ? `
-
-                <div class="meta-item">
-
-                  👨‍🏫
-
-                  <strong>
-                    ${escapeHtml(
-                      course.instructor
-                    )}
-                  </strong>
-
-                </div>
-
-              `
-              : ""
-          }
-
-        </div>
-
       </div>
 
+    `;
 
-      <aside class="purchase-card">
-
-        <img
-          class="course-image"
-          src="${escapeHtml(image)}"
-          alt="${escapeHtml(title)}"
-          onerror="
-            this.onerror=null;
-            this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80';
-          "
-        >
-
-
-        <div class="purchase-body">
-
-          <div
-            class="price ${
-              finalPrice <= 0
-                ? "free"
-                : ""
-            }"
-          >
-
-            ${
-              finalPrice <= 0
-
-                ? "FREE"
-
-                :
-
-                  escapeHtml(
-                    currency
-                  ) +
-
-                  " " +
-
-                  finalPrice.toLocaleString()
-
-            }
-
-
-            ${
-              discountPrice > 0 &&
-              discountPrice < price
-
-                ? `
-
-                  <span class="old-price">
-
-                    ${escapeHtml(
-                      currency
-                    )}
-
-                    ${price.toLocaleString()}
-
-                  </span>
-
-                `
-
-                : ""
-            }
-
-          </div>
-
-
-          <div class="price-note">
-
-            ${
-              finalPrice <= 0
-
-                ? "Free access"
-
-                : "One-time course purchase"
-
-            }
-
-          </div>
-
-
-          ${
-            finalPrice <= 0
-
-              ? `
-
-                <button
-                  id="freeButton"
-                  class="primary-btn"
-                  type="button"
-                >
-
-                  🎓 Start Course
-
-                </button>
-
-              `
-
-              :
-
-              `
-
-                <button
-                  id="cartButton"
-                  class="primary-btn"
-                  type="button"
-                >
-
-                  🛒 Add to Cart
-
-                </button>
-
-              `
-
-          }
-
-
-          <a
-            href="cart.html"
-            class="secondary-btn"
-            style="
-              display:block;
-              text-align:center;
-            "
-          >
-
-            View Cart
-
-          </a>
-
-
-          <div class="purchase-info">
-
-            <div class="info-row">
-
-              <span>
-                Course type
-              </span>
-
-              <strong>
-
-                ${escapeHtml(
-                  course.type ||
-                  "Course"
-                )}
-
-              </strong>
-
-            </div>
-
-
-            <div class="info-row">
-
-              <span>
-                Access
-              </span>
-
-              <strong>
-
-                ${escapeHtml(
-                  course.access ||
-                  "Online"
-                )}
-
-              </strong>
-
-            </div>
-
-
-            <div class="info-row">
-
-              <span>
-                Certificate
-              </span>
-
-              <strong>
-
-                ${
-                  course.certificate
-                    ? "Available"
-                    : "—"
-                }
-
-              </strong>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </aside>
-
-    </section>
-
-
-    <section class="content-layout">
-
-      <div>
-
-        <article class="content-card">
-
-          <h2>
-            About this course
-          </h2>
-
-          <div class="description">
-
-            ${escapeHtml(
-              description
-            )}
-
-          </div>
-
-        </article>
-
-
-        ${getSkillsHtml()}
-
-
-        ${getRequirementsHtml()}
-
-      </div>
-
-
-      <aside>
-
-        ${getBenefitsHtml()}
-
-
-        ${getCourseDetailsHtml()}
-
-      </aside>
-
-    </section>
-
-  `;
-
-
-  /* =====================================================
-     BUTTON EVENTS
-  ===================================================== */
-
-  attachPurchaseEvents();
-
-
-  /* =====================================================
-     UPDATE CART UI
-  ===================================================== */
-
-  updatePurchaseButton();
+  }
 
 }
 
+
+/* =====================================================
+   SEARCH
+===================================================== */
+
+search.addEventListener(
+  "input",
+  filterCourses
+);
+
+
+/* =====================================================
+   CATEGORY FILTER
+===================================================== */
+
+categoryFilter.addEventListener(
+  "change",
+  filterCourses
+);
+
+
+/* =====================================================
+   ACCESS FILTER
+===================================================== */
+
+accessFilter.addEventListener(
+  "change",
+  filterCourses
+);
+
+
+/* =====================================================
+   CART STORAGE SYNC
+===================================================== */
+
+window.addEventListener(
+  "storage",
+  function(event) {
+
+    if(
+      event.key ===
+      "letsStudyProCart"
+    ) {
+
+      loadCart();
+
+    }
+
+  }
+);
+
+
+/* =====================================================
+   INITIALIZE PAGE
+===================================================== */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  function() {
+
+    loadCart();
+
+    loadCourses();
+
+  }
+);
+
+
+/* =====================================================
+   GLOBAL ERROR HANDLER
+===================================================== */
+
+window.addEventListener(
+  "error",
+  function(event) {
+
+    console.error(
+      "Page error:",
+      event.error ||
+      event.message
+    );
+
+  }
+);
+
+
+/* =====================================================
+   FIREBASE AUTH STATE
+===================================================== */
+
+if(
+  typeof firebase !==
+  "undefined" &&
+  firebase.auth
+) {
+
+  firebase.auth()
+    .onAuthStateChanged(
+      function(user) {
+
+        if(user) {
+
+          console.log(
+            "Logged in user:",
+            user.uid
+          );
+
+        } else {
+
+          console.log(
+            "User is browsing as guest."
+          );
+
+        }
+
+      }
+    );
+
+}
+
+
+/* =====================================================
+   PAGE READY
+===================================================== */
+
+console.log(
+  "LetsStudy Pro Courses page ready."
+);
 
 </script>
 
 </body>
 </html>
+
+                
