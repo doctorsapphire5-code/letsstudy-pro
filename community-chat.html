@@ -1,2377 +1,2714 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Community Chat</title>
-
-<style>
-*{
-    box-sizing:border-box;
-}
-
-:root{
-    --primary:#2563eb;
-    --primary-dark:#1d4ed8;
-    --bg:#f8fafc;
-    --panel:#ffffff;
-    --text:#172033;
-    --muted:#64748b;
-    --border:#e2e8f0;
-    --soft:#eff6ff;
-    --success:#16a34a;
-}
-
-body{
-    margin:0;
-    min-height:100vh;
-    font-family:Arial,Helvetica,sans-serif;
-    background:var(--bg);
-    color:var(--text);
-}
-
-button,
-input,
-textarea{
-    font:inherit;
-}
-
-button{
-    cursor:pointer;
-}
-
-a{
-    color:inherit;
-    text-decoration:none;
-}
-
-
-/* =========================
-   HEADER
-========================= */
-
-.header{
-    height:64px;
-    padding:0 20px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:20px;
-    background:#fff;
-    border-bottom:1px solid var(--border);
-}
-
-.logo{
-    color:var(--primary);
-    font-size:18px;
-    font-weight:900;
-}
-
-.header-actions{
-    display:flex;
-    align-items:center;
-    gap:8px;
-}
-
-.header-button{
-    border:1px solid var(--border);
-    background:#fff;
-    border-radius:8px;
-    padding:8px 11px;
-    color:var(--text);
-    font-size:9px;
-    font-weight:800;
-}
-
-.header-button:hover{
-    color:var(--primary);
-    background:var(--soft);
-}
-
-
-/* =========================
-   MAIN CHAT LAYOUT
-========================= */
-
-.chat-layout{
-    height:calc(100vh - 64px);
-    display:grid;
-    grid-template-columns:230px minmax(0,1fr) 220px;
-    overflow:hidden;
-}
-
-
-/* =========================
-   SIDEBAR
-========================= */
-
-.sidebar{
-    background:#fff;
-    border-right:1px solid var(--border);
-    overflow-y:auto;
-}
-
-.sidebar-header{
-    padding:17px 15px 10px;
-}
-
-.sidebar-header h2{
-    margin:0;
-    font-size:13px;
-}
-
-.sidebar-header p{
-    margin:5px 0 0;
-    color:var(--muted);
-    font-size:8px;
-}
-
-.search-box{
-    margin:8px 12px 15px;
-}
-
-.search-box input{
-    width:100%;
-    padding:9px 10px;
-    border:1px solid var(--border);
-    border-radius:8px;
-    outline:none;
-    font-size:9px;
-}
-
-.search-box input:focus{
-    border-color:var(--primary);
-}
-
-.sidebar-title{
-    padding:8px 13px;
-    color:var(--muted);
-    font-size:7px;
-    font-weight:900;
-    letter-spacing:.08em;
-}
-
-.channel{
-    width:100%;
-    padding:9px 13px;
-    border:0;
-    background:transparent;
-    display:flex;
-    align-items:center;
-    gap:8px;
-    text-align:left;
-    color:var(--text);
-    font-size:9px;
-    font-weight:700;
-}
-
-.channel:hover,
-.channel.active{
-    color:var(--primary);
-    background:var(--soft);
-}
-
-.channel-icon{
-    width:22px;
-    height:22px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    border-radius:6px;
-    background:#f1f5f9;
-    font-size:11px;
-}
-
-.channel-count{
-    margin-left:auto;
-    color:var(--muted);
-    font-size:7px;
-}
-
-.sidebar-footer{
-    padding:14px 12px;
-    border-top:1px solid var(--border);
-    margin-top:15px;
-}
-
-.profile-mini{
-    display:flex;
-    align-items:center;
-    gap:8px;
-}
-
-.avatar{
-    width:31px;
-    height:31px;
-    flex:none;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    border-radius:50%;
-    background:var(--primary);
-    color:#fff;
-    font-size:8px;
-    font-weight:900;
-}
-
-.profile-mini strong{
-    display:block;
-    font-size:8px;
-}
-
-.profile-mini span{
-    color:var(--success);
-    font-size:7px;
-}
-
-
-/* =========================
-   CHAT AREA
-========================= */
-
-.chat{
-    min-width:0;
-    display:flex;
-    flex-direction:column;
-    background:#fff;
-}
-
-.chat-header{
-    min-height:64px;
-    padding:11px 18px;
-    border-bottom:1px solid var(--border);
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:15px;
-}
-
-.channel-heading{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    min-width:0;
-}
-
-.channel-heading-icon{
-    width:37px;
-    height:37px;
-    border-radius:9px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:var(--soft);
-    color:var(--primary);
-    font-size:17px;
-}
-
-.channel-heading h1{
-    margin:0;
-    font-size:13px;
-}
-
-.channel-heading p{
-    margin:3px 0 0;
-    color:var(--muted);
-    font-size:8px;
-}
-
-.chat-tools{
-    display:flex;
-    gap:6px;
-}
-
-.tool-button{
-    width:31px;
-    height:31px;
-    border:1px solid var(--border);
-    border-radius:7px;
-    background:#fff;
-    font-size:12px;
-}
-
-.tool-button:hover{
-    color:var(--primary);
-    background:var(--soft);
-}
-
-
-/* =========================
-   MESSAGES
-========================= */
-
-.messages{
-    flex:1;
-    min-height:0;
-    overflow-y:auto;
-    padding:18px;
-    scroll-behavior:smooth;
-}
-
-.date-divider{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    margin:5px 0 18px;
-    color:var(--muted);
-    font-size:7px;
-    font-weight:900;
-}
-
-.date-divider::before,
-.date-divider::after{
-    content:"";
-    height:1px;
-    flex:1;
-    background:var(--border);
-}
-
-.message{
-    display:flex;
-    align-items:flex-start;
-    gap:9px;
-    margin-bottom:17px;
-}
-
-.message-avatar{
-    width:31px;
-    height:31px;
-    flex:none;
-    border-radius:50%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:#dbeafe;
-    color:var(--primary);
-    font-size:8px;
-    font-weight:900;
-}
-
-.message-content{
-    min-width:0;
-    max-width:750px;
-}
-
-.message-meta{
-    display:flex;
-    align-items:baseline;
-    gap:7px;
-}
-
-.message-name{
-    font-size:9px;
-    font-weight:900;
-}
-
-.message-time{
-    color:var(--muted);
-    font-size:7px;
-}
-
-.message-text{
-    margin-top:4px;
-    color:#334155;
-    font-size:9px;
-    line-height:1.6;
-    overflow-wrap:anywhere;
-}
-
-.message-actions{
-    display:flex;
-    gap:5px;
-    margin-top:5px;
-    opacity:0;
-    transition:.15s;
-}
-
-.message:hover .message-actions{
-    opacity:1;
-}
-
-.message-action{
-    border:1px solid var(--border);
-    background:#fff;
-    border-radius:5px;
-    padding:3px 6px;
-    color:var(--muted);
-    font-size:7px;
-}
-
-.message-action:hover{
-    color:var(--primary);
-}
-
-.system-message{
-    margin:14px 0;
-    padding:9px 12px;
-    border-radius:8px;
-    background:#f8fafc;
-    color:var(--muted);
-    text-align:center;
-    font-size:8px;
-}
-
-
-/* =========================
-   COMPOSER
-========================= */
-
-.composer{
-    padding:10px 15px 14px;
-    border-top:1px solid var(--border);
-    background:#fff;
-}
-
-.reply-preview{
-    display:none;
-    margin-bottom:7px;
-    padding:7px 9px;
-    border-left:3px solid var(--primary);
-    border-radius:5px;
-    background:var(--soft);
-    font-size:7px;
-}
-
-.reply-preview strong{
-    display:block;
-    font-size:8px;
-}
-
-.reply-preview span{
-    color:var(--muted);
-}
-
-.composer-box{
-    display:flex;
-    align-items:flex-end;
-    gap:7px;
-    padding:7px;
-    border:1px solid var(--border);
-    border-radius:10px;
-    background:#fff;
-}
-
-.composer-box:focus-within{
-    border-color:#93c5fd;
-}
-
-.composer textarea{
-    min-height:35px;
-    max-height:110px;
-    flex:1;
-    resize:none;
-    border:0;
-    outline:none;
-    padding:7px;
-    color:var(--text);
-    font-size:9px;
-    line-height:1.5;
-}
-
-.attach-button,
-.emoji-button,
-.send-button{
-    width:31px;
-    height:31px;
-    flex:none;
-    border-radius:7px;
-}
-
-.attach-button,
-.emoji-button{
-    border:1px solid var(--border);
-    background:#fff;
-}
-
-.send-button{
-    border:0;
-    background:var(--primary);
-    color:#fff;
-    font-size:11px;
-}
-
-.send-button:hover{
-    background:var(--primary-dark);
-}
-
-.composer-hint{
-    margin:6px 3px 0;
-    color:var(--muted);
-    font-size:7px;
-}
-
-
-/* =========================
-   MEMBERS PANEL
-========================= */
-
-.members{
-    background:#fff;
-    border-left:1px solid var(--border);
-    overflow-y:auto;
-}
-
-.members-header{
-    padding:18px 14px 12px;
-    border-bottom:1px solid var(--border);
-}
-
-.members-header h2{
-    margin:0;
-    font-size:12px;
-}
-
-.members-header p{
-    margin:4px 0 0;
-    color:var(--muted);
-    font-size:8px;
-}
-
-.member{
-    padding:9px 13px;
-    display:flex;
-    align-items:center;
-    gap:8px;
-}
-
-.member:hover{
-    background:#f8fafc;
-}
-
-.member-avatar{
-    position:relative;
-    width:28px;
-    height:28px;
-    flex:none;
-    border-radius:50%;
-    background:#e0e7ff;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:#4338ca;
-    font-size:7px;
-    font-weight:900;
-}
-
-.online-dot{
-    position:absolute;
-    right:-1px;
-    bottom:-1px;
-    width:8px;
-    height:8px;
-    border:2px solid #fff;
-    border-radius:50%;
-    background:var(--success);
-}
-
-.member-info{
-    min-width:0;
-}
-
-.member-info strong{
-    display:block;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-    font-size:8px;
-}
-
-.member-info span{
-    display:block;
-    margin-top:2px;
-    color:var(--muted);
-    font-size:7px;
-}
-
-.member-section{
-    padding:13px 13px 5px;
-    color:var(--muted);
-    font-size:7px;
-    font-weight:900;
-}
-
-
-/* =========================
-   TOAST
-========================= */
-
-.toast{
-    position:fixed;
-    left:50%;
-    bottom:20px;
-    transform:translate(-50%,20px);
-    padding:10px 14px;
-    border-radius:8px;
-    background:#172033;
-    color:#fff;
-    font-size:8px;
-    opacity:0;
-    pointer-events:none;
-    transition:.2s;
-    z-index:200;
-}
-
-.toast.show{
-    opacity:1;
-    transform:translate(-50%,0);
-}
-
-
-/* =========================
-   MOBILE
-========================= */
-
-.mobile-channel-button{
-    display:none;
-}
-
-@media(max-width:900px){
-
-    .chat-layout{
-        grid-template-columns:190px minmax(0,1fr);
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Community Chat | LetsStudy Pro</title>
+  <meta name="description" content="LetsStudy Pro Community Chat — connect, learn, discuss and collaborate with students and creators.">
+  <meta name="theme-color" content="#0f172a">
+
+  <link rel="icon" href="favicon.ico">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
-    .members{
-        display:none;
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e5e7eb;
+      --text: #0f172a;
+      --muted: #64748b;
+      --bubble: #f1f5f9;
+      --danger: #ef4444;
+      --success: #22c55e;
     }
 
-}
-
-@media(max-width:650px){
-
-    .header{
-        padding:0 12px;
+    body.dark {
+      --bg: #0b1120;
+      --surface: #111827;
+      --border: #1f2937;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --bubble: #1e293b;
     }
 
-    .header-actions .header-button:not(:last-child){
-        display:none;
+    body {
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
     }
 
-    .chat-layout{
-        grid-template-columns:1fr;
+    button,
+    input {
+      font: inherit;
     }
 
-    .sidebar{
-        display:none;
+    button {
+      cursor: pointer;
+      border: 0;
     }
 
-    .mobile-channel-button{
-        display:block;
+    /* ================================
+       APP
+    ================================= */
+
+    .app {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
-    .chat-header{
-        padding:9px 12px;
+    /* ================================
+       TOPBAR
+    ================================= */
+
+    .topbar {
+      height: 64px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 18px;
+      gap: 18px;
+      z-index: 10;
     }
 
-    .messages{
-        padding:13px;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      min-width: 220px;
     }
 
-    .message-content{
-        max-width:calc(100vw - 80px);
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      background: var(--primary);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
     }
 
-}
-</style>
+    .brand span {
+      font-size: 17px;
+    }
+
+    .search {
+      flex: 1;
+      max-width: 620px;
+      position: relative;
+    }
+
+    .search i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+    }
+
+    .search input {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 11px 15px 11px 42px;
+      outline: none;
+    }
+
+    .search input:focus {
+      border-color: var(--primary);
+    }
+
+    .top-actions {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--text);
+      display: grid;
+      place-items: center;
+    }
+
+    .icon-btn:hover {
+      background: var(--bubble);
+    }
+
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: var(--primary);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+    }
+
+    /* ================================
+       MAIN
+    ================================= */
+
+    .main {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+    }
+
+    /* ================================
+       SIDEBAR
+    ================================= */
+
+    .sidebar {
+      width: 330px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-header {
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sidebar-header h2 {
+      font-size: 20px;
+    }
+
+    .new-chat {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: var(--primary);
+      color: white;
+    }
+
+    .filters {
+      padding: 0 14px 12px;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+    }
+
+    .filter {
+      padding: 7px 12px;
+      border-radius: 20px;
+      background: var(--bubble);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .filter.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .conversation-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .conversation {
+      padding: 13px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+    }
+
+    .conversation:hover {
+      background: var(--bubble);
+    }
+
+    .conversation.active {
+      background: rgba(37, 99, 235, .08);
+      border-left-color: var(--primary);
+    }
+
+    .conversation-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .conversation-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .conversation-name {
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .conversation-time {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .conversation-preview {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .unread {
+      min-width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* ================================
+       CHAT
+    ================================= */
+
+    .chat {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+    }
+
+    .chat-header {
+      min-height: 70px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 12px 18px;
+      gap: 12px;
+    }
+
+    .back-btn {
+      display: none;
+    }
+
+    .chat-user {
+      flex: 1;
+    }
+
+    .chat-user strong {
+      display: block;
+    }
+
+    .online-status {
+      font-size: 12px;
+      color: var(--success);
+      margin-top: 3px;
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 25px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .date-divider {
+      text-align: center;
+      margin: 8px 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .message-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      max-width: 75%;
+    }
+
+    .message-row.me {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+
+    .message-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    .message {
+      padding: 10px 13px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px 14px 14px 4px;
+    }
+
+    .message-row.me .message {
+      background: var(--primary);
+      color: white;
+      border: 0;
+      border-radius: 14px 14px 4px 14px;
+    }
+
+    .message-author {
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .message-text {
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .message-meta {
+      margin-top: 5px;
+      font-size: 10px;
+      opacity: .65;
+      text-align: right;
+    }
+
+    /* ================================
+       COMPOSER
+    ================================= */
+
+    .composer {
+      padding: 12px 18px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+    }
+
+    .composer-inner {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 7px;
+    }
+
+    .composer textarea {
+      flex: 1;
+      resize: none;
+      border: 0;
+      outline: none;
+      background: transparent;
+      color: var(--text);
+      min-height: 42px;
+      max-height: 130px;
+      padding: 10px;
+    }
+
+    .send-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      background: var(--primary);
+      color: white;
+    }
+
+    .attach-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      background: transparent;
+      color: var(--muted);
+    }
+
+    /* ================================
+       EMPTY STATE
+    ================================= */
+
+    .empty-chat {
+      flex: 1;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 30px;
+    }
+
+    .empty-chat-icon {
+      width: 74px;
+      height: 74px;
+      margin: auto auto 15px;
+      border-radius: 22px;
+      background: rgba(37, 99, 235, .1);
+      color: var(--primary);
+      display: grid;
+      place-items: center;
+      font-size: 30px;
+    }
+
+    .empty-chat h2 {
+      margin-bottom: 8px;
+    }
+
+    .empty-chat p {
+      color: var(--muted);
+      max-width: 400px;
+    }
+
+    /* ================================
+       TOAST
+    ================================= */
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      padding: 13px 17px;
+      border-radius: 10px;
+      background: var(--text);
+      color: var(--surface);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(15px);
+      transition: .25s;
+      z-index: 100;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ================================
+       MOBILE
+    ================================= */
+
+    @media(max-width: 800px) {
+
+      .brand {
+        min-width: auto;
+      }
+
+      .brand span {
+        display: none;
+      }
+
+      .search {
+        display: none;
+      }
+
+      .sidebar {
+        width: 100%;
+      }
+
+      .chat {
+        display: none;
+      }
+
+      .mobile-chat-open .sidebar {
+        display: none;
+      }
+
+      .mobile-chat-open .chat {
+        display: flex;
+      }
+
+      .back-btn {
+        display: grid;
+      }
+
+      .message-row {
+        max-width: 90%;
+      }
+    }
+  </style>
 </head>
-
 
 <body>
 
+<div class="app">
 
-<header class="header">
+  <!-- =========================================
+       TOPBAR
+  ========================================== -->
 
-    <a
-        href="community-chat.html"
-        class="logo">
-        Community Chat
-    </a>
+  <header class="topbar">
 
-    <div class="header-actions">
+    <div class="brand">
+      <div class="brand-icon">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+      <span>LetsStudy Pro</span>
+    </div>
+
+    <div class="search">
+      <i class="fa-solid fa-search"></i>
+      <input
+        id="searchInput"
+        type="search"
+        placeholder="Search conversations..."
+        autocomplete="off"
+      >
+    </div>
+
+    <div class="top-actions">
+
+      <button
+        class="icon-btn"
+        id="themeBtn"
+        title="Toggle theme"
+      >
+        <i class="fa-solid fa-moon"></i>
+      </button>
+
+      <button
+        class="icon-btn"
+        id="notificationBtn"
+        title="Notifications"
+      >
+        <i class="fa-regular fa-bell"></i>
+      </button>
+
+      <div
+        class="avatar"
+        id="topAvatar"
+      >
+        LS
+      </div>
+
+    </div>
+
+  </header>
+
+
+  <!-- =========================================
+       MAIN
+  ========================================== -->
+
+  <main class="main">
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+      <div class="sidebar-header">
+
+        <h2>Messages</h2>
 
         <button
-            class="header-button"
-            onclick="showToast('Community members')">
-            👥 Members
+          class="new-chat"
+          id="newChatBtn"
+          title="New conversation"
+        >
+          <i class="fa-solid fa-plus"></i>
+        </button>
+
+      </div>
+
+      <div class="filters">
+
+        <button
+          class="filter active"
+          data-filter="all"
+        >
+          All
         </button>
 
         <button
-            class="header-button"
-            onclick="showToast('Notifications opened')">
-            🔔 Notifications
+          class="filter"
+          data-filter="direct"
+        >
+          Direct
         </button>
 
-        <a
-            href="dashboard.html"
-            class="header-button">
-            Dashboard
-        </a>
-
-    </div>
-
-</header>
-
-
-<div class="chat-layout">
-
-
-<!-- =========================
-     CHANNEL SIDEBAR
-========================= -->
-
-<aside class="sidebar">
-
-    <div class="sidebar-header">
-
-        <h2>
-            Community
-        </h2>
-
-        <p>
-            Learn, discuss and connect.
-        </p>
-
-    </div>
-
-
-    <div class="search-box">
-
-        <input
-            id="channelSearch"
-            type="search"
-            placeholder="Search channels..."
-            oninput="filterChannels()">
-
-    </div>
-
-
-    <div class="sidebar-title">
-        CHANNELS
-    </div>
-
-
-    <button
-        class="channel active"
-        data-channel="general"
-        onclick="switchChannel('general','General','Community-wide conversation')">
-
-        <span class="channel-icon">
-            #
-        </span>
-
-        <span>
-            General
-        </span>
-
-        <span class="channel-count">
-            128
-        </span>
-
-    </button>
-
-
-    <button
-        class="channel"
-        data-channel="study"
-        onclick="switchChannel('study','Study Help','Ask questions and share study tips')">
-
-        <span class="channel-icon">
-            📚
-        </span>
-
-        <span>
-            Study Help
-        </span>
-
-        <span class="channel-count">
-            84
-        </span>
-
-    </button>
-
-
-    <button
-        class="channel"
-        data-channel="coding"
-        onclick="switchChannel('coding','Coding','Programming and development')">
-
-        <span class="channel-icon">
-            💻
-        </span>
-
-        <span>
-            Coding
-        </span>
-
-        <span class="channel-count">
-            62
-        </span>
-
-    </button>
-
-
-    <button
-        class="channel"
-        data-channel="career"
-        onclick="switchChannel('career','Career','Jobs, careers and professional growth')">
-
-        <span class="channel-icon">
-            💼
-        </span>
-
-        <span>
-            Career
-        </span>
-
-        <span class="channel-count">
-            45
-        </span>
-
-    </button>
-
-
-    <button
-        class="channel"
-        data-channel="business"
-        onclick="switchChannel('business','Business','Entrepreneurship and business ideas')">
-
-        <span class="channel-icon">
-            🏢
-        </span>
-
-        <span>
-            Business
-        </span>
-
-        <span class="channel-count">
-            31
-        </span>
-
-    </button>
-
-
-    <button
-        class="channel"
-        data-channel="projects"
-        onclick="switchChannel('projects','Projects','Collaborate and build together')">
-
-        <span class="channel-icon">
-            🚀
-        </span>
-
-        <span>
-            Projects
-        </span>
-
-        <span class="channel-count">
-            27
-        </span>
-
-    </button>
-
-
-    <button
-        class="channel"
-        data-channel="random"
-        onclick="switchChannel('random','Random','Casual community conversation')">
-
-        <span class="channel-icon">
-            🎉
-        </span>
-
-        <span>
-            Random
-        </span>
-
-        <span class="channel-count">
-            19
-        </span>
-
-    </button>
-
-
-    <div class="sidebar-title">
-        COMMUNITY
-    </div>
-
-
-    <a
-        class="channel"
-        href="study-groups.html">
-
-        <span class="channel-icon">
-            👥
-        </span>
-
-        <span>
-            Study Groups
-        </span>
-
-    </a>
-
-
-    <a
-        class="channel"
-        href="course-discussion.html">
-
-        <span class="channel-icon">
-            💬
-        </span>
-
-        <span>
-            Course Discussion
-        </span>
-
-    </a>
-
-
-    <a
-        class="channel"
-        href="live-discussion.html">
-
-        <span class="channel-icon">
-            🔴
-        </span>
-
-        <span>
-            Live Discussion
-        </span>
-
-    </a>
-
-
-    <div class="sidebar-footer">
-
-        <div class="profile-mini">
-
-            <div class="avatar">
-                ME
-            </div>
-
-            <div>
-                <strong>
-                    My Account
-                </strong>
-
-                <span>
-                    ● Online
-                </span>
-            </div>
+        <button
+          class="filter"
+          data-filter="groups"
+        >
+          Groups
+        </button>
+
+        <button
+          class="filter"
+          data-filter="unread"
+        >
+          Unread
+        </button>
+
+      </div>
+
+      <div
+        class="conversation-list"
+        id="conversationList"
+      >
+      </div>
+
+    </aside>
+
+
+    <!-- CHAT -->
+
+    <section class="chat">
+
+      <header class="chat-header">
+
+        <button
+          class="icon-btn back-btn"
+          id="backBtn"
+        >
+          <i class="fa-solid fa-arrow-left"></i>
+        </button>
+
+        <div
+          class="avatar"
+          id="chatAvatar"
+        >
+          LS
+        </div>
+
+        <div class="chat-user">
+
+          <strong id="chatName">
+            LetsStudy Pro Community
+          </strong>
+
+          <span
+            class="online-status"
+            id="chatStatus"
+          >
+            Online
+          </span>
 
         </div>
 
-    </div>
+        <button
+          class="icon-btn"
+          id="chatSearchBtn"
+          title="Search messages"
+        >
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
 
-</aside>
+        <button
+          class="icon-btn"
+          id="chatMoreBtn"
+          title="More"
+        >
+          <i class="fa-solid fa-ellipsis-vertical"></i>
+        </button>
 
-
-<!-- =========================
-     CHAT
-========================= -->
-
-<main class="chat">
-
-    <header class="chat-header">
-
-        <div class="channel-heading">
-
-            <button
-                class="tool-button mobile-channel-button"
-                onclick="showToast('Use the desktop view to browse channels')">
-                ☰
-            </button>
-
-            <div class="channel-heading-icon">
-                #
-            </div>
-
-            <div>
-
-                <h1 id="channelTitle">
-                    General
-                </h1>
-
-                <p id="channelDescription">
-                    Community-wide conversation
-                </p>
-
-            </div>
-
-        </div>
+      </header>
 
 
-        <div class="chat-tools">
-
-            <button
-                class="tool-button"
-                title="Search messages"
-                onclick="focusMessageSearch()">
-                🔎
-            </button>
-
-            <button
-                class="tool-button"
-                title="Pinned messages"
-                onclick="showToast('Pinned messages opened')">
-                📌
-            </button>
-
-            <button
-                class="tool-button"
-                title="Channel information"
-                onclick="showToast('Channel information opened')">
-                ⓘ
-            </button>
-
-        </div>
-
-    </header>
-
-
-    <section
+      <div
+        class="messages"
         id="messages"
-        class="messages">
+      >
 
+        <div class="empty-chat">
 
-        <div class="date-divider">
-            TODAY
-        </div>
+          <div>
 
-
-        <div class="message">
-
-            <div class="message-avatar">
-                AM
+            <div class="empty-chat-icon">
+              <i class="fa-regular fa-comments"></i>
             </div>
 
-            <div class="message-content">
+            <h2>Welcome to Community Chat</h2>
 
-                <div class="message-meta">
+            <p>
+              Connect with learners, instructors and creators
+              across the LetsStudy Pro ecosystem.
+            </p>
 
-                    <span class="message-name">
-                        Amina
-                    </span>
-
-                    <span class="message-time">
-                        09:12
-                    </span>
-
-                </div>
-
-                <div class="message-text">
-                    Good morning everyone! What is everyone
-                    studying today?
-                </div>
-
-                <div class="message-actions">
-
-                    <button
-                        class="message-action"
-                        onclick="reactToMessage(this)">
-                        👍
-                    </button>
-
-                    <button
-                        class="message-action"
-                        onclick="replyTo('Amina')">
-                        Reply
-                    </button>
-
-                </div>
-
-            </div>
+          </div>
 
         </div>
 
+      </div>
 
-        <div class="message">
 
-            <div class="message-avatar">
-                DK
-            </div>
+      <div class="composer">
 
-            <div class="message-content">
+        <div class="composer-inner">
 
-                <div class="message-meta">
+          <button
+            class="attach-btn"
+            id="attachBtn"
+            title="Attach file"
+          >
+            <i class="fa-solid fa-paperclip"></i>
+          </button>
 
-                    <span class="message-name">
-                        Daniel
-                    </span>
+          <textarea
+            id="messageInput"
+            placeholder="Write a message..."
+            rows="1"
+          ></textarea>
 
-                    <span class="message-time">
-                        09:18
-                    </span>
-
-                </div>
-
-                <div class="message-text">
-                    I'm working through my web development
-                    course. I am currently learning JavaScript.
-                </div>
-
-                <div class="message-actions">
-
-                    <button
-                        class="message-action"
-                        onclick="reactToMessage(this)">
-                        👍
-                    </button>
-
-                    <button
-                        class="message-action"
-                        onclick="replyTo('Daniel')">
-                        Reply
-                    </button>
-
-                </div>
-
-            </div>
+          <button
+            class="send-btn"
+            id="sendBtn"
+            title="Send message"
+          >
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
 
         </div>
 
-
-        <div class="message">
-
-            <div class="message-avatar">
-                SJ
-            </div>
-
-            <div class="message-content">
-
-                <div class="message-meta">
-
-                    <span class="message-name">
-                        Sarah
-                    </span>
-
-                    <span class="message-time">
-                        09:27
-                    </span>
-
-                </div>
-
-                <div class="message-text">
-                    Nice! If anyone needs help with JavaScript,
-                    feel free to ask here.
-                </div>
-
-                <div class="message-actions">
-
-                    <button
-                        class="message-action"
-                        onclick="reactToMessage(this)">
-                        ❤️
-                    </button>
-
-                    <button
-                        class="message-action"
-                        onclick="replyTo('Sarah')">
-                        Reply
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="system-message">
-            You joined the community chat.
-        </div>
-
-
-        <div class="message">
-
-            <div class="message-content">
-
-                <div class="message-meta">
-
-                    <span class="message-name">
-                        James
-                    </span>
-
-                    <span class="message-time">
-                        10:04
-                    </span>
-
-                </div>
-
-                <div class="message-text">
-                    Remember to check the study groups if you
-                    want to work together on a project.
-                </div>
-
-                <div class="message-actions">
-
-                    <button
-                        class="message-action"
-                        onclick="reactToMessage(this)">
-                        👍
-                    </button>
-
-                    <button
-                        class="message-action"
-                        onclick="replyTo('James')">
-                        Reply
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="message">
-
-            <div class="message-avatar">
-                MK
-            </div>
-
-            <div class="message-content">
-
-                <div class="message-meta">
-
-                    <span class="message-name">
-                        Michael
-                    </span>
-
-                    <span class="message-time">
-                        10:16
-                    </span>
-
-                </div>
-
-                <div class="message-text">
-                    I have just joined the programming study
-                    group. Looking forward to learning with everyone.
-                </div>
-
-                <div class="message-actions">
-
-                    <button
-                        class="message-action"
-                        onclick="reactToMessage(this)">
-                        👍
-                    </button>
-
-                    <button
-                        class="message-action"
-                        onclick="replyTo('Michael')">
-                        Reply
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="message">
-
-            <div class="message-avatar">
-                AN
-            </div>
-
-            <div class="message-content">
-
-                <div class="message-meta">
-
-                    <span class="message-name">
-                        Anita
-                    </span>
-
-                    <span class="message-time">
-                        10:31
-                    </span>
-
-                </div>
-
-                <div class="message-text">
-                    Does anyone have recommendations for good
-                    resources for learning frontend development?
-                </div>
-
-                <div class="message-actions">
-
-                    <button
-                        class="message-action"
-                        onclick="reactToMessage(this)">
-                        ❤️
-                    </button>
-
-                    <button
-                        class="message-action"
-                        onclick="replyTo('Anita')">
-                        Reply
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="message">
-
-            <div class="message-avatar">
-                RK
-            </div>
-
-            <div class="message-content">
-
-                <div class="message-meta">
-
-                    <span class="message-name">
-                        Robert
-                    </span>
-
-                    <span class="message-time">
-                        10:45
-                    </span>
-
-                </div>
-
-                <div class="message-text">
-                    Start with HTML and CSS, then move into
-                    JavaScript. Building small projects is also
-                    a great way to practice.
-                </div>
-
-                <div class="message-actions">
-
-                    <button
-                        class="message-action"
-                        onclick="reactToMessage(this)">
-                        👍
-                    </button>
-
-                    <button
-                        class="message-action"
-                        onclick="replyTo('Robert')">
-                        Reply
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="system-message">
-            24 members are currently online.
-        </div>
-
+      </div>
 
     </section>
 
+  </main>
 
-    <!-- =========================
-         MESSAGE COMPOSER
-    ========================= -->
+</div>
 
-    <div class="composer">
+<input
+  type="file"
+  id="fileInput"
+  hidden
+>
 
-        <div
-            id="replyPreview"
-            class="reply-preview">
-
-            <strong id="replyName">
-                Replying to
-            </strong>
-
-            <span id="replyText">
-                Message
-            </span>
-
-        </div>
+<div
+  class="toast"
+  id="toast"
+></div>
 
 
-        <div class="composer-box">
+<!-- =========================================
+     FIREBASE
+========================================== -->
 
-            <button
-                class="attach-button"
-                type="button"
-                title="Attach file"
-                onclick="showToast('File attachment selected')">
-                📎
-            </button>
+<script type="module">
 
+  import {
+    initializeApp
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
-            <textarea
-                id="messageInput"
-                placeholder="Message the community..."
-                rows="1"
-                aria-label="Message"></textarea>
+  import {
+    getAuth,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
-
-            <button
-                class="emoji-button"
-                type="button"
-                title="Add emoji"
-                onclick="addEmoji()">
-                😊
-            </button>
-
-
-            <button
-                class="send-button"
-                type="button"
-                title="Send message"
-                onclick="sendMessage()">
-                ➤
-            </button>
-
-        </div>
+  import {
+    getFirestore,
+    collection,
+    query,
+    where,
+    orderBy,
+    limit,
+    onSnapshot,
+    addDoc,
+    updateDoc,
+    doc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 
-        <div class="composer-hint">
-            Press Enter to send · Shift + Enter for a new line
-        </div>
+  /* =========================================
+     FIREBASE CONFIG
+  ========================================== */
+
+  const firebaseConfig = {
+
+    apiKey: "YOUR_API_KEY",
+
+    authDomain:
+      "let-s-study-pro-course.firebaseapp.com",
+
+    projectId:
+      "let-s-study-pro-course",
+
+    storageBucket:
+      "let-s-study-pro-course.firebasestorage.app",
+
+    messagingSenderId:
+      "YOUR_MESSAGING_SENDER_ID",
+
+    appId:
+      "YOUR_APP_ID"
+
+  };
+
+
+  const app =
+    initializeApp(firebaseConfig);
+
+  const auth =
+    getAuth(app);
+
+  const db =
+    getFirestore(app);
+
+
+  /* =========================================
+     STATE
+  ========================================== */
+
+  let currentUser = null;
+
+  let activeConversationId = null;
+
+  let unsubscribeMessages = null;
+
+  let unsubscribeConversations = null;
+
+
+  /* =========================================
+     ELEMENTS
+  ========================================== */
+
+  const conversationList =
+    document.getElementById(
+      "conversationList"
+    );
+
+  const messages =
+    document.getElementById(
+      "messages"
+    );
+
+  const messageInput =
+    document.getElementById(
+      "messageInput"
+    );
+
+  const sendBtn =
+    document.getElementById(
+      "sendBtn"
+    );
+
+  const toast =
+    document.getElementById(
+      "toast"
+    );
+
+
+  /* =========================================
+     TOAST
+  ========================================== */
+
+  function showToast(message){
+
+    toast.textContent =
+      message;
+
+    toast.classList.add("show");
+
+    setTimeout(()=>{
+      toast.classList.remove("show");
+    },3000);
+
+  }
+
+
+  /* =========================================
+     AUTH
+  ========================================== */
+
+  onAuthStateChanged(
+    auth,
+    user => {
+
+      if(!user){
+
+        window.location.href =
+          "login.html?redirect=" +
+          encodeURIComponent(
+            location.pathname +
+            location.search
+          );
+
+        return;
+
+      }
+
+      currentUser =
+        user;
+
+      document
+        .getElementById("topAvatar")
+        .textContent =
+        (
+          user.displayName ||
+          user.email ||
+          "LS"
+        )
+        .charAt(0)
+        .toUpperCase();
+
+      loadConversations();
+
+    }
+  );
+
+
+  /* =========================================
+     LOAD CONVERSATIONS
+  ========================================== */
+
+  function loadConversations(){
+
+    if(unsubscribeConversations){
+      unsubscribeConversations();
+    }
+
+    const conversationsQuery =
+      query(
+        collection(
+          db,
+          "conversations"
+        ),
+        where(
+          "memberIds",
+          "array-contains",
+          currentUser.uid
+        ),
+        orderBy(
+          "updatedAt",
+          "desc"
+        ),
+        limit(50)
+      );
+
+    unsubscribeConversations =
+      onSnapshot(
+        conversationsQuery,
+        snapshot => {
+
+          conversationList.innerHTML = "";
+
+          if(snapshot.empty){
+
+            conversationList.innerHTML = `
+              <div style="
+                padding:30px 20px;
+                text-align:center;
+                color:var(--muted);
+              ">
+                <i class="fa-regular fa-comments"
+                   style="font-size:30px;margin-bottom:12px;">
+                </i>
+
+                <p>No conversations yet.</p>
+              </div>
+            `;
+
+            return;
+
+          }
+
+          snapshot.forEach(
+            conversation => {
+
+              renderConversation(
+                conversation.id,
+                conversation.data()
+              );
+
+            }
+          );
+
+        },
+        error => {
+
+          console.error(
+            error
+          );
+
+          showToast(
+            "Unable to load conversations."
+          );
+
+        }
+      );
+
+  }
+
+
+  /* =========================================
+     RENDER CONVERSATION
+  ========================================== */
+
+  function renderConversation(
+    id,
+    data
+  ){
+
+    const item =
+      document.createElement(
+        "div"
+      );
+
+    item.className =
+      "conversation";
+
+    if(
+      id ===
+      activeConversationId
+    ){
+
+      item.classList.add(
+        "active"
+      );
+
+    }
+
+    const name =
+      data.name ||
+      "Conversation";
+
+    const lastMessage =
+      data.lastMessage ||
+      "No messages yet.";
+
+    item.innerHTML = `
+
+      <div class="avatar">
+        ${(name.charAt(0) || "C").toUpperCase()}
+      </div>
+
+      <div class="conversation"
+     data-conversation-id=""
+     role="button"
+     tabindex="0">
+
+  <div class="avatar conversation-avatar">
+    <span class="conversation-avatar-text">LS</span>
+    <span class="online-dot"></span>
+  </div>
+
+  <div class="conversation-info">
+
+    <div class="conversation-top">
+
+      <span class="conversation-name">
+        LetsStudy Pro Community
+      </span>
+
+      <span class="conversation-time">
+        Now
+      </span>
 
     </div>
 
-</main>
+    <div class="conversation-bottom">
 
+      <span class="conversation-preview">
+        Start a new conversation
+      </span>
 
-<!-- =========================
-     MEMBERS PANEL
-========================= -->
-
-<aside class="members">
-
-    <div class="members-header">
-
-        <h2>
-            Members
-        </h2>
-
-        <p>
-            24 online · 186 members
-        </p>
+      <span class="unread" hidden>
+        0
+      </span>
 
     </div>
 
+  </div>
 
-    <div class="member-section">
-        ONLINE
-    </div>
+</div>
 
-
-    <div class="member">
-
-        <div class="member-avatar">
-            AM
-            <span class="online-dot"></span>
-        </div>
-
-        <div class="member-info">
-
-            <strong>
-                Amina
-            </strong>
-
-            <span>
-                Student
-            </span>
-
-        </div>
-
-    </div>
-
-
-    <div class="member">
-
-        <div class="member-avatar">
-            DK
-            <span class="online-dot"></span>
-        </div>
-
-        <div class="member-info">
-
-            <strong>
-                Daniel
-            </strong>
-
-            <span>
-                Developer
-            </span>
-
-        </div>
-
-    </div>
-
-
-    <div class="member">
-
-        <div class="member-avatar">
-            SJ
-            <span class="online-dot"></span>
-        </div>
-
-        <div class="member-info">
-
-            <strong>
-                Sarah
-            </strong>
-
-            <span>
-                Designer
-            </span>
-
-        </div>
-
-    </div>
-
-
-    <div class="member">
-
-        <div class="member-avatar">
-            JM
-            <span class="online-dot"></span>
-        </div>
-
-        <div class="member-info">
-
-            <strong>
-                James
-            </strong>
-
-            <span>
-                Mentor
-            </span>
-
-        </div>
-
-    </div>
-
-
-    <div class="member">
-
-        <div class="member-avatar">
-            MK
-            <span class="online-dot"></span>
-        </div>
-
-        <div class="member-info">
-
-            <strong>
-                Michael
-            </strong>
-
-            <span>
-                Student
-            </span>
-
-        </div>
-
-    </div>
-
-
-    <div class="member">
-
-        <div class="member-avatar">
-            AN
-            <span class="online-dot"></span>
-        </div>
-
-        <div class="member-info">
-
-            <strong>
-                Anita
-            </strong>
-
-            <span>
-                Student
-            </span>
-
-        </div>
-
-    </div>
-
-
-    <div class="member-section">
-        RECENTLY ACTIVE
-    </div>
-
-
-    <div class="member">
-
-        <div class="member-avatar">
-            RK
-        </div>
-
-        <div class="member-info">
-
-            <strong>
-                Robert
-            </strong>
-
-            <span>
-                12 min ago
-            </span>
-
-        </div>
-
-    </div>
-
-
-    <div class="member">
-
-        <div class="member-avatar">
-            EL
-        </div>
-
-        <div class="member-info">
-
-            <strong>
-                Elias
-            </strong>
-
-            <span>
-                20 min ago
-            </span>
-
-        </div>
-
-    </div>
+</div>
 
 </aside>
 
+
+<!-- =========================================
+     CHAT AREA
+========================================== -->
+
+<section class="chat">
+
+  <header class="chat-header">
+
+    <button
+      type="button"
+      class="icon-btn back-btn"
+      id="backBtn"
+      aria-label="Back to conversations"
+    >
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+
+    <div
+      class="avatar"
+      id="chatAvatar"
+    >
+      LS
+    </div>
+
+    <div class="chat-user">
+
+      <strong id="chatName">
+        LetsStudy Pro Community
+      </strong>
+
+      <span
+        class="online-status"
+        id="chatStatus"
+      >
+        Online
+      </span>
+
+    </div>
+
+    <button
+      type="button"
+      class="icon-btn"
+      id="chatSearchBtn"
+      title="Search messages"
+      aria-label="Search messages"
+    >
+      <i class="fa-solid fa-magnifying-glass"></i>
+    </button>
+
+    <button
+      type="button"
+      class="icon-btn"
+      id="chatMoreBtn"
+      title="More options"
+      aria-label="More options"
+    >
+      <i class="fa-solid fa-ellipsis-vertical"></i>
+    </button>
+
+  </header>
+
+
+  <!-- =======================================
+       MESSAGES
+  ======================================== -->
+
+  <div
+    class="messages"
+    id="messages"
+    aria-live="polite"
+  >
+
+    <div class="empty-chat">
+
+      <div>
+
+        <div class="empty-chat-icon">
+          <i class="fa-regular fa-comments"></i>
+        </div>
+
+        <h2>
+          Welcome to Community Chat
+        </h2>
+
+        <p>
+          Connect with learners, instructors
+          and creators across the LetsStudy Pro
+          ecosystem.
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =======================================
+       TYPING INDICATOR
+  ======================================== -->
+
+  <div
+    id="typingIndicator"
+    class="typing-indicator"
+    hidden
+  >
+    <span></span>
+    <span></span>
+    <span></span>
+    <em>Someone is typing...</em>
+  </div>
+
+
+  <!-- =======================================
+       COMPOSER
+  ======================================== -->
+
+  <div class="composer">
+
+    <div
+      class="reply-preview"
+      id="replyPreview"
+      hidden
+    >
+
+      <div class="reply-icon">
+        <i class="fa-solid fa-reply"></i>
+      </div>
+
+      <div class="reply-content">
+
+        <strong>
+          Replying to
+        </strong>
+
+        <span id="replyText">
+          Message
+        </span>
+
+      </div>
+
+      <button
+        type="button"
+        class="icon-btn"
+        id="cancelReplyBtn"
+        aria-label="Cancel reply"
+      >
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+    </div>
+
+
+    <div class="composer-inner">
+
+      <button
+        type="button"
+        class="attach-btn"
+        id="attachBtn"
+        title="Attach file"
+        aria-label="Attach file"
+      >
+        <i class="fa-solid fa-paperclip"></i>
+      </button>
+
+      <button
+        type="button"
+        class="attach-btn"
+        id="emojiBtn"
+        title="Emoji"
+        aria-label="Emoji"
+      >
+        <i class="fa-regular fa-face-smile"></i>
+      </button>
+
+      <textarea
+        id="messageInput"
+        rows="1"
+        maxlength="5000"
+        placeholder="Write a message..."
+        autocomplete="off"
+      ></textarea>
+
+      <button
+        type="button"
+        class="send-btn"
+        id="sendBtn"
+        title="Send message"
+        aria-label="Send message"
+      >
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+
+    </div>
+
+    <div class="composer-hint">
+      Press <strong>Enter</strong> to send ·
+      <strong>Shift + Enter</strong> for a new line
+    </div>
+
+  </div>
+
+</section>
+
+</main>
+
 </div>
 
 
-<!-- =========================
+<!-- =========================================
+     FILE INPUT
+========================================== -->
+
+<input
+  type="file"
+  id="fileInput"
+  hidden
+  accept="image/*,.pdf,.doc,.docx,.ppt,.pptx,.txt,.zip"
+>
+
+
+<!-- =========================================
      TOAST
-========================= -->
+========================================== -->
 
 <div
-    id="toast"
-    class="toast"
-    role="status"
-    aria-live="polite">
-</div>
+  class="toast"
+  id="toast"
+  role="status"
+  aria-live="polite"
+></div>
 
 
-<script>
+<!-- =========================================
+     FIREBASE
+========================================== -->
 
-/* =========================
-   STATE
-========================= */
+<script type="module">
 
-let currentChannel = "general";
-let replyTarget = null;
-let toastTimer = null;
+  import {
+    initializeApp
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+  import {
+    getAuth,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+  import {
+    getFirestore,
+    collection,
+    query,
+    where,
+    orderBy,
+    limit,
+    onSnapshot,
+    addDoc,
+    updateDoc,
+    doc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 
-/* =========================
-   TOAST
-========================= */
+  /* =========================================
+     FIREBASE CONFIG
+  ========================================== */
 
-function showToast(message){
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+  authDomain: "let-s-study-pro-course.firebaseapp.com",
+  databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId: "let-s-study-pro-course",
+  storageBucket: "let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId: "474928293390",
+  appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId: "G-85B7V5H5J0"
+};
 
-    const toast =
-        document.getElementById(
-            "toast"
-        );
+  const app =
+    initializeApp(
+      firebaseConfig
+    );
 
-    if(!toast){
-        return;
-    }
+  const auth =
+    getAuth(app);
+
+  const db =
+    getFirestore(app);
+
+
+  /* =========================================
+     STATE
+  ========================================== */
+
+  let currentUser = null;
+
+  let activeConversationId = null;
+
+  let unsubscribeMessages = null;
+
+  let unsubscribeConversations = null;
+
+  let replyToMessage = null;
+
+
+  /* =========================================
+     ELEMENTS
+  ========================================== */
+
+  const conversationList =
+    document.getElementById(
+      "conversationList"
+    );
+
+  const messages =
+    document.getElementById(
+      "messages"
+    );
+
+  const messageInput =
+    document.getElementById(
+      "messageInput"
+    );
+
+  const sendBtn =
+    document.getElementById(
+      "sendBtn"
+    );
+
+  const toast =
+    document.getElementById(
+      "toast"
+    );
+
+  const fileInput =
+    document.getElementById(
+      "fileInput"
+    );
+
+
+  /* =========================================
+     TOAST
+  ========================================== */
+
+  function showToast(
+    message
+  ){
 
     toast.textContent =
-        message;
+      message;
 
     toast.classList.add(
-        "show"
+      "show"
     );
 
-    clearTimeout(
-        toastTimer
+    setTimeout(
+      () => {
+
+        toast.classList.remove(
+          "show"
+        );
+
+      },
+      3000
     );
 
-    toastTimer =
-        setTimeout(
-            function(){
-
-                toast.classList.remove(
-                    "show"
-                );
-
-            },
-            2200
-        );
-
-}
+  }
 
 
-/* =========================
-   CHANNEL SWITCHING
-========================= */
+  /* =========================================
+     AUTH
+  ========================================== */
 
-function switchChannel(
-    channel,
-    title,
-    description
-){
+  onAuthStateChanged(
+    auth,
+    user => {
 
-    currentChannel =
-        channel;
+      if(!user){
 
-    document
-        .querySelectorAll(
-            ".channel[data-channel]"
-        )
-        .forEach(
-            function(button){
-
-                button.classList.toggle(
-                    "active",
-                    button.dataset.channel ===
-                    channel
-                );
-
-            }
-        );
-
-
-    const titleElement =
-        document.getElementById(
-            "channelTitle"
-        );
-
-    const descriptionElement =
-        document.getElementById(
-            "channelDescription"
-        );
-
-
-    if(titleElement){
-
-        titleElement.textContent =
-            title;
-
-    }
-
-
-    if(descriptionElement){
-
-        descriptionElement.textContent =
-            description;
-
-    }
-
-
-    clearReply();
-
-
-    const messages =
-        document.getElementById(
-            "messages"
-        );
-
-
-    if(messages){
-
-        messages.scrollTop = 0;
-
-    }
-
-
-    showToast(
-        "Switched to #" +
-        title
-    );
-
-}
-
-
-/* =========================
-   CHANNEL SEARCH
-========================= */
-
-function filterChannels(){
-
-    const search =
-        document.getElementById(
-            "channelSearch"
-        );
-
-    if(!search){
-        return;
-    }
-
-
-    const query =
-        search.value
-        .toLowerCase()
-        .trim();
-
-
-    document
-        .querySelectorAll(
-            ".channel[data-channel]"
-        )
-        .forEach(
-            function(channel){
-
-                const text =
-                    channel.textContent
-                    .toLowerCase();
-
-
-                channel.style.display =
-                    text.includes(query)
-                        ? "flex"
-                        : "none";
-
-            }
-        );
-
-}
-
-
-/* =========================
-   SEND MESSAGE
-========================= */
-
-function sendMessage(){
-
-    const input =
-        document.getElementById(
-            "messageInput"
-        );
-
-    const messages =
-        document.getElementById(
-            "messages"
-        );
-
-
-    if(!input || !messages){
-        return;
-    }
-
-
-    const text =
-        input.value.trim();
-
-
-    if(!text){
-
-        showToast(
-            "Write a message first."
-        );
-
-        input.focus();
+        location.href =
+          "login.html?redirect=" +
+          encodeURIComponent(
+            location.pathname +
+            location.search
+          );
 
         return;
 
+      }
+
+      currentUser =
+        user;
+
+      const name =
+        user.displayName ||
+        user.email ||
+        "User";
+
+      const topAvatar =
+        document.getElementById(
+          "topAvatar"
+        );
+
+      if(topAvatar){
+
+        topAvatar.textContent =
+          name
+            .charAt(0)
+            .toUpperCase();
+
+      }
+
+      loadConversations();
+
+    }
+  );
+
+
+  /* =========================================
+     LOAD CONVERSATIONS
+  ========================================== */
+
+  function loadConversations(){
+
+    if(
+      unsubscribeConversations
+    ){
+
+      unsubscribeConversations();
+
+    }
+
+    const conversationsQuery =
+      query(
+
+        collection(
+          db,
+          "conversations"
+        ),
+
+        where(
+          "memberIds",
+          "array-contains",
+          currentUser.uid
+        ),
+
+        orderBy(
+          "updatedAt",
+          "desc"
+        ),
+
+        limit(50)
+
+      );
+
+
+    unsubscribeConversations =
+      onSnapshot(
+
+        conversationsQuery,
+
+        snapshot => {
+
+          conversationList.innerHTML =
+            "";
+
+          if(
+            snapshot.empty
+          ){
+
+            conversationList.innerHTML = `
+
+              <div style="
+                padding:40px 20px;
+                text-align:center;
+                color:var(--muted);
+              ">
+
+                <i
+                  class="fa-regular fa-comments"
+                  style="
+                    font-size:32px;
+                    margin-bottom:14px;
+                  "
+                ></i>
+
+                <p>
+                  No conversations yet.
+                </p>
+
+              </div>
+
+            `;
+
+            return;
+
+          }
+
+
+          snapshot.forEach(
+            conversation => {
+
+              renderConversation(
+                conversation.id,
+                conversation.data()
+              );
+
+            }
+          );
+
+        },
+
+        error => {
+
+          console.error(
+            "Conversation error:",
+            error
+          );
+
+          showToast(
+            "Unable to load conversations."
+          );
+
+        }
+
+      );
+
+  }
+
+
+  /* =========================================
+     RENDER CONVERSATION
+  ========================================== */
+
+  function renderConversation(
+    id,
+    data
+  ){
+
+    const item =
+      document.createElement(
+        "div"
+      );
+
+    item.className =
+      "conversation";
+
+    if(
+      id ===
+      activeConversationId
+    ){
+
+      item.classList.add(
+        "active"
+      );
+
     }
 
 
-    const message =
-        document.createElement(
-            "div"
-        );
-
-    message.className =
-        "message";
+    const name =
+      data.name ||
+      "Conversation";
 
 
-    const now =
-        new Date();
+    const lastMessage =
+      data.lastMessage ||
+      "No messages yet.";
 
 
-    const time =
-        now.toLocaleTimeString(
-            [],
-            {
-                hour:"2-digit",
-                minute:"2-digit"
-            }
-        );
+    item.innerHTML = `
 
+      <div class="avatar conversation-avatar">
 
-    message.innerHTML = `
+        ${escapeHtml(
+          name
+            .charAt(0)
+            .toUpperCase()
+        )}
 
-        <div class="message-avatar">
-            ME
+      </div>
+
+      <div class="conversation-info">
+
+        <div class="conversation-top">
+
+          <span class="conversation-name">
+
+            ${escapeHtml(
+              name
+            )}
+
+          </span>
+
+          <span class="conversation-time">
+
+            ${formatTime(
+              data.updatedAt
+            )}
+
+          </span>
+
         </div>
 
-        <div class="message-content">
+        <div class="conversation-bottom">
 
-            <div class="message-meta">
+          <span class="conversation-preview">
 
-                <span class="message-name">
-                    You
-                </span>
+            ${escapeHtml(
+              lastMessage
+            )}
 
-                <span class="message-time">
-                    ${escapeHtml(time)}
-                </span>
-
-            </div>
-
-            <div class="message-text">
-                ${escapeHtml(text)}
-            </div>
-
-            <div class="message-actions">
-
-                <button
-                    class="message-action"
-                    type="button"
-                    onclick="reactToMessage(this)">
-                    👍
-                </button>
-
-                <button
-                    class="message-action"
-                    type="button"
-                    onclick="replyTo('You')">
-                    Reply
-                </button>
-
-            </div>
+          </span>
 
         </div>
+
+      </div>
+
+    `;
+
+
+    item.addEventListener(
+      "click",
+      () => {
+
+        openConversation(
+          id,
+          data
+        );
+
+      }
+    );
+
+
+    item.addEventListener(
+      "keydown",
+      event => {
+
+        if(
+          event.key ===
+          "Enter"
+        ){
+
+          openConversation(
+            id,
+            data
+          );
+
+        }
+
+      }
+    );
+
+
+    conversationList.appendChild(
+      item
+    );
+
+  }
+
+
+  /* =========================================
+     OPEN CONVERSATION
+  ========================================== */
+
+  function openConversation(
+    conversationId,
+    data
+  ){
+
+    activeConversationId =
+      conversationId;
+
+    document.body.classList.add(
+      "mobile-chat-open"
+    );
+
+
+    const chatName =
+      document.getElementById(
+        "chatName"
+      );
+
+    const chatAvatar =
+      document.getElementById(
+        "chatAvatar"
+      );
+
+
+    if(chatName){
+
+      chatName.textContent =
+        data.name ||
+        "Conversation";
+
+    }
+
+
+    if(chatAvatar){
+
+      chatAvatar.textContent =
+        (
+          data.name ||
+          "C"
+        )
+        .charAt(0)
+        .toUpperCase();
+
+    }
+
+
+    loadMessages(
+      conversationId
+    );
+
+  }
+
+
+  /* =========================================
+     LOAD MESSAGES
+  ========================================== */
+
+  function loadMessages(
+    conversationId
+  ){
+
+    if(
+      unsubscribeMessages
+    ){
+
+      unsubscribeMessages();
+
+    }
+
+
+    const messagesQuery =
+      query(
+
+        collection(
+          db,
+          "messages"
+        ),
+
+        where(
+          "conversationId",
+          "==",
+          conversationId
+        ),
+
+        orderBy(
+          "createdAt",
+          "asc"
+        ),
+
+        limit(200)
+
+      );
+
+
+    unsubscribeMessages =
+      onSnapshot(
+
+        messagesQuery,
+
+        snapshot => {
+
+          messages.innerHTML =
+            "";
+
+          if(
+            snapshot.empty
+          ){
+
+            messages.innerHTML = `
+
+              <div class="empty-chat">
+
+                <div>
+
+                  <div class="empty-chat-icon">
+
+                    <i class="
+                      fa-regular
+                      fa-comments
+                    "></i>
+
+                  </div>
+
+                  <h2>
+                    Start the conversation
+                  </h2>
+
+                  <p>
+                    Send the first message
+                    to this conversation.
+                  </p>
+
+                </div>
+
+              </div>
+
+            `;
+
+            return;
+
+          }
+
+
+          snapshot.forEach(
+            message => {
+
+              renderMessage(
+                message.id,
+                message.data()
+              );
+
+            }
+          );
+
+
+          messages.scrollTop =
+            messages.scrollHeight;
+
+        },
+
+        error => {
+
+          console.error(
+            "Messages error:",
+            error
+          );
+
+          showToast(
+            "Unable to load messages."
+          );
+
+        }
+
+      );
+
+  }
+
+
+  /* =========================================
+     RENDER MESSAGE
+  ========================================== */
+
+  function renderMessage(
+    messageId,
+    data
+  ){
+
+    const mine =
+      data.senderId ===
+      currentUser.uid;
+
+
+    const row =
+      document.createElement(
+        "div"
+      );
+
+    row.className =
+      "message-row" +
+      (
+        mine
+          ? " me"
+          : ""
+      );
+
+
+    const senderName =
+      data.senderName ||
+      "User";
+
+
+    row.innerHTML = `
+
+      <div class="message-avatar">
+
+        ${escapeHtml(
+          senderName
+            .charAt(0)
+            .toUpperCase()
+        )}
+
+      </div>
+
+
+      <div class="message">
+
+        ${
+          !mine
+            ? `
+
+              <div class="message-author">
+
+                ${escapeHtml(
+                  senderName
+                )}
+
+              </div>
+
+            `
+            : ""
+        }
+
+
+        <div class="message-text">
+
+          ${escapeHtml(
+            data.text ||
+            ""
+          )}
+
+        </div>
+
+
+        <div class="message-meta">
+
+          ${formatTime(
+            data.createdAt
+          )}
+
+        </div>
+
+      </div>
 
     `;
 
 
     messages.appendChild(
-        message
+      row
     );
 
-
-    input.value = "";
-
-    autoResize(
-        input
-    );
-
-    clearReply();
+  }
 
 
-    messages.scrollTop =
-        messages.scrollHeight;
+  /* =========================================
+     SEND MESSAGE
+  ========================================== */
+
+  async function sendMessage(){
+
+    const text =
+      messageInput.value.trim();
 
 
-    showToast(
-        "Message sent"
-    );
+    if(!text){
 
-}
-
-
-/* =========================
-   REPLY
-========================= */
-
-function replyTo(name){
-
-    replyTarget =
-        name;
-
-
-    const preview =
-        document.getElementById(
-            "replyPreview"
-        );
-
-    const replyName =
-        document.getElementById(
-            "replyName"
-        );
-
-    const replyText =
-        document.getElementById(
-            "replyText"
-        );
-
-
-    if(!preview){
-        return;
-    }
-
-
-    if(replyName){
-
-        replyName.textContent =
-            "Replying to " +
-            name;
+      return;
 
     }
-
-
-    if(replyText){
-
-        replyText.textContent =
-            "Your reply will be sent in this channel.";
-
-    }
-
-
-    preview.style.display =
-        "block";
-
-
-    const input =
-        document.getElementById(
-            "messageInput"
-        );
-
-
-    if(input){
-
-        input.focus();
-
-    }
-
-}
-
-
-function clearReply(){
-
-    replyTarget =
-        null;
-
-
-    const preview =
-        document.getElementById(
-            "replyPreview"
-        );
-
-
-    if(preview){
-
-        preview.style.display =
-            "none";
-
-    }
-
-}
-
-
-/* =========================
-   REACTIONS
-========================= */
-
-function reactToMessage(button){
-
-    if(!button){
-        return;
-    }
-
-
-    const current =
-        button.textContent.trim();
-
-
-    if(current === "👍"){
-
-        button.textContent =
-            "👍 1";
-
-    }else{
-
-        button.textContent =
-            "👍";
-
-    }
-
-}
-
-
-/* =========================
-   EMOJI
-========================= */
-
-function addEmoji(){
-
-    const input =
-        document.getElementById(
-            "messageInput"
-        );
-
-
-    if(!input){
-        return;
-    }
-
-
-    const start =
-        input.selectionStart;
-
-
-    const end =
-        input.selectionEnd;
-
-
-    const emoji =
-        " 😊";
-
-
-    input.value =
-        input.value.substring(
-            0,
-            start
-        ) +
-        emoji +
-        input.value.substring(
-            end
-        );
-
-
-    input.focus();
-
-
-    input.selectionStart =
-        input.selectionEnd =
-            start +
-            emoji.length;
-
-
-    autoResize(
-        input
-    );
-
-}
-
-
-/* =========================
-   MESSAGE SEARCH
-========================= */
-
-function focusMessageSearch(){
-
-    const query =
-        prompt(
-            "Search messages:"
-        );
 
 
     if(
-        query === null ||
-        !query.trim()
+      !activeConversationId
     ){
 
-        return;
+      showToast(
+        "Select a conversation first."
+      );
+
+      return;
 
     }
 
 
-    const term =
-        query
-        .toLowerCase()
-        .trim();
+    sendBtn.disabled =
+      true;
 
 
-    let found = 0;
+    try{
 
+      await addDoc(
 
-    document
-        .querySelectorAll(
-            ".message"
-        )
-        .forEach(
-            function(message){
+        collection(
+          db,
+          "messages"
+        ),
 
-                const text =
-                    message.textContent
-                    .toLowerCase();
+        {
 
+          conversationId:
+            activeConversationId,
 
-                if(
-                    text.includes(term)
-                ){
+          senderId:
+            currentUser.uid,
 
-                    message.style.background =
-                        "#eff6ff";
+          senderName:
+            currentUser.displayName ||
+            currentUser.email ||
+            "User",
 
-                    found++;
+          text:
+            text,
 
-                }else{
+          replyTo:
+            replyToMessage
+              ? replyToMessage.id
+              : null,
 
-                    message.style.background =
-                        "";
-
-                }
-
-            }
-        );
-
-
-    showToast(
-        found +
-        " message" +
-        (
-            found === 1
-                ? ""
-                : "s"
-        ) +
-        " found"
-    );
-
-}
-
-
-/* =========================
-   TEXTAREA
-========================= */
-
-const messageInput =
-    document.getElementById(
-        "messageInput"
-    );
-
-
-if(messageInput){
-
-    messageInput.addEventListener(
-        "input",
-        function(){
-
-            autoResize(
-                this
-            );
+          createdAt:
+            serverTimestamp()
 
         }
-    );
+
+      );
 
 
-    messageInput.addEventListener(
-        "keydown",
-        function(event){
+      await updateDoc(
 
-            if(
-                event.key === "Enter" &&
-                !event.shiftKey
-            ){
+        doc(
+          db,
+          "conversations",
+          activeConversationId
+        ),
 
-                event.preventDefault();
+        {
 
-                sendMessage();
+          lastMessage:
+            text,
 
-            }
+          updatedAt:
+            serverTimestamp()
 
         }
-    );
 
-}
-
-
-function autoResize(
-    textarea
-){
-
-    if(!textarea){
-        return;
-    }
+      );
 
 
-    textarea.style.height =
+      messageInput.value =
+        "";
+
+      messageInput.style.height =
         "auto";
 
 
-    textarea.style.height =
-        Math.min(
-            textarea.scrollHeight,
-            110
-        ) +
-        "px";
-
-}
-
-
-/* =========================
-   KEYBOARD SHORTCUTS
-========================= */
-
-document.addEventListener(
-    "keydown",
-    function(event){
-
-        const active =
-            document.activeElement;
-
-
-        const isTyping =
-            active &&
-            (
-                active.tagName === "INPUT" ||
-                active.tagName === "TEXTAREA"
-            );
-
-
-        if(
-            event.key === "/" &&
-            !isTyping
-        ){
-
-            event.preventDefault();
-
-
-            if(messageInput){
-
-                messageInput.focus();
-
-            }
-
-        }
-
-
-        if(
-            event.key === "Escape"
-        ){
-
-            clearReply();
-
-        }
+      cancelReply();
 
     }
-);
+
+    catch(error){
+
+      console.error(
+        error
+      );
+
+      showToast(
+        "Message could not be sent."
+      );
+
+    }
+
+    finally{
+
+      sendBtn.disabled =
+        false;
+
+    }
+
+  }
 
 
-/* =========================
-   ESCAPE HTML
-========================= */
+  /* =========================================
+     SEND EVENTS
+  ========================================== */
 
-function escapeHtml(
-    value
-){
-
-    const div =
-        document.createElement(
-            "div"
-        );
-
-    div.textContent =
-        value;
-
-    return div.innerHTML;
-
-}
+  sendBtn.addEventListener(
+    "click",
+    sendMessage
+  );
 
 
-/* =========================
-   INITIALIZATION
-========================= */
+  messageInput.addEventListener(
+    "keydown",
+    event => {
 
-if(messageInput){
+      if(
+        event.key ===
+        "Enter" &&
+        !event.shiftKey
+      ){
 
-    autoResize(
-        messageInput
+        event.preventDefault();
+
+        sendMessage();
+
+      }
+
+    }
+  );
+
+
+  messageInput.addEventListener(
+    "input",
+    () => {
+
+      messageInput.style.height =
+        "auto";
+
+      messageInput.style.height =
+        Math.min(
+          messageInput.scrollHeight,
+          130
+        ) + "px";
+
+    }
+  );
+
+
+  /* =========================================
+     ATTACHMENT
+  ========================================== */
+
+  document
+    .getElementById(
+      "attachBtn"
+    )
+    .addEventListener(
+      "click",
+      () => {
+
+        fileInput.click();
+
+      }
     );
 
-}
+
+  fileInput.addEventListener(
+    "change",
+    event => {
+
+      const file =
+        event.target.files[0];
+
+      if(!file){
+
+        return;
+
+      }
+
+      showToast(
+        "Selected: " +
+        file.name
+      );
+
+    }
+  );
+
+
+  /* =========================================
+     REPLY
+  ========================================== */
+
+  function cancelReply(){
+
+    replyToMessage =
+      null;
+
+    const preview =
+      document.getElementById(
+        "replyPreview"
+      );
+
+    if(preview){
+
+      preview.hidden =
+        true;
+
+    }
+
+  }
+
+
+  const cancelReplyBtn =
+    document.getElementById(
+      "cancelReplyBtn"
+    );
+
+
+  if(cancelReplyBtn){
+
+    cancelReplyBtn.addEventListener(
+      "click",
+      cancelReply
+    );
+
+  }
+
+
+  /* =========================================
+     BACK
+  ========================================== */
+
+  document
+    .getElementById(
+      "backBtn"
+    )
+    .addEventListener(
+      "click",
+      () => {
+
+        document.body.classList.remove(
+          "mobile-chat-open"
+        );
+
+      }
+    );
+
+
+  /* =========================================
+     THEME
+  ========================================== */
+
+  document
+    .getElementById(
+      "themeBtn"
+    )
+    .addEventListener(
+      "click",
+      () => {
+
+        document.body.classList.toggle(
+          "dark"
+        );
+
+
+        const icon =
+          document.querySelector(
+            "#themeBtn i"
+          );
+
+
+        if(icon){
+
+          icon.className =
+            document.body.classList.contains(
+              "dark"
+            )
+              ? "fa-solid fa-sun"
+              : "fa-solid fa-moon";
+
+        }
+
+      }
+    );
+
+
+  /* =========================================
+     SEARCH CONVERSATIONS
+  ========================================== */
+
+  document
+    .getElementById(
+      "searchInput"
+    )
+    .addEventListener(
+      "input",
+      event => {
+
+        const term =
+          event.target.value
+            .toLowerCase()
+            .trim();
+
+
+        document
+          .querySelectorAll(
+            ".conversation"
+          )
+          .forEach(
+            item => {
+
+                  item.style.display =
+  item.textContent
+    .toLowerCase()
+    .includes(term)
+      ? "flex"
+      : "none";
+
+            }
+          );
+
+      }
+    );
+
+
+  /* =========================================
+     NEW CHAT
+  ========================================== */
+
+  const newChatBtn =
+    document.getElementById(
+      "newChatBtn"
+    );
+
+  if(newChatBtn){
+
+    newChatBtn.addEventListener(
+      "click",
+      () => {
+
+        showToast(
+          "New conversation is ready."
+        );
+
+      }
+    );
+
+  }
+
+
+  /* =========================================
+     NOTIFICATIONS
+  ========================================== */
+
+  const notificationBtn =
+    document.getElementById(
+      "notificationBtn"
+    );
+
+  if(notificationBtn){
+
+    notificationBtn.addEventListener(
+      "click",
+      () => {
+
+        showToast(
+          "Notifications are currently available in the community system."
+        );
+
+      }
+    );
+
+  }
+
+
+  /* =========================================
+     CHAT SEARCH
+  ========================================== */
+
+  const chatSearchBtn =
+    document.getElementById(
+      "chatSearchBtn"
+    );
+
+  if(chatSearchBtn){
+
+    chatSearchBtn.addEventListener(
+      "click",
+      () => {
+
+        const searchInput =
+          document.getElementById(
+            "searchInput"
+          );
+
+        if(searchInput){
+
+          searchInput.focus();
+
+        }
+
+      }
+    );
+
+  }
+
+
+  /* =========================================
+     CHAT MORE MENU
+  ========================================== */
+
+  const chatMoreBtn =
+    document.getElementById(
+      "chatMoreBtn"
+    );
+
+  if(chatMoreBtn){
+
+    chatMoreBtn.addEventListener(
+      "click",
+      () => {
+
+        showToast(
+          "Conversation options."
+        );
+
+      }
+    );
+
+  }
+
+
+  /* =========================================
+     EMOJI BUTTON
+  ========================================== */
+
+  const emojiBtn =
+    document.getElementById(
+      "emojiBtn"
+    );
+
+  if(emojiBtn){
+
+    emojiBtn.addEventListener(
+      "click",
+      () => {
+
+        const emojis = [
+          "😀",
+          "😂",
+          "😍",
+          "🔥",
+          "👍",
+          "❤️",
+          "🎉",
+          "👏",
+          "🙏",
+          "💡"
+        ];
+
+        const emoji =
+          emojis[
+            Math.floor(
+              Math.random() *
+              emojis.length
+            )
+          ];
+
+        messageInput.value +=
+          emoji;
+
+        messageInput.focus();
+
+        messageInput.dispatchEvent(
+          new Event("input")
+        );
+
+      }
+    );
+
+  }
+
+
+  /* =========================================
+     MOBILE BACK BUTTON
+  ========================================== */
+
+  const backBtn =
+    document.getElementById(
+      "backBtn"
+    );
+
+  if(backBtn){
+
+    backBtn.addEventListener(
+      "click",
+      () => {
+
+        document.body.classList.remove(
+          "mobile-chat-open"
+        );
+
+      }
+    );
+
+  }
+
+
+  /* =========================================
+     GLOBAL ESCAPE KEY
+  ========================================== */
+
+  document.addEventListener(
+    "keydown",
+    event => {
+
+      if(
+        event.key ===
+        "Escape"
+      ){
+
+        document.body.classList.remove(
+          "mobile-chat-open"
+        );
+
+        cancelReply();
+
+      }
+
+    }
+  );
+
+
+  /* =========================================
+     WINDOW CLEANUP
+  ========================================== */
+
+  window.addEventListener(
+    "beforeunload",
+    () => {
+
+      if(
+        unsubscribeMessages
+      ){
+
+        unsubscribeMessages();
+
+      }
+
+      if(
+        unsubscribeConversations
+      ){
+
+        unsubscribeConversations();
+
+      }
+
+    }
+  );
+
+
+  /* =========================================
+     PAGE READY
+  ========================================== */
+
+  console.log(
+    "LetsStudy Pro Community Chat initialized."
+  );
 
 </script>
+
+
+<!-- =========================================
+     ACCESSIBILITY / NOSCRIPT
+========================================== -->
+
+<noscript>
+
+  <div style="
+    padding:30px;
+    text-align:center;
+    font-family:Arial,sans-serif;
+  ">
+
+    <h2>
+      JavaScript is required
+    </h2>
+
+    <p>
+      Please enable JavaScript to use
+      LetsStudy Pro Community Chat.
+    </p>
+
+  </div>
+
+</noscript>
+
 
 </body>
 </html>
