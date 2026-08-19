@@ -1833,356 +1833,1550 @@ function getTimestamp(
   ){
 
     return value.toMillis();
-
-  }
-
-
-  if(
-    typeof value.seconds ===
-    "number"
-  ){
-
-    return (
-      value.seconds * 1000
-    );
-
-  }
-
-
-  const parsed =
-    new Date(
-      value
-    ).getTime();
-
-
-  return Number.isNaN(
-    parsed
-  )
-  ? 0
-  : parsed;
-
-}
-
-
-/* =================================
-   FORMAT MESSAGE DATE
-================================= */
-
-function formatDate(
-  value
-){
-
-  const timestamp =
-    getTimestamp(
-      value
-    );
-
-
-  if(!timestamp){
-
-    return "";
-
-  }
-
-
-  const date =
-    new Date(
-      timestamp
-    );
-
-
-  const now =
-    new Date();
-
-
-  const difference =
-    now.getTime() -
-    timestamp;
-
-
-  const minute =
-    60 * 1000;
-
-  const hour =
-    60 * minute;
-
-  const day =
-    24 * hour;
-
-
-  if(
-    difference < minute
-  ){
-
-    return "Just now";
-
-  }
-
-
-  if(
-    difference < hour
-  ){
-
-    const minutes =
-      Math.floor(
-        difference / minute
-      );
-
-    return (
-      minutes +
-      (
-        minutes === 1
-        ? " minute ago"
-        : " minutes ago"
-      )
-    );
-
-  }
-
-
-  if(
-    difference < day &&
-    date.toDateString() ===
-    now.toDateString()
-  ){
-
-    return date.toLocaleTimeString(
-      "en-US",
-      {
-        hour:"2-digit",
-        minute:"2-digit"
       }
-    );
 
-  }
-
-
-  if(
-    difference <
-    7 * day
-  ){
-
-    return date.toLocaleDateString(
-      "en-US",
-      {
-        weekday:"short",
-        hour:"2-digit",
-        minute:"2-digit"
+      if (value instanceof Date) {
+        return value.getTime();
       }
-    );
 
-  }
+      if (typeof value === "string") {
+        const time = Date.parse(value);
+        return Number.isNaN(time) ? 0 : time;
+      }
 
+      if (typeof value === "number") {
+        return value;
+      }
 
-  return date.toLocaleDateString(
-    "en-US",
-    {
-      year:"numeric",
-      month:"short",
-      day:"numeric"
-    }
-  );
-
-}
-
-
-/* =================================
-   GET INITIALS
-================================= */
-
-function getInitials(
-  name
-){
-
-  const words =
-    String(
-      name ||
-      "LetsStudy Member"
-    )
-    .trim()
-    .split(/\s+/);
-
-
-  return words
-    .slice(0,2)
-    .map(
-      word =>
-        word
-          .charAt(0)
-          .toUpperCase()
-    )
-    .join("");
-
-}
-
-
-/* =================================
-   ESCAPE HTML
-================================= */
-
-function escapeHTML(
-  value
-){
-
-  return String(
-    value ?? ""
-  )
-
-  .replace(
-    /&/g,
-    "&amp;"
-  )
-
-  .replace(
-    /</g,
-    "&lt;"
-  )
-
-  .replace(
-    />/g,
-    "&gt;"
-  )
-
-  .replace(
-    /"/g,
-    "&quot;"
-  )
-
-  .replace(
-    /'/g,
-    "&#039;"
-  );
-
-}
-
-
-/* =================================
-   ESCAPE ATTRIBUTE
-================================= */
-
-function escapeAttribute(
-  value
-){
-
-  return String(
-    value ?? ""
-  )
-
-  .replace(
-    /&/g,
-    "&amp;"
-  )
-
-  .replace(
-    /"/g,
-    "&quot;"
-  )
-
-  .replace(
-    /'/g,
-    "&#039;"
-  )
-
-  .replace(
-    /</g,
-    "&lt;"
-  )
-
-  .replace(
-    />/g,
-    "&gt;"
-  );
-
-}
-
-
-/* =================================
-   SEARCH
-================================= */
-
-searchInput.addEventListener(
-  "input",
-  () => {
-
-    renderConversations();
-
-  }
-);
-
-
-/* =================================
-   PAGE VISIBILITY
-================================= */
-
-document.addEventListener(
-  "visibilitychange",
-  async () => {
-
-    if(
-      document.visibilityState ===
-      "visible" &&
-      currentUser
-    ){
-
-      await loadConversations();
-
+      return 0;
     }
 
-  }
-);
+    function formatTime(value) {
+      const time = toMillis(value);
 
+      if (!time) return "Just now";
 
-/* =================================
-   AUTO REFRESH
-================================= */
+      const diff = Date.now() - time;
 
-setInterval(
-  async () => {
+      if (diff < 60000) {
+        return "Just now";
+      }
 
-    if(
-      currentUser &&
-      document.visibilityState ===
-      "visible"
-    ){
+      if (diff < 3600000) {
+        const minutes = Math.floor(diff / 60000);
+        return `${minutes}m ago`;
+      }
 
-      try{
+      if (diff < 86400000) {
+        const hours = Math.floor(diff / 3600000);
+        return `${hours}h ago`;
+      }
 
-        await loadConversations();
+      if (diff < 604800000) {
+        const days = Math.floor(diff / 86400000);
+        return `${days}d ago`;
+      }
 
-      }catch(error){
+      return new Date(time).toLocaleDateString([], {
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+      });
+    }
 
-        console.warn(
-          "Message refresh failed:",
+    function escapeHTML(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function getInitials(name) {
+      const text = String(name || "User").trim();
+
+      if (!text) return "U";
+
+      return text
+        .split(/\s+/)
+        .slice(0, 2)
+        .map(word => word.charAt(0).toUpperCase())
+        .join("");
+    }
+
+    function getAvatarHTML(data = {}) {
+      const name =
+        data.displayName ||
+        data.name ||
+        data.username ||
+        "User";
+
+      const image =
+        data.photoURL ||
+        data.photoUrl ||
+        data.avatar ||
+        data.avatarUrl ||
+        data.imageUrl ||
+        "";
+
+      if (image) {
+        return `
+          <img
+            src="${escapeHTML(image)}"
+            alt="${escapeHTML(name)}"
+            class="avatar-img"
+            loading="lazy"
+            onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+          >
+          <span class="avatar-fallback" style="display:none">
+            ${escapeHTML(getInitials(name))}
+          </span>
+        `;
+      }
+
+      return `
+        <span class="avatar-fallback">
+          ${escapeHTML(getInitials(name))}
+        </span>
+      `;
+    }
+
+    function showToast(message, type = "info") {
+      const toast = document.getElementById("toast");
+
+      if (!toast) return;
+
+      toast.textContent = message;
+      toast.className = `toast ${type} show`;
+
+      clearTimeout(window.toastTimer);
+
+      window.toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
+    }
+
+    function setLoading(show) {
+      const loading = document.getElementById("loading");
+
+      if (loading) {
+        loading.style.display = show ? "flex" : "none";
+      }
+    }
+
+    function escapeQuery(value) {
+      return String(value || "").trim();
+    }
+
+    /* =====================================================
+       LOAD USERS / CONVERSATIONS
+    ===================================================== */
+
+    async function loadConversations() {
+      const list =
+        document.getElementById("conversationList");
+
+      if (!list) return;
+
+      try {
+        setLoading(true);
+
+        const currentUid = currentUser?.uid;
+
+        if (!currentUid) {
+          list.innerHTML = `
+            <div class="empty-state">
+              <i class="fa-regular fa-user"></i>
+              <h3>Sign in required</h3>
+              <p>Please sign in to view your messages.</p>
+            </div>
+          `;
+          return;
+        }
+
+        /*
+         * Supports the conversation schema:
+         *
+         * conversations/{conversationId}
+         *
+         * {
+         *   participants: [uid1, uid2],
+         *   lastMessage: "...",
+         *   lastMessageAt: Timestamp,
+         *   lastSenderId: uid,
+         *   updatedAt: Timestamp
+         * }
+         */
+
+        const conversationsQuery = query(
+          collection(db, "conversations"),
+          where("participants", "array-contains", currentUid),
+          limit(100)
+        );
+
+        const snapshot =
+          await getDocs(conversationsQuery);
+
+        conversations = snapshot.docs.map(docSnap => ({
+          id: docSnap.id,
+          ...docSnap.data()
+        }));
+
+        conversations.sort((a, b) => {
+          return (
+            toMillis(
+              b.lastMessageAt || b.updatedAt
+            ) -
+            toMillis(
+              a.lastMessageAt || a.updatedAt
+            )
+          );
+        });
+
+        await renderConversations();
+
+      } catch (error) {
+
+        console.error(
+          "Failed to load conversations:",
           error
         );
 
-      }
+        list.innerHTML = `
+          <div class="empty-state">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <h3>Unable to load messages</h3>
+            <p>Please try again.</p>
+          </div>
+        `;
 
+      } finally {
+        setLoading(false);
+      }
     }
 
-  },
-  60000
-);
+    async function renderConversations() {
+      const list =
+        document.getElementById("conversationList");
 
+      if (!list) return;
 
-/* =================================
-   YEAR
-================================= */
+      if (!conversations.length) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">
+              <i class="fa-regular fa-comments"></i>
+            </div>
 
-const yearElement =
-  document.getElementById(
-    "year"
+            <h3>No conversations yet</h3>
+
+            <p>
+              Start a conversation with someone
+              in the LetsStudy Pro community.
+            </p>
+
+            <button
+              class="primary-btn"
+              id="startConversationEmpty"
+            >
+              <i class="fa-solid fa-plus"></i>
+              Start conversation
+            </button>
+          </div>
+        `;
+
+        document
+          .getElementById("startConversationEmpty")
+          ?.addEventListener(
+            "click",
+            openNewMessage
+          );
+
+        return;
+      }
+
+      const html = [];
+
+      for (const conversation of conversations) {
+
+        const otherUid =
+          getOtherParticipant(conversation);
+
+        const userData =
+          await getUserProfile(otherUid);
+
+        const name =
+          userData?.displayName ||
+          userData?.name ||
+          userData?.username ||
+          "LetsStudy Pro User";
+
+        const preview =
+          conversation.lastMessage ||
+          "Start a conversation";
+
+        const active =
+          selectedConversationId === conversation.id
+            ? "active"
+            : "";
+
+        html.push(`
+          <button
+            class="conversation-item ${active}"
+            data-conversation-id="${escapeHTML(conversation.id)}"
+          >
+
+            <div class="conversation-avatar">
+              ${getAvatarHTML(userData || {
+                displayName: name
+              })}
+              ${
+                conversation.online
+                  ? `<span class="online-dot"></span>`
+                  : ""
+              }
+            </div>
+
+            <div class="conversation-content">
+
+              <div class="conversation-top">
+
+                <strong>
+                  ${escapeHTML(name)}
+                </strong>
+
+                <time>
+                  ${formatTime(
+                    conversation.lastMessageAt ||
+                    conversation.updatedAt
+                  )}
+                </time>
+
+              </div>
+
+              <div class="conversation-bottom">
+
+                <span>
+                  ${escapeHTML(preview)}
+                </span>
+
+                ${
+                  conversation.unreadCount
+                    ? `
+                      <b class="unread-count">
+                        ${conversation.unreadCount}
+                      </b>
+                    `
+                    : ""
+                }
+
+              </div>
+
+            </div>
+
+          </button>
+        `);
+      }
+
+      list.innerHTML = html.join("");
+
+      list
+        .querySelectorAll(
+          ".conversation-item"
+        )
+        .forEach(item => {
+
+          item.addEventListener(
+            "click",
+            () => {
+
+              const id =
+                item.dataset.conversationId;
+
+              openConversation(id);
+            }
+          );
+
+        });
+    }
+
+    function getOtherParticipant(conversation) {
+      const participants =
+        conversation?.participants || [];
+
+      return participants.find(
+        uid => uid !== currentUser?.uid
+      ) || "";
+    }
+
+    async function getUserProfile(uid) {
+
+      if (!uid) return null;
+
+      if (userCache.has(uid)) {
+        return userCache.get(uid);
+      }
+
+      try {
+
+        const snap =
+          await getDoc(
+            doc(db, "users", uid)
+          );
+
+        if (!snap.exists()) {
+          userCache.set(uid, {});
+          return {};
+        }
+
+        const data = snap.data();
+
+        userCache.set(uid, data);
+
+        return data;
+
+      } catch (error) {
+
+        console.error(
+          "User profile error:",
+          error
+        );
+
+        return {};
+      }
+    }
+
+    /* =====================================================
+       OPEN CONVERSATION
+    ===================================================== */
+
+    async function openConversation(
+      conversationId
+    ) {
+
+      selectedConversationId =
+        conversationId;
+
+      const conversation =
+        conversations.find(
+          item =>
+            item.id === conversationId
+        );
+
+      if (!conversation) return;
+
+      const otherUid =
+        getOtherParticipant(conversation);
+
+      const userData =
+        await getUserProfile(otherUid);
+
+      activeConversation =
+        conversation;
+
+      activeOtherUser = {
+        uid: otherUid,
+        ...(userData || {})
+      };
+
+      renderActiveUser();
+      await loadMessages(conversationId);
+
+      document.body.classList.add(
+        "conversation-open"
+      );
+
+      await renderConversations();
+    }
+
+    function renderActiveUser() {
+
+      const data =
+        activeOtherUser || {};
+
+      const name =
+        data.displayName ||
+        data.name ||
+        data.username ||
+        "User";
+
+      const avatar =
+        document.getElementById(
+          "activeUserAvatar"
+        );
+
+      const nameElement =
+        document.getElementById(
+          "activeUserName"
+        );
+
+      const status =
+        document.getElementById(
+          "activeUserStatus"
+        );
+
+      if (avatar) {
+        avatar.innerHTML =
+          getAvatarHTML(data);
+      }
+
+      if (nameElement) {
+        nameElement.textContent =
+          name;
+      }
+
+      if (status) {
+        status.textContent =
+          "LetsStudy Pro member";
+      }
+    }
+
+    /* =====================================================
+       LOAD MESSAGES
+    ===================================================== */
+
+    async function loadMessages(
+      conversationId
+    ) {
+
+      const container =
+        document.getElementById(
+          "messagesContainer"
+        );
+
+      if (!container) return;
+
+      container.innerHTML = `
+        <div class="message-loading">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      `;
+
+      try {
+
+        const messagesQuery = query(
+          collection(
+            db,
+            "conversations",
+            conversationId,
+            "messages"
+          ),
+          orderBy("createdAt", "asc"),
+          limit(200)
+        );
+
+        const snapshot =
+          await getDocs(messagesQuery);
+
+        messages =
+          snapshot.docs.map(docSnap => ({
+            id: docSnap.id,
+            ...docSnap.data()
+          }));
+
+        renderMessages();
+
+      } catch (error) {
+
+        console.error(
+          "Failed to load messages:",
+          error
+        );
+
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <h3>Messages unavailable</h3>
+            <p>
+              We could not load this conversation.
+            </p>
+          </div>
+        `;
+      }
+    }
+
+    function renderMessages() {
+
+      const container =
+        document.getElementById(
+          "messagesContainer"
+        );
+
+      if (!container) return;
+
+      if (!messages.length) {
+
+        container.innerHTML = `
+          <div class="conversation-empty">
+            <div class="conversation-empty-icon">
+              <i class="fa-regular fa-comment-dots"></i>
+            </div>
+
+            <h3>
+              Start the conversation
+            </h3>
+
+            <p>
+              Send a message to begin chatting.
+            </p>
+          </div>
+        `;
+
+        return;
+      }
+
+      let previousDate = "";
+
+      const output = [];
+
+      messages.forEach(message => {
+
+        const senderId =
+          message.senderId ||
+          message.uid ||
+          "";
+
+        const mine =
+          senderId === currentUser?.uid;
+
+        const timestamp =
+          toMillis(
+            message.createdAt ||
+            message.timestamp
+          );
+
+        const dateLabel =
+          timestamp
+            ? new Date(timestamp)
+                .toLocaleDateString(
+                  [],
+                  {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric"
+                  }
+                )
+            : "";
+
+        if (
+          dateLabel &&
+          dateLabel !== previousDate
+        ) {
+
+          output.push(`
+            <div class="date-divider">
+              <span>
+                ${escapeHTML(dateLabel)}
+              </span>
+            </div>
+          `);
+
+          previousDate = dateLabel;
+        }
+
+        output.push(`
+          <div
+            class="message-row ${
+              mine ? "mine" : "theirs"
+            }"
+          >
+
+            ${
+              !mine
+                ? `
+                  <div class="message-avatar">
+                    ${getAvatarHTML(
+                      activeOtherUser || {}
+                    )}
+                  </div>
+                `
+                : ""
+            }
+
+            <div class="message-bubble">
+
+              ${
+                message.text
+                  ? `
+                    <div class="message-text">
+                      ${escapeHTML(
+                        message.text
+                      )}
+                    </div>
+                  `
+                  : ""
+              }
+
+              ${
+                message.imageUrl
+                  ? `
+                    <img
+                      src="${escapeHTML(
+                        message.imageUrl
+                      )}"
+                      class="message-image"
+                      alt="Shared image"
+                      loading="lazy"
+                    >
+                  `
+                  : ""
+              }
+
+              <div class="message-meta">
+
+                <time>
+                  ${timestamp
+                    ? new Date(timestamp)
+                        .toLocaleTimeString(
+                          [],
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit"
+                          }
+                        )
+                    : ""}
+                </time>
+
+                ${
+                  mine
+                    ? `
+                      <i class="fa-solid fa-check-double"></i>
+                    `
+                    : ""
+                }
+
+              </div>
+
+            </div>
+
+          </div>
+        `);
+      });
+
+      container.innerHTML =
+        output.join("");
+
+      requestAnimationFrame(() => {
+        container.scrollTop =
+          container.scrollHeight;
+      });
+    }
+
+    /* =====================================================
+       SEND MESSAGE
+    ===================================================== */
+
+    async function sendMessage() {
+
+      if (!currentUser) {
+        showToast(
+          "Please sign in first.",
+          "error"
+        );
+        return;
+      }
+
+      if (!selectedConversationId) {
+        showToast(
+          "Select a conversation first.",
+          "error"
+        );
+        return;
+      }
+
+      const input =
+        document.getElementById(
+          "messageInput"
+        );
+
+      if (!input) return;
+
+      const text =
+        input.value.trim();
+
+      if (!text) return;
+
+      if (text.length > 5000) {
+        showToast(
+          "Message is too long.",
+          "error"
+        );
+        return;
+      }
+
+      const sendButton =
+        document.getElementById(
+          "sendMessage"
+        );
+
+      if (sendButton) {
+        sendButton.disabled = true;
+      }
+
+      try {
+
+        const conversationRef =
+          doc(
+            db,
+            "conversations",
+            selectedConversationId
+          );
+
+        const messageRef =
+          doc(
+            collection(
+              db,
+              "conversations",
+              selectedConversationId,
+              "messages"
+            )
+          );
+
+        const batch =
+          writeBatch(db);
+
+        batch.set(
+          messageRef,
+          {
+            senderId: currentUser.uid,
+            text,
+            createdAt: serverTimestamp(),
+            readBy: [currentUser.uid]
+          }
+        );
+
+        batch.update(
+          conversationRef,
+          {
+            lastMessage: text,
+            lastMessageAt: serverTimestamp(),
+            lastSenderId: currentUser.uid,
+            updatedAt: serverTimestamp()
+          }
+        );
+
+        await batch.commit();
+
+        input.value = "";
+
+        await loadMessages(
+          selectedConversationId
+        );
+
+        await loadConversations();
+
+      } catch (error) {
+
+        console.error(
+          "Send message failed:",
+          error
+        );
+
+        showToast(
+          "Message could not be sent.",
+          "error"
+        );
+
+      } finally {
+
+        if (sendButton) {
+          sendButton.disabled = false;
+        }
+      }
+    }
+
+    /* =====================================================
+       START NEW CONVERSATION
+    ===================================================== */
+
+    function openNewMessage() {
+
+      const modal =
+        document.getElementById(
+          "newMessageModal"
+        );
+
+      if (modal) {
+        modal.classList.add("show");
+
+        const input =
+          document.getElementById(
+            "userSearchInput"
+          );
+
+        input?.focus();
+
+        searchUsers("");
+      }
+    }
+
+    function closeNewMessage() {
+
+      document
+        .getElementById(
+          "newMessageModal"
+        )
+        ?.classList.remove("show");
+    }
+
+    async function searchUsers(term) {
+
+      const results =
+        document.getElementById(
+          "userSearchResults"
+        );
+
+      if (!results) return;
+
+      const search =
+        escapeQuery(term).toLowerCase();
+
+      if (!search) {
+
+        results.innerHTML = `
+          <div class="search-hint">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            Search for a LetsStudy Pro member
+          </div>
+        `;
+
+        return;
+      }
+
+      results.innerHTML = `
+        <div class="search-loading">
+          Searching...
+        </div>
+      `;
+
+      try {
+
+        /*
+         * Firestore does not provide native
+         * contains-search. We load a limited
+         * user set and filter client-side.
+         */
+
+        const usersQuery = query(
+          collection(db, "users"),
+          limit(100)
+        );
+
+        const snapshot =
+          await getDocs(usersQuery);
+
+        const found =
+          snapshot.docs
+            .map(docSnap => ({
+              uid: docSnap.id,
+              ...docSnap.data()
+            }))
+            .filter(user => {
+
+  if (
+    user.uid === currentUser?.uid
+  ) {
+    return false;
+  }
+
+  const name =
+    String(
+      user.displayName ||
+      user.name ||
+      ""
+    )
+      .toLowerCase()
+      .trim();
+
+  const username =
+    String(
+      user.username ||
+      ""
+    )
+      .toLowerCase()
+      .trim();
+
+  const email =
+    String(
+      user.email ||
+      ""
+    )
+      .toLowerCase()
+      .trim();
+
+  return (
+    name.includes(search) ||
+    username.includes(search) ||
+    email.includes(search)
+  );
+})
+.slice(0, 20);
+
+if (!found.length) {
+
+  results.innerHTML = `
+    <div class="search-hint">
+      <i class="fa-solid fa-user-slash"></i>
+
+      <div>
+        <strong>No members found</strong>
+        <small>
+          Try another name, username or email.
+        </small>
+      </div>
+    </div>
+  `;
+
+  return;
+}
+
+results.innerHTML = found
+  .map(user => {
+
+    const displayName =
+      user.displayName ||
+      user.name ||
+      user.username ||
+      "LetsStudy Pro User";
+
+    return `
+      <button
+        type="button"
+        class="user-result"
+        data-user-id="${escapeHTML(user.uid)}"
+      >
+
+        <div class="user-result-avatar">
+          ${getAvatarHTML(user)}
+        </div>
+
+        <div class="user-result-info">
+
+          <strong>
+            ${escapeHTML(displayName)}
+          </strong>
+
+          ${
+            user.username
+              ? `
+                <small>
+                  @${escapeHTML(
+                    user.username
+                  )}
+                </small>
+              `
+              : ""
+          }
+
+        </div>
+
+        <i class="fa-solid fa-chevron-right"></i>
+
+      </button>
+    `;
+  })
+  .join("");
+
+results
+  .querySelectorAll(".user-result")
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      async () => {
+
+        const userId =
+          button.dataset.userId;
+
+        if (!userId) return;
+
+        button.disabled = true;
+
+        try {
+
+          await createConversation(
+            userId
+          );
+
+        } finally {
+
+          button.disabled = false;
+
+        }
+      }
+    );
+
+  });
+
+} catch (error) {
+
+  console.error(
+    "User search failed:",
+    error
   );
 
+  results.innerHTML = `
+    <div class="search-hint error">
 
-if(yearElement){
+      <i class="fa-solid fa-triangle-exclamation"></i>
 
-  yearElement.textContent =
-    new Date()
-      .getFullYear();
+      <div>
+        <strong>Search failed</strong>
+
+        <small>
+          Please try again.
+        </small>
+      </div>
+
+    </div>
+  `;
+}
 
 }
 
+/* =====================================================
+   CREATE / OPEN CONVERSATION
+===================================================== */
+
+async function createConversation(
+  otherUid
+) {
+
+  if (
+    !currentUser ||
+    !otherUid ||
+    otherUid === currentUser.uid
+  ) {
+    return;
+  }
+
+  try {
+
+    const participants = [
+      currentUser.uid,
+      otherUid
+    ].sort();
+
+    /*
+     * Find existing conversation
+     */
+
+    const existingQuery = query(
+      collection(
+        db,
+        "conversations"
+      ),
+      where(
+        "participants",
+        "array-contains",
+        currentUser.uid
+      ),
+      limit(100)
+    );
+
+    const snapshot =
+      await getDocs(
+        existingQuery
+      );
+
+    let existingConversation = null;
+
+    snapshot.forEach(
+      docSnap => {
+
+        const data =
+          docSnap.data();
+
+        const list =
+          Array.isArray(
+            data.participants
+          )
+            ? data.participants
+            : [];
+
+        if (
+          list.length === 2 &&
+          list.includes(otherUid)
+        ) {
+
+          existingConversation =
+            {
+              id: docSnap.id,
+              ...data
+            };
+
+        }
+
+      }
+    );
+
+    if (
+      existingConversation
+    ) {
+
+      closeNewMessage();
+
+      await loadConversations();
+
+      await openConversation(
+        existingConversation.id
+      );
+
+      return;
+    }
+
+    /*
+     * Create new conversation
+     */
+
+    const conversationRef =
+      doc(
+        collection(
+          db,
+          "conversations"
+        )
+      );
+
+    await setDoc(
+      conversationRef,
+      {
+        participants,
+
+        createdAt:
+          serverTimestamp(),
+
+        updatedAt:
+          serverTimestamp(),
+
+        lastMessage: "",
+
+        lastMessageAt: null,
+
+        lastSenderId: "",
+
+        createdBy:
+          currentUser.uid
+      }
+    );
+
+    closeNewMessage();
+
+    await loadConversations();
+
+    await openConversation(
+      conversationRef.id
+    );
+
+    showToast(
+      "Conversation created successfully.",
+      "success"
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Create conversation failed:",
+      error
+    );
+
+    showToast(
+      "Could not create conversation.",
+      "error"
+    );
+  }
+}
+
+/* =====================================================
+   CONVERSATION SEARCH
+===================================================== */
+
+function filterConversations(
+  value
+) {
+
+  const search =
+    String(value || "")
+      .trim()
+      .toLowerCase();
+
+  const items =
+    document.querySelectorAll(
+      ".conversation-item"
+    );
+
+  items.forEach(item => {
+
+    const text =
+      item.textContent
+        .toLowerCase();
+
+    item.style.display =
+      !search ||
+      text.includes(search)
+        ? ""
+        : "none";
+
+  });
+}
+
+/* =====================================================
+   CLOSE ACTIVE CONVERSATION
+===================================================== */
+
+function closeConversation() {
+
+  selectedConversationId =
+    null;
+
+  activeConversation =
+    null;
+
+  activeOtherUser =
+    null;
+
+  messages = [];
+
+  document.body.classList.remove(
+    "conversation-open"
+  );
+
+  const container =
+    document.getElementById(
+      "messagesContainer"
+    );
+
+  if (container) {
+
+    container.innerHTML = `
+      <div class="conversation-placeholder">
+
+        <div class="placeholder-icon">
+          <i class="fa-regular fa-comments"></i>
+        </div>
+
+        <h2>
+          Your messages
+        </h2>
+
+        <p>
+          Select a conversation to start
+          chatting.
+        </p>
+
+      </div>
+    `;
+
+  }
+
+}
+
+/* =====================================================
+   SEND MESSAGE EVENTS
+===================================================== */
+
+const sendButton =
+  document.getElementById(
+    "sendMessage"
+  );
+
+if (sendButton) {
+
+  sendButton.addEventListener(
+    "click",
+    sendMessage
+  );
+
+}
+
+const messageInput =
+  document.getElementById(
+    "messageInput"
+  );
+
+if (messageInput) {
+
+  messageInput.addEventListener(
+    "keydown",
+    event => {
+
+      if (
+        event.key === "Enter" &&
+        !event.shiftKey
+      ) {
+
+        event.preventDefault();
+
+        sendMessage();
+
+      }
+
+    }
+  );
+
+}
+
+/* =====================================================
+   NEW MESSAGE MODAL
+===================================================== */
+
+document
+  .getElementById("newMessageBtn")
+  ?.addEventListener(
+    "click",
+    openNewMessage
+  );
+
+document
+  .getElementById("closeNewMessage")
+  ?.addEventListener(
+    "click",
+    closeNewMessage
+  );
+
+/* =====================================================
+   CLOSE CONVERSATION
+===================================================== */
+
+document
+  .getElementById(
+    "closeConversation"
+  )
+  ?.addEventListener(
+    "click",
+    closeConversation
+  );
+
+/* =====================================================
+   USER SEARCH
+===================================================== */
+
+document
+  .getElementById(
+    "userSearchInput"
+  )
+  ?.addEventListener(
+    "input",
+    event => {
+
+      searchUsers(
+        event.target.value
+      );
+
+    }
+  );
+
+/* =====================================================
+   CONVERSATION SEARCH
+===================================================== */
+
+document
+  .getElementById(
+    "conversationSearch"
+  )
+  ?.addEventListener(
+    "input",
+    event => {
+
+      filterConversations(
+        event.target.value
+      );
+
+    }
+  );
+
+/* =====================================================
+   MODAL BACKDROP
+===================================================== */
+
+document
+  .getElementById(
+    "newMessageModal"
+  )
+  ?.addEventListener(
+    "click",
+    event => {
+
+      if (
+        event.target.id ===
+        "newMessageModal"
+      ) {
+
+        closeNewMessage();
+
+      }
+
+    }
+  );
+
+/* =====================================================
+   ESCAPE KEY
+===================================================== */
+
+document.addEventListener(
+  "keydown",
+  event => {
+
+    if (
+      event.key === "Escape"
+    ) {
+
+      closeNewMessage();
+
+    }
+
+  }
+);
+
+/* =====================================================
+   AUTH STATE
+===================================================== */
+
+onAuthStateChanged(
+  auth,
+  async user => {
+
+    currentUser = user;
+
+    if (!user) {
+
+      window.location.href =
+        "login.html?redirect=" +
+        encodeURIComponent(
+          window.location.pathname +
+          window.location.search
+        );
+
+      return;
+    }
+
+    await loadConversations();
+
+  }
+);
+
+/* =====================================================
+   PAGE INITIALIZATION
+===================================================== */
+
+window.addEventListener(
+  "load",
+  () => {
+
+    const year =
+      document.getElementById(
+        "year"
+      );
+
+    if (year) {
+      year.textContent =
+        new Date().getFullYear();
+    }
+
+  }
+);
 
 </script>
 
