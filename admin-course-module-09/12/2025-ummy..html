@@ -1,4837 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <title>Course Management | LetsStudy Pro Admin</title>
-
-  <meta
-    name="description"
-    content="LetsStudy Pro professional course management administration system."
-  >
-
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-  >
-
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    :root {
-      --primary: #2563eb;
-      --primary-dark: #1d4ed8;
-      --secondary: #0f172a;
-      --bg: #f1f5f9;
-      --card: #ffffff;
-      --text: #0f172a;
-      --muted: #64748b;
-      --border: #e2e8f0;
-      --success: #16a34a;
-      --warning: #f59e0b;
-      --danger: #dc2626;
-      --sidebar: #0b1220;
-      --sidebar-hover: #172033;
-      --radius: 14px;
-      --shadow: 0 8px 30px rgba(15,23,42,.07);
-    }
-
-    body {
-      font-family:
-        Inter,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
-
-    button,
-    input,
-    select,
-    textarea {
-      font: inherit;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    /* =========================
-       LAYOUT
-    ========================= */
-
-    .app {
-      display: flex;
-      min-height: 100vh;
-    }
-
-    .sidebar {
-      width: 260px;
-      background: var(--sidebar);
-      color: #fff;
-      position: fixed;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      overflow-y: auto;
-      z-index: 1000;
-      transition: .3s;
-    }
-
-    .brand {
-      height: 72px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 0 20px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-    }
-
-    .brand-logo {
-      width: 40px;
-      height: 40px;
-      border-radius: 11px;
-      background: linear-gradient(135deg,#2563eb,#7c3aed);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-    }
-
-    .brand strong {
-      font-size: 16px;
-    }
-
-    .brand small {
-      display: block;
-      color: #94a3b8;
-      font-size: 11px;
-      margin-top: 2px;
-    }
-
-    .sidebar-section {
-      padding: 18px 14px 8px;
-      color: #64748b;
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      font-weight: 700;
-    }
-
-    .nav-item {
-      margin: 3px 10px;
-      border-radius: 9px;
-      overflow: hidden;
-    }
-
-    .nav-item button,
-    .nav-item a {
-      width: 100%;
-      border: 0;
-      background: transparent;
-      color: #cbd5e1;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 11px 12px;
-      font-size: 13px;
-      text-align: left;
-    }
-
-    .nav-item button:hover,
-    .nav-item a:hover,
-    .nav-item.active button {
-      background: var(--sidebar-hover);
-      color: #fff;
-    }
-
-    .nav-item.active button {
-      color: #60a5fa;
-    }
-
-    .nav-item i {
-      width: 18px;
-      text-align: center;
-    }
-
-    .main {
-      margin-left: 260px;
-      width: calc(100% - 260px);
-      min-width: 0;
-    }
-
-    .topbar {
-      height: 72px;
-      background: #fff;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 28px;
-      position: sticky;
-      top: 0;
-      z-index: 500;
-    }
-
-    .top-left {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-
-    .menu-btn {
-      display: none;
-      border: 0;
-      background: transparent;
-      font-size: 20px;
-    }
-
-    .top-title {
-      font-size: 17px;
-      font-weight: 750;
-    }
-
-    .top-subtitle {
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 2px;
-    }
-
-    .top-actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .icon-btn {
-      width: 38px;
-      height: 38px;
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      background: #fff;
-      color: var(--muted);
-    }
-
-    .admin-avatar {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      background: #dbeafe;
-      color: #1d4ed8;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-    }
-
-    .content {
-      padding: 26px;
-      max-width: 1600px;
-      margin: auto;
-    }
-
-    /* =========================
-       COURSE SELECTOR
-    ========================= */
-
-    .course-selector {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px;
-      box-shadow: var(--shadow);
-      margin-bottom: 20px;
-    }
-
-    .selector-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 15px;
-      align-items: end;
-    }
-
-    .field label {
-      display: block;
-      font-size: 12px;
-      font-weight: 700;
-      margin-bottom: 7px;
-    }
-
-    .field select,
-    .field input,
-    .field textarea {
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      background: #fff;
-      padding: 11px 12px;
-      outline: none;
-      color: var(--text);
-    }
-
-    .field textarea {
-      resize: vertical;
-      min-height: 100px;
-    }
-
-    .field select:focus,
-    .field input:focus,
-    .field textarea:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(37,99,235,.1);
-    }
-
-    /* =========================
-       COURSE HEADER
-    ========================= */
-
-    .course-header {
-      background: var(--secondary);
-      color: #fff;
-      border-radius: var(--radius);
-      padding: 24px;
-      display: flex;
-      justify-content: space-between;
-      gap: 25px;
-      margin-bottom: 20px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .course-header::after {
-      content: "";
-      position: absolute;
-      width: 300px;
-      height: 300px;
-      border-radius: 50%;
-      background: rgba(37,99,235,.18);
-      right: -100px;
-      top: -130px;
-    }
-
-    .course-info {
-      position: relative;
-      z-index: 1;
-    }
-
-    .course-info h1 {
-      font-size: 25px;
-      margin-bottom: 8px;
-    }
-
-    .course-info p {
-      color: #cbd5e1;
-      font-size: 13px;
-      max-width: 720px;
-      line-height: 1.6;
-    }
-
-    .course-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 14px;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      border-radius: 999px;
-      padding: 5px 10px;
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    .badge-success {
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    .badge-warning {
-      background: #fef3c7;
-      color: #92400e;
-    }
-
-    .badge-info {
-      background: #dbeafe;
-      color: #1d4ed8;
-    }
-
-    .course-header .badge-success {
-      background: rgba(34,197,94,.15);
-      color: #86efac;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 9px;
-      align-items: flex-start;
-      position: relative;
-      z-index: 2;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      border: 0;
-      border-radius: 9px;
-      padding: 10px 14px;
-      font-weight: 700;
-      font-size: 12px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: #fff;
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-dark);
-    }
-
-    .btn-light {
-      background: #fff;
-      color: var(--text);
-    }
-
-    .btn-outline {
-      border: 1px solid var(--border);
-      background: #fff;
-      color: var(--text);
-    }
-
-    .btn-danger {
-      background: var(--danger);
-      color: #fff;
-    }
-
-    .btn-success {
-      background: var(--success);
-      color: #fff;
-    }
-
-    /* =========================
-       STATS
-    ========================= */
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(5,1fr);
-      gap: 14px;
-      margin-bottom: 20px;
-    }
-
-    .stat {
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 17px;
-      box-shadow: var(--shadow);
-    }
-
-    .stat-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .stat-icon {
-      width: 35px;
-      height: 35px;
-      border-radius: 9px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #eff6ff;
-      color: var(--primary);
-    }
-
-    .stat strong {
-      display: block;
-      font-size: 24px;
-      margin-top: 10px;
-    }
-
-    .stat small {
-      color: var(--muted);
-      font-size: 11px;
-    }
-
-    /* =========================
-       WORKSPACE
-    ========================= */
-
-    .workspace {
-      display: grid;
-      grid-template-columns: 245px minmax(0,1fr);
-      gap: 20px;
-      align-items: start;
-    }
-
-    .module-menu {
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 10px;
-      box-shadow: var(--shadow);
-      position: sticky;
-      top: 95px;
-    }
-
-    .module-menu button {
-      width: 100%;
-      border: 0;
-      background: transparent;
-      padding: 11px 12px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-align: left;
-      color: #475569;
-      font-size: 12px;
-      margin-bottom: 2px;
-    }
-
-    .module-menu button:hover {
-      background: #f8fafc;
-    }
-
-    .module-menu button.active {
-      background: #eff6ff;
-      color: var(--primary);
-      font-weight: 700;
-    }
-
-    .module-menu button i {
-      width: 18px;
-      text-align: center;
-    }
-
-    .panel {
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      min-width: 0;
-    }
-
-    .panel-header {
-      padding: 19px 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .panel-header h2 {
-      font-size: 17px;
-    }
-
-    .panel-header p {
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 4px;
-    }
-
-    .panel-body {
-      padding: 20px;
-    }
-
-    /* =========================
-       DASHBOARD
-    ========================= */
-
-    .grid-2 {
-      display: grid;
-      grid-template-columns: repeat(2,1fr);
-      gap: 16px;
-    }
-
-    .grid-3 {
-      display: grid;
-      grid-template-columns: repeat(3,1fr);
-      gap: 16px;
-    }
-
-    .info-card {
-      border: 1px solid var(--border);
-      border-radius: 11px;
-      padding: 16px;
-    }
-
-    .info-card h3 {
-      font-size: 13px;
-      margin-bottom: 10px;
-    }
-
-    .info-card p {
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.6;
-    }
-
-    .progress {
-      height: 8px;
-      border-radius: 999px;
-      background: #e2e8f0;
-      overflow: hidden;
-      margin-top: 10px;
-    }
-
-    .progress div {
-      height: 100%;
-      background: var(--primary);
-      width: 68%;
-    }
-
-    /* =========================
-       TABLE
-    ========================= */
-
-    .table-wrap {
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 720px;
-    }
-
-    th,
-    td {
-      padding: 12px;
-      border-bottom: 1px solid var(--border);
-      text-align: left;
-      font-size: 12px;
-    }
-
-    th {
-      color: var(--muted);
-      background: #f8fafc;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .4px;
-    }
-
-    td strong {
-      font-size: 12px;
-    }
-
-    .actions {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .small-btn {
-      width: 32px;
-      height: 32px;
-      border: 1px solid var(--border);
-      background: #fff;
-      border-radius: 7px;
-      color: var(--muted);
-    }
-
-    .small-btn:hover {
-      color: var(--primary);
-      border-color: #bfdbfe;
-      background: #eff6ff;
-    }
-
-    /* =========================
-       MODULE ACCORDION
-    ========================= */
-
-    .section-card {
-      border: 1px solid var(--border);
-      border-radius: 11px;
-      margin-bottom: 12px;
-      overflow: hidden;
-    }
-
-    .section-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px;
-      background: #f8fafc;
-      gap: 12px;
-    }
-
-    .section-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .drag {
-      color: #94a3b8;
-      cursor: grab;
-    }
-
-    .lesson-list {
-      padding: 5px 12px 10px;
-    }
-
-    .lesson {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 11px 4px;
-      border-bottom: 1px solid #f1f5f9;
-      gap: 10px;
-    }
-
-    .lesson:last-child {
-      border-bottom: 0;
-    }
-
-    .lesson-left {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      min-width: 0;
-    }
-
-    .lesson-left i {
-      color: var(--primary);
-    }
-
-    .lesson-name {
-      font-size: 12px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* =========================
-       FORM
-    ========================= */
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(2,1fr);
-      gap: 16px;
-    }
-
-    .form-grid .full {
-      grid-column: 1/-1;
-    }
-
-    .form-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-top: 18px;
-    }
-
-    .switch-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 15px;
-      padding: 13px 0;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .switch-row:last-child {
-      border-bottom: 0;
-    }
-
-    .switch-info strong {
-      display: block;
-      font-size: 12px;
-    }
-
-    .switch-info small {
-      color: var(--muted);
-      font-size: 11px;
-    }
-
-    .switch {
-      width: 42px;
-      height: 23px;
-      position: relative;
-      display: inline-block;
-    }
-
-    .switch input {
-      display: none;
-    }
-
-    .slider {
-      position: absolute;
-      inset: 0;
-      border-radius: 999px;
-      background: #cbd5e1;
-      transition: .2s;
-    }
-
-    .slider::before {
-      content: "";
-      width: 17px;
-      height: 17px;
-      background: #fff;
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      border-radius: 50%;
-      transition: .2s;
-    }
-
-    .switch input:checked + .slider {
-      background: var(--primary);
-    }
-
-    .switch input:checked + .slider::before {
-      transform: translateX(19px);
-    }
-
-    /* =========================
-       EMPTY
-    ========================= */
-
-    .empty {
-      padding: 50px 20px;
-      text-align: center;
-      color: var(--muted);
-    }
-
-    .empty i {
-      font-size: 40px;
-      margin-bottom: 12px;
-      color: #cbd5e1;
-    }
-
-    .empty h3 {
-      color: var(--text);
-      font-size: 15px;
-      margin-bottom: 6px;
-    }
-
-    /* =========================
-       MODAL
-    ========================= */
-
-    .modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(15,23,42,.6);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      z-index: 2000;
-    }
-
-    .modal.show {
-      display: flex;
-    }
-
-    .modal-box {
-      width: min(650px,100%);
-      max-height: 90vh;
-      overflow-y: auto;
-      background: #fff;
-      border-radius: 15px;
-      box-shadow: 0 30px 80px rgba(0,0,0,.2);
-    }
-
-    .modal-head {
-      padding: 17px 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .modal-head h3 {
-      font-size: 16px;
-    }
-
-    .modal-close {
-      width: 34px;
-      height: 34px;
-      border: 0;
-      border-radius: 8px;
-      background: #f1f5f9;
-    }
-
-    .modal-body {
-      padding: 20px;
-    }
-
-    /* =========================
-       TOAST
-    ========================= */
-
-    .toast {
-      position: fixed;
-      right: 20px;
-      bottom: 20px;
-      background: #0f172a;
-      color: #fff;
-      padding: 13px 17px;
-      border-radius: 10px;
-      font-size: 12px;
-      display: none;
-      z-index: 3000;
-      box-shadow: 0 10px 30px rgba(0,0,0,.2);
-    }
-
-    .toast.show {
-      display: block;
-      animation: toast .25s ease;
-    }
-
-    @keyframes toast {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* =========================
-       MOBILE
-    ========================= */
-
-    @media(max-width:1100px) {
-
-      .stats {
-        grid-template-columns: repeat(3,1fr);
-      }
-
-      .workspace {
-        grid-template-columns: 210px minmax(0,1fr);
-      }
-    }
-
-    @media(max-width:800px) {
-
-      .sidebar {
-        transform: translateX(-100%);
-      }
-
-      .sidebar.open {
-        transform: translateX(0);
-      }
-
-      .main {
-        margin-left: 0;
-        width: 100%;
-      }
-
-      .menu-btn {
-        display: block;
-      }
-
-      .content {
-        padding: 15px;
-      }
-
-      .topbar {
-        padding: 0 15px;
-      }
-
-      .course-header {
-        flex-direction: column;
-      }
-
-      .stats {
-        grid-template-columns: repeat(2,1fr);
-      }
-
-      .workspace {
-        grid-template-columns: 1fr;
-      }
-
-      .module-menu {
-        position: static;
-        display: grid;
-        grid-template-columns: repeat(2,1fr);
-      }
-
-      .grid-2,
-      .grid-3,
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .form-grid .full {
-        grid-column: auto;
-      }
-    }
-
-    @media(max-width:500px) {
-
-      .stats {
-        grid-template-columns: 1fr;
-      }
-
-      .module-menu {
-        grid-template-columns: 1fr;
-      }
-
-      .selector-row {
-        grid-template-columns: 1fr;
-      }
-
-      .course-info h1 {
-        font-size: 20px;
-      }
-
-      .header-actions {
-        width: 100%;
-      }
-
-      .header-actions .btn {
-        flex: 1;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Course Content Management</title>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f6f8fb;font-family:Inter,Arial,sans-serif;color:#172033}
+button,input,textarea,select{font:inherit}
+.container{max-width:1100px;margin:auto;padding:25px}
+.header{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:20px;margin-bottom:20px}
+.header h1{margin:0 0 5px;font-size:24px}
+.header p{margin:0;color:#667085}
+select,input,textarea{width:100%;padding:11px;border:1px solid #d9dee8;border-radius:9px;outline:none}
+button{border:0;border-radius:9px;padding:10px 14px;cursor:pointer;font-weight:600}
+.primary{background:#155eef;color:#fff}
+.danger{background:#fee4e2;color:#b42318}
+.light{background:#eef2f6;color:#344054}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}
+.tabs button.active{background:#155eef;color:white}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:18px;margin-bottom:15px}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.card h3{margin:0 0 5px}
+.muted{color:#667085;font-size:13px}
+.item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px;border:1px solid #eaecf0;border-radius:10px;margin-top:10px}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.modal{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:20px;z-index:10}
+.modal.show{display:flex}
+.modal-box{background:#fff;width:min(600px,100%);max-height:90vh;overflow:auto;border-radius:15px;padding:20px}
+.form-group{margin-bottom:13px}
+.form-group label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.empty{text-align:center;padding:35px;color:#667085}
+@media(max-width:650px){.grid{grid-template-columns:1fr}.item{align-items:flex-start;flex-direction:column}.card-head{align-items:flex-start;flex-direction:column}}
+</style>
 </head>
 
 <body>
 
-<div class="app">
+<main class="container">
 
-  <!-- =========================================
-       SIDEBAR
-  ========================================== -->
+  <section class="header">
+    <h1>Course Content Management</h1>
+    <p id="courseName">Select a course to manage its content.</p>
 
-  <aside class="sidebar" id="sidebar">
+    <br>
 
-    <div class="brand">
-      <div class="brand-logo">
-        LS
-      </div>
+    <select id="courseSelect">
+      <option value="">Select Course</option>
+    </select>
+  </section>
 
-      <div>
-        <strong>LetsStudy Pro</strong>
-        <small>Administration</small>
-      </div>
+  <div id="content" style="display:none">
+
+    <div class="tabs">
+      <button class="active" data-tab="modules">Modules</button>
+      <button data-tab="lessons">Lessons</button>
+      <button data-tab="quizzes">Quizzes</button>
+      <button data-tab="assignments">Assignments</button>
+      <button data-tab="resources">Resources</button>
     </div>
 
-    <div class="sidebar-section">
-      Management
-    </div>
-
-    <div class="nav-item">
-      <a href="admin-dashboard.html">
-        <i class="fa-solid fa-chart-pie"></i>
-        Dashboard
-      </a>
-    </div>
-
-    <div class="nav-item active">
-      <a href="admin-courses.html">
-        <i class="fa-solid fa-graduation-cap"></i>
-        Courses
-      </a>
-    </div>
-
-    <div class="nav-item">
-      <a href="admin-students.html">
-        <i class="fa-solid fa-users"></i>
-        Students
-      </a>
-    </div>
-
-    <div class="nav-item">
-      <a href="admin-resources.html">
-        <i class="fa-solid fa-folder-open"></i>
-        Resources
-      </a>
-    </div>
-
-    <div class="nav-item">
-      <a href="admin-marketplace.html">
-        <i class="fa-solid fa-store"></i>
-        Marketplace
-      </a>
-    </div>
-
-    <div class="nav-item">
-      <a href="admin-scholarships.html">
-        <i class="fa-solid fa-award"></i>
-        Scholarships
-      </a>
-    </div>
-
-    <div class="nav-item">
-      <a href="admin-careers.html">
-        <i class="fa-solid fa-briefcase"></i>
-        Careers
-      </a>
-    </div>
-
-    <div class="sidebar-section">
-  System
-</div>
-
-<div class="nav-item">
-  <a href="admin-users.html">
-    <i class="fa-solid fa-user-shield"></i>
-    <span>Users</span>
-  </a>
-</div>
-
-<div class="nav-item">
-  <a href="admin-roles.html">
-    <i class="fa-solid fa-user-lock"></i>
-    <span>Roles & Permissions</span>
-  </a>
-</div>
-
-<div class="nav-item">
-  <a href="admin-payments.html">
-    <i class="fa-solid fa-credit-card"></i>
-    <span>Payments</span>
-  </a>
-</div>
-
-<div class="nav-item">
-  <a href="admin-orders.html">
-    <i class="fa-solid fa-cart-shopping"></i>
-    <span>Orders</span>
-  </a>
-</div>
-
-<div class="nav-item">
-  <a href="admin-certificates.html">
-    <i class="fa-solid fa-certificate"></i>
-    <span>Certificates</span>
-  </a>
-</div>
-
-<div class="nav-item">
-  <a href="admin-notifications.html">
-    <i class="fa-solid fa-bell"></i>
-    <span>Notifications</span>
-  </a>
-</div>
-
-<div class="nav-item">
-  <a href="admin-support.html">
-    <i class="fa-solid fa-headset"></i>
-    <span>Support</span>
-  </a>
-</div>
-
-<div class="nav-item">
-  <a href="admin-logs.html">
-    <i class="fa-solid fa-clock-rotate-left"></i>
-    <span>Activity Logs</span>
-  </a>
-</div>
-
-<div class="nav-item">
-  <a href="admin-settings.html">
-    <i class="fa-solid fa-gear"></i>
-    <span>System Settings</span>
-  </a>
-</div>
-
-<div class="sidebar-section">
-  Website
-</div>
-
-<div class="nav-item">
-  <a href="../index.html">
-    <i class="fa-solid fa-globe"></i>
-    <span>Back to Website</span>
-  </a>
-</div>
-
-<div class="nav-item">
-  <a href="../profile.html">
-    <i class="fa-solid fa-user"></i>
-    <span>My Profile</span>
-  </a>
-</div>
-
-<div class="nav-item">
-  <button
-    type="button"
-    onclick="logoutAdmin()"
-  >
-    <i class="fa-solid fa-right-from-bracket"></i>
-    <span>Logout</span>
-  </button>
-</div>
-
-</aside>
-
-
-<!-- =========================================
-     MAIN CONTENT
-========================================== -->
-
-<main class="main">
-
-  <header class="topbar">
-
-    <div class="top-left">
-
-      <button
-        class="menu-btn"
-        id="menuBtn"
-        type="button"
-        aria-label="Open menu"
-      >
-        <i class="fa-solid fa-bars"></i>
-      </button>
-
-      <div>
-        <div class="top-title">
-          Course Management
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h3 id="sectionTitle">Modules</h3>
+          <span class="muted" id="count"></span>
         </div>
-
-        <div class="top-subtitle">
-          Manage course content and learning experience
-        </div>
+        <button class="primary" id="addBtn">
+          <i class="fa fa-plus"></i> Add
+        </button>
       </div>
 
-    </div>
-
-    <div class="top-actions">
-
-      <button
-        class="icon-btn"
-        type="button"
-        onclick="showToast('Notifications opened')"
-        aria-label="Notifications"
-      >
-        <i class="fa-regular fa-bell"></i>
-      </button>
-
-      <button
-        class="icon-btn"
-        type="button"
-        onclick="showToast('Search opened')"
-        aria-label="Search"
-      >
-        <i class="fa-solid fa-magnifying-glass"></i>
-      </button>
-
-      <div
-        class="admin-avatar"
-        title="Administrator"
-      >
-        A
-      </div>
-
-    </div>
-
-  </header>
-
-
-  <div class="content">
-
-    <!-- =====================================
-         COURSE SELECTOR
-    ====================================== -->
-
-    <section class="course-selector">
-
-      <div class="selector-row">
-
-        <div class="field">
-
-          <label for="courseSelect">
-            Select Course
-          </label>
-
-          <select id="courseSelect">
-
-            <option value="pcm">
-              Advanced Mathematics — Form 5
-            </option>
-
-            <option value="physics">
-              Physics Masterclass — Form 5
-            </option>
-
-            <option value="chemistry">
-              Chemistry Complete Course — Form 6
-            </option>
-
-          </select>
-
-        </div>
-
-        <button
-          class="btn btn-primary"
-          type="button"
-          onclick="openPreview()"
-        >
-          <i class="fa-solid fa-eye"></i>
-          Preview Course
-        </button>
-
-      </div>
-
-    </section>
-
-
-    <!-- =====================================
-         COURSE HEADER
-    ====================================== -->
-
-    <section class="course-header">
-
-      <div class="course-info">
-
-        <h1 id="courseTitle">
-          Advanced Mathematics — Form 5
-        </h1>
-
-        <p id="courseDescription">
-          Complete Form 5 Advanced Mathematics course
-          including lessons, exercises, quizzes,
-          assignments and downloadable resources.
-        </p>
-
-        <div class="course-meta">
-
-          <span class="badge badge-success">
-            <i class="fa-solid fa-circle-check"></i>
-            Published
-          </span>
-
-          <span class="badge badge-info">
-            Mathematics
-          </span>
-
-          <span class="badge badge-info">
-            Advanced
-          </span>
-
-          <span class="badge badge-info">
-            TZS 50,000
-          </span>
-
-        </div>
-
-      </div>
-
-
-      <div class="header-actions">
-
-        <button
-          class="btn btn-light"
-          type="button"
-          onclick="openEditCourse()"
-        >
-          <i class="fa-solid fa-pen"></i>
-          Edit Details
-        </button>
-
-        <button
-          class="btn btn-primary"
-          type="button"
-          onclick="publishCourse()"
-        >
-          <i class="fa-solid fa-cloud-arrow-up"></i>
-          Publishing
-        </button>
-
-      </div>
-
-    </section>
-
-
-    <!-- =====================================
-         COURSE STATISTICS
-    ====================================== -->
-
-    <section class="stats">
-
-      <div class="stat">
-
-        <div class="stat-top">
-          Students
-
-          <div class="stat-icon">
-            <i class="fa-solid fa-users"></i>
-          </div>
-        </div>
-
-        <strong>
-          1,284
-        </strong>
-
-        <small>
-          Total enrolled
-        </small>
-
-      </div>
-
-
-      <div class="stat">
-
-        <div class="stat-top">
-          Modules
-
-          <div class="stat-icon">
-            <i class="fa-solid fa-layer-group"></i>
-          </div>
-        </div>
-
-        <strong>
-          12
-        </strong>
-
-        <small>
-          Course sections
-        </small>
-
-      </div>
-
-
-      <div class="stat">
-
-        <div class="stat-top">
-          Lessons
-
-          <div class="stat-icon">
-            <i class="fa-solid fa-play"></i>
-          </div>
-        </div>
-
-        <strong>
-          68
-        </strong>
-
-        <small>
-          Published lessons
-        </small>
-
-      </div>
-
-
-      <div class="stat">
-
-        <div class="stat-top">
-          Completion
-
-          <div class="stat-icon">
-            <i class="fa-solid fa-chart-line"></i>
-          </div>
-        </div>
-
-        <strong>
-          72%
-        </strong>
-
-        <small>
-          Average completion
-        </small>
-
-      </div>
-
-
-      <div class="stat">
-
-        <div class="stat-top">
-          Revenue
-
-          <div class="stat-icon">
-            <i class="fa-solid fa-money-bill-wave"></i>
-          </div>
-        </div>
-
-        <strong>
-          64.2M
-        </strong>
-
-        <small>
-          TZS total
-        </small>
-
-      </div>
-
-    </section>
-
-
-    <!-- =====================================
-         COURSE WORKSPACE
-    ====================================== -->
-
-    <section class="workspace">
-
-
-      <!-- COURSE MANAGEMENT MENU -->
-
-      <nav class="module-menu">
-
-        <button
-          type="button"
-          class="active"
-          data-section="overview"
-        >
-          <i class="fa-solid fa-gauge-high"></i>
-          <span>Overview</span>
-        </button>
-
-
-        <button
-          type="button"
-          data-section="modules"
-        >
-          <i class="fa-solid fa-layer-group"></i>
-          <span>Modules & Lessons</span>
-        </button>
-
-
-        <button
-          type="button"
-          data-section="quizzes"
-        >
-          <i class="fa-solid fa-circle-question"></i>
-          <span>Quizzes</span>
-        </button>
-
-
-        <button
-          type="button"
-          data-section="assignments"
-        >
-          <i class="fa-solid fa-file-pen"></i>
-          <span>Assignments</span>
-        </button>
-
-
-        <button
-          type="button"
-          data-section="resources"
-        >
-          <i class="fa-solid fa-folder-open"></i>
-          <span>Resources</span>
-        </button>
-
-
-        <button
-          type="button"
-          data-section="students"
-        >
-          <i class="fa-solid fa-users"></i>
-          <span>Students</span>
-        </button>
-
-
-        <button
-          type="button"
-          data-section="reviews"
-        >
-          <i class="fa-solid fa-star"></i>
-          <span>Reviews</span>
-        </button>
-
-
-        <button
-          type="button"
-          data-section="certificates"
-        >
-          <i class="fa-solid fa-certificate"></i>
-          <span>Certificates</span>
-        </button>
-
-
-        <button
-          type="button"
-          data-section="pricing"
-        >
-          <i class="fa-solid fa-tags"></i>
-          <span>Pricing</span>
-        </button>
-
-
-        <button
-          type="button"
-          data-section="drip"
-        >
-          <i class="fa-solid fa-calendar-days"></i>
-          <span>Drip Schedule</span>
-        </button>
-
-
-        <button
-          type="button"
-          data-section="announcements"
-        >
-          <i class="fa-solid fa-bullhorn"></i>
-          <span>Announcements</span>
-        </button>
-
-
-        <button
-          type="button"
-          data-section="discussion"
-        >
-          <i class="fa-solid fa-comments"></i>
-          <span>Discussion</span>
-        </button>
-
-
-        <button
-          type="button"
-          data-section="analytics"
-        >
-          <i class="fa-solid fa-chart-column"></i>
-          <span>Analytics</span>
-        </button>
-
-
-        <button
-          type="button"
-          data-section="seo"
-        >
-          <i class="fa-solid fa-magnifying-glass-chart"></i>
-          <span>SEO</span>
-        </button>
-
-
-        <button
-          type="button"
-          data-section="media"
-        >
-          <i class="fa-solid fa-photo-film"></i>
-          <span>Media</span>
-        </button>
-
-
-        <button
-          type="button"
-          data-section="instructors"
-        >
-          <i class="fa-solid fa-chalkboard-user"></i>
-          <span>Instructors</span>
-        </button>
-
-
-        <button
-          type="button"
-          data-section="settings"
-        >
-          <i class="fa-solid fa-sliders"></i>
-          <span>Settings</span>
-        </button>
-
-
-        <button
-          type="button"
-          data-section="publishing"
-        >
-          <i class="fa-solid fa-rocket"></i>
-          <span>Publishing</span>
-        </button>
-
-      </nav>
-
-
-      <!-- =====================================
-           DYNAMIC COURSE PANEL
-      ====================================== -->
-
-      <div class="panel">
-
-        <div
-          class="panel-content"
-          id="panelContent"
-        ></div>
-
-      </div>
-
+      <div id="list"></div>
     </section>
 
   </div>
-
 </main>
 
 
-<!-- =========================================
-     MODAL
-========================================== -->
-
-<div
-  class="modal"
-  id="modal"
-  aria-hidden="true"
->
-
+<!-- MODAL -->
+<div class="modal" id="modal">
   <div class="modal-box">
 
-    <div class="modal-head">
-
-      <h3 id="modalTitle">
-        Course Management
-      </h3>
-
-      <button
-        type="button"
-        class="modal-close"
-        onclick="closeModal()"
-        aria-label="Close"
-      >
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-
+    <div class="card-head">
+      <h3 id="modalTitle">Add Content</h3>
+      <button class="light" id="closeModal">✕</button>
     </div>
 
-    <div
-      class="modal-body"
-      id="modalBody"
-    ></div>
+    <br>
 
+    <form id="form">
+
+      <div class="form-group">
+        <label>Title</label>
+        <input id="title" required>
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="description" rows="4"></textarea>
+      </div>
+
+      <div id="extra"></div>
+
+      <button class="primary" style="width:100%">
+        <i class="fa fa-save"></i> Save
+      </button>
+
+    </form>
   </div>
-
 </div>
 
 
-<!-- =========================================
-     TOAST
-========================================== -->
-
-<div
-  class="toast"
-  id="toast"
-  role="status"
-  aria-live="polite"
-></div>
-
-
-<script>
-
-  /* =========================================
-     COURSE DATA
-  ========================================== */
-
-  const courseData = {
-
-    pcm: {
-      title:
-        "Advanced Mathematics — Form 5",
-
-      description:
-        "Complete Form 5 Advanced Mathematics course including lessons, exercises, quizzes, assignments and downloadable resources.",
-
-      modules: 12,
-      lessons: 68,
-      students: 1284
-
-    },
-
-    physics: {
-      title:
-        "Physics Masterclass — Form 5",
-
-      description:
-        "Professional Physics course covering theory, practical work, calculations and examination preparation.",
-
-      modules: 10,
-      lessons: 55,
-      students: 954
-
-    },
-
-    chemistry: {
-      title:
-        "Chemistry Complete Course — Form 6",
-
-      description:
-        "Complete Chemistry learning program with theory, practicals, exercises, quizzes and examination resources.",
-
-      modules: 14,
-      lessons: 81,
-      students: 764
-
-    }
-
-  };
-
-
-  /* =========================================
-     COURSE OVERVIEW
-  ========================================== */
-
-  function overviewHTML() {
-
-    return `
-
-      <div class="panel-header">
-
-        <div>
-
-          <h2>
-            Course Overview
-          </h2>
-
-          <p>
-            Monitor and manage the complete
-            course ecosystem.
-          </p>
-
-        </div>
-
-        <button
-          type="button"
-          class="btn btn-primary"
-          onclick="openEditCourse()"
-        >
-          <i class="fa-solid fa-pen"></i>
-          Edit Course
-        </button>
-
-      </div>
-
-
-      <div class="panel-body">
-
-        <div class="grid-3">
-
-          <div class="info-card">
-
-            <h3>
-              <i class="fa-solid fa-layer-group"></i>
-              Content Structure
-            </h3>
-
-            <p>
-              12 modules, 68 lessons,
-              15 quizzes and 8 assignments.
-            </p>
-
-            <div class="progress">
-              <div style="width:86%"></div>
-            </div>
-
-          </div>
-
-
-          <div class="info-card">
-
-            <h3>
-              <i class="fa-solid fa-user-graduate"></i>
-              Student Progress
-            </h3>
-
-            <p>
-              Average student completion
-              is currently 72%.
-            </p>
-
-            <div class="progress">
-              <div style="width:72%"></div>
-            </div>
-
-          </div>
-
-
-          <div class="info-card">
-
-            <h3>
-              <i class="fa-solid fa-certificate"></i>
-              Certification
-            </h3>
-
-            <p>
-              Students receive certificates
-              after meeting completion requirements.
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <br>
-
-
-        <div class="grid-2">
-
-          <div class="info-card">
-
-            <h3>
-              Recent Activity
-            </h3>
-
-            <div class="lesson">
-
-              <span>
-                New student enrolled
-              </span>
-
-              <small>
-                5 min ago
-              </small>
-
-            </div>
-
-            <div class="lesson">
-
-              <span>
-                Lesson updated
-              </span>
-
-              <small>
-                25 min ago
-              </small>
-
-            </div>
-
-            <div class="lesson">
-
-              <span>
-                New course review
-              </span>
-
-              <small>
-                1 hour ago
-              </small>
-
-            </div>
-
-          </div>
-
-
-          <div class="info-card">
-
-            <h3>
-              Course Health
-            </h3>
-
-            <div class="switch-row">
-
-              <div class="switch-info">
-
-                <strong>
-                  Content complete
-                </strong>
-
-                <small>
-                  All required lessons available
-                </small>
-
-              </div>
-
-              <span class="badge badge-success">
-                Good
-              </span>
-
-            </div>
-
-
-            <div class="switch-row">
-
-              <div class="switch-info">
-
-                <strong>
-                  SEO optimized
-                </strong>
-
-                <small>
-                  Search metadata configured
-                </small>
-
-              </div>
-
-              <span class="badge badge-success">
-                Good
-              </span>
-
-            </div>
-
-
-            <div class="switch-row">
-
-              <div class="switch-info">
-
-                <strong>
-                  Certificate configured
-                </strong>
-
-                <small>
-                  Automatic certificate issuing
-                </small>
-
-              </div>
-
-              <span class="badge badge-success">
-                Ready
-              </span>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    `;
-
-  }
-
-
-  /* =========================================
-     MODULES & LESSONS
-  ========================================== */
-
-  function modulesHTML() {
-
-    return `
-
-      <div class="panel-header">
-
-        <div>
-
-          <h2>
-            Modules & Lessons
-          </h2>
-
-          <p>
-            Build and manage the learning structure.
-          </p>
-
-        </div>
-
-        <button
-          type="button"
-          class="btn btn-primary"
-          onclick="openAddModule()"
-        >
-          <i class="fa-solid fa-plus"></i>
-          Add Module
-        </button>
-
-      </div>
-
-
-      <div class="panel-body">
-
-        ${moduleCard(
-          "01",
-          "Introduction to Advanced Mathematics",
-          "8 lessons"
-        )}
-
-        ${moduleCard(
-          "02",
-          "Functions and Relations",
-          "7 lessons"
-        )}
-
-        ${moduleCard(
-          "03",
-          "Algebraic Expressions",
-          "6 lessons"
-        )}
-
-        ${moduleCard(
-          "04",
-          "Sequences and Series",
-          "9 lessons"
-        )}
-
-        ${moduleCard(
-          "05",
-          "Trigonometry",
-          "8 lessons"
-        )}
-
-      </div>
-
-    `;
-
-  }
-
-
-  function moduleCard(
-    number,
-    title,
-    lessons
-  ) {
-
-    return `
-
-      <div class="section-card">
-
-        <div class="section-head">
-
-          <div class="section-title">
-
-            <i
-              class="fa-solid fa-grip-vertical drag"
-            ></i>
-
-            <div>
-
-              <strong>
-                ${number}. ${title}
-              </strong>
-
-              <div>
-
-                <small>
-                  ${lessons}
-                </small>
-
-                <span class="badge badge-success">
-                  Published
-                </span>
-
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div class="actions">
-
-            <button
-              type="button"
-              class="small-btn"
-              onclick="openAddLesson('${title}')"
-              title="Add Lesson"
-            >
-              <i class="fa-solid fa-plus"></i>
-            </button>
-
-
-            <button
-              type="button"
-              class="small-btn"
-              onclick="editModule('${title}')"
-              title="Edit Module"
-            >
-              <i class="fa-solid fa-pen"></i>
-            </button>
-
-
-            <button
-              type="button"
-              class="small-btn"
-              onclick="deleteItem('module')"
-              title="Delete Module"
-            >
-              <i class="fa-solid fa-trash"></i>
-            </button>
-
-          </div>
-
-        </div>
-
-
-        <div class="lesson-list">
-
-          ${lessonRow(
-            "Introduction",
-            "video",
-            "12:45"
-          )}
-
-          ${lessonRow(
-            "Core Concepts",
-            "video",
-            "25:10"
-          )}
-
-          ${lessonRow(
-            "Worked Examples",
-            "file",
-            "PDF"
-          )}
-
-          ${lessonRow(
-            "Practice Exercise",
-            "assignment",
-            "10 Questions"
-          )}
-
-        </div>
-
-      </div>
-
-    `;
-
-  }
-
-
-  function lessonRow(
-    name,
-    type,
-    duration
-  ) {
-
-    let icon =
-  type === "video"
-    ? "fa-play-circle"
-    : type === "file"
-    ? "fa-file-pdf"
-    : type === "assignment"
-    ? "fa-file-pen"
-    : type === "audio"
-    ? "fa-volume-high"
-    : type === "quiz"
-    ? "fa-circle-question"
-    : "fa-file-lines";
-
-return `
-  <div class="lesson">
-
-    <div class="lesson-left">
-
-      <i class="fa-solid ${icon}"></i>
-
-      <div class="lesson-content">
-
-        <span class="lesson-name">
-          ${name}
-        </span>
-
-        <div class="lesson-meta">
-
-          <span class="badge badge-info">
-            ${
-              type === "video"
-                ? "Video"
-                : type === "file"
-                ? "PDF"
-                : type === "assignment"
-                ? "Assignment"
-                : type === "audio"
-                ? "Audio"
-                : type === "quiz"
-                ? "Quiz"
-                : "Lesson"
-            }
-          </span>
-
-          <small>
-            ${duration}
-          </small>
-
-        </div>
-
-      </div>
-
-    </div>
-
-    <div class="actions">
-
-      <button
-        type="button"
-        class="small-btn"
-        title="Preview Lesson"
-        onclick="previewLesson('${name}')"
-      >
-        <i class="fa-solid fa-eye"></i>
-      </button>
-
-      <button
-        type="button"
-        class="small-btn"
-        title="Edit Lesson"
-        onclick="editLesson('${name}')"
-      >
-        <i class="fa-solid fa-pen"></i>
-      </button>
-
-      <button
-        type="button"
-        class="small-btn"
-        title="Duplicate Lesson"
-        onclick="duplicateLesson('${name}')"
-      >
-        <i class="fa-solid fa-copy"></i>
-      </button>
-
-      <button
-        type="button"
-        class="small-btn"
-        title="Delete Lesson"
-        onclick="deleteItem('lesson')"
-      >
-        <i class="fa-solid fa-trash"></i>
-      </button>
-
-    </div>
-
-  </div>
-`;
-}
-
-
-/* =========================================
-   LESSON PREVIEW
-========================================= */
-
-function previewLesson(name) {
-
-  openModal(
-    "Lesson Preview",
-    `
-      <div class="preview-box">
-
-        <div class="preview-icon">
-          <i class="fa-solid fa-play-circle"></i>
-        </div>
-
-        <h3>
-          ${name}
-        </h3>
-
-        <p>
-          This is the student-facing preview
-          of the selected lesson.
-        </p>
-
-        <div class="preview-meta">
-
-          <span class="badge badge-info">
-            Video Lesson
-          </span>
-
-          <span class="badge badge-success">
-            Published
-          </span>
-
-        </div>
-
-      </div>
-
-      <div class="form-actions">
-
-        <button
-          type="button"
-          class="btn btn-outline"
-          onclick="closeModal()"
-        >
-          Close
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-primary"
-          onclick="
-            closeModal();
-            showToast('Opening lesson preview...');
-          "
-        >
-          <i class="fa-solid fa-arrow-up-right-from-square"></i>
-          Open Preview
-        </button>
-
-      </div>
-    `
-  );
-
-}
-
-
-/* =========================================
-   DUPLICATE LESSON
-========================================= */
-
-function duplicateLesson(name) {
-
-  const confirmed =
-    confirm(
-      `Duplicate "${name}"?`
-    );
-
-  if (!confirmed) {
-    return;
-  }
-
-  showToast(
-    "Lesson duplicated successfully"
-  );
-
-}
-
-
-/* =========================================
-   EDIT LESSON
-========================================= */
-
-function editLesson(name) {
-
-  openModal(
-    "Edit Lesson",
-    `
-      <div class="form-grid">
-
-        <div class="field full">
-
-          <label>
-            Lesson Title
-          </label>
-
-          <input
-            id="editLessonTitle"
-            value="${name}"
-          >
-
-        </div>
-
-
-        <div class="field">
-
-          <label>
-            Lesson Type
-          </label>
-
-          <select id="editLessonType">
-
-            <option value="video">
-              Video
-            </option>
-
-            <option value="text">
-              Text
-            </option>
-
-            <option value="pdf">
-              PDF
-            </option>
-
-            <option value="audio">
-              Audio
-            </option>
-
-            <option value="assignment">
-              Assignment
-            </option>
-
-            <option value="quiz">
-              Quiz
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <div class="field">
-
-          <label>
-            Duration
-          </label>
-
-          <input
-            id="editLessonDuration"
-            placeholder="e.g. 15:30"
-          >
-
-        </div>
-
-
-        <div class="field full">
-
-          <label>
-            Lesson URL
-          </label>
-
-          <input
-            id="editLessonURL"
-            placeholder="https://..."
-          >
-
-        </div>
-
-
-        <div class="field full">
-
-          <label>
-            Lesson Description
-          </label>
-
-          <textarea
-            id="editLessonDescription"
-            placeholder="Describe this lesson..."
-          ></textarea>
-
-        </div>
-
-
-        <div class="field full">
-
-          <label>
-            Lesson Content
-          </label>
-
-          <textarea
-            id="editLessonContent"
-            style="min-height:180px"
-            placeholder="Write lesson content..."
-          ></textarea>
-
-        </div>
-
-
-        <div class="field full">
-
-          <div class="switch-row">
-
-            <div class="switch-info">
-
-              <strong>
-                Free Preview
-              </strong>
-
-              <small>
-                Allow non-enrolled users to preview
-                this lesson.
-              </small>
-
-            </div>
-
-            <label class="switch">
-
-              <input
-                type="checkbox"
-                id="editLessonPreview"
-              >
-
-              <span class="slider"></span>
-
-            </label>
-
-          </div>
-
-        </div>
-
-
-        <div class="field full">
-
-          <div class="switch-row">
-
-            <div class="switch-info">
-
-              <strong>
-                Required Lesson
-              </strong>
-
-              <small>
-                Students must complete this lesson
-                before finishing the course.
-              </small>
-
-            </div>
-
-            <label class="switch">
-
-              <input
-                type="checkbox"
-                id="editLessonRequired"
-                checked
-              >
-
-              <span class="slider"></span>
-
-            </label>
-
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <div class="form-actions">
-
-        <button
-          type="button"
-          class="btn btn-outline"
-          onclick="closeModal()"
-        >
-          Cancel
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-primary"
-          onclick="saveEditedLesson()"
-        >
-          <i class="fa-solid fa-floppy-disk"></i>
-          Save Changes
-        </button>
-
-      </div>
-    `
-  );
-
-}
-
-
-/* =========================================
-   SAVE EDITED LESSON
-========================================= */
-
-function saveEditedLesson() {
-
-  const title =
-    document.getElementById(
-      "editLessonTitle"
-    )?.value.trim();
-
-  if (!title) {
-
-    showToast(
-      "Lesson title is required"
-    );
-
-    return;
-
-  }
-
-  closeModal();
-
-  showToast(
-    "Lesson updated successfully"
-  );
-
-}
-
-
-/* =========================================
-   ADD LESSON
-========================================= */
-
-function openAddLesson(
-  moduleName = ""
-) {
-
-  openModal(
-    "Add Lesson",
-    `
-      <div class="form-grid">
-
-        <div class="field full">
-
-          <label>
-            Lesson Title
-          </label>
-
-          <input
-            id="newLessonTitle"
-            placeholder="e.g. Introduction to Functions"
-          >
-
-        </div>
-
-
-        <div class="field">
-
-          <label>
-            Lesson Type
-          </label>
-
-          <select id="newLessonType">
-
-            <option value="video">
-              Video
-            </option>
-
-            <option value="text">
-              Text
-            </option>
-
-            <option value="pdf">
-              PDF
-            </option>
-
-            <option value="audio">
-              Audio
-            </option>
-
-            <option value="assignment">
-              Assignment
-            </option>
-
-            <option value="quiz">
-              Quiz
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <div class="field">
-
-          <label>
-            Duration
-          </label>
-
-          <input
-            id="newLessonDuration"
-            placeholder="e.g. 20:30"
-          >
-
-        </div>
-
-
-        <div class="field full">
-
-          <label>
-            Module
-          </label>
-
-          <input
-            id="newLessonModule"
-            value="${moduleName}"
-            readonly
-          >
-
-        </div>
-
-
-        <div class="field full">
-
-          <label>
-            Video / File URL
-          </label>
-
-          <input
-            id="newLessonURL"
-            placeholder="https://..."
-          >
-
-        </div>
-
-
-        <div class="field full">
-
-          <label>
-            Lesson Description
-          </label>
-
-          <textarea
-            id="newLessonDescription"
-            placeholder="Describe what students will learn..."
-          ></textarea>
-
-        </div>
-
-
-        <div class="field full">
-
-          <label>
-            Lesson Content
-          </label>
-
-          <textarea
-            id="newLessonContent"
-            style="min-height:180px"
-            placeholder="Enter lesson content..."
-          ></textarea>
-
-        </div>
-
-
-        <div class="field full">
-
-          <div class="switch-row">
-
-            <div class="switch-info">
-
-              <strong>
-                Free Preview
-              </strong>
-
-              <small>
-                Allow visitors to preview this lesson.
-              </small>
-
-            </div>
-
-            <label class="switch">
-
-              <input
-                id="newLessonPreview"
-                type="checkbox"
-              >
-
-              <span class="slider"></span>
-
-            </label>
-
-          </div>
-
-        </div>
-
-
-        <div class="field full">
-
-          <div class="switch-row">
-
-            <div class="switch-info">
-
-              <strong>
-                Required Lesson
-              </strong>
-
-              <small>
-                Required for course completion.
-              </small>
-
-            </div>
-
-            <label class="switch">
-
-              <input
-                id="newLessonRequired"
-                type="checkbox"
-                checked
-              >
-
-              <span class="slider"></span>
-
-            </label>
-
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <div class="form-actions">
-
-        <button
-          type="button"
-          class="btn btn-outline"
-          onclick="closeModal()"
-        >
-          Cancel
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-primary"
-          onclick="saveLesson()"
-        >
-          <i class="fa-solid fa-plus"></i>
-          Add Lesson
-        </button>
-
-      </div>
-    `
-  );
-
-}
-
-
-/* =========================================
-   SAVE LESSON
-========================================= */
-
-function saveLesson() {
-
-  const title =
-    document.getElementById(
-      "newLessonTitle"
-    )?.value.trim();
-
-  if (!title) {
-
-    showToast(
-      "Please enter lesson title"
-    );
-
-    return;
-
-  }
-
-  closeModal();
-
-  showToast(
-    "Lesson added successfully"
-  );
-
-}
-
-
-/* =========================================
-   ADD MODULE
-========================================= */
-
-function openAddModule() {
-
-  openModal(
-    "Add Course Module",
-    `
-      <div class="form-grid">
-
-        <div class="field full">
-
-          <label>
-            Module Title
-          </label>
-
-          <input
-            id="moduleTitle"
-            placeholder="e.g. Functions and Relations"
-          >
-
-        </div>
-
-
-        <div class="field full">
-
-          <label>
-            Module Description
-          </label>
-
-          <textarea
-            id="moduleDescription"
-            placeholder="Describe this module..."
-          ></textarea>
-
-        </div>
-
-
-        <div class="field">
-
-          <label>
-            Module Order
-          </label>
-
-          <input
-            id="moduleOrder"
-            type="number"
-            value="1"
-            min="1"
-          >
-
-        </div>
-
-
-        <div class="field">
-
-          <label>
-            Status
-          </label>
-
-          <select id="moduleStatus">
-
-            <option value="published">
-              Published
-            </option>
-
-            <option value="draft">
-              Draft
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <div class="field full">
-
-          <div class="switch-row">
-
-            <div class="switch-info">
-
-              <strong>
-                Unlock Automatically
-              </strong>
-
-              <small>
-                Make this module available
-                automatically to enrolled students.
-              </small>
-
-            </div>
-
-            <label class="switch">
-
-              <input
-                type="checkbox"
-                checked
-              >
-
-              <span class="slider"></span>
-
-            </label>
-
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <div class="form-actions">
-
-        <button
-          type="button"
-          class="btn btn-outline"
-          onclick="closeModal()"
-        >
-          Cancel
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-primary"
-          onclick="saveModule()"
-        >
-          <i class="fa-solid fa-layer-group"></i>
-          Save Module
-        </button>
-
-      </div>
-    `
-  );
-
-}
-
-
-/* =========================================
-   SAVE MODULE
-========================================= */
-
-function saveModule() {
-
-  const title =
-    document.getElementById(
-      "moduleTitle"
-    )?.value.trim();
-
-  if (!title) {
-
-    showToast(
-      "Please enter module title"
-    );
-
-    return;
-
-  }
-
-  closeModal();
-
-  showToast(
-    "Module created successfully"
-  );
-
-}
-
-
-/* =========================================
-   GENERIC ITEM FORM
-========================================= */
-
-function openGenericForm(
-  title
-) {
-
-  let formTitle =
-    title.toLowerCase();
-
-  let isQuiz =
-    formTitle.includes("quiz");
-
-  let isAssignment =
-    formTitle.includes("assignment");
-
-  let isResource =
-    formTitle.includes("resource");
-
-  let isAnnouncement =
-    formTitle.includes("announcement");
-
-  let isDiscussion =
-    formTitle.includes("discussion");
-
-  let isInstructor =
-    formTitle.includes("instructor");
-
-  let isStudent =
-    formTitle.includes("student");
-
-
-  let specificFields = "";
-
-
-  if (isQuiz) {
-
-    specificFields = `
-
-      <div class="field">
-
-        <label>
-          Number of Questions
-        </label>
-
-        <input
-          type="number"
-          value="20"
-        >
-
-      </div>
-
-
-      <div class="field">
-
-        <label>
-          Pass Mark (%)
-        </label>
-
-        <input
-          type="number"
-          value="70"
-        >
-
-      </div>
-
-
-      <div class="field">
-
-        <label>
-          Attempts
-        </label>
-
-        <input
-          type="number"
-          value="2"
-        >
-
-      </div>
-
-    `;
-
-  }
-
-
-  if (isAssignment) {
-
-    specificFields = `
-
-      <div class="field">
-
-        <label>
-          Maximum Marks
-        </label>
-
-        <input
-          type="number"
-          value="100"
-        >
-
-      </div>
-
-
-      <div class="field">
-
-        <label>
-          Due Date
-        </label>
-
-        <input
-          type="date"
-        >
-
-      </div>
-
-
-      <div class="field">
-
-        <label>
-          Submission Type
-        </label>
-
-        <select>
-
-          <option>
-            File Upload
-          </option>
-
-          <option>
-            Text
-          </option>
-
-          <option>
-            Both
-          </option>
-
-        </select>
-
-      </div>
-
-    `;
-
-  }
-
-
-  if (isResource) {
-
-    specificFields = `
-
-      <div class="field">
-
-        <label>
-          Resource Type
-        </label>
-
-        <select>
-
-          <option>
-            PDF
-          </option>
-
-          <option>
-            Document
-          </option>
-
-          <option>
-            Presentation
-          </option>
-
-          <option>
-            Spreadsheet
-          </option>
-
-          <option>
-            External Link
-          </option>
-
-        </select>
-
-      </div>
-
-
-      <div class="field">
-
-        <label>
-          File / Resource URL
-        </label>
-
-        <input
-          placeholder="https://..."
-        >
-
-      </div>
-
-    `;
-
-  }
-
-
-  if (isAnnouncement) {
-
-    specificFields = `
-
-      <div class="field">
-
-        <label>
-          Audience
-        </label>
-
-        <select>
-
-          <option>
-            All Enrolled Students
-          </option>
-
-          <option>
-            Active Students
-          </option>
-
-          <option>
-            Incomplete Students
-          </option>
-
-        </select>
-
-      </div>
-
-    `;
-
-  }
-
-
-  if (isDiscussion) {
-
-    specificFields = `
-
-      <div class="field">
-
-        <label>
-          Discussion Type
-        </label>
-
-        <select>
-
-          <option>
-            General
-          </option>
-
-          <option>
-            Question
-          </option>
-
-          <option>
-            Module Discussion
-          </option>
-
-        </select>
-
-      </div>
-
-    `;
-
-  }
-
-
-  if (isInstructor) {
-
-    specificFields = `
-
-      <div class="field">
-
-        <label>
-          Instructor Email
-        </label>
-
-        <input
-          type="email"
-          placeholder="instructor@example.com"
-        >
-
-      </div>
-
-
-      <div class="field">
-
-        <label>
-          Instructor Role
-        </label>
-
-        <select>
-
-          <option>
-            Lead Instructor
-          </option>
-
-          <option>
-            Co-Instructor
-          </option>
-
-          <option>
-            Teaching Assistant
-          </option>
-
-        </select>
-
-      </div>
-
-    `;
-
-  }
-
-
-  if (isStudent) {
-
-    specificFields = `
-
-      <div class="field full">
-
-        <label>
-          Student Email
-        </label>
-
-        <input
-          type="email"
-          placeholder="student@example.com"
-        >
-
-      </div>
-
-    `;
-
-  }
-
-
-  openModal(
-    title,
-    `
-      <div class="form-grid">
-
-        <div class="field full">
-
-          <label>
-            Title / Name
-          </label>
-
-          <input
-            id="genericTitle"
-            placeholder="Enter ${title.toLowerCase()} title"
-          >
-
-        </div>
-
-
-        ${specificFields}
-
-
-        <div class="field full">
-
-          <label>
-            Description
-          </label>
-
-          <textarea
-            id="genericDescription"
-            placeholder="Enter description..."
-          ></textarea>
-
-        </div>
-
-
-        <div class="field">
-
-          <label>
-            Status
-          </label>
-
-          <select>
-
-            <option>
-              Published
-            </option>
-
-            <option>
-              Draft
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <div class="field">
-
-          <label>
-            Order
-          </label>
-
-          <input
-            type="number"
-            value="1"
-            min="1"
-          >
-
-        </div>
-
-      </div>
-
-
-      <div class="form-actions">
-
-        <button
-          type="button"
-          class="btn btn-outline"
-          onclick="closeModal()"
-        >
-          Cancel
-        </button>
-
-
-        <button
-          type="button"
-          class="btn btn-primary"
-          onclick="saveGeneric()"
-        >
-                   <i class="fa-solid fa-floppy-disk"></i>
-          Save
-        </button>
-
-      </div>
-    `
-  );
-}
-
-
-/* =========================================
-   SAVE GENERIC ITEM
-========================================= */
-
-function saveGeneric() {
-
-  const titleInput =
-    document.getElementById(
-      "genericTitle"
-    );
-
-  const title =
-    titleInput
-      ? titleInput.value.trim()
-      : "";
-
-  if (!title) {
-
-    showToast(
-      "Please enter a title"
-    );
-
-    return;
-  }
-
-  closeModal();
-
-  showToast(
-    "Item saved successfully"
-  );
-}
-
-
-/* =========================================
-   EDIT MODULE
-========================================= */
-
-function editModule(
-  title
-) {
-
-  openModal(
-    "Edit Module",
-    `
-      <div class="form-grid">
-
-        <div class="field full">
-
-          <label>
-            Module Title
-          </label>
-
-          <input
-            id="editModuleTitle"
-            value="${escapeHTML(title)}"
-          >
-
-        </div>
-
-        <div class="field full">
-
-          <label>
-            Module Description
-          </label>
-
-          <textarea
-            id="editModuleDescription"
-            placeholder="Describe this module..."
-          ></textarea>
-
-        </div>
-
-        <div class="field">
-
-          <label>
-            Module Order
-          </label>
-
-          <input
-            type="number"
-            min="1"
-            value="1"
-          >
-
-        </div>
-
-        <div class="field">
-
-          <label>
-            Status
-          </label>
-
-          <select>
-
-            <option value="published">
-              Published
-            </option>
-
-            <option value="draft">
-              Draft
-            </option>
-
-          </select>
-
-        </div>
-
-      </div>
-
-
-      <div class="form-actions">
-
-        <button
-          type="button"
-          class="btn btn-outline"
-          onclick="closeModal()"
-        >
-          Cancel
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-primary"
-          onclick="saveEditedModule()"
-        >
-          <i class="fa-solid fa-floppy-disk"></i>
-          Save Changes
-        </button>
-
-      </div>
-    `
-  );
-
-}
-
-
-/* =========================================
-   SAVE EDITED MODULE
-========================================= */
-
-function saveEditedModule() {
-
-  const title =
-    document.getElementById(
-      "editModuleTitle"
-    )?.value.trim();
-
-  if (!title) {
-
-    showToast(
-      "Module title is required"
-    );
-
-    return;
-  }
-
-  closeModal();
-
-  showToast(
-    "Module updated successfully"
-  );
-}
-
-
-/* =========================================
-   EDIT LESSON
-========================================= */
-
-function editLesson(
-  name
-) {
-
-  openModal(
-    "Edit Lesson",
-    `
-      <div class="form-grid">
-
-        <div class="field full">
-
-          <label>
-            Lesson Title
-          </label>
-
-          <input
-            id="editLessonTitle"
-            value="${escapeHTML(name)}"
-          >
-
-        </div>
-
-        <div class="field">
-
-          <label>
-            Lesson Type
-          </label>
-
-          <select id="editLessonType">
-
-            <option value="video">
-              Video
-            </option>
-
-            <option value="text">
-              Text
-            </option>
-
-            <option value="pdf">
-              PDF
-            </option>
-
-            <option value="audio">
-              Audio
-            </option>
-
-            <option value="quiz">
-              Quiz
-            </option>
-
-            <option value="assignment">
-              Assignment
-            </option>
-
-          </select>
-
-        </div>
-
-        <div class="field">
-
-          <label>
-            Duration
-          </label>
-
-          <input
-            id="editLessonDuration"
-            placeholder="e.g. 15:30"
-          >
-
-        </div>
-
-        <div class="field full">
-
-          <label>
-            Content URL
-          </label>
-
-          <input
-            id="editLessonURL"
-            placeholder="https://..."
-          >
-
-        </div>
-
-        <div class="field full">
-
-          <label>
-            Lesson Description
-          </label>
-
-          <textarea
-            id="editLessonDescription"
-            placeholder="Describe this lesson..."
-          ></textarea>
-
-        </div>
-
-        <div class="field full">
-
-          <label>
-            Lesson Content
-          </label>
-
-          <textarea
-            id="editLessonContent"
-            style="min-height:180px"
-            placeholder="Enter lesson content..."
-          ></textarea>
-
-        </div>
-
-        <div class="field full">
-
-          <div class="switch-row">
-
-            <div class="switch-info">
-
-              <strong>
-                Free Preview
-              </strong>
-
-              <small>
-                Allow visitors to preview this lesson.
-              </small>
-
-            </div>
-
-            <label class="switch">
-
-              <input
-                type="checkbox"
-                id="editLessonPreview"
-              >
-
-              <span class="slider"></span>
-
-            </label>
-
-          </div>
-
-        </div>
-
-        <div class="field full">
-
-          <div class="switch-row">
-
-            <div class="switch-info">
-
-              <strong>
-                Required Lesson
-              </strong>
-
-              <small>
-                Student must complete this lesson.
-              </small>
-
-            </div>
-
-            <label class="switch">
-
-              <input
-                type="checkbox"
-                id="editLessonRequired"
-                checked
-              >
-
-              <span class="slider"></span>
-
-            </label>
-
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <div class="form-actions">
-
-        <button
-          type="button"
-          class="btn btn-outline"
-          onclick="closeModal()"
-        >
-          Cancel
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-primary"
-          onclick="saveEditedLesson()"
-        >
-          <i class="fa-solid fa-floppy-disk"></i>
-          Save Changes
-        </button>
-
-      </div>
-    `
-  );
-
-}
-
-
-/* =========================================
-   SAVE EDITED LESSON
-========================================= */
-
-function saveEditedLesson() {
-
-  const title =
-    document.getElementById(
-      "editLessonTitle"
-    )?.value.trim();
-
-  if (!title) {
-
-    showToast(
-      "Lesson title is required"
-    );
-
-    return;
-  }
-
-  closeModal();
-
-  showToast(
-    "Lesson updated successfully"
-  );
-}
-
-
-/* =========================================
-   PREVIEW LESSON
-========================================= */
-
-function previewLesson(
-  name
-) {
-
-  openModal(
-    "Lesson Preview",
-    `
-      <div class="preview-box">
-
-        <div class="preview-icon">
-          <i class="fa-solid fa-play-circle"></i>
-        </div>
-
-        <h3>
-          ${escapeHTML(name)}
-        </h3>
-
-        <p>
-          Preview how this lesson will appear
-          to enrolled students.
-        </p>
-
-        <div class="preview-meta">
-
-          <span class="badge badge-info">
-            Lesson
-          </span>
-
-          <span class="badge badge-success">
-            Published
-          </span>
-
-        </div>
-
-      </div>
-
-      <div class="form-actions">
-
-        <button
-          type="button"
-          class="btn btn-outline"
-          onclick="closeModal()"
-        >
-          Close
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-primary"
-          onclick="
-            closeModal();
-            showToast('Opening lesson preview...');
-          "
-        >
-          <i class="fa-solid fa-eye"></i>
-          Open Preview
-        </button>
-
-      </div>
-    `
-  );
-
-}
-
-
-/* =========================================
-   DUPLICATE LESSON
-========================================= */
-
-function duplicateLesson(
-  name
-) {
-
-  const confirmed =
-    confirm(
-      `Duplicate "${name}"?`
-    );
-
-  if (!confirmed) {
-    return;
-  }
-
-  showToast(
-    "Lesson duplicated successfully"
-  );
-
-}
-
-
-/* =========================================
-   DELETE ITEM
-========================================= */
-
-function deleteItem(
-  type = "item"
-) {
-
-  const confirmed =
-    confirm(
-      `Are you sure you want to delete this ${type}?`
-    );
-
-  if (!confirmed) {
-    return;
-  }
-
-  showToast(
-    `${type} deleted successfully`
-  );
-
-}
-
-
-/* =========================================
-   CERTIFICATE CONFIGURATION
-========================================= */
-
-function openCertificateForm() {
-
-  openModal(
-    "Certificate Configuration",
-    `
-      <div class="form-grid">
-
-        <div class="field full">
-
-          <label>
-            Certificate Title
-          </label>
-
-          <input
-            value="Certificate of Course Completion"
-          >
-
-        </div>
-
-        <div class="field">
-
-          <label>
-            Completion Requirement
-          </label>
-
-          <input
-            type="number"
-            value="100"
-            min="0"
-            max="100"
-          >
-
-        </div>
-
-        <div class="field">
-
-          <label>
-            Minimum Quiz Score
-          </label>
-
-          <input
-            type="number"
-            value="70"
-            min="0"
-            max="100"
-          >
-
-        </div>
-
-        <div class="field full">
-
-          <label>
-            Certificate Template
-          </label>
-
-          <select>
-
-            <option>
-              LetsStudy Pro Standard
-            </option>
-
-            <option>
-              Professional Academic
-            </option>
-
-            <option>
-              Modern Certificate
-            </option>
-
-          </select>
-
-        </div>
-
-        <div class="field full">
-
-          <div class="switch-row">
-
-            <div class="switch-info">
-
-              <strong>
-                Automatic Certificate
-              </strong>
-
-              <small>
-                Generate certificate automatically
-                after completion.
-              </small>
-
-            </div>
-
-            <label class="switch">
-
-              <input
-                type="checkbox"
-                checked
-              >
-
-              <span class="slider"></span>
-
-            </label>
-
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <div class="form-actions">
-
-        <button
-          type="button"
-          class="btn btn-outline"
-          onclick="closeModal()"
-        >
-          Cancel
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-primary"
-          onclick="saveCertificate()"
-        >
-          <i class="fa-solid fa-floppy-disk"></i>
-          Save Configuration
-        </button>
-
-      </div>
-    `
-  );
-
-}
-
-
-function saveCertificate() {
-
-  closeModal();
-
-  showToast(
-    "Certificate configuration saved"
-  );
-
-}
-
-
-/* =========================================
-   MEDIA UPLOAD
-========================================= */
-
-function openMediaUpload() {
-
-  openModal(
-    "Course Media",
-    `
-      <div class="form-grid">
-
-        <div class="field full">
-
-          <label>
-            Media Type
-          </label>
-
-          <select>
-
-            <option>
-              Course Thumbnail
-            </option>
-
-            <option>
-              Course Banner
-            </option>
-
-            <option>
-              Intro Video
-            </option>
-
-            <option>
-              Instructor Image
-            </option>
-
-          </select>
-
-        </div>
-
-        <div class="field full">
-
-          <label>
-            Media URL
-          </label>
-
-          <input
-            id="mediaURL"
-            placeholder="https://..."
-          >
-
-        </div>
-
-        <div class="field full">
-
-          <label>
-            Upload File
-          </label>
-
-          <input
-            id="mediaFile"
-            type="file"
-          >
-
-        </div>
-
-      </div>
-
-
-      <div class="form-actions">
-
-        <button
-          type="button"
-          class="btn btn-outline"
-          onclick="closeModal()"
-        >
-          Cancel
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-primary"
-          onclick="uploadMedia()"
-        >
-          <i class="fa-solid fa-upload"></i>
-          Upload Media
-        </button>
-
-      </div>
-    `
-  );
-
-}
-
-
-function uploadMedia() {
-
-  closeModal();
-
-  showToast(
-    "Media uploaded successfully"
-  );
-
-}
-
-
-/* =========================================
-   PRICING
-========================================= */
-
-function savePricing() {
-
-  showToast(
-    "Pricing settings saved successfully"
-  );
-
-}
-
-
-/* =========================================
-   COURSE PUBLISHING
-========================================= */
-
-function publishCourse() {
-
-  const confirmed =
-    confirm(
-      "Publish this course and make it available to students?"
-    );
-
-  if (!confirmed) {
-    return;
-  }
-
-  showToast(
-    "Course published successfully"
-  );
-
-}
-
-
-function setDraft() {
-
-  const confirmed =
-    confirm(
-      "Move this course to draft?"
-    );
-
-  if (!confirmed) {
-    return;
-  }
-
-  showToast(
-    "Course moved to draft"
-  );
-
-}
-
-
-function archiveCourse() {
-
-  const confirmed =
-    confirm(
-      "Archive this course?"
-    );
-
-  if (!confirmed) {
-    return;
-  }
-
-  showToast(
-    "Course archived successfully"
-  );
-
-}
-
-
-/* =========================================
-   COURSE PREVIEW
-========================================= */
-
-function openPreview() {
-
-  window.open(
-    "../course.html",
-    "_blank"
-  );
-
-}
-
-
-/* =========================================
-   MODAL SYSTEM
-========================================= */
-
-function openModal(
-  title,
-  content
-) {
-
-  const modal =
-    document.getElementById(
-      "modal"
-    );
-
-  if (!modal) {
-    return;
-  }
-
-  const modalTitle =
-    document.getElementById(
-      "modalTitle"
-    );
-
-  const modalBody =
-    document.getElementById(
-      "modalBody"
-    );
-
-  if (modalTitle) {
-
-    modalTitle.textContent =
-      title;
-
-  }
-
-  if (modalBody) {
-
-    modalBody.innerHTML =
-      content;
-
-  }
-
-  modal.classList.add(
-    "show"
-  );
-
-  modal.setAttribute(
-    "aria-hidden",
-    "false"
-  );
-
-}
-
-
-function closeModal() {
-
-  const modal =
-    document.getElementById(
-      "modal"
-    );
-
-  if (!modal) {
-    return;
-  }
-
-  modal.classList.remove(
-    "show"
-  );
-
-  modal.setAttribute(
-    "aria-hidden",
-    "true"
-  );
-
-}
-
-
-/* =========================================
-   CLOSE MODAL ON OUTSIDE CLICK
-========================================= */
-
-const modalElement =
-  document.getElementById(
-    "modal"
-  );
-
-if (modalElement) {
-
-  modalElement.addEventListener(
-    "click",
-    function(event) {
-
-      if (
-        event.target ===
-        modalElement
-      ) {
-
-        closeModal();
-
-      }
-
-    }
-  );
-
-}
-
-
-/* =========================================
-   ESCAPE KEY
-========================================= */
-
-document.addEventListener(
-  "keydown",
-  function(event) {
-
-    if (
-      event.key === "Escape"
-    ) {
-
-      closeModal();
-
-    }
-
-  }
-);
-
-
-/* =========================================
-   TOAST
-========================================= */
-
-function showToast(
-  message
-) {
-
-  const toast =
-    document.getElementById(
-      "toast"
-    );
-
-  if (!toast) {
-    return;
-  }
-
-  toast.textContent =
-    message;
-
-  toast.classList.add(
-    "show"
-  );
-
-  clearTimeout(
-    window.__toastTimer
-  );
-
-  window.__toastTimer =
-    setTimeout(
-      function() {
-
-        toast.classList.remove(
-          "show"
-        );
-
-      },
-      2800
-    );
-
-}
-
-
-/* =========================================
-   SAFE HTML
-========================================= */
-
-function escapeHTML(
-  value
-) {
-
-  return String(value)
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-    .replace(
-      /</g,
-      "&lt;"
-    )
-    .replace(
-      />/g,
-      "&gt;"
-    )
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-    .replace(
-      /'/g,
-      "&#039;"
-    );
-
-}
-
-
-/* =========================================
-   MOBILE SIDEBAR
-========================================= */
-
-const menuBtn =
-  document.getElementById(
-    "menuBtn"
-  );
-
-const sidebar =
-  document.getElementById(
-    "sidebar"
-  );
-
-if (
-  menuBtn &&
-  sidebar
-) {
-
-  menuBtn.addEventListener(
-    "click",
-    function() {
-
-      sidebar.classList.toggle(
-        "open"
-      );
-
-    }
-  );
-
-}
-
-
-/* =========================================
-   SIDEBAR NAVIGATION
-========================================= */
-
-if (sidebar) {
-
-  sidebar
-    .querySelectorAll("a")
-    .forEach(
-      function(link) {
-
-        link.addEventListener(
-          "click",
-          function() {
-
-            sidebar.classList.remove(
-              "open"
-            );
-
-          }
-        );
-
-      }
-    );
-
-}
-
-
-/* =========================================
-   ADMIN LOGOUT
-========================================= */
-
-function logoutAdmin() {
-
-  const confirmed =
-    confirm(
-      "Are you sure you want to logout?"
-    );
-
-  if (!confirmed) {
-    return;
-  }
-
-  /*
-    Firebase Auth can be connected here:
-
-    auth.signOut()
-      .then(() => {
-        window.location.href =
-          "login.html";
-      })
-      .catch(error => {
-        console.error(error);
-        showToast(
-          "Logout failed"
-        );
-      });
-  */
-
-  showToast(
-    "Logout successful"
-  );
-
-}
-
-
-/* =========================================
-   COURSE SECTION ROUTER
-========================================= */
-
-if (
-  typeof sections !==
-  "undefined"
-) {
-
-  const initialSection =
-    window.location.hash
-      .replace(
-        "#",
-        ""
-      )
-      .trim() ||
-    "overview";
-
-
-  const selectedSection =
-    sections[
-      initialSection
-    ]
-      ? initialSection
-      : "overview";
-
-
-  if (
-    typeof loadSection ===
-    "function"
-  ) {
-
-    loadSection(
-      selectedSection
-    );
-
-  }
-
-
-  document
-    .querySelectorAll(
-      ".module-menu button"
-    )
-    .forEach(
-      function(button) {
-
-        button.classList.toggle(
-          "active",
-          button.dataset.section ===
-          selectedSection
-        );
-
-      }
-    );
-
-}
-
-
-/* =========================================
-   COURSE SELECTOR
-========================================= */
-
-const courseSelect =
-  document.getElementById(
-    "courseSelect"
-  );
-
-if (courseSelect) {
-
-  courseSelect.addEventListener(
-    "change",
-    function() {
-
-      const course =
-        typeof courseData !==
-        "undefined"
-          ? courseData[
-              this.value
-            ]
-          : null;
-
-
-      if (!course) {
-        return;
-      }
-
-
-      const titleElement =
-        document.getElementById(
-          "courseTitle"
-        );
-
-      const descriptionElement =
-        document.getElementById(
-          "courseDescription"
-        );
-
-
-      if (titleElement) {
-
-        titleElement.textContent =
-          course.title;
-
-      }
-
-
-      if (descriptionElement) {
-
-        descriptionElement.textContent =
-          course.description;
-
-      }
-
-
-      showToast(
-        "Course loaded successfully"
-      );
-
-    }
-  );
-
-}
-
-
-/* =========================================
-   INITIALIZATION
-========================================= */
-
-document.addEventListener(
-  "DOMContentLoaded",
-  function() {
-
-    if (
-      typeof loadSection ===
-      "function"
-    ) {
-
-      loadSection(
-        "overview"
-      );
-
-    }
-
-  }
-);
-
-</script>
 <script type="module">
 
-import { initializeApp } from
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import {
+ initializeApp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
 import {
-  getAuth,
-  onAuthStateChanged
-} from
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-
-import {
-  getFirestore,
-  collection,
-  doc,
-  addDoc,
-  setDoc,
-  updateDoc,
-  deleteDoc,
-  getDoc,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  serverTimestamp
-} from
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-
-import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL
-} from
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
+ getFirestore,
+ collection,
+ getDocs,
+ addDoc,
+ updateDoc,
+ deleteDoc,
+ doc,
+ query,
+ where,
+ orderBy,
+ serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 
-/* =========================================
-   FIREBASE CONFIG
-========================================= */
+/* FIREBASE */
 
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
@@ -4845,1250 +152,558 @@ const firebaseConfig = {
   measurementId: "G-85B7V5H5J0"
 };
 
-
-const app =
-  initializeApp(firebaseConfig);
-
-
-const auth =
-  getAuth(app);
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
 
 
-const db =
-  getFirestore(app);
+/* STATE */
+
+let courseId="";
+let currentTab="modules";
+let editingId=null;
 
 
-const storage =
-  getStorage(app);
+/* DOM */
+
+const courseSelect=document.getElementById("courseSelect");
+const content=document.getElementById("content");
+const list=document.getElementById("list");
+const count=document.getElementById("count");
+const sectionTitle=document.getElementById("sectionTitle");
+const addBtn=document.getElementById("addBtn");
+const modal=document.getElementById("modal");
+const form=document.getElementById("form");
 
 
-/* =========================================
-   CURRENT COURSE
-========================================= */
+/* ESCAPE */
 
-const COURSE_ID =
-  new URLSearchParams(
-    window.location.search
-  ).get("courseId");
+const esc=v=>String(v??"")
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;");
 
 
-if (!COURSE_ID) {
+/* COLLECTION MAP */
 
-  console.error(
-    "Course ID missing from URL."
-  );
+const collections={
+ modules:"courseModules",
+ lessons:"lessons",
+ quizzes:"quizzes",
+ assignments:"assignments",
+ resources:"resources"
+};
+
+
+/* LOAD COURSES */
+
+async function loadCourses(){
+
+ const snap=await getDocs(collection(db,"courses"));
+
+ snap.forEach(x=>{
+
+   const c=x.data();
+
+   const option=document.createElement("option");
+
+   option.value=x.id;
+   option.textContent=c.title||"Untitled Course";
+
+   courseSelect.appendChild(option);
+
+ });
 
 }
 
 
-/* =========================================
-   CURRENT ADMIN
-========================================= */
+/* SELECT COURSE */
 
-let currentAdmin = null;
+courseSelect.onchange=async()=>{
 
+ courseId=courseSelect.value;
 
-onAuthStateChanged(
-  auth,
-  async user => {
+ if(!courseId){
+   content.style.display="none";
+   return;
+ }
 
-    if (!user) {
+ content.style.display="block";
 
-      console.warn(
-        "Admin is not authenticated."
-      );
+ document.getElementById("courseName")
+ .textContent=
+ courseSelect.options[courseSelect.selectedIndex].text;
 
-      return;
+ await loadContent();
 
-    }
-
-    currentAdmin = user;
-
-    console.log(
-      "Admin:",
-      user.uid
-    );
-
-  }
-);
+};
 
 
-/* =========================================
-   COURSE REFERENCE
-========================================= */
+/* LOAD CONTENT */
 
-function courseRef() {
+async function loadContent(){
 
-  return doc(
-    db,
-    "courses",
-    COURSE_ID
-  );
+ list.innerHTML=
+ `<div class="empty">
+   <i class="fa fa-spinner fa-spin"></i>
+   Loading...
+ </div>`;
+
+ try{
+
+   const ref=collection(
+     db,
+     collections[currentTab]
+   );
+
+   const q=query(
+     ref,
+     where("courseId","==",courseId)
+   );
+
+   const snap=await getDocs(q);
+
+   const data=[];
+
+   snap.forEach(x=>{
+     data.push({
+       id:x.id,
+       ...x.data()
+     });
+   });
+
+   data.sort((a,b)=>
+     (a.order||0)-(b.order||0)
+   );
+
+   count.textContent=
+     `${data.length} item${data.length===1?"":"s"}`;
+
+   if(!data.length){
+
+     list.innerHTML=`
+       <div class="empty">
+         No ${currentTab} found.
+       </div>
+     `;
+
+     return;
+   }
+
+   list.innerHTML=data.map(item=>`
+
+     <div class="item">
+
+       <div>
+         <strong>${esc(item.title)}</strong>
+         <div class="muted">
+           ${esc(item.description||"No description")}
+         </div>
+       </div>
+
+       <div class="actions">
+
+         <button
+           class="light"
+           onclick="editItem('${item.id}')">
+           <i class="fa fa-edit"></i>
+         </button>
+
+         <button
+           class="danger"
+           onclick="removeItem('${item.id}')">
+           <i class="fa fa-trash"></i>
+         </button>
+
+       </div>
+
+     </div>
+
+   `).join("");
+
+ }catch(error){
+
+   console.error(error);
+
+   list.innerHTML=
+   `<div class="empty">
+      Failed to load content.
+    </div>`;
+
+ }
 
 }
 
 
-/* =========================================
-   ADD MODULE
-========================================= */
+/* TABS */
 
-window.saveModule =
-async function () {
+document.querySelectorAll(".tabs button")
+.forEach(button=>{
 
-  const title =
-    document
-      .getElementById(
-        "moduleTitle"
-      )
-      ?.value
-      .trim();
+ button.onclick=async()=>{
 
-  const description =
-    document
-      .getElementById(
-        "moduleDescription"
-      )
-      ?.value
-      .trim();
+   document.querySelectorAll(".tabs button")
+   .forEach(x=>x.classList.remove("active"));
 
-  const order =
-    Number(
-      document
-        .getElementById(
-          "moduleOrder"
-        )
-        ?.value || 1
-    );
+   button.classList.add("active");
 
+   currentTab=button.dataset.tab;
 
-  if (!COURSE_ID) {
+   sectionTitle.textContent=
+     currentTab.charAt(0).toUpperCase()+
+     currentTab.slice(1);
 
-    showToast(
-      "Course ID is missing"
-    );
+   await loadContent();
 
-    return;
+ };
 
-  }
+});
 
 
-  if (!title) {
+/* EXTRA FIELDS */
 
-    showToast(
-      "Module title is required"
-    );
+function extraFields(){
 
-    return;
+ if(currentTab==="lessons"){
 
-  }
+   return `
+   <div class="grid">
 
+    <div class="form-group">
+      <label>Lesson Type</label>
+      <select id="type">
+       <option value="video">Video</option>
+       <option value="text">Text</option>
+       <option value="pdf">PDF</option>
+       <option value="audio">Audio</option>
+       <option value="live">Live Class</option>
+      </select>
+    </div>
 
-  try {
+    <div class="form-group">
+      <label>Duration</label>
+      <input id="duration" placeholder="15 min">
+    </div>
 
-    await addDoc(
+   </div>
 
-      collection(
-        db,
-        "courses",
-        COURSE_ID,
-        "modules"
-      ),
+   <div class="form-group">
+     <label>Content / URL</label>
+     <input id="url" placeholder="Video, PDF or resource URL">
+   </div>
+   `;
+ }
 
-      {
 
-        title,
+ if(currentTab==="quizzes"){
 
-        description,
+   return `
+   <div class="grid">
 
-        order,
+    <div class="form-group">
+      <label>Passing Score</label>
+      <input id="passingScore" type="number" value="70">
+    </div>
 
-        status:
-          "published",
+    <div class="form-group">
+      <label>Time Limit</label>
+      <input id="timeLimit" placeholder="30 minutes">
+    </div>
 
-        createdBy:
-          currentAdmin?.uid || null,
+   </div>
+   `;
+ }
 
-        createdAt:
-          serverTimestamp(),
 
-        updatedAt:
-          serverTimestamp()
+ if(currentTab==="assignments"){
 
-      }
+   return `
+   <div class="grid">
 
-    );
+    <div class="form-group">
+      <label>Due Date</label>
+      <input id="dueDate" type="datetime-local">
+    </div>
 
+    <div class="form-group">
+      <label>Maximum Score</label>
+      <input id="maxScore" type="number" value="100">
+    </div>
 
-    closeModal();
+   </div>
 
-    showToast(
-      "Module created successfully"
-    );
-
-
-    if (
-      typeof loadModules ===
-      "function"
-    ) {
-
-      loadModules();
-
-    }
-
-  }
-
-  catch (error) {
-
-    console.error(
-      error
-    );
-
-    showToast(
-      "Failed to create module"
-    );
-
-  }
-
-};
-
-
-/* =========================================
-   LOAD MODULES
-========================================= */
-
-window.loadModules =
-async function () {
-
-  if (!COURSE_ID) {
-    return;
-  }
-
-
-  try {
-
-    const modulesRef =
-      collection(
-        db,
-        "courses",
-        COURSE_ID,
-        "modules"
-      );
-
-
-    const snapshot =
-      await getDocs(
-        modulesRef
-      );
-
-
-    const modules = [];
-
-
-    snapshot.forEach(
-      item => {
-
-        modules.push({
-
-          id:
-            item.id,
-
-          ...item.data()
-
-        });
-
-      }
-    );
-
-
-    modules.sort(
-      (a, b) =>
-        (a.order || 0) -
-        (b.order || 0)
-    );
-
-
-    console.log(
-      "Modules:",
-      modules
-    );
-
-
-    return modules;
-
-  }
-
-  catch (error) {
-
-    console.error(
-      "Load modules error:",
-      error
-    );
-
-    return [];
-
-  }
-
-};
-
-
-/* =========================================
-   ADD LESSON
-========================================= */
-
-window.saveLesson =
-async function () {
-
-  const title =
-    document
-      .getElementById(
-        "newLessonTitle"
-      )
-      ?.value
-      .trim();
-
-  const type =
-    document
-      .getElementById(
-        "newLessonType"
-      )
-      ?.value;
-
-  const duration =
-    document
-      .getElementById(
-        "newLessonDuration"
-      )
-      ?.value
-      .trim();
-
-  const url =
-    document
-      .getElementById(
-        "newLessonURL"
-      )
-      ?.value
-      .trim();
-
-  const description =
-    document
-      .getElementById(
-        "newLessonDescription"
-      )
-      ?.value
-      .trim();
-
-  const content =
-    document
-      .getElementById(
-        "newLessonContent"
-      )
-      ?.value
-      .trim();
-
-
-  const moduleTitle =
-    document
-      .getElementById(
-        "newLessonModule"
-      )
-      ?.value
-      .trim();
-
-
-  if (!title) {
-
-    showToast(
-      "Lesson title is required"
-    );
-
-    return;
-
-  }
-
-
-  if (!COURSE_ID) {
-
-    showToast(
-      "Course ID is missing"
-    );
-
-    return;
-
-  }
-
-
-  try {
-
-    /*
-      In production we should use
-      the actual module ID instead
-      of module title.
-    */
-
-    const modules =
-      await loadModules();
-
-
-    const module =
-      modules.find(
-        item =>
-          item.title ===
-          moduleTitle
-      );
-
-
-    if (!module) {
-
-      showToast(
-        "Module not found"
-      );
-
-      return;
-
-    }
-
-
-    const lessonsRef =
-      collection(
-        db,
-        "courses",
-        COURSE_ID,
-        "modules",
-        module.id,
-        "lessons"
-      );
-
-
-    await addDoc(
-
-      lessonsRef,
-
-      {
-
-        title,
-
-        type,
-
-        duration,
-
-        url,
-
-        description,
-
-        content,
-
-        preview:
-          document
-            .getElementById(
-              "newLessonPreview"
-            )
-            ?.checked || false,
-
-        required:
-          document
-            .getElementById(
-              "newLessonRequired"
-            )
-            ?.checked ?? true,
-
-        status:
-          "published",
-
-        order:
-          1,
-
-        createdBy:
-          currentAdmin?.uid || null,
-
-        createdAt:
-          serverTimestamp(),
-
-        updatedAt:
-          serverTimestamp()
-
-      }
-
-    );
-
-
-    closeModal();
-
-    showToast(
-      "Lesson added successfully"
-    );
-
-  }
-
-  catch (error) {
-
-    console.error(
-      error
-    );
-
-    showToast(
-      "Failed to add lesson"
-    );
-
-  }
-
-};
-
-
-/* =========================================
-   UPDATE MODULE
-========================================= */
-
-window.saveEditedModule =
-async function () {
-
-  const moduleId =
-    window.editingModuleId;
-
-
-  if (!moduleId) {
-
-    showToast(
-      "Module ID missing"
-    );
-
-    return;
-
-  }
-
-
-  const title =
-    document
-      .getElementById(
-        "editModuleTitle"
-      )
-      ?.value
-      .trim();
-
-  const description =
-    document
-      .getElementById(
-        "editModuleDescription"
-      )
-      ?.value
-      .trim();
-
-
-  if (!title) {
-
-    showToast(
-      "Module title is required"
-    );
-
-    return;
-
-  }
-
-
-  try {
-
-    await updateDoc(
-
-      doc(
-        db,
-        "courses",
-        COURSE_ID,
-        "modules",
-        moduleId
-      ),
-
-      {
-
-        title,
-
-        description,
-
-        updatedAt:
-          serverTimestamp()
-
-      }
-
-    );
-
-
-    closeModal();
-
-    showToast(
-      "Module updated successfully"
-    );
-
-  }
-
-  catch (error) {
-
-    console.error(
-      error
-    );
-
-    showToast(
-      "Failed to update module"
-    );
-
-  }
-
-};
-
-
-/* =========================================
-   DELETE MODULE
-========================================= */
-
-window.deleteModule =
-async function (
-  moduleId
-) {
-
-  if (!moduleId) {
-    return;
-  }
-
-
-  const confirmed =
-    confirm(
-      "Delete this module and its lessons?"
-    );
-
-
-  if (!confirmed) {
-    return;
-  }
-
-
-  try {
-
-    await deleteDoc(
-
-      doc(
-        db,
-        "courses",
-        COURSE_ID,
-        "modules",
-        moduleId
-      )
-
-    );
-
-
-    showToast(
-      "Module deleted successfully"
-    );
-
-
-    if (
-      typeof loadModules ===
-      "function"
-    ) {
-
-      loadModules();
-
-    }
-
-  }
-
-  catch (error) {
-
-    console.error(
-      error
-    );
-
-    showToast(
-      "Failed to delete module"
-    );
-
-  }
-
-};
-
-
-/* =========================================
-   UPDATE COURSE SETTINGS
-========================================= */
-
-window.saveCourseSettings =
-async function () {
-
-  const title =
-    document
-      .getElementById(
-        "editCourseTitle"
-      )
-      ?.value
-      .trim();
-
-  const description =
-    document
-      .getElementById(
-        "editCourseDescription"
-      )
-      ?.value
-      .trim();
-
-
-  if (!COURSE_ID) {
-
-    showToast(
-      "Course ID missing"
-    );
-
-    return;
-
-  }
-
-
-  try {
-
-    await updateDoc(
-
-      courseRef(),
-
-      {
-
-        title,
-
-        description,
-
-        updatedAt:
-          serverTimestamp()
-
-      }
-
-    );
-
-
-    closeModal();
-
-    showToast(
-      "Course updated successfully"
-    );
-
-  }
-
-  catch (error) {
-
-    console.error(
-      error
-    );
-
-    showToast(
-      "Failed to update course"
-    );
-
-  }
-
-};
-
-
-/* =========================================
-   PUBLISH COURSE
-========================================= */
-
-window.publishCourse =
-async function () {
-
-  if (!COURSE_ID) {
-    return;
-  }
-
-
-  const confirmed =
-    confirm(
-      "Publish this course?"
-    );
-
-
-  if (!confirmed) {
-    return;
-  }
-
-
-  try {
-
-    await updateDoc(
-
-      courseRef(),
-
-      {
-
-        status:
-          "published",
-
-        publishedAt:
-          serverTimestamp(),
-
-        updatedAt:
-          serverTimestamp()
-
-      }
-
-    );
-
-
-    showToast(
-      "Course published successfully"
-    );
-
-  }
-
-  catch (error) {
-
-    console.error(
-      error
-    );
-
-    showToast(
-      "Publishing failed"
-    );
-
-  }
-
-};
-
-
-/* =========================================
-   MOVE COURSE TO DRAFT
-========================================= */
-
-window.setDraft =
-async function () {
-
-  if (!COURSE_ID) {
-    return;
-  }
-
-
-  try {
-
-    await updateDoc(
-
-      courseRef(),
-
-      {
-
-        status:
-          "draft",
-
-        updatedAt:
-          serverTimestamp()
-
-      }
-
-    );
-
-
-    showToast(
-      "Course moved to draft"
-    );
-
-  }
-
-  catch (error) {
-
-    console.error(
-      error
-    );
-
-    showToast(
-      "Failed to update course"
-    );
-
-  }
-
-};
-
-
-/* =========================================
-   ARCHIVE COURSE
-========================================= */
-
-window.archiveCourse =
-async function () {
-
-  if (!COURSE_ID) {
-    return;
-  }
-
-
-  const confirmed =
-    confirm(
-      "Archive this course?"
-    );
-
-
-  if (!confirmed) {
-    return;
-  }
-
-
-  try {
-
-    await updateDoc(
-
-      courseRef(),
-
-      {
-
-        status:
-          "archived",
-
-        updatedAt:
-          serverTimestamp()
-
-      }
-
-    );
-
-
-    showToast(
-      "Course archived"
-    );
-
-  }
-
-  catch (error) {
-
-    console.error(
-      error
-    );
-
-    showToast(
-      "Failed to archive course"
-    );
-
-  }
-
-};
-
-
-/* =========================================
-   CERTIFICATE SETTINGS
-========================================= */
-
-window.saveCertificate =
-async function () {
-
-  if (!COURSE_ID) {
-    return;
-  }
-
-
-  try {
-
-    await setDoc(
-
-      doc(
-        db,
-        "courses",
-        COURSE_ID,
-        "settings",
-        "certificate"
-      ),
-
-      {
-
-        title:
-          "Certificate of Course Completion",
-
-        completionPercentage:
-          100,
-
-        minimumQuizScore:
-          70,
-
-        automatic:
-          true,
-
-        updatedAt:
-          serverTimestamp()
-
-      },
-
-      {
-        merge: true
-      }
-
-    );
-
-
-    closeModal();
-
-    showToast(
-      "Certificate settings saved"
-    );
-
-  }
-
-  catch (error) {
-
-    console.error(
-      error
-    );
-
-    showToast(
-      "Failed to save certificate settings"
-    );
-
-  }
-
-};
-
-
-/* =========================================
-   COURSE PRICING
-========================================= */
-
-window.savePricing =
-async function () {
-
-  if (!COURSE_ID) {
-    return;
-  }
-
-
-  const price =
-    Number(
-      document
-        .getElementById(
-          "coursePrice"
-        )
-        ?.value || 0
-    );
-
-
-  try {
-
-    await setDoc(
-
-      doc(
-        db,
-        "courses",
-        COURSE_ID,
-        "settings",
-        "pricing"
-      ),
-
-      {
-
-        price,
-
-        currency:
-          "TZS",
-
-        updatedAt:
-          serverTimestamp()
-
-      },
-
-      {
-        merge: true
-      }
-
-    );
-
-
-    showToast(
-      "Pricing saved successfully"
-    );
-
-  }
-
-  catch (error) {
-
-    console.error(
-      error
-    );
-
-    showToast(
-      "Failed to save pricing"
-    );
-
-  }
-
-};
-
-
-/* =========================================
-   ANNOUNCEMENT
-========================================= */
-
-window.createAnnouncement =
-async function () {
-
-  const title =
-    document
-      .getElementById(
-        "announcementTitle"
-      )
-      ?.value
-      .trim();
-
-  const message =
-    document
-      .getElementById(
-        "announcementMessage"
-      )
-      ?.value
-      .trim();
-
-
-  if (!title || !message) {
-
-    showToast(
-      "Title and message are required"
-    );
-
-    return;
-
-  }
-
-
-  try {
-
-    await addDoc(
-
-      collection(
-        db,
-        "courses",
-        COURSE_ID,
-        "announcements"
-      ),
-
-      {
-
-        title,
-
-        message,
-
-        createdBy:
-          currentAdmin?.uid || null,
-
-        createdAt:
-          serverTimestamp()
-
-      }
-
-    );
-
-
-    closeModal();
-
-    showToast(
-      "Announcement published"
-    );
-
-  }
-
-  catch (error) {
-
-    console.error(
-      error
-    );
-
-    showToast(
-      "Failed to publish announcement"
-    );
-
-  }
-
-};
-
-
-/* =========================================
-   LOAD COURSE
-========================================= */
-
-window.loadCourse =
-async function () {
-
-  if (!COURSE_ID) {
-    return;
-  }
-
-
-  try {
-
-    const snapshot =
-      await getDoc(
-        courseRef()
-      );
-
-
-    if (!snapshot.exists()) {
-
-      showToast(
-        "Course not found"
-      );
-
-      return;
-
-    }
-
-
-    const course =
-      snapshot.data();
-
-
-    const titleElement =
-      document.getElementById(
-        "courseTitle"
-      );
-
-
-    const descriptionElement =
-      document.getElementById(
-        "courseDescription"
-      );
-
-
-    if (titleElement) {
-
-      titleElement.textContent =
-        course.title || "";
-
-    }
-
-
-    if (descriptionElement) {
-
-      descriptionElement.textContent =
-        course.description || "";
-
-    }
-
-
-    console.log(
-      "Course loaded:",
-      course
-    );
-
-  }
-
-  catch (error) {
-
-    console.error(
-      "Course loading error:",
-      error
-    );
-
-  }
-
-};
-
-
-/* =========================================
-   START
-========================================= */
-
-if (COURSE_ID) {
-
-  loadCourse();
-
-  loadModules();
-
+   <div class="form-group">
+     <label>Attachment / Submission URL</label>
+     <input id="url" placeholder="Optional URL">
+   </div>
+   `;
+ }
+
+
+ if(currentTab==="resources"){
+
+   return `
+   <div class="grid">
+
+    <div class="form-group">
+      <label>Resource Type</label>
+      <select id="type">
+       <option value="pdf">PDF</option>
+       <option value="document">Document</option>
+       <option value="video">Video</option>
+       <option value="audio">Audio</option>
+       <option value="link">External Link</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>URL</label>
+      <input id="url" required>
+    </div>
+
+   </div>
+   `;
+ }
+
+ return `
+ <div class="form-group">
+   <label>Order</label>
+   <input id="order" type="number" value="0">
+ </div>
+ `;
 }
+
+
+/* OPEN ADD */
+
+addBtn.onclick=()=>{
+
+ editingId=null;
+
+ document.getElementById("modalTitle")
+ .textContent=
+ `Add ${currentTab.slice(0,-1)}`;
+
+ form.reset();
+
+ document.getElementById("extra").innerHTML=
+ extraFields();
+
+ modal.classList.add("show");
+
+};
+
+
+/* CLOSE */
+
+document.getElementById("closeModal")
+.onclick=()=>modal.classList.remove("show");
+
+
+/* SAVE */
+
+form.onsubmit=async e=>{
+
+ e.preventDefault();
+
+ const data={
+   title:document.getElementById("title").value.trim(),
+   description:document.getElementById("description").value.trim(),
+   courseId,
+   updatedAt:serverTimestamp()
+ };
+
+
+ if(currentTab==="modules"){
+
+   data.order=
+     Number(document.getElementById("order")?.value||0);
+
+ }
+
+
+ if(currentTab==="lessons"){
+
+   data.type=
+     document.getElementById("type").value;
+
+   data.duration=
+     document.getElementById("duration").value;
+
+   data.url=
+     document.getElementById("url").value;
+
+ }
+
+
+ if(currentTab==="quizzes"){
+
+   data.passingScore=
+     Number(document.getElementById("passingScore").value);
+
+   data.timeLimit=
+     document.getElementById("timeLimit").value;
+
+ }
+
+
+ if(currentTab==="assignments"){
+
+   data.dueDate=
+     document.getElementById("dueDate").value;
+
+   data.maxScore=
+     Number(document.getElementById("maxScore").value);
+
+   data.url=
+     document.getElementById("url").value;
+
+ }
+
+
+ if(currentTab==="resources"){
+
+   data.type=
+     document.getElementById("type").value;
+
+   data.url=
+     document.getElementById("url").value;
+
+ }
+
+
+ try{
+
+   if(editingId){
+
+     await updateDoc(
+       doc(
+         db,
+         collections[currentTab],
+         editingId
+       ),
+       data
+     );
+
+   }else{
+
+     data.createdAt=serverTimestamp();
+
+     await addDoc(
+       collection(
+         db,
+         collections[currentTab]
+       ),
+       data
+     );
+
+   }
+
+   modal.classList.remove("show");
+
+   await loadContent();
+
+ }catch(error){
+
+   console.error(error);
+
+   alert("Failed to save content.");
+
+ }
+
+};
+
+
+/* EDIT */
+
+window.editItem=async id=>{
+
+ editingId=id;
+
+ const snap=await getDocs(
+   query(
+     collection(
+       db,
+       collections[currentTab]
+     ),
+     where("__name__","==",id)
+   )
+ );
+
+ let item=null;
+
+ snap.forEach(x=>{
+   item=x.data();
+ });
+
+ if(!item)return;
+
+ document.getElementById("modalTitle")
+ .textContent=
+ `Edit ${currentTab.slice(0,-1)}`;
+
+ document.getElementById("title").value=
+   item.title||"";
+
+ document.getElementById("description").value=
+   item.description||"";
+
+ document.getElementById("extra").innerHTML=
+   extraFields();
+
+ setTimeout(()=>{
+
+   Object.keys(item).forEach(key=>{
+
+     const el=document.getElementById(key);
+
+     if(el && key!=="courseId"){
+       el.value=item[key]||"";
+     }
+
+   });
+
+ },10);
+
+ modal.classList.add("show");
+
+};
+
+
+/* DELETE */
+
+window.removeItem=async id=>{
+
+ if(!confirm(
+   `Delete this ${currentTab.slice(0,-1)}?`
+ )) return;
+
+ try{
+
+   await deleteDoc(
+     doc(
+       db,
+       collections[currentTab],
+       id
+     )
+   );
+
+   await loadContent();
+
+ }catch(error){
+
+   console.error(error);
+
+   alert("Delete failed.");
+
+ }
+
+};
+
+
+/* START */
+
+loadCourses();
 
 </script>
 
