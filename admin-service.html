@@ -2156,6 +2156,17 @@ import {
 } from
 "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+  authDomain: "let-s-study-pro-course.firebaseapp.com",
+  databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId: "let-s-study-pro-course",
+  storageBucket: "let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId: "474928293390",
+  appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId: "G-85B7V5H5J0"
+};
 
 /* =====================================================
    STATE
@@ -2530,8 +2541,1201 @@ function updateStats(){
       ).length;
 
 
-  $("featuredServices")
-    .textContent =
-      services.filter(
+      $("featuredServices")
+      .textContent =
+        services.filter(
+          service =>
+            service.featured === true
+        ).length;
+
+
+    $("totalOrders")
+      .textContent =
+        services.reduce(
+          (
+            total,
+            service
+          ) => {
+
+            return (
+              total +
+              Number(
+                service.ordersCount ||
+                service.totalOrders ||
+                0
+              )
+            );
+
+          },
+          0
+        );
+
+
+    $("totalViews")
+      .textContent =
+        services.reduce(
+          (
+            total,
+            service
+          ) => {
+
+            return (
+              total +
+              Number(
+                service.views || 0
+              )
+            );
+
+          },
+          0
+        );
+
+
+    $("averageRating")
+      .textContent =
+        services.length
+          ? (
+              services.reduce(
+                (
+                  total,
+                  service
+                ) => {
+
+                  return (
+                    total +
+                    Number(
+                      service.rating || 0
+                    )
+                  );
+
+                },
+                0
+              ) / services.length
+            ).toFixed(1)
+          : "0.0";
+
+}
+
+
+/* =====================================================
+   FILTER SERVICES
+===================================================== */
+
+function applyFilters(){
+
+  const search =
+    $("searchInput")
+      .value
+      .trim()
+      .toLowerCase();
+
+
+  const status =
+    $("statusFilter")
+      .value;
+
+
+  const category =
+    $("categoryFilter")
+      .value;
+
+
+  filteredServices =
+    services.filter(
+      service => {
+
+        const title =
+          service.title ||
+          service.name ||
+          "";
+
+
+        const description =
+          service.description ||
+          service.shortDescription ||
+          "";
+
+
+        const seller =
+          service.freelancerName ||
+          service.sellerName ||
+          service.ownerName ||
+          "";
+
+
+        const searchableText = (
+
+          title +
+          " " +
+          description +
+          " " +
+          seller +
+          " " +
+          (
+            service.category || ""
+          ) +
+          " " +
+          (
+            service.subcategory || ""
+          )
+
+        ).toLowerCase();
+
+
+        const matchesSearch =
+          !search ||
+          searchableText.includes(
+            search
+          );
+
+
+        const matchesStatus =
+          status === "all" ||
+          service.status === status;
+
+
+        const matchesCategory =
+          category === "all" ||
+          service.category === category;
+
+
+        return (
+          matchesSearch &&
+          matchesStatus &&
+          matchesCategory
+        );
+
+      }
+    );
+
+
+  currentPage = 1;
+
+  renderServices();
+
+}
+
+
+/* =====================================================
+   RENDER SERVICES
+===================================================== */
+
+function renderServices(){
+
+  const container =
+    $("servicesTable");
+
+
+  if(
+    !filteredServices.length
+  ){
+
+    container.innerHTML = "";
+
+
+    $("emptyState")
+      .style.display =
+        "block";
+
+
+    $("pagination")
+      .innerHTML =
+        "";
+
+
+    return;
+
+  }
+
+
+  $("emptyState")
+    .style.display =
+      "none";
+
+
+  const total =
+    filteredServices.length;
+
+
+  const start =
+    (
+      currentPage - 1
+    ) * pageSize;
+
+
+  const end =
+    Math.min(
+      start +
+      pageSize,
+      total
+    );
+
+
+  const pageItems =
+    filteredServices.slice(
+      start,
+      end
+    );
+
+
+  container.innerHTML =
+    pageItems
+      .map(
         service =>
-          service.featur
+          renderServiceRow(
+            service
+          )
+      )
+      .join("");
+
+
+  renderPagination();
+
+}
+
+
+/* =====================================================
+   SERVICE ROW
+===================================================== */
+
+function renderServiceRow(
+  service
+){
+
+  const title =
+    service.title ||
+    service.name ||
+    "Untitled Service";
+
+
+  const seller =
+    service.freelancerName ||
+    service.sellerName ||
+    service.ownerName ||
+    "Unknown";
+
+
+  const image =
+    service.thumbnail ||
+    service.image ||
+    "assets/images/service-placeholder.jpg";
+
+
+  const status =
+    service.status ||
+    "draft";
+
+
+  const rating =
+    Number(
+      service.rating || 0
+    ).toFixed(1);
+
+
+  const orders =
+    Number(
+      service.ordersCount ||
+      service.totalOrders ||
+      0
+    );
+
+
+  const views =
+    Number(
+      service.views || 0
+    );
+
+
+  return `
+
+    <tr>
+
+      <td>
+
+        <div class="service-info">
+
+          <img
+            src="${escapeHTML(image)}"
+            alt="${escapeHTML(title)}"
+            class="service-thumb"
+            loading="lazy"
+            onerror="
+              this.src='assets/images/service-placeholder.jpg'
+            "
+          >
+
+
+          <div>
+
+            <strong>
+              ${escapeHTML(title)}
+            </strong>
+
+
+            <small>
+              ${escapeHTML(
+                service.category ||
+                "Uncategorized"
+              )}
+            </small>
+
+          </div>
+
+        </div>
+
+      </td>
+
+
+      <td>
+
+        <div class="seller-cell">
+
+          <strong>
+            ${escapeHTML(seller)}
+          </strong>
+
+
+          ${
+            service.verified
+              ? `
+                <i
+                  class="fa-solid fa-circle-check"
+                  title="Verified"
+                ></i>
+              `
+              : ""
+          }
+
+        </div>
+
+      </td>
+
+
+      <td>
+
+        <strong>
+
+          ${formatPrice(
+            service.price,
+            service.currency ||
+            "TZS"
+          )}
+
+        </strong>
+
+      </td>
+
+
+      <td>
+
+        <span class="rating">
+
+          <i
+            class="fa-solid fa-star"
+          ></i>
+
+          ${rating}
+
+        </span>
+
+
+        <small>
+
+          ${Number(
+            service.ratingCount ||
+            0
+          )}
+
+          ratings
+
+        </small>
+
+      </td>
+
+
+      <td>
+
+        ${orders.toLocaleString()}
+
+      </td>
+
+
+      <td>
+
+        <span
+          class="status-badge status-${escapeHTML(
+            status
+          )}"
+        >
+
+          ${escapeHTML(
+            status
+          )}
+
+        </span>
+
+      </td>
+
+
+      <td>
+
+        <span
+          class="views-count"
+        >
+
+          <i
+            class="fa-solid fa-eye"
+          ></i>
+
+          ${views.toLocaleString()}
+
+        </span>
+
+      </td>
+
+
+      <td>
+
+        <div class="action-buttons">
+
+
+          <button
+            type="button"
+            class="btn btn-secondary btn-small"
+            data-action="view"
+            data-id="${escapeHTML(
+              service.id
+            )}"
+            title="View"
+          >
+
+            <i
+              class="fa-solid fa-eye"
+            ></i>
+
+          </button>
+
+
+          <button
+            type="button"
+            class="btn btn-primary btn-small"
+            data-action="edit"
+            data-id="${escapeHTML(
+              service.id
+            )}"
+            title="Edit"
+          >
+
+            <i
+              class="fa-solid fa-pen"
+            ></i>
+
+          </button>
+
+
+          <button
+            type="button"
+            class="btn btn-warning btn-small"
+            data-action="toggle-featured"
+            data-id="${escapeHTML(
+              service.id
+            )}"
+            title="${
+              service.featured
+                ? "Remove featured"
+                : "Make featured"
+            }"
+          >
+
+            <i
+              class="fa-solid fa-star"
+            ></i>
+
+          </button>
+
+
+          <button
+            type="button"
+            class="btn btn-danger btn-small"
+            data-action="delete"
+            data-id="${escapeHTML(
+              service.id
+            )}"
+            title="Delete"
+          >
+
+            <i
+              class="fa-solid fa-trash"
+            ></i>
+
+          </button>
+
+
+        </div>
+
+      </td>
+
+    </tr>
+
+  `;
+
+}
+
+
+/* =====================================================
+   RENDER PAGINATION
+===================================================== */
+
+function renderPagination(){
+
+  const pagination =
+    $("pagination");
+
+
+  const totalPages =
+    Math.ceil(
+      filteredServices.length /
+      pageSize
+    );
+
+
+  if(
+    totalPages <= 1
+  ){
+
+    pagination.innerHTML =
+      "";
+
+    return;
+
+  }
+
+
+  let html = "";
+
+
+  html += `
+
+    <button
+      type="button"
+      class="page-btn"
+      data-page="prev"
+      ${
+        currentPage === 1
+          ? "disabled"
+          : ""
+      }
+    >
+
+      <i
+        class="fa-solid fa-chevron-left"
+      ></i>
+
+    </button>
+
+  `;
+
+
+  for(
+    let page = 1;
+    page <= totalPages;
+    page++
+  ){
+
+    html += `
+
+      <button
+        type="button"
+        class="page-btn ${
+          page === currentPage
+            ? "active"
+            : ""
+        }"
+        data-page="${page}"
+      >
+
+        ${page}
+
+      </button>
+
+    `;
+
+  }
+
+
+  html += `
+
+    <button
+      type="button"
+      class="page-btn"
+      data-page="next"
+      ${
+        currentPage === totalPages
+          ? "disabled"
+          : ""
+      }
+    >
+
+      <i
+        class="fa-solid fa-chevron-right"
+      ></i>
+
+    </button>
+
+  `;
+
+
+  pagination.innerHTML =
+    html;
+
+}
+
+
+/* =====================================================
+   PAGINATION EVENTS
+===================================================== */
+
+$("pagination")
+  .addEventListener(
+    "click",
+    event => {
+
+      const button =
+        event.target.closest(
+          "[data-page]"
+        );
+
+
+      if(!button){
+
+        return;
+
+      }
+
+
+      const totalPages =
+        Math.ceil(
+          filteredServices.length /
+          pageSize
+        );
+
+
+      const page =
+        button.dataset.page;
+
+
+      if(
+        page === "prev"
+      ){
+
+        if(
+          currentPage > 1
+        ){
+
+          currentPage--;
+
+        }
+
+      }else if(
+        page === "next"
+      ){
+
+        if(
+          currentPage <
+          totalPages
+        ){
+
+          currentPage++;
+
+        }
+
+      }else{
+
+        currentPage =
+          Number(page);
+
+      }
+
+
+      renderServices();
+
+    }
+  );
+
+
+/* =====================================================
+   SERVICE ACTIONS
+===================================================== */
+
+$("servicesTable")
+  .addEventListener(
+    "click",
+    async event => {
+
+      const button =
+        event.target.closest(
+          "[data-action]"
+        );
+
+
+      if(!button){
+
+        return;
+
+      }
+
+
+      const id =
+        button.dataset.id;
+
+
+      const action =
+        button.dataset.action;
+
+
+      const service =
+        services.find(
+          item =>
+            item.id === id
+        );
+
+
+      if(!service){
+
+        return;
+
+      }
+
+
+      /* VIEW */
+
+      if(
+        action === "view"
+      ){
+
+        viewService(
+          id
+        );
+
+        return;
+
+      }
+
+
+      /* EDIT */
+
+      if(
+        action === "edit"
+      ){
+
+        editService(
+          id
+        );
+
+        return;
+
+      }
+
+
+      /* FEATURED */
+
+      if(
+        action ===
+        "toggle-featured"
+      ){
+
+        try{
+
+          await updateDoc(
+            doc(
+              db,
+              "services",
+              id
+            ),
+            {
+
+              featured:
+                !service.featured,
+
+              updatedAt:
+                serverTimestamp()
+
+            }
+          );
+
+
+          toast(
+            service.featured
+              ? "Service removed from featured."
+              : "Service added to featured."
+          );
+
+
+          await loadServices();
+
+        }catch(error){
+
+          console.error(
+            error
+          );
+
+
+          toast(
+            "Unable to update featured status.",
+            "error"
+          );
+
+        }
+
+
+        return;
+
+      }
+
+
+      /* DELETE */
+
+      if(
+        action === "delete"
+      ){
+
+        const confirmed =
+          confirm(
+            `Are you sure you want to delete "${
+              service.title ||
+              service.name ||
+              "this service"
+            }"?`
+          );
+
+
+        if(!confirmed){
+
+          return;
+
+        }
+
+
+        try{
+
+          await deleteDoc(
+            doc(
+              db,
+              "services",
+              id
+            )
+          );
+
+
+          toast(
+            "Service deleted successfully."
+          );
+
+
+          await loadServices();
+
+        }catch(error){
+
+          console.error(
+            error
+          );
+
+
+          toast(
+            "Unable to delete service.",
+            "error"
+          );
+
+        }
+
+      }
+
+    }
+  );
+
+
+/* =====================================================
+   SEARCH
+===================================================== */
+
+$("searchInput")
+  .addEventListener(
+    "input",
+    applyFilters
+  );
+
+
+$("statusFilter")
+  .addEventListener(
+    "change",
+    applyFilters
+  );
+
+
+$("categoryFilter")
+  .addEventListener(
+    "change",
+    applyFilters
+  );
+
+
+$("sortFilter")
+  .addEventListener(
+    "change",
+    applyFilters
+  );
+
+
+/* =====================================================
+   CLEAR FILTERS
+===================================================== */
+
+$("clearFilters")
+  .addEventListener(
+    "click",
+    () => {
+
+      $("searchInput")
+        .value = "";
+
+
+      $("statusFilter")
+        .value = "all";
+
+
+      $("categoryFilter")
+        .value = "all";
+
+
+      $("sortFilter")
+        .value = "newest";
+
+
+      applyFilters();
+
+    }
+  );
+
+
+/* =====================================================
+   REFRESH
+===================================================== */
+
+$("refreshBtn")
+  .addEventListener(
+    "click",
+    async () => {
+
+      await loadServices();
+
+      toast(
+        "Services refreshed."
+      );
+
+    }
+  );
+
+
+/* =====================================================
+   ADD SERVICE
+===================================================== */
+
+$("addServiceBtn")
+  .addEventListener(
+    "click",
+    () => {
+
+      editingId =
+        null;
+
+
+      $("serviceForm")
+        .reset();
+
+
+      $("serviceId")
+        .value = "";
+
+
+      $("editModalTitle")
+        .textContent =
+          "Add New Service";
+
+
+      $("serviceStatus")
+        .value =
+          "draft";
+
+
+      $("currency")
+        .value =
+          "TZS";
+
+
+      $("revisions")
+        .value =
+          "1";
+
+
+      openModal(
+        "editModal"
+      );
+
+    }
+  );
+
+
+/* =====================================================
+   END SERVICE ADMIN SYSTEM
+===================================================== */
+/* =====================================================
+   END SERVICE ADMIN SYSTEM
+===================================================== */
+
+
+/* =====================================================
+   INITIALIZE ADMIN PAGE
+===================================================== */
+
+function initializeAdminServicePage(){
+
+  try{
+
+    currentPage = 1;
+
+    applyFilters();
+
+  }catch(error){
+
+    console.error(
+      "Service admin initialization error:",
+      error
+    );
+
+    showError(
+      "Unable to initialize service management."
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   GLOBAL KEYBOARD SHORTCUTS
+===================================================== */
+
+document.addEventListener(
+  "keydown",
+  event => {
+
+    /*
+     * CTRL/CMD + K
+     * Focus search
+     */
+
+    if(
+      (
+        event.ctrlKey ||
+        event.metaKey
+      ) &&
+      event.key.toLowerCase() === "k"
+    ){
+
+      event.preventDefault();
+
+      const search =
+        $("searchInput");
+
+      if(search){
+
+        search.focus();
+
+        search.select();
+
+      }
+
+    }
+
+
+    /*
+     * ESC
+     * Close opened modal
+     */
+
+    if(
+      event.key === "Escape"
+    ){
+
+      document
+        .querySelectorAll(
+          ".modal.show"
+        )
+        .forEach(
+          modal => {
+
+            closeModal(
+              modal.id
+            );
+
+          }
+        );
+
+    }
+
+  }
+);
+
+
+/* =====================================================
+   WINDOW ERROR HANDLER
+===================================================== */
+
+window.addEventListener(
+  "error",
+  event => {
+
+    console.error(
+      "Application error:",
+      event.error ||
+      event.message
+    );
+
+  }
+);
+
+
+/* =====================================================
+   UNHANDLED PROMISE HANDLER
+===================================================== */
+
+window.addEventListener(
+  "unhandledrejection",
+  event => {
+
+    console.error(
+      "Unhandled promise rejection:",
+      event.reason
+    );
+
+  }
+);
+
+
+/* =====================================================
+   START APPLICATION
+===================================================== */
+
+initializeAdminServicePage();
+
+
+/* =====================================================
+   END JAVASCRIPT
+===================================================== */
+
+</script>
+
+
+</body>
+
+</html>
