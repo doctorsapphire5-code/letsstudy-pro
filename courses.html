@@ -659,7 +659,7 @@ return;
 */
 
 location.href=
-"course.html?id="+
+"enroll.html?id="+
 encodeURIComponent(courseId);
 
 };
@@ -701,17 +701,177 @@ renderCourses();
 
 /* ================= CART ================= */
 
-try{
+/* ================= CART ================= */
 
-const cart=
-JSON.parse(
-localStorage.getItem("cart") || "[]"
+function addToCart(c){
+
+    let cart = [];
+
+    try{
+        cart = JSON.parse(
+            localStorage.getItem("cart") || "[]"
+        );
+    }catch(e){
+        cart = [];
+    }
+
+    const courseId = c.courseId || window.courseId;
+
+    if(!courseId){
+        alert("Course ID missing.");
+        return;
+    }
+
+    /* Already in cart */
+    if(cart.some(item => item.courseId === courseId)){
+
+        alert("Course already exists in your cart.");
+
+        location.href = "cart.html";
+
+        return;
+    }
+
+    const price =
+        Number(c.price || 0);
+
+    const discountPrice =
+        Number(c.discountPrice || 0);
+
+    const finalPrice =
+        discountPrice > 0 &&
+        discountPrice < price
+        ? discountPrice
+        : price;
+
+    const item = {
+
+        courseId: courseId,
+
+        title: c.title || "",
+
+        slug: c.slug || "",
+
+        thumbnail: c.thumbnail || "",
+
+        shortDescription:
+            c.shortDescription || "",
+
+        instructorId:
+            c.instructorId || "",
+
+        instructorName:
+            c.instructorName ||
+            "LetsStudy Pro",
+
+        category:
+            c.category || "",
+
+        level:
+            c.level || "",
+
+        language:
+            c.language || "",
+
+        duration:
+            c.duration || "",
+
+        modulesCount:
+            Number(c.modulesCount || 0),
+
+        lessonsCount:
+            Number(c.lessonsCount || 0),
+
+        price: price,
+
+        discountPrice:
+            discountPrice,
+
+        finalPrice:
+            finalPrice,
+
+        currency:
+            c.currency || "TZS",
+
+        isFree:
+            c.isFree === true,
+
+        certificate:
+            c.certificate === true,
+
+        addedAt:
+            Date.now()
+
+    };
+
+    cart.push(item);
+
+    localStorage.setItem(
+        "cart",
+        JSON.stringify(cart)
+    );
+
+    updateCartCount();
+
+    alert("Course added to cart.");
+
+}
+
+
+/* ================= CART COUNT ================= */
+
+function updateCartCount(){
+
+    let cart = [];
+
+    try{
+
+        cart = JSON.parse(
+            localStorage.getItem("cart") || "[]"
+        );
+
+    }catch(e){
+
+        cart = [];
+
+    }
+
+    const count =
+        document.getElementById("cartCount");
+
+    if(count){
+
+        count.textContent =
+            cart.length;
+
+    }
+
+}
+
+
+/* ================= CART BUTTON ================= */
+
+document.getElementById(
+    "cartButton"
+)?.addEventListener(
+    "click",
+    function(){
+
+        if(window.currentCourse){
+
+            addToCart(
+                window.currentCourse
+            );
+
+        }
+
+    }
 );
 
-document.getElementById("cartCount")
-.textContent=cart.length;
 
-}catch{}
+/* ================= START ================= */
+
+updateCartCount();
 
 
 /* ================= ESCAPE ================= */
