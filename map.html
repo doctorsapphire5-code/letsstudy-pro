@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Map | LetsStudy Pro</title>
+
+<link rel="icon"
+href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgQHmJO8e8twONhRhp3I6pP4NFDh-LPcqVtAmQ9R9XjOGaVMKShfSLmxeK0fVzJsybBBOXKbA8LIhjgTgko83C-UPVhwgXeLtvTfjtVv6aVGgQgniOF-gMC28bY78HryXZ-5OqCwdBpKGqjEfTta5jLjT1mpvtBi2DQKyu35rkxsZNoVvl0nhvxUUn1gDP0/s1600/Untitled%20design_20260717_144337_0000.jpg">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+<style>
+*{box-sizing:border-box}
+
+body{
+ margin:0;
+ background:#f6f8fb;
+ color:#172033;
+ font-family:Inter,Arial,sans-serif
+}
+
+.top{
+ height:64px;
+ background:#fff;
+ border-bottom:1px solid #e5e7eb;
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ padding:0 5%;
+ position:sticky;
+ top:0;
+ z-index:20
+}
+
+.logo{
+ color:#155eef;
+ font-size:21px;
+ font-weight:900
+}
+
+.container{
+ max-width:1250px;
+ margin:25px auto;
+ padding:0 16px
+}
+
+.header{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:15px;
+ margin-bottom:15px
+}
+
+h1{
+ margin:0;
+ font-size:27px
+}
+
+.subtitle{
+ color:#667085;
+ font-size:12px;
+ margin-top:5px
+}
+
+.actions{
+ display:flex;
+ gap:8px;
+ flex-wrap:wrap
+}
+
+.btn{
+ border:1px solid #d0d5dd;
+ background:#fff;
+ padding:10px 13px;
+ border-radius:9px;
+ font-size:12px;
+ font-weight:800;
+ cursor:pointer
+}
+
+.btn.primary{
+ background:#155eef;
+ color:#fff;
+ border-color:#155eef
+}
+
+.btn:hover{
+ opacity:.9
+}
+
+.search{
+ display:flex;
+ gap:8px;
+ margin-bottom:15px
+}
+
+.search input{
+ flex:1;
+ padding:12px 14px;
+ border:1px solid #d0d5dd;
+ border-radius:10px;
+ outline:none
+}
+
+.map-box{
+ position:relative;
+ height:600px;
+ background:#e5e7eb;
+ border:1px solid #d0d5dd;
+ border-radius:16px;
+ overflow:hidden
+}
+
+#map{
+ width:100%;
+ height:100%
+}
+
+.panel{
+ position:absolute;
+ top:15px;
+ left:15px;
+ width:300px;
+ max-height:calc(100% - 30px);
+ overflow:auto;
+ background:#fff;
+ border-radius:13px;
+ box-shadow:0 8px 30px rgba(16,24,40,.16);
+ z-index:5
+}
+
+.panel-head{
+ padding:15px;
+ border-bottom:1px solid #eaecf0;
+ font-weight:900;
+ font-size:13px
+}
+
+.results{
+ padding:5px
+}
+
+.place{
+ padding:12px;
+ border-bottom:1px solid #eaecf0;
+ cursor:pointer
+}
+
+.place:hover{
+ background:#f8fafc
+}
+
+.place-name{
+ font-size:12px;
+ font-weight:800
+}
+
+.place-meta{
+ color:#667085;
+ font-size:10px;
+ margin-top:4px;
+ line-height:1.5
+}
+
+.status{
+ padding:10px;
+ color:#667085;
+ font-size:11px;
+ text-align:center
+}
+
+.info{
+ position:absolute;
+ right:15px;
+ bottom:15px;
+ background:#fff;
+ padding:11px 14px;
+ border-radius:9px;
+ box-shadow:0 5px 20px rgba(16,24,40,.15);
+ z-index:5;
+ font-size:11px;
+ color:#475467
+}
+
+@media(max-width:700px){
+
+ .header{
+  flex-direction:column;
+  align-items:flex-start
+ }
+
+ .map-box{
+  height:500px
+ }
+
+ .panel{
+  width:calc(100% - 30px);
+  max-height:180px
+ }
+
+ .info{
+  display:none
+ }
+
+}
+</style>
+</head>
+
+<body>
+
+<header class="top">
+<div class="logo">LetsStudy Pro</div>
+</header>
+
+
+<main class="container">
+
+<div class="header">
+
+<div>
+<h1>
+<i class="fa fa-map-location-dot"></i>
+Map
+</h1>
+
+<div class="subtitle">
+Explore places, opportunities and locations around the world.
+</div>
+</div>
+
+<div class="actions">
+
+<button class="btn" id="locationBtn">
+<i class="fa fa-location-crosshairs"></i>
+My Location
+</button>
+
+<button class="btn primary" id="searchBtn">
+<i class="fa fa-magnifying-glass"></i>
+Search
+</button>
+
+</div>
+
+</div>
+
+
+<div class="search">
+
+<input
+id="search"
+placeholder="Search a city, country or place...">
+
+</div>
+
+
+<div class="map-box">
+
+<div id="map"></div>
+
+
+<div class="panel">
+
+<div class="panel-head">
+Search Results
+</div>
+
+<div id="results">
+<div class="status">
+Search for a location to begin.
+</div>
+</div>
+
+</div>
+
+
+<div class="info">
+<i class="fa fa-circle-info"></i>
+Click the map to explore coordinates.
+</div>
+
+</div>
+
+</main>
+
+
+<script>
+
+let map;
+
+let marker;
+
+let searchMarker;
+
+
+const defaultLocation={
+ lat:-6.7924,
+ lng:39.2083
+};
+
+
+/* MAP INITIALIZATION */
+
+function initMap(){
+
+ map=new google.maps.Map(
+  document.getElementById("map"),
+  {
+   center:defaultLocation,
+   zoom:12,
+   mapTypeControl:true,
+   streetViewControl:false,
+   fullscreenControl:true,
+   zoomControl:true
+  }
+ );
+
+
+ map.addListener(
+  "click",
+  event=>{
+
+   const lat=
+   event.latLng.lat();
+
+   const lng=
+   event.latLng.lng();
+
+
+   if(marker)
+    marker.setMap(null);
+
+
+   marker=
+   new google.maps.Marker({
+
+    position:{
+     lat,
+     lng
+    },
+
+    map,
+
+    title:
+    "Selected Location"
+
+   });
+
+
+   showResult(
+    "Selected Location",
+    `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+    lat,
+    lng
+   );
+
+  }
+ );
+
+}
+
+
+/* SEARCH */
+
+async function searchPlace(){
+
+ const query=
+ document.getElementById("search")
+ .value.trim();
+
+
+ if(!query)return;
+
+
+ const geocoder=
+ new google.maps.Geocoder();
+
+
+ geocoder.geocode(
+  {
+   address:query
+  },
+  (results,status)=>{
+
+   if(
+    status!=="OK" ||
+    !results.length
+   ){
+
+    document.getElementById(
+     "results"
+    ).innerHTML=`
+    <div class="status">
+    Location not found.
+    </div>`;
+
+    return;
+
+   }
+
+
+   const result=results[0];
+
+   const location=
+   result.geometry.location;
+
+
+   map.setCenter(location);
+
+   map.setZoom(14);
+
+
+   if(searchMarker)
+    searchMarker.setMap(null);
+
+
+   searchMarker=
+   new google.maps.Marker({
+
+    map,
+
+    position:location,
+
+    title:result.formatted_address
+
+   });
+
+
+   document.getElementById(
+    "results"
+   ).innerHTML=`
+
+   <div class="place">
+
+   <div class="place-name">
+   ${escapeHtml(
+    result.formatted_address
+   )}
+   </div>
+
+   <div class="place-meta">
+   Latitude:
+   ${location.lat().toFixed(6)}
+   <br>
+   Longitude:
+   ${location.lng().toFixed(6)}
+   </div>
+
+   </div>
+
+   `;
+
+  }
+ );
+
+}
+
+
+/* MY LOCATION */
+
+document.getElementById(
+ "locationBtn"
+).onclick=()=>{
+
+ if(!navigator.geolocation){
+
+  alert(
+   "Geolocation is not supported."
+  );
+
+  return;
+
+ }
+
+
+ navigator.geolocation.getCurrentPosition(
+  position=>{
+
+   const location={
+
+    lat:position.coords.latitude,
+
+    lng:position.coords.longitude
+
+   };
+
+
+   map.setCenter(location);
+
+   map.setZoom(15);
+
+
+   if(marker)
+    marker.setMap(null);
+
+
+   marker=
+   new google.maps.Marker({
+
+    position:location,
+
+    map,
+
+    title:"My Location"
+
+   });
+
+
+   showResult(
+    "My Location",
+    `${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`,
+    location.lat,
+    location.lng
+   );
+
+  },
+  ()=>{
+   alert(
+    "Unable to access your location."
+   );
+  }
+ );
+
+};
+
+
+/* SEARCH BUTTON */
+
+document.getElementById(
+ "searchBtn"
+).onclick=
+ searchPlace;
+
+
+document.getElementById(
+ "search"
+).addEventListener(
+ "keydown",
+ e=>{
+
+  if(e.key==="Enter")
+   searchPlace();
+
+ }
+);
+
+
+/* RESULT */
+
+function showResult(
+ name,
+ meta,
+ lat,
+ lng
+){
+
+ document.getElementById(
+  "results"
+ ).innerHTML=`
+
+ <div class="place">
+
+ <div class="place-name">
+ ${escapeHtml(name)}
+ </div>
+
+ <div class="place-meta">
+ ${escapeHtml(meta)}
+ </div>
+
+ <button
+ class="btn primary"
+ style="margin-top:8px"
+ onclick="openDirections(${lat},${lng})">
+
+ <i class="fa fa-route"></i>
+ Directions
+
+ </button>
+
+ </div>
+
+ `;
+
+}
+
+
+/* DIRECTIONS */
+
+function openDirections(lat,lng){
+
+ window.open(
+  `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+  "_blank"
+ );
+
+}
+
+
+/* SAFE HTML */
+
+function escapeHtml(value=""){
+
+ return String(value)
+ .replace(/&/g,"&amp;")
+ .replace(/</g,"&lt;")
+ .replace(/>/g,"&gt;")
+ .replace(/"/g,"&quot;")
+ .replace(/'/g,"&#039;");
+
+}
+
+</script>
+
+
+<!--
+IMPORTANT:
+Replace YOUR_GOOGLE_MAPS_API_KEY
+with your Google Maps JavaScript API key.
+-->
+
+<script
+async
+defer
+src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap">
+</script>
+
+</body>
+</html>
