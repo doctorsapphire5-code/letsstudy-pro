@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Affiliate Admin | LetsStudy Pro</title>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+<style>
+*{box-sizing:border-box}
+
+body{
+ margin:0;
+ background:#f6f8fb;
+ color:#172033;
+ font-family:Inter,Arial,sans-serif
+}
+
+.top{
+ height:64px;
+ background:#fff;
+ border-bottom:1px solid #e5e7eb;
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ padding:0 6%;
+ position:sticky;
+ top:0;
+ z-index:10
+}
+
+.logo{
+ color:#155eef;
+ font-size:21px;
+ font-weight:800
+}
+
+.container{
+ max-width:1200px;
+ margin:30px auto;
+ padding:0 18px
+}
+
+h1{
+ margin:0 0 7px;
+ font-size:27px
+}
+
+.sub{
+ color:#667085;
+ font-size:13px;
+ margin-bottom:22px
+}
+
+.stats{
+ display:grid;
+ grid-template-columns:repeat(4,1fr);
+ gap:15px;
+ margin-bottom:22px
+}
+
+.stat{
+ background:#fff;
+ border:1px solid #e5e7eb;
+ border-radius:14px;
+ padding:18px
+}
+
+.stat i{
+ color:#155eef;
+ font-size:18px
+}
+
+.stat small{
+ display:block;
+ color:#667085;
+ margin-top:9px
+}
+
+.stat strong{
+ display:block;
+ font-size:21px;
+ margin-top:5px
+}
+
+.card{
+ background:#fff;
+ border:1px solid #e5e7eb;
+ border-radius:15px;
+ overflow:hidden
+}
+
+.head{
+ padding:17px;
+ border-bottom:1px solid #e5e7eb;
+ display:flex;
+ justify-content:space-between;
+ align-items:center
+}
+
+.head h2{
+ margin:0;
+ font-size:17px
+}
+
+.search{
+ padding:10px 14px;
+ border:1px solid #d9dee8;
+ border-radius:8px;
+ outline:none
+}
+
+.table{
+ overflow-x:auto
+}
+
+table{
+ width:100%;
+ border-collapse:collapse;
+ min-width:900px
+}
+
+th,td{
+ padding:13px 15px;
+ border-bottom:1px solid #eef0f3;
+ text-align:left;
+ font-size:12px
+}
+
+th{
+ background:#f8fafc;
+ color:#667085;
+ font-size:11px
+}
+
+.badge{
+ display:inline-block;
+ padding:5px 9px;
+ border-radius:20px;
+ font-size:10px;
+ font-weight:800
+}
+
+.pending{
+ background:#fff7ed;
+ color:#c2410c
+}
+
+.active{
+ background:#ecfdf3;
+ color:#027a48
+}
+
+.suspended{
+ background:#fef2f2;
+ color:#b42318
+}
+
+button{
+ border:0;
+ padding:7px 10px;
+ border-radius:7px;
+ cursor:pointer;
+ font-size:10px;
+ font-weight:700
+}
+
+.approve{
+ background:#155eef;
+ color:#fff
+}
+
+.suspend{
+ background:#fee2e2;
+ color:#b42318
+}
+
+.view{
+ background:#eef2f6;
+ color:#344054
+}
+
+.empty{
+ padding:50px;
+ text-align:center;
+ color:#667085
+}
+
+@media(max-width:800px){
+
+.stats{
+ grid-template-columns:repeat(2,1fr)
+}
+
+}
+
+@media(max-width:500px){
+
+.stats{
+ grid-template-columns:1fr
+}
+
+.head{
+ align-items:stretch;
+ flex-direction:column;
+ gap:10px
+}
+
+.search{
+ width:100%
+}
+
+}
+</style>
+</head>
+
+<body>
+
+<header class="top">
+
+<div class="logo">
+LetsStudy Pro Admin
+</div>
+
+<a href="affiliate-dashboard.html">
+<i class="fa fa-arrow-left"></i>
+Dashboard
+</a>
+
+</header>
+
+<main class="container">
+
+<h1>
+Affiliate Management
+</h1>
+
+<p class="sub">
+Manage affiliate registrations, commissions, earnings,
+withdrawals and affiliate payments.
+</p>
+
+
+<section class="stats">
+
+<div class="stat">
+<i class="fa fa-users"></i>
+<small>Total Affiliates</small>
+<strong id="total">0</strong>
+</div>
+
+<div class="stat">
+<i class="fa fa-user-check"></i>
+<small>Active</small>
+<strong id="active">0</strong>
+</div>
+
+<div class="stat">
+<i class="fa fa-clock"></i>
+<small>Pending</small>
+<strong id="pending">0</strong>
+</div>
+
+<div class="stat">
+<i class="fa fa-money-bill"></i>
+<small>Total Earnings</small>
+<strong id="earnings">TZS 0</strong>
+</div>
+
+</section>
+
+
+<section class="card">
+
+<div class="head">
+
+<h2>
+Affiliate Accounts
+</h2>
+
+<input
+id="search"
+class="search"
+placeholder="Search affiliate...">
+
+</div>
+
+
+<div class="table">
+
+<table>
+
+<thead>
+
+<tr>
+<th>Affiliate</th>
+<th>Email</th>
+<th>Referral Code</th>
+<th>Commission</th>
+<th>Sales</th>
+<th>Earnings</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
+
+</thead>
+
+<tbody id="list">
+
+<tr>
+<td colspan="8">
+<div class="empty">
+<i class="fa fa-spinner fa-spin"></i>
+Loading affiliates...
+</div>
+</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+</main>
+
+
+<script type="module">
+
+import {
+initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+getDocs,
+doc,
+updateDoc
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+const firebaseConfig={
+
+apiKey:
+"AIzaSyBcOYDfAVKXbkljsYrgI_0rjodBn678tCc",
+
+authDomain:
+"let-s-study-pro-course.firebaseapp.com",
+
+projectId:
+"let-s-study-pro-course",
+
+storageBucket:
+"let-s-study-pro-course.firebasestorage.app",
+
+messagingSenderId:
+"474928293390",
+
+appId:
+"1:474928293390:web:2bcc2aebf2351c12a9fe5f"
+
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+
+let affiliates=[];
+
+const list=
+document.getElementById("list");
+
+
+function money(v){
+
+return Number(v||0)
+.toLocaleString("en-US");
+
+}
+
+
+function esc(v=""){
+
+return String(v)
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+
+}
+
+
+async function load(){
+
+try{
+
+const snap=
+await getDocs(
+collection(db,"affiliates")
+);
+
+affiliates=[];
+
+snap.forEach(d=>{
+
+affiliates.push({
+
+id:d.id,
+...d.data()
+
+});
+
+});
+
+updateStats();
+render();
+
+}catch(error){
+
+console.error(error);
+
+list.innerHTML=`
+
+<tr>
+<td colspan="8">
+<div class="empty">
+Unable to load affiliates.
+</div>
+</td>
+</tr>
+
+`;
+
+}
+
+}
+
+
+function updateStats(){
+
+const total=affiliates.length;
+
+const active=
+affiliates.filter(
+a=>a.status==="active"
+).length;
+
+const pending=
+affiliates.filter(
+a=>a.status==="pending"
+).length;
+
+const earnings=
+affiliates.reduce(
+(sum,a)=>
+sum+
+Number(a.totalEarnings||0),
+0
+);
+
+document.getElementById("total")
+.textContent=total;
+
+document.getElementById("active")
+.textContent=active;
+
+document.getElementById("pending")
+.textContent=pending;
+
+document.getElementById("earnings")
+.textContent="TZS "+money(earnings);
+
+}
+
+
+function render(){
+
+const keyword=
+document.getElementById("search")
+.value
+.toLowerCase()
+.trim();
+
+const data=
+affiliates.filter(a=>{
+
+const text=`
+
+${a.name||""}
+${a.email||""}
+${a.referralCode||""}
+
+`.toLowerCase();
+
+return text.includes(keyword);
+
+});
+
+
+if(!data.length){
+
+list.innerHTML=`
+
+<tr>
+<td colspan="8">
+
+<div class="empty">
+No affiliates found.
+</div>
+
+</td>
+</tr>
+
+`;
+
+return;
+
+}
+
+
+list.innerHTML=
+data.map(a=>{
+
+const status=
+String(a.status||"pending")
+.toLowerCase();
+
+return`
+
+<tr>
+
+<td>
+<strong>
+${esc(a.name||"Affiliate")}
+</strong>
+</td>
+
+<td>
+${esc(a.email||"-")}
+</td>
+
+<td>
+${esc(a.referralCode||"-")}
+</td>
+
+<td>
+${Number(a.commissionRate||20)}%
+</td>
+
+<td>
+${money(a.totalSales)}
+</td>
+
+<td>
+TZS ${money(a.totalEarnings)}
+</td>
+
+<td>
+
+<span class="badge ${status}">
+
+${esc(
+status.toUpperCase()
+)}
+
+</span>
+
+</td>
+
+<td>
+
+<button
+class="view"
+onclick="viewAffiliate('${a.id}')">
+
+View
+
+</button>
+
+${
+status==="pending"
+?
+`
+
+<button
+class="approve"
+onclick="changeStatus('${a.id}','active')">
+
+Approve
+
+</button>
+
+`
+:""
+}
+
+${
+status==="active"
+?
+`
+
+<button
+class="suspend"
+onclick="changeStatus('${a.id}','suspended')">
+
+Suspend
+
+</button>
+
+`
+:""
+}
+
+</td>
+
+</tr>
+
+`;
+
+}).join("");
+
+}
+
+
+window.changeStatus=
+async function(id,status){
+
+try{
+
+await updateDoc(
+
+doc(db,"affiliates",id),
+
+{
+
+status:status,
+updatedAt:new Date()
+
+}
+
+);
+
+await load();
+
+}catch(error){
+
+console.error(error);
+
+alert(
+"Unable to update affiliate status."
+);
+
+}
+
+};
+
+
+window.viewAffiliate=
+function(id){
+
+window.location.href=
+"affiliate-admin-view.html?id="+
+encodeURIComponent(id);
+
+};
+
+
+document
+.getElementById("search")
+.addEventListener(
+"input",
+render
+);
+
+
+load();
+
+</script>
+
+</body>
+</html>
