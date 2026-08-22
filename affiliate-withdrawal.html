@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Affiliate Withdrawal | LetsStudy Pro</title>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ background:#f6f8fb;
+ color:#172033;
+ font-family:Inter,Arial,sans-serif
+}
+a{text-decoration:none;color:inherit}
+.top{
+ height:64px;
+ background:#fff;
+ border-bottom:1px solid #e5e7eb;
+ padding:0 6%;
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ position:sticky;
+ top:0;
+ z-index:10
+}
+.logo{
+ color:#155eef;
+ font-size:21px;
+ font-weight:800
+}
+.container{
+ max-width:650px;
+ margin:35px auto;
+ padding:0 18px
+}
+.card{
+ background:#fff;
+ border:1px solid #e5e7eb;
+ border-radius:16px;
+ padding:24px
+}
+h1{
+ margin:0 0 8px;
+ font-size:25px
+}
+.sub{
+ color:#667085;
+ font-size:13px;
+ line-height:1.6
+}
+.balance{
+ background:#eef4ff;
+ color:#155eef;
+ padding:18px;
+ border-radius:12px;
+ margin:20px 0
+}
+.balance small{
+ display:block;
+ font-size:11px
+}
+.balance strong{
+ display:block;
+ font-size:25px;
+ margin-top:5px
+}
+label{
+ display:block;
+ font-size:12px;
+ font-weight:700;
+ margin:15px 0 6px
+}
+input,select{
+ width:100%;
+ padding:12px;
+ border:1px solid #d9dee8;
+ border-radius:9px;
+ outline:none;
+ background:#fff
+}
+.summary{
+ background:#f8fafc;
+ border:1px solid #e5e7eb;
+ border-radius:12px;
+ padding:15px;
+ margin-top:18px
+}
+.row{
+ display:flex;
+ justify-content:space-between;
+ gap:15px;
+ padding:7px 0;
+ font-size:12px
+}
+.row.total{
+ border-top:1px solid #ddd;
+ margin-top:7px;
+ padding-top:12px;
+ font-weight:800;
+ font-size:14px
+}
+button{
+ width:100%;
+ margin-top:18px;
+ border:0;
+ background:#155eef;
+ color:#fff;
+ padding:13px;
+ border-radius:9px;
+ font-weight:800;
+ cursor:pointer
+}
+button:disabled{
+ opacity:.6;
+ cursor:not-allowed
+}
+.error{
+ color:#b42318;
+ background:#fef3f2;
+ padding:12px;
+ border-radius:9px;
+ font-size:12px;
+ margin-top:12px
+}
+.success{
+ color:#027a48;
+ background:#ecfdf3;
+ padding:12px;
+ border-radius:9px;
+ font-size:12px;
+ margin-top:12px
+}
+</style>
+</head>
+
+<body>
+
+<header class="top">
+<a href="affiliate-dashboard.html" class="logo">
+LetsStudy Pro
+</a>
+<a href="affiliate-dashboard.html">
+<i class="fa fa-arrow-left"></i> Dashboard
+</a>
+</header>
+
+<main class="container">
+
+<div class="card">
+
+<h1>
+Affiliate Withdrawal
+</h1>
+
+<p class="sub">
+Request withdrawal of your available affiliate earnings.
+A 20% commission is applied according to the affiliate system.
+</p>
+
+<div class="balance">
+<small>Available Balance</small>
+<strong id="balance">TZS 0</strong>
+</div>
+
+<form id="form">
+
+<label>Withdrawal Amount</label>
+
+<input
+id="amount"
+type="number"
+min="1"
+step="1"
+placeholder="Enter amount"
+required>
+
+<label>Payment Method</label>
+
+<select id="paymentMethod" required>
+
+<option value="">
+Select payment method
+</option>
+
+<option value="M-Pesa">
+M-Pesa
+</option>
+
+<option value="Airtel Money">
+Airtel Money
+</option>
+
+<option value="Tigo Pesa">
+Tigo Pesa
+</option>
+
+<option value="Halopesa">
+Halopesa
+</option>
+
+<option value="Bank">
+Bank Transfer
+</option>
+
+</select>
+
+<label>Account Name</label>
+
+<input
+id="accountName"
+placeholder="Account name"
+required>
+
+<label>Account Number</label>
+
+<input
+id="accountNumber"
+placeholder="Phone or bank account number"
+required>
+
+<div class="summary">
+
+<div class="row">
+<span>Gross Amount</span>
+<strong id="gross">TZS 0</strong>
+</div>
+
+<div class="row">
+<span>Commission (20%)</span>
+<strong id="commission">TZS 0</strong>
+</div>
+
+<div class="row">
+<span>Withdrawal Fee</span>
+<strong>TZS 0</strong>
+</div>
+
+<div class="row total">
+<span>Net Amount</span>
+<strong id="net">TZS 0</strong>
+</div>
+
+</div>
+
+<button id="submitBtn" type="submit">
+<i class="fa fa-arrow-right"></i>
+Continue to Payment
+</button>
+
+<div id="message"></div>
+
+</form>
+
+</div>
+
+</main>
+
+<script type="module">
+
+import {
+initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+query,
+where,
+getDocs,
+addDoc,
+serverTimestamp
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+import {
+getAuth,
+onAuthStateChanged
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+
+const firebaseConfig={
+
+apiKey:
+"AIzaSyBcOYDfAVKXbkljsYrgI_0rjodBn678tCc",
+
+authDomain:
+"let-s-study-pro-course.firebaseapp.com",
+
+databaseURL:
+"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+projectId:
+"let-s-study-pro-course",
+
+storageBucket:
+"let-s-study-pro-course.firebasestorage.app",
+
+messagingSenderId:
+"474928293390",
+
+appId:
+"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+measurementId:
+"G-85B7V5H5J0"
+
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+const auth=getAuth(app);
+
+let user=null;
+let affiliate=null;
+let affiliateId=null;
+
+const balanceEl=
+document.getElementById("balance");
+
+const amountEl=
+document.getElementById("amount");
+
+const grossEl=
+document.getElementById("gross");
+
+const commissionEl=
+document.getElementById("commission");
+
+const netEl=
+document.getElementById("net");
+
+const messageEl=
+document.getElementById("message");
+
+const submitBtn=
+document.getElementById("submitBtn");
+
+
+function money(value){
+
+return Number(value||0)
+.toLocaleString("en-US");
+
+}
+
+
+/* =========================
+LOAD AFFILIATE
+========================= */
+
+async function loadAffiliate(){
+
+const q=query(
+collection(db,"affiliates"),
+where("userId","==",user.uid)
+);
+
+const snap=await getDocs(q);
+
+if(snap.empty){
+
+messageEl.innerHTML=`
+<div class="error">
+Affiliate account not found.
+</div>
+`;
+
+submitBtn.disabled=true;
+return;
+}
+
+const d=snap.docs[0];
+
+affiliateId=d.id;
+affiliate=d.data();
+
+const balance=
+Number(affiliate.availableBalance||0);
+
+balanceEl.textContent=
+"TZS "+money(balance);
+
+}
+
+
+/* =========================
+CALCULATE
+========================= */
+
+amountEl.addEventListener(
+"input",
+()=>{
+
+const gross=
+Number(amountEl.value||0);
+
+const rate=20;
+
+const commission=
+gross*(rate/100);
+
+const fee=0;
+
+const net=
+gross-commission-fee;
+
+grossEl.textContent=
+"TZS "+money(gross);
+
+commissionEl.textContent=
+"TZS "+money(commission);
+
+netEl.textContent=
+"TZS "+money(Math.max(net,0));
+
+});
+
+
+/* =========================
+SUBMIT
+========================= */
+
+document
+.getElementById("form")
+.addEventListener(
+"submit",
+async e=>{
+
+e.preventDefault();
+
+messageEl.innerHTML="";
+
+const gross=
+Number(amountEl.value||0);
+
+const available=
+Number(
+affiliate?.availableBalance||0
+);
+
+if(gross<=0){
+
+messageEl.innerHTML=`
+<div class="error">
+Enter a valid withdrawal amount.
+</div>
+`;
+
+return;
+}
+
+if(gross>available){
+
+messageEl.innerHTML=`
+<div class="error">
+Withdrawal amount is greater than your available balance.
+</div>
+`;
+
+return;
+}
+
+const paymentMethod=
+document.getElementById(
+"paymentMethod"
+).value;
+
+const accountName=
+document.getElementById(
+"accountName"
+).value.trim();
+
+const accountNumber=
+document.getElementById(
+"accountNumber"
+).value.trim();
+
+if(!paymentMethod||!accountName||!accountNumber){
+
+messageEl.innerHTML=`
+<div class="error">
+Please complete all payment details.
+</div>
+`;
+
+return;
+}
+
+
+submitBtn.disabled=true;
+
+submitBtn.innerHTML=
+'<i class="fa fa-spinner fa-spin"></i> Creating...';
+
+
+try{
+
+const commissionRate=20;
+
+const commissionAmount=
+gross*(commissionRate/100);
+
+const withdrawalFee=0;
+
+const netAmount=
+gross-
+commissionAmount-
+withdrawalFee;
+
+
+/* =========================
+CREATE WITHDRAWAL
+========================= */
+
+const ref=
+"WD-"+Date.now();
+
+
+const withdrawalRef=
+await addDoc(
+collection(db,"withdrawals"),
+{
+
+userId:user.uid,
+
+affiliateId:affiliateId,
+
+grossAmount:gross,
+
+commissionRate:commissionRate,
+
+commissionAmount:commissionAmount,
+
+withdrawalFee:withdrawalFee,
+
+netAmount:netAmount,
+
+currency:"TZS",
+
+paymentMethod:paymentMethod,
+
+accountName:accountName,
+
+accountNumber:accountNumber,
+
+status:"pending",
+
+processedBy:"",
+
+transactionReference:ref,
+
+rejectionReason:"",
+
+adminNote:"",
+
+requestedAt:serverTimestamp(),
+
+processedAt:null,
+
+updatedAt:serverTimestamp()
+
+}
+);
+
+
+/* =========================
+SEND TO PAYMENT
+========================= */
+
+const params=new URLSearchParams({
+
+type:"affiliate_withdrawal",
+
+withdrawalId:
+withdrawalRef,
+
+withdrawalDocId:
+withdrawalRef,
+
+userId:user.uid,
+
+affiliateId:affiliateId,
+
+grossAmount:String(gross),
+
+commissionRate:String(commissionRate),
+
+commissionAmount:
+String(commissionAmount),
+
+withdrawalFee:
+String(withdrawalFee),
+
+netAmount:
+String(netAmount),
+
+currency:"TZS",
+
+paymentMethod:paymentMethod,
+
+accountName:accountName,
+
+accountNumber:accountNumber
+
+});
+
+
+/*
+Payment page receives
+all withdrawal information.
+*/
+
+window.location.href=
+"payment.html?"+
+params.toString();
+
+
+}catch(error){
+
+console.error(error);
+
+submitBtn.disabled=false;
+
+submitBtn.innerHTML=
+'<i class="fa fa-arrow-right"></i> Continue to Payment';
+
+messageEl.innerHTML=`
+
+<div class="error">
+
+Unable to create withdrawal.
+Please try again.
+
+</div>
+
+`;
+
+}
+
+});
+
+
+/* =========================
+AUTH
+========================= */
+
+onAuthStateChanged(
+auth,
+async currentUser=>{
+
+if(!currentUser){
+
+messageEl.innerHTML=`
+
+<div class="error">
+
+Please login to request
+an affiliate withdrawal.
+
+</div>
+
+`;
+
+submitBtn.disabled=true;
+
+return;
+}
+
+user=currentUser;
+
+try{
+
+await loadAffiliate();
+
+}catch(error){
+
+console.error(error);
+
+messageEl.innerHTML=`
+
+<div class="error">
+
+Unable to load affiliate account.
+
+</div>
+
+`;
+
+}
+
+});
+
+</script>
+
+</body>
+</html>
