@@ -22,6 +22,10 @@ body{
  font-family:Inter,Arial,sans-serif
 }
 
+button,input,select,textarea{
+ font:inherit
+}
+
 .top{
  height:64px;
  background:#fff;
@@ -75,6 +79,13 @@ h1{
  margin-top:6px
 }
 
+.header-right{
+ display:flex;
+ align-items:center;
+ gap:8px;
+ flex-wrap:wrap
+}
+
 .search{
  display:flex;
  gap:8px
@@ -87,6 +98,21 @@ h1{
  border-radius:9px;
  outline:none;
  background:#fff
+}
+
+.add-btn{
+ border:0;
+ background:#155eef;
+ color:#fff;
+ padding:11px 15px;
+ border-radius:9px;
+ font-size:12px;
+ font-weight:800;
+ cursor:pointer
+}
+
+.add-btn:hover{
+ background:#073bba
 }
 
 .stats{
@@ -211,7 +237,8 @@ td{
 
 .actions{
  display:flex;
- gap:5px
+ gap:5px;
+ flex-wrap:wrap
 }
 
 .btn{
@@ -241,16 +268,151 @@ td{
  color:#667085
 }
 
-@media(max-width:800px){
+/* MODAL */
+
+.modal{
+ display:none;
+ position:fixed;
+ inset:0;
+ background:rgba(15,23,42,.65);
+ z-index:100;
+ padding:20px;
+ overflow:auto
+}
+
+.modal-box{
+ width:100%;
+ max-width:800px;
+ margin:30px auto;
+ background:#fff;
+ border-radius:18px;
+ overflow:hidden;
+ box-shadow:0 20px 60px rgba(0,0,0,.2)
+}
+
+.modal-head{
+ display:flex;
+ justify-content:space-between;
+ align-items:flex-start;
+ padding:22px 25px;
+ border-bottom:1px solid #eaecf0
+}
+
+.modal-head h2{
+ margin:0;
+ font-size:21px
+}
+
+.modal-head p{
+ margin:6px 0 0;
+ color:#667085;
+ font-size:12px
+}
+
+.close{
+ width:34px;
+ height:34px;
+ border:0;
+ border-radius:50%;
+ background:#f2f4f7;
+ cursor:pointer;
+ font-size:20px
+}
+
+.form{
+ padding:25px
+}
+
+.form-grid{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:14px
+}
+
+.field{
+ margin-bottom:14px
+}
+
+.field label{
+ display:block;
+ font-size:11px;
+ font-weight:800;
+ margin-bottom:6px;
+ color:#344054
+}
+
+.field input,
+.field select,
+.field textarea{
+ width:100%;
+ border:1px solid #d0d5dd;
+ border-radius:9px;
+ padding:11px 12px;
+ outline:none;
+ background:#fff
+}
+
+.field textarea{
+ min-height:100px;
+ resize:vertical
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus{
+ border-color:#155eef
+}
+
+.full{
+ grid-column:1/-1
+}
+
+.form-actions{
+ display:flex;
+ justify-content:flex-end;
+ gap:10px;
+ margin-top:8px;
+ padding-top:18px;
+ border-top:1px solid #eaecf0
+}
+
+.cancel{
+ border:1px solid #d0d5dd;
+ background:#fff;
+ padding:11px 16px;
+ border-radius:9px;
+ cursor:pointer;
+ font-weight:800
+}
+
+.save{
+ border:0;
+ background:#155eef;
+ color:#fff;
+ padding:11px 18px;
+ border-radius:9px;
+ cursor:pointer;
+ font-weight:800
+}
+
+.save:disabled{
+ opacity:.6;
+ cursor:not-allowed
+}
+
+@media(max-width:900px){
 
  .header{
   flex-direction:column;
   align-items:flex-start
  }
 
+ .header-right{
+  width:100%
+ }
+
  .search{
-  width:100%;
-  flex-wrap:wrap
+  width:100%
  }
 
  .search input,
@@ -258,8 +420,33 @@ td{
   flex:1
  }
 
+}
+
+@media(max-width:650px){
+
  .stats{
   grid-template-columns:repeat(2,1fr)
+ }
+
+ .form-grid{
+  grid-template-columns:1fr
+ }
+
+ .full{
+  grid-column:auto
+ }
+
+ .header-right{
+  flex-direction:column;
+  align-items:stretch
+ }
+
+ .add-btn{
+  width:100%
+ }
+
+ .search{
+  flex-direction:column
  }
 
 }
@@ -287,11 +474,27 @@ ADMIN
 <div class="header">
 
 <div>
+
 <h1>Freelancer Management</h1>
+
 <div class="subtitle">
 Manage, verify, feature and control freelancers.
 </div>
+
 </div>
+
+
+<div class="header-right">
+
+<button
+class="add-btn"
+onclick="openAdd()">
+
+<i class="fa fa-plus"></i>
+Add Freelancer
+
+</button>
+
 
 <div class="search">
 
@@ -301,11 +504,25 @@ placeholder="Search freelancer...">
 
 <select id="statusFilter">
 
-<option value="">All Status</option>
-<option value="published">Published</option>
-<option value="pending">Pending</option>
-<option value="suspended">Suspended</option>
+<option value="">
+All Status
+</option>
+
+<option value="published">
+Published
+</option>
+
+<option value="pending">
+Pending
+</option>
+
+<option value="suspended">
+Suspended
+</option>
+
 </select>
+
+</div>
 
 </div>
 
@@ -315,27 +532,62 @@ placeholder="Search freelancer...">
 <section class="stats">
 
 <div class="stat">
+
 <i class="fa fa-users"></i>
-<strong id="total">0</strong>
-<span>Total Freelancers</span>
+
+<strong id="total">
+0
+</strong>
+
+<span>
+Total Freelancers
+</span>
+
 </div>
 
+
 <div class="stat">
+
 <i class="fa fa-circle-check"></i>
-<strong id="verifiedCount">0</strong>
-<span>Verified</span>
+
+<strong id="verifiedCount">
+0
+</strong>
+
+<span>
+Verified
+</span>
+
 </div>
 
+
 <div class="stat">
+
 <i class="fa fa-star"></i>
-<strong id="featuredCount">0</strong>
-<span>Featured</span>
+
+<strong id="featuredCount">
+0
+</strong>
+
+<span>
+Featured
+</span>
+
 </div>
 
+
 <div class="stat">
+
 <i class="fa fa-user-clock"></i>
-<strong id="pendingCount">0</strong>
-<span>Pending</span>
+
+<strong id="pendingCount">
+0
+</strong>
+
+<span>
+Pending
+</span>
+
 </div>
 
 </section>
@@ -346,7 +598,9 @@ placeholder="Search freelancer...">
 <table>
 
 <thead>
+
 <tr>
+
 <th>Freelancer</th>
 <th>Category</th>
 <th>Rate</th>
@@ -354,16 +608,26 @@ placeholder="Search freelancer...">
 <th>Jobs</th>
 <th>Status</th>
 <th>Actions</th>
+
 </tr>
+
 </thead>
+
 
 <tbody id="list">
 
 <tr>
-<td colspan="7" class="loading">
+
+<td
+colspan="7"
+class="loading">
+
 <i class="fa fa-spinner fa-spin"></i>
+
 Loading freelancers...
+
 </td>
+
 </tr>
 
 </tbody>
@@ -375,6 +639,358 @@ Loading freelancers...
 </main>
 
 
+<!-- ADD FREELANCER MODAL -->
+
+<div
+id="addModal"
+class="modal">
+
+<div class="modal-box">
+
+<div class="modal-head">
+
+<div>
+
+<h2>
+Add Freelancer
+</h2>
+
+<p>
+Create a professional freelancer profile.
+</p>
+
+</div>
+
+
+<button
+class="close"
+onclick="closeAdd()">
+
+×
+
+</button>
+
+</div>
+
+
+<form
+id="addForm"
+class="form">
+
+
+<div class="form-grid">
+
+
+<div class="field">
+
+<label>
+Full Name *
+</label>
+
+<input
+id="name"
+required
+placeholder="John Doe">
+
+</div>
+
+
+<div class="field">
+
+<label>
+Username *
+</label>
+
+<input
+id="username"
+required
+placeholder="johndoe">
+
+</div>
+
+
+<div class="field">
+
+<label>
+Email
+</label>
+
+<input
+id="email"
+type="email"
+placeholder="john@example.com">
+
+</div>
+
+
+<div class="field">
+
+<label>
+Professional Headline
+</label>
+
+<input
+id="headline"
+placeholder="Full Stack Developer">
+
+</div>
+
+
+<div class="field">
+
+<label>
+Country
+</label>
+
+<input
+id="country"
+placeholder="Tanzania">
+
+</div>
+
+
+<div class="field">
+
+<label>
+Region
+</label>
+
+<input
+id="region"
+placeholder="Dar es Salaam">
+
+</div>
+
+
+<div class="field">
+
+<label>
+City
+</label>
+
+<input
+id="city"
+placeholder="Dar es Salaam">
+
+</div>
+
+
+<div class="field">
+
+<label>
+Hourly Rate
+</label>
+
+<input
+id="hourlyRate"
+type="number"
+min="0"
+placeholder="25000">
+
+</div>
+
+
+<div class="field">
+
+<label>
+Currency
+</label>
+
+<select id="currency">
+
+<option value="TZS">
+TZS
+</option>
+
+<option value="USD">
+USD
+</option>
+
+<option value="EUR">
+EUR
+</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+Experience Level
+</label>
+
+<select id="experienceLevel">
+
+<option value="Beginner">
+Beginner
+</option>
+
+<option value="Intermediate">
+Intermediate
+</option>
+
+<option value="Expert">
+Expert
+</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+Availability
+</label>
+
+<select id="availability">
+
+<option value="available">
+Available
+</option>
+
+<option value="busy">
+Busy
+</option>
+
+<option value="unavailable">
+Unavailable
+</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>
+Status
+</label>
+
+<select id="status">
+
+<option value="pending">
+Pending
+</option>
+
+<option value="published">
+Published
+</option>
+
+<option value="suspended">
+Suspended
+</option>
+
+</select>
+
+</div>
+
+
+<div class="field full">
+
+<label>
+Skills
+</label>
+
+<input
+id="skills"
+placeholder="Web Development, SEO, Design">
+
+</div>
+
+
+<div class="field full">
+
+<label>
+Categories
+</label>
+
+<input
+id="categories"
+placeholder="Technology, Marketing, Design">
+
+</div>
+
+
+<div class="field full">
+
+<label>
+Profile Image URL
+</label>
+
+<input
+id="profileImage"
+placeholder="https://...">
+
+</div>
+
+
+<div class="field full">
+
+<label>
+Cover Image URL
+</label>
+
+<input
+id="coverImage"
+placeholder="https://...">
+
+</div>
+
+
+<div class="field full">
+
+<label>
+Bio
+</label>
+
+<textarea
+id="bio"
+placeholder="Write freelancer professional biography...">
+</textarea>
+
+</div>
+
+
+</div>
+
+
+<div class="form-actions">
+
+<button
+type="button"
+class="cancel"
+onclick="closeAdd()">
+
+Cancel
+
+</button>
+
+
+<button
+type="submit"
+class="save"
+id="saveBtn">
+
+<i class="fa fa-plus"></i>
+
+Create Freelancer
+
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+
 <script type="module">
 
 import {
@@ -382,11 +998,13 @@ import {
 }
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
+
 import {
  getFirestore,
  collection,
  getDocs,
  doc,
+ addDoc,
  updateDoc,
  deleteDoc,
  serverTimestamp
@@ -416,8 +1034,13 @@ const firebaseConfig={
 
 };
 
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
+
+const app=
+initializeApp(firebaseConfig);
+
+const db=
+getFirestore(app);
+
 
 let freelancers=[];
 
@@ -438,6 +1061,8 @@ function esc(value=""){
 }
 
 
+/* LOAD */
+
 async function load(){
 
  try{
@@ -447,23 +1072,36 @@ async function load(){
    collection(db,"freelancers")
   );
 
+
   freelancers=
   snap.docs.map(d=>({
+
    id:d.id,
+
    ...d.data()
+
   }));
 
+
   render();
+
 
  }catch(error){
 
   console.error(error);
 
   $("list").innerHTML=`
+
   <tr>
-  <td colspan="7" class="empty">
+
+  <td
+  colspan="7"
+  class="empty">
+
   Unable to load freelancers.
+
   </td>
+
   </tr>`;
 
  }
@@ -471,12 +1109,15 @@ async function load(){
 }
 
 
+/* RENDER */
+
 function render(){
 
  const q=
  $("search").value
  .toLowerCase()
  .trim();
+
 
  const status=
  $("statusFilter").value;
@@ -486,22 +1127,28 @@ function render(){
  freelancers.filter(f=>{
 
   const text=`
+
   ${f.name||""}
   ${f.username||""}
   ${f.headline||""}
   ${f.city||""}
   ${f.country||""}
-  ${f.category||""}
-  ${Array.isArray(f.categories)
+
+  ${
+   Array.isArray(f.categories)
    ?f.categories.join(" ")
    :""
   }
+
   `.toLowerCase();
 
 
   return(
+
    (!q||text.includes(q)) &&
+
    (!status||f.status===status)
+
   );
 
  });
@@ -512,16 +1159,20 @@ function render(){
 
 
  $("verifiedCount").textContent=
- freelancers.filter(f=>f.verified).length;
+ freelancers.filter(
+  f=>f.verified
+ ).length;
 
 
  $("featuredCount").textContent=
- freelancers.filter(f=>f.featured).length;
+ freelancers.filter(
+  f=>f.featured
+ ).length;
 
 
  $("pendingCount").textContent=
- freelancers.filter(f=>
-  !f.status ||
+ freelancers.filter(
+  f=>!f.status||
   f.status==="pending"
  ).length;
 
@@ -529,10 +1180,17 @@ function render(){
  if(!data.length){
 
   $("list").innerHTML=`
+
   <tr>
-  <td colspan="7" class="empty">
+
+  <td
+  colspan="7"
+  class="empty">
+
   No freelancers found.
+
   </td>
+
   </tr>`;
 
   return;
@@ -546,17 +1204,24 @@ function render(){
 }
 
 
+/* ROW */
+
 function row(f){
 
  const name=
- f.name||"Unnamed Freelancer";
+ f.name||
+ "Unnamed Freelancer";
+
 
  const initial=
- name.trim().charAt(0).toUpperCase();
+ name.trim()
+ .charAt(0)
+ .toUpperCase();
 
 
  const status=
- f.status||"pending";
+ f.status||
+ "pending";
 
 
  const statusClass=
@@ -584,16 +1249,23 @@ function row(f){
 <div class="avatar">
 
 ${
+
  f.profileImage
+
  ?
+
  `<img
  src="${esc(f.profileImage)}"
  alt="${esc(name)}">`
+
  :
+
  initial
+
 }
 
 </div>
+
 
 <div>
 
@@ -602,18 +1274,33 @@ ${
 ${esc(name)}
 
 ${
+
  f.verified
+
  ?
+
  `<span class="verified">
+
  <i class="fa fa-circle-check"></i>
+
  </span>`
- :""
+
+ :
+
+ ""
+
 }
 
 </div>
 
+
 <div class="username">
-@${esc(f.username||"freelancer")}
+
+@${esc(
+ f.username||
+ "freelancer"
+)}
+
 </div>
 
 </div>
@@ -624,32 +1311,56 @@ ${
 
 
 <td>
+
 ${esc(categories)}
+
 </td>
 
 
 <td>
+
 ${esc(f.currency||"TZS")}
- ${Number(f.hourlyRate||0).toLocaleString()}
+
+${Number(
+ f.hourlyRate||0
+).toLocaleString()}
+
 /hr
-</td>
 
-
-<td>
-⭐ ${Number(f.rating||0).toFixed(1)}
-(${Number(f.ratingCount||0)})
-</td>
-
-
-<td>
-${Number(f.totalJobs||0)}
 </td>
 
 
 <td>
 
-<span class="badge ${statusClass}">
+⭐
+
+${Number(
+ f.rating||0
+).toFixed(1)}
+
+(${Number(
+ f.ratingCount||0
+)})
+
+</td>
+
+
+<td>
+
+${Number(
+ f.totalJobs||0
+)}
+
+</td>
+
+
+<td>
+
+<span
+class="badge ${statusClass}">
+
 ${esc(status)}
+
 </span>
 
 </td>
@@ -659,35 +1370,53 @@ ${esc(status)}
 
 <div class="actions">
 
+
 <button
 class="btn"
 onclick="viewFreelancer('${f.id}')">
+
 View
+
 </button>
+
 
 <button
 class="btn"
 onclick="toggleVerify('${f.id}',${!!f.verified})">
+
 ${f.verified?"Unverify":"Verify"}
+
 </button>
+
 
 <button
 class="btn"
 onclick="toggleFeatured('${f.id}',${!!f.featured})">
+
 ${f.featured?"Unfeature":"Feature"}
+
 </button>
+
 
 <button
 class="btn danger"
-onclick="toggleSuspend('${f.id}','${esc(status)}')">
-${status==="suspended"?"Activate":"Suspend"}
+onclick="toggleSuspend('${f.id}','${status}')">
+
+${status==="suspended"
+?"Activate"
+:"Suspend"}
+
 </button>
+
 
 <button
 class="btn danger"
 onclick="removeFreelancer('${f.id}')">
+
 Delete
+
 </button>
+
 
 </div>
 
@@ -700,27 +1429,256 @@ Delete
 }
 
 
+/* ADD MODAL */
+
+window.openAdd=()=>{
+
+ $("addModal").style.display=
+ "block";
+
+ document.body.style.overflow=
+ "hidden";
+
+};
+
+
+window.closeAdd=()=>{
+
+ $("addModal").style.display=
+ "none";
+
+ document.body.style.overflow=
+ "";
+
+ $("addForm").reset();
+
+};
+
+
+/* ADD FREELANCER */
+
+$("addForm").addEventListener(
+ "submit",
+ async e=>{
+
+  e.preventDefault();
+
+
+  const saveBtn=
+  $("saveBtn");
+
+
+  saveBtn.disabled=true;
+
+  saveBtn.innerHTML=
+  '<i class="fa fa-spinner fa-spin"></i> Creating...';
+
+
+  try{
+
+   const name=
+   $("name").value.trim();
+
+
+   const username=
+   $("username").value
+   .trim()
+   .replace(/^@/,"");
+
+
+   const freelancer={
+
+    userId:"",
+
+    name:name,
+
+    username:username,
+
+    slug:
+    username
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g,"-")
+    .replace(/^-|-$/g,""),
+
+    email:
+    $("email").value.trim(),
+
+    profileImage:
+    $("profileImage").value.trim(),
+
+    coverImage:
+    $("coverImage").value.trim(),
+
+    headline:
+    $("headline").value.trim(),
+
+    bio:
+    $("bio").value.trim(),
+
+    country:
+    $("country").value.trim(),
+
+    region:
+    $("region").value.trim(),
+
+    city:
+    $("city").value.trim(),
+
+    timezone:
+    "Africa/Dar_es_Salaam",
+
+    languages:[],
+
+    skills:
+    $("skills").value
+    .split(",")
+    .map(x=>x.trim())
+    .filter(Boolean),
+
+    categories:
+    $("categories").value
+    .split(",")
+    .map(x=>x.trim())
+    .filter(Boolean),
+
+    experienceLevel:
+    $("experienceLevel").value,
+
+    hourlyRate:
+    Number(
+     $("hourlyRate").value||0
+    ),
+
+    currency:
+    $("currency").value,
+
+    availability:
+    $("availability").value,
+
+    responseTime:
+    "24 hours",
+
+    totalJobs:0,
+
+    completedJobs:0,
+
+    activeJobs:0,
+
+    rating:0,
+
+    ratingCount:0,
+
+    totalEarnings:0,
+
+    portfolioCount:0,
+
+    verified:false,
+
+    featured:false,
+
+    status:
+    $("status").value,
+
+    createdAt:
+    serverTimestamp(),
+
+    updatedAt:
+    serverTimestamp(),
+
+    publishedAt:
+    $("status").value==="published"
+    ?serverTimestamp()
+    :null
+
+   };
+
+
+   const ref=
+   await addDoc(
+    collection(db,"freelancers"),
+    freelancer
+   );
+
+
+   /*
+    Firestore document ID
+    ndiyo freelancerId
+   */
+
+   alert(
+    "Freelancer created successfully!\n\n"+
+    "Freelancer ID: "+
+    ref.id
+   );
+
+
+   closeAdd();
+
+
+   await load();
+
+
+  }catch(error){
+
+   console.error(error);
+
+   alert(
+    "Failed to create freelancer:\n"+
+    error.message
+   );
+
+
+  }finally{
+
+   saveBtn.disabled=false;
+
+   saveBtn.innerHTML=
+   '<i class="fa fa-plus"></i> Create Freelancer';
+
+  }
+
+ });
+
+
+/* VIEW */
+
 window.viewFreelancer=id=>{
 
  location.href=
- `freelancer-view.html?id=${encodeURIComponent(id)}`;
+ `admin-freelancer-view.html?id=${
+  encodeURIComponent(id)
+ }`;
 
 };
 
 
-window.toggleVerify=async(id,current)=>{
+/* VERIFY */
+
+window.toggleVerify=
+async(id,current)=>{
 
  try{
 
   await updateDoc(
-   doc(db,"freelancers",id),
+
+   doc(
+    db,
+    "freelancers",
+    id
+   ),
+
    {
     verified:!current,
-    updatedAt:serverTimestamp()
+
+    updatedAt:
+    serverTimestamp()
    }
+
   );
 
+
   await load();
+
 
  }catch(e){
 
@@ -731,19 +1689,33 @@ window.toggleVerify=async(id,current)=>{
 };
 
 
-window.toggleFeatured=async(id,current)=>{
+/* FEATURE */
+
+window.toggleFeatured=
+async(id,current)=>{
 
  try{
 
   await updateDoc(
-   doc(db,"freelancers",id),
+
+   doc(
+    db,
+    "freelancers",
+    id
+   ),
+
    {
     featured:!current,
-    updatedAt:serverTimestamp()
+
+    updatedAt:
+    serverTimestamp()
    }
+
   );
 
+
   await load();
+
 
  }catch(e){
 
@@ -754,7 +1726,10 @@ window.toggleFeatured=async(id,current)=>{
 };
 
 
-window.toggleSuspend=async(id,status)=>{
+/* SUSPEND */
+
+window.toggleSuspend=
+async(id,status)=>{
 
  const next=
  status==="suspended"
@@ -765,14 +1740,25 @@ window.toggleSuspend=async(id,status)=>{
  try{
 
   await updateDoc(
-   doc(db,"freelancers",id),
+
+   doc(
+    db,
+    "freelancers",
+    id
+   ),
+
    {
     status:next,
-    updatedAt:serverTimestamp()
+
+    updatedAt:
+    serverTimestamp()
    }
+
   );
 
+
   await load();
+
 
  }catch(e){
 
@@ -783,7 +1769,10 @@ window.toggleSuspend=async(id,status)=>{
 };
 
 
-window.removeFreelancer=async id=>{
+/* DELETE */
+
+window.removeFreelancer=
+async id=>{
 
  if(
  !confirm(
@@ -795,10 +1784,18 @@ window.removeFreelancer=async id=>{
  try{
 
   await deleteDoc(
-   doc(db,"freelancers",id)
+
+   doc(
+    db,
+    "freelancers",
+    id
+   )
+
   );
 
+
   await load();
+
 
  }catch(e){
 
@@ -809,16 +1806,39 @@ window.removeFreelancer=async id=>{
 };
 
 
+/* SEARCH */
+
 $("search").addEventListener(
-"input",
-render
+ "input",
+ render
 );
+
 
 $("statusFilter").addEventListener(
-"change",
-render
+ "change",
+ render
 );
 
+
+/* CLOSE MODAL ON BACKDROP */
+
+$("addModal").addEventListener(
+ "click",
+ e=>{
+
+  if(
+   e.target.id==="addModal"
+  ){
+
+   closeAdd();
+
+  }
+
+ }
+);
+
+
+/* START */
 
 load();
 
