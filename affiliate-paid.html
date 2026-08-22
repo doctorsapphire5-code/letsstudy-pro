@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Paid Earnings | LetsStudy Pro</title>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+<style>
+*{box-sizing:border-box}
+
+body{
+ margin:0;
+ background:#f6f8fb;
+ color:#172033;
+ font-family:Inter,Arial,sans-serif
+}
+
+a{text-decoration:none;color:inherit}
+
+.top{
+ height:64px;
+ background:#fff;
+ border-bottom:1px solid #e5e7eb;
+ padding:0 6%;
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ position:sticky;
+ top:0;
+ z-index:10
+}
+
+.logo{
+ color:#155eef;
+ font-size:21px;
+ font-weight:800
+}
+
+.container{
+ max-width:1050px;
+ margin:30px auto;
+ padding:0 18px
+}
+
+.header{
+ margin-bottom:20px
+}
+
+.header h1{
+ margin:0 0 7px;
+ font-size:27px
+}
+
+.header p{
+ margin:0;
+ color:#667085;
+ font-size:13px
+}
+
+.summary{
+ display:grid;
+ grid-template-columns:repeat(3,1fr);
+ gap:15px;
+ margin-bottom:22px
+}
+
+.box{
+ background:#fff;
+ border:1px solid #e5e7eb;
+ border-radius:14px;
+ padding:18px
+}
+
+.box i{
+ color:#155eef;
+ font-size:18px
+}
+
+.box small{
+ display:block;
+ color:#667085;
+ margin-top:9px;
+ font-size:11px
+}
+
+.box strong{
+ display:block;
+ margin-top:5px;
+ font-size:21px
+}
+
+.card{
+ background:#fff;
+ border:1px solid #e5e7eb;
+ border-radius:15px;
+ overflow:hidden
+}
+
+.card-head{
+ padding:17px;
+ border-bottom:1px solid #e5e7eb;
+ display:flex;
+ justify-content:space-between;
+ align-items:center
+}
+
+.card-head h2{
+ margin:0;
+ font-size:17px
+}
+
+.table-wrap{
+ overflow-x:auto
+}
+
+table{
+ width:100%;
+ border-collapse:collapse;
+ min-width:760px
+}
+
+th,td{
+ padding:13px 15px;
+ text-align:left;
+ border-bottom:1px solid #eef0f3;
+ font-size:12px
+}
+
+th{
+ background:#f8fafc;
+ color:#667085;
+ font-size:11px
+}
+
+.amount{
+ font-weight:800
+}
+
+.status{
+ display:inline-flex;
+ align-items:center;
+ gap:5px;
+ background:#ecfdf3;
+ color:#027a48;
+ padding:5px 9px;
+ border-radius:20px;
+ font-size:10px;
+ font-weight:800
+}
+
+.ref{
+ color:#155eef;
+ font-family:monospace;
+ font-size:11px
+}
+
+.empty{
+ padding:55px 20px;
+ text-align:center;
+ color:#667085
+}
+
+.empty i{
+ font-size:30px;
+ margin-bottom:10px
+}
+
+.loading{
+ padding:50px;
+ text-align:center;
+ color:#667085
+}
+
+@media(max-width:700px){
+
+ .summary{
+  grid-template-columns:1fr
+ }
+
+ .header h1{
+  font-size:23px
+ }
+
+}
+</style>
+</head>
+
+<body>
+
+<header class="top">
+
+<a href="affiliate-dashboard.html" class="logo">
+LetsStudy Pro
+</a>
+
+<a href="affiliate-dashboard.html">
+<i class="fa fa-arrow-left"></i>
+Dashboard
+</a>
+
+</header>
+
+
+<main class="container">
+
+<section class="header">
+
+<h1>
+Paid Earnings
+</h1>
+
+<p>
+View all affiliate commissions that have already been paid.
+</p>
+
+</section>
+
+
+<section class="summary">
+
+<div class="box">
+
+<i class="fa fa-money-bill-transfer"></i>
+
+<small>Total Paid</small>
+
+<strong id="totalPaid">
+TZS 0
+</strong>
+
+</div>
+
+
+<div class="box">
+
+<i class="fa fa-receipt"></i>
+
+<small>Payments</small>
+
+<strong id="paymentCount">
+0
+</strong>
+
+</div>
+
+
+<div class="box">
+
+<i class="fa fa-percent"></i>
+
+<small>Commission Rate</small>
+
+<strong>
+20%
+</strong>
+
+</div>
+
+</section>
+
+
+<section class="card">
+
+<div class="card-head">
+
+<h2>
+Payment History
+</h2>
+
+<span
+id="loadingText"
+style="font-size:11px;color:#667085">
+
+Loading...
+
+</span>
+
+</div>
+
+
+<div class="table-wrap">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Date</th>
+
+<th>Gross</th>
+
+<th>Commission</th>
+
+<th>Net Paid</th>
+
+<th>Method</th>
+
+<th>Reference</th>
+
+<th>Status</th>
+
+</tr>
+
+</thead>
+
+<tbody id="payments">
+
+<tr>
+
+<td colspan="7">
+
+<div class="loading">
+
+<i class="fa fa-spinner fa-spin"></i>
+
+Loading payments...
+
+</div>
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+</main>
+
+
+<script type="module">
+
+import {
+initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+query,
+where,
+getDocs
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+import {
+getAuth,
+onAuthStateChanged
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+
+const firebaseConfig={
+
+apiKey:
+"AIzaSyBcOYDfAVKXbkljsYrgI_0rjodBn678tCc",
+
+authDomain:
+"let-s-study-pro-course.firebaseapp.com",
+
+databaseURL:
+"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+projectId:
+"let-s-study-pro-course",
+
+storageBucket:
+"let-s-study-pro-course.firebasestorage.app",
+
+messagingSenderId:
+"474928293390",
+
+appId:
+"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+measurementId:
+"G-85B7V5H5J0"
+
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+const auth=getAuth(app);
+
+
+const paymentsEl=
+document.getElementById("payments");
+
+const totalPaidEl=
+document.getElementById("totalPaid");
+
+const paymentCountEl=
+document.getElementById("paymentCount");
+
+const loadingText=
+document.getElementById("loadingText");
+
+
+function money(value){
+
+return Number(value||0)
+.toLocaleString("en-US");
+
+}
+
+
+function escapeHtml(value=""){
+
+return String(value)
+
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+
+}
+
+
+function formatDate(value){
+
+if(!value) return "-";
+
+try{
+
+const date=
+value.toDate
+?
+value.toDate()
+:
+new Date(value);
+
+return date.toLocaleDateString(
+"en-GB",
+{
+day:"2-digit",
+month:"short",
+year:"numeric"
+}
+);
+
+}catch{
+
+return "-";
+
+}
+
+}
+
+
+/* =========================
+LOAD PAID PAYMENTS
+========================= */
+
+async function loadPayments(user){
+
+try{
+
+const q=query(
+
+collection(
+db,
+"affiliatePayments"
+),
+
+where(
+"userId",
+"==",
+user.uid
+)
+
+);
+
+const snap=
+await getDocs(q);
+
+
+let payments=[];
+
+snap.forEach(item=>{
+
+const data=item.data();
+
+if(
+String(data.status||"")
+.toLowerCase()==="paid"
+){
+
+payments.push({
+
+id:item.id,
+...data
+
+});
+
+}
+
+});
+
+
+payments.sort(
+(a,b)=>{
+
+const ad=
+a.paidAt?.toMillis?.()||0;
+
+const bd=
+b.paidAt?.toMillis?.()||0;
+
+return bd-ad;
+
+}
+);
+
+
+let total=0;
+
+payments.forEach(p=>{
+
+total+=
+Number(
+p.netAmount||0
+);
+
+});
+
+
+totalPaidEl.textContent=
+"TZS "+money(total);
+
+paymentCountEl.textContent=
+payments.length;
+
+loadingText.textContent=
+`${payments.length} payment${
+payments.length===1?"":"s"
+}`;
+
+
+if(!payments.length){
+
+paymentsEl.innerHTML=`
+
+<tr>
+
+<td colspan="7">
+
+<div class="empty">
+
+<i class="fa fa-receipt"></i>
+
+<h3>
+No paid earnings yet
+</h3>
+
+<p>
+Your completed affiliate payments will appear here.
+</p>
+
+</div>
+
+</td>
+
+</tr>
+
+`;
+
+return;
+
+}
+
+
+paymentsEl.innerHTML=
+payments.map(p=>`
+
+<tr>
+
+<td>
+${escapeHtml(
+formatDate(p.paidAt||p.createdAt)
+)}
+</td>
+
+<td class="amount">
+TZS ${money(p.grossAmount)}
+</td>
+
+<td>
+TZS ${money(p.commissionAmount)}
+</td>
+
+<td class="amount">
+TZS ${money(p.netAmount)}
+</td>
+
+<td>
+${escapeHtml(
+p.paymentMethod||"-"
+)}
+</td>
+
+<td class="ref">
+${escapeHtml(
+p.transactionReference||p.id
+)}
+</td>
+
+<td>
+
+<span class="status">
+
+<i class="fa fa-check-circle"></i>
+
+Paid
+
+</span>
+
+</td>
+
+</tr>
+
+`).join("");
+
+
+}catch(error){
+
+console.error(error);
+
+loadingText.textContent="Error";
+
+paymentsEl.innerHTML=`
+
+<tr>
+
+<td colspan="7">
+
+<div class="empty">
+
+<i class="fa fa-triangle-exclamation"></i>
+
+<h3>
+Unable to load payments
+</h3>
+
+<p>
+Please try again later.
+</p>
+
+</div>
+
+</td>
+
+</tr>
+
+`;
+
+}
+
+}
+
+
+/* =========================
+AUTH
+========================= */
+
+onAuthStateChanged(
+auth,
+user=>{
+
+if(!user){
+
+paymentsEl.innerHTML=`
+
+<tr>
+
+<td colspan="7">
+
+<div class="empty">
+
+<i class="fa fa-lock"></i>
+
+<h3>
+Login required
+</h3>
+
+<p>
+Please login to view your paid earnings.
+</p>
+
+</div>
+
+</td>
+
+</tr>
+
+`;
+
+loadingText.textContent="";
+
+return;
+
+}
+
+loadPayments(user);
+
+});
+
+</script>
+
+</body>
+</html>
