@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Marketing Order | LetsStudy Pro</title>
+
+<meta name="description"
+content="Place your marketing order on LetsStudy Pro.">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+<style>
+*{box-sizing:border-box}
+
+body{
+ margin:0;
+ background:#f6f8fb;
+ color:#172033;
+ font-family:Inter,Arial,sans-serif
+}
+
+a{
+ text-decoration:none;
+ color:inherit
+}
+
+.top{
+ height:64px;
+ background:#fff;
+ border-bottom:1px solid #e5e7eb;
+ padding:0 6%;
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ position:sticky;
+ top:0;
+ z-index:20
+}
+
+.logo{
+ color:#155eef;
+ font-size:21px;
+ font-weight:800
+}
+
+.nav{
+ display:flex;
+ gap:18px;
+ font-size:13px;
+ font-weight:700
+}
+
+.container{
+ max-width:1050px;
+ margin:30px auto;
+ padding:0 20px
+}
+
+.back{
+ display:inline-flex;
+ gap:7px;
+ align-items:center;
+ color:#155eef;
+ font-size:12px;
+ font-weight:700;
+ margin-bottom:18px
+}
+
+.layout{
+ display:grid;
+ grid-template-columns:1.15fr .85fr;
+ gap:20px;
+ align-items:start
+}
+
+.card{
+ background:#fff;
+ border:1px solid #e5e7eb;
+ border-radius:16px;
+ overflow:hidden
+}
+
+.image{
+ height:300px;
+ background:#eef2f6
+}
+
+.image img{
+ width:100%;
+ height:100%;
+ object-fit:cover
+}
+
+.content{
+ padding:25px
+}
+
+.type{
+ color:#155eef;
+ font-size:10px;
+ font-weight:800;
+ text-transform:uppercase
+}
+
+h1{
+ font-size:27px;
+ margin:8px 0 12px
+}
+
+.description{
+ color:#667085;
+ font-size:13px;
+ line-height:1.8;
+ white-space:pre-line
+}
+
+.tags{
+ display:flex;
+ flex-wrap:wrap;
+ gap:7px;
+ margin-top:18px
+}
+
+.tag{
+ background:#f2f4f7;
+ padding:7px 10px;
+ border-radius:20px;
+ color:#475467;
+ font-size:10px
+}
+
+.order{
+ padding:24px
+}
+
+.order h2{
+ margin:0 0 18px;
+ font-size:21px
+}
+
+.field{
+ margin-bottom:14px
+}
+
+.field label{
+ display:block;
+ margin-bottom:6px;
+ font-size:11px;
+ font-weight:800
+}
+
+input,
+textarea{
+ width:100%;
+ padding:11px;
+ border:1px solid #d9dee8;
+ border-radius:9px;
+ outline:none;
+ font:inherit;
+ font-size:12px
+}
+
+textarea{
+ min-height:100px;
+ resize:vertical
+}
+
+.summary{
+ border-top:1px solid #e5e7eb;
+ margin-top:20px;
+ padding-top:18px
+}
+
+.row{
+ display:flex;
+ justify-content:space-between;
+ gap:10px;
+ margin-bottom:10px;
+ font-size:12px
+}
+
+.btn{
+ width:100%;
+ border:0;
+ padding:13px;
+ border-radius:9px;
+ background:#155eef;
+ color:#fff;
+ font-size:12px;
+ font-weight:800;
+ cursor:pointer;
+ margin-top:15px;
+ display:block;
+ text-align:center
+}
+
+.btn:disabled{
+ opacity:.6;
+ cursor:not-allowed
+}
+
+.loading,
+.error{
+ background:#fff;
+ border:1px solid #e5e7eb;
+ border-radius:16px;
+ padding:60px 20px;
+ text-align:center;
+ color:#667085
+}
+
+.success{
+ display:none;
+ margin-top:15px;
+ padding:13px;
+ border-radius:9px;
+ background:#ecfdf3;
+ color:#027a48;
+ border:1px solid #abefc6;
+ font-size:12px;
+ line-height:1.6
+}
+
+@media(max-width:800px){
+
+ .nav{
+  display:none
+ }
+
+ .layout{
+  grid-template-columns:1fr
+ }
+
+ .container{
+  padding:0 15px
+ }
+
+ .image{
+  height:240px
+ }
+}
+</style>
+</head>
+
+<body>
+
+<header class="top">
+
+<a href="index.html" class="logo">
+LetsStudy Pro
+</a>
+
+<nav class="nav">
+
+<a href="course.html">Courses</a>
+<a href="marketplace.html">Marketplace</a>
+<a href="scholarships.html">Scholarships</a>
+<a href="careers.html">Careers</a>
+
+</nav>
+
+</header>
+
+
+<main class="container">
+
+<a
+id="backLink"
+href="marketing-view.html"
+class="back">
+
+<i class="fa fa-arrow-left"></i>
+
+Back to Promotion
+
+</a>
+
+
+<div id="app">
+
+<div class="loading">
+
+<i class="fa fa-spinner fa-spin"></i>
+
+<p>
+Loading order...
+</p>
+
+</div>
+
+</div>
+
+</main>
+
+
+<script type="module">
+
+import {
+ initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+ getFirestore,
+ doc,
+ getDoc,
+ addDoc,
+ collection,
+ serverTimestamp
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+import {
+ getAuth,
+ onAuthStateChanged
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+
+/* =========================
+ FIREBASE
+========================= */
+
+const firebaseConfig={
+
+ apiKey:
+ "AIzaSyBcOYDfAVKXbkljsYrgI_0rjodBn678tCc",
+
+ authDomain:
+ "let-s-study-pro-course.firebaseapp.com",
+
+ databaseURL:
+ "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+ projectId:
+ "let-s-study-pro-course",
+
+ storageBucket:
+ "let-s-study-pro-course.firebasestorage.app",
+
+ messagingSenderId:
+ "474928293390",
+
+ appId:
+ "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+ measurementId:
+ "G-85B7V5H5J0"
+
+};
+
+
+const app=
+initializeApp(firebaseConfig);
+
+const db=
+getFirestore(app);
+
+const auth=
+getAuth(app);
+
+
+/* =========================
+ STATE
+========================= */
+
+let campaign=null;
+let currentUser=null;
+
+
+/* =========================
+ URL ID
+========================= */
+
+const params=
+new URLSearchParams(
+window.location.search
+);
+
+const campaignId=
+params.get("id");
+
+
+const backLink=
+document.getElementById(
+"backLink"
+);
+
+
+if(campaignId){
+
+ backLink.href=
+ `marketing-view.html?id=${encodeURIComponent(campaignId)}`;
+
+}
+
+
+/* =========================
+ AUTH
+========================= */
+
+onAuthStateChanged(
+ auth,
+ user=>{
+
+  currentUser=user;
+
+ }
+);
+
+
+/* =========================
+ ESCAPE
+========================= */
+
+function esc(value=""){
+
+ return String(value)
+ .replace(/&/g,"&amp;")
+ .replace(/</g,"&lt;")
+ .replace(/>/g,"&gt;")
+ .replace(/"/g,"&quot;")
+ .replace(/'/g,"&#039;");
+
+}
+
+
+/* =========================
+ LOAD
+========================= */
+
+async function loadCampaign(){
+
+ if(!campaignId){
+
+  showError(
+   "Promotion not found",
+   "Missing promotion ID."
+  );
+
+  return;
+
+ }
+
+
+ try{
+
+  const ref=
+   doc(
+    db,
+    "marketingCampaigns",
+    campaignId
+   );
+
+
+  const snap=
+   await getDoc(ref);
+
+
+  if(!snap.exists()){
+
+   showError(
+    "Promotion not found",
+    "This promotion does not exist."
+   );
+
+   return;
+
+  }
+
+
+  campaign={
+   id:snap.id,
+   ...snap.data()
+  };
+
+
+  if(campaign.status!=="published"){
+
+   showError(
+    "Promotion unavailable",
+    "This promotion is no longer available."
+   );
+
+   return;
+
+  }
+
+
+  render();
+
+
+ }catch(error){
+
+  console.error(error);
+
+  showError(
+   "Unable to load promotion",
+   "Please try again later."
+  );
+
+ }
+
+}
+
+
+/* =========================
+ RENDER
+========================= */
+
+function render(){
+
+ const image=
+  campaign.imageUrl||
+  "https://via.placeholder.com/800x500?text=Promotion";
+
+
+ document.getElementById("app").innerHTML=`
+
+ <div class="layout">
+
+
+  <section class="card">
+
+
+   <div class="image">
+
+    <img
+     src="${esc(image)}"
+     alt="${esc(
+      campaign.title||
+      "Promotion"
+     )}">
+
+   </div>
+
+
+   <div class="content">
+
+    <div class="type">
+
+     ${esc(
+      campaign.type||
+      "Promotion"
+     )}
+
+    </div>
+
+
+    <h1>
+
+     ${esc(
+      campaign.title||
+      "Promotion"
+     )}
+
+    </h1>
+
+
+    <div class="description">
+
+     ${esc(
+      campaign.description||
+      "Promotion details."
+     )}
+
+    </div>
+
+
+    <div class="tags">
+
+     <span class="tag">
+
+      <i class="fa fa-users"></i>
+
+      ${esc(
+       campaign.audience||
+       "Everyone"
+      )}
+
+     </span>
+
+
+     ${
+      campaign.coupon
+      ?
+
+      `<span class="tag">
+
+       <i class="fa fa-ticket"></i>
+
+       ${esc(campaign.coupon)}
+
+      </span>`
+
+      :
+
+      ""
+     }
+
+    </div>
+
+   </div>
+
+  </section>
+
+
+  <section class="card order">
+
+   <h2>
+    Promotion Order
+   </h2>
+
+
+   <form id="orderForm">
+
+
+    <div class="field">
+
+     <label>
+      Full Name
+     </label>
+
+     <input
+      id="name"
+      required
+      placeholder="Your full name">
+
+    </div>
+
+
+    <div class="field">
+
+     <label>
+      Email
+     </label>
+
+     <input
+      id="email"
+      type="email"
+      required
+      placeholder="you@example.com">
+
+    </div>
+
+
+    <div class="field">
+
+     <label>
+      Phone
+     </label>
+
+     <input
+      id="phone"
+      required
+      placeholder="+255...">
+
+    </div>
+
+
+    <div class="field">
+
+     <label>
+      Campaign Details
+     </label>
+
+     <textarea
+      id="message"
+      placeholder="Describe your marketing requirements..."></textarea>
+
+    </div>
+
+
+    <div class="summary">
+
+     <div class="row">
+
+      <span>
+       Promotion
+      </span>
+
+      <strong>
+       ${esc(
+        campaign.title||
+        "Promotion"
+       )}
+      </strong>
+
+     </div>
+
+
+     <div class="row">
+
+      <span>
+       Price
+      </span>
+
+      <strong>
+
+       ${esc(
+        campaign.currency||
+        "TZS"
+       )}
+
+       ${Number(
+        campaign.price||0
+       ).toLocaleString()}
+
+      </strong>
+
+     </div>
+
+    </div>
+
+
+    <button
+     id="submitBtn"
+     type="submit"
+     class="btn">
+
+     Continue to Checkout
+
+     <i class="fa fa-arrow-right"></i>
+
+    </button>
+
+
+    <div
+     id="success"
+     class="success">
+
+     Order created successfully.
+
+     <br><br>
+
+     Redirecting to checkout...
+
+    </div>
+
+
+   </form>
+
+  </section>
+
+ </div>
+
+ `;
+
+
+ document
+  .getElementById("orderForm")
+  .addEventListener(
+   "submit",
+   submitOrder
+  );
+
+}
+
+
+/* =========================
+ CREATE ORDER
+========================= */
+
+async function submitOrder(e){
+
+ e.preventDefault();
+
+
+ const name=
+  document.getElementById(
+   "name"
+  ).value.trim();
+
+
+ const email=
+  document.getElementById(
+   "email"
+  ).value.trim();
+
+
+ const phone=
+  document.getElementById(
+   "phone"
+  ).value.trim();
+
+
+ const message=
+  document.getElementById(
+   "message"
+  ).value.trim();
+
+
+ if(!name||!email||!phone){
+
+  alert(
+   "Please fill in all required fields."
+  );
+
+  return;
+
+ }
+
+
+ const btn=
+  document.getElementById(
+   "submitBtn"
+  );
+
+
+ const success=
+  document.getElementById(
+   "success"
+  );
+
+
+ btn.disabled=true;
+
+ btn.innerHTML=`
+  <i class="fa fa-spinner fa-spin"></i>
+  Creating Order...
+ `;
+
+
+ try{
+
+  const orderRef=
+   await addDoc(
+
+    collection(
+     db,
+     "marketingOrders"
+    ),
+
+    {
+
+     campaignId:
+      campaign.id,
+
+     campaignTitle:
+      campaign.title||"",
+
+     campaignType:
+      campaign.type||"Promotion",
+
+     name:name,
+
+     email:email,
+
+     phone:phone,
+
+     message:message,
+
+     userId:
+      currentUser
+       ?
+       currentUser.uid
+       :
+       null,
+
+     amount:
+      Number(
+       campaign.price||0
+      ),
+
+     currency:
+      campaign.currency||
+      "TZS",
+
+     status:
+      "pending",
+
+     paymentStatus:
+      "unpaid",
+
+     createdAt:
+      serverTimestamp()
+
+    }
+
+   );
+
+
+  success.style.display=
+   "block";
+
+
+  btn.innerHTML=`
+   <i class="fa fa-check"></i>
+   Order Created
+  `;
+
+
+  setTimeout(()=>{
+
+   window.location.href=
+    `marketing-checkout.html?orderId=${encodeURIComponent(orderRef.id)}&id=${encodeURIComponent(campaign.id)}`;
+
+  },700);
+
+
+ }catch(error){
+
+  console.error(error);
+
+  alert(
+   "Unable to create order. Please try again."
+  );
+
+
+  btn.disabled=false;
+
+  btn.innerHTML=`
+   Continue to Checkout
+   <i class="fa fa-arrow-right"></i>
+  `;
+
+ }
+
+}
+
+
+/* =========================
+ ERROR
+========================= */
+
+function showError(title,message){
+
+ document.getElementById("app").innerHTML=`
+
+ <div class="error">
+
+  <i class="fa fa-triangle-exclamation"></i>
+
+  <h2>
+   ${esc(title)}
+  </h2>
+
+  <p>
+   ${esc(message)}
+  </p>
+
+  <a
+   href="marketing.html"
+   class="btn"
+   style="display:inline-block;max-width:220px">
+
+   Back to Marketing
+
+  </a>
+
+ </div>
+
+ `;
+
+}
+
+
+/* =========================
+ START
+========================= */
+
+loadCampaign();
+
+</script>
+
+</body>
+</html>
