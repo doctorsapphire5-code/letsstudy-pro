@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Affiliate Register | LetsStudy Pro</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ background:#f6f8fb;
+ color:#172033;
+ font-family:Inter,Arial,sans-serif
+}
+a{text-decoration:none;color:inherit}
+.top{
+ height:64px;background:#fff;border-bottom:1px solid #e5e7eb;
+ display:flex;align-items:center;padding:0 6%
+}
+.logo{color:#155eef;font-size:21px;font-weight:800}
+.container{max-width:650px;margin:40px auto;padding:20px}
+.card{
+ background:#fff;border:1px solid #e5e7eb;border-radius:16px;
+ padding:28px
+}
+h1{margin-top:0}
+p{color:#667085;font-size:13px;line-height:1.6}
+label{
+ display:block;font-size:12px;font-weight:700;margin:15px 0 6px
+}
+input{
+ width:100%;padding:12px;border:1px solid #d9dee8;
+ border-radius:9px;outline:none
+}
+button{
+ width:100%;margin-top:20px;padding:13px;border:0;
+ border-radius:9px;background:#155eef;color:#fff;
+ font-weight:800;cursor:pointer
+}
+button:disabled{opacity:.6}
+.message{
+ margin-top:15px;padding:12px;border-radius:9px;
+ display:none;font-size:13px
+}
+.success{background:#ecfdf3;color:#027a48}
+.error{background:#fef3f2;color:#b42318}
+</style>
+</head>
+
+<body>
+
+<header class="top">
+<a href="index.html" class="logo">LetsStudy Pro</a>
+</header>
+
+<main class="container">
+
+<div class="card">
+
+<h1>Become an Affiliate</h1>
+
+<p>
+Join the LetsStudy Pro Affiliate Program and earn
+20% commission from eligible sales generated through
+your referral activity.
+</p>
+
+<form id="form">
+
+<label>Full Name</label>
+<input id="name" required>
+
+<label>Email Address</label>
+<input id="email" type="email" required>
+
+<button id="submit">
+Submit Affiliate Application
+</button>
+
+</form>
+
+<div id="message" class="message"></div>
+
+</div>
+
+</main>
+
+<script type="module">
+
+import {
+ initializeApp
+} from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+ getFirestore,
+ collection,
+ addDoc,
+ serverTimestamp,
+ query,
+ where,
+ getDocs
+} from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig={
+ apiKey:"AIzaSyBcOYDfAVKXbkljsYrgI_0rjodBn678tCc",
+ authDomain:"let-s-study-pro-course.firebaseapp.com",
+ projectId:"let-s-study-pro-course",
+ storageBucket:"let-s-study-pro-course.firebasestorage.app",
+ messagingSenderId:"474928293390",
+ appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+const form=document.getElementById("form");
+const submit=document.getElementById("submit");
+const message=document.getElementById("message");
+
+function showMessage(text,type){
+ message.textContent=text;
+ message.className="message "+type;
+ message.style.display="block";
+}
+
+function createReferralCode(name){
+ return "LSP-"+name
+ .trim()
+ .toUpperCase()
+ .replace(/[^A-Z0-9]/g,"")
+ .slice(0,8)
+ +"-"+Math.random().toString(36).slice(2,7).toUpperCase();
+}
+
+form.addEventListener("submit",async e=>{
+
+ e.preventDefault();
+
+ const name=document.getElementById("name").value.trim();
+ const email=document.getElementById("email").value.trim().toLowerCase();
+
+ if(!name || !email)return;
+
+ submit.disabled=true;
+ submit.textContent="Submitting...";
+
+ try{
+
+  const existing=await getDocs(
+   query(
+    collection(db,"affiliates"),
+    where("email","==",email)
+   )
+  );
+
+  if(!existing.empty){
+   showMessage(
+    "An affiliate application already exists for this email.",
+    "error"
+   );
+   submit.disabled=false;
+   submit.textContent="Submit Affiliate Application";
+   return;
+  }
+
+  await addDoc(
+   collection(db,"affiliates"),
+   {
+    userId:"",
+    referralCode:createReferralCode(name),
+    name:name,
+    email:email,
+    status:"pending",
+    commissionRate:20,
+    clicks:0,
+    conversions:0,
+    totalSales:0,
+    totalEarnings:0,
+    pendingEarnings:0,
+    availableBalance:0,
+    paidEarnings:0,
+    createdAt:serverTimestamp(),
+    updatedAt:serverTimestamp()
+   }
+  );
+
+  showMessage(
+   "Application submitted successfully. Your application is now pending review.",
+   "success"
+  );
+
+  form.reset();
+
+  setTimeout(()=>{
+   window.location.href="affiliate-dashboard.html";
+  },1500);
+
+ }catch(error){
+
+  console.error(error);
+
+  showMessage(
+   "Unable to submit application. Please try again.",
+   "error"
+  );
+
+  submit.disabled=false;
+  submit.textContent="Submit Affiliate Application";
+
+ }
+
+});
+
+</script>
+
+</body>
+</html>
