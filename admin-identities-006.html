@@ -1,0 +1,8169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Identity & ID Manager | LetsStudy Pro Admin</title>
+
+<meta name="description"
+      content="LetsStudy Pro Admin Identity and ID Management System. Manage users, courses, modules, lessons, certificates and records.">
+
+<link rel="icon" href="/favicon.ico">
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+:root{
+    --primary:#2563eb;
+    --primary-dark:#1d4ed8;
+    --bg:#f5f7fb;
+    --card:#ffffff;
+    --text:#111827;
+    --muted:#6b7280;
+    --border:#e5e7eb;
+    --success:#16a34a;
+    --warning:#d97706;
+    --danger:#dc2626;
+    --purple:#7c3aed;
+    --shadow:0 8px 30px rgba(15,23,42,.07);
+}
+
+body{
+    font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    background:var(--bg);
+    color:var(--text);
+}
+
+button,
+input,
+select{
+    font:inherit;
+}
+
+button{
+    cursor:pointer;
+}
+
+.app{
+    min-height:100vh;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+    position:fixed;
+    left:0;
+    top:0;
+    bottom:0;
+    width:250px;
+    background:#111827;
+    color:white;
+    padding:20px 14px;
+    z-index:1000;
+    overflow-y:auto;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:8px 10px 25px;
+}
+
+.brand-logo{
+    width:42px;
+    height:42px;
+    border-radius:12px;
+    object-fit:cover;
+    background:white;
+}
+
+.brand h2{
+    font-size:18px;
+}
+
+.brand small{
+    color:#9ca3af;
+}
+
+.nav-title{
+    font-size:11px;
+    color:#6b7280;
+    text-transform:uppercase;
+    margin:18px 10px 8px;
+}
+
+.nav-item{
+    display:flex;
+    align-items:center;
+    gap:11px;
+    width:100%;
+    padding:11px 12px;
+    border-radius:9px;
+    color:#d1d5db;
+    text-decoration:none;
+    margin-bottom:4px;
+    transition:.2s;
+}
+
+.nav-item:hover,
+.nav-item.active{
+    background:#1f2937;
+    color:white;
+}
+
+.nav-icon{
+    width:20px;
+    text-align:center;
+}
+
+/* MAIN */
+
+.main{
+    margin-left:250px;
+    min-height:100vh;
+}
+
+.topbar{
+    height:70px;
+    background:white;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 28px;
+    position:sticky;
+    top:0;
+    z-index:100;
+}
+
+.top-title{
+    font-size:19px;
+    font-weight:700;
+}
+
+.admin-user{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.avatar{
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    background:#dbeafe;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    color:var(--primary);
+}
+
+.content{
+    padding:28px;
+}
+
+/* HEADER */
+
+.page-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:20px;
+    margin-bottom:25px;
+}
+
+.page-header h1{
+    font-size:28px;
+    margin-bottom:6px;
+}
+
+.page-header p{
+    color:var(--muted);
+}
+
+.header-actions{
+    display:flex;
+    gap:9px;
+}
+
+.btn{
+    border:1px solid var(--border);
+    background:white;
+    color:var(--text);
+    border-radius:9px;
+    padding:10px 15px;
+    font-weight:600;
+}
+
+.btn:hover{
+    background:#f9fafb;
+}
+
+.btn-primary{
+    background:var(--primary);
+    color:white;
+    border-color:var(--primary);
+}
+
+.btn-primary:hover{
+    background:var(--primary-dark);
+}
+
+.btn-danger{
+    color:var(--danger);
+}
+
+/* STATS */
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:16px;
+    margin-bottom:24px;
+}
+
+.stat{
+    background:white;
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:18px;
+    box-shadow:var(--shadow);
+}
+
+.stat-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
+
+.stat-label{
+    color:var(--muted);
+    font-size:13px;
+}
+
+.stat-icon{
+    width:38px;
+    height:38px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#eff6ff;
+}
+
+.stat-number{
+    font-size:25px;
+    font-weight:800;
+    margin-top:9px;
+}
+
+/* FILTER */
+
+.panel{
+    background:white;
+    border:1px solid var(--border);
+    border-radius:15px;
+    box-shadow:var(--shadow);
+}
+
+.filters{
+    padding:18px;
+    display:grid;
+    grid-template-columns:1fr 180px 180px auto;
+    gap:12px;
+}
+
+.input,
+.select{
+    width:100%;
+    height:43px;
+    border:1px solid var(--border);
+    border-radius:9px;
+    padding:0 13px;
+    outline:none;
+    background:white;
+}
+
+.input:focus,
+.select:focus{
+    border-color:var(--primary);
+    box-shadow:0 0 0 3px rgba(37,99,235,.1);
+}
+
+/* TABLE */
+
+.table-wrap{
+    overflow-x:auto;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:1100px;
+}
+
+thead{
+    background:#f9fafb;
+}
+
+th{
+    text-align:left;
+    font-size:12px;
+    text-transform:uppercase;
+    color:#6b7280;
+    padding:13px 16px;
+    border-bottom:1px solid var(--border);
+    white-space:nowrap;
+}
+
+td{
+    padding:14px 16px;
+    border-bottom:1px solid var(--border);
+    vertical-align:middle;
+}
+
+tbody tr:hover{
+    background:#fafcff;
+}
+
+.id{
+    color:var(--primary);
+    font-family:monospace;
+    font-size:12px;
+    font-weight:700;
+}
+
+.name{
+    font-weight:700;
+}
+
+.email{
+    color:#374151;
+    font-size:13px;
+}
+
+.type{
+    display:inline-flex;
+    padding:5px 9px;
+    border-radius:20px;
+    font-size:11px;
+    font-weight:700;
+    background:#eef2ff;
+    color:#4338ca;
+}
+
+.status{
+    display:inline-flex;
+    padding:5px 9px;
+    border-radius:20px;
+    font-size:11px;
+    font-weight:700;
+}
+
+.status.active,
+.status.published,
+.status.completed{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.status.pending,
+.status.draft{
+    background:#fef3c7;
+    color:#92400e;
+}
+
+.status.blocked,
+.status.deleted{
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+.actions{
+    display:flex;
+    gap:6px;
+}
+
+.icon-btn{
+    width:34px;
+    height:34px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:white;
+}
+
+.icon-btn:hover{
+    background:#f3f4f6;
+}
+
+/* EMPTY */
+
+.empty{
+    padding:60px 20px;
+    text-align:center;
+    color:var(--muted);
+}
+
+.empty-icon{
+    font-size:42px;
+    margin-bottom:10px;
+}
+
+/* LOADER */
+
+.loader{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:50px;
+}
+
+.spinner{
+    width:35px;
+    height:35px;
+    border:4px solid #e5e7eb;
+    border-top-color:var(--primary);
+    border-radius:50%;
+    animation:spin .8s linear infinite;
+}
+
+@keyframes spin{
+    to{
+        transform:rotate(360deg);
+    }
+}
+
+/* MODAL */
+
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(15,23,42,.55);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:2000;
+}
+
+.modal.show{
+    display:flex;
+}
+
+.modal-box{
+    width:min(760px,100%);
+    max-height:90vh;
+    overflow:auto;
+    background:white;
+    border-radius:16px;
+    box-shadow:0 20px 70px rgba(0,0,0,.25);
+}
+
+.modal-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:20px;
+    border-bottom:1px solid var(--border);
+}
+
+.modal-head h2{
+    font-size:19px;
+}
+
+.close{
+    border:0;
+    background:#f3f4f6;
+    width:35px;
+    height:35px;
+    border-radius:8px;
+}
+
+.modal-body{
+    padding:20px;
+}
+
+.detail-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:15px;
+}
+
+.detail{
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:13px;
+}
+
+.detail.full{
+    grid-column:1/-1;
+}
+
+.detail-label{
+    color:var(--muted);
+    font-size:11px;
+    text-transform:uppercase;
+    margin-bottom:5px;
+}
+
+.detail-value{
+    font-weight:600;
+    word-break:break-word;
+}
+
+.copy{
+    margin-left:7px;
+    padding:4px 7px;
+    border:1px solid var(--border);
+    border-radius:5px;
+    background:white;
+    font-size:11px;
+}
+
+/* MOBILE */
+
+.mobile-menu{
+    display:none;
+    border:0;
+    background:transparent;
+    font-size:23px;
+}
+
+@media(max-width:1100px){
+    .stats{
+        grid-template-columns:repeat(3,1fr);
+    }
+
+    .filters{
+        grid-template-columns:1fr 1fr;
+    }
+}
+
+@media(max-width:800px){
+
+    .sidebar{
+        transform:translateX(-100%);
+        transition:.25s;
+    }
+
+    .sidebar.open{
+        transform:translateX(0);
+    }
+
+    .main{
+        margin-left:0;
+    }
+
+    .mobile-menu{
+        display:block;
+    }
+
+    .content{
+        padding:18px;
+    }
+
+    .topbar{
+        padding:0 16px;
+    }
+
+    .page-header{
+        flex-direction:column;
+    }
+
+    .stats{
+        grid-template-columns:1fr 1fr;
+    }
+
+    .filters{
+        grid-template-columns:1fr;
+    }
+}
+
+@media(max-width:480px){
+
+    .stats{
+        grid-template-columns:1fr;
+    }
+
+    .page-header h1{
+        font-size:23px;
+    }
+
+    .detail-grid{
+        grid-template-columns:1fr;
+    }
+
+    .detail.full{
+        grid-column:auto;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar" id="sidebar">
+
+    <div class="brand">
+
+        <img
+            src="/favicon.ico"
+            class="brand-logo"
+            alt="LetsStudy Pro">
+
+        <div>
+            <h2>LetsStudy Pro</h2>
+            <small>Administration</small>
+        </div>
+
+    </div>
+
+    <div class="nav-title">
+        Main
+    </div>
+
+    <a href="/admin.html" class="nav-item">
+        <span class="nav-icon">📊</span>
+        Dashboard
+    </a>
+
+    <a href="/admin-course.html" class="nav-item">
+        <span class="nav-icon">🎓</span>
+        Courses
+    </a>
+
+    <a href="/admin-users.html" class="nav-item">
+        <span class="nav-icon">👥</span>
+        Users
+    </a>
+
+    <div class="nav-title">
+        Management
+    </div>
+
+    <a href="#" class="nav-item active">
+        <span class="nav-icon">🆔</span>
+        Identity & IDs
+    </a>
+
+    <a href="/admin-certificate.html" class="nav-item">
+        <span class="nav-icon">🏆</span>
+        Certificates
+    </a>
+
+    <a href="/admin-orders.html" class="nav-item">
+        <span class="nav-icon">💳</span>
+        Orders
+    </a>
+
+    <a href="/admin-analytics.html" class="nav-item">
+        <span class="nav-icon">📈</span>
+        Analytics
+    </a>
+
+    <div class="nav-title">
+        System
+    </div>
+
+    <a href="/account-security.html" class="nav-item">
+        <span class="nav-icon">🔐</span>
+        Security
+    </a>
+
+    <a href="/account-preferences.html" class="nav-item">
+        <span class="nav-icon">⚙️</span>
+        Settings
+    </a>
+
+</aside>
+
+
+<!-- MAIN -->
+
+<main class="main">
+
+    <header class="topbar">
+
+        <div style="display:flex;align-items:center;gap:12px">
+
+            <button
+                class="mobile-menu"
+                onclick="toggleSidebar()">
+                ☰
+            </button>
+
+            <div class="top-title">
+                Identity & ID Management
+            </div>
+
+        </div>
+
+        <div class="admin-user">
+
+            <div class="avatar" id="adminAvatar">
+                A
+            </div>
+
+            <div>
+                <strong id="adminName">
+                    Admin
+                </strong>
+
+                <div
+                    style="font-size:11px;color:#6b7280"
+                    id="adminEmail">
+                    Loading...
+                </div>
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <section class="content">
+
+        <div class="page-header">
+
+            <div>
+
+                <h1>
+                    Identity & IDs
+                </h1>
+
+                <p>
+                    Manage and inspect every important LetsStudy Pro record,
+                    user identity and creator information.
+                </p>
+
+            </div>
+
+            <div class="header-actions">
+
+                <button
+                    class="btn"
+                    onclick="loadAllRecords()">
+                    🔄 Refresh
+                </button>
+
+                <button
+                    class="btn btn-primary"
+                    onclick="exportCSV()">
+                    📥 Export CSV
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- STATS -->
+
+        <div class="stats">
+
+            <div class="stat">
+
+                <div class="stat-top">
+
+                    <span class="stat-label">
+                        Total Records
+                    </span>
+
+                    <span class="stat-icon">
+                        🗂️
+                    </span>
+
+                </div>
+
+                <div
+                    class="stat-number"
+                    id="totalRecords">
+                    0
+                </div>
+
+            </div>
+
+
+            <div class="stat">
+
+                <div class="stat-top">
+
+                    <span class="stat-label">
+                        Users
+                    </span>
+
+                    <span class="stat-icon">
+                        👥
+                    </span>
+
+                </div>
+
+                <div
+                    class="stat-number"
+                    id="totalUsers">
+                    0
+                </div>
+
+            </div>
+
+
+            <div class="stat">
+
+                <div class="stat-top">
+
+                    <span class="stat-label">
+                        Courses
+                    </span>
+
+                    <span class="stat-icon">
+                        🎓
+                    </span>
+
+                </div>
+
+                <div
+                    class="stat-number"
+                    id="totalCourses">
+                    0
+                </div>
+
+            </div>
+
+
+            <div class="stat">
+
+                <div class="stat-top">
+
+                    <span class="stat-label">
+                        Certificates
+                    </span>
+
+                    <span class="stat-icon">
+                        🏆
+                    </span>
+
+                </div>
+
+                <div
+                    class="stat-number"
+                    id="totalCertificates">
+                    0
+                </div>
+
+            </div>
+
+
+            <div class="stat">
+
+                <div class="stat-top">
+
+                    <span class="stat-label">
+                        Admin
+                    </span>
+
+                    <span class="stat-icon">
+                        🔐
+                    </span>
+
+                </div>
+
+                <div
+                    class="stat-number"
+                    id="totalAdmins">
+                    0
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- FILTER -->
+
+        <div class="panel">
+
+            <div class="filters">
+
+                <input
+                    id="searchInput"
+                    class="input"
+                    type="search"
+                    placeholder="Search ID, name, email, user ID, course ID..."
+                    oninput="filterRecords()">
+
+                <select
+                    id="typeFilter"
+                    class="select"
+                    onchange="filterRecords()">
+
+                    <option value="all">
+                        All Types
+                    </option>
+
+                    <option value="user">
+                        Users
+                    </option>
+
+                    <option value="course">
+                        Courses
+                    </option>
+
+                    <option value="module">
+                        Modules
+                    </option>
+
+                    <option value="lesson">
+                        Lessons
+                    </option>
+
+                    <option value="certificate">
+                        Certificates
+                    </option>
+
+                    <option value="order">
+                        Orders
+                    </option>
+
+                    <option value="resource">
+                        Resources
+                    </option>
+
+                    <option value="post">
+                        Posts
+                    </option>
+
+                </select>
+
+
+                <select
+                    id="statusFilter"
+                    class="select"
+                    onchange="filterRecords()">
+
+                    <option value="all">
+                        All Status
+                    </option>
+
+                    <option value="active">
+                        Active
+                    </option>
+
+                    <option value="published">
+                        Published
+                    </option>
+
+                    <option value="draft">
+                        Draft
+                    </option>
+
+                    <option value="pending">
+                        Pending
+                    </option>
+
+                    <option value="completed">
+                        Completed
+                    </option>
+
+                </select>
+
+
+                <button
+                    class="btn"
+                    onclick="clearFilters()">
+                    Clear
+                </button>
+
+            </div>
+
+
+            <!-- TABLE -->
+
+            <div class="table-wrap">
+
+                <div
+                    id="loader"
+                    class="loader">
+
+                    <div class="spinner"></div>
+
+                </div>
+
+
+                <table id="recordsTable" style="display:none">
+
+                    <thead>
+
+                    <tr>
+
+                        <th>ID</th>
+
+                        <th>Name / Title</th>
+
+                        <th>Type</th>
+
+                        <th>User ID</th>
+
+                        <th>Email</th>
+
+                        <th>Created By</th>
+
+                        <th>Status</th>
+
+                        <th>Created</th>
+
+                        <th>Actions</th>
+
+                    </tr>
+
+                    </thead>
+
+                    <tbody id="recordsBody"></tbody>
+
+                </table>
+
+
+                <div
+                    id="emptyState"
+                    class="empty"
+                    style="display:none">
+
+                    <div class="empty-icon">
+                        🔎
+                    </div>
+
+                    <h3>
+                        No records found
+                    </h3>
+
+                    <p>
+                        Try another search or filter.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+</div>
+
+
+<!-- DETAILS MODAL -->
+
+<div
+    class="modal"
+    id="detailsModal"
+    onclick="closeModal(event)">
+
+    <div class="modal-box">
+
+        <div class="modal-head">
+
+            <h2>
+                Record Details
+            </h2>
+
+            <button
+                class="close"
+                onclick="closeDetails()">
+                ✕
+            </button>
+
+        </div>
+
+        <div
+            class="modal-body"
+            id="detailsBody">
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- FIREBASE -->
+
+<script type="module">
+
+import {
+    initializeApp
+} from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+    getAuth,
+    onAuthStateChanged
+} from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+    getFirestore,
+    collection,
+    getDocs,
+    doc,
+    getDoc,
+    query,
+    limit
+} from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/*
+================================================
+FIREBASE CONFIG
+================================================
+
+WEKA FIREBASE CONFIG YAKO HALISI HAPA
+================================================
+*/
+
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: ",
+  authDomain: "let-s-study-pro-course.firebaseapp.com",
+  databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId: "let-s-study-pro-course",
+  storageBucket: "let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId: "474928293390",
+  appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId: "G-85B7V5H5J0"
+};
+
+
+const app =
+    initializeApp(firebaseConfig);
+
+const auth =
+    getAuth(app);
+
+const db =
+    getFirestore(app);
+
+
+/*
+================================================
+GLOBAL STATE
+
+<script type="module">
+
+import {
+    initializeApp
+} from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+    getAuth,
+    onAuthStateChanged
+} from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+    getFirestore,
+    collection,
+    getDocs,
+    doc,
+    getDoc
+} from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/*
+================================================
+FIREBASE CONFIG
+================================================
+*/
+
+const firebaseConfig = {
+    apiKey: "WEKA_API_KEY_YAKO_HAPA",
+    authDomain: "let-s-study-pro-course.firebaseapp.com",
+    databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+    projectId: "let-s-study-pro-course",
+    storageBucket: "let-s-study-pro-course.firebasestorage.app",
+    messagingSenderId: "474928293390",
+    appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+    measurementId: "G-85B7V5H5J0"
+};
+
+
+/*
+================================================
+INITIALIZE FIREBASE
+================================================
+*/
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+
+const db = getFirestore(app);
+
+
+/*
+================================================
+DATA
+================================================
+*/
+
+let allRecords = [];
+let filteredRecords = [];
+
+const COLLECTIONS = [
+
+    "users",
+    "courses",
+    "courseModules",
+    "modules",
+    "lessons",
+    "enrollments",
+    "certificates",
+    "certificateTemplates",
+
+    "orders",
+    "payments",
+    "subscriptions",
+    "transactions",
+    "wallets",
+
+    "resources",
+    "posts",
+    "comments",
+    "reviews",
+
+    "services",
+    "freelancers",
+    "projects",
+    "applications",
+
+    "assignments",
+    "quizzes",
+    "questions",
+
+    "notifications",
+    "messages",
+
+    "studyGroups",
+    "events",
+
+    "admins",
+
+    "instructors"
+];
+
+
+/*
+================================================
+TYPE ICONS
+================================================
+*/
+
+const TYPE_ICONS = {
+
+    user: "👤",
+    course: "🎓",
+    module: "📦",
+    lesson: "📖",
+    certificate: "🏆",
+    order: "🛒",
+    payment: "💳",
+    subscription: "🔄",
+    resource: "📚",
+    post: "📝",
+    comment: "💬",
+    service: "🛠️",
+    freelancer: "👨‍💻",
+    project: "📁",
+    application: "📨",
+    assignment: "📋",
+    quiz: "❓",
+    question: "❔",
+    review: "⭐",
+    notification: "🔔",
+    message: "✉️",
+    transaction: "💰",
+    wallet: "👛",
+    admin: "🔐",
+    instructor: "👨‍🏫",
+    enrollment: "🎟️",
+    event: "📅",
+    studyGroup: "👥"
+};
+
+
+/*
+================================================
+TYPE LABEL
+================================================
+*/
+
+function getType(collectionName){
+
+    const map = {
+
+        users: "user",
+
+        courses: "course",
+
+        courseModules: "module",
+
+        modules: "module",
+
+        lessons: "lesson",
+
+        enrollments: "enrollment",
+
+        certificates: "certificate",
+
+        certificateTemplates: "certificate",
+
+        orders: "order",
+
+        payments: "payment",
+
+        subscriptions: "subscription",
+
+        transactions: "transaction",
+
+        wallets: "wallet",
+
+        resources: "resource",
+
+        posts: "post",
+
+        comments: "comment",
+
+        reviews: "review",
+
+        services: "service",
+
+        freelancers: "freelancer",
+
+        projects: "project",
+
+        applications: "application",
+
+        assignments: "assignment",
+
+        quizzes: "quiz",
+
+        questions: "question",
+
+        notifications: "notification",
+
+        messages: "message",
+
+        studyGroups: "studyGroup",
+
+        events: "event",
+
+        admins: "admin",
+
+        instructors: "instructor"
+    };
+
+    return map[collectionName] || collectionName;
+
+}
+
+
+/*
+================================================
+GET NAME
+================================================
+*/
+
+function getName(data, id){
+
+    return (
+        data.name ||
+        data.fullName ||
+        data.displayName ||
+        data.title ||
+        data.courseName ||
+        data.courseTitle ||
+        data.lessonName ||
+        data.moduleName ||
+        data.resourceName ||
+        data.postTitle ||
+        data.serviceName ||
+        data.projectName ||
+        data.email ||
+        id ||
+        "Unnamed Record"
+    );
+
+}
+
+
+/*
+================================================
+GET EMAIL
+================================================
+*/
+
+function getEmail(data){
+
+    return (
+        data.email ||
+        data.userEmail ||
+        data.ownerEmail ||
+        data.createdByEmail ||
+        data.instructorEmail ||
+        data.emailAddress ||
+        "—"
+    );
+
+}
+
+
+/*
+================================================
+GET USER ID
+================================================
+*/
+
+function getUserId(data, id){
+
+    return (
+        data.userId ||
+        data.uid ||
+        data.userUID ||
+        data.ownerId ||
+        data.ownerID ||
+        data.createdBy ||
+        data.createdById ||
+        data.authorId ||
+        data.instructorId ||
+        data.freelancerId ||
+        id ||
+        "—"
+    );
+
+}
+
+
+/*
+================================================
+GET CREATED BY
+================================================
+*/
+
+function getCreatedBy(data){
+
+    return (
+        data.createdBy ||
+        data.createdById ||
+        data.createdByEmail ||
+        data.authorId ||
+        data.authorEmail ||
+        data.ownerId ||
+        data.ownerEmail ||
+        data.userId ||
+        "—"
+    );
+
+}
+
+
+/*
+================================================
+GET STATUS
+================================================
+*/
+
+function getStatus(data){
+
+    return (
+        data.status ||
+        data.state ||
+        data.courseStatus ||
+        data.paymentStatus ||
+        data.orderStatus ||
+        data.subscriptionStatus ||
+        data.publishStatus ||
+        "—"
+    );
+
+}
+
+
+/*
+================================================
+FORMAT DATE
+================================================
+*/
+
+function formatDate(value){
+
+    if(!value){
+        return "—";
+    }
+
+    try{
+
+        if(
+            typeof value === "object" &&
+            value.seconds
+        ){
+
+            return new Date(
+                value.seconds * 1000
+            ).toLocaleString();
+
+        }
+
+        return new Date(value).toLocaleString();
+
+    }catch{
+
+        return "—";
+
+    }
+
+}
+
+
+/*
+================================================
+LOAD ALL RECORDS
+================================================
+*/
+
+async function loadAllRecords(){
+
+    const loader =
+        document.getElementById("loader");
+
+    const table =
+        document.getElementById("recordsTable");
+
+    const empty =
+        document.getElementById("emptyState");
+
+    loader.style.display = "flex";
+    table.style.display = "none";
+    empty.style.display = "none";
+
+    allRecords = [];
+
+    try{
+
+        for(const collectionName of COLLECTIONS){
+
+            try{
+
+                const snapshot =
+                    await getDocs(
+                        collection(
+                            db,
+                            collectionName
+                        )
+                    );
+
+                snapshot.forEach(item => {
+
+                    allRecords.push({
+
+                        collection:
+                            collectionName,
+
+                        id:
+                            item.id,
+
+                        data:
+                            item.data()
+
+                    });
+
+                });
+
+            }catch(error){
+
+                console.warn(
+                    `Cannot read ${collectionName}:`,
+                    error.message
+                );
+
+            }
+
+        }
+
+
+        filteredRecords =
+            [...allRecords];
+
+
+        updateStats();
+
+        populateCollectionFilter();
+
+        renderRecords();
+
+        loader.style.display = "none";
+
+        if(filteredRecords.length){
+
+            table.style.display = "table";
+
+        }else{
+
+            empty.style.display = "block";
+
+        }
+
+    }catch(error){
+
+        console.error(error);
+
+        loader.style.display = "none";
+
+        empty.style.display = "block";
+
+        empty.innerHTML = `
+            <div class="empty-icon">⚠️</div>
+            <h3>Failed to load records</h3>
+            <p>${escapeHTML(error.message)}</p>
+        `;
+
+    }
+
+}
+
+
+/*
+================================================
+UPDATE STATS
+================================================
+*/
+
+function updateStats(){
+
+    document.getElementById(
+        "totalRecords"
+    ).textContent =
+        allRecords.length;
+
+
+    document.getElementById(
+        "totalUsers"
+    ).textContent =
+        allRecords.filter(
+            r => r.collection === "users"
+        ).length;
+
+
+    document.getElementById(
+        "totalCourses"
+    ).textContent =
+        allRecords.filter(
+            r => r.collection === "courses"
+        ).length;
+
+
+    document.getElementById(
+        "totalCertificates"
+    ).textContent =
+        allRecords.filter(
+            r => r.collection === "certificates"
+        ).length;
+
+
+    document.getElementById(
+        "totalAdmins"
+    ).textContent =
+        allRecords.filter(
+            r =>
+                r.collection === "admins" ||
+                r.data.role === "admin" ||
+                r.data.role === "superadmin"
+        ).length;
+
+}
+
+
+/*
+================================================
+COLLECTION FILTER
+================================================
+*/
+
+function populateCollectionFilter(){
+
+    const select =
+        document.getElementById(
+            "typeFilter"
+        );
+
+    const current =
+        select.value;
+
+    const types =
+        [
+            ...new Set(
+                allRecords.map(
+                    r => getType(r.collection)
+                )
+            )
+        ].sort();
+
+
+    select.innerHTML = `
+        <option value="all">
+            All Types
+        </option>
+    `;
+
+
+    types.forEach(type => {
+
+        const option =
+            document.createElement("option");
+
+        option.value = type;
+
+        option.textContent =
+            `${TYPE_ICONS[type] || "📄"} ${
+                type.charAt(0).toUpperCase() +
+                type.slice(1)
+            }`;
+
+        select.appendChild(option);
+
+    });
+
+
+    if(
+        types.includes(current)
+    ){
+
+        select.value = current;
+
+    }
+
+}
+
+
+/*
+================================================
+FILTER
+================================================
+*/
+
+window.filterRecords = function(){
+
+    const search =
+        document
+            .getElementById("searchInput")
+            .value
+            .trim()
+            .toLowerCase();
+
+
+    const type =
+        document
+            .getElementById("typeFilter")
+            .value;
+
+
+    const status =
+        document
+            .getElementById("statusFilter")
+            .value
+            .toLowerCase();
+
+
+    filteredRecords =
+        allRecords.filter(record => {
+
+            const data =
+                record.data || {};
+
+            const typeName =
+                getType(
+                    record.collection
+                );
+
+
+            const searchable =
+                JSON.stringify({
+                    id: record.id,
+                    collection:
+                        record.collection,
+                    ...data
+                })
+                .toLowerCase();
+
+
+            const matchesSearch =
+                !search ||
+                searchable.includes(search);
+
+
+            const matchesType =
+                type === "all" ||
+                typeName === type;
+
+
+            const recordStatus =
+                String(
+                    getStatus(data)
+                ).toLowerCase();
+
+
+            const matchesStatus =
+                status === "all" ||
+                recordStatus === status;
+
+
+            return (
+                matchesSearch &&
+                matchesType &&
+                matchesStatus
+            );
+
+        });
+
+
+    renderRecords();
+
+};
+
+
+/*
+================================================
+RENDER RECORDS
+================================================
+*/
+
+function renderRecords(){
+
+    const body =
+        document.getElementById(
+            "recordsBody"
+        );
+
+    const table =
+        document.getElementById(
+            "recordsTable"
+        );
+
+    const empty =
+        document.getElementById(
+            "emptyState"
+        );
+
+
+    body.innerHTML = "";
+
+
+    if(!filteredRecords.length){
+
+        table.style.display = "none";
+
+        empty.style.display = "block";
+
+        return;
+
+    }
+
+
+    table.style.display = "table";
+
+    empty.style.display = "none";
+
+
+    filteredRecords.forEach(record => {
+
+        const data =
+            record.data || {};
+
+        const type =
+            getType(
+                record.collection
+            );
+
+        const name =
+            getName(
+                data,
+                record.id
+            );
+
+        const email =
+            getEmail(data);
+
+        const userId =
+            getUserId(
+                data,
+                record.id
+            );
+
+        const createdBy =
+            getCreatedBy(data);
+
+        const status =
+            getStatus(data);
+
+        const created =
+            formatDate(
+                data.createdAt ||
+                data.createdDate ||
+                data.created_at ||
+                data.timestamp
+            );
+
+
+        const tr =
+            document.createElement("tr");
+
+
+        tr.innerHTML = `
+
+            <td>
+
+                <div class="id">
+
+                    ${escapeHTML(record.id)}
+
+                    <button
+                        class="copy"
+                        onclick="copyText('${escapeJS(record.id)}')">
+                        Copy
+                    </button>
+
+                </div>
+
+                <div style="
+                    font-size:10px;
+                    color:#9ca3af;
+                    margin-top:3px;
+                ">
+                    ${escapeHTML(record.collection)}
+                </div>
+
+            </td>
+
+
+            <td>
+
+                <div class="name">
+                    ${escapeHTML(name)}
+                </div>
+
+                <div style="
+                    font-size:11px;
+                    color:#9ca3af;
+                    margin-top:3px;
+                ">
+                    ${escapeHTML(
+                        data.slug || ""
+                    )}
+                </div>
+
+            </td>
+
+
+            <td>
+
+                <span class="type">
+
+                    ${TYPE_ICONS[type] || "📄"}
+
+                    ${escapeHTML(type)}
+
+                </span>
+
+            </td>
+
+
+            <td>
+
+                <div class="id">
+
+                    ${escapeHTML(userId)}
+
+                </div>
+
+                <button
+                    class="copy"
+                    onclick="copyText('${escapeJS(userId)}')">
+                    Copy
+                </button>
+
+            </td>
+
+
+            <td>
+
+                <div class="email">
+
+                    ${escapeHTML(email)}
+
+                </div>
+
+            </td>
+
+
+            <td>
+
+                <div class="id">
+
+                    ${escapeHTML(createdBy)}
+
+                </div>
+
+            </td>
+
+
+            <td>
+
+                ${renderStatus(status)}
+
+            </td>
+
+
+            <td>
+
+                <span style="
+                    font-size:11px;
+                    color:#6b7280;
+                ">
+
+                    ${escapeHTML(created)}
+
+                </span>
+
+            </td>
+
+
+            <td>
+
+                <div class="actions">
+
+                    <button
+                        class="icon-btn"
+                        title="View"
+                        onclick="viewRecord('${escapeJS(record.collection)}','${escapeJS(record.id)}')">
+                        👁️
+                    </button>
+
+                    <button
+                        class="icon-btn"
+                        title="Copy ID"
+                        onclick="copyText('${escapeJS(record.id)}')">
+                        📋
+                    </button>
+
+                </div>
+
+            </td>
+
+        `;
+
+
+        body.appendChild(tr);
+
+    });
+
+}
+
+
+/*
+================================================
+STATUS
+================================================
+*/
+
+function renderStatus(status){
+
+    if(!status || status === "—"){
+
+        return `
+            <span class="status">
+                —
+            </span>
+        `;
+
+    }
+
+    const clean =
+        String(status)
+            .toLowerCase()
+            .replace(/\s+/g,"");
+
+
+    let cls = "";
+
+    if(
+        clean === "active" ||
+        clean === "published" ||
+        clean === "completed" ||
+        clean === "success"
+    ){
+
+        cls = clean;
+
+    }else if(
+        clean === "pending" ||
+        clean === "draft"
+    ){
+
+        cls = clean;
+
+    }else if(
+        clean === "blocked" ||
+        clean === "deleted" ||
+        clean === "failed"
+    ){
+
+        cls = clean;
+
+    }
+
+
+    return `
+        <span class="status ${cls}">
+            ${escapeHTML(status)}
+        </span>
+    `;
+
+}
+
+
+/*
+================================================
+VIEW RECORD
+================================================
+*/
+
+window.viewRecord =
+async function(collectionName, id){
+
+    try{
+
+        const record =
+            allRecords.find(
+                r =>
+                    r.collection === collectionName &&
+                    r.id === id
+            );
+
+
+        if(!record){
+
+            alert("Record not found.");
+
+            return;
+
+        }
+
+
+        const data =
+            record.data || {};
+
+
+        const name =
+            getName(
+                data,
+                id
+            );
+
+
+        const type =
+            getType(
+                collectionName
+            );
+
+
+        document.getElementById(
+            "detailsBody"
+        ).innerHTML = `
+
+            <div class="detail-grid">
+
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        Collection
+                    </div>
+
+                    <div class="detail-value">
+                        ${escapeHTML(collectionName)}
+                    </div>
+
+                </div>
+
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        Document ID
+                    </div>
+
+                    <div class="detail-value">
+
+                        ${escapeHTML(id)}
+
+                        <button
+                            class="copy"
+                            onclick="copyText('${escapeJS(id)}')">
+                            Copy ID
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        Name / Title
+                    </div>
+
+                    <div class="detail-value">
+                        ${escapeHTML(name)}
+                    </div>
+
+                </div>
+
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        Type
+                    </div>
+
+                    <div class="detail-value">
+                        ${TYPE_ICONS[type] || "📄"}
+                        ${escapeHTML(type)}
+                    </div>
+
+                </div>
+
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        User ID
+                    </div>
+
+                    <div class="detail-value">
+
+                        ${escapeHTML(
+                            getUserId(data,id)
+                        )}
+
+                    </div>
+
+                </div>
+
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        Email
+                    </div>
+
+                                        <div class="detail">
+
+                        <div class="detail-label">
+                            Email
+                        </div>
+
+                        <div class="detail-value">
+                            ${escapeHtml(
+                                record.email || "—"
+                            )}
+                        </div>
+
+                    </div>
+
+
+                    <div class="detail">
+
+                        <div class="detail-label">
+                            User ID
+                        </div>
+
+                        <div class="detail-value">
+
+                            ${copyableValue(
+                                record.userId || record.uid
+                            )}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="detail">
+
+                        <div class="detail-label">
+                            Document ID
+                        </div>
+
+                        <div class="detail-value">
+
+                            ${copyableValue(
+                                record.id
+                            )}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="detail">
+
+                        <div class="detail-label">
+                            Owner ID
+                        </div>
+
+                        <div class="detail-value">
+
+                            ${copyableValue(
+                                record.ownerId
+                                || record.createdBy
+                                || record.instructorId
+                                || record.userId
+                            )}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="detail">
+
+                        <div class="detail-label">
+                            Created By
+                        </div>
+
+                        <div class="detail-value">
+
+                            ${escapeHtml(
+                                record.createdBy
+                                || record.createdByName
+                                || "—"
+                            )}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="detail">
+
+                        <div class="detail-label">
+                            Role
+                        </div>
+
+                        <div class="detail-value">
+
+                            ${escapeHtml(
+                                record.role
+                                || record.userRole
+                                || "—"
+                            )}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="detail">
+
+                        <div class="detail-label">
+                            Collection
+                        </div>
+
+                        <div class="detail-value">
+
+                            ${escapeHtml(
+                                record.collection || "—"
+                            )}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="detail">
+
+                        <div class="detail-label">
+                            Type
+                        </div>
+
+                        <div class="detail-value">
+
+                            ${escapeHtml(
+                                record.type || "—"
+                            )}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="detail">
+
+                        <div class="detail-label">
+                            Status
+                        </div>
+
+                        <div class="detail-value">
+
+                            ${escapeHtml(
+                                record.status || "—"
+                            )}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="detail">
+
+                        <div class="detail-label">
+                            Created At
+                        </div>
+
+                        <div class="detail-value">
+
+                            ${formatDate(
+                                record.createdAt
+                            )}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="detail">
+
+                        <div class="detail-label">
+                            Updated At
+                        </div>
+
+                        <div class="detail-value">
+
+                            ${formatDate(
+                                record.updatedAt
+                            )}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="detail">
+
+                        <div class="detail-label">
+                            Name / Title
+                        </div>
+
+                        <div class="detail-value">
+
+                            ${escapeHtml(
+                                getName(record)
+                            )}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="detail full">
+
+                        <div class="detail-label">
+                            Complete Firebase Document
+                        </div>
+
+                        <pre style="
+                            margin-top:10px;
+                            background:#111827;
+                            color:#e5e7eb;
+                            padding:16px;
+                            border-radius:10px;
+                            overflow:auto;
+                            font-size:12px;
+                            line-height:1.6;
+                        ">${escapeHtml(
+                            JSON.stringify(
+                                record.raw || record,
+                                firebaseReplacer,
+                                2
+                            )
+                        )}</pre>
+
+                    </div>
+
+                </div>
+            `;
+
+            document
+                .getElementById("detailsModal")
+                .classList.add("show");
+        };
+
+
+        window.closeDetails = function(){
+
+            document
+                .getElementById("detailsModal")
+                .classList.remove("show");
+
+        };
+
+
+        window.closeModal = function(event){
+
+            if(
+                event &&
+                event.target !==
+                document.getElementById("detailsModal")
+            ){
+                return;
+            }
+
+            closeDetails();
+
+        };
+
+
+        /* ==========================================
+           COPY
+        ========================================== */
+
+        window.copyText = async function(value){
+
+            if(
+                value === undefined ||
+                value === null ||
+                value === "" ||
+                value === "—"
+            ){
+                return;
+            }
+
+            try{
+
+                await navigator.clipboard.writeText(
+                    String(value)
+                );
+
+                showToast("Copied successfully");
+
+            }catch(error){
+
+                const textarea =
+                    document.createElement("textarea");
+
+                textarea.value =
+                    String(value);
+
+                document.body.appendChild(
+                    textarea
+                );
+
+                textarea.select();
+
+                document.execCommand("copy");
+
+                textarea.remove();
+
+                showToast(
+                    "Copied successfully"
+                );
+            }
+
+        };
+
+
+        /* ==========================================
+           CSV EXPORT
+        ========================================== */
+
+        window.exportCSV = function(){
+
+            const rows =
+                filteredRecords.length
+                    ? filteredRecords
+                    : allRecords;
+
+            if(!rows.length){
+
+                showToast(
+                    "No records to export"
+                );
+
+                return;
+            }
+
+            const headers = [
+
+                "Collection",
+                "Document ID",
+                "Name",
+                "Type",
+                "User ID",
+                "Email",
+                "Owner ID",
+                "Created By",
+                "Role",
+                "Status",
+                "Created At",
+                "Updated At"
+
+            ];
+
+            const csvRows = [
+
+                headers.join(","),
+
+                ...rows.map(record => [
+
+                    csvEscape(
+                        record.collection
+                    ),
+
+                    csvEscape(
+                        record.id
+                    ),
+
+                    csvEscape(
+                        getName(record)
+                    ),
+
+                    csvEscape(
+                        record.type
+                    ),
+
+                    csvEscape(
+                        record.userId ||
+                        record.uid
+                    ),
+
+                    csvEscape(
+                        record.email
+                    ),
+
+                    csvEscape(
+                        record.ownerId ||
+                        record.createdBy ||
+                        record.instructorId ||
+                        record.userId
+                    ),
+
+                    csvEscape(
+                        record.createdBy ||
+                        record.createdByName
+                    ),
+
+                    csvEscape(
+                        record.role ||
+                        record.userRole
+                    ),
+
+                    csvEscape(
+                        record.status
+                    ),
+
+                    csvEscape(
+                        formatDate(record.createdAt)
+                    ),
+
+                    csvEscape(
+                        formatDate(record.updatedAt)
+                    )
+
+                ].join(","))
+
+            ];
+
+            const blob =
+                new Blob(
+                    [csvRows.join("\n")],
+                    {
+                        type:
+                        "text/csv;charset=utf-8;"
+                    }
+                );
+
+            const url =
+                URL.createObjectURL(blob);
+
+            const a =
+                document.createElement("a");
+
+            a.href = url;
+
+            a.download =
+                "letsstudy-pro-system-ids-" +
+                new Date()
+                    .toISOString()
+                    .slice(0,10) +
+                ".csv";
+
+            document.body.appendChild(a);
+
+            a.click();
+
+            a.remove();
+
+            URL.revokeObjectURL(url);
+
+            showToast(
+                "CSV exported successfully"
+            );
+
+        };
+
+
+        function csvEscape(value){
+
+            if(
+                value === undefined ||
+                value === null
+            ){
+                return "";
+            }
+
+            const text =
+                String(value)
+                .replace(/"/g,'""');
+
+            return `"${text}"`;
+        }
+
+
+        /* ==========================================
+           HELPERS
+        ========================================== */
+
+        function copyableValue(value){
+
+            if(
+                value === undefined ||
+                value === null ||
+                value === ""
+            ){
+
+                return "—";
+
+            }
+
+            const safe =
+                escapeHtml(String(value));
+
+            const encoded =
+                encodeURIComponent(
+                    String(value)
+                );
+
+            return `
+                <span style="
+                    font-family:monospace;
+                    font-size:12px;
+                ">
+                    ${safe}
+                </span>
+
+                <button
+                    class="copy"
+                    onclick="
+                        copyText(
+                            decodeURIComponent('${encoded}')
+                        )
+                    ">
+                    Copy
+                </button>
+            `;
+
+        }
+
+
+        function escapeHtml(value){
+
+            if(
+                value === undefined ||
+                value === null
+            ){
+
+                return "";
+
+            }
+
+            return String(value)
+                .replace(/&/g,"&amp;")
+                .replace(/</g,"&lt;")
+                .replace(/>/g,"&gt;")
+                .replace(/"/g,"&quot;")
+                .replace(/'/g,"&#039;");
+
+        }
+
+
+        function firebaseReplacer(key,value){
+
+            if(
+                value &&
+                typeof value === "object"
+            ){
+
+                if(
+                    typeof value.toDate ===
+                    "function"
+                ){
+
+                    return value
+                        .toDate()
+                        .toISOString();
+
+                }
+
+            }
+
+            return value;
+        }
+
+
+        function formatDate(value){
+
+            if(!value){
+
+                return "—";
+
+            }
+
+            try{
+
+                if(
+                    value &&
+                    typeof value.toDate ===
+                    "function"
+                ){
+
+                    return value
+                        .toDate()
+                        .toLocaleString();
+
+                }
+
+                if(
+                    typeof value === "object" &&
+                    value.seconds
+                ){
+
+                    return new Date(
+                        value.seconds * 1000
+                    ).toLocaleString();
+
+                }
+
+                const date =
+                    new Date(value);
+
+                if(
+                    Number.isNaN(
+                        date.getTime()
+                    )
+                ){
+
+                    return escapeHtml(
+                        String(value)
+                    );
+
+                }
+
+                return date.toLocaleString();
+
+            }catch(error){
+
+                return "—";
+
+            }
+
+        }
+
+
+        function getName(record){
+
+            return (
+                record.name ||
+                record.fullName ||
+                record.displayName ||
+                record.title ||
+                record.courseName ||
+                record.courseTitle ||
+                record.lessonName ||
+                record.moduleName ||
+                record.resourceName ||
+                record.certificateName ||
+                record.email ||
+                record.slug ||
+                record.id ||
+                "Unnamed Record"
+            );
+
+        }
+
+
+        function normalizeRecord(
+            collectionName,
+            id,
+            data
+        ){
+
+            return {
+
+                ...data,
+
+                collection:
+                    collectionName,
+
+                id:
+
+                    id,
+
+                type:
+
+                    detectType(
+                        collectionName
+                    ),
+
+                raw:
+                    data
+
+            };
+
+        }
+
+
+        function detectType(
+            collectionName
+        ){
+
+            const name =
+                collectionName
+                    .toLowerCase();
+
+            if(
+                name === "users" ||
+                name.includes("user")
+            ){
+                return "user";
+            }
+
+            if(
+                name === "courses" ||
+                name.includes("course")
+            ){
+                return "course";
+            }
+
+            if(
+                name.includes("module")
+            ){
+                return "module";
+            }
+
+            if(
+                name.includes("lesson")
+            ){
+                return "lesson";
+            }
+
+            if(
+                name.includes("certificate")
+            ){
+                return "certificate";
+            }
+
+            if(
+                name.includes("order")
+            ){
+                return "order";
+            }
+
+            if(
+                name.includes("resource")
+            ){
+                return "resource";
+            }
+
+            if(
+                name.includes("post")
+            ){
+                return "post";
+            }
+
+            return "other";
+
+        }
+
+
+        /* ==========================================
+           LOAD FIRESTORE
+        ========================================== */
+
+        window.loadAllRecords =
+        async function(){
+
+            showLoader();
+
+            allRecords = [];
+
+            try{
+
+                const snapshots =
+                    await Promise.all(
+                        COLLECTIONS.map(
+                            async collectionName => {
+
+                                try{
+
+                                    const snap =
+                                        await getDocs(
+                                            collection(
+                                                db,
+                                                collectionName
+                                            )
+                                        );
+
+                                    return {
+                                        collectionName,
+                                        snap
+                                    };
+
+                                }catch(error){
+
+                                    console.warn(
+                                        "Collection skipped:",
+                                        collectionName,
+                                        error
+                                    );
+
+                                    return {
+                                        collectionName,
+                                        snap:null
+                                    };
+
+                                }
+
+                            }
+                        )
+                    );
+
+
+                snapshots.forEach(
+                    result => {
+
+                        if(!result.snap){
+                            return;
+                        }
+
+                        result.snap.forEach(
+                            documentSnapshot => {
+
+                                allRecords.push(
+                                    normalizeRecord(
+                                        result.collectionName,
+                                        documentSnapshot.id,
+                                        documentSnapshot.data()
+                                    )
+                                );
+
+                            }
+                        );
+
+                    }
+                );
+
+
+                filteredRecords =
+                    [...allRecords];
+
+
+                updateStats();
+
+                populateCollectionFilter();
+
+                renderRecords();
+
+                hideLoader();
+
+                showToast(
+                    `${allRecords.length} records loaded`
+                );
+
+            }catch(error){
+
+                console.error(error);
+
+                hideLoader();
+
+                showError(
+                    error
+                );
+
+            }
+
+        };
+
+
+        /* ==========================================
+           FILTER
+        ========================================== */
+
+        window.filterRecords =
+        function(){
+
+            const search =
+                document
+                    .getElementById(
+                        "searchInput"
+                    )
+                    .value
+                    .toLowerCase()
+                    .trim();
+
+            const type =
+                document
+                    .getElementById(
+                        "typeFilter"
+                                        )
+                    .value;
+
+    const status =
+        document.getElementById(
+            "statusFilter"
+        )
+        .value;
+
+    const q =
+        document.getElementById(
+            "searchInput"
+        )
+        .value
+        .trim()
+        .toLowerCase();
+
+    filteredRecords =
+        allRecords.filter(record => {
+
+            const typeMatch =
+                type === "all" ||
+                record.type === type;
+
+            const statusMatch =
+                status === "all" ||
+                String(record.status || "")
+                    .toLowerCase() === status;
+
+            const searchable = [
+                record.id,
+                record.name,
+                record.title,
+                record.email,
+                record.userId,
+                record.ownerId,
+                record.createdBy,
+                record.courseId,
+                record.moduleId,
+                record.lessonId,
+                record.slug,
+                record.collection,
+                record.type
+            ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+            const searchMatch =
+                !q ||
+                searchable.includes(q);
+
+            return (
+                typeMatch &&
+                statusMatch &&
+                searchMatch
+            );
+        });
+
+    renderRecords();
+}
+
+
+/*
+================================================
+RENDER RECORDS
+================================================
+*/
+
+function renderRecords(){
+
+    const tbody =
+        document.getElementById(
+            "recordsBody"
+        );
+
+    const table =
+        document.getElementById(
+            "recordsTable"
+        );
+
+    const empty =
+        document.getElementById(
+            "emptyState"
+        );
+
+    tbody.innerHTML = "";
+
+    if(!filteredRecords.length){
+
+        table.style.display = "none";
+        empty.style.display = "block";
+
+        return;
+    }
+
+    table.style.display = "table";
+    empty.style.display = "none";
+
+    filteredRecords.forEach(record => {
+
+        const tr =
+            document.createElement("tr");
+
+        tr.innerHTML = `
+
+            <td>
+
+                <div
+                    style="
+                    display:flex;
+                    align-items:center;
+                    gap:7px;
+                    ">
+
+                    <span class="id">
+                        ${escapeHTML(
+                            record.id || "—"
+                        )}
+                    </span>
+
+                    <button
+                        class="copy"
+                        onclick="copyText(
+                            '${escapeAttr(
+                                record.id || ""
+                            )}'
+                        )">
+
+                        📋
+
+                    </button>
+
+                </div>
+
+                <div
+                    style="
+                    font-size:10px;
+                    color:#9ca3af;
+                    margin-top:4px;
+                    ">
+
+                    ${escapeHTML(
+                        record.collection || ""
+                    )}
+
+                </div>
+
+            </td>
+
+
+            <td>
+
+                <div class="name">
+
+                    ${escapeHTML(
+                        record.name ||
+                        record.title ||
+                        "Unnamed Record"
+                    )}
+
+                </div>
+
+                ${
+                    record.slug
+                    ? `
+                    <div
+                        style="
+                        font-size:11px;
+                        color:#9ca3af;
+                        margin-top:3px;
+                        ">
+
+                        ${escapeHTML(
+                            record.slug
+                        )}
+
+                    </div>
+                    `
+                    : ""
+                }
+
+            </td>
+
+
+            <td>
+
+                <span class="type">
+
+                    ${escapeHTML(
+                        record.type || "record"
+                    )}
+
+                </span>
+
+            </td>
+
+
+            <td>
+
+                ${
+                    record.userId
+                    ? `
+                    <div class="id-cell">
+
+                        <span class="id">
+                            ${escapeHTML(
+                                record.userId
+                            )}
+                        </span>
+
+                        <button
+                            class="copy"
+                            onclick="copyText(
+                                '${escapeAttr(
+                                    record.userId
+                                )}'
+                            )">
+
+                            📋
+
+                        </button>
+
+                    </div>
+                    `
+                    : "—"
+                }
+
+            </td>
+
+
+            <td>
+
+                ${
+                    record.email
+                    ? `
+                    <span class="email">
+
+                        ${escapeHTML(
+                            record.email
+                        )}
+
+                    </span>
+                    `
+                    : "—"
+                }
+
+            </td>
+
+
+            <td>
+
+                ${
+                    record.createdBy ||
+                    record.ownerId
+                    ? `
+                    <span class="id">
+
+                        ${escapeHTML(
+                            record.createdBy ||
+                            record.ownerId
+                        )}
+
+                    </span>
+                    `
+                    : "—"
+                }
+
+            </td>
+
+
+            <td>
+
+                ${
+                    record.status
+                    ? `
+                    <span class="
+                        status
+                        ${escapeHTML(
+                            String(
+                                record.status
+                            ).toLowerCase()
+                        )}
+                    ">
+
+                        ${escapeHTML(
+                            record.status
+                        )}
+
+                    </span>
+                    `
+                    : "—"
+                }
+
+            </td>
+
+
+            <td>
+
+                ${
+                    formatDate(
+                        record.createdAt
+                    )
+                }
+
+            </td>
+
+
+            <td>
+
+                <div class="actions">
+
+                    <button
+                        class="icon-btn"
+                        title="View details"
+                        onclick="viewRecord(
+                            '${escapeAttr(
+                                record.key
+                            )}'
+                        )">
+
+                        👁️
+
+                    </button>
+
+                    <button
+                        class="icon-btn"
+                        title="Copy ID"
+                        onclick="copyText(
+                            '${escapeAttr(
+                                record.id || ""
+                            )}'
+                        )">
+
+                        📋
+
+                    </button>
+
+                </div>
+
+            </td>
+
+        `;
+
+        tbody.appendChild(tr);
+    });
+}
+
+
+/*
+================================================
+VIEW RECORD
+================================================
+*/
+
+window.viewRecord = function(key){
+
+    const record =
+        allRecords.find(
+            item => item.key === key
+        );
+
+    if(!record){
+
+        showToast(
+            "Record not found"
+        );
+
+        return;
+    }
+
+    const modal =
+        document.getElementById(
+            "detailsModal"
+        );
+
+    const body =
+        document.getElementById(
+            "detailsBody"
+        );
+
+    body.innerHTML = `
+
+        <div class="detail-grid">
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    Collection
+                </div>
+
+                <div class="detail-value">
+
+                    ${escapeHTML(
+                        record.collection || "—"
+                    )}
+
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    Document ID
+                </div>
+
+                <div class="detail-value">
+
+                    ${escapeHTML(
+                        record.id || "—"
+                    )}
+
+                    ${
+                        record.id
+                        ? `
+                        <button
+                            class="copy"
+                            onclick="copyText(
+                                '${escapeAttr(
+                                    record.id
+                                )}'
+                            )">
+
+                            Copy
+
+                        </button>
+                        `
+                        : ""
+                    }
+
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    Name / Title
+                </div>
+
+                <div class="detail-value">
+
+                    ${escapeHTML(
+                        record.name ||
+                        record.title ||
+                        "—"
+                    )}
+
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    Type
+                </div>
+
+                <div class="detail-value">
+
+                    ${escapeHTML(
+                        record.type || "—"
+                    )}
+
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    User ID
+                </div>
+
+                <div class="detail-value">
+
+                    ${escapeHTML(
+                        record.userId || "—"
+                    )}
+
+                    ${
+                        record.userId
+                        ? `
+                        <button
+                            class="copy"
+                            onclick="copyText(
+                                '${escapeAttr(
+                                    record.userId
+                                )}'
+                            )">
+
+                            Copy
+
+                        </button>
+                        `
+                        : ""
+                    }
+
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    Email
+                </div>
+
+                <div class="detail-value">
+
+                    ${escapeHTML(
+                        record.email || "—"
+                    )}
+
+                    ${
+                        record.email
+                        ? `
+                        <button
+                            class="copy"
+                            onclick="copyText(
+                                '${escapeAttr(
+                                    record.email
+                                )}'
+                            )">
+
+                            Copy
+
+                        </button>
+                        `
+                        : ""
+                    }
+
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    Owner ID
+                </div>
+
+                <div class="detail-value">
+
+                    ${escapeHTML(
+                        record.ownerId || "—"
+                    )}
+
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    Created By
+                </div>
+
+                <div class="detail-value">
+
+                    ${escapeHTML(
+                        record.createdBy || "—"
+                    )}
+
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    Course ID
+                </div>
+
+                <div class="detail-value">
+
+                    ${escapeHTML(
+                        record.courseId || "—"
+                    )}
+
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    Module ID
+                </div>
+
+                <div class="detail-value">
+
+                    ${escapeHTML(
+                        record.moduleId || "—"
+                    )}
+
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    Lesson ID
+                </div>
+
+                <div class="detail-value">
+
+                    ${escapeHTML(
+                        record.lessonId || "—"
+                    )}
+
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    Status
+                </div>
+
+                <div class="detail-value">
+
+                    ${escapeHTML(
+                        record.status || "—"
+                    )}
+
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    Created At
+                </div>
+
+                <div class="detail-value">
+
+                    ${formatDate(
+                        record.createdAt
+                    )}
+
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    Updated At
+                </div>
+
+                <div class="detail-value">
+
+                    ${formatDate(
+                        record.updatedAt
+                    )}
+
+                </div>
+
+            </div>
+
+
+            <div class="detail full">
+
+                <div class="detail-label">
+                    Document Path
+                </div>
+
+                <div class="detail-value">
+
+                    ${escapeHTML(
+                        record.collection +
+                        "/" +
+                        record.id
+                    )}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div
+            style="
+            margin-top:20px;
+            "
+        >
+
+            <h3
+                style="
+                font-size:15px;
+                margin-bottom:10px;
+                "
+            >
+
+                Complete Firebase Document
+
+            </h3>
+
+            <pre
+                style="
+                background:#111827;
+                color:#e5e7eb;
+                padding:16px;
+                border-radius:10px;
+                overflow:auto;
+                font-size:12px;
+                line-height:1.6;
+                "
+            >${escapeHTML(
+                JSON.stringify(
+                    record.data,
+                    firebaseReplacer,
+                    2
+                )
+            )}</pre>
+
+        </div>
+
+    `;
+
+    modal.classList.add("show");
+};
+
+
+/*
+================================================
+CLOSE MODAL
+================================================
+*/
+
+window.closeDetails = function(){
+
+    document
+        .getElementById(
+            "detailsModal"
+        )
+        .classList.remove("show");
+
+};
+
+
+window.closeModal = function(event){
+
+    if(
+        event &&
+        event.target !== event.currentTarget
+    ){
+
+        return;
+
+    }
+
+    closeDetails();
+
+};
+
+
+/*
+================================================
+COPY
+================================================
+*/
+
+window.copyText = async function(text){
+
+    if(!text){
+
+        showToast(
+            "Nothing to copy"
+        );
+
+        return;
+    }
+
+    try{
+
+        await navigator.clipboard.writeText(
+            text
+        );
+
+        showToast(
+            "Copied successfully"
+        );
+
+    }catch(error){
+
+        const textarea =
+            document.createElement("textarea");
+
+        textarea.value = text;
+
+        document.body.appendChild(
+            textarea
+        );
+
+        textarea.select();
+
+        document.execCommand(
+            "copy"
+        );
+
+        textarea.remove();
+
+        showToast(
+            "Copied successfully"
+        );
+    }
+};
+
+
+/*
+================================================
+LOAD ALL RECORDS
+================================================
+*/
+
+window.loadAllRecords = async function(){
+
+    const loader =
+        document.getElementById(
+            "loader"
+        );
+
+    const table =
+        document.getElementById(
+            "recordsTable"
+        );
+
+    const empty =
+        document.getElementById(
+            "emptyState"
+        );
+
+    loader.style.display = "flex";
+    table.style.display = "none";
+    empty.style.display = "none";
+
+    allRecords = [];
+
+    try{
+
+        for(
+            const collectionName
+            of COLLECTIONS
+        ){
+
+            try{
+
+                const snapshot =
+                    await getDocs(
+                        collection(
+                            db,
+                            collectionName
+                        )
+                    );
+
+                snapshot.forEach(
+                    snapshotDoc => {
+
+                        const data =
+                            snapshotDoc.data();
+
+                        allRecords.push(
+                            normalizeRecord(
+                                collectionName,
+                                snapshotDoc.id,
+                                data
+                            )
+                        );
+
+                    }
+                );
+
+            }catch(error){
+
+                console.warn(
+                    "Collection skipped:",
+                    collectionName,
+                    error
+                );
+
+            }
+
+        }
+
+
+        filteredRecords =
+            [...allRecords];
+
+        updateStats();
+
+        populateCollectionFilter();
+
+        renderRecords();
+
+        loader.style.display = "none";
+
+
+        if(
+            !allRecords.length
+        ){
+
+            empty.style.display =
+                "block";
+
+        }
+
+    }catch(error){
+
+        console.error(error);
+
+        loader.innerHTML = `
+
+            <div
+                style="
+                color:#dc2626;
+                text-align:center;
+                "
+            >
+
+                <div
+                    style="
+                    font-size:30px;
+                    margin-bottom:8px;
+                    "
+                >
+
+                    ⚠️
+
+                </div>
+
+                <strong>
+                    Failed to load records
+                </strong>
+
+                <p
+                    style="
+                    margin-top:6px;
+                    font-size:12px;
+                    "
+                >
+
+                    ${escapeHTML(
+                        error.message
+                    )}
+
+                </p>
+
+            </div>
+
+        `;
+
+    }
+
+};
+
+
+/*
+================================================
+NORMALIZE FIRESTORE RECORD
+================================================
+*/
+
+function normalizeRecord(
+    collectionName,
+    id,
+    data
+){
+
+    const record = {
+
+        key:
+            collectionName +
+            "::" +
+            id,
+
+        collection:
+            collectionName,
+
+        id:
+            id,
+
+        data:
+            data || {},
+
+        name:
+            firstValue(
+                data,
+                [
+                    "name",
+                                        "displayName",
+                    "fullName",
+                    "title",
+                    "courseName",
+                    "courseTitle",
+                    "lessonTitle",
+                    "moduleName",
+                    "moduleTitle",
+                    "resourceName",
+                    "resourceTitle",
+                    "certificateName",
+                    "certificateTitle",
+                    "productName",
+                    "serviceName",
+                    "projectName",
+                    "eventName",
+                    "groupName",
+                    "categoryName",
+                    "planName",
+                    "templateName",
+                    "announcementTitle",
+                    "postTitle",
+                    "quizTitle",
+                    "assignmentTitle",
+                    "questionText"
+                ]
+            ),
+
+            title:
+                firstValue(
+                    data,
+                    [
+                        "title",
+                        "courseTitle",
+                        "lessonTitle",
+                        "moduleTitle",
+                        "resourceTitle",
+                        "certificateTitle",
+                        "postTitle",
+                        "quizTitle",
+                        "assignmentTitle",
+                        "announcementTitle"
+                    ]
+                ),
+
+            email:
+                firstValue(
+                    data,
+                    [
+                        "email",
+                        "userEmail",
+                        "ownerEmail",
+                        "createdByEmail",
+                        "creatorEmail",
+                        "authorEmail",
+                        "studentEmail",
+                        "instructorEmail",
+                        "adminEmail",
+                        "freelancerEmail"
+                    ]
+                ),
+
+            userId:
+                firstValue(
+                    data,
+                    [
+                        "userId",
+                        "uid",
+                        "userUID",
+                        "userUid",
+                        "studentId",
+                        "studentUID",
+                        "memberId",
+                        "memberUID",
+                        "accountId",
+                        "customerId"
+                    ]
+                ),
+
+            ownerId:
+                firstValue(
+                    data,
+                    [
+                        "ownerId",
+                        "ownerUID",
+                        "ownerUid",
+                        "ownerUserId",
+                        "createdBy",
+                        "createdById",
+                        "creatorId",
+                        "creatorUID",
+                        "authorId",
+                        "authorUID",
+                        "instructorId",
+                        "instructorUID",
+                        "freelancerId",
+                        "providerId"
+                    ]
+                ),
+
+            createdBy:
+                firstValue(
+                    data,
+                    [
+                        "createdBy",
+                        "createdById",
+                        "createdByUID",
+                        "creatorId",
+                        "creatorUID",
+                        "authorId",
+                        "authorUID",
+                        "adminId",
+                        "adminUID"
+                    ]
+                ),
+
+            courseId:
+                firstValue(
+                    data,
+                    [
+                        "courseId",
+                        "courseID",
+                        "course_id"
+                    ]
+                ),
+
+            moduleId:
+                firstValue(
+                    data,
+                    [
+                        "moduleId",
+                        "moduleID",
+                        "module_id"
+                    ]
+                ),
+
+            lessonId:
+                firstValue(
+                    data,
+                    [
+                        "lessonId",
+                        "lessonID",
+                        "lesson_id"
+                    ]
+                ),
+
+            enrollmentId:
+                firstValue(
+                    data,
+                    [
+                        "enrollmentId",
+                        "enrollmentID"
+                    ]
+                ),
+
+            certificateId:
+                firstValue(
+                    data,
+                    [
+                        "certificateId",
+                        "certificateID"
+                    ]
+                ),
+
+            orderId:
+                firstValue(
+                    data,
+                    [
+                        "orderId",
+                        "orderID"
+                    ]
+                ),
+
+            paymentId:
+                firstValue(
+                    data,
+                    [
+                        "paymentId",
+                        "paymentID",
+                        "transactionId",
+                        "transactionID"
+                    ]
+                ),
+
+            resourceId:
+                firstValue(
+                    data,
+                    [
+                        "resourceId",
+                        "resourceID"
+                    ]
+                ),
+
+            serviceId:
+                firstValue(
+                    data,
+                    [
+                        "serviceId",
+                        "serviceID"
+                    ]
+                ),
+
+            projectId:
+                firstValue(
+                    data,
+                    [
+                        "projectId",
+                        "projectID"
+                    ]
+                ),
+
+            slug:
+                firstValue(
+                    data,
+                    [
+                        "slug"
+                    ]
+                ),
+
+            role:
+                firstValue(
+                    data,
+                    [
+                        "role",
+                        "userRole",
+                        "accountRole"
+                    ]
+                ),
+
+            status:
+                firstValue(
+                    data,
+                    [
+                        "status",
+                        "state"
+                    ]
+                ),
+
+            createdAt:
+                firstValue(
+                    data,
+                    [
+                        "createdAt",
+                        "created_at",
+                        "dateCreated",
+                        "createdDate",
+                        "timestamp"
+                    ]
+                ),
+
+            updatedAt:
+                firstValue(
+                    data,
+                    [
+                        "updatedAt",
+                        "updated_at",
+                        "dateUpdated",
+                        "updatedDate"
+                    ]
+                ),
+
+            type:
+                getRecordType(
+                    collectionName
+                )
+        };
+
+    return record;
+}
+
+
+/*
+================================================
+GET RECORD TYPE
+================================================
+*/
+
+function getRecordType(
+    collectionName
+){
+
+    const map = {
+
+        users: "user",
+
+        courses: "course",
+
+        courseModules: "module",
+
+        modules: "module",
+
+        lessons: "lesson",
+
+        enrollments: "enrollment",
+
+        certificates: "certificate",
+
+        certificateTemplates: "certificate",
+
+        orders: "order",
+
+        payments: "payment",
+
+        subscriptions: "subscription",
+
+        resources: "resource",
+
+        posts: "post",
+
+        comments: "comment",
+
+        services: "service",
+
+        freelancers: "freelancer",
+
+        projects: "project",
+
+        applications: "application",
+
+        assignments: "assignment",
+
+        quizzes: "quiz",
+
+        questions: "question",
+
+        reviews: "review",
+
+        notifications: "notification",
+
+        messages: "message",
+
+        transactions: "transaction",
+
+        wallets: "wallet",
+
+        referrals: "referral",
+
+        withdrawals: "withdrawal",
+
+        refunds: "refund",
+
+        products: "product",
+
+        marketplace: "marketplace",
+
+        events: "event",
+
+        bookings: "booking",
+
+        meetings: "meeting",
+
+        privateMeetings: "private-meeting",
+
+        announcements: "announcement",
+
+        faqs: "faq",
+
+        courseFaqs: "course-faq",
+
+        courseResources: "course-resource",
+
+        courseAssignments: "course-assignment",
+
+        courseQuizzes: "course-quiz",
+
+        learningProgress: "learning-progress",
+
+        progress: "progress",
+
+        studyGroups: "study-group",
+
+        groupMembers: "group-member",
+
+        chatRooms: "chat-room",
+
+        chatMessages: "chat-message",
+
+        supportTickets: "support-ticket",
+
+        reports: "report",
+
+        likes: "like",
+
+        followers: "follower",
+
+        following: "following",
+
+        bookmarks: "bookmark",
+
+        achievements: "achievement",
+
+        badges: "badge",
+
+        points: "point",
+
+        streaks: "streak",
+
+        adminLogs: "admin-log",
+
+        loginLogs: "login-log",
+
+        auditLogs: "audit-log",
+
+        systemSettings: "system-setting"
+
+    };
+
+    return (
+        map[collectionName] ||
+        collectionName
+            .replace(
+                /s$/,
+                ""
+            )
+    );
+}
+
+
+/*
+================================================
+FIRST VALUE
+================================================
+*/
+
+function firstValue(
+    object,
+    keys
+){
+
+    if(
+        !object ||
+        typeof object !== "object"
+    ){
+
+        return "";
+
+    }
+
+    for(
+        const key of keys
+    ){
+
+        const value =
+            object[key];
+
+        if(
+            value !== undefined &&
+            value !== null &&
+            value !== ""
+        ){
+
+            return normalizeValue(
+                value
+            );
+
+        }
+
+    }
+
+    return "";
+}
+
+
+/*
+================================================
+NORMALIZE FIREBASE VALUE
+================================================
+*/
+
+function normalizeValue(
+    value
+){
+
+    if(
+        typeof value === "string" ||
+        typeof value === "number" ||
+        typeof value === "boolean"
+    ){
+
+        return String(value);
+
+    }
+
+    if(
+        value instanceof Date
+    ){
+
+        return value;
+
+    }
+
+    if(
+        value &&
+        typeof value.toDate === "function"
+    ){
+
+        try{
+
+            return value.toDate();
+
+        }catch{
+
+            return String(value);
+
+        }
+
+    }
+
+    if(
+        value &&
+        typeof value === "object" &&
+        typeof value.seconds === "number"
+    ){
+
+        return new Date(
+            value.seconds * 1000
+        );
+
+    }
+
+    if(
+        value &&
+        typeof value === "object"
+    ){
+
+        try{
+
+            return JSON.stringify(
+                value
+            );
+
+        }catch{
+
+            return String(value);
+
+        }
+
+    }
+
+    return String(value);
+}
+
+
+/*
+================================================
+FORMAT DATE
+================================================
+*/
+
+function formatDate(
+    value
+){
+
+    if(!value){
+
+        return "—";
+
+    }
+
+    try{
+
+        let date;
+
+        if(
+            value instanceof Date
+        ){
+
+            date = value;
+
+        }else if(
+            value &&
+            typeof value.toDate === "function"
+        ){
+
+            date = value.toDate();
+
+        }else if(
+            typeof value === "number"
+        ){
+
+            date =
+                new Date(value);
+
+        }else{
+
+            date =
+                new Date(value);
+
+        }
+
+        if(
+            Number.isNaN(
+                date.getTime()
+            )
+        ){
+
+            return escapeHTML(
+                String(value)
+            );
+
+        }
+
+        return new Intl.DateTimeFormat(
+            "en-GB",
+            {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+            }
+        ).format(date);
+
+    }catch(error){
+
+        return escapeHTML(
+            String(value)
+        );
+
+    }
+}
+
+
+/*
+================================================
+FIREBASE JSON REPLACER
+================================================
+*/
+
+function firebaseReplacer(
+    key,
+    value
+){
+
+    if(
+        value instanceof Date
+    ){
+
+        return value.toISOString();
+
+    }
+
+    if(
+        value &&
+        typeof value === "object"
+    ){
+
+        if(
+            typeof value.toDate ===
+            "function"
+        ){
+
+            try{
+
+                return value
+                    .toDate()
+                    .toISOString();
+
+            }catch{
+
+                return String(value);
+
+            }
+
+        }
+
+        if(
+            typeof value.seconds ===
+            "number"
+        ){
+
+            return new Date(
+                value.seconds * 1000
+            ).toISOString();
+
+        }
+
+    }
+
+    return value;
+}
+
+
+/*
+================================================
+UPDATE STATISTICS
+================================================
+*/
+
+function updateStats(){
+
+    const users =
+        allRecords.filter(
+            record =>
+                record.type === "user"
+        );
+
+    const courses =
+        allRecords.filter(
+            record =>
+                record.type === "course"
+        );
+
+    const certificates =
+        allRecords.filter(
+            record =>
+                record.type === "certificate"
+        );
+
+    const admins =
+        allRecords.filter(
+            record => {
+
+                if(
+                    record.collection !==
+                    "users"
+                ){
+
+                    return false;
+
+                }
+
+                const role =
+                    String(
+                        record.role ||
+                        record.data?.role ||
+                        ""
+                    )
+                    .toLowerCase();
+
+                return [
+                    "admin",
+                    "superadmin",
+                    "super-admin"
+                ].includes(role);
+
+            }
+        );
+
+
+    document.getElementById(
+        "totalRecords"
+    ).textContent =
+        allRecords.length;
+
+
+    document.getElementById(
+        "totalUsers"
+    ).textContent =
+        users.length;
+
+
+    document.getElementById(
+        "totalCourses"
+    ).textContent =
+        courses.length;
+
+
+    document.getElementById(
+        "totalCertificates"
+    ).textContent =
+        certificates.length;
+
+
+    document.getElementById(
+        "totalAdmins"
+    ).textContent =
+        admins.length;
+
+}
+
+
+/*
+================================================
+FILTER RECORDS
+================================================
+*/
+
+window.filterRecords =
+function(){
+
+    const search =
+        document.getElementById(
+            "searchInput"
+        )
+        .value
+        .trim()
+        .toLowerCase();
+
+
+    const type =
+        document.getElementById(
+            "typeFilter"
+        )
+        .value;
+
+
+    const status =
+        document.getElementById(
+            "statusFilter"
+        )
+        .value;
+
+
+    filteredRecords =
+        allRecords.filter(
+            record => {
+
+                const dataText =
+                    JSON.stringify(
+                        record.data || {}
+                    )
+                    .toLowerCase();
+
+
+                const searchable = [
+
+                    record.collection,
+
+                    record.id,
+
+                    record.name,
+
+                    record.title,
+
+                    record.email,
+
+                    record.userId,
+
+                    record.ownerId,
+
+                    record.createdBy,
+
+                    record.courseId,
+
+                    record.moduleId,
+
+                    record.lessonId,
+
+                    record.enrollmentId,
+
+                    record.certificateId,
+
+                    record.orderId,
+
+                    record.paymentId,
+
+                    record.resourceId,
+
+                    record.serviceId,
+
+                    record.projectId,
+
+                    record.slug,
+
+                    record.role,
+
+                    record.status,
+
+                    dataText
+
+                ]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase();
+
+
+                const searchMatch =
+                    !search ||
+                    searchable.includes(
+                        search
+                    );
+
+
+                const typeMatch =
+                    type === "all" ||
+                    record.type === type;
+
+
+                const recordStatus =
+                    String(
+                        record.status || ""
+                    )
+                    .toLowerCase();
+
+
+                const statusMatch =
+                    status === "all" ||
+                    recordStatus === status;
+
+
+                return (
+                    searchMatch &&
+                    typeMatch &&
+                    statusMatch
+                );
+
+            }
+        );
+
+
+    renderRecords();
+
+};
+
+
+/*
+================================================
+RENDER RECORDS
+================================================
+*/
+
+function renderRecords(){
+
+    const tbody =
+        document.getElementById(
+            "recordsBody"
+        );
+
+    const table =
+        document.getElementById(
+            "recordsTable"
+        );
+
+    const empty =
+        document.getElementById(
+            "emptyState"
+        );
+
+
+    tbody.innerHTML = "";
+
+
+    if(
+        !filteredRecords.length
+    ){
+
+        table.style.display =
+            "none";
+
+        empty.style.display =
+            "block";
+
+        return;
+
+    }
+
+
+    table.style.display =
+        "table";
+
+    empty.style.display =
+        "none";
+
+
+    filteredRecords.forEach(
+        record => {
+
+            const tr =
+                document.createElement(
+                    "tr"
+                );
+
+
+            tr.innerHTML = `
+
+                <td>
+
+                    <div
+                        style="
+                        display:flex;
+                        align-items:center;
+                        gap:6px;
+                        "
+                    >
+
+                        <span class="id">
+
+                            ${escapeHTML(
+                                record.id ||
+                                "—"
+                            )}
+
+                        </span>
+
+                        <button
+                            class="copy"
+                            onclick="copyText(
+                                '${escapeAttr(
+                                    record.id || ""
+                                )}'
+                            )"
+                        >
+                            📋
+                        </button>
+
+                    </div>
+
+                    <div
+                        style="
+                        font-size:10px;
+                        color:#9ca3af;
+                        margin-top:4px;
+                        "
+                    >
+
+                        ${escapeHTML(
+                            record.collection
+                        )}
+
+                    </div>
+
+                </td>
+
+
+                <td>
+
+                    <div class="name">
+
+                        ${escapeHTML(
+                            record.name ||
+                            record.title ||
+                            "Unnamed"
+                                            )}
+
+                    </div>
+
+                    ${
+                        record.email
+                            ? `
+                            <div class="detail">
+                                <div class="detail-label">
+                                    Email
+                                </div>
+
+                                <div class="detail-value">
+                                    ${escapeHtml(record.email)}
+
+                                    <button
+                                        class="copy"
+                                        onclick="copyValue('${escapeAttr(record.email)}')">
+                                        Copy
+                                    </button>
+                                </div>
+                            </div>
+                            `
+                            : ""
+                    }
+
+                    ${
+                        record.userId
+                            ? `
+                            <div class="detail">
+                                <div class="detail-label">
+                                    User ID
+                                </div>
+
+                                <div class="detail-value">
+                                    ${escapeHtml(record.userId)}
+
+                                    <button
+                                        class="copy"
+                                        onclick="copyValue('${escapeAttr(record.userId)}')">
+                                        Copy
+                                    </button>
+                                </div>
+                            </div>
+                            `
+                            : ""
+                    }
+
+                    ${
+                        record.ownerId
+                            ? `
+                            <div class="detail">
+                                <div class="detail-label">
+                                    Owner ID
+                                </div>
+
+                                <div class="detail-value">
+                                    ${escapeHtml(record.ownerId)}
+
+                                    <button
+                                        class="copy"
+                                        onclick="copyValue('${escapeAttr(record.ownerId)}')">
+                                        Copy
+                                    </button>
+                                </div>
+                            </div>
+                            `
+                            : ""
+                    }
+
+                    ${
+                        record.createdBy
+                            ? `
+                            <div class="detail">
+                                <div class="detail-label">
+                                    Created By
+                                </div>
+
+                                <div class="detail-value">
+                                    ${escapeHtml(record.createdBy)}
+
+                                    <button
+                                        class="copy"
+                                        onclick="copyValue('${escapeAttr(record.createdBy)}')">
+                                        Copy
+                                    </button>
+                                </div>
+                            </div>
+                            `
+                            : ""
+                    }
+
+                    ${
+                        record.courseId
+                            ? `
+                            <div class="detail">
+                                <div class="detail-label">
+                                    Course ID
+                                </div>
+
+                                <div class="detail-value">
+                                    ${escapeHtml(record.courseId)}
+
+                                    <button
+                                        class="copy"
+                                        onclick="copyValue('${escapeAttr(record.courseId)}')">
+                                        Copy
+                                    </button>
+                                </div>
+                            </div>
+                            `
+                            : ""
+                    }
+
+                    ${
+                        record.moduleId
+                            ? `
+                            <div class="detail">
+                                <div class="detail-label">
+                                    Module ID
+                                </div>
+
+                                <div class="detail-value">
+                                    ${escapeHtml(record.moduleId)}
+
+                                    <button
+                                        class="copy"
+                                        onclick="copyValue('${escapeAttr(record.moduleId)}')">
+                                        Copy
+                                    </button>
+                                </div>
+                            </div>
+                            `
+                            : ""
+                    }
+
+                    ${
+                        record.lessonId
+                            ? `
+                            <div class="detail">
+                                <div class="detail-label">
+                                    Lesson ID
+                                </div>
+
+                                <div class="detail-value">
+                                    ${escapeHtml(record.lessonId)}
+
+                                    <button
+                                        class="copy"
+                                        onclick="copyValue('${escapeAttr(record.lessonId)}')">
+                                        Copy
+                                    </button>
+                                </div>
+                            </div>
+                            `
+                            : ""
+                    }
+
+                    ${
+                        record.certificateId
+                            ? `
+                            <div class="detail">
+                                <div class="detail-label">
+                                    Certificate ID
+                                </div>
+
+                                <div class="detail-value">
+                                    ${escapeHtml(record.certificateId)}
+
+                                    <button
+                                        class="copy"
+                                        onclick="copyValue('${escapeAttr(record.certificateId)}')">
+                                        Copy
+                                    </button>
+                                </div>
+                            </div>
+                            `
+                            : ""
+                    }
+
+                    ${
+                        record.orderId
+                            ? `
+                            <div class="detail">
+                                <div class="detail-label">
+                                    Order ID
+                                </div>
+
+                                <div class="detail-value">
+                                    ${escapeHtml(record.orderId)}
+
+                                    <button
+                                        class="copy"
+                                        onclick="copyValue('${escapeAttr(record.orderId)}')">
+                                        Copy
+                                    </button>
+                                </div>
+                            </div>
+                            `
+                            : ""
+                    }
+
+                    ${
+                        record.slug
+                            ? `
+                            <div class="detail">
+                                <div class="detail-label">
+                                    Slug
+                                </div>
+
+                                <div class="detail-value">
+                                    ${escapeHtml(record.slug)}
+                                </div>
+                            </div>
+                            `
+                            : ""
+                    }
+
+                    ${
+                        record.status
+                            ? `
+                            <div class="detail">
+                                <div class="detail-label">
+                                    Status
+                                </div>
+
+                                <div class="detail-value">
+                                    ${escapeHtml(record.status)}
+                                </div>
+                            </div>
+                            `
+                            : ""
+                    }
+
+                    ${
+                        record.createdAt
+                            ? `
+                            <div class="detail">
+                                <div class="detail-label">
+                                    Created At
+                                </div>
+
+                                <div class="detail-value">
+                                    ${formatDate(record.createdAt)}
+                                </div>
+                            </div>
+                            `
+                            : ""
+                    }
+
+                    <div class="detail full">
+
+                        <div class="detail-label">
+                            Firebase Document ID
+                        </div>
+
+                        <div class="detail-value">
+
+                            ${escapeHtml(record.id)}
+
+                            <button
+                                class="copy"
+                                onclick="copyValue('${escapeAttr(record.id)}')">
+                                Copy ID
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    <div class="detail full">
+
+                        <div class="detail-label">
+                            Collection
+                        </div>
+
+                        <div class="detail-value">
+                            ${escapeHtml(record.collection)}
+                        </div>
+
+                    </div>
+
+                    <div class="detail full">
+
+                        <div class="detail-label">
+                            Complete Firebase Record
+                        </div>
+
+                        <pre>${escapeHtml(
+                            JSON.stringify(
+                                record.data || {},
+                                null,
+                                2
+                            )
+                        )}</pre>
+
+                    </div>
+
+                </div>
+            `;
+
+        document
+            .getElementById("detailsModal")
+            .classList.add("show");
+    }
+
+    window.closeDetails = function(){
+
+        document
+            .getElementById("detailsModal")
+            .classList.remove("show");
+
+    };
+
+    window.closeModal = function(event){
+
+        if(
+            event.target.id === "detailsModal"
+        ){
+
+            closeDetails();
+
+        }
+
+    };
+
+
+    /*
+    ================================================
+    COPY
+    ================================================
+    */
+
+    window.copyValue = async function(value){
+
+        try{
+
+            await navigator.clipboard.writeText(
+                String(value)
+            );
+
+            showToast(
+                "Copied successfully"
+            );
+
+        }catch(error){
+
+            const textarea =
+                document.createElement("textarea");
+
+            textarea.value = value;
+
+            document.body.appendChild(
+                textarea
+            );
+
+            textarea.select();
+
+            document.execCommand("copy");
+
+            textarea.remove();
+
+            showToast(
+                "Copied successfully"
+            );
+        }
+
+    };
+
+
+    /*
+    ================================================
+    ESCAPE HTML
+    ================================================
+    */
+
+    function escapeHtml(value){
+
+        if(
+            value === null ||
+            value === undefined
+        ){
+
+            return "";
+
+        }
+
+        return String(value)
+            .replace(/&/g,"&amp;")
+            .replace(/</g,"&lt;")
+            .replace(/>/g,"&gt;")
+            .replace(/"/g,"&quot;")
+            .replace(/'/g,"&#039;");
+
+    }
+
+
+    function escapeAttr(value){
+
+        return escapeHtml(value)
+            .replace(/`/g,"&#096;");
+
+    }
+
+
+    /*
+    ================================================
+    DATE FORMAT
+    ================================================
+    */
+
+    function formatDate(value){
+
+        if(!value){
+
+            return "—";
+
+        }
+
+        try{
+
+            if(
+                typeof value === "object" &&
+                value.seconds
+            ){
+
+                return new Date(
+                    value.seconds * 1000
+                ).toLocaleString();
+
+            }
+
+            if(
+                typeof value === "object" &&
+                value.toDate
+            ){
+
+                return value
+                    .toDate()
+                    .toLocaleString();
+
+            }
+
+            const date =
+                new Date(value);
+
+            if(
+                !Number.isNaN(
+                    date.getTime()
+                )
+            ){
+
+                return date.toLocaleString();
+
+            }
+
+        }catch(error){
+
+            console.warn(
+                "Date formatting error:",
+                error
+            );
+
+        }
+
+        return String(value);
+
+    }
+
+
+    /*
+    ================================================
+    NAME DETECTION
+    ================================================
+    */
+
+    function getRecordName(
+        data,
+        id
+    ){
+
+        const fields = [
+
+            "name",
+            "displayName",
+            "fullName",
+            "title",
+            "courseName",
+            "courseTitle",
+            "lessonName",
+            "lessonTitle",
+            "moduleName",
+            "moduleTitle",
+            "certificateName",
+            "certificateTitle",
+            "resourceName",
+            "resourceTitle",
+            "serviceName",
+            "serviceTitle",
+            "productName",
+            "productTitle",
+            "postTitle",
+            "username",
+            "email"
+
+        ];
+
+        for(
+            const field of fields
+        ){
+
+            if(
+                data[field] !== undefined &&
+                data[field] !== null &&
+                String(data[field]).trim()
+            ){
+
+                return String(
+                    data[field]
+                );
+
+            }
+
+        }
+
+        return id || "Unnamed";
+
+    }
+
+
+    /*
+    ================================================
+    FIND FIELD
+    ================================================
+    */
+
+    function findField(
+        data,
+        fields
+    ){
+
+        for(
+            const field of fields
+        ){
+
+            if(
+                data[field] !== undefined &&
+                data[field] !== null &&
+                String(data[field]).trim()
+            ){
+
+                return String(
+                    data[field]
+                );
+
+            }
+
+        }
+
+        return "";
+
+    }
+
+
+    /*
+    ================================================
+    RECORD TYPE
+    ================================================
+    */
+
+    function getRecordType(
+        collectionName
+    ){
+
+        const name =
+            String(
+                collectionName
+            ).toLowerCase();
+
+        if(
+            name === "users" ||
+            name === "admins" ||
+            name.includes("user")
+        ){
+
+            return "user";
+
+        }
+
+        if(
+            name === "courses" ||
+            name.includes("course")
+        ){
+
+            return "course";
+
+        }
+
+        if(
+            name.includes("module")
+        ){
+
+            return "module";
+
+        }
+
+        if(
+            name.includes("lesson")
+        ){
+
+            return "lesson";
+
+        }
+
+        if(
+            name.includes("certificate")
+        ){
+
+            return "certificate";
+
+        }
+
+        if(
+            name.includes("order")
+        ){
+
+            return "order";
+
+        }
+
+        if(
+            name.includes("resource")
+        ){
+
+            return "resource";
+
+        }
+
+        if(
+            name.includes("post")
+        ){
+
+            return "post";
+
+        }
+
+        return name
+            .replace(/[_-]/g," ")
+            .toLowerCase();
+
+    }
+
+
+    /*
+    ================================================
+    NORMALIZE RECORD
+    ================================================
+    */
+
+    function normalizeRecord(
+        collectionName,
+        docId,
+        data
+    ){
+
+        const userId =
+            findField(
+                data,
+                [
+                    "userId",
+                    "uid",
+                    "userID",
+                    "studentId",
+                    "studentID",
+                    "creatorId",
+                    "createdByUserId"
+                ]
+            );
+
+        const ownerId =
+            findField(
+                data,
+                [
+                    "ownerId",
+                    "ownerID",
+                    "createdBy",
+                    "creatorUid",
+                    "authorId",
+                    "freelancerId",
+                    "instructorId"
+                ]
+            );
+
+        const email =
+            findField(
+                data,
+                [
+                    "email",
+                    "userEmail",
+                    "ownerEmail",
+                    "creatorEmail",
+                    "authorEmail"
+                ]
+            );
+
+        const createdBy =
+            findField(
+                data,
+                [
+                    "createdBy",
+                    "createdById",
+                    "creatorId",
+                    "creatorUid",
+                    "authorId",
+                    "adminId"
+                ]
+            );
+
+        const status =
+            findField(
+                data,
+                [
+                    "status",
+                    "state"
+                ]
+            );
+
+        return {
+
+            id:docId,
+
+            collection:
+                collectionName,
+
+            type:
+                getRecordType(
+                    collectionName
+                ),
+
+            name:
+                getRecordName(
+                    data,
+                    docId
+                ),
+
+            userId,
+
+            ownerId,
+
+            email,
+
+            createdBy,
+
+            status,
+
+            createdAt:
+                data.createdAt ||
+                data.created_at ||
+                null,
+
+            data
+
+        };
+
+    }
+
+
+    /*
+    ================================================
+    FIRESTORE COLLECTIONS
+    ================================================
+    */
+
+    const COLLECTIONS = [
+
+        "users",
+        "admins",
+
+        "courses",
+        "courseModules",
+        "modules",
+        "lessons",
+
+        "enrollments",
+        "certificates",
+        "certificateTemplates",
+
+        "orders",
+        "payments",
+        "transactions",
+
+        "subscriptions",
+
+        "resources",
+
+        "posts",
+        "comments",
+
+        "services",
+        "freelancers",
+        "projects",
+        "applications",
+
+        "assignments",
+        "quizzes",
+        "questions",
+
+        "reviews",
+
+        "notifications",
+        "messages",
+
+        "wallets",
+        "withdrawals",
+
+                "referrals",
+        "achievements",
+        "badges",
+        "points",
+        "wallets",
+        "transactions",
+        "withdrawals",
+        "subscriptions",
+        "payments",
+        "notifications",
+        "messages",
+        "comments",
+        "reviews",
+        "services",
+        "freelancers",
+        "projects",
+        "applications",
+        "events",
+        "bookings",
+        "meetings",
+        "privateMeetings",
+        "announcements",
+        "assignments",
+        "quizzes",
+        "questions",
+        "quizAttempts",
+        "courseProgress",
+        "learningProgress",
+        "enrollments",
+        "lessons",
+        "modules",
+        "courseModules",
+        "resources",
+        "posts",
+        "categories",
+        "certificateTemplates",
+        "certificates",
+        "orders",
+        "cart",
+        "wishlists",
+        "favorites",
+        "reports",
+        "supportTickets",
+        "adminLogs",
+        "loginLogs"
+    ];
+
+    /*
+    ============================================================
+    RECORD STORAGE
+    ============================================================
+    */
+
+    let allRecords = [];
+    let filteredRecords = [];
+
+
+    /*
+    ============================================================
+    FIELD HELPERS
+    ============================================================
+    */
+
+    function firstValue(data, fields, fallback = ""){
+
+        for(const field of fields){
+
+            const value = data?.[field];
+
+            if(
+                value !== undefined &&
+                value !== null &&
+                String(value).trim() !== ""
+            ){
+                return value;
+            }
+        }
+
+        return fallback;
+    }
+
+
+    function getName(data){
+
+        return firstValue(
+            data,
+            [
+                "name",
+                "displayName",
+                "fullName",
+                "title",
+                "courseName",
+                "courseTitle",
+                "userName",
+                "username",
+                "studentName",
+                "instructorName",
+                "creatorName",
+                "serviceName",
+                "resourceName",
+                "certificateName",
+                "certificateTitle",
+                "postTitle",
+                "lessonTitle",
+                "moduleTitle"
+            ],
+            "Unnamed"
+        );
+    }
+
+
+    function getEmail(data){
+
+        return firstValue(
+            data,
+            [
+                "email",
+                "userEmail",
+                "ownerEmail",
+                "createdByEmail",
+                "adminEmail",
+                "instructorEmail",
+                "studentEmail"
+            ],
+            "—"
+        );
+    }
+
+
+    function getUserId(data){
+
+        return firstValue(
+            data,
+            [
+                "userId",
+                "uid",
+                "userID",
+                "studentId",
+                "studentID",
+                "customerId",
+                "customerID",
+                "memberId",
+                "memberID"
+            ],
+            "—"
+        );
+    }
+
+
+    function getOwnerId(data){
+
+        return firstValue(
+            data,
+            [
+                "ownerId",
+                "ownerID",
+                "createdBy",
+                "createdById",
+                "creatorId",
+                "creatorID",
+                "authorId",
+                "authorID",
+                "instructorId",
+                "instructorID"
+            ],
+            "—"
+        );
+    }
+
+
+    function getCreatedBy(data){
+
+        return firstValue(
+            data,
+            [
+                "createdBy",
+                "createdById",
+                "creatorId",
+                "creatorID",
+                "authorId",
+                "authorID",
+                "ownerId",
+                "ownerID",
+                "userId",
+                "uid"
+            ],
+            "—"
+        );
+    }
+
+
+    function getStatus(data){
+
+        return String(
+            firstValue(
+                data,
+                [
+                    "status",
+                    "state",
+                    "courseStatus",
+                    "paymentStatus",
+                    "orderStatus",
+                    "subscriptionStatus"
+                ],
+                "—"
+            )
+        );
+    }
+
+
+    function getDate(data){
+
+        const value = firstValue(
+            data,
+            [
+                "createdAt",
+                "created_at",
+                "dateCreated",
+                "timestamp",
+                "updatedAt"
+            ],
+            null
+        );
+
+        if(!value) return "—";
+
+        try{
+
+            if(
+                typeof value === "object" &&
+                typeof value.toDate === "function"
+            ){
+                return value.toDate().toLocaleString();
+            }
+
+            const date = new Date(value);
+
+            if(!isNaN(date.getTime())){
+                return date.toLocaleString();
+            }
+
+        }catch(error){}
+
+        return String(value);
+    }
+
+
+    /*
+    ============================================================
+    TYPE DETECTION
+    ============================================================
+    */
+
+    function detectType(collectionName){
+
+        const c =
+            String(collectionName)
+            .toLowerCase();
+
+        if(c === "users") return "user";
+
+        if(
+            c.includes("course") &&
+            !c.includes("progress")
+        ){
+            return "course";
+        }
+
+        if(
+            c.includes("module")
+        ){
+            return "module";
+        }
+
+        if(
+            c.includes("lesson")
+        ){
+            return "lesson";
+        }
+
+        if(
+            c.includes("certificate")
+        ){
+            return "certificate";
+        }
+
+        if(
+            c.includes("order")
+        ){
+            return "order";
+        }
+
+        if(
+            c.includes("resource")
+        ){
+            return "resource";
+        }
+
+        if(
+            c.includes("post")
+        ){
+            return "post";
+        }
+
+        return c.replace(/s$/,"");
+    }
+
+
+    /*
+    ============================================================
+    LOAD ALL RECORDS
+    ============================================================
+    */
+
+    async function loadAllRecords(){
+
+        const loader =
+            document.getElementById("loader");
+
+        const table =
+            document.getElementById("recordsTable");
+
+        const empty =
+            document.getElementById("emptyState");
+
+        loader.style.display = "flex";
+        table.style.display = "none";
+        empty.style.display = "none";
+
+        allRecords = [];
+
+        try{
+
+            for(
+                const collectionName
+                of COLLECTIONS
+            ){
+
+                try{
+
+                    const snapshot =
+                        await getDocs(
+                            collection(
+                                db,
+                                collectionName
+                            )
+                        );
+
+                    snapshot.forEach(
+                        documentSnapshot => {
+
+                            const data =
+                                documentSnapshot.data();
+
+                            allRecords.push({
+
+                                id:
+                                    documentSnapshot.id,
+
+                                collection:
+                                    collectionName,
+
+                                type:
+                                    detectType(
+                                        collectionName
+                                    ),
+
+                                data
+
+                            });
+
+                        }
+                    );
+
+                }catch(error){
+
+                    console.warn(
+                        "Cannot load collection:",
+                        collectionName,
+                        error
+                    );
+
+                }
+
+            }
+
+
+            updateStats();
+
+            populateTypeFilter();
+
+            filteredRecords =
+                [...allRecords];
+
+            renderRecords();
+
+
+        }catch(error){
+
+            console.error(error);
+
+            showToast(
+                "Failed to load Firebase records"
+            );
+
+            empty.innerHTML = `
+                <div class="empty-icon">⚠️</div>
+                <h3>Unable to load records</h3>
+                <p>
+                    Check Firebase configuration
+                    and Firestore security rules.
+                </p>
+            `;
+
+            empty.style.display = "block";
+
+        }finally{
+
+            loader.style.display = "none";
+
+        }
+
+    }
+
+
+    /*
+    ============================================================
+    UPDATE STATISTICS
+    ============================================================
+    */
+
+    function updateStats(){
+
+        document.getElementById(
+            "totalRecords"
+        ).textContent =
+            allRecords.length;
+
+
+        document.getElementById(
+            "totalUsers"
+        ).textContent =
+            allRecords.filter(
+                r => r.type === "user"
+            ).length;
+
+
+        document.getElementById(
+            "totalCourses"
+        ).textContent =
+            allRecords.filter(
+                r => r.type === "course"
+            ).length;
+
+
+        document.getElementById(
+            "totalCertificates"
+        ).textContent =
+            allRecords.filter(
+                r => r.type === "certificate"
+            ).length;
+
+
+        document.getElementById(
+            "totalAdmins"
+        ).textContent =
+            allRecords.filter(r => {
+
+                if(r.type !== "user")
+                    return false;
+
+                const role =
+                    String(
+                        firstValue(
+                            r.data,
+                            [
+                                "role",
+                                "userRole",
+                                "accountType"
+                            ],
+                            ""
+                        )
+                    ).toLowerCase();
+
+                return [
+                    "admin",
+                    "administrator",
+                    "superadmin",
+                    "super-admin"
+                ].includes(role);
+
+            }).length;
+
+    }
+
+
+    /*
+    ============================================================
+    TYPE FILTER OPTIONS
+    ============================================================
+    */
+
+    function populateTypeFilter(){
+
+        const select =
+            document.getElementById(
+                "typeFilter"
+            );
+
+        const current =
+            select.value;
+
+        const types =
+            [
+                ...new Set(
+                    allRecords.map(
+                        record => record.type
+                    )
+                )
+            ].sort();
+
+        select.innerHTML = `
+            <option value="all">
+                All Types
+            </option>
+        `;
+
+        types.forEach(type => {
+
+            const option =
+                document.createElement("option");
+
+            option.value = type;
+
+            option.textContent =
+                type.charAt(0).toUpperCase() +
+                type.slice(1);
+
+            select.appendChild(option);
+
+        });
+
+        if(
+            types.includes(current)
+        ){
+            select.value = current;
+        }
+
+    }
+
+
+    /*
+    ============================================================
+    FILTER RECORDS
+    ============================================================
+    */
+
+    function filterRecords(){
+
+        const search =
+            document.getElementById(
+                "searchInput"
+            ).value
+            .trim()
+            .toLowerCase();
+
+        const type =
+            document.getElementById(
+                "typeFilter"
+            ).value;
+
+        const status =
+            document.getElementById(
+                "statusFilter"
+            ).value
+            .toLowerCase();
+
+
+        filteredRecords =
+            allRecords.filter(record => {
+
+                const data =
+                    record.data || {};
+
+                const searchable = [
+
+                    record.id,
+
+                    record.collection,
+
+                    record.type,
+
+                    getName(data),
+
+                    getEmail(data),
+
+                    getUserId(data),
+
+                    getOwnerId(data),
+
+                    getCreatedBy(data),
+
+                    getStatus(data),
+
+                    data.slug,
+
+                    data.courseId,
+
+                    data.courseID,
+
+                    data.moduleId,
+
+                    data.moduleID,
+
+                    data.lessonId,
+
+                    data.lessonID,
+
+                    data.certificateId,
+
+                    data.orderId,
+
+                    data.transactionId
+
+                ]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase();
+
+
+                const matchesSearch =
+                    !search ||
+                    searchable.includes(search);
+
+
+                const matchesType =
+                    type === "all" ||
+                    record.type === type;
+
+
+                const recordStatus =
+                    getStatus(data)
+                    .toLowerCase();
+
+
+                const matchesStatus =
+                    status === "all" ||
+                    recordStatus === status;
+
+
+                return (
+                    matchesSearch &&
+                    matchesType &&
+                    matchesStatus
+                );
+
+            });
+
+
+        renderRecords();
+
+    }
+
+
+    /*
+    ============================================================
+    RENDER RECORDS
+    ============================================================
+    */
+
+    function renderRecords(){
+
+        const body =
+            document.getElementById(
+                "recordsBody"
+            );
+
+        const table =
+            document.getElementById(
+                "recordsTable"
+            );
+
+        const empty =
+            document.getElementById(
+                "emptyState"
+            );
+
+
+        body.innerHTML = "";
+
+
+        if(!filteredRecords.length){
+
+            table.style.display = "none";
+            empty.style.display = "block";
+
+            return;
+
+        }
+
+
+        table.style.display = "table";
+        empty.style.display = "none";
+
+
+        filteredRecords.forEach(
+            (record,index) => {
+
+                const data =
+                    record.data || {};
+
+                const name =
+                    getName(data);
+
+                const email =
+                    getEmail(data);
+
+                const userId =
+                    getUserId(data);
+
+                const createdBy =
+                    getCreatedBy(data);
+
+                const status =
+                    getStatus(data);
+
+
+                const row =
+                    document.createElement("tr");
+
+
+                row.innerHTML = `
+
+                    <td>
+
+                        <div
+                            class="id"
+                            title="${escapeHTML(record.id)}">
+
+                            ${escapeHTML(
+                                record.id
+                            )}
+
+                        </div>
+
+                        <div
+                            style="
+                            font-size:10px;
+                            color:#9ca3af;
+                            margin-top:3px">
+
+                            ${escapeHTML(
+                                record.collection
+                            )}
+
+                        </div>
+
+                    </td>
+
+
+                    <td>
+
+                        <div class="name">
+
+                            ${escapeHTML(
+                                name
+                            )}
+
+                        </div>
+
+                        ${
+                            data.slug
+                            ? `
+                            <div
+                                style="
+                                font-size:11px;
+                                color:#9ca3af;
+                                margin-top:3px">
+
+                                ${escapeHTML(
+                                    String(
+                                        data.slug
+                                    )
+                                )}
+
+                            </div>
+                            `
+                            : ""
+                        }
+
+                    </td>
+
+
+                    <td>
+
+                        <span class="type">
+
+                            ${escapeHTML(
+                                record.type
+                            )}
+
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        <div class="id-cell">
+
+                            <span
+                                class="id"
+                                title="${escapeHTML(
+                                    String(userId)
+                                )}">
+
+                                ${escapeHTML(
+                                    truncate(
+                                        String(userId),
+                                        22
+                                    )
+                                )}
+
+                            </span>
+
+                            ${
+                                userId !== "—"
+                                ? `
+                                <button
+                                    class="copy"
+                                    onclick="copyText('${jsEscape(
+                                        String(userId)
+                                    )}')">
+                                    Copy
+                                </button>
+                                `
+                                : ""
+                            }
+
+                        </div>
+
+                    </td>
+
+
+                    <td>
+
+                        <div class="email">
+
+                            ${escapeHTML(
+                                String(email)
+                            )}
+
+                        </div>
+
+                    </td>
+
+
+                    <td>
+
+                        <div class="id-cell">
+
+                            <span
+                                class="id"
+                                title="${escapeHTML(
+                                    String(createdBy)
+                                )}">
+
+                                ${escapeHTML(
+                                    truncate(
+                                        String(createdBy),
+                                        20
+                                    )
+                                )}
+
+                            </span>
+
+                        </div>
+
+                    </td>
+
+
+                    <td>
+
+                        <span class="
+                            status
+                            ${statusClass(status)}
+                        ">
+
+                            ${escapeHTML(
+                                status
+                            )}
+
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        <span
+                            style="
+                            font-size:11px;
+                            color:#6b7280">
+
+                            ${escapeHTML(
+                                getDate(data)
+                            )}
+
+                        </span>
+
+                                         <button
+                            class="icon-btn"
+                            title="View Details"
+                            onclick="viewRecord('${escapeAttr(record.collection)}','${escapeAttr(record.id)}')">
+                            👁️
+                        </button>
+
+                        <button
+                            class="icon-btn"
+                            title="Copy ID"
+                            onclick="copyText('${escapeAttr(record.id)}')">
+                            📋
+                        </button>
+
+                    </div>
+
+                </td>
+
+            </tr>
+        `;
+    });
+
+    document.getElementById("recordsBody").innerHTML = html;
+
+    document.getElementById("recordsTable").style.display =
+        filtered.length ? "table" : "none";
+
+    document.getElementById("emptyState").style.display =
+        filtered.length ? "none" : "block";
+}
+
+
+/* =========================================================
+   GET RECORD NAME
+========================================================= */
+
+function getRecordName(data, id){
+
+    const keys = [
+        "name",
+        "displayName",
+        "fullName",
+        "title",
+        "courseName",
+        "courseTitle",
+        "lessonName",
+        "lessonTitle",
+        "moduleName",
+        "moduleTitle",
+        "certificateName",
+        "certificateTitle",
+        "resourceName",
+        "resourceTitle",
+        "postTitle",
+        "serviceName",
+        "serviceTitle",
+        "productName",
+        "productTitle",
+        "username",
+        "email"
+    ];
+
+    for(const key of keys){
+
+        if(
+            data &&
+            data[key] !== undefined &&
+            data[key] !== null &&
+            String(data[key]).trim() !== ""
+        ){
+            return String(data[key]);
+        }
+    }
+
+    return id || "Unnamed";
+}
+
+
+/* =========================================================
+   GET USER ID
+========================================================= */
+
+function getUserId(data){
+
+    if(!data) return "—";
+
+    const keys = [
+        "userId",
+        "uid",
+        "userID",
+        "ownerId",
+        "ownerID",
+        "studentId",
+        "studentID",
+        "customerId",
+        "customerID",
+        "freelancerId",
+        "freelancerID",
+        "creatorId",
+        "creatorID"
+    ];
+
+    for(const key of keys){
+
+        if(
+            data[key] !== undefined &&
+            data[key] !== null &&
+            String(data[key]).trim() !== ""
+        ){
+            return String(data[key]);
+        }
+    }
+
+    return "—";
+}
+
+
+/* =========================================================
+   GET EMAIL
+========================================================= */
+
+function getEmail(data){
+
+    if(!data) return "—";
+
+    const keys = [
+        "email",
+        "userEmail",
+        "ownerEmail",
+        "createdByEmail",
+        "creatorEmail",
+        "studentEmail",
+        "customerEmail",
+        "adminEmail"
+    ];
+
+    for(const key of keys){
+
+        if(
+            data[key] !== undefined &&
+            data[key] !== null &&
+            String(data[key]).trim() !== ""
+        ){
+            return String(data[key]);
+        }
+    }
+
+    return "—";
+}
+
+
+/* =========================================================
+   GET CREATED BY
+========================================================= */
+
+function getCreatedBy(data){
+
+    if(!data) return "—";
+
+    const keys = [
+        "createdBy",
+        "creatorId",
+        "creatorID",
+        "createdById",
+        "createdByID",
+        "ownerId",
+        "ownerID",
+        "authorId",
+        "authorID",
+        "userId",
+        "uid"
+    ];
+
+    for(const key of keys){
+
+        if(
+            data[key] !== undefined &&
+            data[key] !== null &&
+            String(data[key]).trim() !== ""
+        ){
+            return String(data[key]);
+        }
+    }
+
+    return "—";
+}
+
+
+/* =========================================================
+   GET STATUS
+========================================================= */
+
+function getStatus(data){
+
+    if(!data) return "—";
+
+    const keys = [
+        "status",
+        "state",
+        "courseStatus",
+        "paymentStatus",
+        "orderStatus",
+        "enrollmentStatus",
+        "subscriptionStatus"
+    ];
+
+    for(const key of keys){
+
+        if(
+            data[key] !== undefined &&
+            data[key] !== null &&
+            String(data[key]).trim() !== ""
+        ){
+            return String(data[key]);
+        }
+    }
+
+    if(data.published === true) return "published";
+    if(data.active === true) return "active";
+    if(data.completed === true) return "completed";
+    if(data.disabled === true) return "disabled";
+
+    return "—";
+}
+
+
+/* =========================================================
+   GET DATE
+========================================================= */
+
+function getDate(data){
+
+    if(!data) return "—";
+
+    const keys = [
+        "createdAt",
+        "created",
+        "dateCreated",
+        "timestamp",
+        "updatedAt",
+        "date"
+    ];
+
+    for(const key of keys){
+
+        const value = data[key];
+
+        if(!value) continue;
+
+        try{
+
+            let date;
+
+            if(
+                typeof value === "object" &&
+                typeof value.toDate === "function"
+            ){
+                date = value.toDate();
+            }
+            else if(
+                typeof value === "object" &&
+                value.seconds
+            ){
+                date = new Date(
+                    value.seconds * 1000
+                );
+            }
+            else{
+                date = new Date(value);
+            }
+
+            if(!isNaN(date.getTime())){
+
+                return date.toLocaleString(
+                    "en-GB",
+                    {
+                        year:"numeric",
+                        month:"short",
+                        day:"2-digit",
+                        hour:"2-digit",
+                        minute:"2-digit"
+                    }
+                );
+            }
+
+        }catch(error){
+
+            console.warn(
+                "Date parsing error:",
+                error
+            );
+        }
+    }
+
+    return "—";
+}
+
+
+/* =========================================================
+   TYPE DETECTION
+========================================================= */
+
+function detectType(collectionName){
+
+    const c =
+        String(collectionName)
+        .toLowerCase();
+
+    if(
+        c === "users" ||
+        c === "user"
+    ){
+        return "user";
+    }
+
+    if(
+        c.includes("course")
+    ){
+        return "course";
+    }
+
+    if(
+        c.includes("module")
+    ){
+        return "module";
+    }
+
+    if(
+        c.includes("lesson")
+    ){
+        return "lesson";
+    }
+
+    if(
+        c.includes("certificate")
+    ){
+        return "certificate";
+    }
+
+    if(
+        c.includes("order")
+    ){
+        return "order";
+    }
+
+    if(
+        c.includes("resource")
+    ){
+        return "resource";
+    }
+
+    if(
+        c.includes("post")
+    ){
+        return "post";
+    }
+
+    if(
+        c.includes("quiz") ||
+        c.includes("question")
+    ){
+        return "quiz";
+    }
+
+    if(
+        c.includes("assignment")
+    ){
+        return "assignment";
+    }
+
+    if(
+        c.includes("payment")
+    ){
+        return "payment";
+    }
+
+    if(
+        c.includes("subscription")
+    ){
+        return "subscription";
+    }
+
+    if(
+        c.includes("service")
+    ){
+        return "service";
+    }
+
+    if(
+        c.includes("freelancer")
+    ){
+        return "freelancer";
+    }
+
+    return c || "record";
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHtml(value){
+
+    if(value === null || value === undefined){
+        return "";
+    }
+
+    return String(value)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+}
+
+
+/* =========================================================
+   ESCAPE ATTRIBUTE
+========================================================= */
+
+function escapeAttr(value){
+
+    return String(value ?? "")
+        .replace(/\\/g,"\\\\")
+        .replace(/'/g,"\\'")
+        .replace(/"/g,"&quot;")
+        .replace(/\n/g,"\\n")
+        .replace(/\r/g,"\\r");
+}
+
+
+/* =========================================================
+   VIEW RECORD
+========================================================= */
+
+window.viewRecord = async function(
+    collectionName,
+    recordId
+){
+
+    try{
+
+        const ref =
+            doc(
+                db,
+                collectionName,
+                recordId
+            );
+
+        const snapshot =
+            await getDoc(ref);
+
+        if(!snapshot.exists()){
+
+            showToast(
+                "Record no longer exists"
+            );
+
+            return;
+        }
+
+        const data =
+            snapshot.data();
+
+        const userId =
+            getUserId(data);
+
+        const email =
+            getEmail(data);
+
+        const createdBy =
+            getCreatedBy(data);
+
+        const status =
+            getStatus(data);
+
+        document.getElementById(
+            "detailsBody"
+        ).innerHTML = `
+
+            <div class="detail-grid">
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        Collection
+                    </div>
+
+                    <div class="detail-value">
+                        ${escapeHtml(collectionName)}
+                    </div>
+
+                </div>
+
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        Document ID
+                    </div>
+
+                    <div class="detail-value">
+
+                        <span class="id">
+                            ${escapeHtml(recordId)}
+                        </span>
+
+                        <button
+                            class="copy"
+                            onclick="copyText('${escapeAttr(recordId)}')">
+                            Copy
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        Name / Title
+                    </div>
+
+                    <div class="detail-value">
+                        ${escapeHtml(
+                            getRecordName(
+                                data,
+                                recordId
+                            )
+                        )}
+                    </div>
+
+                </div>
+
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        Type
+                    </div>
+
+                    <div class="detail-value">
+                        ${escapeHtml(
+                            detectType(collectionName)
+                        )}
+                    </div>
+
+                </div>
+
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        User ID
+                    </div>
+
+                    <div class="detail-value">
+
+                        ${escapeHtml(userId)}
+
+                        ${
+                            userId !== "—"
+                            ? `
+                                <button
+                                    class="copy"
+                                    onclick="copyText('${escapeAttr(userId)}')">
+                                    Copy
+                                </button>
+                              `
+                            : ""
+                        }
+
+                    </div>
+
+                </div>
+
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        Email
+                    </div>
+
+                    <div class="detail-value">
+                        ${escapeHtml(email)}
+                    </div>
+
+                </div>
+
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        Created By
+                    </div>
+
+                    <div class="detail-value">
+                        ${escapeHtml(createdBy)}
+                    </div>
+
+                </div>
+
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        Status
+                    </div>
+
+                    <div class="detail-value">
+                        ${escapeHtml(status)}
+                    </div>
+
+                </div>
+
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        Created At
+                    </div>
+
+                    <div class="detail-value">
+                        ${escapeHtml(
+                            getDate(data)
+                        )}
+                    </div>
+
+                </div>
+
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        Firebase Path
+                    </div>
+
+                    <div class="detail-value">
+                        ${escapeHtml(
+                            collectionName +
+                            "/" +
+                            recordId
+                        )}
+                    </div>
+
+                </div>
+
+
+                <div class="detail full">
+
+                    <div class="detail-label">
+                        Complete Document Data
+                    </div>
+
+                    <pre>${escapeHtml(
+                        JSON.stringify(
+                            data,
+                            firebaseReplacer,
+                            2
+                        )
+                    )}</pre>
+
+                </div>
+
+            </div>
+        `;
+
+        document.getElementById(
+            "detailsModal"
+        ).classList.add("show");
+
+    }catch(error){
+
+        console.error(
+            "View record error:",
+            error
+        );
+
+        showToast(
+            "Unable to load record"
+        );
+    }
+};
+
+
+/* =========================================================
+   FIREBASE TIMESTAMP / SPECIAL VALUES
+========================================================= */
+
+function firebaseReplacer(key,value){
+
+    if(
+        value &&
+        typeof value === "object"
+    ){
+
+        if(
+            typeof value.toDate === "function"
+        ){
+
+            try{
+
+                return value
+                    .toDate()
+                    .toISOString();
+
+            }catch(e){}
+        }
+
+        if(
+            value.seconds !== undefined &&
+            value.nanoseconds !== undefined
+        ){
+
+            return {
+                seconds:value.seconds,
+                nanoseconds:value.nanoseconds,
+                iso:new Date(
+                    value.seconds * 1000
+                ).toISOString()
+            };
+        }
+    }
+
+    return value;
+}
+
+
+/* =========================================================
+   CLOSE MODAL
+========================================================= */
+
+window.closeDetails = function(){
+
+    document.getElementById(
+        "detailsModal"
+    ).classList.remove("show");
+};
+
+
+window.closeModal = function(event){
+
+    if(
+        event &&
+        event.target !==
+        document.getElementById("detailsModal")
+    ){
+        return;
+    }
+
+    closeDetails();
+};
+
+
+/* =========================================================
+   COPY
+========================================================= */
+
+window.copyText = async function(text){
+
+    try{
+
+        await navigator.clipboard.writeText(
+            String(text)
+        );
+
+        showToast(
+            "Copied to clipboard"
+        );
+
+    }catch(error){
+
+        const textarea =
+            document.createElement("textarea");
+
+        textarea.value = text;
+
+        document.body.appendChild(
+            textarea
+        );
+
+        textarea.select();
+
+        document.execCommand("copy");
+
+        textarea.remove();
+
+        showToast(
+            "Copied to clipboard"
+        );
+    }
+};
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+function showToast(message){
+
+    const toast =
+        document.createElement("div");
+
+    toast.style.position = "fixed";
+    toast.style.right = "20px";
+    toast.style.bottom = "20px";
+    toast.style.zIndex = "9999";
+    toast.style.background = "#111827";
+    toast.style.color = "#fff";
+    toast.style.padding = "12px 16px";
+    toast.style.borderRadius = "9px";
+    toast.style.fontSize = "13px";
+    toast.textContent = message;
+
+    document.body.appendChild(toast);
+
+    setTimeout(
+        () => toast.remove(),
+        2200
+    );
+}
+
+
+/* =========================================================
+   FILTER RECORDS
+========================================================= */
+
+window.filterRecords = function(){
+
+    const search =
+        document.getElementById(
+            "searchInput"
+        ).value
+        .trim()
+        .toLowerCase();
+
+    const type =
+        document.getElementById(
+            "typeFilter"
+        ).value;
+
+    const status =
+        document.getElementById(
+            "statusFilter"
+        ).value;
+
+
+    filteredRecords =
+        allRecords.filter(record => {
+
+            const data =
+                record.data || {};
+
+            const recordType =
+                detectType(
+                    record.collection
+                );
+
+            const recordStatus =
+                getStatus(data)
+                .toLowerCase();
+
+            const searchable = [
+                record.id,
+                record.collection,
+                recordType,
+                getRecordName(data,record.id),
+                getUserId(data),
+                getEmail(data),
+                getCreatedBy(data),
+                recordStatus,
+                JSON.stringify(data)
+            ]
+            .join(" ")
+            .toLowerCase();
+
+
+            const matchesSearch =
+                !search ||
+                searchable.includes(search);
+
+
+            const matchesType =
+                type === "all" ||
+                recordType === type;
+
+
+            const matchesStatus =
+                status === "all" ||
+                recordStatus === status;
+
+
+            return (
+                matchesSearch &&
+                matchesType &&
+                matchesStatus
+            );
+        });
+
+
+    renderRecords(
+        filteredRecords
+    );
+};
+
+
+/* =========================================================
+   CLEAR FILTERS
+========================================================= */
+
+window.clearFilters = function(){
+
+    document.getElementById(
+        "searchInput"
+    ).value = "";
+
+    document.getElementById(
+        "typeFilter"
+    ).value = "all";
+
+    document.getElementById(
+        "statusFilter"
+    ).value = "all";
+
+    filterRecords();
+};
+
+
+/* =========================================================
+   EXPORT CSV
+========================================================= */
+
+window.exportCSV = function(){
+
+    if(!filteredRecords.length){
+
+        showToast(
+            "No records to export"
+        );
+
+        return;
+    }
+
+
+    const headers = [
+        "Collection",
+        "Document ID",
+        "Name",
+        "Type",
+        "User ID",
+        "Email",
+        "Created By",
+        "Status",
+        "Created At"
+    ];
+
+
+    const rows =
+        filteredRecords.map(record => {
+
+            const data =
+                record.data || {};
+
+            return [
+                record.collection,
+                record.id,
+                getRecordName(
+                    data,
+                    record.id
+                ),
+                                detectType(
+                    record.collection
+                ),
+                getUserId(data),
+                getEmail(data),
+                getCreatedBy(data),
+                getStatus(data),
+                getDate(data)
+            ];
+        });
+
+
+    const csv = [
+        headers,
+        ...rows
+    ]
+    .map(row =>
+        row.map(value =>
+            `"${String(value ?? "")
+                .replace(/"/g, '""')}"`
+        ).join(",")
+    )
+    .join("\n");
+
+
+    const blob = new Blob(
+        [csv],
+        {
+            type: "text/csv;charset=utf-8;"
+        }
+    );
+
+
+    const url =
+        URL.createObjectURL(blob);
+
+
+    const link =
+        document.createElement("a");
+
+    link.href = url;
+
+    link.download =
+        `letsstudy-pro-records-${new Date()
+            .toISOString()
+            .slice(0, 10)}.csv`;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    link.remove();
+
+    URL.revokeObjectURL(url);
+
+    showToast(
+        "CSV exported successfully"
+    );
+};
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+window.toggleSidebar = function(){
+
+    const sidebar =
+        document.getElementById("sidebar");
+
+    sidebar.classList.toggle("open");
+};
+
+
+/* =========================================================
+   CLOSE SIDEBAR AFTER NAVIGATION
+========================================================= */
+
+document.querySelectorAll(
+    ".nav-item"
+).forEach(item => {
+
+    item.addEventListener(
+        "click",
+        () => {
+
+            if(
+                window.innerWidth <= 800
+            ){
+
+                document
+                    .getElementById("sidebar")
+                    .classList.remove("open");
+
+            }
+
+        }
+    );
+
+});
+
+
+/* =========================================================
+   AUTH STATE
+========================================================= */
+
+onAuthStateChanged(
+    auth,
+    async user => {
+
+        if(user){
+
+            const adminName =
+                user.displayName ||
+                user.email?.split("@")[0] ||
+                "Admin";
+
+            document.getElementById(
+                "adminName"
+            ).textContent =
+                adminName;
+
+
+            document.getElementById(
+                "adminEmail"
+            ).textContent =
+                user.email ||
+                "No email";
+
+
+            document.getElementById(
+                "adminAvatar"
+            ).textContent =
+                adminName
+                    .charAt(0)
+                    .toUpperCase();
+
+        }
+        else{
+
+            document.getElementById(
+                "adminName"
+            ).textContent =
+                "Guest";
+
+
+            document.getElementById(
+                "adminEmail"
+            ).textContent =
+                "Not signed in";
+
+
+            document.getElementById(
+                "adminAvatar"
+            ).textContent =
+                "?";
+        }
+
+        /*
+         * Load records even when authentication
+         * state is still being resolved.
+         */
+        await loadAllRecords();
+    }
+);
+
+
+/* =========================================================
+   INITIAL LOAD
+========================================================= */
+
+window.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        /*
+         * Auth listener normally triggers
+         * loadAllRecords().
+         *
+         * This fallback ensures the page does
+         * not remain stuck on the loader.
+         */
+
+        setTimeout(() => {
+
+            const loader =
+                document.getElementById("loader");
+
+            if(
+                loader &&
+                loader.style.display !== "none" &&
+                !allRecords.length
+            ){
+
+                loadAllRecords();
+
+            }
+
+        }, 1200);
+
+    }
+);
+
+
+/* =========================================================
+   ESCAPE KEY
+========================================================= */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if(event.key === "Escape"){
+
+            closeDetails();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   CTRL/CMD + K SEARCH
+========================================================= */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if(
+            (event.ctrlKey || event.metaKey) &&
+            event.key.toLowerCase() === "k"
+        ){
+
+            event.preventDefault();
+
+            const search =
+                document.getElementById(
+                    "searchInput"
+                );
+
+            if(search){
+
+                search.focus();
+
+                search.select();
+
+            }
+        }
+
+    }
+);
+
+
+/* =========================================================
+   GLOBAL FUNCTIONS
+========================================================= */
+
+window.loadAllRecords =
+    loadAllRecords;
+
+window.filterRecords =
+    filterRecords;
+
+window.clearFilters =
+    clearFilters;
+
+window.exportCSV =
+    exportCSV;
+
+window.viewRecord =
+    viewRecord;
+
+window.closeDetails =
+    closeDetails;
+
+window.copyText =
+    copyText;
+
+</script>
+
+</body>
+</html>
