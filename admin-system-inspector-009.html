@@ -1,0 +1,3911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>System Inspector | Let'sStudy Pro Admin</title>
+
+<meta name="description"
+      content="Let'sStudy Pro Admin System Inspector for viewing entity names, document IDs, user IDs, owner IDs and Firebase records.">
+
+<link rel="icon" href="/favicon.ico">
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+body{
+    font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,
+    "Segoe UI",sans-serif;
+    background:#f5f7fb;
+    color:#172033;
+}
+
+button,
+input,
+select{
+    font:inherit;
+}
+
+button{
+    cursor:pointer;
+}
+
+.app{
+    min-height:100vh;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.header{
+    height:70px;
+    background:#fff;
+    border-bottom:1px solid #e5e7eb;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 24px;
+    position:sticky;
+    top:0;
+    z-index:100;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.logo{
+    width:42px;
+    height:42px;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#111827;
+    color:#fff;
+    font-weight:800;
+    font-size:18px;
+}
+
+.brand-text h1{
+    font-size:17px;
+    line-height:1.2;
+}
+
+.brand-text span{
+    font-size:12px;
+    color:#6b7280;
+}
+
+.header-actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.icon-btn{
+    border:1px solid #e5e7eb;
+    background:#fff;
+    width:40px;
+    height:40px;
+    border-radius:10px;
+}
+
+.icon-btn:hover{
+    background:#f3f4f6;
+}
+
+/* =========================
+   LAYOUT
+========================= */
+
+.layout{
+    display:flex;
+}
+
+.sidebar{
+    width:250px;
+    background:#111827;
+    min-height:calc(100vh - 70px);
+    color:#fff;
+    padding:20px 14px;
+    position:fixed;
+    left:0;
+    top:70px;
+    bottom:0;
+    overflow-y:auto;
+}
+
+.sidebar-title{
+    font-size:11px;
+    text-transform:uppercase;
+    color:#9ca3af;
+    letter-spacing:.08em;
+    padding:10px 12px;
+}
+
+.nav-item{
+    width:100%;
+    border:0;
+    background:transparent;
+    color:#d1d5db;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:11px 12px;
+    border-radius:9px;
+    margin-bottom:4px;
+    text-align:left;
+}
+
+.nav-item:hover,
+.nav-item.active{
+    background:#1f2937;
+    color:#fff;
+}
+
+.main{
+    margin-left:250px;
+    width:calc(100% - 250px);
+    padding:28px;
+}
+
+/* =========================
+   PAGE HEADER
+========================= */
+
+.page-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:20px;
+    margin-bottom:25px;
+}
+
+.page-header h2{
+    font-size:28px;
+    margin-bottom:6px;
+}
+
+.page-header p{
+    color:#6b7280;
+    font-size:14px;
+}
+
+.primary-btn{
+    background:#111827;
+    color:#fff;
+    border:0;
+    border-radius:10px;
+    padding:11px 17px;
+    font-weight:600;
+}
+
+.primary-btn:hover{
+    background:#000;
+}
+
+/* =========================
+   STATS
+========================= */
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:15px;
+    margin-bottom:22px;
+}
+
+.stat{
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    padding:18px;
+}
+
+.stat-label{
+    font-size:12px;
+    color:#6b7280;
+    margin-bottom:8px;
+}
+
+.stat-value{
+    font-size:25px;
+    font-weight:800;
+}
+
+.stat-sub{
+    font-size:11px;
+    color:#9ca3af;
+    margin-top:5px;
+}
+
+/* =========================
+   TOOLBAR
+========================= */
+
+.toolbar{
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    padding:15px;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:18px;
+}
+
+.search-box{
+    flex:1;
+    min-width:250px;
+    position:relative;
+}
+
+.search-box input{
+    width:100%;
+    height:43px;
+    border:1px solid #d1d5db;
+    border-radius:9px;
+    padding:0 14px;
+    outline:none;
+}
+
+.search-box input:focus,
+.toolbar select:focus{
+    border-color:#111827;
+}
+
+.toolbar select{
+    height:43px;
+    border:1px solid #d1d5db;
+    border-radius:9px;
+    padding:0 12px;
+    background:#fff;
+    min-width:170px;
+}
+
+.secondary-btn{
+    height:43px;
+    border:1px solid #d1d5db;
+    background:#fff;
+    border-radius:9px;
+    padding:0 14px;
+}
+
+.secondary-btn:hover{
+    background:#f9fafb;
+}
+
+/* =========================
+   TABLE
+========================= */
+
+.table-card{
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    overflow:hidden;
+}
+
+.table-top{
+    padding:15px 18px;
+    border-bottom:1px solid #e5e7eb;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.table-top strong{
+    font-size:15px;
+}
+
+.table-count{
+    color:#6b7280;
+    font-size:13px;
+}
+
+.table-wrap{
+    overflow-x:auto;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:1050px;
+}
+
+thead{
+    background:#f9fafb;
+}
+
+th{
+    text-align:left;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    color:#6b7280;
+    padding:13px 16px;
+    border-bottom:1px solid #e5e7eb;
+}
+
+td{
+    padding:14px 16px;
+    border-bottom:1px solid #f0f1f3;
+    vertical-align:middle;
+    font-size:13px;
+}
+
+tbody tr:hover{
+    background:#fafafa;
+}
+
+.entity{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.entity-icon{
+    width:35px;
+    height:35px;
+    border-radius:9px;
+    background:#f3f4f6;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:16px;
+}
+
+.entity-name{
+    font-weight:700;
+    max-width:230px;
+}
+
+.entity-type{
+    font-size:11px;
+    color:#9ca3af;
+    margin-top:2px;
+}
+
+.id-cell{
+    display:flex;
+    align-items:center;
+    gap:6px;
+}
+
+.id-text{
+    max-width:160px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-family:monospace;
+    font-size:12px;
+}
+
+.copy-btn{
+    border:1px solid #e5e7eb;
+    background:#fff;
+    border-radius:6px;
+    padding:4px 7px;
+    font-size:11px;
+}
+
+.copy-btn:hover{
+    background:#f3f4f6;
+}
+
+.badge{
+    display:inline-flex;
+    align-items:center;
+    border-radius:999px;
+    padding:5px 9px;
+    font-size:11px;
+    font-weight:700;
+    background:#f3f4f6;
+    color:#374151;
+}
+
+.badge.published,
+.badge.active,
+.badge.success{
+    background:#ecfdf5;
+    color:#047857;
+}
+
+.badge.draft,
+.badge.pending{
+    background:#fffbeb;
+    color:#b45309;
+}
+
+.badge.disabled,
+.badge.deleted,
+.badge.failed{
+    background:#fef2f2;
+    color:#b91c1c;
+}
+
+.actions{
+    display:flex;
+    gap:6px;
+}
+
+.action-btn{
+    border:1px solid #e5e7eb;
+    background:#fff;
+    border-radius:7px;
+    padding:6px 9px;
+    font-size:11px;
+}
+
+.action-btn:hover{
+    background:#f3f4f6;
+}
+
+/* =========================
+   EMPTY / LOADING
+========================= */
+
+.loading,
+.empty{
+    text-align:center;
+    padding:55px 20px;
+    color:#6b7280;
+}
+
+.spinner{
+    width:30px;
+    height:30px;
+    border:3px solid #e5e7eb;
+    border-top-color:#111827;
+    border-radius:50%;
+    animation:spin .8s linear infinite;
+    margin:0 auto 12px;
+}
+
+@keyframes spin{
+    to{
+        transform:rotate(360deg);
+    }
+}
+
+/* =========================
+   MODAL
+========================= */
+
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.55);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+    padding:20px;
+}
+
+.modal.show{
+    display:flex;
+}
+
+.modal-card{
+    width:min(900px,100%);
+    max-height:90vh;
+    background:#fff;
+    border-radius:16px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+}
+
+.modal-header{
+    padding:18px 20px;
+    border-bottom:1px solid #e5e7eb;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.modal-header h3{
+    font-size:17px;
+}
+
+.close-btn{
+    width:35px;
+    height:35px;
+    border:0;
+    border-radius:8px;
+    background:#f3f4f6;
+}
+
+.modal-body{
+    padding:20px;
+    overflow:auto;
+}
+
+.detail-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+    margin-bottom:20px;
+}
+
+.detail{
+    border:1px solid #e5e7eb;
+    border-radius:10px;
+    padding:12px;
+}
+
+.detail-label{
+    font-size:10px;
+    color:#9ca3af;
+    text-transform:uppercase;
+    margin-bottom:5px;
+}
+
+.detail-value{
+    font-size:13px;
+    font-weight:600;
+    word-break:break-word;
+}
+
+pre{
+    background:#111827;
+    color:#e5e7eb;
+    padding:16px;
+    border-radius:10px;
+    overflow:auto;
+    font-size:12px;
+    line-height:1.6;
+}
+
+/* =========================
+   TOAST
+========================= */
+
+.toast{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    background:#111827;
+    color:#fff;
+    padding:12px 16px;
+    border-radius:10px;
+    font-size:13px;
+    transform:translateY(100px);
+    opacity:0;
+    transition:.25s;
+    z-index:2000;
+}
+
+.toast.show{
+    transform:translateY(0);
+    opacity:1;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+.mobile-menu{
+    display:none;
+}
+
+@media(max-width:1100px){
+
+    .stats{
+        grid-template-columns:repeat(3,1fr);
+    }
+
+}
+
+@media(max-width:800px){
+
+    .sidebar{
+        display:none;
+    }
+
+    .main{
+        margin-left:0;
+        width:100%;
+        padding:18px;
+    }
+
+    .mobile-menu{
+        display:block;
+    }
+
+    .header{
+        padding:0 15px;
+    }
+
+    .stats{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .page-header{
+        flex-direction:column;
+    }
+
+    .detail-grid{
+        grid-template-columns:1fr;
+    }
+
+}
+
+@media(max-width:500px){
+
+    .stats{
+        grid-template-columns:1fr;
+    }
+
+    .brand-text{
+        display:none;
+    }
+
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<!-- =========================
+     HEADER
+========================= -->
+
+<header class="header">
+
+    <div class="brand">
+
+        <button class="icon-btn mobile-menu"
+                onclick="toggleSidebar()">
+            ☰
+        </button>
+
+        <div class="logo">LS</div>
+
+        <div class="brand-text">
+            <h1>Let'sStudy Pro</h1>
+            <span>Admin System Inspector</span>
+        </div>
+
+    </div>
+
+    <div class="header-actions">
+
+        <button class="icon-btn"
+                onclick="loadAllData()"
+                title="Refresh">
+            ↻
+        </button>
+
+    </div>
+
+</header>
+
+
+<div class="layout">
+
+<!-- =========================
+     SIDEBAR
+========================= -->
+
+<aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-title">
+        Administration
+    </div>
+
+    <button class="nav-item"
+            onclick="goTo('admin-dashboard.html')">
+        🏠 Dashboard
+    </button>
+
+    <button class="nav-item"
+            onclick="goTo('admin-course.html')">
+        📚 Courses
+    </button>
+
+    <button class="nav-item active">
+        🆔 System IDs
+    </button>
+
+    <button class="nav-item"
+            onclick="goTo('admin-users.html')">
+        👥 Users
+    </button>
+
+    <button class="nav-item"
+            onclick="goTo('admin-orders.html')">
+        🛒 Orders
+    </button>
+
+    <button class="nav-item"
+            onclick="goTo('admin-payments.html')">
+        💳 Payments
+    </button>
+
+    <div class="sidebar-title">
+        System
+    </div>
+
+    <button class="nav-item"
+            onclick="goTo('settings.html')">
+        ⚙️ Settings
+    </button>
+
+</aside>
+
+
+<!-- =========================
+     MAIN
+========================= -->
+
+<main class="main">
+
+    <div class="page-header">
+
+        <div>
+            <h2>System Inspector</h2>
+
+            <p>
+                View every important Firebase record,
+                document ID, user ID and owner relationship.
+            </p>
+        </div>
+
+        <button class="primary-btn"
+                onclick="loadAllData()">
+            ↻ Refresh Records
+        </button>
+
+    </div>
+
+
+    <!-- =========================
+         STATS
+    ========================= -->
+
+    <section class="stats">
+
+        <div class="stat">
+            <div class="stat-label">Total Records</div>
+            <div class="stat-value"
+                 id="totalRecords">
+                0
+            </div>
+            <div class="stat-sub">
+                Loaded records
+            </div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-label">Collections</div>
+            <div class="stat-value"
+                 id="totalCollections">
+                0
+            </div>
+            <div class="stat-sub">
+                Firebase collections
+            </div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-label">Users</div>
+            <div class="stat-value"
+                 id="totalUsers">
+                0
+            </div>
+            <div class="stat-sub">
+                User records
+            </div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-label">Courses</div>
+            <div class="stat-value"
+                 id="totalCourses">
+                0
+            </div>
+            <div class="stat-sub">
+                Course records
+            </div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-label">Status</div>
+            <div class="stat-value"
+                 id="systemStatus">
+                —
+            </div>
+            <div class="stat-sub">
+                Firebase connection
+            </div>
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         TOOLBAR
+    ========================= -->
+
+    <section class="toolbar">
+
+        <div class="search-box">
+
+            <input
+                id="searchInput"
+                type="search"
+                placeholder="Search name, ID, user ID, email, slug..."
+                oninput="renderTable()"
+            >
+
+        </div>
+
+
+        <select id="collectionFilter"
+                onchange="renderTable()">
+
+            <option value="all">
+                All Collections
+            </option>
+
+        </select>
+
+
+        <select id="statusFilter"
+                onchange="renderTable()">
+
+            <option value="all">
+                All Status
+            </option>
+
+            <option value="published">
+                Published
+            </option>
+
+            <option value="active">
+                Active
+            </option>
+
+            <option value="draft">
+                Draft
+            </option>
+
+            <option value="pending">
+                Pending
+            </option>
+
+            <option value="disabled">
+                Disabled
+            </option>
+
+        </select>
+
+
+        <button class="secondary-btn"
+                onclick="clearFilters()">
+            Clear
+        </button>
+
+    </section>
+
+
+    <!-- =========================
+         TABLE
+    ========================= -->
+
+    <section class="table-card">
+
+        <div class="table-top">
+
+            <strong>
+                Firebase Records
+            </strong>
+
+            <span class="table-count"
+                  id="tableCount">
+                0 records
+            </span>
+
+        </div>
+
+
+        <div id="tableContainer">
+
+            <div class="loading">
+
+                <div class="spinner"></div>
+
+                Loading Firebase records...
+
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+</div>
+
+</div>
+
+
+<!-- =========================
+     DOCUMENT MODAL
+========================= -->
+
+<div class="modal"
+     id="documentModal"
+     onclick="closeModalOutside(event)">
+
+    <div class="modal-card">
+
+        <div class="modal-header">
+
+            <h3 id="modalTitle">
+                Document
+            </h3>
+
+            <button class="close-btn"
+                    onclick="closeModal()">
+                ✕
+            </button>
+
+        </div>
+
+        <div class="modal-body">
+
+            <div class="detail-grid">
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        Collection
+                    </div>
+
+                    <div class="detail-value"
+                         id="detailCollection">
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        Document ID
+                    </div>
+
+                    <div class="detail-value"
+                         id="detailId">
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        User ID
+                    </div>
+
+                    <div class="detail-value"
+                         id="detailUserId">
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        Owner ID
+                    </div>
+
+                    <div class="detail-value"
+                         id="detailOwnerId">
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        Created By
+                    </div>
+
+                    <div class="detail-value"
+                         id="detailCreatedBy">
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        Status
+                    </div>
+
+                    <div class="detail-value"
+                         id="detailStatus">
+                        —
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <h4 style="margin-bottom:10px;">
+                Complete Document
+            </h4>
+
+            <pre id="documentJson">{}</pre>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="toast"
+     id="toast">
+    Copied
+</div>
+
+
+<!-- =========================
+     FIREBASE
+========================= -->
+
+<script type="module">
+
+import {
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+
+import {
+    getFirestore,
+    collection,
+    getDocs
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+import {
+    getAuth,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
+
+/*
+================================================
+LET'S STUDY PRO FIREBASE CONFIG
+================================================
+
+REPLACE THESE VALUES WITH YOUR REAL FIREBASE
+CONFIGURATION.
+================================================
+*/
+
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: ",
+  authDomain: "let-s-study-pro-course.firebaseapp.com",
+  databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId: "let-s-study-pro-course",
+  storageBucket: "let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId: "474928293390",
+  appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId: "G-85B7V5H5J0"
+};
+
+/*
+================================================
+INITIALIZE
+================================================
+*/
+
+const app =
+    initializeApp(firebaseConfig);
+
+const db =
+    getFirestore(app);
+
+const auth =
+    getAuth(app);
+
+
+/*
+================================================
+COLLECTIONS
+================================================
+
+Add or remove collections according
+to your Let'sStudy Pro Firestore database.
+================================================
+*/
+
+const COLLECTIONS = [
+
+    "users",
+
+    "courses",
+
+    "courseModules",
+
+    "lessons",
+
+    "enrollments",
+
+    "certificates",
+
+    "certificateTemplates",
+
+    "orders",
+
+    "payments",
+
+    "subscriptions",
+
+    "resources",
+
+    "posts",
+
+    "comments",
+
+    "services",
+
+    "freelancers",
+
+    "projects",
+
+    "applications",
+
+    "assignments",
+
+    "quizzes",
+
+    "questions",
+
+    "reviews",
+
+    "notifications",
+
+    "messages",
+
+    "transactions",
+
+    "wallets",
+
+    "withdrawals",
+
+    "studyGroups",
+
+    "studyGroupMembers",
+
+    "events",
+
+    "bookmarks",
+
+    "wishlist",
+
+    "cart",
+
+    "points",
+
+    "badges",
+
+    "achievements",
+
+    "subscriptions",
+
+    "premiumMembers",
+
+    "referrals",
+
+    "affiliate",
+
+    "affiliateTransactions",
+
+    "supportTickets",
+
+    "reports",
+
+    "auditLogs",
+
+    "adminLogs"
+
+];
+
+
+/*
+================================================
+GLOBAL DATA
+================================================
+*/
+
+let allRecords = [];
+
+let currentUser = null;
+
+
+/*
+================================================
+AUTH
+================================================
+*/
+
+onAuthStateChanged(auth, user => {
+
+    currentUser = user || null;
+
+    if (user) {
+
+        console.log(
+            "Admin authenticated:",
+            user.uid,
+            user.email
+        );
+
+        loadAllData();
+
+    } else {
+
+        document.getElementById("systemStatus").textContent =
+            "Login";
+
+        document.getElementById("tableContainer").innerHTML = `
+            <div class="empty">
+                <div style="font-size:40px;margin-bottom:10px;">
+                    🔐
+                </div>
+
+                <strong>Authentication required</strong>
+
+                <p style="margin-top:6px;">
+                    Please login to access Firebase records.
+                </p>
+            </div>
+        `;
+
+    }
+
+});
+
+
+/*
+================================================
+LOAD ALL FIRESTORE DATA
+================================================
+*/
+
+window.loadAllData = async function(){
+
+    if (!currentUser){
+
+        showToast("Please login first");
+
+        return;
+
+    }
+
+    const container =
+        document.getElementById("tableContainer");
+
+    container.innerHTML = `
+        <div class="loading">
+
+            <div class="spinner"></div>
+
+            Loading Firebase records...
+
+        </div>
+    `;
+
+
+    allRecords = [];
+
+    let successfulCollections = 0;
+
+
+    for (const collectionName of COLLECTIONS){
+
+        try{
+
+            const snapshot =
+                await getDocs(
+                    collection(
+                        db,
+                        collectionName
+                    )
+                );
+
+
+            successfulCollections++;
+
+
+            snapshot.forEach(docSnap => {
+
+                const data =
+                    docSnap.data();
+
+
+                allRecords.push({
+
+                    collection:
+                        collectionName,
+
+                    id:
+                        docSnap.id,
+
+                    data:
+                        data
+
+                });
+
+            });
+
+
+        }catch(error){
+
+            console.warn(
+                `Cannot read collection: ${collectionName}`,
+                error
+            );
+
+        }
+
+    }
+
+
+    /*
+    ================================================
+    SORT
+    ================================================
+    */
+
+    allRecords.sort((a,b) => {
+
+        return a.collection.localeCompare(
+            b.collection
+        );
+
+    });
+
+
+    /*
+    ================================================
+    UPDATE STATS
+    ================================================
+    */
+
+    document.getElementById(
+        "totalRecords"
+    ).textContent =
+        allRecords.length;
+
+
+    document.getElementById(
+        "totalCollections"
+    ).textContent =
+        successfulCollections;
+
+
+    document.getElementById(
+        "totalUsers"
+    ).textContent =
+        allRecords.filter(
+            x =>
+                x.collection === "users"
+        ).length;
+
+
+    document.getElementById(
+        "totalCourses"
+    ).textContent =
+        allRecords.filter(
+            x =>
+                x.collection === "courses"
+        ).length;
+
+
+    document.getElementById(
+        "systemStatus"
+    ).textContent =
+        "Online";
+
+
+    /*
+    ================================================
+    COLLECTION FILTER
+    ================================================
+    */
+
+    populateCollectionFilter();
+
+
+    /*
+    ================================================
+    RENDER
+    ================================================
+    */
+
+    renderTable();
+
+
+    showToast(
+        `${allRecords.length} records loaded`
+    );
+
+};
+
+
+/*
+================================================
+COLLECTION FILTER
+================================================
+*/
+
+function populateCollectionFilter(){
+
+    const select =
+        document.getElementById(
+            "collectionFilter"
+        );
+
+
+    const collections =
+        [...new Set(
+            allRecords.map(
+                item =>
+                    item.collection
+            )
+        )].sort();
+
+
+    select.innerHTML = `
+        <option value="all">
+            All Collections
+        </option>
+    `;
+
+
+    collections.forEach(name => {
+
+        const option =
+            document.createElement(
+                "option"
+            );
+
+        option.value = name;
+
+        option.textContent = name;
+
+        select.appendChild(option);
+
+    });
+
+}
+
+
+/*
+================================================
+GET FIELD
+================================================
+*/
+
+function getField(data, fields){
+
+    for (const field of fields){
+
+        if (
+            data[field] !== undefined &&
+            data[field] !== null &&
+            String(data[field]).trim() !== ""
+        ){
+
+            return data[field];
+
+        }
+
+    }
+
+    return "";
+
+}
+
+
+/*
+================================================
+GET USER ID
+================================================
+*/
+
+function getUserId(data){
+
+    return getField(
+        data,
+        [
+            "userId",
+            "uid",
+            "userID",
+            "studentId",
+            "memberId",
+            "customerId",
+            "accountId"
+        ]
+    );
+
+}
+
+
+/*
+================================================
+GET OWNER ID
+================================================
+*/
+
+function getOwnerId(data){
+
+    return getField(
+        data,
+        [
+            "ownerId",
+            "createdBy",
+            "createdById",
+            "authorId",
+            "adminId",
+            "instructorId",
+            "freelancerId",
+            "sellerId",
+            "providerId"
+        ]
+    );
+
+}
+
+
+/*
+================================================
+GET NAME
+================================================
+*/
+
+function getName(data, id){
+
+    const name =
+        getField(
+            data,
+            [
+                "name",
+                "title",
+                "courseName",
+                "productName",
+                "serviceName",
+                "displayName",
+                "fullName",
+                "username",
+                "studentName",
+                "instructorName",
+                "freelancerName",
+                "businessName"
+            ]
+        );
+
+
+    return name || id;
+
+}
+
+
+/*
+================================================
+GET EMAIL
+================================================
+*/
+
+function getEmail(data){
+
+    return getField(
+        data,
+        [
+            "email",
+            "userEmail",
+            "ownerEmail",
+            "createdByEmail",
+            "instructorEmail",
+            "studentEmail",
+            "customerEmail"
+        ]
+    );
+
+}
+
+
+/*
+================================================
+GET STATUS
+================================================
+*/
+
+function getStatus(data){
+
+    const status =
+        getField(
+            data,
+            [
+                "status",
+                "state",
+                "courseStatus",
+                "paymentStatus",
+                "subscriptionStatus"
+            ]
+        );
+
+
+    return status || "";
+
+}
+
+
+/*
+================================================
+ESCAPE HTML
+================================================
+*/
+
+function escapeHTML(value){
+
+    if (
+        value === null ||
+        value === undefined
+    ){
+
+        return "";
+
+    }
+
+
+    return String(value)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+
+}
+
+
+/*
+================================================
+NORMALIZE SEARCH TEXT
+================================================
+*/
+
+function searchableRecord(record){
+
+    const data =
+        record.data || {};
+
+
+    return [
+
+        record.collection,
+
+        record.id,
+
+        getName(
+            data,
+            record.id
+        ),
+
+        getUserId(data),
+
+        getOwnerId(data),
+
+        getEmail(data),
+
+        getStatus(data),
+
+        getField(
+            data,
+            ["slug"]
+        ),
+
+        getField(
+            data,
+            ["role"]
+        )
+
+    ]
+    .join(" ")
+    .toLowerCase();
+
+}
+
+
+/*
+================================================
+STATUS CLASS
+================================================
+*/
+
+function statusClass(status){
+
+    const value =
+        String(status)
+            .toLowerCase();
+
+
+    if (
+        value.includes("published") ||
+        value.includes("active") ||
+        value.includes("success") ||
+        value.includes("completed")
+    ){
+
+        return "success";
+
+    }
+
+
+    if (
+        value.includes("draft") ||
+        value.includes("pending")
+    ){
+
+        return "pending";
+
+    }
+
+
+    if (
+        value.includes("disabled") ||
+        value.includes("deleted") ||
+        value.includes("failed") ||
+        value.includes("cancel")
+    ){
+
+        return "failed";
+
+    }
+
+
+    return "";
+
+}
+
+
+/*
+================================================
+RENDER TABLE
+================================================
+*/
+
+window.renderTable = function(){
+
+    const search =
+        document.getElementById(
+            "searchInput"
+        ).value
+        .trim()
+        .toLowerCase();
+
+
+    const collectionFilter =
+        document.getElementById(
+            "collectionFilter"
+        ).value;
+
+
+    const statusFilter =
+        document.getElementById(
+            "statusFilter"
+        ).value;
+
+
+    let records =
+        allRecords.filter(record => {
+
+            /*
+            SEARCH
+            */
+
+            if (
+                search &&
+                !searchableRecord(record)
+                    .includes(search)
+            ){
+
+                return false;
+
+            }
+
+
+            /*
+            COLLECTION
+            */
+
+            if (
+                collectionFilter !== "all" &&
+                record.collection !==
+                    collectionFilter
+            ){
+
+                return false;
+
+            }
+
+
+            /*
+            STATUS
+            */
+
+            if (
+                statusFilter !== "all"
+            ){
+
+                const status =
+                    getStatus(
+                        record.data
+                    )
+                    .toLowerCase();
+
+
+                if (
+                    !status.includes(
+                        statusFilter
+                    )
+                ){
+
+                    return false;
+
+                }
+
+            }
+
+
+            return true;
+
+        });
+
+
+    document.getElementById(
+        "tableCount"
+    ).textContent =
+        `${records.length} records`;
+
+
+    if (!records.length){
+
+        document.getElementById(
+            "tableContainer"
+        ).innerHTML = `
+
+            <div class="empty">
+
+                <div style="font-size:40px;">
+                    🔎
+                </div>
+
+                <strong>
+                    No records found
+                </strong>
+
+                <p style="margin-top:6px;">
+                    Try another search or filter.
+                </p>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    const rows =
+        records.map(
+            (record,index) => {
+
+                const data =
+                    record.data || {};
+
+
+                const name =
+                    getName(
+                        data,
+                        record.id
+                    );
+
+
+                const userId =
+                    getUserId(data);
+
+
+                const ownerId =
+                    getOwnerId(data);
+
+
+                const email =
+                    getEmail(data);
+
+
+                const status =
+                    getStatus(data);
+
+
+                return `
+
+                <tr>
+
+                    <td>
+
+                        <div class="entity">
+
+                            <div class="entity-icon">
+                                ${getIcon(
+                                    record.collection
+                                )}
+                            </div>
+
+                            <div>
+
+                                <div class="entity-name">
+                                    ${escapeHTML(name)}
+                                </div>
+
+                                <div class="entity-type">
+                                    ${escapeHTML(
+                                        record.collection
+                                    )}
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+
+
+                    <td>
+
+                        <div class="id-cell">
+
+                            <span
+                                class="id-text"
+                                title="${escapeHTML(record.id)}"
+                            >
+                                ${escapeHTML(record.id)}
+                            </span>
+
+                            <button
+                                class="copy-btn"
+                                onclick="copyText(
+                                    ${JSON.stringify(record.id)}
+                                )"
+                            >
+                                Copy
+                            </button>
+
+                        </div>
+
+                    </td>
+
+
+                    <td>
+
+                        ${
+                            userId
+                            ?
+                            `
+                            <div class="id-cell">
+
+                                <span
+                                    class="id-text"
+                                    title="${escapeHTML(userId)}"
+                                >
+                                    ${escapeHTML(userId)}
+                                </span>
+
+                                <button
+                                    class="copy-btn"
+                                    onclick="copyText(
+                                        ${JSON.stringify(
+                                            String(userId)
+                                        )}
+                                    )"
+                                >
+                                    Copy
+                                </button>
+
+                            </div>
+                            `
+                            :
+                            `<span class="badge">—</span>`
+                        }
+
+                    </td>
+
+
+                    <td>
+
+                        ${
+                            ownerId
+                            ?
+                            `
+                            <div class="id-cell">
+
+                                <span
+                                    class="id-text"
+                                    title="${escapeHTML(ownerId)}"
+                                >
+                                    ${escapeHTML(ownerId)}
+                                </span>
+
+                                <button
+                                    class="copy-btn"
+                                    onclick="copyText(
+                                        ${JSON.stringify(
+                                            String(ownerId)
+                                        )}
+                                    )"
+                                >
+                                    Copy
+                                </button>
+
+                            </div>
+                            `
+                            :
+                            `<span class="badge">—</span>`
+                        }
+
+                    </td>
+
+
+                    <td>
+
+                        ${
+                            email
+                            ?
+                            `
+                            <span
+                                title="${escapeHTML(email)}"
+                            >
+                                ${escapeHTML(email)}
+                            </span>
+                            `
+                            :
+                            `<span class="badge">—</span>`
+                        }
+
+                    </td>
+
+
+                    <td>
+
+                        ${
+                            status
+                            ?
+                            `
+                            <span
+                                class="badge ${statusClass(status)}"
+                            >
+                                ${escapeHTML(status)}
+                            </span>
+                            `
+                            :
+                            `<span class="badge">—</span>`
+                        }
+
+                    </td>
+
+
+                    <td>
+
+                        <div class="actions">
+
+                            <button
+                                class="action-btn"
+                                onclick="viewRecord(${index}, ${JSON.stringify(record.id)})"
+                            >
+                                View
+                            </button>
+
+                            <button
+                                class="action-btn"
+                                onclick="copyRecordId(
+                                    ${JSON.stringify(record.id)}
+                                )"
+                            >
+                                ID
+                            </button>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+                `;
+
+            }
+        )
+        .join("");
+
+
+    /*
+    ================================================
+    TABLE
+    ================================================
+    */
+
+    document.getElementById(
+        "tableContainer"
+    ).innerHTML = `
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Entity
+                        </th>
+
+                        <th>
+                            Document ID
+                        </th>
+
+                        <th>
+                            User ID
+                        </th>
+
+                        <th>
+                            Owner ID
+                        </th>
+
+                        <th>
+                            Email
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    ${rows}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    `;
+
+};
+
+
+/*
+================================================
+ICONS
+================================================
+*/
+
+function getIcon(collection){
+
+    const icons = {
+
+        users:"👤",
+
+        courses:"📚",
+
+        courseModules:"📦",
+
+        lessons:"🎓",
+
+        enrollments:"📝",
+
+        certificates:"🏆",
+
+        certificateTemplates:"📜",
+
+        orders:"🛒",
+
+        payments:"💳",
+
+        subscriptions:"🔄",
+
+        resources:"📄",
+
+        posts:"📰",
+
+        comments:"💬",
+
+        services:"🛠️",
+
+        freelancers:"💼",
+
+        projects:"📁",
+
+        applications:"📨",
+
+        assignments:"📋",
+
+        quizzes:"❓",
+
+        questions:"❔",
+
+                reviews: "⭐",
+        notifications: "🔔",
+        messages: "💬",
+        transactions: "💰",
+        wallets: "👛",
+        withdrawals: "🏦",
+        referrals: "🔗",
+        subscriptions: "📦",
+        memberships: "👑",
+        studyGroups: "👥",
+        discussions: "🗣️",
+        announcements: "📢",
+        events: "📅",
+        internships: "💼",
+        jobs: "💼",
+        scholarships: "🎓",
+        applications: "📝",
+        attendance: "📋",
+        progress: "📈",
+        certificates: "🏆",
+        certificateTemplates: "📜",
+        websites: "🌐",
+        websiteProjects: "🖥️",
+        products: "🛍️",
+        services: "🛠️",
+        freelancerServices: "🧑‍💻",
+        cart: "🛒",
+        wishlist: "❤️",
+        bookmarks: "🔖",
+        reports: "🚨",
+        supportTickets: "🎫",
+        contactMessages: "✉️",
+        adminLogs: "📋"
+    };
+
+
+    /*
+    ============================================================
+       LOCAL STATE
+    ============================================================
+    */
+
+    let allRecords = [];
+    let loadedCollections = [];
+
+
+    /*
+    ============================================================
+       COLLECTION SELECT
+    ============================================================
+    */
+
+    function buildCollectionFilter(){
+
+        const select =
+            document.getElementById("collectionFilter");
+
+        if(!select) return;
+
+        select.innerHTML =
+            `<option value="all">All Collections</option>`;
+
+        loadedCollections
+            .sort()
+            .forEach(name => {
+
+                const option =
+                    document.createElement("option");
+
+                option.value = name;
+                option.textContent =
+                    `${iconFor(name)} ${name}`;
+
+                select.appendChild(option);
+
+            });
+
+    }
+
+
+    /*
+    ============================================================
+       LOAD ALL FIRESTORE DATA
+    ============================================================
+    */
+
+    window.loadAllData = async function(){
+
+        const container =
+            document.getElementById("tableContainer");
+
+        container.innerHTML = `
+            <div class="loading">
+                <div class="spinner"></div>
+                Loading Firebase records...
+            </div>
+        `;
+
+        setSystemStatus("Loading...");
+
+        allRecords = [];
+        loadedCollections = [];
+
+        try{
+
+            for(const collectionName of COLLECTIONS){
+
+                try{
+
+                    const snapshot =
+                        await getDocs(
+                            collection(db, collectionName)
+                        );
+
+                    loadedCollections.push(
+                        collectionName
+                    );
+
+                    snapshot.forEach(docSnap => {
+
+                        const data =
+                            docSnap.data();
+
+                        allRecords.push({
+
+                            collection:
+                                collectionName,
+
+                            id:
+                                docSnap.id,
+
+                            data:
+                                data
+
+                        });
+
+                    });
+
+                }catch(error){
+
+                    console.warn(
+                        `Unable to read collection: ${collectionName}`,
+                        error
+                    );
+
+                }
+
+            }
+
+            updateStats();
+
+            buildCollectionFilter();
+
+            renderTable();
+
+            setSystemStatus("Online");
+
+            showToast(
+                `${allRecords.length} records loaded`
+            );
+
+        }catch(error){
+
+            console.error(error);
+
+            setSystemStatus("Error");
+
+            container.innerHTML = `
+                <div class="empty">
+                    <strong>Unable to load Firebase records.</strong>
+                    <br><br>
+                    ${escapeHtml(error.message)}
+                </div>
+            `;
+
+        }
+
+    };
+
+
+    /*
+    ============================================================
+       UPDATE STATS
+    ============================================================
+    */
+
+    function updateStats(){
+
+        document.getElementById("totalRecords")
+            .textContent =
+            allRecords.length;
+
+
+        document.getElementById("totalCollections")
+            .textContent =
+            loadedCollections.length;
+
+
+        const users =
+            allRecords.filter(
+                r => r.collection === "users"
+            ).length;
+
+        document.getElementById("totalUsers")
+            .textContent =
+            users;
+
+
+        const courses =
+            allRecords.filter(
+                r => r.collection === "courses"
+            ).length;
+
+        document.getElementById("totalCourses")
+            .textContent =
+            courses;
+
+    }
+
+
+    /*
+    ============================================================
+       SYSTEM STATUS
+    ============================================================
+    */
+
+    function setSystemStatus(status){
+
+        const element =
+            document.getElementById("systemStatus");
+
+        if(element){
+
+            element.textContent =
+                status;
+
+        }
+
+    }
+
+
+    /*
+    ============================================================
+       FIND USER ID
+    ============================================================
+    */
+
+    function getUserId(data){
+
+        const possibleFields = [
+
+            "userId",
+            "uid",
+            "userID",
+            "userUid",
+            "userUID",
+            "ownerId",
+            "ownerID",
+            "createdBy",
+            "createdById",
+            "authorId",
+            "authorID",
+            "freelancerId",
+            "studentId",
+            "instructorId",
+            "adminId"
+
+        ];
+
+        for(const field of possibleFields){
+
+            if(
+                data[field] !== undefined &&
+                data[field] !== null &&
+                String(data[field]).trim() !== ""
+            ){
+
+                return String(data[field]);
+
+            }
+
+        }
+
+        return "—";
+
+    }
+
+
+    /*
+    ============================================================
+       FIND OWNER ID
+    ============================================================
+    */
+
+    function getOwnerId(data){
+
+        const possibleFields = [
+
+            "ownerId",
+            "ownerID",
+            "userId",
+            "uid",
+            "createdBy",
+            "createdById",
+            "authorId",
+            "authorID"
+
+        ];
+
+        for(const field of possibleFields){
+
+            if(
+                data[field] !== undefined &&
+                data[field] !== null &&
+                String(data[field]).trim() !== ""
+            ){
+
+                return String(data[field]);
+
+            }
+
+        }
+
+        return "—";
+
+    }
+
+
+    /*
+    ============================================================
+       FIND EMAIL
+    ============================================================
+    */
+
+    function getEmail(data){
+
+        const possibleFields = [
+
+            "email",
+            "userEmail",
+            "ownerEmail",
+            "createdByEmail",
+            "authorEmail",
+            "instructorEmail",
+            "studentEmail"
+
+        ];
+
+        for(const field of possibleFields){
+
+            if(
+                data[field] !== undefined &&
+                data[field] !== null &&
+                String(data[field]).trim() !== ""
+            ){
+
+                return String(data[field]);
+
+            }
+
+        }
+
+        return "—";
+
+    }
+
+
+    /*
+    ============================================================
+       FIND NAME
+    ============================================================
+    */
+
+    function getName(data, id){
+
+        const possibleFields = [
+
+            "name",
+            "title",
+            "displayName",
+            "fullName",
+            "userName",
+            "username",
+            "courseName",
+            "productName",
+            "serviceName",
+            "studentName",
+            "instructorName",
+            "freelancerName",
+            "adminName",
+            "issuerName"
+
+        ];
+
+        for(const field of possibleFields){
+
+            if(
+                data[field] !== undefined &&
+                data[field] !== null &&
+                String(data[field]).trim() !== ""
+            ){
+
+                return String(data[field]);
+
+            }
+
+        }
+
+        return id;
+
+    }
+
+
+    /*
+    ============================================================
+       FIND STATUS
+    ============================================================
+    */
+
+    function getStatus(data){
+
+        if(
+            data.status !== undefined &&
+            data.status !== null
+        ){
+
+            return String(data.status);
+
+        }
+
+        if(data.published === true){
+
+            return "published";
+
+        }
+
+        if(data.active === true){
+
+            return "active";
+
+        }
+
+        if(data.published === false){
+
+            return "draft";
+
+        }
+
+        if(data.enabled === false){
+
+            return "disabled";
+
+        }
+
+        return "—";
+
+    }
+
+
+    /*
+    ============================================================
+       ICON
+    ============================================================
+    */
+
+    function iconFor(collectionName){
+
+        return COLLECTION_ICONS[collectionName]
+            || "📄";
+
+    }
+
+
+    /*
+    ============================================================
+       RENDER TABLE
+    ============================================================
+    */
+
+    window.renderTable = function(){
+
+        const search =
+            (
+                document.getElementById("searchInput")
+                ?.value || ""
+            )
+            .trim()
+            .toLowerCase();
+
+
+        const collection =
+            document.getElementById(
+                "collectionFilter"
+            )?.value || "all";
+
+
+        const status =
+            document.getElementById(
+                "statusFilter"
+            )?.value || "all";
+
+
+        let filtered =
+            allRecords.filter(record => {
+
+                const data =
+                    record.data || {};
+
+                const name =
+                    getName(
+                        data,
+                        record.id
+                    );
+
+                const userId =
+                    getUserId(data);
+
+                const ownerId =
+                    getOwnerId(data);
+
+                const email =
+                    getEmail(data);
+
+                const recordStatus =
+                    getStatus(data)
+                    .toLowerCase();
+
+
+                const searchable =
+                    [
+                        record.collection,
+                        record.id,
+                        name,
+                        userId,
+                        ownerId,
+                        email,
+                        recordStatus,
+                        data.slug || "",
+                        data.title || "",
+                        data.name || ""
+                    ]
+                    .join(" ")
+                    .toLowerCase();
+
+
+                const matchesSearch =
+                    !search ||
+                    searchable.includes(search);
+
+
+                const matchesCollection =
+                    collection === "all" ||
+                    record.collection === collection;
+
+
+                const matchesStatus =
+                    status === "all" ||
+                    recordStatus === status;
+
+
+                return (
+                    matchesSearch &&
+                    matchesCollection &&
+                    matchesStatus
+                );
+
+            });
+
+
+        const tableCount =
+            document.getElementById("tableCount");
+
+        tableCount.textContent =
+            `${filtered.length} record${filtered.length === 1 ? "" : "s"}`;
+
+
+        if(!filtered.length){
+
+            document.getElementById(
+                "tableContainer"
+            ).innerHTML = `
+                <div class="empty">
+                    No matching records found.
+                </div>
+            `;
+
+            return;
+
+        }
+
+
+        const rows =
+            filtered.map(
+                (record, index) => {
+
+                    const data =
+                        record.data || {};
+
+                    const name =
+                        getName(
+                            data,
+                            record.id
+                        );
+
+                    const userId =
+                        getUserId(data);
+
+                    const ownerId =
+                        getOwnerId(data);
+
+                    const email =
+                        getEmail(data);
+
+                    const recordStatus =
+                        getStatus(data);
+
+                    return `
+
+                    <tr>
+
+                        <td>
+
+                            <div class="entity">
+
+                                <div class="entity-icon">
+                                    ${iconFor(record.collection)}
+                                </div>
+
+                                <div>
+
+                                    <div class="entity-name">
+                                        ${escapeHtml(name)}
+                                    </div>
+
+                                    <div class="entity-type">
+                                        ${escapeHtml(record.collection)}
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+
+                        <td>
+
+                            <div class="id-cell">
+
+                                <span
+                                    class="id-text"
+                                    title="${escapeAttr(record.id)}"
+                                >
+                                    ${escapeHtml(record.id)}
+                                </span>
+
+                                <button
+                                    class="copy-btn"
+                                    onclick="copyValue('${escapeJs(record.id)}')"
+                                >
+                                    Copy
+                                </button>
+
+                            </div>
+
+                        </td>
+
+
+                        <td>
+
+                            <div class="id-cell">
+
+                                <span
+                                    class="id-text"
+                                    title="${escapeAttr(userId)}"
+                                >
+                                    ${escapeHtml(userId)}
+                                </span>
+
+                                ${
+                                    userId !== "—"
+                                    ? `
+                                    <button
+                                        class="copy-btn"
+                                        onclick="copyValue('${escapeJs(userId)}')"
+                                    >
+                                        Copy
+                                    </button>
+                                    `
+                                    : ""
+                                }
+
+                            </div>
+
+                        </td>
+
+
+                        <td>
+
+                            <div class="id-cell">
+
+                                <span
+                                    class="id-text"
+                                    title="${escapeAttr(ownerId)}"
+                                >
+                                    ${escapeHtml(ownerId)}
+                                </span>
+
+                            </div>
+
+                        </td>
+
+
+                        <td>
+
+                            <span
+                                style="
+                                    font-size:12px;
+                                    color:#4b5563;
+                                "
+                                title="${escapeAttr(email)}"
+                            >
+                                ${escapeHtml(email)}
+                            </span>
+
+                        </td>
+
+
+                        <td>
+
+                            ${
+                                recordStatus !== "—"
+                                ? `
+                                    <span class="
+                                        badge
+                                        ${statusClass(recordStatus)}
+                                    ">
+                                        ${escapeHtml(recordStatus)}
+                                    </span>
+                                `
+                                : `
+                                    <span class="badge">
+                                        —
+                                    </span>
+                                `
+                            }
+
+                        </td>
+
+
+                        <td>
+
+                            <div class="actions">
+
+                                <button
+                                    class="action-btn"
+                                    onclick="viewRecord(${index}, '${escapeJs(record.collection)}', '${escapeJs(record.id)}')"
+                                >
+                                    View
+                                </button>
+
+                                <button
+                                    class="action-btn"
+                                    onclick="copyValue('${escapeJs(record.id)}')"
+                                >
+                                    Copy ID
+                                </button>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    `;
+
+                }
+            )
+            .join("");
+
+
+        document.getElementById(
+            "tableContainer"
+        ).innerHTML = `
+
+            <div class="table-wrap">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Name / Entity
+                            </th>
+
+                            <th>
+                                Document ID
+                            </th>
+
+                            <th>
+                                User ID
+                            </th>
+
+                            <th>
+                                Owner ID
+                            </th>
+
+                            <th>
+                                Email
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th>
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        ${rows}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        `;
+
+    };
+
+
+    /*
+    ============================================================
+       VIEW RECORD
+    ============================================================
+    */
+
+    window.viewRecord = function(
+        index,
+        collectionName,
+        documentId
+    ){
+
+        const record =
+            allRecords.find(
+                item =>
+                    item.collection === collectionName &&
+                    item.id === documentId
+            );
+
+
+        if(!record) return;
+
+
+        const data =
+            record.data || {};
+
+
+                document.getElementById(
+            "modalTitle"
+        ).textContent =
+            getName(
+                data,
+                documentId
+            );
+
+        document.getElementById(
+            "detailCollection"
+        ).textContent =
+            collectionName;
+
+        document.getElementById(
+            "detailId"
+        ).textContent =
+            documentId;
+
+        document.getElementById(
+            "detailUserId"
+        ).textContent =
+            getUserId(data);
+
+        document.getElementById(
+            "detailOwnerId"
+        ).textContent =
+            getOwnerId(data);
+
+        document.getElementById(
+            "detailCreatedBy"
+        ).textContent =
+            data.createdBy ||
+            data.createdById ||
+            "—";
+
+        document.getElementById(
+            "detailStatus"
+        ).textContent =
+            getStatus(data);
+
+        document.getElementById(
+            "documentJson"
+        ).textContent =
+            JSON.stringify(
+                {
+                    collection: collectionName,
+                    documentId: documentId,
+
+                    name: getName(
+                        data,
+                        documentId
+                    ),
+
+                    userId: getUserId(data),
+
+                    ownerId: getOwnerId(data),
+
+                    email: getEmail(data),
+
+                    data: cleanFirebaseData(data)
+                },
+                null,
+                2
+            );
+
+        document.getElementById(
+            "documentModal"
+        ).classList.add("show");
+
+    };
+
+
+    /*
+    ============================================================
+       CLEAN FIREBASE DATA
+    ============================================================
+    */
+
+    function cleanFirebaseData(data){
+
+        const result = {};
+
+        Object.keys(data || {})
+            .forEach(key => {
+
+                const value = data[key];
+
+                /*
+                 * Firebase Timestamp
+                 */
+                if(
+                    value &&
+                    typeof value === "object" &&
+                    typeof value.toDate === "function"
+                ){
+
+                    result[key] =
+                        value.toDate().toISOString();
+
+                }
+
+                /*
+                 * Array
+                 */
+                else if(
+                    Array.isArray(value)
+                ){
+
+                    result[key] =
+                        value.map(item =>
+                            cleanFirebaseValue(item)
+                        );
+
+                }
+
+                /*
+                 * Object
+                 */
+                else if(
+                    value &&
+                    typeof value === "object"
+                ){
+
+                    result[key] =
+                        cleanFirebaseValue(value);
+
+                }
+
+                else{
+
+                    result[key] = value;
+
+                }
+
+            });
+
+        return result;
+
+    }
+
+
+    function cleanFirebaseValue(value){
+
+        if(
+            value &&
+            typeof value === "object" &&
+            typeof value.toDate === "function"
+        ){
+
+            return value.toDate().toISOString();
+
+        }
+
+        if(
+            Array.isArray(value)
+        ){
+
+            return value.map(
+                item => cleanFirebaseValue(item)
+            );
+
+        }
+
+        if(
+            value &&
+            typeof value === "object"
+        ){
+
+            const output = {};
+
+            Object.keys(value)
+                .forEach(key => {
+
+                    output[key] =
+                        cleanFirebaseValue(
+                            value[key]
+                        );
+
+                });
+
+            return output;
+
+        }
+
+        return value;
+
+    }
+
+
+    /*
+    ============================================================
+       CLOSE MODAL
+    ============================================================
+    */
+
+    window.closeModal = function(){
+
+        const modal =
+            document.getElementById(
+                "documentModal"
+            );
+
+        if(modal){
+
+            modal.classList.remove("show");
+
+        }
+
+    };
+
+
+    window.closeModalOutside = function(event){
+
+        const modal =
+            document.getElementById(
+                "documentModal"
+            );
+
+        if(
+            event.target === modal
+        ){
+
+            closeModal();
+
+        }
+
+    };
+
+
+    /*
+    ============================================================
+       COPY VALUE
+    ============================================================
+    */
+
+    window.copyValue = async function(value){
+
+        if(
+            value === undefined ||
+            value === null ||
+            value === "" ||
+            value === "—"
+        ){
+
+            return;
+
+        }
+
+        const text =
+            String(value);
+
+        try{
+
+            if(
+                navigator.clipboard &&
+                window.isSecureContext
+            ){
+
+                await navigator.clipboard.writeText(
+                    text
+                );
+
+            }else{
+
+                const textarea =
+                    document.createElement(
+                        "textarea"
+                    );
+
+                textarea.value = text;
+
+                textarea.style.position =
+                    "fixed";
+
+                textarea.style.opacity =
+                    "0";
+
+                document.body.appendChild(
+                    textarea
+                );
+
+                textarea.focus();
+
+                textarea.select();
+
+                document.execCommand(
+                    "copy"
+                );
+
+                textarea.remove();
+
+            }
+
+            showToast(
+                "Copied successfully"
+            );
+
+        }catch(error){
+
+            console.error(
+                "Copy failed:",
+                error
+            );
+
+            showToast(
+                "Copy failed"
+            );
+
+        }
+
+    };
+
+
+    /*
+    ============================================================
+       COPY COMPLETE RECORD
+    ============================================================
+    */
+
+    window.copyRecord = async function(
+        collectionName,
+        documentId
+    ){
+
+        const record =
+            allRecords.find(
+                item =>
+                    item.collection ===
+                        collectionName &&
+                    item.id ===
+                        documentId
+            );
+
+        if(!record){
+
+            showToast(
+                "Record not found"
+            );
+
+            return;
+
+        }
+
+        const data =
+            record.data || {};
+
+        const output = {
+
+            collection:
+                collectionName,
+
+            documentId:
+                documentId,
+
+            name:
+                getName(
+                    data,
+                    documentId
+                ),
+
+            userId:
+                getUserId(data),
+
+            ownerId:
+                getOwnerId(data),
+
+            email:
+                getEmail(data),
+
+            status:
+                getStatus(data),
+
+            data:
+                cleanFirebaseData(data)
+
+        };
+
+        await copyValue(
+            JSON.stringify(
+                output,
+                null,
+                2
+            )
+        );
+
+    };
+
+
+    /*
+    ============================================================
+       CLEAR FILTERS
+    ============================================================
+    */
+
+    window.clearFilters = function(){
+
+        const search =
+            document.getElementById(
+                "searchInput"
+            );
+
+        const collection =
+            document.getElementById(
+                "collectionFilter"
+            );
+
+        const status =
+            document.getElementById(
+                "statusFilter"
+            );
+
+        if(search){
+
+            search.value = "";
+
+        }
+
+        if(collection){
+
+            collection.value = "all";
+
+        }
+
+        if(status){
+
+            status.value = "all";
+
+        }
+
+        renderTable();
+
+    };
+
+
+    /*
+    ============================================================
+       SIDEBAR
+    ============================================================
+    */
+
+    window.toggleSidebar = function(){
+
+        const sidebar =
+            document.getElementById(
+                "sidebar"
+            );
+
+        if(!sidebar){
+
+            return;
+
+        }
+
+        if(
+            window.innerWidth <= 800
+        ){
+
+            if(
+                sidebar.style.display ===
+                "block"
+            ){
+
+                sidebar.style.display =
+                    "none";
+
+            }else{
+
+                sidebar.style.display =
+                    "block";
+
+            }
+
+        }
+
+    };
+
+
+    /*
+    ============================================================
+       NAVIGATION
+    ============================================================
+    */
+
+    window.goTo = function(page){
+
+        if(!page){
+
+            return;
+
+        }
+
+        window.location.href =
+            page;
+
+    };
+
+
+    /*
+    ============================================================
+       TOAST
+    ============================================================
+    */
+
+    function showToast(message){
+
+        const toast =
+            document.getElementById(
+                "toast"
+            );
+
+        if(!toast){
+
+            return;
+
+        }
+
+        toast.textContent =
+            message;
+
+        toast.classList.add(
+            "show"
+        );
+
+        clearTimeout(
+            window.__toastTimer
+        );
+
+        window.__toastTimer =
+            setTimeout(
+                () => {
+
+                    toast.classList.remove(
+                        "show"
+                    );
+
+                },
+                1800
+            );
+
+    }
+
+
+    /*
+    ============================================================
+       ESCAPE HTML
+    ============================================================
+    */
+
+    function escapeHtml(value){
+
+        return String(
+            value ?? ""
+        )
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
+
+    }
+
+
+    /*
+    ============================================================
+       ESCAPE ATTRIBUTE
+    ============================================================
+    */
+
+    function escapeAttr(value){
+
+        return escapeHtml(
+            value
+        );
+
+    }
+
+
+    /*
+    ============================================================
+       ESCAPE JAVASCRIPT STRING
+    ============================================================
+    */
+
+    function escapeJs(value){
+
+        return String(
+            value ?? ""
+        )
+        .replaceAll(
+            "\\",
+            "\\\\"
+        )
+        .replaceAll(
+            "'",
+            "\\'"
+        )
+        .replaceAll(
+            "\n",
+            "\\n"
+        )
+        .replaceAll(
+            "\r",
+            "\\r"
+        );
+
+    }
+
+
+    /*
+    ============================================================
+       AUTH STATE
+    ============================================================
+    */
+
+    onAuthStateChanged(
+        auth,
+        user => {
+
+            if(user){
+
+                console.log(
+                    "Let'sStudy Pro Admin Inspector"
+                );
+
+                console.log(
+                    "Admin UID:",
+                    user.uid
+                );
+
+                console.log(
+                    "Admin Email:",
+                    user.email || "No email"
+                );
+
+            }else{
+
+                console.warn(
+                    "No Firebase Authentication user is signed in."
+                );
+
+            }
+
+        }
+    );
+
+
+    /*
+    ============================================================
+       INITIAL LOAD
+    ============================================================
+    */
+
+    loadAllData();
+
+</script>
+
+
+<script>
+
+/*
+============================================================
+KEYBOARD SHORTCUTS
+============================================================
+*/
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        /*
+        ESC = Close modal
+        */
+
+        if(
+            event.key === "Escape"
+        ){
+
+            closeModal();
+
+        }
+
+
+        /*
+        CTRL + K = Search
+        */
+
+        if(
+            event.ctrlKey &&
+            event.key.toLowerCase() === "k"
+        ){
+
+            event.preventDefault();
+
+            const search =
+                document.getElementById(
+                    "searchInput"
+                );
+
+            if(search){
+
+                search.focus();
+
+            }
+
+        }
+
+    }
+);
+
+
+/*
+============================================================
+CLICK OUTSIDE SIDEBAR ON MOBILE
+============================================================
+*/
+
+document.addEventListener(
+    "click",
+    event => {
+
+        if(
+            window.innerWidth > 800
+        ){
+
+            return;
+
+        }
+
+        const sidebar =
+            document.getElementById(
+                "sidebar"
+            );
+
+        const menu =
+            document.querySelector(
+                ".mobile-menu"
+            );
+
+        if(
+            sidebar &&
+            sidebar.style.display === "block" &&
+            !sidebar.contains(event.target) &&
+            !menu?.contains(event.target)
+        ){
+
+            sidebar.style.display =
+                "none";
+
+        }
+
+    }
+);
+
+</script>
+
+</body>
+</html>
