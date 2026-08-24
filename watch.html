@@ -1,1498 +1,2470 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
-    <title>Watch Video | Let's Study</title>
+<title>Watch Video | Let'sStudy Pro</title>
 
-    <style>
-        *{
-            box-sizing:border-box;
-            margin:0;
-            padding:0;
-        }
+<meta name="description"
+      content="Watch videos on Let'sStudy Pro. Learn, discover and share educational content.">
 
-        body{
-            font-family:Arial,Helvetica,sans-serif;
-            background:#f5f7fb;
-            color:#172033;
-            line-height:1.6;
-        }
+<link rel="icon" href="/favicon.ico">
 
-        a{
-            color:inherit;
-            text-decoration:none;
-        }
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
 
-        button,
-        input,
-        textarea{
-            font:inherit;
-        }
+:root{
+    --bg:#f5f5f5;
+    --card:#fff;
+    --text:#111827;
+    --muted:#6b7280;
+    --border:#e5e7eb;
+    --primary:#111827;
+    --danger:#dc2626;
+}
 
-        .header{
-            position:sticky;
-            top:0;
-            z-index:20;
-            background:#fff;
-            border-bottom:1px solid #e5e9f2;
-            padding:14px 5%;
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            gap:20px;
-        }
+body{
+    font-family:
+        Inter,system-ui,-apple-system,
+        BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+}
 
-        .brand{
-            font-size:22px;
-            font-weight:800;
-        }
+button,input,textarea{
+    font:inherit;
+}
 
-        .nav{
-            display:flex;
-            flex-wrap:wrap;
-            gap:18px;
-        }
+button{
+    cursor:pointer;
+}
 
-        .nav a{
-            color:#667085;
-            font-weight:600;
-        }
+.header{
+    height:64px;
+    background:#fff;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 22px;
+    position:sticky;
+    top:0;
+    z-index:100;
+}
 
-        .nav a:hover{
-            color:#2563eb;
-        }
+.logo{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:800;
+}
 
-        .container{
-            width:min(1250px,92%);
-            margin:28px auto;
-        }
+.logo-mark{
+    width:38px;
+    height:38px;
+    border-radius:10px;
+    background:#111827;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
 
-        .watch-layout{
-            display:grid;
-            grid-template-columns:minmax(0,1fr) 350px;
-            gap:24px;
-        }
+.header-search{
+    width:min(500px,45%);
+}
 
-        .video-section{
-            min-width:0;
-        }
+.header-search input{
+    width:100%;
+    height:40px;
+    border:1px solid var(--border);
+    border-radius:22px;
+    padding:0 17px;
+    outline:none;
+}
 
-        .player{
-            background:#090d16;
-            border-radius:16px;
-            overflow:hidden;
-            position:relative;
-            aspect-ratio:16/9;
-        }
+.header-actions{
+    display:flex;
+    gap:8px;
+}
 
-        .player video{
-            width:100%;
-            height:100%;
-            display:block;
-            object-fit:contain;
-            background:#090d16;
-        }
+.icon-btn{
+    width:38px;
+    height:38px;
+    border:1px solid var(--border);
+    background:#fff;
+    border-radius:50%;
+}
 
-        .player-placeholder{
-            position:absolute;
-            inset:0;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            flex-direction:column;
-            color:#fff;
-            background:
-                linear-gradient(
-                    135deg,
-                    #111827,
-                    #312e81
-                );
-        }
+.layout{
+    max-width:1450px;
+    margin:auto;
+    padding:24px;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 360px;
+    gap:24px;
+}
 
-        .play-icon{
-            width:70px;
-            height:70px;
-            border-radius:50%;
-            background:#2563eb;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-size:28px;
-            margin-bottom:12px;
-        }
+.video-player{
+    width:100%;
+    aspect-ratio:16/9;
+    background:#000;
+    border-radius:12px;
+    overflow:hidden;
+}
 
-        .video-info{
-            background:#fff;
-            border:1px solid #e5e9f2;
-            border-radius:15px;
-            padding:20px;
-            margin-top:16px;
-        }
+.video-player video,
+.video-player iframe{
+    width:100%;
+    height:100%;
+    border:0;
+    display:block;
+}
 
-        .video-title{
-            font-size:25px;
-            line-height:1.3;
-            margin-bottom:8px;
-        }
+.video-title{
+    font-size:22px;
+    line-height:1.35;
+    margin-top:17px;
+}
 
-        .video-meta{
-            color:#667085;
-            font-size:14px;
-        }
+.video-meta{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    margin-top:12px;
+    flex-wrap:wrap;
+}
 
-        .action-row{
-            display:flex;
-            flex-wrap:wrap;
-            gap:9px;
-            margin-top:18px;
-            padding-top:16px;
-            border-top:1px solid #edf0f5;
-        }
+.stats{
+    color:var(--muted);
+    font-size:14px;
+}
 
-        .btn{
-            border:0;
-            border-radius:9px;
-            padding:10px 15px;
-            cursor:pointer;
-            font-weight:700;
-        }
+.actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+}
 
-        .btn-primary{
-            background:#2563eb;
-            color:#fff;
-        }
+.action{
+    border:1px solid var(--border);
+    background:#fff;
+    border-radius:20px;
+    padding:9px 15px;
+    font-weight:600;
+}
 
-        .btn-secondary{
-            background:#eef2f7;
-            color:#263247;
-        }
+.action:hover{
+    background:#f3f4f6;
+}
 
-        .channel-box{
-            display:flex;
-            align-items:center;
-            gap:14px;
-            margin-top:20px;
-            padding-top:20px;
-            border-top:1px solid #edf0f5;
-        }
+.channel{
+    margin-top:18px;
+    padding:17px 0;
+    border-top:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px;
+}
 
-        .channel-avatar{
-            width:52px;
-            height:52px;
-            border-radius:50%;
-            background:#172033;
-            color:#fff;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-weight:800;
-        }
+.channel-info{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
 
-        .channel-info{
-            flex:1;
-        }
+.channel-avatar{
+    width:48px;
+    height:48px;
+    border-radius:50%;
+    object-fit:cover;
+    background:#eee;
+}
 
-        .channel-info strong{
-            display:block;
-        }
+.channel-name{
+    font-weight:800;
+}
 
-        .channel-info span{
-            color:#667085;
-            font-size:13px;
-        }
+.channel-subs{
+    color:var(--muted);
+    font-size:12px;
+    margin-top:3px;
+}
 
-        .description{
-            margin-top:18px;
-            color:#596579;
-            white-space:pre-line;
-        }
+.subscribe{
+    border:0;
+    background:#111827;
+    color:#fff;
+    padding:10px 17px;
+    border-radius:22px;
+    font-weight:700;
+}
 
-        .comments{
-            margin-top:22px;
-            background:#fff;
-            border:1px solid #e5e9f2;
-            border-radius:15px;
-            padding:20px;
-        }
+.subscribe.subscribed{
+    background:#e5e7eb;
+    color:#111827;
+}
 
-        .comments h2{
-            margin-bottom:15px;
-        }
+.description{
+    margin-top:18px;
+    background:#fff;
+    border-radius:12px;
+    padding:17px;
+    white-space:pre-wrap;
+    line-height:1.6;
+}
 
-        .comment-form{
-            display:flex;
-            gap:10px;
-            margin-bottom:20px;
-        }
+.comments{
+    margin-top:24px;
+    background:#fff;
+    border-radius:12px;
+    padding:18px;
+}
 
-        .comment-input{
-            flex:1;
-            border:1px solid #d8deea;
-            border-radius:9px;
-            padding:11px 13px;
-            outline:none;
-        }
+.comments h2{
+    font-size:18px;
+    margin-bottom:17px;
+}
 
-        .comment{
-            padding:14px 0;
-            border-top:1px solid #edf0f5;
-        }
+.comment-form{
+    display:flex;
+    gap:10px;
+    margin-bottom:20px;
+}
 
-        .comment strong{
-            display:block;
-        }
+.comment-form input{
+    flex:1;
+    height:42px;
+    border:1px solid var(--border);
+    border-radius:21px;
+    padding:0 15px;
+    outline:none;
+}
 
-        .comment p{
-            color:#596579;
-            font-size:14px;
-        }
+.comment-form button{
+    border:0;
+    background:#111827;
+    color:#fff;
+    border-radius:21px;
+    padding:0 17px;
+}
 
-        .sidebar{
-            min-width:0;
-        }
+.comment{
+    display:flex;
+    gap:11px;
+    padding:14px 0;
+    border-bottom:1px solid #f0f0f0;
+}
 
-        .sidebar-box{
-            background:#fff;
-            border:1px solid #e5e9f2;
-            border-radius:15px;
-            padding:18px;
-        }
+.comment-avatar{
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    object-fit:cover;
+}
 
-        .sidebar-box h2{
-            font-size:19px;
-            margin-bottom:14px;
-        }
+.comment-user{
+    font-weight:700;
+    font-size:14px;
+}
 
-        .playlist-item{
-            display:flex;
-            gap:10px;
-            padding:10px 0;
-            border-bottom:1px solid #edf0f5;
-        }
+.comment-text{
+    margin-top:4px;
+    color:#374151;
+    line-height:1.5;
+}
 
-        .playlist-item:last-child{
-            border-bottom:0;
-        }
+.sidebar-title{
+    font-size:18px;
+    font-weight:800;
+    margin-bottom:15px;
+}
 
-        .playlist-thumb{
-            width:105px;
-            height:62px;
-            flex-shrink:0;
-            border-radius:8px;
-            background:
-                linear-gradient(
-                    135deg,
-                    #dbeafe,
-                    #ddd6fe
-                );
-            display:flex;
-            align-items:center;
-            justify-content:center;
-        }
+.related{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+}
 
-        .playlist-item h3{
-            font-size:14px;
-            line-height:1.35;
-        }
+.related-card{
+    display:grid;
+    grid-template-columns:145px 1fr;
+    gap:10px;
+    cursor:pointer;
+}
 
-        .playlist-item span{
-            display:block;
-            color:#667085;
-            font-size:12px;
-            margin-top:3px;
-        }
+.related-thumb{
+    width:145px;
+    height:82px;
+    border-radius:8px;
+    object-fit:cover;
+    background:#ddd;
+}
 
-        .recommended{
-            margin-top:20px;
-        }
+.related-title{
+    font-size:14px;
+    font-weight:700;
+    line-height:1.35;
+}
 
-        .recommended-card{
-            display:flex;
-            gap:10px;
-            padding:11px 0;
-            border-bottom:1px solid #edf0f5;
-        }
+.related-meta{
+    color:var(--muted);
+    font-size:11px;
+    margin-top:6px;
+}
 
-        .recommended-card:last-child{
-            border-bottom:0;
-        }
+.loading,
+.empty{
+    padding:45px 20px;
+    text-align:center;
+    color:var(--muted);
+}
 
-        .recommended-thumb{
-            width:110px;
-            height:65px;
-            flex-shrink:0;
-            border-radius:8px;
-            background:
-                linear-gradient(
-                    135deg,
-                    #bfdbfe,
-                    #e9d5ff
-                );
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-size:20px;
-        }
+.spinner{
+    width:30px;
+    height:30px;
+    border:3px solid #ddd;
+    border-top-color:#111827;
+    border-radius:50%;
+    animation:spin .8s linear infinite;
+    margin:auto auto 10px;
+}
 
-        .recommended-card h3{
-            font-size:14px;
-            line-height:1.35;
-        }
+@keyframes spin{
+    to{
+        transform:rotate(360deg);
+    }
+}
 
-        .recommended-card p{
-            color:#667085;
-            font-size:12px;
-        }
+.toast{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translate(-50%,100px);
+    background:#111827;
+    color:#fff;
+    padding:11px 17px;
+    border-radius:9px;
+    opacity:0;
+    transition:.25s;
+    z-index:500;
+}
 
-        .toast{
-            position:fixed;
-            right:20px;
-            bottom:20px;
-            background:#172033;
-            color:#fff;
-            padding:12px 18px;
-            border-radius:9px;
-            opacity:0;
-            transform:translateY(10px);
-            transition:.25s;
-            pointer-events:none;
-            z-index:100;
-        }
+.toast.show{
+    transform:translate(-50%,0);
+    opacity:1;
+}
 
-        .toast.show{
-            opacity:1;
-            transform:translateY(0);
-        }
+@media(max-width:950px){
 
-        .footer{
-            margin-top:50px;
-            padding:30px 5%;
-            background:#fff;
-            border-top:1px solid #e5e9f2;
-            display:flex;
-            justify-content:space-between;
-            flex-wrap:wrap;
-            gap:20px;
-        }
+    .layout{
+        grid-template-columns:1fr;
+    }
 
-        .footer-links{
-            display:flex;
-            flex-wrap:wrap;
-            gap:18px;
-        }
+    .header-search{
+        width:40%;
+    }
 
-        @media(max-width:900px){
-            .watch-layout{
-                grid-template-columns:1fr;
-            }
+}
 
-            .sidebar{
-                order:2;
-            }
-        }
+@media(max-width:600px){
 
-        @media(max-width:650px){
-            .header{
-                flex-direction:column;
-                align-items:flex-start;
-            }
+    .header{
+        padding:0 12px;
+    }
 
-            .video-title{
-                font-size:21px;
-            }
+    .brand-text{
+        display:none;
+    }
 
-            .comment-form{
-                flex-direction:column;
-            }
-        }
-    </style>
+    .header-search{
+        width:45%;
+    }
+
+    .layout{
+        padding:12px;
+    }
+
+    .video-title{
+        font-size:18px;
+    }
+
+    .related-card{
+        grid-template-columns:125px 1fr;
+    }
+
+    .related-thumb{
+        width:125px;
+        height:72px;
+    }
+
+}
+</style>
 </head>
 
 <body>
 
 <header class="header">
 
-    <a
-        href="dashboard.html"
-        class="brand">
-        Let's Study
+    <a href="/" class="logo"
+       style="text-decoration:none;color:inherit">
+
+        <div class="logo-mark">LS</div>
+
+        <div class="brand-text">
+            Let'sStudy Pro
+        </div>
+
     </a>
 
-    <nav class="nav">
-        <a href="dashboard.html">Dashboard</a>
-        <a href="courses.html">Courses</a>
-        <a href="video-dashboard.html">Videos</a>
-        <a href="channels.html">Channels</a>
-        <a href="playlists.html">Playlists</a>
-        <a href="community.html">Community</a>
-    </nav>
+    <div class="header-search">
+
+        <input
+            id="searchInput"
+            type="search"
+            placeholder="Search videos..."
+            onkeydown="handleSearch(event)">
+
+    </div>
+
+    <div class="header-actions">
+
+        <button
+            class="icon-btn"
+            onclick="location.href='/notifications.html'">
+            🔔
+        </button>
+
+        <button
+            class="icon-btn"
+            onclick="location.href='/profile.html'">
+            👤
+        </button>
+
+    </div>
 
 </header>
 
 
-<main class="container">
+<main class="layout">
 
-    <div class="watch-layout">
+<section>
 
-        <section class="video-section">
+    <!-- VIDEO -->
 
-            <div class="player">
+    <div
+        class="video-player"
+        id="videoPlayer">
 
-                <video
-                    id="videoPlayer"
-                    controls
-                    preload="metadata">
-                </video>
-
-                <div
-                    id="playerPlaceholder"
-                    class="player-placeholder">
-
-                    <div class="play-icon">
-                        ▶
-                    </div>
-
-                    <strong>
-                        Video Player
-                    </strong>
-
-                    <span>
-                        Select a video to start watching
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <article class="video-info">
-
-                <h1
-                    id="videoTitle"
-                    class="video-title">
-                    HTML & CSS Complete Beginner Guide
-                </h1>
-
-                <div
-                    id="videoMeta"
-                    class="video-meta">
-                    2.4K views • 18:42 • Published today
-                </div>
-
-
-                <div class="action-row">
-
-                    <button
-                        id="likeButton"
-                        class="btn btn-secondary"
-                        onclick="toggleLike()">
-                        👍 Like
-                    </button>
-
-                    <button
-                        id="saveButton"
-                        class="btn btn-secondary"
-                        onclick="saveVideo()">
-                        🔖 Save
-                    </button>
-
-                    <button
-                        class="btn btn-secondary"
-                        onclick="shareVideo()">
-                        ↗ Share
-                    </button>
-
-                    <a
-                        href="playlists.html"
-                        class="btn btn-secondary">
-                        + Playlist
-                    </a>
-
-                </div>
-
-
-                <div class="channel-box">
-
-                    <a
-                        href="channel-details.html"
-                        class="channel-avatar">
-                        LS
-                    </a>
-
-                    <div class="channel-info">
-
-                        <strong>
-                            Let's Study ✓
-                        </strong>
-
-                        <span>
-                            @letsstudy • 12.4K followers
-                        </span>
-
-                    </div>
-
-                    <button
-                        id="followButton"
-                        class="btn btn-primary"
-                        onclick="toggleFollow()">
-                        Follow
-                    </button>
-
-                </div>
-
-
-                <p
-                    id="videoDescription"
-                    class="description">
-                    Learn the foundations of HTML and CSS
-                    and understand how to build your first
-                    responsive website.
-                </p>
-
-            </article>
-
-
-            <section class="comments">
-
-                <h2>
-                    Comments
-                    <span id="commentCount">
-                        (2)
-                    </span>
-                </h2>
-
-                <form
-                    id="commentForm"
-                    class="comment-form">
-
-                    <input
-                        id="commentInput"
-                        class="comment-input"
-                        type="text"
-                        maxlength="500"
-                        placeholder="Add a comment..."
-                        required>
-
-                    <button
-                        class="btn btn-primary"
-                        type="submit">
-                        Comment
-                    </button>
-
-                </form>
-
-
-                <div id="commentsList">
-
-                    <div class="comment">
-
-                        <strong>
-                            JM
-                        </strong>
-
-                        <p>
-                            Very useful explanation.
-                        </p>
-
-                    </div>
-
-                    <div class="comment">
-
-                        <strong>
-                            Amina
-                        </strong>
-
-                        <p>
-                            The examples made the topic easy
-                            to understand.
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-        </section>
-
-
-        <aside class="sidebar">
-
-            <div class="sidebar-box">
-
-                <h2>
-                    Playlist
-                </h2>
-
-                <div id="playlistList">
-
-                    <a
-                        href="watch.html?id=video-1"
-                        class="playlist-item">
-
-                        <div class="playlist-thumb">
-                            ▶
-                        </div>
-
-                        <div>
-
-                            <h3>
-                                HTML & CSS Complete Guide
-                            </h3>
-
-                            <span>
-                                18:42
-                            </span>
-
-                        </div>
-
-                    </a>
-
-
-                    <a
-                        href="watch.html?id=video-2"
-                        class="playlist-item">
-
-                        <div class="playlist-thumb">
-                            ▶
-                        </div>
-
-                        <div>
-
-                            <h3>
-                                JavaScript Basics
-                            </h3>
-
-                            <span>
-                                24:15
-                            </span>
-
-                        </div>
-
-                    </a>
-
-
-                    <a
-                        href="watch.html?id=video-3"
-                        class="playlist-item">
-
-                        <div class="playlist-thumb">
-                            ▶
-                        </div>
-
-                        <div>
-
-                            <h3>
-                                Build Your First Website
-                            </h3>
-
-                            <span>
-                                31:08
-                            </span>
-
-                        </div>
-
-                    </a>
-
-                </div>
-
-            </div>
-
-
-            <div class="sidebar-box recommended">
-
-                <h2>
-                    Recommended
-                </h2>
-
-                <div id="recommendedList">
-
-                    <a
-                        href="watch.html?id=video-4"
-                        class="recommended-card">
-
-                        <div class="recommended-thumb">
-                            ▶
-                        </div>
-
-                        <div>
-
-                            <h3>
-                                Introduction to AI
-                            </h3>
-
-                            <p>
-                                4.7K views
-                            </p>
-
-                        </div>
-
-                    </a>
-
-
-                    <a
-                        href="watch.html?id=video-5"
-                        class="recommended-card">
-
-                        <div class="recommended-thumb">
-                            ▶
-                        </div>
-
-                        <div>
-
-                            <h3>
-                                Career Skills Every Student Needs
-                            </h3>
-
-                            <p>
-                                1.2K views
-                            </p>
-
-                        </div>
-
-                    </a>
-
-
-                    <a
-                        href="watch.html?id=video-6"
-                        class="recommended-card">
-
-                        <div class="recommended-thumb">
-                            ▶
-                        </div>
-
-                        <div>
-
-                            <h3>
-                                How to Learn Programming
-                            </h3>
-
-                            <p>
-                                5.3K views
-                            </p>
-
-                        </div>
-
-                    </a>
-
-                </div>
-
-            </div>
-
-        </aside>
+        <div class="loading">
+            <div class="spinner"></div>
+            Loading video...
+        </div>
 
     </div>
+
+
+    <!-- TITLE -->
+
+    <h1
+        class="video-title"
+        id="videoTitle">
+        Loading...
+    </h1>
+
+
+    <div class="video-meta">
+
+        <div
+            class="stats"
+            id="videoStats">
+            —
+        </div>
+
+        <div class="actions">
+
+            <button
+                class="action"
+                id="likeBtn"
+                onclick="toggleLike()">
+                👍 <span id="likeCount">0</span>
+            </button>
+
+            <button
+                class="action"
+                onclick="shareVideo()">
+                ↗ Share
+            </button>
+
+            <button
+                class="action"
+                onclick="saveVideo()">
+                🔖 Save
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- CHANNEL -->
+
+    <div class="channel">
+
+        <div class="channel-info">
+
+            <img
+                id="channelAvatar"
+                class="channel-avatar"
+                src="/favicon.ico"
+                alt="Channel">
+
+            <div>
+
+                <div
+                    class="channel-name"
+                    id="channelName">
+                    Let'sStudy Pro
+                </div>
+
+                <div
+                    class="channel-subs"
+                    id="channelSubs">
+                    0 subscribers
+                </div>
+
+            </div>
+
+        </div>
+
+        <button
+            class="subscribe"
+            id="subscribeBtn"
+            onclick="toggleSubscribe()">
+            Subscribe
+        </button>
+
+    </div>
+
+
+    <!-- DESCRIPTION -->
+
+    <div
+        class="description"
+        id="videoDescription">
+        Loading description...
+    </div>
+
+
+    <!-- COMMENTS -->
+
+    <section class="comments">
+
+        <h2>
+            Comments
+            (<span id="commentsCount">0</span>)
+        </h2>
+
+        <form
+            class="comment-form"
+            onsubmit="submitComment(event)">
+
+            <input
+                id="commentInput"
+                placeholder="Add a comment..."
+                maxlength="1000"
+                required>
+
+            <button type="submit">
+                Comment
+            </button>
+
+        </form>
+
+        <div id="commentsList">
+
+            <div class="loading">
+                Loading comments...
+            </div>
+
+        </div>
+
+    </section>
+
+</section>
+
+
+<!-- RELATED -->
+
+<aside>
+
+    <div class="sidebar-title">
+        Related videos
+    </div>
+
+    <div
+        class="related"
+        id="relatedVideos">
+
+        <div class="loading">
+            <div class="spinner"></div>
+            Loading...
+        </div>
+
+    </div>
+
+</aside>
 
 </main>
 
 
-<footer class="footer">
-
-    <div>
-        <strong>
-            Let's Study
-        </strong>
-
-        <div>
-            Learn. Practice. Grow.
-        </div>
-    </div>
-
-    <div class="footer-links">
-
-        <a href="courses.html">
-            Courses
-        </a>
-
-        <a href="video-dashboard.html">
-            Videos
-        </a>
-
-        <a href="channels.html">
-            Channels
-        </a>
-
-        <a href="playlists.html">
-            Playlists
-        </a>
-
-        <a href="live.html">
-            Live
-        </a>
-
-        <a href="community.html">
-            Community
-        </a>
-
-    </div>
-
-</footer>
-
-
 <div
-    id="toast"
     class="toast"
-    role="status"
-    aria-live="polite">
+    id="toast">
 </div>
 
 
-<script>
+<script type="module">
 
-const videos = {
+import {
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
-    "video-1": {
-        title:
-            "HTML & CSS Complete Beginner Guide",
-        description:
-            "Learn the foundations of HTML and CSS and understand how to build your first responsive website.",
-        views:
-            "2.4K",
-        duration:
-            "18:42",
-        video:
-            ""
-    },
+import {
+    getAuth,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
-    "video-2": {
-        title:
-            "JavaScript Basics",
-        description:
-            "Learn variables, functions, conditions, loops and other JavaScript fundamentals.",
-        views:
-            "3.1K",
-        duration:
-            "24:15",
-        video:
-            ""
-    },
+import {
+    getFirestore,
+    doc,
+    getDoc,
+    collection,
+    getDocs,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    query,
+    where,
+    orderBy,
+    limit,
+    increment,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-    "video-3": {
-        title:
-            "Build Your First Website",
-        description:
-            "Create a responsive website from scratch using modern web development techniques.",
-        views:
-            "1.8K",
-        duration:
-            "31:08",
-        video:
-            ""
-    },
 
-    "video-4": {
-        title:
-            "Introduction to Artificial Intelligence",
-        description:
-            "Understand artificial intelligence concepts and how modern AI systems work.",
-        views:
-            "4.7K",
-        duration:
-            "21:33",
-        video:
-            ""
-    },
+/* ==============================
+   FIREBASE
+============================== */
 
-    "video-5": {
-        title:
-            "Career Skills Every Student Needs",
-        description:
-            "Practical skills that help students prepare for education, work and professional growth.",
-        views:
-            "1.2K",
-        duration:
-            "16:20",
-        video:
-            ""
-    }
-    }
+const firebaseConfig = {
+    apiKey: "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+    authDomain: "let-s-study-pro-course.firebaseapp.com",
+    databaseURL:
+        "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+    projectId: "let-s-study-pro-course",
+    storageBucket:
+        "let-s-study-pro-course.firebasestorage.app",
+    messagingSenderId: "474928293390",
+    appId:
+        "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+    measurementId: "G-85B7V5H5J0"
 };
 
+const app =
+    initializeApp(firebaseConfig);
 
-/* =========================
+const db =
+    getFirestore(app);
+
+const auth =
+    getAuth(app);
+
+
+/* ==============================
+   STATE
+============================== */
+
+let currentUser = null;
+let video = null;
+let videoId = null;
+let channel = null;
+let liked = false;
+let subscribed = false;
+
+
+/* ==============================
    GET VIDEO ID
-========================= */
+============================== */
 
-function getVideoId(){
+const params =
+    new URLSearchParams(
+        location.search
+    );
 
-    const params =
-        new URLSearchParams(
-            window.location.search
+videoId =
+    params.get("id");
+
+
+/* ==============================
+   AUTH
+============================== */
+
+onAuthStateChanged(
+    auth,
+    async user => {
+
+        currentUser = user;
+
+        if(videoId){
+
+            await loadVideo();
+            await loadComments();
+            await checkLike();
+            await checkSubscription();
+
+        }
+
+    }
+);
+
+
+/* ==============================
+   LOAD VIDEO
+============================== */
+
+async function loadVideo(){
+
+    if(!videoId){
+
+        showError(
+            "Video ID is missing."
         );
 
-    return (
-        params.get("id") ||
-        "video-1"
-    );
+        return;
+
+    }
+
+    try{
+
+        const ref =
+            doc(
+                db,
+                "videos",
+                videoId
+            );
+
+        const snap =
+            await getDoc(ref);
+
+        if(!snap.exists()){
+
+            showError(
+                "Video not found."
+            );
+
+            return;
+
+        }
+
+        video = {
+            id:snap.id,
+            ...snap.data()
+        };
+
+        renderVideo();
+
+        await updateViews();
+
+        await loadChannel();
+
+        await loadRelated();
+
+    }catch(error){
+
+        console.error(
+            "Video loading error:",
+            error
+        );
+
+        showError(
+            "Unable to load video."
+        );
+
+    }
 
 }
 
 
-/* =========================
-   LOAD VIDEO
-========================= */
+/* ==============================
+   RENDER VIDEO
+============================== */
 
-function loadVideo(){
+function renderVideo(){
 
-    const id =
-        getVideoId();
-
-    const video =
-        videos[id] ||
-        videos["video-1"];
-
+    document.title =
+        `${video.title || "Watch Video"} | Let'sStudy Pro`;
 
     document.getElementById(
         "videoTitle"
     ).textContent =
-        video.title;
-
+        video.title ||
+        "Untitled Video";
 
     document.getElementById(
         "videoDescription"
     ).textContent =
-        video.description;
-
+        video.description ||
+        "No description available.";
 
     document.getElementById(
-        "videoMeta"
+        "likeCount"
     ).textContent =
-        video.views +
-        " views • " +
-        video.duration +
-        " • Published today";
+        formatNumber(
+            video.likes || 0
+        );
 
+    document.getElementById(
+        "commentsCount"
+    ).textContent =
+        formatNumber(
+            video.commentsCount || 0
+        );
+
+    document.getElementById(
+        "videoStats"
+    ).textContent =
+        `${formatNumber(video.views || 0)} views • ${formatDate(video.publishedAt || video.createdAt)}`;
 
     const player =
         document.getElementById(
             "videoPlayer"
         );
 
-    const placeholder =
-        document.getElementById(
-            "playerPlaceholder"
-        );
+    const url =
+        video.videoUrl || "";
 
+    const type =
+        video.videoType || "video";
 
-    if(video.video){
+    if(type === "youtube"){
 
-        player.src =
-            video.video;
+        player.innerHTML = `
+            <iframe
+                src="${youtubeEmbed(url)}"
+                title="${escapeHTML(video.title || "Video")}"
+                allowfullscreen
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+            </iframe>
+        `;
 
-        placeholder.style.display =
-            "none";
+    }else if(type === "embed"){
+
+        player.innerHTML = `
+            <iframe
+                src="${escapeAttr(url)}"
+                title="${escapeHTML(video.title || "Video")}"
+                allowfullscreen>
+            </iframe>
+        `;
 
     }else{
 
-        player.removeAttribute(
-            "src"
-        );
-
-        placeholder.style.display =
-            "flex";
+        player.innerHTML = `
+            <video
+                controls
+                playsinline
+                poster="${escapeAttr(video.thumbnail || "")}">
+                <source
+                    src="${escapeAttr(url)}"
+                    type="video/mp4">
+                Your browser does not support video playback.
+            </video>
+        `;
 
     }
 
 }
 
 
-/* =========================
-   TOAST
-========================= */
+/* ==============================
+   CHANNEL
+============================== */
 
-function showToast(message){
+async function loadChannel(){
 
-    const toast =
+    if(!video.channelId){
+
         document.getElementById(
-            "toast"
-        );
+            "channelName"
+        ).textContent =
+            video.creatorName ||
+            "Let'sStudy Pro";
 
+        return;
 
-    toast.textContent =
-        message;
+    }
 
+    try{
 
-    toast.classList.add(
-        "show"
-    );
-
-
-    setTimeout(
-        function(){
-
-            toast.classList.remove(
-                "show"
+        const snap =
+            await getDoc(
+                doc(
+                    db,
+                    "channels",
+                    video.channelId
+                )
             );
 
-        },
-        2200
-    );
+        if(!snap.exists())
+            return;
 
-}
+        channel = {
+            id:snap.id,
+            ...snap.data()
+        };
 
-
-/* =========================
-   LIKE VIDEO
-========================= */
-
-function toggleLike(){
-
-    const key =
-        "liked_" +
-        getVideoId();
-
-
-    const liked =
-        localStorage.getItem(
-            key
-        ) === "true";
-
-
-    localStorage.setItem(
-        key,
-        String(!liked)
-    );
-
-
-    document.getElementById(
-        "likeButton"
-    ).textContent =
-        liked
-            ? "👍 Like"
-            : "👍 Liked";
-
-
-    showToast(
-        liked
-            ? "Like removed."
-            : "Video liked."
-    );
-
-}
-
-
-/* =========================
-   SAVE VIDEO
-========================= */
-
-function saveVideo(){
-
-    const key =
-        "saved_" +
-        getVideoId();
-
-
-    const saved =
-        localStorage.getItem(
-            key
-        ) === "true";
-
-
-    localStorage.setItem(
-        key,
-        String(!saved)
-    );
-
-
-    document.getElementById(
-        "saveButton"
-    ).textContent =
-        saved
-            ? "🔖 Save"
-            : "🔖 Saved";
-
-
-    showToast(
-        saved
-            ? "Removed from saved videos."
-            : "Video saved."
-    );
-
-}
-
-
-/* =========================
-   FOLLOW CHANNEL
-========================= */
-
-function toggleFollow(){
-
-    const followed =
-        localStorage.getItem(
-            "letsStudyFollowed"
-        ) === "true";
-
-
-    localStorage.setItem(
-        "letsStudyFollowed",
-        String(!followed)
-    );
-
-
-    document.getElementById(
-        "followButton"
-    ).textContent =
-        followed
-            ? "Follow"
-            : "Following";
-
-
-    showToast(
-        followed
-            ? "Channel unfollowed."
-            : "Channel followed."
-    );
-
-}
-
-
-/* =========================
-   SHARE VIDEO
-========================= */
-
-function shareVideo(){
-
-    const url =
-        window.location.href;
-
-
-    const title =
         document.getElementById(
-            "videoTitle"
-        ).textContent;
+            "channelName"
+        ).textContent =
+            channel.name ||
+            "Unnamed Channel";
+
+        document.getElementById(
+            "channelSubs"
+        ).textContent =
+            `${formatNumber(channel.subscribers || 0)} subscribers`;
+
+        document.getElementById(
+            "channelAvatar"
+        ).src =
+            channel.avatar ||
+            "/favicon.ico";
+
+    }catch(error){
+
+        console.warn(
+            "Channel unavailable:",
+            error
+        );
+
+    }
+
+}
 
 
-    if(
-        navigator.share
-    ){
+/* ==============================
+   VIEWS
+============================== */
 
-        navigator.share({
+async function updateViews(){
 
-            title:
-                title,
+    try{
 
-            text:
-                "Watch this video on Let's Study.",
+        await updateDoc(
+            doc(
+                db,
+                "videos",
+                videoId
+            ),
+            {
+                views:increment(1)
+            }
+        );
 
-            url:
-                url
+        video.views =
+            Number(video.views || 0) + 1;
 
-        }).catch(
-            function(){}
+        document.getElementById(
+            "videoStats"
+        ).textContent =
+            `${formatNumber(video.views)} views • ${formatDate(video.publishedAt || video.createdAt)}`;
+
+    }catch(error){
+
+        console.warn(
+            "View update failed:",
+            error
+        );
+
+    }
+
+}
+
+
+/* ==============================
+   LIKE
+============================== */
+
+async function checkLike(){
+
+    if(!currentUser)
+        return;
+
+    try{
+
+        const q =
+            query(
+                collection(
+                    db,
+                    "videoLikes"
+                ),
+                where(
+                    "videoId",
+                    "==",
+                    videoId
+                ),
+                where(
+                    "userId",
+                    "==",
+                    currentUser.uid
+                ),
+                limit(1)
+            );
+
+        const snap =
+            await getDocs(q);
+
+        liked =
+            !snap.empty;
+
+        updateLikeButton();
+
+    }catch(error){
+
+        console.warn(
+            "Like check failed:",
+            error
+        );
+
+    }
+
+}
+
+
+function updateLikeButton(){
+
+    const button =
+        document.getElementById(
+            "likeBtn"
+        );
+
+    if(liked){
+
+        button.innerHTML =
+            `👍 <span id="likeCount">${formatNumber(video.likes || 0)}</span>`;
+
+        button.style.background =
+            "#111827";
+
+        button.style.color =
+            "#fff";
+
+    }else{
+
+        button.innerHTML =
+            `👍 <span id="likeCount">${formatNumber(video.likes || 0)}</span>`;
+
+        button.style.background =
+            "#fff";
+
+        button.style.color =
+            "#111827";
+
+    }
+
+}
+
+
+window.toggleLike = async function(){
+
+    if(!currentUser){
+
+        showToast(
+            "Please sign in to like this video."
         );
 
         return;
 
     }
 
+    try{
 
-    if(
-        navigator.clipboard
-    ){
+        const q =
+            query(
+                collection(
+                    db,
+                    "videoLikes"
+                ),
+                where(
+                    "videoId",
+                    "==",
+                    videoId
+                ),
+                where(
+                    "userId",
+                    "==",
+                    currentUser.uid
+                ),
+                limit(1)
+            );
 
-        navigator.clipboard
-            .writeText(
-                url
-            )
-            .then(
-                function(){
+        const snap =
+            await getDocs(q);
 
-                    showToast(
-                        "Video link copied."
-                    );
+        if(snap.empty){
 
-                }
-            )
-            .catch(
-                function(){
-
-                    showToast(
-                        "Unable to copy link."
-                    );
-
+            await addDoc(
+                collection(
+                    db,
+                    "videoLikes"
+                ),
+                {
+                    videoId,
+                    userId:
+                        currentUser.uid,
+                    createdAt:
+                        serverTimestamp()
                 }
             );
 
-        return;
+            await updateDoc(
+                doc(
+                    db,
+                    "videos",
+                    videoId
+                ),
+                {
+                    likes:
+                        increment(1)
+                }
+            );
 
-    }
+            video.likes =
+                Number(video.likes || 0) + 1;
+
+            liked = true;
+
+        }else{
+
+            for(const item of snap.docs){
+
+                await deleteDoc(
+                    item.ref
+                );
+
+            }
+
+            await updateDoc(
+                doc(
+                    db,
+                    "videos",
+                    videoId
+                ),
+                {
+                    likes:
+                        increment(-1)
+                }
+            );
+
+                            video.likes =
+                    Math.max(
+                        0,
+                        Number(video.likes || 0) + delta
+                    );
+
+                await updateDoc(
+                    doc(db, "videos", videoId),
+                    {
+                        likes: video.likes,
+                        updatedAt: serverTimestamp()
+                    }
+                );
+
+                liked = delta > 0;
+
+                updateLikeUI();
+
+            } catch (error) {
+
+                console.error(
+                    "Like update failed:",
+                    error
+                );
+
+                showToast(
+                    "Failed to update like"
+                );
+
+            } finally {
+
+                likeBusy = false;
+
+            }
+
+        }
 
 
-    showToast(
-        "Copy the video URL from your browser."
-    );
+        /* ==============================
+           LIKE UI
+        ============================== */
 
-}
+        function updateLikeUI(){
+
+            const button =
+                document.getElementById("likeBtn");
+
+            const count =
+                document.getElementById("likeCount");
+
+            if(!button || !count) return;
+
+            count.textContent =
+                formatNumber(
+                    Number(video.likes || 0)
+                );
+
+            button.classList.toggle(
+                "active",
+                liked
+            );
+
+            button.innerHTML =
+                liked
+                    ? "👍 Liked"
+                    : "👍 Like";
+        }
 
 
-/* =========================
-   COMMENTS
-========================= */
+        /* ==============================
+           SHARE VIDEO
+        ============================== */
 
-document
-    .getElementById(
-        "commentForm"
-    )
-    .addEventListener(
-        "submit",
-        function(event){
+        async function shareVideo(){
 
-            event.preventDefault();
+            if(!video) return;
 
+            const url =
+                window.location.href;
+
+            const shareData = {
+                title:
+                    video.title ||
+                    "Let'sStudy Pro Video",
+
+                text:
+                    video.description ||
+                    video.title ||
+                    "Watch this video on Let'sStudy Pro",
+
+                url
+            };
+
+            try{
+
+                if(
+                    navigator.share
+                ){
+
+                    await navigator.share(
+                        shareData
+                    );
+
+                }else{
+
+                    await copyText(url);
+
+                    showToast(
+                        "Video link copied"
+                    );
+
+                }
+
+                await updateDoc(
+                    doc(db, "videos", videoId),
+                    {
+                        shares:
+                            increment(1),
+                        updatedAt:
+                            serverTimestamp()
+                    }
+                );
+
+                video.shares =
+                    Number(video.shares || 0) + 1;
+
+                updateVideoStats();
+
+            }catch(error){
+
+                if(
+                    error?.name !==
+                    "AbortError"
+                ){
+
+                    console.error(
+                        "Share failed:",
+                        error
+                    );
+
+                }
+
+            }
+
+        }
+
+
+        /* ==============================
+           COMMENTS
+        ============================== */
+
+        async function loadComments(){
+
+            const list =
+                document.getElementById(
+                    "commentsList"
+                );
+
+            if(!list) return;
+
+            list.innerHTML =
+                `<div class="loading">
+                    Loading comments...
+                </div>`;
+
+            try{
+
+                const q =
+                    query(
+                        collection(
+                            db,
+                            "comments"
+                        ),
+                        where(
+                            "videoId",
+                            "==",
+                            videoId
+                        ),
+                        orderBy(
+                            "createdAt",
+                            "desc"
+                        ),
+                        limit(50)
+                    );
+
+                const snapshot =
+                    await getDocs(q);
+
+                comments = [];
+
+                snapshot.forEach(
+                    item => {
+
+                        comments.push({
+                            id: item.id,
+                            ...item.data()
+                        });
+
+                    }
+                );
+
+                renderComments();
+
+            }catch(error){
+
+                console.error(
+                    "Comments loading failed:",
+                    error
+                );
+
+                list.innerHTML =
+                    `<div class="empty">
+                        Unable to load comments.
+                    </div>`;
+
+            }
+
+        }
+
+
+        function renderComments(){
+
+            const list =
+                document.getElementById(
+                    "commentsList"
+                );
+
+            const count =
+                document.getElementById(
+                    "commentCount"
+                );
+
+            if(count){
+
+                count.textContent =
+                    formatNumber(
+                        comments.length
+                    );
+
+            }
+
+            if(!list) return;
+
+            if(!comments.length){
+
+                list.innerHTML =
+                    `<div class="empty">
+                        No comments yet.
+                        Be the first to comment.
+                    </div>`;
+
+                return;
+
+            }
+
+            list.innerHTML =
+                comments.map(
+                    comment => {
+
+                        const name =
+                            escapeHTML(
+                                comment.userName ||
+                                comment.displayName ||
+                                "User"
+                            );
+
+                        const text =
+                            escapeHTML(
+                                comment.text ||
+                                comment.message ||
+                                ""
+                            );
+
+                        const avatar =
+                            escapeHTML(
+                                comment.userImage ||
+                                comment.avatar ||
+                                `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}`
+                            );
+
+                        return `
+                        <article class="comment">
+
+                            <img
+                                src="${avatar}"
+                                alt="${name}"
+                                class="comment-avatar"
+                                onerror="this.src='/favicon.ico'"
+                            >
+
+                            <div class="comment-content">
+
+                                <div class="comment-head">
+
+                                    <strong>
+                                        ${name}
+                                    </strong>
+
+                                    <span>
+                                        ${formatDate(
+                                            comment.createdAt
+                                        )}
+                                    </span>
+
+                                </div>
+
+                                <p>
+                                    ${text}
+                                </p>
+
+                            </div>
+
+                        </article>
+                        `;
+
+                    }
+                ).join("");
+
+        }
+
+
+        /* ==============================
+           ADD COMMENT
+        ============================== */
+
+        async function addComment(){
 
             const input =
                 document.getElementById(
                     "commentInput"
                 );
 
+            if(!input) return;
 
             const text =
                 input.value.trim();
 
-
             if(!text){
+
+                showToast(
+                    "Write a comment first"
+                );
 
                 return;
 
             }
 
+            const user =
+                auth.currentUser;
 
-            const comment =
-                document.createElement(
-                    "div"
+            if(!user){
+
+                showToast(
+                    "Please login to comment"
                 );
 
+                return;
 
-            comment.className =
-                "comment";
+            }
 
+            try{
 
-            const strong =
-                document.createElement(
-                    "strong"
+                const userName =
+                    user.displayName ||
+                    user.email?.split("@")[0] ||
+                    "User";
+
+                const userImage =
+                    user.photoURL || "";
+
+                await addDoc(
+                    collection(
+                        db,
+                        "comments"
+                    ),
+                    {
+                        videoId,
+
+                        userId:
+                            user.uid,
+
+                        userName,
+
+                        userEmail:
+                            user.email || "",
+
+                        userImage,
+
+                        text,
+
+                        createdAt:
+                            serverTimestamp(),
+
+                        updatedAt:
+                            serverTimestamp()
+                    }
                 );
 
+                await updateDoc(
+                    doc(
+                        db,
+                        "videos",
+                        videoId
+                    ),
+                    {
+                        commentsCount:
+                            increment(1),
 
-            strong.textContent =
-                "You";
-
-
-            const paragraph =
-                document.createElement(
-                    "p"
+                        updatedAt:
+                            serverTimestamp()
+                    }
                 );
 
+                input.value = "";
 
-            paragraph.textContent =
-                text;
+                video.commentsCount =
+                    Number(
+                        video.commentsCount || 0
+                    ) + 1;
 
+                updateVideoStats();
 
-            comment.appendChild(
-                strong
-            );
+                await loadComments();
 
-
-            comment.appendChild(
-                paragraph
-            );
-
-
-            document
-                .getElementById(
-                    "commentsList"
-                )
-                .prepend(
-                    comment
+                showToast(
+                    "Comment added"
                 );
 
+            }catch(error){
 
-            input.value =
-                "";
-
-
-            updateCommentCount();
-
-
-            showToast(
-                "Comment added."
-            );
-
-        }
-    );
-
-
-function updateCommentCount(){
-
-    const list =
-        document.getElementById(
-            "commentsList"
-        );
-
-
-    const count =
-        list.children.length;
-
-
-    document.getElementById(
-        "commentCount"
-    ).textContent =
-        "(" + count + ")";
-
-}
-
-
-/* =========================
-   RESTORE USER ACTIONS
-========================= */
-
-function restoreActions(){
-
-    const videoId =
-        getVideoId();
-
-
-    const liked =
-        localStorage.getItem(
-            "liked_" +
-            videoId
-        ) === "true";
-
-
-    const saved =
-        localStorage.getItem(
-            "saved_" +
-            videoId
-        ) === "true";
-
-
-    const followed =
-        localStorage.getItem(
-            "letsStudyFollowed"
-        ) === "true";
-
-
-    const likeButton =
-        document.getElementById(
-            "likeButton"
-        );
-
-
-    const saveButton =
-        document.getElementById(
-            "saveButton"
-        );
-
-
-    const followButton =
-        document.getElementById(
-            "followButton"
-        );
-
-
-    if(likeButton){
-
-        likeButton.textContent =
-            liked
-                ? "👍 Liked"
-                : "👍 Like";
-
-    }
-
-
-    if(saveButton){
-
-        saveButton.textContent =
-            saved
-                ? "🔖 Saved"
-                : "🔖 Save";
-
-    }
-
-
-    if(followButton){
-
-        followButton.textContent =
-            followed
-                ? "Following"
-                : "Follow";
-
-    }
-
-}
-
-
-/* =========================
-   KEYBOARD SHORTCUTS
-========================= */
-
-document.addEventListener(
-    "keydown",
-    function(event){
-
-        const active =
-            document.activeElement;
-
-
-        const typing =
-            active &&
-            (
-                active.tagName === "INPUT" ||
-                active.tagName === "TEXTAREA" ||
-                active.tagName === "SELECT"
-            );
-
-
-        if(
-            event.key === "/" &&
-            !typing
-        ){
-
-            event.preventDefault();
-
-
-            const commentInput =
-                document.getElementById(
-                    "commentInput"
+                console.error(
+                    "Comment failed:",
+                    error
                 );
 
-
-            if(commentInput){
-
-                commentInput.focus();
+                showToast(
+                    "Unable to add comment"
+                );
 
             }
 
         }
 
 
-        if(
-            event.key === " " &&
-            !typing
-        ){
+        /* ==============================
+           SUBSCRIBE CHANNEL
+        ============================== */
 
-            event.preventDefault();
+        async function subscribeChannel(){
 
+            const user =
+                auth.currentUser;
 
-            const player =
-                document.getElementById(
-                    "videoPlayer"
+            if(!user){
+
+                showToast(
+                    "Please login to subscribe"
                 );
 
+                return;
+
+            }
 
             if(
-                player &&
-                player.src
+                !video?.channelId
             ){
 
-                if(player.paused){
+                showToast(
+                    "Channel unavailable"
+                );
 
-                    player.play();
+                return;
+
+            }
+
+            try{
+
+                const subscriptionId =
+                    `${user.uid}_${video.channelId}`;
+
+                const subscriptionRef =
+                    doc(
+                        db,
+                        "subscriptions",
+                        subscriptionId
+                    );
+
+                const existing =
+                    await getDoc(
+                        subscriptionRef
+                    );
+
+                if(existing.exists()){
+
+                    await deleteDoc(
+                        subscriptionRef
+                    );
+
+                    await updateDoc(
+                        doc(
+                            db,
+                            "channels",
+                            video.channelId
+                        ),
+                        {
+                            subscribers:
+                                increment(-1),
+
+                            updatedAt:
+                                serverTimestamp()
+                        }
+                    );
+
+                    subscribed = false;
 
                 }else{
 
-                    player.pause();
+                    await setDoc(
+                        subscriptionRef,
+                        {
+                            userId:
+                                user.uid,
+
+                            channelId:
+                                video.channelId,
+
+                            userEmail:
+                                user.email || "",
+
+                            createdAt:
+                                serverTimestamp()
+                        }
+                    );
+
+                    await updateDoc(
+                        doc(
+                            db,
+                            "channels",
+                            video.channelId
+                        ),
+                        {
+                            subscribers:
+                                increment(1),
+
+                            updatedAt:
+                                serverTimestamp()
+                        }
+                    );
+
+                    subscribed = true;
+
+                }
+
+                updateSubscribeUI();
+
+            }catch(error){
+
+                console.error(
+                    "Subscription failed:",
+                    error
+                );
+
+                showToast(
+                    "Unable to update subscription"
+                );
+
+            }
+
+        }
+
+
+        /* ==============================
+           SUBSCRIBE UI
+        ============================== */
+
+        function updateSubscribeUI(){
+
+            const button =
+                document.getElementById(
+                    "subscribeBtn"
+                );
+
+            if(!button) return;
+
+            button.textContent =
+                subscribed
+                    ? "Subscribed"
+                    : "Subscribe";
+
+            button.classList.toggle(
+                "subscribed",
+                subscribed
+            );
+
+        }
+
+
+        /* ==============================
+           CHECK SUBSCRIPTION
+        ============================== */
+
+        async function checkSubscription(){
+
+            const user =
+                auth.currentUser;
+
+            if(
+                !user ||
+                !video?.channelId
+            ){
+
+                subscribed = false;
+
+                updateSubscribeUI();
+
+                return;
+
+            }
+
+            try{
+
+                const ref =
+                    doc(
+                        db,
+                        "subscriptions",
+                        `${user.uid}_${video.channelId}`
+                    );
+
+                const snapshot =
+                    await getDoc(ref);
+
+                subscribed =
+                    snapshot.exists();
+
+                updateSubscribeUI();
+
+            }catch(error){
+
+                console.error(
+                    "Subscription check failed:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        /* ==============================
+           CHANNEL
+        ============================== */
+
+        async function loadChannel(){
+
+            if(!video?.channelId){
+
+                return;
+
+            }
+
+            try{
+
+                const snapshot =
+                    await getDoc(
+                        doc(
+                            db,
+                            "channels",
+                            video.channelId
+                        )
+                    );
+
+                if(
+                    !snapshot.exists()
+                ){
+
+                    return;
+
+                }
+
+                channel = {
+                    id:
+                        snapshot.id,
+
+                    ...snapshot.data()
+                };
+
+                renderChannel();
+
+            }catch(error){
+
+                console.error(
+                    "Channel loading failed:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        function renderChannel(){
+
+            if(!channel) return;
+
+            const name =
+                channel.name ||
+                channel.ownerEmail ||
+                "Channel";
+
+            const avatar =
+                channel.avatar ||
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}`;
+
+            const nameElement =
+                document.getElementById(
+                    "channelName"
+                );
+
+            const avatarElement =
+                document.getElementById(
+                    "channelAvatar"
+                );
+
+            const subscribersElement =
+                document.getElementById(
+                    "subscriberCount"
+                );
+
+            if(nameElement){
+
+                nameElement.textContent =
+                    name;
+
+            }
+
+            if(avatarElement){
+
+                avatarElement.src =
+                    avatar;
+
+            }
+
+            if(subscribersElement){
+
+                subscribersElement.textContent =
+                    `${formatNumber(
+                        Number(
+                            channel.subscribers || 0
+                        )
+                    )} subscribers`;
+
+            }
+
+            const verified =
+                document.getElementById(
+                    "verifiedBadge"
+                );
+
+            if(verified){
+
+                verified.style.display =
+                    channel.verified
+                        ? "inline-flex"
+                        : "none";
+
+            }
+
+        }
+
+
+        /* ==============================
+           RELATED VIDEOS
+        ============================== */
+
+        async function loadRelatedVideos(){
+
+            const container =
+                document.getElementById(
+                    "relatedVideos"
+                );
+
+            if(!container) return;
+
+            try{
+
+                let snapshot;
+
+                if(video.category){
+
+                    const q =
+                        query(
+                            collection(
+                                db,
+                                "videos"
+                            ),
+                            where(
+                                "category",
+                                "==",
+                                video.category
+                            ),
+                            where(
+                                "status",
+                                "==",
+                                "published"
+                            ),
+                            limit(12)
+                        );
+
+                    snapshot =
+                        await getDocs(q);
+
+                }else{
+
+                    const q =
+                        query(
+                            collection(
+                                db,
+                                "videos"
+                            ),
+                            where(
+                                "status",
+                                "==",
+                                "published"
+                            ),
+                            limit(12)
+                        );
+
+                    snapshot =
+                        await getDocs(q);
+
+                }
+
+                const related = [];
+
+                snapshot.forEach(
+                    item => {
+
+                        if(
+                            item.id !== videoId
+                        ){
+
+                            related.push({
+                                id:
+                                    item.id,
+
+                                ...item.data()
+                            });
+
+                        }
+
+                    }
+                );
+
+                renderRelatedVideos(
+                    related
+                );
+
+            }catch(error){
+
+                console.error(
+                    "Related videos failed:",
+                    error
+                );
+
+                        }
+
+        }
+
+        /* ==============================
+           VIDEO ACTIONS
+        ============================== */
+
+        async function likeVideo(){
+
+            if(!videoId || !currentVideo){
+                return;
+            }
+
+            try{
+
+                const ref =
+                    doc(db,"videos",videoId);
+
+                const currentLikes =
+                    Number(currentVideo.likes || 0);
+
+                const liked =
+                    localStorage.getItem(
+                        `liked_${videoId}`
+                    ) === "true";
+
+                const nextLikes =
+                    liked
+                        ? Math.max(0,currentLikes - 1)
+                        : currentLikes + 1;
+
+                await updateDoc(ref,{
+                    likes: nextLikes,
+                    updatedAt: serverTimestamp()
+                });
+
+                currentVideo.likes = nextLikes;
+
+                localStorage.setItem(
+                    `liked_${videoId}`,
+                    String(!liked)
+                );
+
+                updateVideoStats();
+
+                showToast(
+                    liked
+                        ? "Like removed"
+                        : "Video liked ❤️"
+                );
+
+            }catch(error){
+
+                console.error(
+                    "Like video failed:",
+                    error
+                );
+
+                showToast(
+                    "Unable to update like"
+                );
+
+            }
+
+        }
+
+
+        async function shareVideo(){
+
+            const url =
+                window.location.href;
+
+            const title =
+                currentVideo?.title ||
+                "Let'sStudy Pro Video";
+
+            try{
+
+                if(
+                    navigator.share
+                ){
+
+                    await navigator.share({
+                        title:title,
+                        text:
+                            `Watch ${title} on Let'sStudy Pro`,
+                        url:url
+                    });
+
+                }else{
+
+                    await copyText(url);
+
+                    showToast(
+                        "Video link copied"
+                    );
+
+                }
+
+                if(currentVideo){
+
+                    const ref =
+                        doc(
+                            db,
+                            "videos",
+                            videoId
+                        );
+
+                    const shares =
+                        Number(
+                            currentVideo.shares || 0
+                        ) + 1;
+
+                    await updateDoc(ref,{
+                        shares:shares,
+                        updatedAt:
+                            serverTimestamp()
+                    });
+
+                    currentVideo.shares =
+                        shares;
+
+                    updateVideoStats();
+
+                }
+
+            }catch(error){
+
+                console.error(
+                    "Share video failed:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        /* ==============================
+           COMMENTS
+        ============================== */
+
+        async function loadComments(){
+
+            if(!videoId){
+                return;
+            }
+
+            const container =
+                document.getElementById(
+                    "commentsList"
+                );
+
+            if(!container){
+                return;
+            }
+
+            container.innerHTML =
+                `<div class="loading">
+                    Loading comments...
+                </div>`;
+
+            try{
+
+                const commentsRef =
+                    collection(
+                        db,
+                        "videos",
+                        videoId,
+                        "comments"
+                    );
+
+                const snap =
+                    await getDocs(
+                        query(
+                            commentsRef,
+                            orderBy(
+                                "createdAt",
+                                "desc"
+                            ),
+                            limit(50)
+                        )
+                    );
+
+                if(snap.empty){
+
+                    container.innerHTML =
+                        `<div class="empty">
+                            No comments yet.
+                            Be the first to comment.
+                        </div>`;
+
+                    return;
+
+                }
+
+                container.innerHTML = "";
+
+                snap.forEach(commentDoc => {
+
+                    const data =
+                        commentDoc.data();
+
+                    const item =
+                        document.createElement(
+                            "div"
+                        );
+
+                    item.className =
+                        "comment";
+
+                    const name =
+                        escapeHTML(
+                            data.userName ||
+                            data.displayName ||
+                            "User"
+                        );
+
+                    const text =
+                        escapeHTML(
+                            data.text ||
+                            data.comment ||
+                            ""
+                        );
+
+                    const avatar =
+                        escapeAttr(
+                            data.userAvatar ||
+                            `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                name
+                            )}`
+                        );
+
+                    item.innerHTML = `
+                        <img
+                            class="comment-avatar"
+                            src="${avatar}"
+                            alt="${name}"
+                            onerror="this.src='https://ui-avatars.com/api/?name=User'"
+                        >
+
+                        <div class="comment-content">
+
+                            <div class="comment-top">
+
+                                <strong>
+                                    ${name}
+                                </strong>
+
+                                <span>
+                                    ${formatDate(
+                                        data.createdAt
+                                    )}
+                                </span>
+
+                            </div>
+
+                            <div class="comment-text">
+                                ${text}
+                            </div>
+
+                        </div>
+                    `;
+
+                    container.appendChild(
+                        item
+                    );
+
+                });
+
+            }catch(error){
+
+                console.error(
+                    "Comments failed:",
+                    error
+                );
+
+                container.innerHTML =
+                    `<div class="empty">
+                        Comments could not be loaded.
+                    </div>`;
+
+            }
+
+        }
+
+
+        async function submitComment(){
+
+            if(!currentUser){
+
+                showToast(
+                    "Please sign in to comment"
+                );
+
+                return;
+
+            }
+
+            if(!videoId){
+                return;
+            }
+
+            const input =
+                document.getElementById(
+                    "commentInput"
+                );
+
+            if(!input){
+                return;
+            }
+
+            const text =
+                input.value.trim();
+
+            if(!text){
+
+                showToast(
+                    "Write a comment first"
+                );
+
+                return;
+
+            }
+
+            const button =
+                document.getElementById(
+                    "commentButton"
+                );
+
+            try{
+
+                if(button){
+                    button.disabled = true;
+                    button.textContent =
+                        "Posting...";
+                }
+
+                await addDoc(
+                    collection(
+                        db,
+                        "videos",
+                        videoId,
+                        "comments"
+                    ),
+                    {
+                        userId:
+                            currentUser.uid,
+
+                        userName:
+                            currentUser.displayName ||
+                            currentUser.email?.split("@")[0] ||
+                            "User",
+
+                        userEmail:
+                            currentUser.email ||
+                            "",
+
+                        userAvatar:
+                            currentUser.photoURL ||
+                            "",
+
+                        text:text,
+
+                        createdAt:
+                            serverTimestamp()
+                    }
+                );
+
+                const videoRef =
+                    doc(
+                        db,
+                        "videos",
+                        videoId
+                    );
+
+                const commentsCount =
+                    Number(
+                        currentVideo.commentsCount ||
+                        0
+                    ) + 1;
+
+                await updateDoc(
+                    videoRef,
+                    {
+                        commentsCount:
+                            commentsCount,
+
+                        updatedAt:
+                            serverTimestamp()
+                    }
+                );
+
+                currentVideo.commentsCount =
+                    commentsCount;
+
+                input.value = "";
+
+                updateVideoStats();
+
+                await loadComments();
+
+                showToast(
+                    "Comment posted"
+                );
+
+            }catch(error){
+
+                console.error(
+                    "Comment failed:",
+                    error
+                );
+
+                showToast(
+                    "Unable to post comment"
+                );
+
+            }finally{
+
+                if(button){
+
+                    button.disabled = false;
+
+                    button.textContent =
+                        "Comment";
 
                 }
 
@@ -1500,61 +2472,2167 @@ document.addEventListener(
 
         }
 
-    }
-);
 
+        /* ==============================
+           RELATED VIDEOS
+        ============================== */
 
-/* =========================
-   VIDEO ERROR HANDLER
-========================= */
+        async function loadRelatedVideos(){
 
-document
-    .getElementById(
-        "videoPlayer"
-    )
-    .addEventListener(
-        "error",
-        function(){
-
-            const placeholder =
+            const container =
                 document.getElementById(
-                    "playerPlaceholder"
+                    "relatedVideos"
                 );
 
+            if(!container){
+                return;
+            }
 
-            placeholder.style.display =
-                "flex";
+            try{
 
+                let videos = [];
 
-            showToast(
-                "Unable to load this video."
-            );
+                if(currentVideo?.category){
+
+                    const snap =
+                        await getDocs(
+                            query(
+                                collection(
+                                    db,
+                                    "videos"
+                                ),
+                                where(
+                                    "category",
+                                    "==",
+                                    currentVideo.category
+                                ),
+                                where(
+                                    "status",
+                                    "==",
+                                    "published"
+                                ),
+                                limit(12)
+                            )
+                        );
+
+                    snap.forEach(item => {
+
+                        if(
+                            item.id !== videoId
+                        ){
+
+                            videos.push({
+                                id:item.id,
+                                ...item.data()
+                            });
+
+                        }
+
+                    });
+
+                }
+
+                if(
+                    videos.length < 6
+                ){
+
+                    const snap =
+                        await getDocs(
+                            query(
+                                collection(
+                                    db,
+                                    "videos"
+                                ),
+                                where(
+                                    "status",
+                                    "==",
+                                    "published"
+                                ),
+                                limit(12)
+                            )
+                        );
+
+                    snap.forEach(item => {
+
+                        if(
+                            item.id !== videoId &&
+                            !videos.some(
+                                v =>
+                                    v.id === item.id
+                            )
+                        ){
+
+                            videos.push({
+                                id:item.id,
+                                ...item.data()
+                            });
+
+                        }
+
+                    });
+
+                }
+
+                videos =
+                    videos.slice(0,8);
+
+                if(!videos.length){
+
+                    container.innerHTML =
+                        `<div class="empty">
+                            No related videos.
+                        </div>`;
+
+                    return;
+
+                }
+
+                container.innerHTML = "";
+
+                videos.forEach(item => {
+
+                    const card =
+                        document.createElement(
+                            "article"
+                        );
+
+                    card.className =
+                        "related-card";
+
+                    const thumbnail =
+                        escapeAttr(
+                            item.thumbnail ||
+                            "https://via.placeholder.com/640x360?text=Let'sStudy+Pro"
+                        );
+
+                    const title =
+                        escapeHTML(
+                            item.title ||
+                            "Untitled Video"
+                        );
+
+                    const channel =
+                        escapeHTML(
+                            item.creatorName ||
+                            "Let'sStudy Pro"
+                        );
+
+                    card.innerHTML = `
+                        <a
+                            href="watch.html?id=${encodeURIComponent(
+                                item.id
+                            )}"
+                            class="related-thumb"
+                        >
+
+                            <img
+                                src="${thumbnail}"
+                                alt="${title}"
+                                loading="lazy"
+                            >
+
+                            ${
+                                item.duration
+                                    ? `<span class="duration">
+                                        ${escapeHTML(
+                                            String(
+                                                item.duration
+                                            )
+                                        )}
+                                      </span>`
+                                    : ""
+                            }
+
+                        </a>
+
+                        <div class="related-info">
+
+                            <h3>
+                                <a
+                                    href="watch.html?id=${encodeURIComponent(
+                                        item.id
+                                    )}"
+                                >
+                                    ${title}
+                                </a>
+                            </h3>
+
+                            <p>
+                                ${channel}
+                            </p>
+
+                            <small>
+                                ${formatViews(
+                                    item.views || 0
+                                )} views
+                            </small>
+
+                        </div>
+                    `;
+
+                    container.appendChild(
+                        card
+                    );
+
+                });
+
+            }catch(error){
+
+                console.error(
+                    "Related videos failed:",
+                    error
+                );
+
+                container.innerHTML =
+                    `<div class="empty">
+                        Related videos could not be loaded.
+                    </div>`;
+
+            }
 
         }
+
+
+        /* ==============================
+           CHANNEL
+        ============================== */
+
+        async function loadChannel(){
+
+            if(!currentVideo?.channelId){
+                return;
+            }
+
+            const channelId =
+                currentVideo.channelId;
+
+            try{
+
+                const channelSnap =
+                    await getDoc(
+                        doc(
+                            db,
+                            "channels",
+                            channelId
+                        )
+                    );
+
+                if(
+                    !channelSnap.exists()
+                ){
+                    return;
+                }
+
+                const channel =
+                    channelSnap.data();
+
+                const name =
+                    channel.name ||
+                    currentVideo.creatorName ||
+                    "Channel";
+
+                const avatar =
+                    channel.avatar ||
+                    currentVideo.creatorImage ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        name
+                    )}`;
+
+                const channelName =
+                    document.getElementById(
+                        "channelName"
+                    );
+
+                const channelAvatar =
+                    document.getElementById(
+                        "channelAvatar"
+                    );
+
+                const channelSubscribers =
+                    document.getElementById(
+                        "channelSubscribers"
+                    );
+
+                if(channelName){
+                    channelName.textContent =
+                        name;
+                }
+
+                if(channelAvatar){
+                    channelAvatar.src =
+                        avatar;
+                }
+
+                if(channelSubscribers){
+
+                    channelSubscribers.textContent =
+                        `${formatViews(
+                            channel.subscribers || 0
+                        )} subscribers`;
+
+                }
+
+            }catch(error){
+
+                console.error(
+                    "Channel loading failed:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        /* ==============================
+           SUBSCRIBE
+        ============================== */
+
+        async function subscribeChannel(){
+
+            if(!currentUser){
+
+                showToast(
+                    "Please sign in to subscribe"
+                );
+
+                return;
+
+            }
+
+            if(
+                !currentVideo?.channelId
+            ){
+                showToast(
+                    "Channel unavailable"
+                );
+
+                return;
+
+            }
+
+            const channelId =
+                currentVideo.channelId;
+
+            try{
+
+                const subscriptionId =
+                    `${currentUser.uid}_${channelId}`;
+
+                const subscriptionRef =
+                    doc(
+                        db,
+                                                  "channelSubscriptions",
+                        subscriptionId
+                    );
+
+                    const existing =
+                        await getDoc(
+                            subscriptionRef
+                        );
+
+                    const channelRef =
+                        doc(
+                            db,
+                            "channels",
+                            channelId
+                        );
+
+                    const channelSnap =
+                        await getDoc(
+                            channelRef
+                        );
+
+                    const channelData =
+                        channelSnap.exists()
+                            ? channelSnap.data()
+                            : {};
+
+                    let subscribers =
+                        Number(
+                            channelData.subscribers || 0
+                        );
+
+                    if(existing.exists()){
+
+                        /* ==========================
+                           UNSUBSCRIBE
+                        ========================== */
+
+                        await deleteDoc(
+                            subscriptionRef
+                        );
+
+                        subscribers =
+                            Math.max(
+                                0,
+                                subscribers - 1
+                            );
+
+                        if(channelSnap.exists()){
+
+                            await updateDoc(
+                                channelRef,
+                                {
+                                    subscribers,
+                                    updatedAt:
+                                        serverTimestamp()
+                                }
+                            );
+
+                        }
+
+                        setSubscribeButton(false);
+
+                        showToast(
+                            "Unsubscribed successfully"
+                        );
+
+                    }else{
+
+                        /* ==========================
+                           SUBSCRIBE
+                        ========================== */
+
+                        await setDoc(
+                            subscriptionRef,
+                            {
+                                userId:
+                                    currentUser.uid,
+
+                                channelId:
+                                    channelId,
+
+                                channelName:
+                                    channelData.name ||
+                                    currentVideo.creatorName ||
+                                    "Channel",
+
+                                userEmail:
+                                    currentUser.email || "",
+
+                                createdAt:
+                                    serverTimestamp()
+                            }
+                        );
+
+                        subscribers += 1;
+
+                        if(channelSnap.exists()){
+
+                            await updateDoc(
+                                channelRef,
+                                {
+                                    subscribers,
+                                    updatedAt:
+                                        serverTimestamp()
+                                }
+                            );
+
+                        }
+
+                        setSubscribeButton(true);
+
+                        showToast(
+                            "Subscribed successfully 🔔"
+                        );
+
+                        /* ==========================
+                           CREATE NOTIFICATION
+                        ========================== */
+
+                        try{
+
+                            await addDoc(
+                                collection(
+                                    db,
+                                    "notifications"
+                                ),
+                                {
+                                    userId:
+                                        currentVideo.creatorId ||
+                                        channelData.ownerId ||
+                                        "",
+
+                                    type:
+                                        "new_subscriber",
+
+                                    title:
+                                        "New Subscriber",
+
+                                    message:
+                                        `${
+                                            currentUser.displayName ||
+                                            currentUser.email ||
+                                            "A user"
+                                        } subscribed to your channel.`,
+
+                                    videoId:
+                                        videoId || "",
+
+                                    channelId:
+                                        channelId,
+
+                                    senderId:
+                                        currentUser.uid,
+
+                                    read:false,
+
+                                    createdAt:
+                                        serverTimestamp()
+                                }
+                            );
+
+                        }catch(notificationError){
+
+                            console.warn(
+                                "Notification creation failed:",
+                                notificationError
+                            );
+
+                        }
+
+                    }
+
+                    /* Refresh channel information */
+
+                    await loadChannel();
+
+                }catch(error){
+
+                    console.error(
+                        "Subscription failed:",
+                        error
+                    );
+
+                    showToast(
+                        "Subscription failed. Please try again."
+                    );
+
+                }
+
+            }
+
+
+            async function checkSubscription(){
+
+                if(
+                    !currentUser ||
+                    !currentVideo?.channelId
+                ){
+
+                    setSubscribeButton(false);
+
+                    return;
+
+                }
+
+                try{
+
+                    const subscriptionId =
+                        `${currentUser.uid}_${currentVideo.channelId}`;
+
+                    const subscriptionRef =
+                        doc(
+                            db,
+                            "channelSubscriptions",
+                            subscriptionId
+                        );
+
+                    const snap =
+                        await getDoc(
+                            subscriptionRef
+                        );
+
+                    setSubscribeButton(
+                        snap.exists()
+                    );
+
+                }catch(error){
+
+                    console.error(
+                        "Subscription check failed:",
+                        error
+                    );
+
+                    setSubscribeButton(false);
+
+                }
+
+            }
+
+
+            function setSubscribeButton(
+                subscribed
+            ){
+
+                const button =
+                    document.getElementById(
+                        "subscribeButton"
+                    );
+
+                if(!button){
+                    return;
+                }
+
+                button.textContent =
+                    subscribed
+                        ? "Subscribed"
+                        : "Subscribe";
+
+                button.classList.toggle(
+                    "subscribed",
+                    subscribed
+                );
+
+                button.setAttribute(
+                    "aria-pressed",
+                    String(subscribed)
+                );
+
+            }
+
+
+            /* ==============================
+               LOAD VIDEO
+            ============================== */
+
+            async function loadVideo(){
+
+                if(!videoId){
+
+                    showPageError(
+                        "Video ID is missing."
+                    );
+
+                    return;
+
+                }
+
+                try{
+
+                    const videoRef =
+                        doc(
+                            db,
+                            "videos",
+                            videoId
+                        );
+
+                    const videoSnap =
+                        await getDoc(
+                            videoRef
+                        );
+
+                    if(
+                        !videoSnap.exists()
+                    ){
+
+                        showPageError(
+                            "Video not found."
+                        );
+
+                        return;
+
+                    }
+
+                    video = {
+                        id:videoSnap.id,
+                        ...videoSnap.data()
+                    };
+
+                    /* ==========================
+                       VIDEO ACCESS
+                    ========================== */
+
+                    if(
+                        video.status &&
+                        video.status !== "published"
+                    ){
+
+                        const owner =
+                            currentUser &&
+                            (
+                                currentUser.uid ===
+                                video.creatorId
+                            );
+
+                        if(!owner){
+
+                            showPageError(
+                                "This video is not available."
+                            );
+
+                            return;
+
+                        }
+
+                    }
+
+                    renderVideo();
+
+                    renderVideoInfo();
+
+                    await loadChannel();
+
+                    await checkSubscription();
+
+                    await loadComments();
+
+                    await loadRelatedVideos();
+
+                    await registerView();
+
+                }catch(error){
+
+                    console.error(
+                        "Video loading failed:",
+                        error
+                    );
+
+                    showPageError(
+                        "Unable to load video."
+                    );
+
+                }
+
+            }
+
+
+            /* ==============================
+               RENDER VIDEO
+            ============================== */
+
+            function renderVideo(){
+
+                const player =
+                    document.getElementById(
+                        "videoPlayer"
+                    );
+
+                if(!player){
+                    return;
+                }
+
+                const videoUrl =
+                    video.videoUrl || "";
+
+                if(!videoUrl){
+
+                    player.innerHTML =
+                        `<div class="player-empty">
+                            Video source unavailable.
+                        </div>`;
+
+                    return;
+
+                }
+
+                const videoType =
+                    String(
+                        video.videoType || ""
+                    ).toLowerCase();
+
+                if(
+                    videoType === "youtube" ||
+                    videoUrl.includes(
+                        "youtube.com"
+                    ) ||
+                    videoUrl.includes(
+                        "youtu.be"
+                    )
+                ){
+
+                    const youtubeId =
+                        getYouTubeId(
+                            videoUrl
+                        );
+
+                    if(youtubeId){
+
+                        player.innerHTML = `
+                            <iframe
+                                src="https://www.youtube.com/embed/${youtubeId}"
+                                title="${escapeAttr(
+                                    video.title ||
+                                    "Let'sStudy Pro Video"
+                                )}"
+                                allow="
+                                    accelerometer;
+                                    autoplay;
+                                    clipboard-write;
+                                    encrypted-media;
+                                    gyroscope;
+                                    picture-in-picture;
+                                    web-share
+                                "
+                                allowfullscreen>
+                            </iframe>
+                        `;
+
+                        return;
+
+                    }
+
+                }
+
+                player.innerHTML = `
+                    <video
+                        controls
+                        playsinline
+                        preload="metadata"
+                        poster="${escapeAttr(
+                            video.thumbnail || ""
+                        )}">
+
+                        <source
+                            src="${escapeAttr(
+                                videoUrl
+                            )}"
+                            type="${escapeAttr(
+                                video.mimeType ||
+                                "video/mp4"
+                            )}">
+
+                        Your browser does not support
+                        HTML5 video.
+
+                    </video>
+                `;
+
+            }
+
+
+            /* ==============================
+               VIDEO INFORMATION
+            ============================== */
+
+            function renderVideoInfo(){
+
+                if(!video){
+                    return;
+                }
+
+                const title =
+                    document.getElementById(
+                        "videoTitle"
+                    );
+
+                const description =
+                    document.getElementById(
+                        "videoDescription"
+                    );
+
+                const category =
+                    document.getElementById(
+                        "videoCategory"
+                    );
+
+                const creator =
+                    document.getElementById(
+                        "channelName"
+                    );
+
+                if(title){
+
+                    title.textContent =
+                        video.title ||
+                        "Untitled Video";
+
+                }
+
+                if(description){
+
+                    description.textContent =
+                        video.description ||
+                        "";
+
+                }
+
+                if(category){
+
+                    category.textContent =
+                        video.category ||
+                        "General";
+
+                }
+
+                if(creator){
+
+                    creator.textContent =
+                        video.creatorName ||
+                        "Let'sStudy Pro";
+
+                }
+
+                updateVideoStats();
+
+            }
+
+
+            function updateVideoStats(){
+
+                if(!video){
+                    return;
+                }
+
+                const views =
+                    document.getElementById(
+                        "videoViews"
+                    );
+
+                const likes =
+                    document.getElementById(
+                        "videoLikes"
+                    );
+
+                const comments =
+                    document.getElementById(
+                        "videoComments"
+                    );
+
+                const shares =
+                    document.getElementById(
+                        "videoShares"
+                    );
+
+                if(views){
+
+                    views.textContent =
+                        formatViews(
+                            video.views || 0
+                        );
+
+                }
+
+                if(likes){
+
+                    likes.textContent =
+                        formatViews(
+                            video.likes || 0
+                        );
+
+                }
+
+                if(comments){
+
+                    comments.textContent =
+                        formatViews(
+                            video.commentsCount || 0
+                        );
+
+                }
+
+                if(shares){
+
+                    shares.textContent =
+                        formatViews(
+                            video.shares || 0
+                        );
+
+                }
+
+            }
+
+
+            /* ==============================
+               VIEW COUNTER
+            ============================== */
+
+            async function registerView(){
+
+                if(!videoId){
+                    return;
+                }
+
+                const key =
+                    `video_view_${videoId}`;
+
+                if(
+                    sessionStorage.getItem(key)
+                ){
+                    return;
+                }
+
+                sessionStorage.setItem(
+                    key,
+                    "1"
+                );
+
+                try{
+
+                    const videoRef =
+                        doc(
+                            db,
+                            "videos",
+                            videoId
+                        );
+
+                    const views =
+                        Number(
+                            video.views || 0
+                        ) + 1;
+
+                    await updateDoc(
+                        videoRef,
+                        {
+                            views
+                        }
+                    );
+
+                    video.views =
+                        views;
+
+                    updateVideoStats();
+
+                }catch(error){
+
+                    console.error(
+                        "View registration failed:",
+                        error
+                    );
+
+                }
+
+            }
+
+
+            /* ==============================
+               HELPERS
+            ============================== */
+
+            function formatViews(value){
+
+                const number =
+                    Number(value || 0);
+
+                if(
+                    number >= 1000000
+                ){
+
+                    return (
+                        number / 1000000
+                    ).toFixed(1) + "M";
+
+                }
+
+                if(
+                    number >= 1000
+                ){
+
+                    return (
+                        number / 1000
+                    ).toFixed(1) + "K";
+
+                }
+
+                return String(number);
+
+            }
+
+
+            function getYouTubeId(url){
+
+                try{
+
+                    const parsed =
+                        new URL(url);
+
+                    if(
+                        parsed.hostname.includes(
+                            "youtu.be"
+                        )
+                    ){
+
+                        return parsed.pathname
+                            .replace("/","")
+                            .split("/")[0];
+
+                    }
+
+                    if(
+                        parsed.hostname.includes(
+                            "youtube.com"
+                        )
+                    ){
+
+                        if(
+                            parsed.pathname ===
+                            "/watch"
+                        ){
+
+                            return parsed
+                                .searchParams
+                                .get("v");
+
+                        }
+
+                        if(
+                            parsed.pathname
+                                .startsWith("/embed/")
+                        ){
+
+                            return parsed
+                                .pathname
+                                .split("/")[2];
+
+                        }
+
+                        if(
+                            parsed.pathname
+                                                                .startsWith(
+                                    "/shorts/"
+                                )
+                        ){
+
+                            return parsed
+                                .pathname
+                                .split("/")[2];
+
+                        }
+
+                    }
+
+                }catch(error){
+
+                    console.error(
+                        "Failed to parse YouTube URL:",
+                        error
+                    );
+
+                }
+
+                return null;
+
+            }
+
+
+            /* ==============================
+               ESCAPE HTML
+            ============================== */
+
+            function escapeHTML(value){
+
+                return String(
+                    value ?? ""
+                )
+                .replace(/&/g,"&amp;")
+                .replace(/</g,"&lt;")
+                .replace(/>/g,"&gt;")
+                .replace(/"/g,"&quot;")
+                .replace(/'/g,"&#039;");
+
+            }
+
+
+            function escapeAttr(value){
+
+                return escapeHTML(value);
+
+            }
+
+
+            /* ==============================
+               TOGGLE SIDEBAR
+            ============================== */
+
+            function toggleSidebar(){
+
+                const sidebar =
+                    document.getElementById(
+                        "sidebar"
+                    );
+
+                if(!sidebar){
+                    return;
+                }
+
+                sidebar.classList.toggle(
+                    "open"
+                );
+
+            }
+
+
+            /* ==============================
+               TOAST
+            ============================== */
+
+            function showToast(message){
+
+                let toast =
+                    document.getElementById(
+                        "toast"
+                    );
+
+                if(!toast){
+
+                    toast =
+                        document.createElement(
+                            "div"
+                        );
+
+                    toast.id = "toast";
+
+                    toast.style.cssText = `
+                        position:fixed;
+                        left:50%;
+                        bottom:25px;
+                        transform:translateX(-50%)
+                                   translateY(20px);
+                        background:#111827;
+                        color:#fff;
+                        padding:11px 17px;
+                        border-radius:10px;
+                        font-size:13px;
+                        z-index:9999;
+                        opacity:0;
+                        transition:.25s;
+                    `;
+
+                    document.body.appendChild(
+                        toast
+                    );
+
+                }
+
+                toast.textContent =
+                    message;
+
+                toast.style.opacity = "1";
+
+                toast.style.transform =
+                    "translateX(-50%) translateY(0)";
+
+                clearTimeout(
+                    window.__toastTimer
+                );
+
+                window.__toastTimer =
+                    setTimeout(() => {
+
+                        toast.style.opacity =
+                            "0";
+
+                        toast.style.transform =
+                            "translateX(-50%) translateY(20px)";
+
+                    },2500);
+
+            }
+
+
+            /* ==============================
+               PAGE ERROR
+            ============================== */
+
+            function showPageError(message){
+
+                console.error(
+                    message
+                );
+
+                const player =
+                    document.getElementById(
+                        "videoPlayer"
+                    );
+
+                if(player){
+
+                    player.innerHTML = `
+                        <div class="player-empty">
+                            ${escapeHTML(message)}
+                        </div>
+                    `;
+
+                }
+
+                const title =
+                    document.getElementById(
+                        "videoTitle"
+                    );
+
+                if(title){
+
+                    title.textContent =
+                        message;
+
+                }
+
+            }
+
+
+            /* ==============================
+               SHARE VIDEO
+            ============================== */
+
+            async function shareVideo(){
+
+                if(!video){
+                    return;
+                }
+
+                const shareUrl =
+                    window.location.href;
+
+                const shareData = {
+
+                    title:
+                        video.title ||
+                        "Let'sStudy Pro Video",
+
+                    text:
+                        video.description ||
+                        "Watch this video on Let'sStudy Pro.",
+
+                    url:
+                        shareUrl
+
+                };
+
+                try{
+
+                    if(
+                        navigator.share
+                    ){
+
+                        await navigator.share(
+                            shareData
+                        );
+
+                    }else{
+
+                        await navigator.clipboard.writeText(
+                            shareUrl
+                        );
+
+                        showToast(
+                            "Video link copied"
+                        );
+
+                    }
+
+                    try{
+
+                        const videoRef =
+                            doc(
+                                db,
+                                "videos",
+                                videoId
+                            );
+
+                        const shares =
+                            Number(
+                                video.shares || 0
+                            ) + 1;
+
+                        await updateDoc(
+                            videoRef,
+                            {
+                                shares
+                            }
+                        );
+
+                        video.shares =
+                            shares;
+
+                        updateVideoStats();
+
+                    }catch(error){
+
+                        console.warn(
+                            "Share counter failed:",
+                            error
+                        );
+
+                    }
+
+                }catch(error){
+
+                    console.error(
+                        "Share failed:",
+                        error
+                    );
+
+                }
+
+            }
+
+
+            /* ==============================
+               LIKE VIDEO
+            ============================== */
+
+            async function likeVideo(){
+
+                if(!video){
+                    return;
+                }
+
+                if(!currentUser){
+
+                    showToast(
+                        "Please sign in to like this video."
+                    );
+
+                    return;
+
+                }
+
+                try{
+
+                    const likeId =
+                        `${currentUser.uid}_${videoId}`;
+
+                    const likeRef =
+                        doc(
+                            db,
+                            "videoLikes",
+                            likeId
+                        );
+
+                    const likeSnap =
+                        await getDoc(
+                            likeRef
+                        );
+
+                    const videoRef =
+                        doc(
+                            db,
+                            "videos",
+                            videoId
+                        );
+
+                    if(
+                        likeSnap.exists()
+                    ){
+
+                        await deleteDoc(
+                            likeRef
+                        );
+
+                        video.likes =
+                            Math.max(
+                                0,
+                                Number(
+                                    video.likes || 0
+                                ) - 1
+                            );
+
+                        setLikeButton(false);
+
+                    }else{
+
+                        await setDoc(
+                            likeRef,
+                            {
+                                userId:
+                                    currentUser.uid,
+
+                                videoId:
+                                    videoId,
+
+                                createdAt:
+                                    serverTimestamp()
+                            }
+                        );
+
+                        video.likes =
+                            Number(
+                                video.likes || 0
+                            ) + 1;
+
+                        setLikeButton(true);
+
+                    }
+
+                    await updateDoc(
+                        videoRef,
+                        {
+                            likes:
+                                video.likes
+                        }
+                    );
+
+                    updateVideoStats();
+
+                }catch(error){
+
+                    console.error(
+                        "Like failed:",
+                        error
+                    );
+
+                    showToast(
+                        "Unable to update like."
+                    );
+
+                }
+
+            }
+
+
+            function setLikeButton(
+                liked
+            ){
+
+                const button =
+                    document.getElementById(
+                        "likeButton"
+                    );
+
+                if(!button){
+                    return;
+                }
+
+                button.textContent =
+                    liked
+                        ? "❤️ Liked"
+                        : "🤍 Like";
+
+                button.classList.toggle(
+                    "liked",
+                    liked
+                );
+
+            }
+
+
+            /* ==============================
+               INITIALIZE LIKE STATE
+            ============================== */
+
+            async function checkLike(){
+
+                if(
+                    !currentUser ||
+                    !videoId
+                ){
+
+                    setLikeButton(false);
+
+                    return;
+
+                }
+
+                try{
+
+                    const likeId =
+                        `${currentUser.uid}_${videoId}`;
+
+                    const likeRef =
+                        doc(
+                            db,
+                            "videoLikes",
+                            likeId
+                        );
+
+                    const snap =
+                        await getDoc(
+                            likeRef
+                        );
+
+                    setLikeButton(
+                        snap.exists()
+                    );
+
+                }catch(error){
+
+                    console.warn(
+                        "Like state failed:",
+                        error
+                    );
+
+                }
+
+            }
+
+
+            /* ==============================
+               COPY VIDEO LINK
+            ============================== */
+
+            async function copyVideoLink(){
+
+                try{
+
+                    await navigator.clipboard.writeText(
+                        window.location.href
+                    );
+
+                    showToast(
+                        "Video link copied"
+                    );
+
+                }catch(error){
+
+                    const area =
+                        document.createElement(
+                            "textarea"
+                        );
+
+                    area.value =
+                        window.location.href;
+
+                    document.body.appendChild(
+                        area
+                    );
+
+                    area.select();
+
+                    document.execCommand(
+                        "copy"
+                    );
+
+                    area.remove();
+
+                    showToast(
+                        "Video link copied"
+                    );
+
+                }
+
+            }
+
+
+            /* ==============================
+               LOAD RELATED VIDEOS
+            ============================== */
+
+            async function loadRelatedVideos(){
+
+                const container =
+                    document.getElementById(
+                        "relatedVideos"
+                    );
+
+                if(!container){
+                    return;
+                }
+
+                try{
+
+                    const videosRef =
+                        collection(
+                            db,
+                            "videos"
+                        );
+
+                    const snap =
+                        await getDocs(
+                            videosRef
+                        );
+
+                    const related = [];
+
+                    snap.forEach(
+                        item => {
+
+                            if(
+                                item.id === videoId
+                            ){
+                                return;
+                            }
+
+                            const data =
+                                item.data();
+
+                            if(
+                                data.status &&
+                                data.status !==
+                                    "published"
+                            ){
+                                return;
+                            }
+
+                            const sameCategory =
+                                data.category ===
+                                video.category;
+
+                            const sameCreator =
+                                data.creatorId ===
+                                video.creatorId;
+
+                            if(
+                                sameCategory ||
+                                sameCreator
+                            ){
+
+                                related.push({
+                                    id:item.id,
+                                    ...data
+                                });
+
+                            }
+
+                        }
+                    );
+
+                    related.sort(
+                        () =>
+                            Math.random() - .5
+                    );
+
+                    const items =
+                        related.slice(
+                            0,
+                            8
+                        );
+
+                    if(!items.length){
+
+                        container.innerHTML = `
+                            <div class="empty-related">
+                                No related videos found.
+                            </div>
+                        `;
+
+                        return;
+
+                    }
+
+                    container.innerHTML =
+                        items.map(
+                            item => `
+
+                            <a
+                                class="related-video"
+                                href="/watch.html?v=${encodeURIComponent(
+                                    item.id
+                                )}">
+
+                                <div class="related-thumb">
+
+                                    <img
+                                        src="${escapeAttr(
+                                            item.thumbnail ||
+                                            "/favicon.ico"
+                                        )}"
+                                        alt="${escapeAttr(
+                                            item.title ||
+                                            "Video"
+                                        )}"
+                                        loading="lazy">
+
+                                    ${
+                                        item.duration
+                                            ? `
+                                                <span>
+                                                    ${escapeHTML(
+                                                        item.duration
+                                                    )}
+                                                </span>
+                                              `
+                                            : ""
+                                    }
+
+                                </div>
+
+                                <div class="related-info">
+
+                                    <strong>
+                                        ${escapeHTML(
+                                            item.title ||
+                                            "Untitled Video"
+                                        )}
+                                    </strong>
+
+                                    <small>
+                                        ${escapeHTML(
+                                            item.creatorName ||
+                                            "Let'sStudy Pro"
+                                        )}
+                                    </small>
+
+                                    <small>
+                                        ${formatViews(
+                                            item.views || 0
+                                        )} views
+                                    </small>
+
+                                </div>
+
+                            </a>
+
+                        `
+                        ).join("");
+
+                }catch(error){
+
+                    console.error(
+                        "Related videos failed:",
+                        error
+                    );
+
+                }
+
+            }
+
+
+            /* ==============================
+               LOAD CHANNEL
+            ============================== */
+
+            async function loadChannel(){
+
+                if(!video){
+                    return;
+                }
+
+                const channelId =
+                    video.channelId;
+
+                if(!channelId){
+
+                    const name =
+                        document.getElementById(
+                            "channelName"
+                        );
+
+                    if(name){
+
+                        name.textContent =
+                            video.creatorName ||
+                            "Let'sStudy Pro";
+
+                    }
+
+                    return;
+
+                }
+
+                try{
+
+                    const channelRef =
+                        doc(
+                            db,
+                            "channels",
+                            channelId
+                        );
+
+                    const snap =
+                        await getDoc(
+                            channelRef
+                        );
+
+                    if(!snap.exists()){
+                        return;
+                    }
+
+                    const channel =
+                        snap.data();
+
+                    const name =
+                        document.getElementById(
+                            "channelName"
+                        );
+
+                    const avatar =
+                        document.getElementById(
+                            "channelAvatar"
+                        );
+
+                    const subscribers =
+                        document.getElementById(
+                            "channelSubscribers"
+                        );
+
+                    if(name){
+
+                        name.textContent =
+                            channel.name ||
+                            video.creatorName ||
+                            "Channel";
+
+                    }
+
+                    if(avatar){
+
+                        avatar.src =
+                           channel.avatar ||
+    "/favicon.ico";
+
+const channelAvatar =
+    channel.avatar ||
+    "/favicon.ico";
+
+document.getElementById("channelAvatar").src =
+    channelAvatar;
+
+document.getElementById("channelAvatar").alt =
+    channel.name || "Channel";
+
+document.getElementById("channelName").textContent =
+    channel.name || "Unnamed Channel";
+
+document.getElementById("channelHandle").textContent =
+    channel.handle
+        ? `@${String(channel.handle).replace(/^@/, "")}`
+        : "";
+
+document.getElementById("channelDescription").textContent =
+    channel.description || "";
+
+document.getElementById("subscriberCount").textContent =
+    formatNumber(channel.subscribers || 0);
+
+document.getElementById("videoCount").textContent =
+    formatNumber(channel.videosCount || 0);
+
+document.getElementById("viewCount").textContent =
+    formatNumber(channel.totalViews || 0);
+
+const verifiedBadge =
+    document.getElementById("verifiedBadge");
+
+if (verifiedBadge) {
+    verifiedBadge.style.display =
+        channel.verified ? "inline-flex" : "none";
+}
+
+const website =
+    document.getElementById("channelWebsite");
+
+if (website) {
+    if (channel.website) {
+        website.href = channel.website;
+        website.textContent = channel.website;
+        website.style.display = "inline-flex";
+    } else {
+        website.style.display = "none";
+    }
+}
+
+/* ==============================
+   SOCIAL LINKS
+============================== */
+
+const socialContainer =
+    document.getElementById("socialLinks");
+
+if (socialContainer) {
+
+    socialContainer.innerHTML = "";
+
+    const socials =
+        channel.socialLinks || {};
+
+    Object.entries(socials).forEach(
+        ([platform, url]) => {
+
+            if (!url) return;
+
+            const link =
+                document.createElement("a");
+
+            link.href = url;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+
+            link.className =
+                "social-link";
+
+            link.textContent =
+                platform;
+
+            socialContainer.appendChild(link);
+        }
+    );
+}
+
+/* ==============================
+   CHANNEL OWNER
+============================== */
+
+const ownerId =
+    channel.ownerId || "";
+
+const ownerEmail =
+    channel.ownerEmail || "";
+
+const ownerElement =
+    document.getElementById("channelOwner");
+
+if (ownerElement) {
+
+    ownerElement.textContent =
+        ownerEmail ||
+        ownerId ||
+        "Unknown owner";
+}
+
+/* ==============================
+   SUBSCRIBE BUTTON
+============================== */
+
+const subscribeBtn =
+    document.getElementById("subscribeBtn");
+
+if (subscribeBtn) {
+
+    subscribeBtn.dataset.channelId =
+        channelId;
+
+    subscribeBtn.addEventListener(
+        "click",
+        () => subscribeToChannel(channelId)
+    );
+}
+
+/* ==============================
+   LOAD CHANNEL VIDEOS
+============================== */
+
+await loadChannelVideos(channelId);
+
+/* ==============================
+   CHANNEL STATUS
+============================== */
+
+const status =
+    String(channel.status || "published")
+        .toLowerCase();
+
+const statusElement =
+    document.getElementById("channelStatus");
+
+if (statusElement) {
+
+    statusElement.textContent =
+        status;
+
+    statusElement.className =
+        `status ${status}`;
+}
+
+/* ==============================
+   PUBLISHED DATE
+============================== */
+
+const publishedElement =
+    document.getElementById("publishedAt");
+
+if (publishedElement) {
+
+    publishedElement.textContent =
+        formatDate(channel.publishedAt);
+}
+
+/* ==============================
+   PAGE TITLE
+============================== */
+
+document.title =
+    `${channel.name || "Channel"} | Let'sStudy Pro`;
+
+/* ==============================
+   META DESCRIPTION
+============================== */
+
+const metaDescription =
+    document.querySelector(
+        'meta[name="description"]'
     );
 
+if (metaDescription) {
 
-/* =========================
-   INITIALIZE PAGE
-========================= */
+    metaDescription.content =
+        channel.description ||
+        `${channel.name || "Channel"} on Let'sStudy Pro`;
+}
+
+/* ==============================
+   ERROR HANDLING
+============================== */
+
+} catch (error) {
+
+    console.error(
+        "Channel loading failed:",
+        error
+    );
+
+    showToast(
+        "Failed to load channel."
+    );
+
+    const loading =
+        document.getElementById("loading");
+
+    if (loading) {
+        loading.style.display = "none";
+    }
+
+    const errorState =
+        document.getElementById("errorState");
+
+    if (errorState) {
+        errorState.style.display = "block";
+    }
+}
+
+/* ==============================
+   INITIALIZE CHANNEL PAGE
+============================== */
 
 document.addEventListener(
     "DOMContentLoaded",
-    function(){
+    () => {
 
-        loadVideo();
-
-        restoreActions();
-
-        updateCommentCount();
+        loadChannel();
 
     }
 );
 
+/* ==============================
+   MOBILE MENU
+============================== */
 
-/* =========================
-   END
-========================= */
+window.toggleMenu = function () {
+
+    const menu =
+        document.getElementById("mobileMenu");
+
+    if (menu) {
+        menu.classList.toggle("open");
+    }
+
+};
+
+/* ==============================
+   BACK
+============================== */
+
+window.goBack = function () {
+
+    if (history.length > 1) {
+        history.back();
+    } else {
+        location.href = "/";
+    }
+
+};
+
+/* ==============================
+   CLOSE MODALS
+============================== */
+
+document.addEventListener(
+    "click",
+    event => {
+
+        if (
+            event.target.classList.contains(
+                "modal"
+            )
+        ) {
+
+            event.target.classList.remove(
+                "show"
+            );
+        }
+
+    }
+);
 
 </script>
 
