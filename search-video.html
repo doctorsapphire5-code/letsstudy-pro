@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Search | LetsStudy Pro</title>
+
+<meta name="description"
+content="Search videos, channels, playlists, courses, resources and posts on LetsStudy Pro.">
+
+<link rel="icon" href="/favicon.ico">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+    font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+    background:#f7f8fa;
+    color:#111827;
+}
+
+button,input{font:inherit}
+
+.header{
+    height:64px;
+    background:#fff;
+    border-bottom:1px solid #e5e7eb;
+    display:flex;
+    align-items:center;
+    gap:20px;
+    padding:0 20px;
+    position:sticky;
+    top:0;
+    z-index:20;
+}
+
+.logo{
+    font-size:20px;
+    font-weight:800;
+    white-space:nowrap;
+}
+
+.search{
+    flex:1;
+    max-width:700px;
+    display:flex;
+}
+
+.search input{
+    flex:1;
+    height:42px;
+    border:1px solid #d1d5db;
+    border-right:0;
+    border-radius:22px 0 0 22px;
+    padding:0 18px;
+    outline:none;
+}
+
+.search button{
+    width:55px;
+    border:1px solid #d1d5db;
+    background:#f3f4f6;
+    border-radius:0 22px 22px 0;
+}
+
+.user{
+    margin-left:auto;
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    background:#2563eb;
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+}
+
+.container{
+    max-width:1250px;
+    margin:auto;
+    padding:25px 18px;
+}
+
+.filters{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin:18px 0 25px;
+}
+
+.filter{
+    border:1px solid #d1d5db;
+    background:white;
+    border-radius:20px;
+    padding:8px 15px;
+    cursor:pointer;
+}
+
+.filter.active{
+    background:#111827;
+    color:white;
+}
+
+.info{
+    color:#6b7280;
+    font-size:14px;
+    margin-bottom:20px;
+}
+
+.results{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    gap:22px;
+}
+
+.card{
+    background:white;
+    border:1px solid #e5e7eb;
+    border-radius:13px;
+    overflow:hidden;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.card:hover{
+    transform:translateY(-2px);
+    box-shadow:0 8px 25px rgba(0,0,0,.08);
+}
+
+.thumb{
+    width:100%;
+    aspect-ratio:16/9;
+    background:#e5e7eb;
+    object-fit:cover;
+}
+
+.card-body{
+    padding:13px;
+}
+
+.title{
+    font-weight:700;
+    line-height:1.4;
+    margin-bottom:7px;
+}
+
+.meta{
+    color:#6b7280;
+    font-size:12px;
+    line-height:1.6;
+}
+
+.type{
+    display:inline-block;
+    margin-top:8px;
+    padding:4px 8px;
+    border-radius:12px;
+    background:#eff6ff;
+    color:#2563eb;
+    font-size:11px;
+    font-weight:700;
+}
+
+.loading,
+.empty{
+    text-align:center;
+    padding:70px 20px;
+    color:#6b7280;
+    grid-column:1/-1;
+}
+
+.spinner{
+    width:35px;
+    height:35px;
+    margin:auto auto 12px;
+    border:4px solid #e5e7eb;
+    border-top-color:#2563eb;
+    border-radius:50%;
+    animation:spin .8s linear infinite;
+}
+
+@keyframes spin{
+    to{transform:rotate(360deg)}
+}
+
+@media(max-width:600px){
+    .header{
+        padding:0 10px;
+        gap:8px;
+    }
+
+    .logo{
+        font-size:16px;
+    }
+
+    .search input{
+        min-width:0;
+    }
+
+    .results{
+        grid-template-columns:1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+
+    <div class="logo">
+        LetsStudy Pro
+    </div>
+
+    <form class="search" id="searchForm">
+
+        <input
+            id="searchInput"
+            type="search"
+            placeholder="Search videos, courses, channels..."
+            autocomplete="off">
+
+        <button type="submit">
+            🔍
+        </button>
+
+    </form>
+
+    <div class="user" id="userAvatar">
+        G
+    </div>
+
+</header>
+
+
+<main class="container">
+
+    <h1>
+        Search
+    </h1>
+
+    <div class="filters">
+
+        <button class="filter active"
+                data-type="all">
+            All
+        </button>
+
+        <button class="filter"
+                data-type="videos">
+            🎬 Videos
+        </button>
+
+        <button class="filter"
+                data-type="channels">
+            📺 Channels
+        </button>
+
+        <button class="filter"
+                data-type="playlists">
+            📑 Playlists
+        </button>
+
+        <button class="filter"
+                data-type="courses">
+            🎓 Courses
+        </button>
+
+        <button class="filter"
+                data-type="resources">
+            📚 Resources
+        </button>
+
+        <button class="filter"
+                data-type="posts">
+            📝 Posts
+        </button>
+
+    </div>
+
+    <div class="info" id="searchInfo">
+        Enter a search term to begin.
+    </div>
+
+    <section class="results"
+             id="results">
+
+        <div class="empty">
+            🔎<br><br>
+            Search LetsStudy Pro
+        </div>
+
+    </section>
+
+</main>
+
+
+<script type="module">
+
+import {
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+    getFirestore,
+    collection,
+    getDocs
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+import {
+    getAuth,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+
+/* ==============================
+   FIREBASE
+============================== */
+
+const firebaseConfig = {
+    apiKey:"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+    authDomain:"let-s-study-pro-course.firebaseapp.com",
+    databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+    projectId:"let-s-study-pro-course",
+    storageBucket:"let-s-study-pro-course.firebasestorage.app",
+    messagingSenderId:"474928293390",
+    appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+    measurementId:"G-85B7V5H5J0"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+
+/* ==============================
+   COLLECTIONS
+============================== */
+
+const COLLECTIONS = [
+    "videos",
+    "channels",
+    "playlists",
+    "courses",
+    "resources",
+    "posts"
+];
+
+let allRecords = [];
+let activeType = "all";
+let searchTerm = "";
+
+
+/* ==============================
+   HELPERS
+============================== */
+
+function getValue(data, keys){
+
+    for(const key of keys){
+
+        const value = data?.[key];
+
+        if(
+            value !== undefined &&
+            value !== null &&
+            String(value).trim() !== ""
+        ){
+            return value;
+        }
+
+    }
+
+    return "";
+}
+
+
+function getName(data){
+
+    return getValue(data,[
+        "title",
+        "name",
+        "channelName",
+        "courseName",
+        "displayName"
+    ]) || "Untitled";
+
+}
+
+
+function getDescription(data){
+
+    return getValue(data,[
+        "description",
+        "shortDescription",
+        "message"
+    ]);
+
+}
+
+
+function getThumbnail(data){
+
+    return getValue(data,[
+        "thumbnail",
+        "thumbnailUrl",
+        "image",
+        "cover"
+    ]) || "/favicon.ico";
+
+}
+
+
+function getCreator(data){
+
+    return getValue(data,[
+        "creatorName",
+        "ownerName",
+        "authorName",
+        "instructorName",
+        "channelName"
+    ]);
+
+}
+
+
+function normalize(value){
+
+    return String(value || "")
+        .toLowerCase()
+        .trim();
+
+}
+
+
+/* ==============================
+   LOAD DATA
+============================== */
+
+async function loadCollection(name){
+
+    try{
+
+        const snapshot =
+            await getDocs(
+                collection(db,name)
+            );
+
+        return snapshot.docs.map(docSnap => {
+
+            const data = docSnap.data();
+
+            return {
+                id:docSnap.id,
+                type:name,
+                ...data
+            };
+
+        });
+
+    }catch(error){
+
+        console.warn(
+            `Collection unavailable: ${name}`,
+            error
+        );
+
+        return [];
+
+    }
+
+}
+
+
+async function loadAll(){
+
+    const results =
+        document.getElementById("results");
+
+    results.innerHTML = `
+        <div class="loading">
+            <div class="spinner"></div>
+            Loading search data...
+        </div>
+    `;
+
+    const loaded =
+        await Promise.all(
+            COLLECTIONS.map(loadCollection)
+        );
+
+    allRecords =
+        loaded.flat();
+
+    runSearch();
+
+}
+
+
+/* ==============================
+   SEARCH
+============================== */
+
+function runSearch(){
+
+    const query =
+        normalize(searchTerm);
+
+    let records =
+        allRecords;
+
+    if(activeType !== "all"){
+
+        records =
+            records.filter(
+                item => item.type === activeType
+            );
+
+    }
+
+    if(query){
+
+        records =
+            records.filter(item => {
+
+                const text = [
+                    item.id,
+                    item.type,
+                    getName(item),
+                    getDescription(item),
+                    getCreator(item),
+                    item.slug,
+                    item.category,
+                    item.tags
+                ]
+                .flat()
+                .map(normalize)
+                .join(" ");
+
+                return text.includes(query);
+
+            });
+
+    }else{
+
+        records = [];
+
+    }
+
+    renderResults(records);
+
+}
+
+
+/* ==============================
+   RENDER
+============================== */
+
+function renderResults(records){
+
+    const container =
+        document.getElementById("results");
+
+    const info =
+        document.getElementById("searchInfo");
+
+    if(!searchTerm){
+
+        info.textContent =
+            "Enter a search term to begin.";
+
+        container.innerHTML = `
+            <div class="empty">
+                🔎<br><br>
+                Search videos, channels, playlists,
+                courses and resources.
+            </div>
+        `;
+
+        return;
+
+    }
+
+    info.textContent =
+        `${records.length} result${records.length === 1 ? "" : "s"} found`;
+
+    if(!records.length){
+
+        container.innerHTML = `
+            <div class="empty">
+                🔎<br><br>
+                No results found for
+                "<strong>${escapeHtml(searchTerm)}</strong>"
+            </div>
+        `;
+
+        return;
+
+    }
+
+    container.innerHTML =
+        records.map(createCard).join("");
+
+}
+
+
+function createCard(record){
+
+    const name =
+        escapeHtml(getName(record));
+
+    const description =
+        escapeHtml(getDescription(record));
+
+    const creator =
+        escapeHtml(getCreator(record));
+
+    const thumbnail =
+        escapeHtml(getThumbnail(record));
+
+    return `
+        <article
+            class="card"
+            onclick="openRecord(
+                '${escapeJs(record.type)}',
+                '${escapeJs(record.id)}'
+            )">
+
+            <img
+                class="thumb"
+                src="${thumbnail}"
+                alt="${name}"
+                loading="lazy"
+                onerror="this.src='/favicon.ico'">
+
+            <div class="card-body">
+
+                <div class="title">
+                    ${name}
+                </div>
+
+                <div class="meta">
+                    ${creator || "LetsStudy Pro"}
+                    ${description
+                        ? `<br>${description.substring(0,100)}`
+                        : ""}
+                </div>
+
+                <span class="type">
+                    ${formatType(record.type)}
+                </span>
+
+            </div>
+
+        </article>
+    `;
+
+}
+
+
+/* ==============================
+   OPEN RECORD
+============================== */
+
+window.openRecord =
+function(type,id){
+
+    const record =
+        allRecords.find(
+            item =>
+                item.type === type &&
+                item.id === id
+        );
+
+    if(!record) return;
+
+    let url = "";
+
+    switch(type){
+
+        case "videos":
+            url =
+                `/video.html?id=${encodeURIComponent(id)}`;
+            break;
+
+        case "channels":
+            url =
+                `/channel.html?id=${encodeURIComponent(id)}`;
+            break;
+
+        case "playlists":
+            url =
+                `/playlist.html?id=${encodeURIComponent(id)}`;
+            break;
+
+        case "courses":
+            url =
+                `/course.html?id=${encodeURIComponent(id)}`;
+            break;
+
+        case "resources":
+            url =
+                `/resources-details.html?id=${encodeURIComponent(id)}`;
+            break;
+
+        case "posts":
+            url =
+                `/post-details.html?id=${encodeURIComponent(id)}`;
+            break;
+
+    }
+
+    if(url){
+        window.location.href = url;
+    }
+
+};
+
+
+/* ==============================
+   FILTERS
+============================== */
+
+document.querySelectorAll(".filter")
+.forEach(button => {
+
+    button.addEventListener(
+        "click",
+        () => {
+
+            document
+                .querySelectorAll(".filter")
+                .forEach(btn =>
+                    btn.classList.remove("active")
+                );
+
+            button.classList.add("active");
+
+            activeType =
+                button.dataset.type;
+
+            runSearch();
+
+        }
+    );
+
+});
+
+
+/* ==============================
+   SEARCH FORM
+============================== */
+
+document
+.getElementById("searchForm")
+.addEventListener(
+    "submit",
+    event => {
+
+        event.preventDefault();
+
+        searchTerm =
+            document
+                .getElementById("searchInput")
+                .value;
+
+        const url =
+            new URL(window.location.href);
+
+        if(searchTerm.trim()){
+            url.searchParams.set(
+                "q",
+                searchTerm.trim()
+            );
+        }else{
+            url.searchParams.delete("q");
+        }
+
+        history.replaceState(
+            {},
+            "",
+            url
+        );
+
+        runSearch();
+
+    }
+);
+
+
+/* ==============================
+   URL SEARCH
+============================== */
+
+const params =
+    new URLSearchParams(
+        window.location.search
+    );
+
+const initialQuery =
+    params.get("q");
+
+if(initialQuery){
+
+    document
+        .getElementById("searchInput")
+        .value = initialQuery;
+
+    searchTerm = initialQuery;
+
+}
+
+
+/* ==============================
+   AUTH
+============================== */
+
+onAuthStateChanged(
+    auth,
+    user => {
+
+        const avatar =
+            document.getElementById("userAvatar");
+
+        if(!user){
+
+            avatar.textContent = "G";
+            return;
+
+        }
+
+        const name =
+            user.displayName ||
+            user.email?.charAt(0) ||
+            "U";
+
+        avatar.textContent =
+            name.charAt(0).toUpperCase();
+
+    }
+);
+
+
+/* ==============================
+   SECURITY / HTML
+============================== */
+
+function escapeHtml(value){
+
+    return String(value || "")
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+
+}
+
+
+function escapeJs(value){
+
+    return String(value || "")
+        .replace(/\\/g,"\\\\")
+        .replace(/'/g,"\\'")
+        .replace(/"/g,'\\"');
+
+}
+
+
+function formatType(type){
+
+    const names = {
+        videos:"🎬 Video",
+        channels:"📺 Channel",
+        playlists:"📑 Playlist",
+        courses:"🎓 Course",
+        resources:"📚 Resource",
+        posts:"📝 Post"
+    };
+
+    return names[type] || type;
+
+}
+
+
+/* ==============================
+   START
+============================== */
+
+loadAll();
+
+</script>
+
+</body>
+</html>
