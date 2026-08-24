@@ -1,962 +1,1732 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1">
+
 <title>Admin Modules | LetsStudy Pro</title>
-<meta name="description" content="LetsStudy Pro Admin Curriculum Manager">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
 <style>
-*{box-sizing:border-box}
-body{margin:0;font-family:Inter,Arial,sans-serif;background:#f5f7fb;color:#172033}
-button,input,textarea,select{font:inherit}
-button{cursor:pointer;border:0}
-.top{height:65px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:50}
-.logo{font-size:20px;font-weight:800;color:#155eef}
-.top-right{display:flex;gap:8px}
-.container{max-width:1250px;margin:auto;padding:25px 16px 60px}
-.hero{background:linear-gradient(135deg,#101828,#155eef);color:#fff;border-radius:20px;padding:28px;margin-bottom:20px}
-.hero h1{margin:0 0 8px;font-size:30px}
-.hero p{margin:0;opacity:.9}
-.toolbar{background:#fff;border:1px solid #e5e7eb;border-radius:15px;padding:16px;margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap}
-input,textarea,select{width:100%;border:1px solid #d0d5dd;border-radius:10px;padding:11px;background:#fff;outline:none}
-input:focus,textarea:focus,select:focus{border-color:#155eef}
-.search{flex:1;min-width:220px}
-.primary{background:#155eef;color:#fff;padding:11px 16px;border-radius:10px;font-weight:700}
-.secondary{background:#eef4ff;color:#155eef;padding:11px 16px;border-radius:10px;font-weight:700}
-.danger{background:#fee4e2;color:#b42318;padding:8px 11px;border-radius:8px;font-weight:700}
-.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px}
-.stat{background:#fff;border:1px solid #e5e7eb;border-radius:13px;padding:15px}
-.stat b{font-size:22px;display:block}.stat span{font-size:12px;color:#667085}
-.module{background:#fff;border:1px solid #e5e7eb;border-radius:16px;margin-bottom:14px;overflow:hidden}
-.module-head{padding:17px;display:flex;align-items:center;gap:12px}
-.module-title{flex:1}
-.module-title h2{margin:0 0 5px;font-size:17px}
-.module-title p{margin:0;color:#667085;font-size:13px}
-.module-actions{display:flex;gap:6px;flex-wrap:wrap}
-.module-body{display:none;background:#fafafa;border-top:1px solid #eee;padding:18px}
-.module-body.open{display:block}
-.section{margin-bottom:20px}
-.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.section h3{margin:0;font-size:15px}
-.card-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px}
-.card h4{margin:0 0 6px}.card p{margin:0;color:#667085;font-size:13px;line-height:1.5}
-.actions{display:flex;gap:6px;margin-top:12px}
-.small{padding:7px 10px;border-radius:8px;background:#eef4ff;color:#155eef;font-size:12px;font-weight:700}
-.badge{display:inline-block;background:#f2f4f7;border-radius:20px;padding:4px 8px;font-size:11px;margin:7px 4px 0 0}
-.empty{text-align:center;padding:30px;color:#667085}
-.loading{text-align:center;padding:40px}
-.error{background:#fef3f2;color:#b42318;padding:13px;border-radius:10px;margin-bottom:15px}
-.modal{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:15px;z-index:100}
-.modal.show{display:flex}
-.modal-box{background:#fff;width:min(650px,100%);max-height:92vh;overflow:auto;border-radius:18px;padding:22px}
-.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-.modal-head h2{margin:0}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.field{margin-bottom:12px}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
-.full{grid-column:1/-1}
-.form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}
-.close{background:#f2f4f7;border-radius:9px;padding:8px 12px}
-.toast{position:fixed;right:18px;bottom:18px;background:#101828;color:#fff;padding:13px 17px;border-radius:10px;display:none;z-index:200}
-.toast.show{display:block}
-@media(max-width:900px){.stats{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:650px){.stats{grid-template-columns:repeat(2,1fr)}.card-grid,.form-grid{grid-template-columns:1fr}.full{grid-column:auto}.module-head{align-items:flex-start;flex-direction:column}.module-actions{width:100%}}
-</style>
-</head>
 
-<body>
-
-<header class="top">
-  <div class="logo">LetsStudy Pro <small>ADMIN</small></div>
-  <div class="top-right">
-    <button class="secondary" onclick="location.reload()">Refresh</button>
-  </div>
-</header>
-
-<main class="container">
-
-<section class="hero">
-  <h1>Curriculum Manager</h1>
-  <p>Manage Modules → Lessons → Quizzes → Assignments → Resources → Announcements → FAQs.</p>
-</section>
-
-<div class="toolbar">
-  <input id="courseId" placeholder="Enter Course ID">
-  <button class="primary" onclick="loadCurriculum()">Load Course</button>
-</div>
-
-<div id="error"></div>
-
-<div class="stats">
-  <div class="stat"><b id="mCount">0</b><span>Modules</span></div>
-  <div class="stat"><b id="lCount">0</b><span>Lessons</span></div>
-  <div class="stat"><b id="qCount">0</b><span>Quizzes</span></div>
-  <div class="stat"><b id="aCount">0</b><span>Assignments</span></div>
-  <div class="stat"><b id="rCount">0</b><span>Resources</span></div>
-  <div class="stat"><b id="fCount">0</b><span>FAQs</span></div>
-</div>
-
-<div class="toolbar">
-  <input class="search" id="search" placeholder="Search modules, lessons...">
-  <button class="primary" onclick="openForm('module')">+ Module</button>
-</div>
-
-<div id="modules">
-  <div class="empty">Enter a course ID and click Load Course.</div>
-</div>
-
-</main>
-
-<!-- MODAL -->
-
-<div class="modal" id="modal">
-<div class="modal-box">
-
-<div class="modal-head">
-  <h2 id="modalTitle">Add</h2>
-  <button class="close" onclick="closeModal()">✕</button>
-</div>
-
-<form id="form">
-
-<div id="fields"></div>
-
-<div class="form-actions">
-  <button type="button" class="close" onclick="closeModal()">Cancel</button>
-  <button class="primary" type="submit">Save</button>
-</div>
-
-</form>
-</div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script type="module">
-
-import{initializeApp}
-from"https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-
-import{
-getFirestore,
-collection,
-doc,
-getDoc,
-getDocs,
-query,
-where,
-addDoc,
-updateDoc,
-deleteDoc,
-serverTimestamp
-}
-from"https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
-
-
-/* FIREBASE */
-
-const firebaseConfig={
-apiKey:"AIzaSyBcKXbAVKXbkljsyRgI_0rjodBn678tCc",
-authDomain:"let-s-study-pro-course.firebaseapp.com",
-databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
-projectId:"let-s-study-pro-course",
-storageBucket:"let-s-study-pro-course.firebasestorage.app",
-messagingSenderId:"474928293390",
-appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
-measurementId:"G-85B7V5H5J0"
-};
-
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
-
-
-/* STATE */
-
-let courseId="";
-let data={
-modules:[],
-lessons:[],
-quizzes:[],
-assignments:[],
-resources:[],
-announcements:[],
-courseFAQs:[]
-};
-
-let editingId=null;
-let editingCollection=null;
-
-
-/* HELPERS */
-
-const $=id=>document.getElementById(id);
-
-function esc(v){
-return String(v??"")
-.replace(/&/g,"&amp;")
-.replace(/</g,"&lt;")
-.replace(/>/g,"&gt;")
-.replace(/"/g,"&quot;")
-.replace(/'/g,"&#039;");
+*{
+box-sizing:border-box;
 }
 
-function toast(msg){
-$("toast").textContent=msg;
-$("toast").classList.add("show");
-setTimeout(()=>$("toast").classList.remove("show"),2500);
+body{
+margin:0;
+font-family:Arial,Helvetica,sans-serif;
+background:#f5f7fb;
+color:#172033;
 }
 
-function showError(msg){
-$("error").innerHTML=
-`<div class="error">${esc(msg)}</div>`;
+.container{
+max-width:1100px;
+margin:auto;
+padding:18px;
 }
 
 
-/* LOAD COLLECTION */
+/* HEADER */
 
-async function getByCourse(collectionName){
-
-const q=query(
-collection(db,collectionName),
-where("courseId","==",courseId)
-);
-
-const snap=await getDocs(q);
-
-return snap.docs.map(d=>({
-id:d.id,
-...d.data()
-}));
-
+.header{
+background:#fff;
+border-radius:16px;
+padding:20px;
+margin-bottom:18px;
+box-shadow:0 4px 18px rgba(0,0,0,.06);
 }
 
-
-/* LOAD CURRICULUM */
-
-window.loadCurriculum=async function(){
-
-courseId=$("courseId").value.trim();
-
-if(!courseId){
-showError("Please enter a Course ID.");
-return;
+.header-top{
+display:flex;
+align-items:center;
+gap:14px;
 }
 
-try{
-
-$("modules").innerHTML=
-`<div class="loading">Loading curriculum...</div>`;
-
-const results=await Promise.all([
-getByCourse("modules"),
-getByCourse("lessons"),
-getByCourse("quizzes"),
-getByCourse("assignments"),
-getByCourse("resources"),
-getByCourse("announcements"),
-getByCourse("courseFAQs")
-]);
-
-[
-data.modules,
-data.lessons,
-data.quizzes,
-data.assignments,
-data.resources,
-data.announcements,
-data.courseFAQs
-]=results;
-
-data.modules.sort((a,b)=>
-Number(a.order||0)-Number(b.order||0));
-
-data.lessons.sort((a,b)=>
-Number(a.order||0)-Number(b.order||0));
-
-updateStats();
-render();
-
-toast("Curriculum loaded.");
-
-}catch(e){
-
-console.error(e);
-showError(e.message);
-
+.header-icon{
+width:52px;
+height:52px;
+border-radius:13px;
+background:#eff6ff;
+color:#2563eb;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:22px;
 }
 
-};
+.header h1{
+margin:0;
+font-size:23px;
+}
+
+.header p{
+margin:6px 0 0;
+color:#64748b;
+font-size:13px;
+}
 
 
 /* STATS */
 
-function updateStats(){
+.stats{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:12px;
+margin-bottom:18px;
+}
 
-$("mCount").textContent=data.modules.length;
-$("lCount").textContent=data.lessons.length;
-$("qCount").textContent=data.quizzes.length;
-$("aCount").textContent=data.assignments.length;
-$("rCount").textContent=data.resources.length;
-$("fCount").textContent=data.courseFAQs.length;
+.stat{
+background:#fff;
+border-radius:14px;
+padding:17px;
+box-shadow:0 4px 18px rgba(0,0,0,.05);
+}
+
+.stat-label{
+font-size:12px;
+color:#64748b;
+}
+
+.stat-value{
+font-size:24px;
+font-weight:bold;
+margin-top:5px;
+}
+
+
+/* FORM */
+
+.form-card{
+background:#fff;
+padding:20px;
+border-radius:16px;
+margin-bottom:18px;
+box-shadow:0 4px 18px rgba(0,0,0,.06);
+}
+
+.form-title{
+font-size:17px;
+font-weight:bold;
+margin-bottom:15px;
+}
+
+.form-grid{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:13px;
+}
+
+.field{
+display:flex;
+flex-direction:column;
+gap:6px;
+}
+
+.field.full{
+grid-column:1/-1;
+}
+
+label{
+font-size:12px;
+font-weight:bold;
+color:#475569;
+}
+
+input,
+textarea,
+select{
+width:100%;
+border:1px solid #dbe2ea;
+border-radius:9px;
+padding:11px 12px;
+font-family:inherit;
+font-size:13px;
+outline:none;
+background:#fff;
+}
+
+textarea{
+min-height:100px;
+resize:vertical;
+}
+
+input:focus,
+textarea:focus,
+select:focus{
+border-color:#2563eb;
+}
+
+
+/* BUTTONS */
+
+.actions{
+display:flex;
+gap:9px;
+margin-top:15px;
+flex-wrap:wrap;
+}
+
+button{
+border:0;
+border-radius:9px;
+padding:11px 16px;
+font-weight:bold;
+cursor:pointer;
+font-size:13px;
+}
+
+.btn-primary{
+background:#2563eb;
+color:#fff;
+}
+
+.btn-secondary{
+background:#e2e8f0;
+color:#334155;
+}
+
+.btn-danger{
+background:#fee2e2;
+color:#b91c1c;
+}
+
+button:disabled{
+opacity:.6;
+cursor:not-allowed;
+}
+
+
+/* LIST CARD */
+
+.list-card{
+background:#fff;
+border-radius:16px;
+padding:18px;
+box-shadow:0 4px 18px rgba(0,0,0,.06);
+}
+
+.list-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:10px;
+margin-bottom:15px;
+}
+
+.list-title{
+font-size:17px;
+font-weight:bold;
+}
+
+.search{
+max-width:300px;
+}
+
+
+/* MODULE */
+
+.module{
+border:1px solid #e5e7eb;
+border-radius:13px;
+padding:15px;
+margin-bottom:11px;
+display:flex;
+gap:14px;
+align-items:flex-start;
+}
+
+.module-order{
+width:42px;
+height:42px;
+border-radius:50%;
+background:#eff6ff;
+color:#2563eb;
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:bold;
+flex-shrink:0;
+}
+
+.module-content{
+flex:1;
+min-width:0;
+}
+
+.module-title{
+font-size:15px;
+font-weight:bold;
+}
+
+.module-description{
+font-size:12px;
+color:#64748b;
+margin-top:5px;
+line-height:1.5;
+}
+
+.meta{
+display:flex;
+gap:7px;
+flex-wrap:wrap;
+margin-top:9px;
+}
+
+.badge{
+font-size:10px;
+padding:5px 9px;
+border-radius:20px;
+background:#f1f5f9;
+color:#475569;
+}
+
+.active{
+background:#dcfce7;
+color:#166534;
+}
+
+.published{
+background:#dcfce7;
+color:#166534;
+}
+
+.draft{
+background:#fef3c7;
+color:#92400e;
+}
+
+.inactive{
+background:#fee2e2;
+color:#991b1b;
+}
+
+.module-actions{
+display:flex;
+gap:7px;
+}
+
+.icon-btn{
+width:36px;
+height:36px;
+padding:0;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.edit{
+background:#eff6ff;
+color:#2563eb;
+}
+
+.delete{
+background:#fee2e2;
+color:#dc2626;
+}
+
+
+/* EMPTY */
+
+.empty{
+text-align:center;
+padding:45px 15px;
+color:#64748b;
+}
+
+.empty i{
+font-size:35px;
+margin-bottom:12px;
+}
+
+
+/* LOADING */
+
+.loading{
+text-align:center;
+padding:40px;
+color:#64748b;
+}
+
+
+/* MESSAGE */
+
+.message{
+display:none;
+padding:12px 14px;
+border-radius:9px;
+margin-bottom:15px;
+font-size:13px;
+}
+
+.success{
+background:#dcfce7;
+color:#166534;
+}
+
+.error{
+background:#fee2e2;
+color:#991b1b;
+}
+
+
+/* MOBILE */
+
+@media(max-width:700px){
+
+.container{
+padding:10px;
+}
+
+.stats{
+grid-template-columns:1fr;
+}
+
+.form-grid{
+grid-template-columns:1fr;
+}
+
+.field.full{
+grid-column:auto;
+}
+
+.list-header{
+flex-direction:column;
+align-items:stretch;
+}
+
+.search{
+max-width:none;
+}
+
+.module{
+flex-wrap:wrap;
+}
+
+.module-actions{
+width:100%;
+justify-content:flex-end;
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+
+<div class="container">
+
+
+<!-- HEADER -->
+
+<div class="header">
+
+<div class="header-top">
+
+<div class="header-icon">
+<i class="fa-solid fa-layer-group"></i>
+</div>
+
+<div>
+
+<h1>
+Admin Modules
+</h1>
+
+<p>
+Manage course modules
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- MESSAGE -->
+
+<div
+id="message"
+class="message">
+</div>
+
+
+<!-- STATS -->
+
+<div class="stats">
+
+<div class="stat">
+
+<div class="stat-label">
+Total Modules
+</div>
+
+<div
+id="totalModules"
+class="stat-value">
+0
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-label">
+Published
+</div>
+
+<div
+id="publishedModules"
+class="stat-value">
+0
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-label">
+Draft
+</div>
+
+<div
+id="draftModules"
+class="stat-value">
+0
+</div>
+
+</div>
+
+</div>
+
+
+<!-- FORM -->
+
+<div class="form-card">
+
+<div
+id="formTitle"
+class="form-title">
+
+Add Module
+
+</div>
+
+
+<div class="form-grid">
+
+
+<!-- COURSE -->
+
+<div class="field">
+
+<label>
+Course
+</label>
+
+<select
+id="courseId">
+
+<option value="">
+Select course
+</option>
+
+</select>
+
+</div>
+
+
+<!-- TITLE -->
+
+<div class="field">
+
+<label>
+Title
+</label>
+
+<input
+id="title"
+type="text"
+placeholder="Module title">
+
+</div>
+
+
+<!-- DESCRIPTION -->
+
+<div class="field full">
+
+<label>
+Description
+</label>
+
+<textarea
+id="description"
+placeholder="Module description"></textarea>
+
+</div>
+
+
+<!-- ORDER -->
+
+<div class="field">
+
+<label>
+Order
+</label>
+
+<input
+id="order"
+type="number"
+min="1"
+value="1">
+
+</div>
+
+
+<!-- STATUS -->
+
+<div class="field">
+
+<label>
+Status
+</label>
+
+<select
+id="status">
+
+<option value="draft">
+Draft
+</option>
+
+<option value="published">
+Published
+</option>
+
+<option value="active">
+Active
+</option>
+
+<option value="inactive">
+Inactive
+</option>
+
+</select>
+
+</div>
+
+
+</div>
+
+
+<div class="actions">
+
+<button
+id="saveBtn"
+class="btn-primary">
+
+<i class="fa-solid fa-plus"></i>
+Add Module
+
+</button>
+
+
+<button
+id="cancelBtn"
+class="btn-secondary"
+style="display:none">
+
+Cancel
+
+</button>
+
+</div>
+
+</div>
+
+
+<!-- LIST -->
+
+<div class="list-card">
+
+
+<div class="list-header">
+
+<div class="list-title">
+Course Modules
+</div>
+
+<input
+id="search"
+class="search"
+type="search"
+placeholder="Search modules...">
+
+</div>
+
+
+<div
+id="modulesList">
+
+<div class="loading">
+
+<i class="fa-solid fa-spinner fa-spin"></i>
+
+<br><br>
+
+Loading modules...
+
+</div>
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+<script type="module">
+
+
+/* =====================================================
+   FIREBASE
+===================================================== */
+
+import {
+initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+
+
+import {
+getAuth,
+onAuthStateChanged
+}
+from
+"https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+
+
+import {
+getFirestore,
+collection,
+getDocs,
+addDoc,
+updateDoc,
+deleteDoc,
+doc,
+serverTimestamp,
+query,
+orderBy
+}
+from
+"https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+
+/* =====================================================
+   CONFIG
+===================================================== */
+
+const firebaseConfig = {
+
+apiKey:
+"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+authDomain:
+"let-s-study-pro-course.firebaseapp.com",
+
+databaseURL:
+"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+projectId:
+"let-s-study-pro-course",
+
+storageBucket:
+"let-s-study-pro-course.firebasestorage.app",
+
+messagingSenderId:
+"474928293390",
+
+appId:
+"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+measurementId:
+"G-85B7V5H5J0"
+
+};
+
+
+const app =
+initializeApp(
+firebaseConfig
+);
+
+const auth =
+getAuth(app);
+
+const db =
+getFirestore(app);
+
+
+/* =====================================================
+   ELEMENTS
+===================================================== */
+
+const courseSelect =
+document.getElementById(
+"courseId"
+);
+
+const titleInput =
+document.getElementById(
+"title"
+);
+
+const descriptionInput =
+document.getElementById(
+"description"
+);
+
+const orderInput =
+document.getElementById(
+"order"
+);
+
+const statusSelect =
+document.getElementById(
+"status"
+);
+
+const saveBtn =
+document.getElementById(
+"saveBtn"
+);
+
+const cancelBtn =
+document.getElementById(
+"cancelBtn"
+);
+
+const modulesList =
+document.getElementById(
+"modulesList"
+);
+
+const searchInput =
+document.getElementById(
+"search"
+);
+
+const message =
+document.getElementById(
+"message"
+);
+
+const totalModules =
+document.getElementById(
+"totalModules"
+);
+
+const publishedModules =
+document.getElementById(
+"publishedModules"
+);
+
+const draftModules =
+document.getElementById(
+"draftModules"
+);
+
+const formTitle =
+document.getElementById(
+"formTitle"
+);
+
+
+/* =====================================================
+   STATE
+===================================================== */
+
+let currentUser = null;
+
+let modules = [];
+
+let courses = [];
+
+let editingModuleId = null;
+
+
+/* =====================================================
+   ESCAPE HTML
+===================================================== */
+
+function escapeHTML(value){
+
+return String(
+value ?? ""
+)
+
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;")
+.replaceAll('"',"&quot;")
+.replaceAll("'","&#039;");
 
 }
 
 
-/* RENDER */
+/* =====================================================
+   MESSAGE
+===================================================== */
 
-function render(){
+function showMessage(
+text,
+type="success"
+){
 
-const search=$("search").value.toLowerCase().trim();
+message.textContent =
+text;
 
-let modules=data.modules.filter(m=>{
+message.className =
+"message " +
+type;
 
-if(!search)return true;
+message.style.display =
+"block";
 
-const ls=data.lessons.filter(
-l=>l.moduleId===m.id
+setTimeout(
+()=>{
+message.style.display =
+"none";
+},
+3500
 );
 
-return(
-String(m.title||"").toLowerCase().includes(search)||
-ls.some(l=>
-String(l.title||"").toLowerCase().includes(search)
+}
+
+
+/* =====================================================
+   LOAD COURSES
+===================================================== */
+
+async function loadCourses(){
+
+const snapshot =
+await getDocs(
+collection(
+db,
+"courses"
 )
 );
 
+courses =
+snapshot.docs.map(
+courseDoc => ({
+
+id:
+courseDoc.id,
+
+...courseDoc.data()
+
+})
+);
+
+
+courseSelect.innerHTML = `
+
+<option value="">
+Select course
+</option>
+
+`;
+
+
+courses.forEach(
+course => {
+
+const option =
+document.createElement(
+"option"
+);
+
+option.value =
+course.id;
+
+option.textContent =
+course.title ||
+course.id;
+
+courseSelect.appendChild(
+option
+);
+
+});
+
+}
+
+
+/* =====================================================
+   LOAD MODULES
+===================================================== */
+
+async function loadModules(){
+
+modulesList.innerHTML = `
+
+<div class="loading">
+
+<i class="fa-solid fa-spinner fa-spin"></i>
+
+<br><br>
+
+Loading modules...
+
+</div>
+
+`;
+
+
+const snapshot =
+await getDocs(
+collection(
+db,
+"modules"
+)
+);
+
+
+modules =
+snapshot.docs.map(
+moduleDoc => ({
+
+id:
+moduleDoc.id,
+
+...moduleDoc.data()
+
+})
+);
+
+
+/* SORT */
+
+modules.sort(
+(a,b) =>
+Number(a.order || 0) -
+Number(b.order || 0)
+);
+
+
+/* STATS */
+
+totalModules.textContent =
+modules.length;
+
+publishedModules.textContent =
+modules.filter(
+m =>
+String(m.status)
+.toLowerCase()
+===
+"published"
+||
+String(m.status)
+.toLowerCase()
+===
+"active"
+).length;
+
+draftModules.textContent =
+modules.filter(
+m =>
+String(m.status)
+.toLowerCase()
+===
+"draft"
+).length;
+
+
+renderModules();
+
+}
+
+
+/* =====================================================
+   RENDER
+===================================================== */
+
+function renderModules(){
+
+const search =
+searchInput.value
+.trim()
+.toLowerCase();
+
+
+const filtered =
+modules.filter(
+module => {
+
+const course =
+courses.find(
+c =>
+c.id ===
+module.courseId
+);
+
+const courseTitle =
+course?.title || "";
+
+return (
+
+String(
+module.title || ""
+)
+.toLowerCase()
+.includes(search)
+
+||
+
+String(
+module.description || ""
+)
+.toLowerCase()
+.includes(search)
+
+||
+
+courseTitle
+.toLowerCase()
+.includes(search)
+
+);
+
 });
 
 
-if(!modules.length){
+if(!filtered.length){
 
-$("modules").innerHTML=
-`<div class="empty">No modules found.</div>`;
+modulesList.innerHTML = `
+
+<div class="empty">
+
+<i class="fa-solid fa-layer-group"></i>
+
+<br>
+
+No modules found.
+
+</div>
+
+`;
 
 return;
 
 }
 
 
-$("modules").innerHTML=modules.map((m,i)=>{
+modulesList.innerHTML =
+filtered.map(
+module => {
 
-const lessons=data.lessons.filter(
-l=>l.moduleId===m.id
+const course =
+courses.find(
+c =>
+c.id ===
+module.courseId
 );
 
-return`
+const status =
+String(
+module.status ||
+"unknown"
+).toLowerCase();
 
-<article class="module">
 
-<div class="module-head">
+return `
+
+<div
+class="module">
+
+
+<div class="module-order">
+
+${Number(
+module.order
+) || 1}
+
+</div>
+
+
+<div class="module-content">
+
 
 <div class="module-title">
-<h2>${i+1}. ${esc(m.title||"Untitled Module")}</h2>
-<p>${esc(m.description||"")}</p>
 
-<span class="badge">
-${esc(m.status||"draft")}
-</span>
+${escapeHTML(
+module.title ||
+"Untitled Module"
+)}
 
-<span class="badge">
-${lessons.length} Lessons
-</span>
 </div>
+
+
+<div class="module-description">
+
+${escapeHTML(
+module.description ||
+"No description"
+)}
+
+</div>
+
+
+<div class="meta">
+
+
+<span class="badge">
+
+<i class="fa-solid fa-book"></i>
+
+${escapeHTML(
+course?.title ||
+module.courseId ||
+"Unknown Course"
+)}
+
+</span>
+
+
+<span
+class="badge ${
+status
+}">
+
+${escapeHTML(
+module.status ||
+"Unknown"
+)}
+
+</span>
+
+
+<span class="badge">
+
+Order:
+${Number(
+module.order
+) || 1}
+
+</span>
+
+
+</div>
+
+
+</div>
+
 
 <div class="module-actions">
 
-<button class="small"
-onclick="toggle('${m.id}')">
-Open
+
+<button
+class="icon-btn edit"
+title="Edit"
+onclick="editModule('${module.id}')">
+
+<i class="fa-solid fa-pen"></i>
+
 </button>
 
-<button class="small"
-onclick="editItem('modules','${m.id}')">
-Edit
+
+<button
+class="icon-btn delete"
+title="Delete"
+onclick="removeModule('${module.id}')">
+
+<i class="fa-solid fa-trash"></i>
+
 </button>
 
-<button class="danger"
-onclick="removeItem('modules','${m.id}')">
-Delete
-</button>
 
 </div>
 
-</div>
-
-<div class="module-body" id="body-${m.id}">
-
-${renderLessons(m.id)}
-
-${renderGlobalSection(
-"Quizzes",
-"quizzes",
-data.quizzes,
-m.id
-)}
-
-${renderGlobalSection(
-"Assignments",
-"assignments",
-data.assignments,
-m.id
-)}
-
-${renderGlobalSection(
-"Resources",
-"resources",
-data.resources,
-m.id
-)}
-
-${renderGlobalSection(
-"Announcements",
-"announcements",
-data.announcements,
-m.id
-)}
-
-${renderGlobalSection(
-"FAQs",
-"courseFAQs",
-data.courseFAQs,
-m.id
-)}
 
 </div>
-
-</article>
 
 `;
 
-}).join("");
+}
+).join("");
 
 }
 
 
-/* LESSONS */
+/* =====================================================
+   ADD / UPDATE
+===================================================== */
 
-function renderLessons(moduleId){
+saveBtn.addEventListener(
+"click",
+async ()=>{
 
-const list=data.lessons.filter(
-x=>x.moduleId===moduleId
+const courseId =
+courseSelect.value;
+
+const title =
+titleInput.value.trim();
+
+const description =
+descriptionInput.value.trim();
+
+const order =
+Number(
+orderInput.value
 );
 
-return`
+const status =
+statusSelect.value;
 
-<div class="section">
-
-<div class="section-head">
-<h3>📚 Lessons (${list.length})</h3>
-
-<button class="small"
-onclick="openForm('lessons',null,'${moduleId}')">
-+ Lesson
-</button>
-</div>
-
-<div class="card-grid">
-
-${list.length?list.map(l=>`
-
-<div class="card">
-
-<h4>${esc(l.title||"Lesson")}</h4>
-
-<p>${esc(l.description||"")}</p>
-
-<span class="badge">${esc(l.type||"lesson")}</span>
-
-${l.duration?
-`<span class="badge">${esc(l.duration)}</span>`:""}
-
-<span class="badge">
-Order ${esc(l.order??0)}
-</span>
-
-<div class="actions">
-
-<button class="small"
-onclick="editItem('lessons','${l.id}')">
-Edit
-</button>
-
-<button class="danger"
-onclick="removeItem('lessons','${l.id}')">
-Delete
-</button>
-
-</div>
-
-</div>
-
-`).join(""):
-`<div class="empty">No lessons.</div>`}
-
-</div>
-</div>
-
-`;
-
-}
-
-
-/* OTHER SECTIONS */
-
-function renderGlobalSection(title,collectionName,list,moduleId){
-
-/*
-Quizzes, assignments, resources, announcements and FAQs
-are linked by courseId, therefore they are shown under
-the selected course.
-*/
-
-if(!list.length)return"";
-
-let icon={
-quizzes:"📝",
-assignments:"📋",
-resources:"📎",
-announcements:"📢",
-courseFAQs:"❓"
-}[collectionName]||"•";
-
-return`
-
-<div class="section">
-
-<div class="section-head">
-
-<h3>${icon} ${title} (${list.length})</h3>
-
-<button class="small"
-onclick="openForm('${collectionName}')">
-+ Add
-</button>
-
-</div>
-
-<div class="card-grid">
-
-${list.map(x=>`
-
-<div class="card">
-
-<h4>
-${esc(
-x.title||
-x.name||
-x.question||
-"Untitled"
-)}
-</h4>
-
-<p>
-${esc(
-x.description||
-x.instructions||
-x.message||
-x.answer||
-""
-)}
-</p>
-
-${
-x.priority?
-`<span class="badge">${esc(x.priority)}</span>`:""
-}
-
-${
-x.type?
-`<span class="badge">${esc(x.type)}</span>`:""
-}
-
-<div class="actions">
-
-<button class="small"
-onclick="editItem('${collectionName}','${x.id}')">
-Edit
-</button>
-
-<button class="danger"
-onclick="removeItem('${collectionName}','${x.id}')">
-Delete
-</button>
-
-</div>
-
-</div>
-
-`).join("")}
-
-</div>
-</div>
-
-`;
-
-}
-
-
-/* TOGGLE */
-
-window.toggle=function(id){
-
-const el=$("body-"+id);
-
-if(el)el.classList.toggle("open");
-
-};
-
-
-/* FORM FIELD GENERATOR */
-
-function field(label,name,type="text",value="",full=false){
-
-return`
-
-<div class="field ${full?"full":""}">
-
-<label>${label}</label>
-
-${
-type==="textarea"
-?`<textarea name="${name}" rows="4">${esc(value)}</textarea>`
-:type==="select"
-?`<select name="${name}">
-<option value="draft" ${value==="draft"?"selected":""}>Draft</option>
-<option value="published" ${value==="published"?"selected":""}>Published</option>
-</select>`
-:`<input type="${type}" name="${name}" value="${esc(value)}">`
-}
-
-</div>
-
-`;
-
-}
-
-
-/* OPEN FORM */
-
-window.openForm=function(type,id=null,moduleId=null){
-
-editingId=id;
-editingCollection=type;
-
-const existing=
-id?data[type].find(x=>x.id===id):null;
-
-let html="";
-
-switch(type){
-
-case"module":
-
-$("modalTitle").textContent=
-id?"Edit Module":"Add Module";
-
-html+=field("Title","title","text",
-existing?.title||"");
-
-html+=field("Description","description",
-"textarea",existing?.description||"",true);
-
-html+=field("Order","order","number",
-existing?.order??0);
-
-html+=field("Status","status","select",
-existing?.status||"draft");
-
-break;
-
-
-case"lessons":
-
-$("modalTitle").textContent=
-id?"Edit Lesson":"Add Lesson";
-
-html+=field("Title","title","text",
-existing?.title||"");
-
-html+=field("Module ID","moduleId","text",
-existing?.moduleId||moduleId||"");
-
-html+=field("Type","type","text",
-existing?.type||"video");
-
-html+=field("Description","description",
-"textarea",existing?.description||"",true);
-
-html+=field("Content URL","contentUrl","url",
-existing?.contentUrl||"");
-
-html+=field("Duration","duration","text",
-existing?.duration||"");
-
-html+=field("Order","order","number",
-existing?.order??0);
-
-html+=field("Status","status","select",
-existing?.status||"draft");
-
-break;
-
-
-case"quizzes":
-
-$("modalTitle").textContent=
-id?"Edit Quiz":"Add Quiz";
-
-html+=field("Title","title","text",
-existing?.title||"");
-
-html+=field("Description","description",
-"textarea",existing?.description||"",true);
-
-html+=field("Passing Score","passingScore","number",
-existing?.passingScore??70);
-
-html+=field("Time Limit","timeLimit","text",
-existing?.timeLimit||"");
-
-html+=field("Attempts","attempts","number",
-existing?.attempts??1);
-
-break;
-
-
-case"assignments":
-
-$("modalTitle").textContent=
-id?"Edit Assignment":"Add Assignment";
-
-html+=field("Title","title","text",
-existing?.title||"");
-
-html+=field("Instructions","instructions",
-"textarea",existing?.instructions||"",true);
-
-html+=field("Points","points","number",
-existing?.points??100);
-
-html+=field("Submission Type","submissionType","text",
-existing?.submissionType||"file");
-
-html+=field("Deadline","deadline","datetime-local",
-existing?.deadline||"");
-
-break;
-
-
-case"resources":
-
-$("modalTitle").textContent=
-id?"Edit Resource":"Add Resource";
-
-html+=field("Name","name","text",
-existing?.name||"");
-
-html+=field("Type","type","text",
-existing?.type||"PDF");
-
-html+=field("URL","url","url",
-existing?.url||"");
-
-html+=field("Description","description",
-"textarea",existing?.description||"",true);
-
-break;
-
-
-case"announcements":
-
-$("modalTitle").textContent=
-id?"Edit Announcement":"Add Announcement";
-
-html+=field("Title","title","text",
-existing?.title||"");
-
-html+=field("Message","message",
-"textarea",existing?.message||"",true);
-
-html+=field("Priority","priority","text",
-existing?.priority||"normal");
-
-html+=field("Publish Date","publishDate",
-"datetime-local",existing?.publishDate||"");
-
-break;
-
-
-case"courseFAQs":
-
-$("modalTitle").textContent=
-id?"Edit FAQ":"Add FAQ";
-
-html+=field("Question","question",
-"text",existing?.question||"",true);
-
-html+=field("Answer","answer",
-"textarea",existing?.answer||"",true);
-
-html+=field("Order","order","number",
-existing?.order??0);
-
-break;
-
-default:return;
-
-}
-
-$("fields").innerHTML=
-`<div class="form-grid">${html}</div>`;
-
-$("modal").classList.add("show");
-
-};
-
-
-/* CLOSE */
-
-window.closeModal=function(){
-
-$("modal").classList.remove("show");
-editingId=null;
-editingCollection=null;
-
-};
-
-
-/* SAVE */
-
-$("form").addEventListener("submit",async e=>{
-
-e.preventDefault();
 
 if(!courseId){
-toast("Load a course first.");
+
+showMessage(
+"Please select a course.",
+"error"
+);
+
 return;
+
 }
+
+
+if(!title){
+
+showMessage(
+"Module title is required.",
+"error"
+);
+
+return;
+
+}
+
+
+if(!order || order < 1){
+
+showMessage(
+"Enter a valid module order.",
+"error"
+);
+
+return;
+
+}
+
+
+saveBtn.disabled =
+true;
+
 
 try{
 
-const fd=new FormData(e.target);
-const values=Object.fromEntries(fd.entries());
 
-if(values.order!=="")
-values.order=Number(values.order);
+/* ================================================
+   EXISTING MODULE
+================================================ */
 
-if(values.passingScore!=="")
-values.passingScore=Number(values.passingScore);
-
-if(values.attempts!=="")
-values.attempts=Number(values.attempts);
-
-if(values.points!=="")
-values.points=Number(values.points);
-
-
-/* ALWAYS LINK TO COURSE */
-
-values.courseId=courseId;
-
-
-/* TIMESTAMPS */
-
-if(editingId){
-
-values.updatedAt=serverTimestamp();
+if(editingModuleId){
 
 await updateDoc(
-doc(db,editingCollection,editingId),
-values
+
+doc(
+db,
+"modules",
+editingModuleId
+),
+
+{
+
+courseId:
+courseId,
+
+title:
+title,
+
+description:
+description,
+
+order:
+order,
+
+status:
+status,
+
+updatedAt:
+serverTimestamp()
+
+}
+
 );
 
-toast("Updated successfully.");
+
+showMessage(
+"Module updated successfully."
+);
+
 
 }else{
 
-values.createdAt=serverTimestamp();
+
+/* ================================================
+   NEW MODULE
+
+   MODEL:
+
+   courseId
+   title
+   description
+   order
+   status
+   createdBy
+   createdAt
+   updatedAt
+================================================ */
+
 
 await addDoc(
-collection(db,editingCollection),
-values
+
+collection(
+db,
+"modules"
+),
+
+{
+
+courseId:
+courseId,
+
+title:
+title,
+
+description:
+description,
+
+order:
+order,
+
+status:
+status,
+
+createdBy:
+currentUser.uid,
+
+createdAt:
+serverTimestamp(),
+
+updatedAt:
+serverTimestamp()
+
+}
+
 );
 
-toast("Created successfully.");
+
+showMessage(
+"Module added successfully."
+);
 
 }
 
-closeModal();
 
-await loadCurriculum();
+resetForm();
 
-}catch(e){
+await loadModules();
 
-console.error(e);
-showError(e.message);
+
+}catch(error){
+
+console.error(error);
+
+showMessage(
+error.message ||
+"Operation failed.",
+"error"
+);
 
 }
+
+
+saveBtn.disabled =
+false;
 
 });
 
 
-/* EDIT */
+/* =====================================================
+   EDIT
+===================================================== */
 
-window.editItem=function(collectionName,id){
+window.editModule =
+function(id){
 
-openForm(collectionName,id);
+const module =
+modules.find(
+m =>
+m.id === id
+);
+
+if(!module)
+return;
+
+
+editingModuleId =
+id;
+
+
+courseSelect.value =
+module.courseId ||
+"";
+
+titleInput.value =
+module.title ||
+"";
+
+descriptionInput.value =
+module.description ||
+"";
+
+orderInput.value =
+module.order ||
+1;
+
+statusSelect.value =
+module.status ||
+"draft";
+
+
+formTitle.textContent =
+"Edit Module";
+
+
+saveBtn.innerHTML = `
+
+<i class="fa-solid fa-save"></i>
+
+Update Module
+
+`;
+
+cancelBtn.style.display =
+"inline-block";
+
+
+window.scrollTo({
+top:0,
+behavior:"smooth"
+});
 
 };
 
 
-/* DELETE */
+/* =====================================================
+   DELETE
+===================================================== */
 
-window.removeItem=async function(collectionName,id){
+window.removeModule =
+async function(id){
 
-if(!confirm(
-"Delete this item permanently?"
-))return;
+const module =
+modules.find(
+m =>
+m.id === id
+);
+
+if(!module)
+return;
+
+
+const confirmed =
+confirm(
+`Delete module "${module.title || ""}"?`
+);
+
+
+if(!confirmed)
+return;
+
 
 try{
 
 await deleteDoc(
-doc(db,collectionName,id)
+doc(
+db,
+"modules",
+id
+)
 );
 
-toast("Deleted successfully.");
 
-await loadCurriculum();
+showMessage(
+"Module deleted successfully."
+);
 
-}catch(e){
 
-console.error(e);
-showError(e.message);
+await loadModules();
+
+
+}catch(error){
+
+console.error(error);
+
+showMessage(
+error.message ||
+"Failed to delete module.",
+"error"
+);
 
 }
 
 };
 
 
-/* SEARCH */
+/* =====================================================
+   CANCEL
+===================================================== */
 
-$("search").addEventListener(
-"input",render
+cancelBtn.addEventListener(
+"click",
+resetForm
 );
 
 
-/* URL COURSE ID */
+/* =====================================================
+   RESET
+===================================================== */
 
-const params=
-new URLSearchParams(location.search);
+function resetForm(){
 
-const urlCourse=params.get("courseId");
+editingModuleId =
+null;
 
-if(urlCourse){
+courseSelect.value =
+"";
 
-$("courseId").value=urlCourse;
-loadCurriculum();
+titleInput.value =
+"";
+
+descriptionInput.value =
+"";
+
+orderInput.value =
+1;
+
+statusSelect.value =
+"draft";
+
+formTitle.textContent =
+"Add Module";
+
+saveBtn.innerHTML = `
+
+<i class="fa-solid fa-plus"></i>
+
+Add Module
+
+`;
+
+cancelBtn.style.display =
+"none";
 
 }
+
+
+/* =====================================================
+   SEARCH
+===================================================== */
+
+searchInput.addEventListener(
+"input",
+renderModules
+);
+
+
+/* =====================================================
+   AUTH
+===================================================== */
+
+onAuthStateChanged(
+auth,
+async user => {
+
+if(!user){
+
+modulesList.innerHTML = `
+
+<div class="empty">
+
+<i class="fa-solid fa-lock"></i>
+
+<br><br>
+
+Please login as administrator.
+
+</div>
+
+`;
+
+return;
+
+}
+
+
+currentUser =
+user;
+
+
+try{
+
+await loadCourses();
+
+await loadModules();
+
+}catch(error){
+
+console.error(error);
+
+modulesList.innerHTML = `
+
+<div class="empty">
+
+<i class="fa-solid fa-triangle-exclamation"></i>
+
+<br><br>
+
+${escapeHTML(
+error.message
+)}
+
+</div>
+
+`;
+
+}
+
+});
 
 </script>
 
