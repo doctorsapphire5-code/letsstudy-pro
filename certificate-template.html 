@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<title>Certificate Template | Let'sStudy Pro</title>
+
+<style>
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+font-family:Arial,Helvetica,sans-serif;
+background:#f3f6fa;
+color:#172033;
+}
+
+.page{
+max-width:1100px;
+margin:auto;
+padding:20px;
+}
+
+.loading,
+.error{
+background:#fff;
+padding:50px 20px;
+text-align:center;
+border-radius:16px;
+box-shadow:0 5px 20px rgba(0,0,0,.07);
+}
+
+.error{
+color:#991b1b;
+}
+
+.certificate{
+position:relative;
+overflow:hidden;
+background:#fff;
+min-height:650px;
+padding:50px;
+display:flex;
+align-items:center;
+justify-content:center;
+text-align:center;
+box-shadow:0 8px 30px rgba(0,0,0,.12);
+}
+
+.certificate.landscape{
+aspect-ratio:1.414/1;
+}
+
+.certificate.portrait{
+max-width:760px;
+margin:auto;
+aspect-ratio:1/1.414;
+}
+
+.background{
+position:absolute;
+inset:0;
+width:100%;
+height:100%;
+object-fit:cover;
+z-index:0;
+opacity:.18;
+}
+
+.content{
+position:relative;
+z-index:2;
+width:100%;
+}
+
+.logo{
+max-width:120px;
+max-height:80px;
+object-fit:contain;
+margin-bottom:20px;
+}
+
+.issuer{
+font-size:14px;
+font-weight:bold;
+letter-spacing:2px;
+text-transform:uppercase;
+}
+
+.title{
+font-family:Georgia,serif;
+font-size:45px;
+margin:20px 0 10px;
+}
+
+.description{
+max-width:650px;
+margin:0 auto 25px;
+color:#64748b;
+line-height:1.6;
+}
+
+.issuer-title{
+font-size:14px;
+color:#64748b;
+}
+
+.course{
+margin-top:25px;
+font-size:20px;
+font-weight:bold;
+}
+
+.actions{
+display:flex;
+justify-content:center;
+gap:10px;
+margin-top:20px;
+}
+
+button{
+border:0;
+padding:12px 18px;
+border-radius:9px;
+cursor:pointer;
+font-weight:bold;
+}
+
+.print{
+background:#172033;
+color:white;
+}
+
+.back{
+background:#e2e8f0;
+color:#334155;
+}
+
+@media(max-width:700px){
+
+.page{
+padding:10px;
+}
+
+.certificate{
+padding:25px 15px;
+min-height:500px;
+}
+
+.title{
+font-size:32px;
+}
+
+}
+
+@media print{
+
+body{
+background:#fff;
+}
+
+.page{
+padding:0;
+}
+
+.actions{
+display:none;
+}
+
+.certificate{
+box-shadow:none;
+}
+
+}
+</style>
+</head>
+
+<body>
+
+<div class="page">
+
+<div id="loading" class="loading">
+
+Loading certificate template...
+
+</div>
+
+
+<div id="error"
+class="error"
+style="display:none">
+
+<div id="errorText">
+Certificate template not found.
+</div>
+
+</div>
+
+
+<div id="certificate"
+class="certificate landscape"
+style="display:none">
+
+<img
+id="background"
+class="background"
+style="display:none"
+alt="Certificate Background">
+
+
+<div class="content">
+
+<img
+id="logo"
+class="logo"
+style="display:none"
+alt="Certificate Logo">
+
+
+<div
+id="issuerName"
+class="issuer">
+</div>
+
+
+<h1 class="title">
+Certificate of Completion
+</h1>
+
+
+<div
+id="description"
+class="description">
+</div>
+
+
+<div
+id="issuerTitle"
+class="issuer-title">
+</div>
+
+
+<div
+id="course"
+class="course">
+</div>
+
+</div>
+
+</div>
+
+
+<div class="actions">
+
+<button
+class="print"
+onclick="window.print()">
+
+Print Certificate
+
+</button>
+
+
+<button
+class="back"
+onclick="history.back()">
+
+Back
+
+</button>
+
+</div>
+
+</div>
+
+
+<script type="module">
+
+import {
+initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+
+import {
+getFirestore,
+doc,
+getDoc
+}
+from
+"https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+
+/* ==========================================
+   FIREBASE
+========================================== */
+
+const firebaseConfig={
+
+apiKey:
+"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+authDomain:
+"let-s-study-pro-course.firebaseapp.com",
+
+databaseURL:
+"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+projectId:
+"let-s-study-pro-course",
+
+storageBucket:
+"let-s-study-pro-course.firebasestorage.app",
+
+messagingSenderId:
+"474928293390",
+
+appId:
+"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+measurementId:
+"G-85B7V5H5J0"
+
+};
+
+
+const app=
+initializeApp(firebaseConfig);
+
+const db=
+getFirestore(app);
+
+
+/* ==========================================
+   ELEMENTS
+========================================== */
+
+const loading=
+document.getElementById("loading");
+
+const error=
+document.getElementById("error");
+
+const errorText=
+document.getElementById("errorText");
+
+const certificate=
+document.getElementById("certificate");
+
+const background=
+document.getElementById("background");
+
+const logo=
+document.getElementById("logo");
+
+const issuerName=
+document.getElementById("issuerName");
+
+const issuerTitle=
+document.getElementById("issuerTitle");
+
+const description=
+document.getElementById("description");
+
+const course=
+document.getElementById("course");
+
+
+/* ==========================================
+   TEMPLATE ID
+========================================== */
+
+const params=
+new URLSearchParams(
+window.location.search
+);
+
+const templateId=
+params.get("templateId");
+
+
+/* ==========================================
+   LOAD TEMPLATE
+========================================== */
+
+async function loadTemplate(){
+
+if(!templateId){
+
+showError(
+"No template ID provided."
+);
+
+return;
+
+}
+
+
+try{
+
+const ref=
+doc(
+db,
+"certificateTemplates",
+templateId
+);
+
+
+const snap=
+await getDoc(ref);
+
+
+if(!snap.exists()){
+
+showError(
+"Certificate template not found."
+);
+
+return;
+
+}
+
+
+const data=
+snap.data();
+
+
+/* ==========================================
+   DATA
+========================================== */
+
+issuerName.textContent=
+data.issuerName || "";
+
+issuerTitle.textContent=
+data.issuerTitle || "";
+
+description.textContent=
+data.description || "";
+
+course.textContent=
+data.courseId
+?
+"Course ID: "+data.courseId
+:
+"";
+
+
+/* ==========================================
+   LOGO
+========================================== */
+
+if(data.logo){
+
+logo.src=data.logo;
+
+logo.style.display=
+"block";
+
+logo.onerror=()=>{
+
+logo.style.display=
+"none";
+
+};
+
+}
+
+
+/* ==========================================
+   BACKGROUND
+========================================== */
+
+if(data.background){
+
+background.src=
+data.background;
+
+background.style.display=
+"block";
+
+background.onerror=()=>{
+
+background.style.display=
+"none";
+
+};
+
+}
+
+
+/* ==========================================
+   ORIENTATION
+========================================== */
+
+certificate.className=
+"certificate "+
+(
+data.orientation==="portrait"
+?
+"portrait"
+:
+"landscape"
+);
+
+
+/* ==========================================
+   SHOW
+========================================== */
+
+loading.style.display=
+"none";
+
+certificate.style.display=
+"flex";
+
+
+}catch(err){
+
+console.error(err);
+
+showError(
+"Unable to load certificate template."
+);
+
+}
+
+}
+
+
+/* ==========================================
+   ERROR
+========================================== */
+
+function showError(text){
+
+loading.style.display=
+"none";
+
+error.style.display=
+"block";
+
+errorText.textContent=
+text;
+
+}
+
+
+loadTemplate();
+
+</script>
+
+</body>
+</html>
