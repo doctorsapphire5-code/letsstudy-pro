@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Notifications | Let'sStudy Pro</title>
+
+<meta name="description"
+content="Let'sStudy Pro notification center for videos, channels, courses and platform updates.">
+
+<link rel="icon" href="/favicon.ico">
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+body{
+    font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+    background:#f5f7fb;
+    color:#111827;
+}
+
+button,input,select{
+    font:inherit;
+}
+
+button{
+    cursor:pointer;
+}
+
+.app{
+    min-height:100vh;
+}
+
+.header{
+    height:68px;
+    background:#fff;
+    border-bottom:1px solid #e5e7eb;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 22px;
+    position:sticky;
+    top:0;
+    z-index:100;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.logo{
+    width:40px;
+    height:40px;
+    border-radius:10px;
+    background:#111827;
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:800;
+}
+
+.brand strong{
+    font-size:17px;
+}
+
+.brand small{
+    display:block;
+    color:#6b7280;
+    font-size:11px;
+}
+
+.header-right{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.avatar{
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    background:#dbeafe;
+    color:#2563eb;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:800;
+}
+
+.main{
+    max-width:1000px;
+    margin:auto;
+    padding:28px 18px;
+}
+
+.page-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:15px;
+    margin-bottom:22px;
+}
+
+.page-head h1{
+    font-size:27px;
+    margin-bottom:5px;
+}
+
+.page-head p{
+    color:#6b7280;
+    font-size:14px;
+}
+
+.actions{
+    display:flex;
+    gap:8px;
+}
+
+.btn{
+    border:1px solid #e5e7eb;
+    background:white;
+    padding:10px 14px;
+    border-radius:9px;
+    font-weight:600;
+}
+
+.btn:hover{
+    background:#f9fafb;
+}
+
+.btn-primary{
+    background:#2563eb;
+    border-color:#2563eb;
+    color:white;
+}
+
+.btn-primary:hover{
+    background:#1d4ed8;
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:14px;
+    margin-bottom:18px;
+}
+
+.stat{
+    background:white;
+    border:1px solid #e5e7eb;
+    border-radius:13px;
+    padding:16px;
+}
+
+.stat-label{
+    color:#6b7280;
+    font-size:12px;
+}
+
+.stat-value{
+    font-size:25px;
+    font-weight:800;
+    margin-top:5px;
+}
+
+.toolbar{
+    background:white;
+    border:1px solid #e5e7eb;
+    border-radius:13px;
+    padding:14px;
+    display:flex;
+    gap:9px;
+    margin-bottom:15px;
+}
+
+.search{
+    flex:1;
+}
+
+.search input,
+.toolbar select{
+    width:100%;
+    height:42px;
+    border:1px solid #d1d5db;
+    border-radius:8px;
+    padding:0 12px;
+    outline:none;
+    background:white;
+}
+
+.search input:focus,
+.toolbar select:focus{
+    border-color:#2563eb;
+}
+
+.list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.notification{
+    background:white;
+    border:1px solid #e5e7eb;
+    border-radius:13px;
+    padding:15px;
+    display:flex;
+    gap:13px;
+    transition:.2s;
+}
+
+.notification:hover{
+    border-color:#cbd5e1;
+    transform:translateY(-1px);
+}
+
+.notification.unread{
+    border-left:4px solid #2563eb;
+    background:#f8fbff;
+}
+
+.notify-icon{
+    width:42px;
+    height:42px;
+    flex:none;
+    border-radius:11px;
+    background:#eff6ff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+}
+
+.notify-content{
+    flex:1;
+    min-width:0;
+}
+
+.notify-title{
+    font-weight:750;
+    margin-bottom:4px;
+}
+
+.notify-message{
+    color:#4b5563;
+    font-size:13px;
+    line-height:1.5;
+}
+
+.meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:8px;
+    color:#9ca3af;
+    font-size:11px;
+}
+
+.badge{
+    padding:4px 8px;
+    border-radius:20px;
+    background:#f3f4f6;
+    color:#374151;
+    font-weight:700;
+}
+
+.notify-actions{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+}
+
+.small-btn{
+    border:1px solid #e5e7eb;
+    background:white;
+    border-radius:7px;
+    padding:6px 8px;
+    font-size:11px;
+}
+
+.small-btn:hover{
+    background:#f3f4f6;
+}
+
+.empty{
+    background:white;
+    border:1px solid #e5e7eb;
+    border-radius:13px;
+    text-align:center;
+    padding:55px 20px;
+    color:#6b7280;
+}
+
+.empty-icon{
+    font-size:42px;
+    margin-bottom:10px;
+}
+
+.loading{
+    background:white;
+    border:1px solid #e5e7eb;
+    border-radius:13px;
+    padding:50px;
+    text-align:center;
+    color:#6b7280;
+}
+
+.spinner{
+    width:30px;
+    height:30px;
+    border:3px solid #e5e7eb;
+    border-top-color:#2563eb;
+    border-radius:50%;
+    animation:spin .8s linear infinite;
+    margin:auto auto 12px;
+}
+
+@keyframes spin{
+    to{transform:rotate(360deg)}
+}
+
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.55);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:1000;
+}
+
+.modal.show{
+    display:flex;
+}
+
+.modal-box{
+    background:white;
+    width:min(600px,100%);
+    max-height:90vh;
+    overflow:auto;
+    border-radius:15px;
+}
+
+.modal-head{
+    padding:17px 20px;
+    border-bottom:1px solid #e5e7eb;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.modal-head button{
+    border:0;
+    background:#f3f4f6;
+    width:34px;
+    height:34px;
+    border-radius:8px;
+}
+
+.modal-body{
+    padding:20px;
+}
+
+.detail{
+    border:1px solid #e5e7eb;
+    border-radius:9px;
+    padding:12px;
+    margin-bottom:10px;
+}
+
+.detail label{
+    display:block;
+    font-size:10px;
+    color:#9ca3af;
+    text-transform:uppercase;
+    margin-bottom:4px;
+}
+
+.detail div{
+    word-break:break-word;
+    font-size:13px;
+}
+
+.toast{
+    position:fixed;
+    right:18px;
+    bottom:18px;
+    background:#111827;
+    color:white;
+    padding:11px 15px;
+    border-radius:9px;
+    opacity:0;
+    transform:translateY(20px);
+    transition:.25s;
+    z-index:3000;
+}
+
+.toast.show{
+    opacity:1;
+    transform:translateY(0);
+}
+
+@media(max-width:650px){
+
+    .page-head{
+        flex-direction:column;
+    }
+
+    .stats{
+        grid-template-columns:1fr;
+    }
+
+    .toolbar{
+        flex-direction:column;
+    }
+
+    .notification{
+        align-items:flex-start;
+    }
+
+    .notify-actions{
+        flex-direction:row;
+    }
+
+    .brand small{
+        display:none;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header class="header">
+
+    <div class="brand">
+
+        <div class="logo">LS</div>
+
+        <div>
+            <strong>Let'sStudy Pro</strong>
+            <small>Notification Center</small>
+        </div>
+
+    </div>
+
+    <div class="header-right">
+
+        <div class="avatar" id="avatar">
+            U
+        </div>
+
+    </div>
+
+</header>
+
+
+<main class="main">
+
+    <div class="page-head">
+
+        <div>
+
+            <h1>Notifications</h1>
+
+            <p>
+                Stay updated with videos, channels,
+                courses and Let'sStudy Pro activities.
+            </p>
+
+        </div>
+
+        <div class="actions">
+
+            <button
+                class="btn"
+                onclick="markAllRead()">
+                ✓ Mark all read
+            </button>
+
+            <button
+                class="btn btn-primary"
+                onclick="loadNotifications()">
+                ↻ Refresh
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- STATS -->
+
+    <div class="stats">
+
+        <div class="stat">
+
+            <div class="stat-label">
+                Total Notifications
+            </div>
+
+            <div
+                class="stat-value"
+                id="totalCount">
+                0
+            </div>
+
+        </div>
+
+        <div class="stat">
+
+            <div class="stat-label">
+                Unread
+            </div>
+
+            <div
+                class="stat-value"
+                id="unreadCount">
+                0
+            </div>
+
+        </div>
+
+        <div class="stat">
+
+            <div class="stat-label">
+                Read
+            </div>
+
+            <div
+                class="stat-value"
+                id="readCount">
+                0
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- FILTER -->
+
+    <div class="toolbar">
+
+        <div class="search">
+
+            <input
+                id="searchInput"
+                type="search"
+                placeholder="Search notifications..."
+                oninput="renderNotifications()">
+
+        </div>
+
+        <select
+            id="typeFilter"
+            onchange="renderNotifications()">
+
+            <option value="all">
+                All Types
+            </option>
+
+            <option value="video">
+                Videos
+            </option>
+
+            <option value="channel">
+                Channels
+            </option>
+
+            <option value="course">
+                Courses
+            </option>
+
+            <option value="like">
+                Likes
+            </option>
+
+            <option value="comment">
+                Comments
+            </option>
+
+            <option value="system">
+                System
+            </option>
+
+        </select>
+
+        <select
+            id="readFilter"
+            onchange="renderNotifications()">
+
+            <option value="all">
+                All
+            </option>
+
+            <option value="unread">
+                Unread
+            </option>
+
+            <option value="read">
+                Read
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <!-- LIST -->
+
+    <div id="notificationList">
+
+        <div class="loading">
+
+            <div class="spinner"></div>
+
+            Loading notifications...
+
+        </div>
+
+    </div>
+
+</main>
+
+</div>
+
+
+<!-- DETAILS -->
+
+<div
+    class="modal"
+    id="detailsModal"
+    onclick="outsideModal(event)">
+
+    <div class="modal-box">
+
+        <div class="modal-head">
+
+            <strong>Notification Details</strong>
+
+            <button onclick="closeDetails()">
+                ✕
+            </button>
+
+        </div>
+
+        <div
+            class="modal-body"
+            id="detailsBody">
+        </div>
+
+    </div>
+
+</div>
+
+
+<div
+    class="toast"
+    id="toast">
+    Done
+</div>
+
+
+<script type="module">
+
+import {
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+    getAuth,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+    getFirestore,
+    collection,
+    query,
+    where,
+    orderBy,
+    onSnapshot,
+    doc,
+    updateDoc,
+    deleteDoc,
+    writeBatch
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+// ============================================
+// FIREBASE CONFIG
+// ============================================
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+    authDomain: "let-s-study-pro-course.firebaseapp.com",
+    databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+    projectId: "let-s-study-pro-course",
+    storageBucket: "let-s-study-pro-course.firebasestorage.app",
+    messagingSenderId: "474928293390",
+    appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+    measurementId: "G-85B7V5H5J0"
+};
+
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+
+const db = getFirestore(app);
+
+
+// ============================================
+// STATE
+// ============================================
+
+let currentUser = null;
+
+let notifications = [];
+
+let unsubscribe = null;
+
+
+// ============================================
+// AUTH
+// ============================================
+
+onAuthStateChanged(auth, user => {
+
+    currentUser = user;
+
+    if(!user){
+
+        document.getElementById(
+            "notificationList"
+        ).innerHTML = `
+
+            <div class="empty">
+
+                <div class="empty-icon">
+                    🔐
+                </div>
+
+                <h3>
+                    Sign in required
+                </h3>
+
+                <p>
+                    Please login to view your notifications.
+                </p>
+
+                <br>
+
+                <button
+                    class="btn btn-primary"
+                    onclick="location.href='/login.html'">
+                    Login
+                </button>
+
+            </div>
+
+        `;
+
+        return;
+    }
+
+
+    document.getElementById("avatar").textContent =
+        getInitial(
+            user.displayName ||
+            user.email ||
+            "U"
+        );
+
+    loadNotifications();
+
+});
+
+
+// ============================================
+// LOAD NOTIFICATIONS
+// ============================================
+
+window.loadNotifications = function(){
+
+    if(!currentUser){
+        return;
+    }
+
+    if(unsubscribe){
+        unsubscribe();
+    }
+
+
+    const notificationsRef =
+        collection(db,"notifications");
+
+
+    /*
+     IMPORTANT:
+
+     Notifications are filtered by userId,
+     so each user sees their own notifications.
+    */
+
+    const q = query(
+        notificationsRef,
+        where(
+            "userId",
+            "==",
+            currentUser.uid
+        )
+    );
+
+
+    unsubscribe = onSnapshot(
+        q,
+
+        snapshot => {
+
+            notifications = snapshot.docs.map(
+                item => ({
+
+                    id:item.id,
+
+                    ...item.data()
+
+                })
+            );
+
+
+            notifications.sort(
+                (a,b) =>
+                    getTime(b.createdAt) -
+                    getTime(a.createdAt)
+            );
+
+
+            updateStats();
+
+            renderNotifications();
+
+        },
+
+        error => {
+
+            console.error(
+                "Notifications error:",
+                error
+            );
+
+            document.getElementById(
+                "notificationList"
+            ).innerHTML = `
+
+                <div class="empty">
+
+                    <div class="empty-icon">
+                        ⚠️
+                    </div>
+
+                    <h3>
+                        Failed to load notifications
+                    </h3>
+
+                    <p>
+                        ${escapeHTML(error.message)}
+                    </p>
+
+                </div>
+
+            `;
+
+        }
+    );
+
+};
+
+
+// ============================================
+// RENDER
+// ============================================
+
+window.renderNotifications = function(){
+
+    const search =
+        document.getElementById(
+            "searchInput"
+        ).value
+        .toLowerCase()
+        .trim();
+
+
+    const type =
+        document.getElementById(
+            "typeFilter"
+        ).value;
+
+
+    const read =
+        document.getElementById(
+            "readFilter"
+        ).value;
+
+
+    let list =
+        notifications.filter(item => {
+
+            const text = [
+
+                item.title,
+
+                item.message,
+
+                item.type,
+
+                item.videoId,
+
+                item.channelId,
+
+                item.senderId
+
+            ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+
+            const matchesSearch =
+                !search ||
+                text.includes(search);
+
+
+            const matchesType =
+                type === "all" ||
+                String(item.type || "")
+                    .toLowerCase() === type;
+
+
+            const matchesRead =
+                read === "all" ||
+
+                (
+                    read === "unread" &&
+                    item.read !== true
+                ) ||
+
+                (
+                    read === "read" &&
+                    item.read === true
+                );
+
+
+            return (
+                matchesSearch &&
+                matchesType &&
+                matchesRead
+            );
+
+        });
+
+
+    const container =
+        document.getElementById(
+            "notificationList"
+        );
+
+
+    if(!list.length){
+
+        container.innerHTML = `
+
+            <div class="empty">
+
+                <div class="empty-icon">
+                    🔔
+                </div>
+
+                <h3>
+                    No notifications
+                </h3>
+
+                <p>
+                    You're all caught up.
+                </p>
+
+            </div>
+
+        `;
+
+        return;
+    }
+
+
+    container.innerHTML =
+        `<div class="list">` +
+
+        list.map(
+            createNotificationHTML
+        ).join("") +
+
+        `</div>`;
+
+};
+
+
+// ============================================
+// NOTIFICATION HTML
+// ============================================
+
+function createNotificationHTML(item){
+
+    const unread =
+        item.read !== true;
+
+
+    const icon =
+        getNotificationIcon(
+            item.type
+        );
+
+
+    return `
+
+        <article
+            class="notification ${unread ? "unread" : ""}"
+            data-id="${escapeAttr(item.id)}">
+
+            <div class="notify-icon">
+                ${icon}
+            </div>
+
+
+            <div class="notify-content">
+
+                <div class="notify-title">
+                    ${escapeHTML(
+                        item.title ||
+                        "Notification"
+                    )}
+                </div>
+
+                <div class="notify-message">
+                    ${escapeHTML(
+                        item.message ||
+                        ""
+                    )}
+                </div>
+
+
+                <div class="meta">
+
+                    <span class="badge">
+                        ${escapeHTML(
+                            item.type ||
+                            "system"
+                        )}
+                    </span>
+
+                    <span>
+                        ${formatDate(
+                            item.createdAt
+                        )}
+                    </span>
+
+                    ${
+                        item.videoId
+                        ? `
+                        <span>
+                            Video:
+                            ${escapeHTML(
+                                item.videoId
+                            )}
+                        </span>
+                        `
+                        : ""
+                    }
+
+                    ${
+                        item.channelId
+                        ? `
+                        <span>
+                            Channel:
+                            ${escapeHTML(
+                                item.channelId
+                            )}
+                        </span>
+                        `
+                        : ""
+                    }
+
+                </div>
+
+            </div>
+
+
+            <div class="notify-actions">
+
+                ${
+                    unread
+                    ? `
+                    <button
+                        class="small-btn"
+                        onclick="markRead('${escapeAttr(item.id)}')">
+                        ✓ Read
+                    </button>
+                    `
+                    : ""
+                }
+
+
+                <button
+                    class="small-btn"
+                    onclick="viewDetails('${escapeAttr(item.id)}')">
+                    View
+                </button>
+
+
+                <button
+                    class="small-btn"
+                    onclick="deleteNotification('${escapeAttr(item.id)}')">
+                    Delete
+                </button>
+
+            </div>
+
+        </article>
+
+    `;
+
+}
+
+
+// ============================================
+// MARK READ
+// ============================================
+
+window.markRead = async function(id){
+
+    try{
+
+        await updateDoc(
+            doc(
+                db,
+                "notifications",
+                id
+            ),
+            {
+                read:true
+            }
+        );
+
+        showToast(
+            "Notification marked as read"
+        );
+
+    }catch(error){
+
+        console.error(error);
+
+        showToast(
+            "Failed to delete notification"
+        );
+
+    }
+
+};
+
+
+// ============================================
+// VIEW NOTIFICATION DETAILS
+// ============================================
+
+window.viewDetails = function(id){
+
+    const item =
+        notifications.find(
+            notification =>
+                notification.id === id
+        );
+
+    if(!item){
+        showToast("Notification not found");
+        return;
+    }
+
+    document.getElementById(
+        "detailsBody"
+    ).innerHTML = `
+
+        ${detail(
+            "Notification ID",
+            item.id
+        )}
+
+        ${detail(
+            "User ID",
+            item.userId
+        )}
+
+        ${detail(
+            "Type",
+            item.type
+        )}
+
+        ${detail(
+            "Title",
+            item.title
+        )}
+
+        ${detail(
+            "Message",
+            item.message
+        )}
+
+        ${detail(
+            "Video ID",
+            item.videoId
+        )}
+
+        ${detail(
+            "Channel ID",
+            item.channelId
+        )}
+
+        ${detail(
+            "Sender ID",
+            item.senderId
+        )}
+
+        ${detail(
+            "Read",
+            item.read === true
+                ? "Yes"
+                : "No"
+        )}
+
+        ${detail(
+            "Created At",
+            formatDate(item.createdAt)
+        )}
+
+    `;
+
+    document.getElementById(
+        "detailsModal"
+    ).classList.add("show");
+
+};
+
+
+// ============================================
+// DETAIL COMPONENT
+// ============================================
+
+function detail(label,value){
+
+    return `
+
+        <div class="detail">
+
+            <label>
+                ${escapeHTML(label)}
+            </label>
+
+            <div>
+                ${
+                    value === undefined ||
+                    value === null ||
+                    value === ""
+                    ? "—"
+                    : escapeHTML(value)
+                }
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+// ============================================
+// CLOSE MODAL
+// ============================================
+
+window.closeDetails = function(){
+
+    document.getElementById(
+        "detailsModal"
+    ).classList.remove("show");
+
+};
+
+
+window.outsideModal = function(event){
+
+    if(
+        event.target.id ===
+        "detailsModal"
+    ){
+
+        closeDetails();
+
+    }
+
+};
+
+
+// ============================================
+// UPDATE STATISTICS
+// ============================================
+
+function updateStats(){
+
+    const total =
+        notifications.length;
+
+    const unread =
+        notifications.filter(
+            item =>
+                item.read !== true
+        ).length;
+
+    const read =
+        notifications.filter(
+            item =>
+                item.read === true
+        ).length;
+
+
+    document.getElementById(
+        "totalCount"
+    ).textContent = total;
+
+    document.getElementById(
+        "unreadCount"
+    ).textContent = unread;
+
+    document.getElementById(
+        "readCount"
+    ).textContent = read;
+
+};
+
+
+// ============================================
+// NOTIFICATION ICON
+// ============================================
+
+function getNotificationIcon(type){
+
+    const icons = {
+
+        video: "🎬",
+
+        channel: "📺",
+
+        course: "🎓",
+
+        like: "❤️",
+
+        comment: "💬",
+
+        subscription: "⭐",
+
+        certificate: "🏆",
+
+        system: "⚙️",
+
+        message: "💬",
+
+        follow: "👤",
+
+        upload: "⬆️",
+
+        live: "🔴",
+
+        payment: "💳",
+
+        order: "🛒",
+
+        achievement: "🏅"
+
+    };
+
+    const key =
+        String(type || "")
+            .toLowerCase();
+
+    return icons[key] || "🔔";
+
+};
+
+
+// ============================================
+// FIREBASE TIMESTAMP
+// ============================================
+
+function getTime(value){
+
+    if(!value){
+        return 0;
+    }
+
+
+    if(
+        typeof value.toMillis ===
+        "function"
+    ){
+
+        return value.toMillis();
+
+    }
+
+
+    if(
+        typeof value.seconds ===
+        "number"
+    ){
+
+        return value.seconds * 1000;
+
+    }
+
+
+    if(
+        value instanceof Date
+    ){
+
+        return value.getTime();
+
+    }
+
+
+    const date =
+        new Date(value);
+
+    const time =
+        date.getTime();
+
+    return Number.isNaN(time)
+        ? 0
+        : time;
+
+};
+
+
+// ============================================
+// FORMAT DATE
+// ============================================
+
+function formatDate(value){
+
+    const time =
+        getTime(value);
+
+    if(!time){
+
+        return "Unknown date";
+
+    }
+
+    return new Intl.DateTimeFormat(
+        "en-US",
+        {
+            dateStyle:"medium",
+            timeStyle:"short"
+        }
+    ).format(
+        new Date(time)
+    );
+
+};
+
+
+// ============================================
+// INITIAL
+// ============================================
+
+function getInitial(text){
+
+    const value =
+        String(text || "")
+            .trim();
+
+    return (
+        value.charAt(0)
+            .toUpperCase()
+        || "U"
+    );
+
+};
+
+
+// ============================================
+// ESCAPE HTML
+// ============================================
+
+function escapeHTML(value){
+
+    return String(
+        value ?? ""
+    )
+    .replaceAll(
+        "&",
+        "&amp;"
+    )
+    .replaceAll(
+        "<",
+        "&lt;"
+    )
+    .replaceAll(
+        ">",
+        "&gt;"
+    )
+    .replaceAll(
+        '"',
+        "&quot;"
+    )
+    .replaceAll(
+        "'",
+        "&#039;"
+    );
+
+};
+
+
+// ============================================
+// ESCAPE ATTRIBUTE
+// ============================================
+
+function escapeAttr(value){
+
+    return escapeHTML(value);
+
+};
+
+
+// ============================================
+// TOAST
+// ============================================
+
+function showToast(message){
+
+    const toast =
+        document.getElementById(
+            "toast"
+        );
+
+    if(!toast){
+        return;
+    }
+
+    toast.textContent =
+        message;
+
+    toast.classList.add(
+        "show"
+    );
+
+    clearTimeout(
+        window.toastTimer
+    );
+
+    window.toastTimer =
+        setTimeout(
+            () => {
+
+                toast.classList.remove(
+                    "show"
+                );
+
+            },
+            2200
+        );
+
+};
+
+
+// ============================================
+// CLEANUP REAL-TIME LISTENER
+// ============================================
+
+window.addEventListener(
+    "beforeunload",
+    () => {
+
+        if(unsubscribe){
+
+            unsubscribe();
+
+            unsubscribe = null;
+
+        }
+
+    }
+);
+
+
+// ============================================
+// KEYBOARD SHORTCUT
+// ============================================
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if(event.key === "Escape"){
+
+            closeDetails();
+
+        }
+
+    }
+);
+
+
+// ============================================
+// INITIAL STATE
+// ============================================
+
+console.log(
+    "Let'sStudy Pro Notifications System initialized."
+);
+
+console.log(
+    "Firestore collection: notifications"
+);
+
+</script>
+
+</body>
+</html>
