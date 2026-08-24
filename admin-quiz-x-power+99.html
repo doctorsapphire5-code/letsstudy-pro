@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Quiz Management | LetsStudy Pro</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Arial,sans-serif;background:#f5f7fb;color:#101828}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer;border:0;border-radius:9px;padding:11px 15px;font-weight:700}
+.primary{background:#155eef;color:#fff}
+.secondary{background:#eef4ff;color:#155eef}
+.danger{background:#fee4e2;color:#b42318}
+header{height:68px;background:#fff;border-bottom:1px solid #eaecf0;display:flex;align-items:center;justify-content:space-between;padding:0 22px;position:sticky;top:0;z-index:20}
+.logo{font-size:21px;font-weight:900;color:#155eef}
+.admin{font-size:13px;color:#667085}
+.container{max-width:1250px;margin:auto;padding:24px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:22px}
+h1{margin:0;font-size:28px}
+.muted{color:#667085}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px}
+.stat{background:#fff;border:1px solid #eaecf0;border-radius:15px;padding:18px}
+.stat span{color:#667085;font-size:13px}
+.stat strong{display:block;font-size:28px;margin-top:7px}
+.card{background:#fff;border:1px solid #eaecf0;border-radius:15px;padding:20px;margin-bottom:16px}
+.filters{display:flex;gap:10px;flex-wrap:wrap}
+input,textarea,select{width:100%;border:1px solid #d0d5dd;border-radius:9px;padding:11px 12px;outline:0;background:#fff}
+input:focus,textarea:focus,select:focus{border-color:#155eef}
+.search{max-width:380px}
+.quiz{display:flex;justify-content:space-between;gap:15px;align-items:flex-start}
+.quiz-title{font-size:18px;font-weight:800;margin-bottom:7px}
+.meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.badge{font-size:11px;padding:5px 9px;border-radius:20px;background:#f2f4f7;color:#475467}
+.published{background:#ecfdf3;color:#027a48}
+.draft{background:#f2f4f7;color:#475467}
+.actions{display:flex;gap:7px;flex-wrap:wrap}
+.empty,.loading{text-align:center;padding:45px;color:#667085}
+.error{display:none;background:#fef3f2;border:1px solid #fecdca;color:#b42318;padding:12px;border-radius:9px;margin-bottom:15px}
+.modal{display:none;position:fixed;inset:0;background:#0008;z-index:100;align-items:center;justify-content:center;padding:15px}
+.modal.show{display:flex}
+.modal-box{width:min(720px,100%);max-height:94vh;overflow:auto;background:#fff;border-radius:18px;padding:22px}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.close{background:#f2f4f7;font-size:18px}
+.form-group{margin-bottom:14px}
+label{display:block;font-size:13px;font-weight:800;margin-bottom:6px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.question{border:1px solid #eaecf0;border-radius:12px;padding:15px;margin-top:10px}
+.question-top{display:flex;justify-content:space-between;gap:10px}
+.question-text{font-weight:700;line-height:1.5}
+.option{padding:7px 0;color:#475467;font-size:13px}
+.correct{color:#027a48;font-weight:800}
+.footer-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+#questionPanel{display:none}
+@media(max-width:800px){
+.stats{grid-template-columns:1fr 1fr}
+.quiz{flex-direction:column}
+.actions{width:100%}
+.grid{grid-template-columns:1fr}
+}
+@media(max-width:500px){
+.container{padding:15px}
+.stats{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="logo">LetsStudy Pro</div>
+<div class="admin">Admin • Quiz Management</div>
+</header>
+
+<main class="container">
+
+<div class="top">
+<div>
+<h1>Quiz Management</h1>
+<p class="muted">Manage quizzes and questions for your courses.</p>
+</div>
+
+<button class="primary" onclick="openQuizModal()">
++ Create Quiz
+</button>
+</div>
+
+<div id="error" class="error"></div>
+
+<div class="stats">
+<div class="stat">
+<span>Total Quizzes</span>
+<strong id="totalQuizzes">0</strong>
+</div>
+
+<div class="stat">
+<span>Published</span>
+<strong id="publishedQuizzes">0</strong>
+</div>
+
+<div class="stat">
+<span>Drafts</span>
+<strong id="draftQuizzes">0</strong>
+</div>
+
+<div class="stat">
+<span>Total Questions</span>
+<strong id="totalQuestions">0</strong>
+</div>
+</div>
+
+<div class="card">
+<div class="filters">
+
+<input
+id="search"
+class="search"
+placeholder="Search quiz or course ID..."
+oninput="renderQuizzes()">
+
+<select id="statusFilter" onchange="renderQuizzes()">
+<option value="">All Status</option>
+<option value="published">Published</option>
+<option value="draft">Draft</option>
+</select>
+
+</div>
+</div>
+
+<div id="quizList" class="loading">
+Loading quizzes...
+</div>
+
+<!-- QUESTIONS PANEL -->
+
+<section id="questionPanel">
+
+<div class="top">
+<div>
+<h2 id="selectedQuizTitle">Quiz Questions</h2>
+<p class="muted" id="selectedQuizInfo"></p>
+</div>
+
+<button class="secondary" onclick="closeQuestionPanel()">
+← Back to Quizzes
+</button>
+</div>
+
+<div class="card">
+
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+<div>
+<strong>Questions</strong>
+<p class="muted" style="margin:5px 0">Manage questions for this quiz.</p>
+</div>
+
+<button class="primary" onclick="openQuestionModal()">
++ Add Question
+</button>
+</div>
+
+<div id="questionList" class="loading">
+Loading questions...
+</div>
+
+</div>
+
+</section>
+
+</main>
+
+
+<!-- QUIZ MODAL -->
+
+<div id="quizModal" class="modal">
+
+<div class="modal-box">
+
+<div class="modal-head">
+<h2 id="quizModalTitle">Create Quiz</h2>
+
+<button class="close" onclick="closeQuizModal()">×</button>
+</div>
+
+<form id="quizForm">
+
+<div class="form-group">
+<label>Course ID *</label>
+<input id="courseId" required>
+</div>
+
+<div class="form-group">
+<label>Quiz Title *</label>
+<input id="quizTitle" required>
+</div>
+
+<div class="form-group">
+<label>Description</label>
+<textarea id="quizDescription" rows="4"></textarea>
+</div>
+
+<div class="grid">
+
+<div class="form-group">
+<label>Passing Score (%)</label>
+<input id="passingScore" type="number" min="0" max="100" value="70">
+</div>
+
+<div class="form-group">
+<label>Time Limit (minutes)</label>
+<input id="timeLimit" type="number" min="0" value="30">
+</div>
+
+<div class="form-group">
+<label>Attempts</label>
+<input id="attempts" type="number" min="1" value="1">
+</div>
+
+<div class="form-group">
+<label>Status</label>
+<select id="quizStatus">
+<option value="draft">Draft</option>
+<option value="published">Published</option>
+</select>
+</div>
+
+</div>
+
+<div class="footer-actions">
+<button type="button" class="secondary" onclick="closeQuizModal()">Cancel</button>
+<button class="primary">Save Quiz</button>
+</div>
+
+</form>
+
+</div>
+</div>
+
+
+<!-- QUESTION MODAL -->
+
+<div id="questionModal" class="modal">
+
+<div class="modal-box">
+
+<div class="modal-head">
+<h2 id="questionModalTitle">Add Question</h2>
+
+<button class="close" onclick="closeQuestionModal()">×</button>
+</div>
+
+<form id="questionForm">
+
+<div class="form-group">
+<label>Question *</label>
+<textarea id="questionText" rows="4" required></textarea>
+</div>
+
+<div class="grid">
+
+<div class="form-group">
+<label>Option A *</label>
+<input id="optionA" required>
+</div>
+
+<div class="form-group">
+<label>Option B *</label>
+<input id="optionB" required>
+</div>
+
+<div class="form-group">
+<label>Option C *</label>
+<input id="optionC" required>
+</div>
+
+<div class="form-group">
+<label>Option D *</label>
+<input id="optionD" required>
+</div>
+
+</div>
+
+<div class="grid">
+
+<div class="form-group">
+<label>Correct Answer *</label>
+<select id="correctAnswer" required>
+<option value="A">A</option>
+<option value="B">B</option>
+<option value="C">C</option>
+<option value="D">D</option>
+</select>
+</div>
+
+<div class="form-group">
+<label>Points</label>
+<input id="points" type="number" min="1" value="1">
+</div>
+
+<div class="form-group">
+<label>Order</label>
+<input id="questionOrder" type="number" min="1" value="1">
+</div>
+
+<div class="form-group">
+<label>Status</label>
+<select id="questionStatus">
+<option value="published">Published</option>
+<option value="draft">Draft</option>
+</select>
+</div>
+
+</div>
+
+<div class="form-group">
+<label>Explanation</label>
+<textarea id="explanation" rows="3"></textarea>
+</div>
+
+<div class="footer-actions">
+<button type="button" class="secondary" onclick="closeQuestionModal()">Cancel</button>
+<button class="primary">Save Question</button>
+</div>
+
+</form>
+
+</div>
+</div>
+
+
+<script type="module">
+
+import {initializeApp}
+from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+getDocs,
+addDoc,
+updateDoc,
+deleteDoc,
+doc,
+serverTimestamp
+}
+from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+
+const firebaseConfig={
+apiKey:"AIzaSyBcKXbAVKXbkljsyRgI_0rjodBn678tCc",
+authDomain:"let-s-study-pro-course.firebaseapp.com",
+databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+projectId:"let-s-study-pro-course",
+storageBucket:"let-s-study-pro-course.firebasestorage.app",
+messagingSenderId:"474928293390",
+appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+measurementId:"G-85B7V5H5J0"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+let quizzes=[];
+let questions=[];
+let editingQuizId=null;
+let editingQuestionId=null;
+let selectedQuiz=null;
+
+
+/* =========================
+LOAD QUIZZES
+========================= */
+
+async function loadQuizzes(){
+
+try{
+
+const snap=await getDocs(
+collection(db,"quizzes")
+);
+
+quizzes=snap.docs.map(d=>({
+id:d.id,
+...d.data()
+}));
+
+await loadQuestionCount();
+
+renderQuizzes();
+
+}catch(e){
+
+showError(e.message);
+
+}
+
+}
+
+
+/* =========================
+QUESTION COUNT
+========================= */
+
+async function loadQuestionCount(){
+
+try{
+
+const snap=await getDocs(
+collection(db,"quizQuestions")
+);
+
+questions=snap.docs.map(d=>({
+id:d.id,
+...d.data()
+}));
+
+document.getElementById("totalQuestions").textContent=
+questions.length;
+
+}catch(e){
+
+console.warn(e);
+
+}
+
+}
+
+
+/* =========================
+RENDER QUIZZES
+========================= */
+
+window.renderQuizzes=function(){
+
+const search=
+document.getElementById("search").value
+.toLowerCase().trim();
+
+const status=
+document.getElementById("statusFilter").value;
+
+const list=quizzes.filter(q=>{
+
+const text=
+`${q.title||""} ${q.courseId||""}`
+.toLowerCase();
+
+return text.includes(search)&&
+(!status||q.status===status);
+
+});
+
+
+document.getElementById("totalQuizzes").textContent=
+quizzes.length;
+
+document.getElementById("publishedQuizzes").textContent=
+quizzes.filter(q=>q.status==="published").length;
+
+document.getElementById("draftQuizzes").textContent=
+quizzes.filter(q=>q.status!=="published").length;
+
+
+if(!list.length){
+
+document.getElementById("quizList").innerHTML=
+`<div class="card empty">No quizzes found.</div>`;
+
+return;
+
+}
+
+
+document.getElementById("quizList").innerHTML=
+list.map(q=>{
+
+const count=questions.filter(x=>x.quizId===q.id).length;
+
+return`
+
+<div class="card quiz">
+
+<div>
+
+<div class="quiz-title">
+${escapeHTML(q.title||"Untitled Quiz")}
+</div>
+
+<div class="muted">
+${escapeHTML(q.description||"No description")}
+</div>
+
+<div class="meta">
+
+<span class="badge">
+Course: ${escapeHTML(q.courseId||"-")}
+</span>
+
+<span class="badge">
+${count} Questions
+</span>
+
+<span class="badge">
+Passing: ${q.passingScore??70}%
+</span>
+
+<span class="badge">
+Time: ${q.timeLimit??0} min
+</span>
+
+<span class="badge">
+Attempts: ${q.attempts??1}
+</span>
+
+<span class="badge ${
+q.status==="published"?"published":"draft"
+}">
+${escapeHTML(q.status||"draft")}
+</span>
+
+</div>
+
+</div>
+
+<div class="actions">
+
+<button class="primary"
+onclick="openQuestions('${q.id}')">
+Questions
+</button>
+
+<button class="secondary"
+onclick="editQuiz('${q.id}')">
+Edit
+</button>
+
+<button class="danger"
+onclick="deleteQuiz('${q.id}')">
+Delete
+</button>
+
+</div>
+
+</div>
+
+`;
+
+}).join("");
+
+}
+
+
+/* =========================
+CREATE QUIZ
+========================= */
+
+window.openQuizModal=function(){
+
+editingQuizId=null;
+
+document.getElementById("quizModalTitle").textContent=
+"Create Quiz";
+
+document.getElementById("quizForm").reset();
+
+document.getElementById("passingScore").value=70;
+document.getElementById("timeLimit").value=30;
+document.getElementById("attempts").value=1;
+
+document.getElementById("quizModal").classList.add("show");
+
+};
+
+
+/* =========================
+EDIT QUIZ
+========================= */
+
+window.editQuiz=function(id){
+
+const q=quizzes.find(x=>x.id===id);
+
+if(!q)return;
+
+editingQuizId=id;
+
+document.getElementById("quizModalTitle").textContent=
+"Edit Quiz";
+
+document.getElementById("courseId").value=q.courseId||"";
+document.getElementById("quizTitle").value=q.title||"";
+document.getElementById("quizDescription").value=q.description||"";
+document.getElementById("passingScore").value=q.passingScore??70;
+document.getElementById("timeLimit").value=q.timeLimit??30;
+document.getElementById("attempts").value=q.attempts??1;
+document.getElementById("quizStatus").value=q.status||"draft";
+
+document.getElementById("quizModal").classList.add("show");
+
+};
+
+
+/* =========================
+SAVE QUIZ
+========================= */
+
+document.getElementById("quizForm")
+.addEventListener("submit",async e=>{
+
+e.preventDefault();
+
+const data={
+courseId:document.getElementById("courseId").value.trim(),
+title:document.getElementById("quizTitle").value.trim(),
+description:document.getElementById("quizDescription").value.trim(),
+passingScore:Number(document.getElementById("passingScore").value),
+timeLimit:Number(document.getElementById("timeLimit").value),
+attempts:Number(document.getElementById("attempts").value),
+status:document.getElementById("quizStatus").value
+};
+
+try{
+
+if(editingQuizId){
+
+await updateDoc(
+doc(db,"quizzes",editingQuizId),
+{
+...data,
+updatedAt:serverTimestamp()
+}
+);
+
+}else{
+
+await addDoc(
+collection(db,"quizzes"),
+{
+...data,
+createdAt:serverTimestamp()
+}
+);
+
+}
+
+closeQuizModal();
+await loadQuizzes();
+
+}catch(e){
+
+showError(e.message);
+
+}
+
+});
+
+
+/* =========================
+DELETE QUIZ
+========================= */
+
+window.deleteQuiz=async function(id){
+
+if(!confirm(
+"Delete this quiz? Questions belonging to it will also be removed."
+))return;
+
+try{
+
+const quizQuestions=
+questions.filter(q=>q.quizId===id);
+
+for(const q of quizQuestions){
+
+await deleteDoc(
+doc(db,"quizQuestions",q.id)
+);
+
+}
+
+await deleteDoc(
+doc(db,"quizzes",id)
+);
+
+await loadQuizzes();
+
+}catch(e){
+
+showError(e.message);
+
+}
+
+};
+
+
+/* =========================
+OPEN QUESTIONS
+========================= */
+
+window.openQuestions=async function(id){
+
+selectedQuiz=
+quizzes.find(q=>q.id===id);
+
+if(!selectedQuiz)return;
+
+document.getElementById("quizList").style.display="none";
+document.getElementById("questionPanel").style.display="block";
+
+document.getElementById("selectedQuizTitle").textContent=
+selectedQuiz.title;
+
+document.getElementById("selectedQuizInfo").textContent=
+`Course ID: ${selectedQuiz.courseId} • Quiz ID: ${selectedQuiz.id}`;
+
+await loadQuestions();
+
+window.scrollTo({
+top:0,
+behavior:"smooth"
+});
+
+};
+
+
+/* =========================
+LOAD QUESTIONS
+========================= */
+
+async function loadQuestions(){
+
+const snap=await getDocs(
+collection(db,"quizQuestions")
+);
+
+questions=snap.docs
+.map(d=>({
+id:d.id,
+...d.data()
+}))
+.filter(q=>
+q.quizId===selectedQuiz.id
+)
+.sort((a,b)=>
+Number(a.order||0)-Number(b.order||0)
+);
+
+document.getElementById("totalQuestions").textContent=
+questions.length;
+
+renderQuestions();
+
+}
+
+
+/* =========================
+RENDER QUESTIONS
+========================= */
+
+function renderQuestions(){
+
+const el=
+document.getElementById("questionList");
+
+if(!questions.length){
+
+el.innerHTML=
+`<div class="empty">
+No questions yet. Add the first question.
+</div>`;
+
+return;
+
+}
+
+el.innerHTML=
+questions.map((q,i)=>`
+
+<div class="question">
+
+<div class="question-top">
+
+<div>
+
+<div class="question-text">
+${i+1}. ${escapeHTML(q.question)}
+</div>
+
+<div class="option">
+A. ${escapeHTML(q.options?.A||"")}
+</div>
+
+<div class="option">
+B. ${escapeHTML(q.options?.B||"")}
+</div>
+
+<div class="option">
+C. ${escapeHTML(q.options?.C||"")}
+</div>
+
+<div class="option">
+D. ${escapeHTML(q.options?.D||"")}
+</div>
+
+<div class="meta">
+
+<span class="badge correct">
+Correct: ${escapeHTML(q.correctAnswer||"-")}
+</span>
+
+<span class="badge">
+Points: ${q.points??1}
+</span>
+
+<span class="badge">
+Order: ${q.order??i+1}
+</span>
+
+<span class="badge">
+${escapeHTML(q.status||"published")}
+</span>
+
+</div>
+
+</div>
+
+<div class="actions">
+
+<button class="secondary"
+onclick="editQuestion('${q.id}')">
+Edit
+</button>
+
+<button class="danger"
+onclick="deleteQuestion('${q.id}')">
+Delete
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+`).join("");
+
+}
+
+
+/* =========================
+QUESTION MODAL
+========================= */
+
+window.openQuestionModal=function(){
+
+editingQuestionId=null;
+
+document.getElementById("questionModalTitle").textContent=
+"Add Question";
+
+document.getElementById("questionForm").reset();
+
+document.getElementById("points").value=1;
+document.getElementById("questionOrder").value=
+questions.length+1;
+
+document.getElementById("questionModal").classList.add("show");
+
+};
+
+
+window.editQuestion=function(id){
+
+const q=questions.find(x=>x.id===id);
+
+if(!q)return;
+
+editingQuestionId=id;
+
+document.getElementById("questionModalTitle").textContent=
+"Edit Question";
+
+document.getElementById("questionText").value=q.question||"";
+document.getElementById("optionA").value=q.options?.A||"";
+document.getElementById("optionB").value=q.options?.B||"";
+document.getElementById("optionC").value=q.options?.C||"";
+document.getElementById("optionD").value=q.options?.D||"";
+document.getElementById("correctAnswer").value=q.correctAnswer||"A";
+document.getElementById("points").value=q.points??1;
+document.getElementById("questionOrder").value=q.order??1;
+document.getElementById("questionStatus").value=q.status||"published";
+document.getElementById("explanation").value=q.explanation||"";
+
+document.getElementById("questionModal").classList.add("show");
+
+};
+
+
+/* =========================
+SAVE QUESTION
+========================= */
+
+document.getElementById("questionForm")
+.addEventListener("submit",async e=>{
+
+e.preventDefault();
+
+const data={
+
+quizId:selectedQuiz.id,
+
+courseId:selectedQuiz.courseId,
+
+question:
+document.getElementById("questionText").value.trim(),
+
+options:{
+A:document.getElementById("optionA").value.trim(),
+B:document.getElementById("optionB").value.trim(),
+C:document.getElementById("optionC").value.trim(),
+D:document.getElementById("optionD").value.trim()
+},
+
+correctAnswer:
+document.getElementById("correctAnswer").value,
+
+explanation:
+document.getElementById("explanation").value.trim(),
+
+points:Number(
+document.getElementById("points").value
+),
+
+order:Number(
+document.getElementById("questionOrder").value
+),
+
+status:
+document.getElementById("questionStatus").value
+
+};
+
+try{
+
+if(editingQuestionId){
+
+await updateDoc(
+doc(
+db,
+"quizQuestions",
+editingQuestionId
+),
+{
+...data,
+updatedAt:serverTimestamp()
+}
+);
+
+}else{
+
+await addDoc(
+collection(db,"quizQuestions"),
+{
+...data,
+createdAt:serverTimestamp(),
+updatedAt:serverTimestamp()
+}
+);
+
+}
+
+closeQuestionModal();
+await loadQuestions();
+
+}catch(e){
+
+showError(e.message);
+
+}
+
+});
+
+
+/* =========================
+DELETE QUESTION
+========================= */
+
+window.deleteQuestion=async function(id){
+
+if(!confirm(
+"Delete this question?"
+))return;
+
+try{
+
+await deleteDoc(
+doc(db,"quizQuestions",id)
+);
+
+await loadQuestions();
+
+}catch(e){
+
+showError(e.message);
+
+}
+
+};
+
+
+/* =========================
+CLOSE
+========================= */
+
+window.closeQuizModal=function(){
+
+document.getElementById("quizModal")
+.classList.remove("show");
+
+};
+
+window.closeQuestionModal=function(){
+
+document.getElementById("questionModal")
+.classList.remove("show");
+
+};
+
+window.closeQuestionPanel=function(){
+
+selectedQuiz=null;
+
+document.getElementById("questionPanel").style.display="none";
+document.getElementById("quizList").style.display="block";
+
+loadQuizzes();
+
+};
+
+
+/* =========================
+ERROR
+========================= */
+
+function showError(message){
+
+const el=document.getElementById("error");
+
+el.textContent=message;
+el.style.display="block";
+
+setTimeout(()=>{
+  el.style.display="none";
+},6000);
+
+}
+
+
+/* =========================
+ESCAPE HTML
+========================= */
+
+function escapeHTML(value){
+
+return String(value ?? "")
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+
+}
+
+
+/* =========================
+CLOSE MODALS WHEN CLICKING
+OUTSIDE
+========================= */
+
+document.getElementById("quizModal")
+.addEventListener("click",e=>{
+
+if(e.target.id==="quizModal"){
+closeQuizModal();
+}
+
+});
+
+
+document.getElementById("questionModal")
+.addEventListener("click",e=>{
+
+if(e.target.id==="questionModal"){
+closeQuestionModal();
+}
+
+});
+
+
+/* =========================
+ESC KEY
+========================= */
+
+document.addEventListener("keydown",e=>{
+
+if(e.key==="Escape"){
+
+closeQuizModal();
+closeQuestionModal();
+
+}
+
+});
+
+
+/* =========================
+URL COURSE FILTER
+========================= */
+
+const urlParams=
+new URLSearchParams(
+window.location.search
+);
+
+const urlCourseId=
+urlParams.get("courseId");
+
+
+if(urlCourseId){
+
+document.getElementById("search").value=
+urlCourseId;
+
+}
+
+
+/* =========================
+INITIAL LOAD
+========================= */
+
+loadQuizzes();
+
+</script>
+
+</body>
+</html>
