@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<title>Admin Panel | LetsStudy Pro</title>
+
+<meta name="description"
+content="LetsStudy Pro administration and management dashboard.">
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+body{
+  font-family:Inter,Arial,sans-serif;
+  background:#f5f7fb;
+  color:#111827;
+}
+
+.header{
+  height:64px;
+  background:#fff;
+  border-bottom:1px solid #e5e7eb;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 22px;
+  position:sticky;
+  top:0;
+  z-index:1000;
+}
+
+.logo{
+  text-decoration:none;
+  font-size:21px;
+  font-weight:900;
+  color:#111827;
+}
+
+.logo span{
+  color:#2563eb;
+}
+
+.header-right{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.user{
+  font-size:13px;
+  color:#6b7280;
+}
+
+.logout{
+  border:0;
+  background:#fee2e2;
+  color:#b91c1c;
+  padding:9px 13px;
+  border-radius:9px;
+  cursor:pointer;
+  font-weight:700;
+}
+
+.layout{
+  display:flex;
+  min-height:calc(100vh - 64px);
+}
+
+.sidebar{
+  width:270px;
+  background:#111827;
+  color:#fff;
+  padding:18px 12px;
+  overflow-y:auto;
+  position:fixed;
+  top:64px;
+  bottom:0;
+  left:0;
+  z-index:900;
+}
+
+.sidebar-title{
+  padding:10px 12px;
+  font-size:11px;
+  text-transform:uppercase;
+  color:#9ca3af;
+  font-weight:800;
+  letter-spacing:.7px;
+}
+
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  padding:10px 12px;
+  margin:2px 0;
+  border-radius:8px;
+  color:#d1d5db;
+  text-decoration:none;
+  font-size:13px;
+  font-weight:600;
+  transition:.15s;
+}
+
+.nav-item:hover{
+  background:#1f2937;
+  color:#fff;
+}
+
+.nav-item.active{
+  background:#2563eb;
+  color:#fff;
+}
+
+.icon{
+  width:22px;
+  text-align:center;
+}
+
+.main{
+  margin-left:270px;
+  width:calc(100% - 270px);
+  padding:28px;
+}
+
+.page-title{
+  font-size:30px;
+  font-weight:900;
+}
+
+.page-subtitle{
+  color:#6b7280;
+  margin-top:7px;
+  font-size:14px;
+}
+
+.search{
+  margin:25px 0;
+  width:100%;
+  max-width:650px;
+}
+
+.search input{
+  width:100%;
+  padding:14px 16px;
+  border:1px solid #d1d5db;
+  border-radius:11px;
+  outline:none;
+  background:#fff;
+  font-size:14px;
+}
+
+.search input:focus{
+  border-color:#2563eb;
+  box-shadow:0 0 0 3px rgba(37,99,235,.1);
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:
+    repeat(auto-fill,minmax(230px,1fr));
+  gap:17px;
+}
+
+.card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:15px;
+  padding:20px;
+  text-decoration:none;
+  color:#111827;
+  box-shadow:0 5px 18px rgba(15,23,42,.05);
+  transition:.2s;
+}
+
+.card:hover{
+  transform:translateY(-3px);
+  border-color:#2563eb;
+  box-shadow:0 12px 28px rgba(15,23,42,.1);
+}
+
+.card-icon{
+  width:42px;
+  height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#eff6ff;
+  color:#2563eb;
+  border-radius:10px;
+  font-size:20px;
+  margin-bottom:13px;
+}
+
+.card h3{
+  font-size:15px;
+  margin-bottom:6px;
+}
+
+.card p{
+  font-size:12px;
+  color:#6b7280;
+  line-height:1.5;
+}
+
+.count{
+  margin:25px 0 12px;
+  font-size:13px;
+  color:#6b7280;
+}
+
+.menu-btn{
+  display:none;
+  border:0;
+  background:#eff6ff;
+  color:#2563eb;
+  width:40px;
+  height:40px;
+  border-radius:9px;
+  font-size:20px;
+}
+
+.overlay{
+  display:none;
+}
+
+@media(max-width:800px){
+
+  .menu-btn{
+    display:block;
+  }
+
+  .sidebar{
+    transform:translateX(-100%);
+    transition:.25s;
+  }
+
+  .sidebar.open{
+    transform:translateX(0);
+  }
+
+  .overlay.show{
+    display:block;
+    position:fixed;
+    inset:64px 0 0;
+    background:rgba(0,0,0,.4);
+    z-index:800;
+  }
+
+  .main{
+    margin-left:0;
+    width:100%;
+    padding:20px 15px;
+  }
+
+  .user{
+    display:none;
+  }
+
+  .page-title{
+    font-size:25px;
+  }
+
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+
+  <div style="display:flex;align-items:center;gap:12px">
+
+    <button
+      class="menu-btn"
+      id="menuBtn"
+      type="button"
+    >☰</button>
+
+    <a href="index.html" class="logo">
+      LetsStudy <span>Pro</span>
+    </a>
+
+  </div>
+
+  <div class="header-right">
+
+    <span
+      class="user"
+      id="userEmail"
+    >
+      Checking login...
+    </span>
+
+    <button
+      class="logout"
+      id="logoutBtn"
+      type="button"
+    >
+      Logout
+    </button>
+
+  </div>
+
+</header>
+
+
+<div class="overlay" id="overlay"></div>
+
+
+<div class="layout">
+
+<aside class="sidebar" id="sidebar">
+
+<div class="sidebar-title">
+  Main
+</div>
+
+<a class="nav-item active" href="admin-panel.html">
+  <span class="icon">🏠</span>
+  Admin Home
+</a>
+
+<a class="nav-item" href="dashboard.html">
+  <span class="icon">📊</span>
+  Dashboard
+</a>
+
+
+<div class="sidebar-title">
+  Users & Security
+</div>
+
+<a class="nav-item" href="admin-login-log.html">
+  🔐 Login Logs
+</a>
+
+<a class="nav-item" href="admin-users.html">
+  👥 Users
+</a>
+
+<a class="nav-item" href="admin-students.html">
+  🎓 Students
+</a>
+
+<a class="nav-item"
+href="admin-instructor-applications-09/12/2025-ummy.html.html">
+  👨‍🏫 Instructor Applications
+</a>
+
+<a class="nav-item" href="admin-identities-006.html">
+  🪪 Identities
+</a>
+
+<a class="nav-item" href="admin-roles.html">
+  👤 Roles
+</a>
+
+<a class="nav-item" href="admin-permissions.html">
+  🔑 Permissions
+</a>
+
+<a class="nav-item" href="admin-security.html">
+  🛡️ Security
+</a>
+
+<a class="nav-item" href="admin-settings.html">
+  ⚙️ Settings
+</a>
+
+<a class="nav-item" href="admin-maintenance.html">
+  🔧 Maintenance
+</a>
+
+<a class="nav-item" href="admin-notifications.html">
+  🔔 Notifications
+</a>
+
+<a class="nav-item" href="admin-support.html">
+  🆘 Support
+</a>
+
+<a class="nav-item"
+href="admin-system-inspector-009.html">
+  🔍 System Inspector
+</a>
+
+
+<div class="sidebar-title">
+  Learning
+</div>
+
+<a class="nav-item"
+href="admin-course-09/12/2025-ummy.html">
+  📚 Courses
+</a>
+
+<a class="nav-item"
+href="admin-course-module-09/12/2025-ummy..html">
+  🧩 Course Modules
+</a>
+
+<a class="nav-item"
+href="admin-lessons-09/12/2025-ummy.html">
+  📖 Lessons
+</a>
+
+<a class="nav-item"
+href="admin-assignments-&-05.html">
+  📝 Assignments
+</a>
+
+<a class="nav-item"
+href="admin-course-faqs-1234.html">
+  ❓ Course FAQs
+</a>
+
+<a class="nav-item"
+href="admin-announcements~√~[]~.html">
+  📢 Announcements
+</a>
+
+<a class="nav-item"
+href="admin-quiz-x-power+99.html">
+  🧠 Quizzes
+</a>
+
+<a class="nav-item"
+href="admin-video.html">
+  🎬 Video
+</a>
+
+<a class="nav-item"
+href="admin-videos.html">
+  🎥 Videos
+</a>
+
+<a class="nav-item"
+href="admin-resourses-09/12/2025-ummy.html">
+  📁 Resources
+</a>
+
+<a class="nav-item"
+href="admin-resources-¢-@-&.html">
+  📂 Resource Manager
+</a>
+
+
+<div class="sidebar-title">
+  Finance
+</div>
+
+<a class="nav-item" href="admin-order.html">
+  🛒 Orders
+</a>
+
+<a class="nav-item" href="admin-payments.html">
+  💳 Payments
+</a>
+
+<a class="nav-item" href="admin-payment-methods.html">
+  💰 Payment Methods
+</a>
+
+<a class="nav-item" href="admin-refunds.html">
+  ↩️ Refunds
+</a>
+
+<a class="nav-item" href="admin-payouts.html">
+  💵 Payouts
+</a>
+
+<a class="nav-item"
+href="admin-payouts-setting.html">
+  ⚙️ Payout Settings
+</a>
+
+<a class="nav-item" href="admin-withdrawal.html">
+  🏦 Withdrawals
+</a>
+
+<a class="nav-item" href="admin-wallet.html">
+  👛 Wallet
+</a>
+
+<a class="nav-item" href="admin-revenue.html">
+  📈 Revenue
+</a>
+
+<a class="nav-item"
+href="admin-subscription-096.html">
+  🔄 Subscriptions
+</a>
+
+<a class="nav-item" href="admin-premium.html">
+  ⭐ Premium
+</a>
+
+<a class="nav-item" href="admin-referrals.html">
+  🔗 Referrals
+</a>
+
+
+<div class="sidebar-title">
+  Analytics
+</div>
+
+<a class="nav-item"
+href="admin-analytics-09/12/2025-ummy.html">
+  📊 Admin Analytics
+</a>
+
+<a class="nav-item" href="admin-reports.html">
+  📋 Reports
+</a>
+
+<a class="nav-item" href="revenue-analytics.html">
+  💹 Revenue Analytics
+</a>
+
+<a class="nav-item" href="app-analytics.html">
+  📱 App Analytics
+</a>
+
+<a class="nav-item" href="premium-analytics.html">
+  ⭐ Premium Analytics
+</a>
+
+<a class="nav-item" href="video-analytics.html">
+  🎥 Video Analytics
+</a>
+
+<a class="nav-item" href="website-analytics.html">
+  🌐 Website Analytics
+</a>
+
+<a class="nav-item" href="theme-analytics.html">
+  🎨 Theme Analytics
+</a>
+
+<a class="nav-item" href="plugins-analytics.html">
+  🔌 Plugins Analytics
+</a>
+
+
+<div class="sidebar-title">
+  Marketing
+</div>
+
+<a class="nav-item" href="admin-marketing+.html">
+  📣 Marketing
+</a>
+
+<a class="nav-item" href="admin-seo.html">
+  🔎 SEO
+</a>
+
+<a class="nav-item" href="sms-campaigns.html">
+  📱 SMS Campaigns
+</a>
+
+<a class="nav-item" href="whatsapp-campaigns.html">
+  💬 WhatsApp Campaigns
+</a>
+
+<a class="nav-item" href="email-campaigns.html">
+  ✉️ Email Campaigns
+</a>
+
+<a class="nav-item" href="marketing-dashboard.html">
+  📢 Marketing Dashboard
+</a>
+
+
+<div class="sidebar-title">
+  Ecosystem
+</div>
+
+<a class="nav-item" href="admin-community.html">
+  👥 Community
+</a>
+
+<a class="nav-item" href="admin-service.html">
+  🛠️ Services
+</a>
+
+<a class="nav-item" href="admin-private-meeting.html">
+  📅 Private Meetings
+</a>
+
+<a class="nav-item" href="admin-bussiness.html">
+  🏢 Business
+</a>
+
+<a class="nav-item" href="admin-scholarships*-00u.html">
+  🎓 Scholarships
+</a>
+
+<a class="nav-item"
+href="admin-career-09/12/2025-ummy.html">
+  💼 Careers
+</a>
+
+<a class="nav-item"
+href="admin-certificate-09/12/2025-ummy.html">
+  🏆 Certificates
+</a>
+
+<a class="nav-item"
+href="admin-adult-log-09/12/2025-ummy.html">
+  📜 Adult Log
+</a>
+
+<a class="nav-item"
+href="admin-ai-09/12/2025-ummy.html">
+  🤖 AI
+</a>
+
+<a class="nav-item" href="admin-translations.html">
+  🌍 Translations
+</a>
+
+<a class="nav-item" href="admin-page-links.html">
+  🔗 Page Links
+</a>
+
+<a class="nav-item" href="admin-reviews.html">
+  ⭐ Reviews
+</a>
+
+
+<div class="sidebar-title">
+  Dashboards
+</div>
+
+<a class="nav-item" href="super-admin.html">
+  👑 Super Admin
+</a>
+
+<a class="nav-item"
+href="super-admin-x-power-admin.005.html">
+  ⚡ Super Admin X
+</a>
+
+<a class="nav-item" href="affiliate-dashboard.html">
+  🤝 Affiliate Dashboard
+</a>
+
+<a class="nav-item" href="premium-dashboard.html">
+  ⭐ Premium Dashboard
+</a>
+
+<a class="nav-item" href="creator-dashboard.html">
+  ✍️ Creator Dashboard
+</a>
+
+<a class="nav-item" href="provider-dashboard.html">
+  🏪 Provider Dashboard
+</a>
+
+<a class="nav-item" href="developer-dashboard.html">
+  👨‍💻 Developer Dashboard
+</a>
+
+<a class="nav-item" href="cloud-dashboard.html">
+  ☁️ Cloud Dashboard
+</a>
+
+<a class="nav-item" href="website-dashboard.html">
+  🌐 Website Dashboard
+</a>
+
+<a class="nav-item" href="marketing-dashboard.html">
+  📣 Marketing Dashboard
+</a>
+
+</aside>
+
+
+<main class="main">
+
+<h1 class="page-title">
+  LetsStudy Pro Admin Panel
+</h1>
+
+<p class="page-subtitle">
+  Manage and access all LetsStudy Pro administration tools from one place.
+</p>
+
+
+<div class="search">
+
+<input
+  id="searchInput"
+  type="search"
+  placeholder="Search admin pages..."
+  autocomplete="off"
+>
+
+</div>
+
+
+<div class="count">
+  <span id="pageCount">0</span>
+  admin pages available
+</div>
+
+
+<div class="grid" id="pageGrid"></div>
+
+</main>
+
+</div>
+
+
+<script type="module">
+
+/*
+==========================================================
+FIREBASE AUTHENTICATION
+==========================================================
+*/
+
+import {
+  initializeApp
+} from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut
+} from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+
+const firebaseConfig = {
+
+  apiKey:
+    "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+  authDomain:
+    "let-s-study-pro-course.firebaseapp.com",
+
+  projectId:
+    "let-s-study-pro-course",
+
+  storageBucket:
+    "let-s-study-pro-course.firebasestorage.app",
+
+  messagingSenderId:
+    "474928293390",
+
+  appId:
+    "1:474928293390:web:2bcc2aebf2351c12a9fe5f"
+
+};
+
+
+const app =
+  initializeApp(
+    firebaseConfig
+  );
+
+
+const auth =
+  getAuth(app);
+
+
+/*
+==========================================================
+LOGIN CHECK
+ANY LOGGED-IN USER IS ALLOWED
+==========================================================
+*/
+
+onAuthStateChanged(
+  auth,
+  user => {
+
+    if(!user){
+
+      window.location.href =
+        "login.html";
+
+      return;
+
+    }
+
+
+    document.getElementById(
+      "userEmail"
+    ).textContent =
+      user.email ||
+      "Logged in user";
+
+  }
+);
+
+
+/*
+==========================================================
+LOGOUT
+==========================================================
+*/
+
+document
+  .getElementById("logoutBtn")
+  .addEventListener(
+    "click",
+    async () => {
+
+      try{
+
+        await signOut(auth);
+
+        window.location.href =
+          "login.html";
+
+      }catch(error){
+
+        console.error(
+          "Logout error:",
+          error
+        );
+
+      }
+
+    }
+  );
+
+</script>
+
+
+<script>
+
+/*
+==========================================================
+ADMIN PAGE DIRECTORY
+==========================================================
+*/
+
+const pages = [
+
+{
+  title:"Login Logs",
+  file:"admin-login-log.html",
+  icon:"🔐",
+  description:"View authentication and login activity."
+},
+
+{
+  title:"Users",
+  file:"admin-users.html",
+  icon:"👥",
+  description:"Manage registered platform users."
+},
+
+{
+  title:"Students",
+  file:"admin-students.html",
+  icon:"🎓",
+  description:"Manage students and learning accounts."
+},
+
+{
+  title:"Instructor Applications",
+  file:"admin-instructor-applications-09/12/2025-ummy.html.html",
+  icon:"👨‍🏫",
+  description:"Review instructor applications."
+},
+
+{
+  title:"Identities",
+  file:"admin-identities-006.html",
+  icon:"🪪",
+  description:"Manage user identities."
+},
+
+{
+  title:"Roles",
+  file:"admin-roles.html",
+  icon:"👤",
+  description:"Manage platform roles."
+},
+
+{
+  title:"Permissions",
+  file:"admin-permissions.html",
+  icon:"🔑",
+  description:"Manage access permissions."
+},
+
+{
+  title:"Security",
+  file:"admin-security.html",
+  icon:"🛡️",
+  description:"Security management."
+},
+
+{
+  title:"Settings",
+  file:"admin-settings.html",
+  icon:"⚙️",
+  description:"Platform settings."
+},
+
+{
+  title:"Maintenance",
+  file:"admin-maintenance.html",
+  icon:"🔧",
+  description:"Maintenance controls."
+},
+
+{
+  title:"Notifications",
+  file:"admin-notifications.html",
+  icon:"🔔",
+  description:"Manage platform notifications."
+},
+
+{
+  title:"Support",
+  file:"admin-support.html",
+  icon:"🆘",
+  description:"Support management."
+},
+
+{
+  title:"System Inspector",
+  file:"admin-system-inspector-009.html",
+  icon:"🔍",
+  description:"Inspect system configuration."
+},
+
+{
+  title:"Courses",
+  file:"admin-course-09/12/2025-ummy.html",
+  icon:"📚",
+  description:"Manage courses."
+},
+
+{
+  title:"Course Modules",
+  file:"admin-course-module-09/12/2025-ummy..html",
+  icon:"🧩",
+  description:"Manage course modules."
+},
+
+{
+  title:"Lessons",
+  file:"admin-lessons-09/12/2025-ummy.html",
+  icon:"📖",
+  description:"Manage lessons."
+},
+
+{
+  title:"Assignments",
+  file:"admin-assignments-&-05.html",
+  icon:"📝",
+  description:"Manage assignments."
+},
+
+{
+  title:"Course FAQs",
+  file:"admin-course-faqs-1234.html",
+  icon:"❓",
+  description:"Manage course FAQs."
+},
+
+{
+  title:"Announcements",
+  file:"admin-announcements~√~[]~.html",
+  icon:"📢",
+  description:"Manage announcements."
+},
+
+{
+  title:"Quizzes",
+  file:"admin-quiz-x-power+99.html",
+  icon:"🧠",
+  description:"Manage quizzes."
+},
+
+{
+  title:"Video",
+  file:"admin-video.html",
+  icon:"🎬",
+  description:"Manage video content."
+},
+
+{
+  title:"Videos",
+  file:"admin-videos.html",
+  icon:"🎥",
+  description:"Manage platform videos."
+},
+
+{
+  title:"Resources",
+  file:"admin-resourses-09/12/2025-ummy.html",
+  icon:"📁",
+  description:"Manage learning resources."
+},
+
+{
+  title:"Resource Manager",
+  file:"admin-resources-¢-@-&.html",
+  icon:"📂",
+  description:"Advanced resource management."
+},
+
+{
+  title:"Orders",
+  file:"admin-order.html",
+  icon:"🛒",
+  description:"Manage orders."
+},
+
+{
+  title:"Payments",
+  file:"admin-payments.html",
+  icon:"💳",
+  description:"View platform payments."
+},
+
+{
+  title:"Payment Methods",
+  file:"admin-payment-methods.html",
+  icon:"💰",
+  description:"Configure payment methods."
+},
+
+{
+  title:"Refunds",
+  file:"admin-refunds.html",
+  icon:"↩️",
+  description:"Manage refunds."
+},
+
+{
+  title:"Payouts",
+  file:"admin-payouts.html",
+  icon:"💵",
+  description:"Manage payouts."
+},
+
+{
+  title:"Payout Settings",
+  file:"admin-payouts-setting.html",
+  icon:"⚙️",
+  description:"Configure payout settings."
+},
+
+{
+  title:"Withdrawals",
+  file:"admin-withdrawal.html",
+  icon:"🏦",
+  description:"Manage withdrawals."
+},
+
+{
+  title:"Wallet",
+  file:"admin-wallet.html",
+  icon:"👛",
+  description:"Manage wallets."
+},
+
+{
+  title:"Revenue",
+  file:"admin-revenue.html",
+  icon:"📈",
+  description:"View platform revenue."
+},
+
+{
+  title:"Subscriptions",
+  file:"admin-subscription-096.html",
+  icon:"🔄",
+  description:"Manage subscriptions."
+},
+
+{
+  title:"Premium",
+  file:"admin-premium.html",
+  icon:"⭐",
+  description:"Manage premium services."
+},
+
+{
+  title:"Referrals",
+  file:"admin-referrals.html",
+  icon:"🔗",
+  description:"Manage referrals."
+},
+
+{
+  title:"Admin Analytics",
+  file:"admin-analytics-09/12/2025-ummy.html",
+  icon:"📊",
+  description:"Administrative analytics."
+},
+
+{
+  title:"Reports",
+  file:"admin-reports.html",
+  icon:"📋",
+  description:"Platform reports."
+},
+
+{
+  title:"Revenue Analytics",
+  file:"revenue-analytics.html",
+  icon:"💹",
+  description:"Revenue analytics."
+},
+
+{
+  title:"App Analytics",
+  file:"app-analytics.html",
+  icon:"📱",
+  description:"Application analytics."
+},
+
+{
+  title:"Premium Analytics",
+  file:"premium-analytics.html",
+  icon:"⭐",
+  description:"Premium analytics."
+},
+
+{
+  title:"Video Analytics",
+  file:"video-analytics.html",
+  icon:"🎥",
+  description:"Video performance analytics."
+},
+
+{
+  title:"Website Analytics",
+  file:"website-analytics.html",
+  icon:"🌐",
+  description:"Website analytics."
+},
+
+{
+  title:"Theme Analytics",
+  file:"theme-analytics.html",
+  icon:"🎨",
+  description:"Theme analytics."
+},
+
+{
+  title:"Plugins Analytics",
+  file:"plugins-analytics.html",
+  icon:"🔌",
+  description:"Plugin analytics."
+},
+
+{
+  title:"Marketing",
+  file:"admin-marketing+.html",
+  icon:"📣",
+  description:"Marketing management."
+},
+
+{
+  title:"SEO",
+  file:"admin-seo.html",
+  icon:"🔎",
+  description:"Search engine optimization."
+},
+
+{
+  title:"SMS Campaigns",
+  file:"sms-campaigns.html",
+  icon:"📱",
+  description:"SMS campaign management."
+},
+
+{
+  title:"WhatsApp Campaigns",
+  file:"whatsapp-campaigns.html",
+  icon:"💬",
+  description:"WhatsApp campaigns."
+},
+
+{
+  title:"Email Campaigns",
+  file:"email-campaigns.html",
+  icon:"✉️",
+  description:"Email campaign management."
+},
+
+{
+  title:"Marketing Dashboard",
+  file:"marketing-dashboard.html",
+  icon:"📢",
+  description:"Marketing dashboard."
+},
+
+{
+  title:"Community",
+  file:"admin-community.html",
+  icon:"👥",
+  description:"Community management."
+},
+
+{
+  title:"Services",
+  file:"admin-service.html",
+  icon:"🛠️",
+  description:"Platform services."
+},
+
+{
+  title:"Private Meetings",
+  file:"admin-private-meeting.html",
+  icon:"📅",
+  description:"Manage private meetings."
+},
+
+{
+  title:"Business",
+  file:"admin-bussiness.html",
+  icon:"🏢",
+  description:"Business management."
+},
+
+{
+  title:"Scholarships",
+  file:"admin-scholarships*-00u.html",
+  icon:"🎓",
+  description:"Manage scholarships."
+},
+
+{
+  title:"Careers",
+  file:"admin-career-09/12/2025-ummy.html",
+  icon:"💼",
+  description:"Career management."
+},
+
+{
+  title:"Certificates",
+  file:"admin-certificate-09/12/2025-ummy.html",
+  icon:"🏆",
+  description:"Certificate management."
+},
+
+{
+  title:"Adult Log",
+  file:"admin-adult-log-09/12/2025-ummy.html",
+  icon:"📜",
+  description:"Adult activity logs."
+},
+
+{
+  title:"AI",
+  file:"admin-ai-09/12/2025-ummy.html",
+  icon:"🤖",
+  description:"AI administration."
+},
+
+{
+  title:"Translations",
+  file:"admin-translations.html",
+  icon:"🌍",
+  description:"Manage translations."
+},
+
+{
+  const adminPages = [
+
+  /* =========================
+     USER & ACCESS MANAGEMENT
+  ========================= */
+
+  {
+    title: "Login Logs",
+    file: "admin-login-log.html",
+    icon: "🔐"
+  },
+  {
+    title: "Users",
+    file: "admin-users.html",
+    icon: "👥"
+  },
+  {
+    title: "Students",
+    file: "admin-students.html",
+    icon: "🎓"
+  },
+  {
+    title: "Instructor Applications",
+    file: "admin-instructor-applications-09/12/2025-ummy.html.html",
+    icon: "👨‍🏫"
+  },
+  {
+    title: "Identities",
+    file: "admin-identities-006.html",
+    icon: "🪪"
+  },
+  {
+    title: "Roles",
+    file: "admin-roles.html",
+    icon: "👤"
+  },
+  {
+    title: "Permissions",
+    file: "admin-permissions.html",
+    icon: "🛡️"
+  },
+  {
+    title: "Security",
+    file: "admin-security.html",
+    icon: "🔒"
+  },
+  {
+    title: "Settings",
+    file: "admin-settings.html",
+    icon: "⚙️"
+  },
+  {
+    title: "Maintenance",
+    file: "admin-maintenance.html",
+    icon: "🔧"
+  },
+  {
+    title: "Notifications",
+    file: "admin-notifications.html",
+    icon: "🔔"
+  },
+  {
+    title: "Support",
+    file: "admin-support.html",
+    icon: "🎧"
+  },
+  {
+    title: "System Inspector",
+    file: "admin-system-inspector-009.html",
+    icon: "🖥️"
+  },
+
+
+  /* =========================
+     COURSE MANAGEMENT
+  ========================= */
+
+  {
+    title: "Courses",
+    file: "admin-course-09/12/2025-ummy.html",
+    icon: "📚"
+  },
+  {
+    title: "Course Modules",
+    file: "admin-course-module-09/12/2025-ummy..html",
+    icon: "🗂️"
+  },
+  {
+    title: "Lessons",
+    file: "admin-lessons-09/12/2025-ummy.html",
+    icon: "📖"
+  },
+  {
+    title: "Assignments",
+    file: "admin-assignments-&-05.html",
+    icon: "📝"
+  },
+  {
+    title: "Course FAQs",
+    file: "admin-course-faqs-1234.html",
+    icon: "❓"
+  },
+  {
+    title: "Announcements",
+    file: "admin-announcements~√~[]~.html",
+    icon: "📢"
+  },
+  {
+    title: "Quiz Management",
+    file: "admin-quiz-x-power+99.html",
+    icon: "🧠"
+  },
+  {
+    title: "Video",
+    file: "admin-video.html",
+    icon: "🎬"
+  },
+  {
+    title: "Videos",
+    file: "admin-videos.html",
+    icon: "🎥"
+  },
+  {
+    title: "Resources",
+    file: "admin-resourses-09/12/2025-ummy.html",
+    icon: "📂"
+  },
+  {
+    title: "Resources Manager",
+    file: "admin-resources-¢-@-&.html",
+    icon: "📦"
+  },
+
+
+  /* =========================
+     ORDERS & PAYMENTS
+  ========================= */
+
+  {
+    title: "Orders",
+    file: "admin-order.html",
+    icon: "🛒"
+  },
+  {
+    title: "Payments",
+    file: "admin-payments.html",
+    icon: "💳"
+  },
+  {
+    title: "Payment Methods",
+    file: "admin-payment-methods.html",
+    icon: "🏦"
+  },
+  {
+    title: "Refunds",
+    file: "admin-refunds.html",
+    icon: "↩️"
+  },
+  {
+    title: "Payouts",
+    file: "admin-payouts.html",
+    icon: "💰"
+  },
+  {
+    title: "Payout Settings",
+    file: "admin-payouts-setting.html",
+    icon: "⚙️"
+  },
+  {
+    title: "Withdrawals",
+    file: "admin-withdrawal.html",
+    icon: "💸"
+  },
+  {
+    title: "Wallet",
+    file: "admin-wallet.html",
+    icon: "👛"
+  },
+  {
+    title: "Revenue",
+    file: "admin-revenue.html",
+    icon: "📈"
+  },
+  {
+    title: "Subscriptions",
+    file: "admin-subscription-096.html",
+    icon: "🔄"
+  },
+  {
+    title: "Premium",
+    file: "admin-premium.html",
+    icon: "⭐"
+  },
+  {
+    title: "Referrals",
+    file: "admin-referrals.html",
+    icon: "🤝"
+  },
+
+
+  /* =========================
+     ANALYTICS & REPORTS
+  ========================= */
+
+  {
+    title: "Admin Analytics",
+    file: "admin-analytics-09/12/2025-ummy.html",
+    icon: "📊"
+  },
+  {
+    title: "Reports",
+    file: "admin-reports.html",
+    icon: "📋"
+  },
+  {
+    title: "Revenue Analytics",
+    file: "revenue-analytics.html",
+    icon: "💹"
+  },
+  {
+    title: "App Analytics",
+    file: "app-analytics.html",
+    icon: "📱"
+  },
+  {
+    title: "Premium Analytics",
+    file: "premium-analytics.html",
+    icon: "⭐"
+  },
+  {
+    title: "Video Analytics",
+    file: "video-analytics.html",
+    icon: "🎥"
+  },
+  {
+    title: "Website Analytics",
+    file: "website-analytics.html",
+    icon: "🌐"
+  },
+  {
+    title: "Theme Analytics",
+    file: "theme-analytics.html",
+    icon: "🎨"
+  },
+  {
+    title: "Plugin Analytics",
+    file: "plugins-analytics.html",
+    icon: "🧩"
+  },
+
+
+  /* =========================
+     MARKETING & SEO
+  ========================= */
+
+  {
+    title: "Marketing",
+    file: "admin-marketing+.html",
+    icon: "📣"
+  },
+  {
+    title: "SEO",
+    file: "admin-seo.html",
+    icon: "🔎"
+  },
+  {
+    title: "SMS Campaigns",
+    file: "sms-campaigns.html",
+    icon: "📱"
+  },
+  {
+    title: "WhatsApp Campaigns",
+    file: "whatsapp-campaigns.html",
+    icon: "💬"
+  },
+  {
+    title: "Email Campaigns",
+    file: "email-campaigns.html",
+    icon: "✉️"
+  },
+  {
+    title: "Marketing Dashboard",
+    file: "marketing-dashboard.html",
+    icon: "📢"
+  },
+
+
+  /* =========================
+     COMMUNITY & SERVICES
+  ========================= */
+
+  {
+    title: "Community",
+    file: "admin-community.html",
+    icon: "🌍"
+  },
+  {
+    title: "Services",
+    file: "admin-service.html",
+    icon: "🛠️"
+  },
+  {
+    title: "Private Meetings",
+    file: "admin-private-meeting.html",
+    icon: "🤝"
+  },
+  {
+    title: "Business",
+    file: "admin-bussiness.html",
+    icon: "🏢"
+  },
+  {
+    title: "Scholarships",
+    file: "admin-scholarships*-00u.html",
+    icon: "🎓"
+  },
+  {
+    title: "Career",
+    file: "admin-career-09/12/2025-ummy.html",
+    icon: "💼"
+  },
+  {
+    title: "Certificates",
+    file: "admin-certificate-09/12/2025-ummy.html",
+    icon: "📜"
+  },
+  {
+    title: "Adult Log",
+    file: "admin-adult-log-09/12/2025-ummy.html",
+    icon: "🔞"
+  },
+  {
+    title: "AI Management",
+    file: "admin-ai-09/12/2025-ummy.html",
+    icon: "🤖"
+  },
+  {
+    title: "Translations",
+    file: "admin-translations.html",
+    icon: "🌐"
+  },
+  {
+    title: "Page Links",
+    file: "admin-page-links.html",
+    icon: "🔗"
+  },
+  {
+    title: "Reviews",
+    file: "admin-reviews.html",
+    icon: "⭐"
+  },
+
+
+  /* =========================
+     SUPER ADMIN
+  ========================= */
+
+  {
+    title: "Super Admin",
+    file: "super-admin.html",
+    icon: "👑"
+  },
+  {
+    title: "Super Admin Power",
+    file: "super-admin-x-power-admin.005.html",
+    icon: "⚡"
+  },
+
+
+  /* =========================
+     DASHBOARDS
+  ========================= */
+
+  {
+    title: "Admin Dashboard",
+    file: "dashboard.html",
+    icon: "🏠"
+  },
+  {
+    title: "Affiliate Dashboard",
+    file: "affiliate-dashboard.html",
+    icon: "🤝"
+  },
+  {
+    title: "Premium Dashboard",
+    file: "premium-dashboard.html",
+    icon: "⭐"
+  },
+  {
+    title: "Creator Dashboard",
+    file: "creator-dashboard.html",
+    icon: "🎨"
+  },
+  {
+    title: "Provider Dashboard",
+    file: "provider-dashboard.html",
+    icon: "🏪"
+  },
+  {
+    title: "Developer Dashboard",
+    file: "developer-dashboard.html",
+    icon: "💻"
+  },
+  {
+    title: "Cloud Dashboard",
+    file: "cloud-dashboard.html",
+    icon: "☁️"
+  },
+  {
+    title: "Website Dashboard",
+    file: "website-dashboard.html",
+    icon: "🌐"
+  },
+  {
+    title: "Marketing Dashboard",
+    file: "marketing-dashboard.html",
+    icon: "📣"
+  }
+
+];
+
+
+<script>
+/* =====================================================
+   ADMIN ACCESS CONTROL
+   ===================================================== */
+
+const ADMIN_EMAILS = [
+  // Weka email za admin hapa
+  // "admin@example.com"
+];
+
+const adminGrid = document.getElementById("adminGrid");
+const searchInput = document.getElementById("searchInput");
+const totalPages = document.getElementById("totalPages");
+const visiblePages = document.getElementById("visiblePages");
+const accessMessage = document.getElementById("accessMessage");
+
+
+/* =====================================================
+   RENDER ADMIN PAGES
+   ===================================================== */
+
+function renderPages(list = adminPages) {
+
+  if (!adminGrid) return;
+
+  adminGrid.innerHTML = "";
+
+  list.forEach(page => {
+
+    const card = document.createElement("a");
+
+    card.className = "admin-card";
+
+    card.href = page.file;
+
+    card.innerHTML = `
+      <div class="admin-icon">
+        ${page.icon || "📄"}
+      </div>
+
+      <div class="admin-info">
+        <h3>${escapeHtml(page.title)}</h3>
+        <span>${escapeHtml(page.file)}</span>
+      </div>
+
+      <div class="admin-arrow">
+        →
+      </div>
+    `;
+
+    adminGrid.appendChild(card);
+
+  });
+
+  if (visiblePages) {
+    visiblePages.textContent = list.length;
+  }
+
+}
+
+
+/* =====================================================
+   SEARCH
+   ===================================================== */
+
+if (searchInput) {
+
+  searchInput.addEventListener("input", () => {
+
+    const query =
+      searchInput.value
+        .trim()
+        .toLowerCase();
+
+    if (!query) {
+
+      renderPages();
+
+      return;
+
+    }
+
+    const filtered =
+      adminPages.filter(page =>
+        page.title
+          .toLowerCase()
+          .includes(query) ||
+
+        page.file
+          .toLowerCase()
+          .includes(query)
+      );
+
+    renderPages(filtered);
+
+  });
+
+}
+
+
+/* =====================================================
+   ESCAPE HTML
+   ===================================================== */
+
+function escapeHtml(value) {
+
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+}
+
+
+/* =====================================================
+   COUNTS
+   ===================================================== */
+
+if (totalPages) {
+  totalPages.textContent =
+    adminPages.length;
+}
+
+
+/* =====================================================
+   INITIAL RENDER
+   ===================================================== */
+
+renderPages();
+
+
+/* =====================================================
+   FIREBASE AUTH
+   ===================================================== */
+
+import {
+  getAuth,
+  onAuthStateChanged
+} from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+try {
+
+  const auth = getAuth();
+
+  onAuthStateChanged(
+    auth,
+    user => {
+
+      if (!user) {
+
+        if (accessMessage) {
+
+          accessMessage.textContent =
+            "Please login to access the Admin Panel.";
+
+        }
+
+        return;
+
+      }
+
+      if (accessMessage) {
+
+        accessMessage.textContent =
+          `Signed in as ${user.email}`;
+
+      }
+
+    }
+  );
+
+}
+catch(error) {
+
+  console.error(
+  "Authentication error:",
+  error
+);
+
+}
+</script>
+
+</body>
+</html>
