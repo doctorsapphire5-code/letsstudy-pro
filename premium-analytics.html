@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Premium Analytics | LetsStudy Pro</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#f5f7fb;
+color:#172033
+}
+header{
+background:linear-gradient(135deg,#7c3aed,#2563eb);
+color:#fff;
+padding:18px 20px;
+font-size:21px;
+font-weight:800
+}
+.container{
+max-width:1200px;
+margin:auto;
+padding:20px
+}
+.grid{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:14px
+}
+.card{
+background:#fff;
+padding:18px;
+border-radius:13px;
+box-shadow:0 2px 12px #00000010
+}
+.stat span{
+color:#6b7280;
+font-size:13px
+}
+.stat b{
+display:block;
+font-size:27px;
+margin-top:7px
+}
+.green{color:#16a34a}
+.red{color:#dc2626}
+.purple{color:#7c3aed}
+.blue{color:#2563eb}
+.two{
+display:grid;
+grid-template-columns:1.5fr 1fr;
+gap:18px;
+margin-top:18px
+}
+input,select{
+width:100%;
+padding:11px;
+border:1px solid #d1d5db;
+border-radius:8px;
+font:inherit;
+margin-bottom:12px
+}
+table{
+width:100%;
+border-collapse:collapse
+}
+th,td{
+padding:11px;
+border-bottom:1px solid #eee;
+text-align:left;
+font-size:13px
+}
+th{color:#6b7280}
+.badge{
+padding:5px 9px;
+border-radius:20px;
+font-size:11px;
+background:#dcfce7;
+color:#166534
+}
+canvas{
+width:100%!important;
+height:280px!important
+}
+@media(max-width:850px){
+.grid{grid-template-columns:1fr 1fr}
+.two{grid-template-columns:1fr}
+}
+@media(max-width:500px){
+.grid{grid-template-columns:1fr}
+.container{padding:12px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+💎 LetsStudy Pro — Premium Analytics
+</header>
+
+<div class="container">
+
+<!-- STATS -->
+
+<div class="grid">
+
+<div class="card stat">
+<span>Total Premium Users</span>
+<b id="totalUsers" class="purple">0</b>
+</div>
+
+<div class="card stat">
+<span>Active Subscriptions</span>
+<b id="active" class="green">0</b>
+</div>
+
+<div class="card stat">
+<span>Total Revenue</span>
+<b id="revenue" class="blue">TZS 0</b>
+</div>
+
+<div class="card stat">
+<span>Expired / Cancelled</span>
+<b id="expired" class="red">0</b>
+</div>
+
+</div>
+
+
+<!-- CHARTS -->
+
+<div class="two">
+
+<div class="card">
+
+<h3>Revenue Overview</h3>
+
+<canvas id="revenueChart"></canvas>
+
+</div>
+
+
+<div class="card">
+
+<h3>Subscription Status</h3>
+
+<canvas id="statusChart"></canvas>
+
+</div>
+
+</div>
+
+
+<!-- PLAN ANALYTICS -->
+
+<div class="card" style="margin-top:18px">
+
+<h3>Premium Plans</h3>
+
+<table>
+
+<thead>
+
+<tr>
+<th>Plan</th>
+<th>Users</th>
+<th>Revenue</th>
+</tr>
+
+</thead>
+
+<tbody id="plansBody">
+
+<tr>
+<td colspan="3">
+Loading...
+</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+
+<!-- TRANSACTIONS -->
+
+<div class="card" style="margin-top:18px">
+
+<h3>Premium Transactions</h3>
+
+<input
+id="search"
+placeholder="Search user, plan or transaction..."
+oninput="renderTransactions()"
+>
+
+<table>
+
+<thead>
+
+<tr>
+<th>User</th>
+<th>Plan</th>
+<th>Amount</th>
+<th>Status</th>
+<th>Date</th>
+</tr>
+
+</thead>
+
+<tbody id="transactionsBody">
+
+<tr>
+<td colspan="5">
+Loading...
+</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+
+<!-- CHART JS -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+<script type="module">
+
+/* =====================================================
+   FIREBASE
+===================================================== */
+
+import {
+initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+getDocs
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+const firebaseConfig = {
+
+apiKey:
+"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+authDomain:
+"let-s-study-pro-course.firebaseapp.com",
+
+databaseURL:
+"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+projectId:
+"let-s-study-pro-course",
+
+storageBucket:
+"let-s-study-pro-course.firebasestorage.app",
+
+messagingSenderId:
+"474928293390",
+
+appId:
+"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+measurementId:
+"G-85B7V5H5J0"
+
+};
+
+
+const app =
+initializeApp(firebaseConfig);
+
+const db =
+getFirestore(app);
+
+
+/* =====================================================
+   COLLECTION
+=====================================================
+
+Expected:
+
+premiumSubscriptions
+
+or
+
+subscriptions
+
+*/
+
+const collectionName =
+"subscriptions";
+
+
+let records = [];
+
+let revenueChart;
+
+let statusChart;
+
+
+/* =====================================================
+   FORMAT MONEY
+===================================================== */
+
+function money(value){
+
+return new Intl.NumberFormat(
+"en-TZ"
+).format(
+Number(value || 0)
+);
+
+}
+
+
+/* =====================================================
+   DATE
+===================================================== */
+
+function formatDate(value){
+
+if(!value)
+return "-";
+
+try{
+
+if(
+typeof value.toDate ===
+"function"
+){
+
+return value
+.toDate()
+.toLocaleDateString(
+"en-TZ"
+);
+
+}
+
+return new Date(value)
+.toLocaleDateString(
+"en-TZ"
+);
+
+}catch{
+
+return "-";
+
+}
+
+}
+
+
+/* =====================================================
+   LOAD ANALYTICS
+===================================================== */
+
+async function loadAnalytics(){
+
+try{
+
+const snapshot =
+await getDocs(
+collection(
+db,
+collectionName
+)
+);
+
+
+records = [];
+
+snapshot.forEach(
+item => {
+
+records.push({
+
+id:item.id,
+
+...item.data()
+
+});
+
+});
+
+
+calculateAnalytics();
+
+renderTransactions();
+
+renderPlans();
+
+drawCharts();
+
+
+}catch(error){
+
+console.error(
+"Analytics error:",
+error
+);
+
+}
+
+}
+
+
+/* =====================================================
+   CALCULATE
+===================================================== */
+
+function calculateAnalytics(){
+
+const active =
+records.filter(
+x =>
+String(
+x.status || ""
+).toLowerCase()
+===
+"active"
+);
+
+
+const expired =
+records.filter(
+x =>
+[
+"expired",
+"cancelled",
+"canceled"
+]
+.includes(
+String(
+x.status || ""
+).toLowerCase()
+)
+);
+
+
+const revenue =
+records.reduce(
+(sum,x) => {
+
+const status =
+String(
+x.status || ""
+).toLowerCase();
+
+
+if(
+[
+"paid",
+"active",
+"completed",
+"success",
+"successful"
+].includes(status)
+){
+
+return sum +
+Number(
+x.price ??
+x.amount ??
+x.total ??
+0
+);
+
+}
+
+return sum;
+
+},
+0
+);
+
+
+document
+.getElementById("totalUsers")
+.textContent =
+records.length;
+
+
+document
+.getElementById("active")
+.textContent =
+active.length;
+
+
+document
+.getElementById("revenue")
+.textContent =
+"TZS " + money(revenue);
+
+
+document
+.getElementById("expired")
+.textContent =
+expired.length;
+
+}
+
+
+/* =====================================================
+   STATUS CHART
+===================================================== */
+
+function drawCharts(){
+
+const active =
+records.filter(
+x =>
+String(x.status)
+.toLowerCase()
+===
+"active"
+).length;
+
+
+const expired =
+records.filter(
+x =>
+String(x.status)
+.toLowerCase()
+===
+"expired"
+).length;
+
+
+const cancelled =
+records.filter(
+x =>
+[
+"cancelled",
+"canceled"
+]
+.includes(
+String(x.status)
+.toLowerCase()
+)
+).length;
+
+
+if(revenueChart)
+revenueChart.destroy();
+
+
+if(statusChart)
+statusChart.destroy();
+
+
+const ctx1 =
+document
+.getElementById(
+"revenueChart"
+)
+.getContext("2d");
+
+
+const ctx2 =
+document
+.getElementById(
+"statusChart"
+)
+.getContext("2d");
+
+
+const monthly =
+{};
+
+
+records.forEach(
+x => {
+
+const status =
+String(
+x.status || ""
+).toLowerCase();
+
+
+if(
+![
+"paid",
+"active",
+"completed",
+"success",
+"successful"
+].includes(status)
+)
+return;
+
+
+let date;
+
+try{
+
+date =
+x.createdAt?.toDate
+? x.createdAt.toDate()
+: new Date(
+x.createdAt
+);
+
+}catch{
+
+date =
+new Date();
+
+}
+
+
+const key =
+date.toLocaleString(
+"en",
+{
+month:"short"
+}
+);
+
+
+monthly[key] =
+(monthly[key] || 0) +
+Number(
+x.price ??
+x.amount ??
+x.total ??
+0
+);
+
+});
+
+
+const labels =
+Object.keys(monthly);
+
+
+const values =
+Object.values(monthly);
+
+
+revenueChart =
+new Chart(
+ctx1,
+{
+type:"line",
+
+data:{
+labels,
+
+datasets:[
+{
+label:"Revenue (TZS)",
+data:values,
+tension:.35,
+fill:true
+}
+]
+},
+
+options:{
+responsive:true,
+maintainAspectRatio:false
+}
+
+}
+);
+
+
+statusChart =
+new Chart(
+ctx2,
+{
+type:"doughnut",
+
+data:{
+labels:[
+"Active",
+"Expired",
+"Cancelled"
+],
+
+datasets:[
+{
+data:[
+active,
+expired,
+cancelled
+]
+}
+]
+},
+
+options:{
+responsive:true,
+maintainAspectRatio:false
+}
+
+}
+);
+
+}
+
+
+/* =====================================================
+   PLANS
+===================================================== */
+
+function renderPlans(){
+
+const body =
+document
+.getElementById(
+"plansBody"
+);
+
+
+const plans =
+{};
+
+
+records.forEach(
+x => {
+
+const name =
+x.planName ||
+x.plan ||
+"Unknown";
+
+
+if(!plans[name]){
+
+plans[name] = {
+users:0,
+revenue:0
+};
+
+}
+
+
+plans[name].users++;
+
+
+plans[name].revenue +=
+Number(
+x.price ??
+x.amount ??
+x.total ??
+0
+);
+
+});
+
+
+body.innerHTML = "";
+
+
+Object.entries(plans)
+.forEach(
+([name,data]) => {
+
+const row =
+document.createElement(
+"tr"
+);
+
+
+row.innerHTML = `
+
+<td>
+<strong>
+${escapeHtml(name)}
+</strong>
+</td>
+
+<td>
+${data.users}
+</td>
+
+<td>
+TZS ${money(data.revenue)}
+</td>
+
+`;
+
+
+body.appendChild(row);
+
+});
+
+
+if(!Object.keys(plans).length){
+
+body.innerHTML =
+`
+<tr>
+<td colspan="3">
+No premium plans found.
+</td>
+</tr>
+`;
+
+}
+
+}
+
+
+/* =====================================================
+   TRANSACTIONS
+===================================================== */
+
+window.renderTransactions =
+function(){
+
+const query =
+document
+.getElementById("search")
+.value
+.toLowerCase();
+
+
+const body =
+document
+.getElementById(
+"transactionsBody"
+);
+
+
+const filtered =
+records.filter(
+x => {
+
+const text =
+`
+${x.userName || ""}
+${x.userEmail || ""}
+${x.email || ""}
+${x.planName || ""}
+${x.plan || ""}
+${x.transactionId || ""}
+`.toLowerCase();
+
+
+return text.includes(
+query
+);
+
+});
+
+
+body.innerHTML = "";
+
+
+filtered
+.slice(0,100)
+.forEach(
+x => {
+
+const status =
+String(
+x.status ||
+"unknown"
+).toLowerCase();
+
+
+const row =
+document.createElement(
+"tr"
+);
+
+
+row.innerHTML = `
+
+<td>
+
+<strong>
+${escapeHtml(
+x.userName ||
+x.name ||
+"Unknown"
+)}
+</strong>
+
+<br>
+
+<small>
+${escapeHtml(
+x.userEmail ||
+x.email ||
+""
+)}
+</small>
+
+</td>
+
+
+<td>
+${escapeHtml(
+x.planName ||
+x.plan ||
+"-"
+)}
+</td>
+
+
+<td>
+TZS ${money(
+x.price ??
+x.amount ??
+x.total ??
+0
+)}
+</td>
+
+
+<td>
+
+<span class="badge">
+${escapeHtml(status)}
+</span>
+
+</td>
+
+
+<td>
+${formatDate(
+x.createdAt ||
+x.startDate
+)}
+</td>
+
+`;
+
+
+body.appendChild(row);
+
+});
+
+
+if(!filtered.length){
+
+body.innerHTML =
+`
+<tr>
+<td colspan="5">
+No transactions found.
+</td>
+</tr>
+`;
+
+}
+
+};
+
+
+/* =====================================================
+   ESCAPE
+===================================================== */
+
+function escapeHtml(value){
+
+return String(
+value ?? ""
+)
+
+.replaceAll(
+"&",
+"&amp;"
+)
+
+.replaceAll(
+"<",
+"&lt;"
+)
+
+.replaceAll(
+">",
+"&gt;"
+)
+
+.replaceAll(
+'"',
+"&quot;"
+)
+
+.replaceAll(
+"'",
+"&#039;"
+);
+
+}
+
+
+/* =====================================================
+   START
+===================================================== */
+
+loadAnalytics();
+
+
+/* =====================================================
+   AUTO REFRESH
+===================================================== */
+
+setInterval(
+loadAnalytics,
+60000
+);
+
+</script>
+
+</body>
+</html>
