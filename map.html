@@ -1,299 +1,1461 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Google Maps | LetsStudy Pro</title>
+  <title>Maps | LetsStudy Pro</title>
 
-<meta name="description"
-content="Explore locations with embedded Google Maps on LetsStudy Pro.">
+  <meta
+    name="description"
+    content="Explore locations with LetsStudy Pro interactive maps."
+  >
 
-<link rel="icon"
-href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgQHmJO8e8twONhRhp3I6pP4NFDh-LPcqVtAmQ9R9XjOGaVMKShfSLmxeK0fVzJsybBBOXKbA8LIhjgTgko83C-UPVhwgXeLtvTfjtVv6aVGgQgniOF-gMC28bY78HryXZ-5OqCwdBpKGqjEfTta5jLjT1mpvtBi2DQKyu35rkxsZNoVvl0nhvxUUn1gDP0/s1600/Untitled%20design_20260717_144337_0000.jpg">
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    crossorigin=""
+  >
 
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-<style>
-*{
- box-sizing:border-box;
-}
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Arial,
+        sans-serif;
+      background: #f5f7fb;
+      color: #111827;
+    }
 
-body{
- margin:0;
- background:#f5f7fb;
- color:#172033;
- font-family:Inter,Arial,sans-serif;
-}
+    .app {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-.top{
- height:64px;
- background:#fff;
- border-bottom:1px solid #e5e7eb;
- display:flex;
- align-items:center;
- padding:0 5%;
- position:sticky;
- top:0;
- z-index:20;
-}
+    /* =====================================================
+       HEADER
+       ===================================================== */
 
-.logo{
- color:#155eef;
- font-size:21px;
- font-weight:900;
-}
+    .header {
+      height: 64px;
+      min-height: 64px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 18px;
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+      z-index: 2000;
+    }
 
-.container{
- max-width:1200px;
- margin:28px auto;
- padding:0 18px;
-}
+    .brand {
+      font-size: 20px;
+      font-weight: 800;
+      color: #2563eb;
+      white-space: nowrap;
+    }
 
-.header{
- margin-bottom:18px;
-}
+    .brand span {
+      color: #111827;
+    }
 
-h1{
- margin:0 0 7px;
- font-size:28px;
-}
+    .search-container {
+      position: relative;
+      width: min(700px, 100%);
+      flex: 1;
+      margin: auto;
+    }
 
-.subtitle{
- color:#667085;
- font-size:13px;
- line-height:1.6;
-}
+    .search-wrapper {
+      position: relative;
+      width: 100%;
+    }
 
-.search{
- display:flex;
- gap:8px;
- margin:18px 0;
-}
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 17px;
+      pointer-events: none;
+      z-index: 2;
+    }
 
-.search input{
- flex:1;
- padding:13px 14px;
- border:1px solid #d0d5dd;
- border-radius:10px;
- outline:none;
- font-size:13px;
- background:#fff;
-}
+    #searchInput {
+      width: 100%;
+      height: 44px;
+      border: 1px solid #d1d5db;
+      border-radius: 11px;
+      background: #f9fafb;
+      padding: 0 100px 0 42px;
+      font-size: 14px;
+      color: #111827;
+      outline: none;
+      transition: 0.2s ease;
+    }
 
-.btn{
- border:0;
- background:#155eef;
- color:#fff;
- padding:13px 18px;
- border-radius:10px;
- font-size:12px;
- font-weight:800;
- cursor:pointer;
-}
+    #searchInput:focus {
+      background: #ffffff;
+      border-color: #2563eb;
+      box-shadow:
+        0 0 0 3px rgba(37, 99, 235, 0.10);
+    }
 
-.btn:hover{
- background:#073bba;
-}
+    #searchButton {
+      position: absolute;
+      right: 5px;
+      top: 5px;
+      height: 34px;
+      border: none;
+      border-radius: 7px;
+      padding: 0 15px;
+      background: #2563eb;
+      color: #ffffff;
+      font-weight: 700;
+      cursor: pointer;
+    }
 
-.map-card{
- background:#fff;
- border:1px solid #e5e7eb;
- border-radius:17px;
- overflow:hidden;
- box-shadow:0 5px 20px rgba(16,24,40,.06);
-}
+    #searchButton:hover {
+      background: #1d4ed8;
+    }
 
-.map{
- width:100%;
- height:620px;
- border:0;
- display:block;
-}
+    #searchButton:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
 
-.bottom{
- padding:15px;
- display:flex;
- justify-content:space-between;
- align-items:center;
- gap:10px;
- flex-wrap:wrap;
-}
+    /* =====================================================
+       SEARCH RESULTS
+       ===================================================== */
 
-.info{
- color:#667085;
- font-size:11px;
-}
+    .search-results {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 49px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.12);
+      overflow: hidden;
+      max-height: 330px;
+      overflow-y: auto;
+      display: none;
+      z-index: 5000;
+    }
 
-.open{
- background:#155eef;
- color:#fff;
- padding:10px 14px;
- border-radius:8px;
- font-size:11px;
- font-weight:800;
-}
+    .search-result {
+      padding: 12px 14px;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+    }
 
-@media(max-width:600px){
+    .search-result:last-child {
+      border-bottom: none;
+    }
 
- .search{
-  flex-direction:column;
- }
+    .search-result:hover {
+      background: #f8fafc;
+    }
 
- .map{
-  height:500px;
- }
+    .result-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #111827;
+    }
 
- h1{
-  font-size:24px;
- }
+    .result-address {
+      margin-top: 4px;
+      font-size: 12px;
+      color: #6b7280;
+      line-height: 1.45;
+    }
 
-}
-</style>
+    /* =====================================================
+       MAP
+       ===================================================== */
+
+    .map-area {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      background: #e5e7eb;
+    }
+
+    /* =====================================================
+       CUSTOM CONTROLS
+       ===================================================== */
+
+    .map-controls {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 1500;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .map-control {
+      width: 44px;
+      height: 44px;
+      border: none;
+      border-radius: 10px;
+      background: #ffffff;
+      color: #111827;
+      box-shadow:
+        0 4px 15px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+
+    .map-control:hover {
+      background: #f3f4f6;
+      transform: translateY(-1px);
+    }
+
+    .map-control:active {
+      transform: scale(0.96);
+    }
+
+    /* =====================================================
+       STATUS
+       ===================================================== */
+
+    .status {
+      position: absolute;
+      left: 16px;
+      bottom: 16px;
+      z-index: 1500;
+      max-width: calc(100% - 32px);
+      padding: 10px 14px;
+      border-radius: 9px;
+      background: #ffffff;
+      color: #374151;
+      font-size: 13px;
+      box-shadow:
+        0 4px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    .status.success {
+      color: #166534;
+    }
+
+    .status.error {
+      color: #b91c1c;
+    }
+
+    .status.loading {
+      color: #1d4ed8;
+    }
+
+    /* =====================================================
+       POPUP
+       ===================================================== */
+
+    .popup-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      color: #111827;
+    }
+
+    .popup-description {
+      font-size: 13px;
+      color: #4b5563;
+      line-height: 1.5;
+    }
+
+    .popup-link {
+      display: inline-block;
+      margin-top: 9px;
+      padding: 7px 11px;
+      background: #2563eb;
+      color: #ffffff !important;
+      text-decoration: none;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .popup-link:hover {
+      background: #1d4ed8;
+    }
+
+    /* =====================================================
+       MOBILE
+       ===================================================== */
+
+    @media (max-width: 700px) {
+
+      .header {
+        height: 58px;
+        min-height: 58px;
+        padding: 0 10px;
+        gap: 8px;
+      }
+
+      .brand {
+        display: none;
+      }
+
+      .search-container {
+        width: 100%;
+      }
+
+      #searchInput {
+        height: 42px;
+        padding-left: 39px;
+        padding-right: 88px;
+      }
+
+      #searchButton {
+        padding: 0 12px;
+      }
+
+      .map-controls {
+        top: 10px;
+        right: 10px;
+      }
+
+      .map-control {
+        width: 42px;
+        height: 42px;
+      }
+
+      .status {
+        left: 10px;
+        bottom: 10px;
+        max-width: calc(100% - 20px);
+      }
+    }
+
+    /* Hide default Leaflet zoom controls because
+       custom controls are being used */
+    .leaflet-control-zoom {
+      display: none;
+    }
+  </style>
 </head>
 
 <body>
 
-<header class="top">
+<div class="app">
 
-<div class="logo">
-LetsStudy Pro
+  <!-- ===================================================
+       HEADER
+       =================================================== -->
+
+  <header class="header">
+
+    <div class="brand">
+      LetsStudy <span>Pro</span>
+    </div>
+
+    <div class="search-container">
+
+      <div class="search-wrapper">
+
+        <span class="search-icon">🔎</span>
+
+        <input
+          id="searchInput"
+          type="search"
+          placeholder="Search a city, country or place..."
+          autocomplete="off"
+          spellcheck="false"
+        >
+
+        <button
+          id="searchButton"
+          type="button"
+        >
+          Search
+        </button>
+
+      </div>
+
+      <div
+        id="searchResults"
+        class="search-results"
+      ></div>
+
+    </div>
+
+  </header>
+
+
+  <!-- ===================================================
+       MAP AREA
+       =================================================== -->
+
+  <main class="map-area">
+
+    <div id="map"></div>
+
+
+    <!-- MAP CONTROLS -->
+
+    <div class="map-controls">
+
+      <button
+        id="locationBtn"
+        class="map-control"
+        type="button"
+        title="My location"
+        aria-label="Find my location"
+      >
+        📍
+      </button>
+
+      <button
+        id="zoomInBtn"
+        class="map-control"
+        type="button"
+        title="Zoom in"
+        aria-label="Zoom in"
+      >
+        +
+      </button>
+
+      <button
+        id="zoomOutBtn"
+        class="map-control"
+        type="button"
+        title="Zoom out"
+        aria-label="Zoom out"
+      >
+        −
+      </button>
+
+      <button
+        id="resetBtn"
+        class="map-control"
+        type="button"
+        title="Reset map"
+        aria-label="Reset map"
+      >
+        ⌂
+      </button>
+
+    </div>
+
+
+    <!-- STATUS -->
+
+    <div
+      id="status"
+      class="status"
+    >
+      Loading map...
+    </div>
+
+  </main>
+
 </div>
 
-</header>
+
+<!-- =====================================================
+     LEAFLET
+     ===================================================== -->
+
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  crossorigin=""
+></script>
 
 
-<main class="container">
+<!-- =====================================================
+     FIREBASE + APPLICATION
+     ===================================================== -->
 
-<div class="header">
+<script type="module">
 
-<h1>
-<i class="fa fa-map-location-dot"></i>
-Google Maps
-</h1>
+  /* =====================================================
+     FIREBASE IMPORTS
+     ===================================================== */
 
-<div class="subtitle">
-Search and explore locations directly inside LetsStudy Pro.
-</div>
+  import {
+    initializeApp
+  } from
+  "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
-</div>
-
-
-<div class="search">
-
-<input
-id="location"
-value="Dar es Salaam, Tanzania"
-placeholder="Search city, country or location...">
-
-<button
-class="btn"
-onclick="searchMap()">
-
-<i class="fa fa-search"></i>
-Search
-
-</button>
-
-</div>
+  import {
+    getFirestore,
+    collection,
+    getDocs
+  } from
+  "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 
-<section class="map-card">
+  /* =====================================================
+     FIREBASE CONFIG
+     ===================================================== */
 
-<iframe
-id="map"
-class="map"
-src="https://www.google.com/maps?q=Dar%20es%20Salaam%2C%20Tanzania&output=embed"
-loading="lazy"
-allowfullscreen
-referrerpolicy="no-referrer-when-downgrade">
-</iframe>
+  const firebaseConfig = {
 
+    apiKey:
+      "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
 
-<div class="bottom">
+    authDomain:
+      "let-s-study-pro-course.firebaseapp.com",
 
-<div class="info">
+    databaseURL:
+      "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
 
-<i class="fa fa-circle-info"></i>
+    projectId:
+      "let-s-study-pro-course",
 
-Google Maps embedded inside LetsStudy Pro.
+    storageBucket:
+      "let-s-study-pro-course.firebasestorage.app",
 
-</div>
+    messagingSenderId:
+      "474928293390",
 
-<a
-id="openMap"
-class="open"
-href="https://www.google.com/maps/search/?api=1&query=Dar%20es%20Salaam%2C%20Tanzania"
-target="_blank"
-rel="noopener">
+    appId:
+      "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
 
-<i class="fa fa-arrow-up-right-from-square"></i>
-Open in Google Maps
+    measurementId:
+      "G-85B7V5H5J0"
 
-</a>
-
-</div>
-
-</section>
-
-</main>
+  };
 
 
-<script>
+  /* =====================================================
+     INITIALIZE FIREBASE
+     ===================================================== */
 
-function searchMap(){
+  let db = null;
 
- const location=
- document
- .getElementById("location")
- .value
- .trim();
+  try {
 
+    const app =
+      initializeApp(firebaseConfig);
 
- if(!location){
+    db =
+      getFirestore(app);
 
-  alert(
-   "Please enter a location."
-  );
+    console.log(
+      "Firebase initialized successfully."
+    );
 
-  return;
- }
+  } catch (error) {
 
+    console.error(
+      "Firebase initialization error:",
+      error
+    );
 
- const encoded=
- encodeURIComponent(location);
-
-
- document
- .getElementById("map")
- .src=
- "https://www.google.com/maps?q="+
- encoded+
- "&output=embed";
-
-
- document
- .getElementById("openMap")
- .href=
- "https://www.google.com/maps/search/?api=1&query="+
- encoded;
-
-}
-
-
-document
-.getElementById("location")
-.addEventListener(
- "keydown",
- function(e){
-
-  if(e.key==="Enter"){
-   searchMap();
   }
 
- }
+
+  /* =====================================================
+     MAP SETTINGS
+     ===================================================== */
+
+  const DEFAULT_LAT = -6.7924;
+  const DEFAULT_LNG = 39.2083;
+  const DEFAULT_ZOOM = 6;
+
+
+  /* =====================================================
+     CREATE MAP
+     ===================================================== */
+
+  const map =
+    L.map("map", {
+      zoomControl: false,
+      attributionControl: true
+    }).setView(
+      [
+        DEFAULT_LAT,
+        DEFAULT_LNG
+      ],
+      DEFAULT_ZOOM
+    );
+
+
+  /* =====================================================
+     OPENSTREETMAP
+     ===================================================== */
+
+  L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+      maxZoom: 19,
+
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'
+    }
+  ).addTo(map);
+
+
+  /* =====================================================
+     DOM
+     ===================================================== */
+
+  const searchInput =
+    document.getElementById(
+      "searchInput"
+    );
+
+  const searchButton =
+    document.getElementById(
+      "searchButton"
+    );
+
+  const searchResults =
+    document.getElementById(
+      "searchResults"
+    );
+
+  const locationBtn =
+    document.getElementById(
+      "locationBtn"
+    );
+
+  const zoomInBtn =
+    document.getElementById(
+      "zoomInBtn"
+    );
+
+  const zoomOutBtn =
+    document.getElementById(
+      "zoomOutBtn"
+    );
+
+  const resetBtn =
+    document.getElementById(
+      "resetBtn"
+    );
+
+  const status =
+    document.getElementById(
+      "status"
+    );
+
+
+  /* =====================================================
+     STATUS
+     ===================================================== */
+
+  function setStatus(
+    message,
+    type = ""
+  ) {
+
+    status.textContent =
+      message;
+
+    status.className =
+      "status " + type;
+
+  }
+
+
+  /* =====================================================
+     MARKERS LAYER
+     ===================================================== */
+
+  const markersLayer =
+    L.layerGroup().addTo(map);
+
+
+  let userMarker = null;
+  let accuracyCircle = null;
+
+
+  /* =====================================================
+     HTML ESCAPING
+     ===================================================== */
+
+  function escapeHtml(value) {
+
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+
+  }
+
+
+  function escapeAttribute(value) {
+
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;");
+
+  }
+
+
+  /* =====================================================
+     ADD MARKER
+     ===================================================== */
+
+  function addMarker({
+    latitude,
+    longitude,
+    title = "Location",
+    description = "",
+    link = ""
+  }) {
+
+    const lat =
+      Number(latitude);
+
+    const lng =
+      Number(longitude);
+
+
+    if (
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lng)
+    ) {
+
+      return null;
+
+    }
+
+
+    const marker =
+      L.marker([
+        lat,
+        lng
+      ]);
+
+
+    let popup = `
+
+      <div class="popup-title">
+        ${escapeHtml(title)}
+      </div>
+
+    `;
+
+
+    if (description) {
+
+      popup += `
+
+        <div class="popup-description">
+          ${escapeHtml(description)}
+        </div>
+
+      `;
+
+    }
+
+
+    if (link) {
+
+      popup += `
+
+        <a
+          class="popup-link"
+          href="${escapeAttribute(link)}"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Open Link
+        </a>
+
+      `;
+
+    }
+
+
+    marker
+      .bindPopup(popup)
+      .addTo(markersLayer);
+
+
+    return marker;
+
+  }
+
+
+  /* =====================================================
+     DEFAULT LOCATIONS
+     ===================================================== */
+
+  addMarker({
+    latitude: -6.7924,
+    longitude: 39.2083,
+    title: "Dar es Salaam",
+    description: "Tanzania"
+  });
+
+
+  addMarker({
+    latitude: -1.2864,
+    longitude: 36.8172,
+    title: "Nairobi",
+    description: "Kenya"
+  });
+
+
+  addMarker({
+    latitude: -6.1630,
+    longitude: 35.7516,
+    title: "Dodoma",
+    description: "Capital city of Tanzania"
+  });
+
+
+  /* =====================================================
+     SEARCH
+     ===================================================== */
+
+  async function searchPlace() {
+
+    const query =
+      searchInput.value.trim();
+
+
+    if (!query) {
+
+      setStatus(
+        "Type a place to search.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    searchButton.disabled = true;
+
+    setStatus(
+      "Searching...",
+      "loading"
+    );
+
+
+    searchResults.style.display =
+      "none";
+
+
+    try {
+
+      const params =
+        new URLSearchParams({
+          q: query,
+          format: "json",
+          addressdetails: "1",
+          limit: "8
+"
+        });
+
+
+      const response =
+        await fetch(
+          `https://nominatim.openstreetmap.org/search?${params}`,
+          {
+            headers: {
+              Accept:
+                "application/json"
+            }
+          }
+        );
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          "Search failed."
+        );
+
+      }
+
+
+      const places =
+        await response.json();
+
+
+      if (!places.length) {
+
+        setStatus(
+          "No location found.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      renderSearchResults(
+        places
+      );
+
+
+      setStatus(
+        `${places.length} location(s) found.`,
+        "success"
+      );
+
+    } catch (error) {
+
+      console.error(
+        error
+      );
+
+      setStatus(
+        "Search failed. Please try again.",
+        "error"
+      );
+
+    } finally {
+
+      searchButton.disabled =
+        false;
+
+    }
+
+  }
+
+
+  /* =====================================================
+     SEARCH RESULTS
+     ===================================================== */
+
+  function renderSearchResults(
+    places
+  ) {
+
+    searchResults.innerHTML =
+      "";
+
+
+    places.forEach(
+      place => {
+
+        const item =
+          document.createElement(
+            "div"
+          );
+
+
+        item.className =
+          "search-result";
+
+
+        const title =
+          place.name ||
+          place.display_name
+            ?.split(",")[0] ||
+          "Location";
+
+
+        item.innerHTML = `
+
+          <div class="result-title">
+            ${escapeHtml(title)}
+          </div>
+
+          <div class="result-address">
+            ${escapeHtml(
+              place.display_name
+            )}
+          </div>
+
+        `;
+
+
+        item.addEventListener(
+          "click",
+          () => {
+
+            const lat =
+              Number(place.lat);
+
+            const lng =
+              Number(place.lon);
+
+
+            map.flyTo(
+              [lat, lng],
+              15,
+              {
+                duration: 1.2
+              }
+            );
+
+
+            const marker =
+              addMarker({
+                latitude: lat,
+                longitude: lng,
+                title: title,
+                description:
+                  place.display_name
+              });
+
+
+            if (marker) {
+
+              marker.openPopup();
+
+            }
+
+
+            searchInput.value =
+              place.display_name;
+
+
+            searchResults.style.display =
+              "none";
+
+
+            setStatus(
+              "Location found.",
+              "success"
+            );
+
+          }
+        );
+
+
+        searchResults.appendChild(
+          item
+        );
+
+      }
+    );
+
+
+    searchResults.style.display =
+      "block";
+
+  }
+
+
+  /* =====================================================
+     SEARCH EVENTS
+     ===================================================== */
+
+  searchButton.addEventListener(
+    "click",
+    searchPlace
+  );
+
+
+  searchInput.addEventListener(
+    "keydown",
+    event => {
+
+      if (
+        event.key === "Enter"
+      ) {
+
+        event.preventDefault();
+
+        searchPlace();
+
+      }
+
+    }
+  );
+
+
+  document.addEventListener(
+    "click",
+    event => {
+
+      if (
+        !event.target.closest(
+          ".search-container"
+        )
+      ) {
+
+        searchResults.style.display =
+          "none";
+
+      }
+
+    }
+  );
+
+
+  /* =====================================================
+     CURRENT LOCATION
+     ===================================================== */
+
+  function findMyLocation() {
+
+    if (
+      !navigator.geolocation
+    ) {
+
+      setStatus(
+        "Geolocation is not supported by this browser.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    setStatus(
+      "Finding your location...",
+      "loading"
+    );
+
+
+    navigator.geolocation.getCurrentPosition(
+
+      position => {
+
+        const lat =
+          position.coords.latitude;
+
+        const lng =
+  position.coords.longitude;
+
+const accuracy =
+  position.coords.accuracy;
+
+if (userMarker) {
+  map.removeLayer(userMarker);
+}
+
+if (accuracyCircle) {
+  map.removeLayer(accuracyCircle);
+}
+
+userMarker = L.marker([
+  lat,
+  lng
+]).addTo(map);
+
+userMarker.bindPopup(`
+  <div class="popup-title">
+    Your Location
+  </div>
+
+  <div class="popup-description">
+    Latitude: ${lat.toFixed(6)}<br>
+    Longitude: ${lng.toFixed(6)}<br>
+    Accuracy: ${Math.round(accuracy)} m
+  </div>
+`);
+
+accuracyCircle = L.circle(
+  [lat, lng],
+  {
+    radius: accuracy
+  }
+).addTo(map);
+
+map.flyTo(
+  [lat, lng],
+  16,
+  {
+    duration: 1.2
+  }
 );
+
+userMarker.openPopup();
+
+setStatus(
+  "Your location was found.",
+  "success"
+);
+
+      },
+
+      error => {
+
+        console.error(
+          "Geolocation error:",
+          error
+        );
+
+        let message =
+          "Unable to find your location.";
+
+        if (
+          error.code ===
+          error.PERMISSION_DENIED
+        ) {
+          message =
+            "Location permission was denied.";
+        }
+
+        if (
+          error.code ===
+          error.POSITION_UNAVAILABLE
+        ) {
+          message =
+            "Your location is unavailable.";
+        }
+
+        if (
+          error.code ===
+          error.TIMEOUT
+        ) {
+          message =
+            "Location request timed out.";
+        }
+
+        setStatus(
+          message,
+          "error"
+        );
+
+      },
+
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0
+      }
+
+    );
+
+  }
+
+
+  /* =====================================================
+     LOCATION BUTTON
+     ===================================================== */
+
+  locationBtn.addEventListener(
+    "click",
+    findMyLocation
+  );
+
+
+  /* =====================================================
+     ZOOM IN
+     ===================================================== */
+
+  zoomInBtn.addEventListener(
+    "click",
+    () => {
+      map.zoomIn();
+    }
+  );
+
+
+  /* =====================================================
+     ZOOM OUT
+     ===================================================== */
+
+  zoomOutBtn.addEventListener(
+    "click",
+    () => {
+      map.zoomOut();
+    }
+  );
+
+
+  /* =====================================================
+     RESET MAP
+     ===================================================== */
+
+  resetBtn.addEventListener(
+    "click",
+    () => {
+
+      map.flyTo(
+        [
+          DEFAULT_LAT,
+          DEFAULT_LNG
+        ],
+        DEFAULT_ZOOM,
+        {
+          duration: 1
+        }
+      );
+
+      setStatus(
+        "Map reset.",
+        "success"
+      );
+
+    }
+  );
+
+
+  /* =====================================================
+     FIRESTORE MAP MARKERS
+     ===================================================== */
+
+  async function loadFirestoreMarkers() {
+
+    if (!db) {
+      console.log(
+        "Firestore is not available."
+      );
+      return;
+    }
+
+    try {
+
+      const snapshot =
+        await getDocs(
+          collection(
+            db,
+            "mapMarkers"
+          )
+        );
+
+      let loaded = 0;
+
+      snapshot.forEach(
+        documentSnapshot => {
+
+          const data =
+            documentSnapshot.data();
+
+          const marker =
+            addMarker({
+              latitude:
+                data.latitude ??
+                data.lat,
+
+              longitude:
+                data.longitude ??
+                data.lng,
+
+              title:
+                data.title ||
+                "Location",
+
+              description:
+                data.description ||
+                "",
+
+              link:
+                data.link ||
+                ""
+            });
+
+          if (marker) {
+            loaded++;
+          }
+
+        }
+      );
+
+      console.log(
+        `Loaded ${loaded} Firestore marker(s).`
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Firestore marker error:",
+        error
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     INITIALIZE FIRESTORE MARKERS
+     ===================================================== */
+
+  loadFirestoreMarkers();
+
+
+  /* =====================================================
+     INITIAL MAP STATUS
+     ===================================================== */
+
+  setStatus(
+    "Map ready.",
+    "success"
+  );
+
+
+  /* =====================================================
+     FIX MAP SIZE
+     ===================================================== */
+
+  setTimeout(
+    () => {
+      map.invalidateSize();
+    },
+    300
+  );
+
+
+  window.addEventListener(
+    "resize",
+    () => {
+      map.invalidateSize();
+    }
+  );
+
+
+  /* =====================================================
+     MAP CLICK
+     ===================================================== */
+
+  map.on(
+    "click",
+    event => {
+
+      const lat =
+        event.latlng.lat;
+
+      const lng =
+        event.latlng.lng;
+
+      console.log(
+        "Map clicked:",
+        lat,
+        lng
+      );
+
+    }
+  );
+
+
+  /* =====================================================
+     FINISHED
+     ===================================================== */
+
+  console.log(
+    "LetsStudy Pro Maps initialized successfully."
+  );
 
 </script>
 
