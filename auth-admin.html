@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
+  <title>Admin Authentication | Let'sStudy Pro</title>
+
+  <meta
+    name="description"
+    content="Secure administrator authentication portal for Let'sStudy Pro."
+  >
+
+  <meta name="robots" content="noindex,nofollow">
+
+  <link rel="preconnect" href="https://www.gstatic.com">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #687386;
+      --border: #e2e7ef;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --danger: #dc2626;
+      --success: #15803d;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 20px;
+
+      font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 470px;
+    }
+
+    .brand {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .logo {
+      width: 68px;
+      height: 68px;
+
+      margin: 0 auto 13px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 19px;
+
+      background: var(--primary);
+      color: #fff;
+
+      font-size: 30px;
+      font-weight: 800;
+    }
+
+    .brand h1 {
+      margin: 0;
+
+      font-size: 25px;
+      line-height: 1.2;
+    }
+
+    .brand p {
+      margin: 7px 0 0;
+
+      color: var(--muted);
+
+      font-size: 14px;
+    }
+
+    .card {
+      background: var(--card);
+
+      border: 1px solid var(--border);
+
+      border-radius: 22px;
+
+      padding: 28px;
+
+      box-shadow:
+        0 20px 50px rgba(15, 23, 42, .10);
+    }
+
+    .card-header {
+      text-align: center;
+
+      margin-bottom: 24px;
+    }
+
+    .card-header h2 {
+      margin: 0 0 7px;
+
+      font-size: 21px;
+    }
+
+    .card-header p {
+      margin: 0;
+
+      color: var(--muted);
+
+      font-size: 14px;
+
+      line-height: 1.5;
+    }
+
+    .loading {
+      text-align: center;
+
+      padding: 25px 0;
+
+      color: var(--muted);
+
+      font-size: 14px;
+    }
+
+    .spinner {
+      width: 30px;
+      height: 30px;
+
+      margin: 0 auto 12px;
+
+      border: 3px solid #e2e7ef;
+      border-top-color: var(--primary);
+
+      border-radius: 50%;
+
+      animation: spin .7s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .actions {
+      display: grid;
+
+      gap: 12px;
+    }
+
+    .action {
+      min-height: 54px;
+
+      display: flex;
+      align-items: center;
+      gap: 13px;
+
+      padding: 10px 14px;
+
+      border: 1px solid var(--border);
+
+      border-radius: 12px;
+
+      color: var(--text);
+
+      text-decoration: none;
+
+      background: #fff;
+
+      transition:
+        border-color .15s ease,
+        transform .1s ease;
+    }
+
+    .action:hover {
+      border-color: var(--primary);
+    }
+
+    .action:active {
+      transform: translateY(1px);
+    }
+
+    .action-icon {
+      width: 38px;
+      height: 38px;
+
+      flex-shrink: 0;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 10px;
+
+      background: #eff6ff;
+
+      font-size: 19px;
+    }
+
+    .action-title {
+      display: block;
+
+      margin-bottom: 2px;
+
+      font-size: 15px;
+
+      font-weight: 750;
+    }
+
+    .action-description {
+      display: block;
+
+      color: var(--muted);
+
+      font-size: 12px;
+    }
+
+    .dashboard {
+      display: none;
+    }
+
+    .dashboard-card {
+      padding: 18px;
+
+      margin-bottom: 18px;
+
+      border: 1px solid var(--border);
+
+      border-radius: 14px;
+
+      background: #f8fafc;
+    }
+
+    .admin-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 48px;
+      height: 48px;
+
+      flex-shrink: 0;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 50%;
+
+      background: var(--primary);
+      color: white;
+
+      font-weight: 800;
+    }
+
+    .admin-name {
+      margin: 0 0 3px;
+
+      font-size: 15px;
+
+      font-weight: 750;
+    }
+
+    .admin-email {
+      margin: 0;
+
+      color: var(--muted);
+
+      font-size: 12px;
+
+      word-break: break-word;
+    }
+
+    .badge {
+      display: inline-flex;
+
+      margin-top: 7px;
+
+      padding: 4px 9px;
+
+      border-radius: 999px;
+
+      background: #dcfce7;
+
+      color: var(--success);
+
+      font-size: 11px;
+
+      font-weight: 750;
+    }
+
+    .dashboard-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      min-height: 49px;
+
+      border-radius: 11px;
+
+      background: var(--primary);
+
+      color: #fff;
+
+      text-decoration: none;
+
+      font-size: 14px;
+
+      font-weight: 700;
+    }
+
+    .logout-button {
+      width: 100%;
+
+      min-height: 46px;
+
+      margin-top: 10px;
+
+      border: 1px solid #fecaca;
+
+      border-radius: 11px;
+
+      background: #fef2f2;
+
+      color: var(--danger);
+
+      font-size: 14px;
+
+      font-weight: 700;
+
+      cursor: pointer;
+    }
+
+    .security {
+      margin-top: 22px;
+
+      padding: 12px;
+
+      border-radius: 10px;
+
+      background: #f8fafc;
+
+      color: var(--muted);
+
+      text-align: center;
+
+      font-size: 12px;
+
+      line-height: 1.5;
+    }
+
+    footer {
+      margin-top: 20px;
+
+      text-align: center;
+
+      color: var(--muted);
+
+      font-size: 12px;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 14px;
+      }
+
+      .card {
+        padding: 22px 18px;
+
+        border-radius: 18px;
+      }
+
+      .brand h1 {
+        font-size: 22px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<main class="container">
+
+  <header class="brand">
+
+    <div
+      class="logo"
+      aria-hidden="true"
+    >
+      🛡️
+    </div>
+
+    <h1>Let'sStudy Pro</h1>
+
+    <p>Administrator Portal</p>
+
+  </header>
+
+
+  <section class="card">
+
+    <!-- Loading -->
+
+    <div
+      id="loading"
+      class="loading"
+      aria-live="polite"
+    >
+
+      <div
+        class="spinner"
+        aria-hidden="true"
+      ></div>
+
+      Checking authentication...
+
+    </div>
+
+
+    <!-- Logged Out -->
+
+    <div
+      id="loggedOut"
+      hidden
+    >
+
+      <div class="card-header">
+
+        <h2>
+          Admin Authentication
+        </h2>
+
+        <p>
+          Access the Let'sStudy Pro administration system.
+        </p>
+
+      </div>
+
+
+      <nav
+        class="actions"
+        aria-label="Administrator authentication"
+      >
+
+        <a
+          href="login-admin.html"
+          class="action"
+        >
+
+          <span
+            class="action-icon"
+            aria-hidden="true"
+          >
+            🔑
+          </span>
+
+          <span>
+
+            <span class="action-title">
+              Admin Login
+            </span>
+
+            <span class="action-description">
+              Sign in to your administrator account
+            </span>
+
+          </span>
+
+        </a>
+
+
+        <a
+          href="register-admin.html"
+          class="action"
+        >
+
+          <span
+            class="action-icon"
+            aria-hidden="true"
+          >
+            🛡️
+          </span>
+
+          <span>
+
+            <span class="action-title">
+              Register Admin
+            </span>
+
+            <span class="action-description">
+              Create an administrator account
+            </span>
+
+          </span>
+
+        </a>
+
+
+        <a
+          href="forgot-password-admin.html"
+          class="action"
+        >
+
+          <span
+            class="action-icon"
+            aria-hidden="true"
+          >
+            🔐
+          </span>
+
+          <span>
+
+            <span class="action-title">
+              Forgot Password
+            </span>
+
+            <span class="action-description">
+              Reset your administrator password
+            </span>
+
+          </span>
+
+        </a>
+
+      </nav>
+
+    </div>
+
+
+    <!-- Logged In -->
+
+    <div
+      id="dashboard"
+      class="dashboard"
+    >
+
+      <div class="card-header">
+
+        <h2>
+          Welcome, Administrator
+        </h2>
+
+        <p>
+          You are securely authenticated.
+        </p>
+
+      </div>
+
+
+      <div class="dashboard-card">
+
+        <div class="admin-info">
+
+          <div
+            id="avatar"
+            class="avatar"
+            aria-hidden="true"
+          >
+            A
+          </div>
+
+          <div>
+
+            <p
+              id="adminName"
+              class="admin-name"
+            >
+              Administrator
+            </p>
+
+            <p
+              id="adminEmail"
+              class="admin-email"
+            >
+              —
+            </p>
+
+            <span class="badge">
+              ✓ Administrator
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <a
+        href="admin-dashboard.html"
+        class="dashboard-button"
+      >
+        Open Admin Dashboard
+      </a>
+
+
+      <button
+        type="button"
+        id="logoutBtn"
+        class="logout-button"
+      >
+        🚪 Logout
+      </button>
+
+    </div>
+
+
+    <div class="security">
+      🔒 Admin access is protected by Firebase Authentication
+      and Firestore role verification.
+    </div>
+
+  </section>
+
+
+  <footer>
+    © <span id="year"></span> Let'sStudy Pro
+  </footer>
+
+</main>
+
+
+<script type="module">
+
+  import { initializeApp }
+    from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+  import {
+    getFirestore,
+    doc,
+    getDoc
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+  /* =========================
+     FIREBASE CONFIG
+  ========================== */
+
+  const firebaseConfig = {
+
+    apiKey:
+      "AIzaSyBcOYDfAVKXbbljsyRgI_0rj0rodBn678tCc",
+
+    authDomain:
+      "let-s-study-pro-course.firebaseapp.com",
+
+    projectId:
+      "let-s-study-pro-course",
+
+    storageBucket:
+      "let-s-study-pro-course.firebasestorage.app",
+
+    messagingSenderId:
+      "474928293390",
+
+    appId:
+      "1:474928293390:web:2bcc2aebf2351c12a9fe5f"
+  };
+
+
+  /* =========================
+     INITIALIZE
+  ========================== */
+
+  const app =
+    initializeApp(firebaseConfig);
+
+  const auth =
+    getAuth(app);
+
+  const db =
+    getFirestore(app);
+
+
+  /* =========================
+     DOM
+  ========================== */
+
+  const loading =
+    document.getElementById("loading");
+
+  const loggedOut =
+    document.getElementById("loggedOut");
+
+  const dashboard =
+    document.getElementById("dashboard");
+
+  const adminName =
+    document.getElementById("adminName");
+
+  const adminEmail =
+    document.getElementById("adminEmail");
+
+  const avatar =
+    document.getElementById("avatar");
+
+  const logoutBtn =
+    document.getElementById("logoutBtn");
+
+
+  document.getElementById("year").textContent =
+    new Date().getFullYear();
+
+
+  /* =========================
+     CHECK ADMIN ROLE
+  ========================== */
+
+  async function isAdmin(user) {
+
+    if (!user) {
+      return false;
+    }
+
+
+    try {
+
+      const userRef =
+        doc(
+          db,
+          "users",
+          user.uid
+        );
+
+      const snapshot =
+        await getDoc(userRef);
+
+
+      if (!snapshot.exists()) {
+        return false;
+      }
+
+
+      const data =
+        snapshot.data();
+
+
+      return (
+        data.role === "admin" &&
+        data.status !== "disabled"
+      );
+
+
+    } catch (error) {
+
+      console.error(
+        "Admin verification error:",
+        error
+      );
+
+      return false;
+    }
+  }
+
+
+  /* =========================
+     SHOW ADMIN
+  ========================== */
+
+  function showAdmin(user) {
+
+    loading.hidden = true;
+
+    loggedOut.hidden = true;
+
+    dashboard.style.display =
+      "block";
+
+
+    const name =
+      user.displayName ||
+      "Administrator";
+
+
+    adminName.textContent =
+      name;
+
+
+    adminEmail.textContent =
+      user.email || "";
+
+
+    avatar.textContent =
+      name
+        .trim()
+        .charAt(0)
+        .toUpperCase() || "A";
+  }
+
+
+  /* =========================
+     SHOW LOGIN
+  ========================== */
+
+  function showLogin() {
+
+    loading.hidden = true;
+
+    dashboard.style.display =
+      "none";
+
+    loggedOut.hidden = false;
+  }
+
+
+  /* =========================
+     AUTH STATE
+  ========================== */
+
+  onAuthStateChanged(
+    auth,
+    async (user) => {
+
+      if (!user) {
+
+        showLogin();
+
+        return;
+      }
+
+
+      const admin =
+        await isAdmin(user);
+
+
+      if (!admin) {
+
+        await signOut(auth);
+
+        showLogin();
+
+        return;
+      }
+
+
+      showAdmin(user);
+
+    }
+  );
+
+
+  /* =========================
+     LOGOUT
+  ========================== */
+
+  logoutBtn.addEventListener(
+    "click",
+    async () => {
+
+      logoutBtn.disabled = true;
+
+      logoutBtn.textContent =
+        "Logging out...";
+
+
+      try {
+
+        await signOut(auth);
+
+        window.location.replace(
+          "login-admin.html"
+        );
+
+      } catch (error) {
+
+        console.error(
+          "Logout error:",
+          error
+        );
+
+        logoutBtn.disabled = false;
+
+        logoutBtn.textContent =
+          "🚪 Logout";
+      }
+
+    }
+  );
+
+</script>
+
+</body>
+</html>
