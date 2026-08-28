@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
+  <title>Logout | Let'sStudy Pro</title>
+
+  <meta
+    name="description"
+    content="Sign out of your Let'sStudy Pro account."
+  >
+
+  <meta
+    name="robots"
+    content="noindex,nofollow"
+  >
+
+  <meta
+    name="theme-color"
+    content="#2563eb"
+  >
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      min-height: 100dvh;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 18px;
+
+      font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
+
+      background: #f5f7fb;
+      color: #172033;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 390px;
+
+      padding: 30px 24px;
+
+      text-align: center;
+
+      background: #ffffff;
+
+      border: 1px solid #e2e7ef;
+
+      border-radius: 20px;
+
+      box-shadow:
+        0 15px 40px rgba(15, 23, 42, .08);
+    }
+
+    .logo {
+      width: 58px;
+      height: 58px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      margin: 0 auto 18px;
+
+      border-radius: 15px;
+
+      background: #2563eb;
+      color: #ffffff;
+
+      font-size: 25px;
+      font-weight: 800;
+    }
+
+    .spinner {
+      width: 28px;
+      height: 28px;
+
+      margin: 0 auto 17px;
+
+      border: 3px solid #e5e7eb;
+      border-top-color: #2563eb;
+
+      border-radius: 50%;
+
+      animation: spin .7s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    h1 {
+      margin: 0 0 7px;
+
+      font-size: 21px;
+      line-height: 1.25;
+    }
+
+    p {
+      margin: 0;
+
+      color: #667085;
+
+      font-size: 13px;
+
+      line-height: 1.55;
+    }
+
+    .error {
+      display: none;
+
+      margin-top: 18px;
+
+      padding: 11px 13px;
+
+      border: 1px solid #fecaca;
+
+      border-radius: 10px;
+
+      background: #fef2f2;
+
+      color: #b91c1c;
+
+      font-size: 13px;
+    }
+
+    .error.show {
+      display: block;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      min-height: 46px;
+
+      margin-top: 18px;
+      padding: 0 18px;
+
+      border-radius: 10px;
+
+      background: #2563eb;
+      color: #ffffff;
+
+      text-decoration: none;
+
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .button:hover {
+      background: #1d4ed8;
+    }
+
+    .button:focus-visible {
+      outline: 3px solid rgba(37, 99, 235, .25);
+      outline-offset: 3px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .spinner {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main
+    class="card"
+    aria-live="polite"
+  >
+
+    <div
+      class="logo"
+      aria-hidden="true"
+    >
+      L
+    </div>
+
+    <div
+      id="spinner"
+      class="spinner"
+      aria-hidden="true"
+    ></div>
+
+    <h1 id="title">
+      Signing out...
+    </h1>
+
+    <p id="message">
+      Please wait while we securely sign you out.
+    </p>
+
+    <div
+      id="error"
+      class="error"
+      role="alert"
+    ></div>
+
+    <a
+      id="loginButton"
+      class="button"
+      href="index-auth.html"
+      hidden
+    >
+      Continue
+    </a>
+
+  </main>
+
+
+  <script type="module">
+
+    import {
+      initializeApp
+    } from
+      "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+    import {
+      getAuth,
+      signOut
+    } from
+      "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+
+    /* =========================
+       FIREBASE
+    ========================== */
+
+    const firebaseConfig = {
+
+      apiKey:
+        "AIzaSyBcOYDfAVKXbkljsyRgI_0rj0rodBn678tCc",
+
+      authDomain:
+        "let-s-study-pro-course.firebaseapp.com",
+
+      projectId:
+        "let-s-study-pro-course",
+
+      storageBucket:
+        "let-s-study-pro-course.firebasestorage.app",
+
+      messagingSenderId:
+        "474928293390",
+
+      appId:
+        "1:474928293390:web:2bcc2aebf2351c12a9fe5f"
+    };
+
+
+    /* =========================
+       INITIALIZE
+    ========================== */
+
+    const app =
+      initializeApp(firebaseConfig);
+
+    const auth =
+      getAuth(app);
+
+
+    /* =========================
+       ELEMENTS
+    ========================== */
+
+    const spinner =
+      document.getElementById("spinner");
+
+    const title =
+      document.getElementById("title");
+
+    const message =
+      document.getElementById("message");
+
+    const errorBox =
+      document.getElementById("error");
+
+    const loginButton =
+      document.getElementById("loginButton");
+
+
+    /* =========================
+       USER LOGOUT
+    ========================== */
+
+    async function logoutUser() {
+
+      try {
+
+        await signOut(auth);
+
+
+        /*
+         * Clear only temporary session data.
+         */
+        try {
+          sessionStorage.clear();
+        } catch (error) {
+          console.warn(
+            "Session cleanup failed.",
+            error
+          );
+        }
+
+
+        spinner.style.display =
+          "none";
+
+        title.textContent =
+          "Signed out successfully";
+
+        message.textContent =
+          "Your Let'sStudy Pro account has been securely signed out.";
+
+
+        /*
+         * Redirect USER only.
+         */
+        setTimeout(() => {
+
+          window.location.replace(
+            "index-auth.html"
+          );
+
+        }, 400);
+
+
+      } catch (error) {
+
+        console.error(
+          "User logout failed:",
+          error
+        );
+
+        spinner.style.display =
+          "none";
+
+        title.textContent =
+          "Logout failed";
+
+        message.textContent =
+          "We could not complete the logout request.";
+
+        errorBox.textContent =
+          "Please try again or continue to the authentication page.";
+
+        errorBox.classList.add("show");
+
+        loginButton.hidden =
+          false;
+      }
+    }
+
+
+    logoutUser();
+
+  </script>
+
+</body>
+</html>
