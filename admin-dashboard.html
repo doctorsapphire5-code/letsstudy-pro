@@ -1,0 +1,1742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Admin Dashboard | Let'sStudy Pro</title>
+
+  <meta
+    name="description"
+    content="Let'sStudy Pro Administrator Dashboard"
+  >
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #667085;
+      --border: #e5e7eb;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --warning: #d97706;
+      --sidebar: #111827;
+      --sidebar-text: #d1d5db;
+    }
+
+    body {
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* SIDEBAR */
+
+    .sidebar {
+      width: 270px;
+      background: var(--sidebar);
+      color: white;
+      position: fixed;
+      inset: 0 auto 0 0;
+      overflow-y: auto;
+      z-index: 1000;
+      transition: transform .25s ease;
+    }
+
+    .brand {
+      height: 72px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 22px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: var(--primary);
+      font-size: 20px;
+    }
+
+    .brand-title {
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 2px;
+    }
+
+    .nav {
+      padding: 18px 12px 30px;
+    }
+
+    .nav-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      padding: 12px;
+    }
+
+    .nav a {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 11px 12px;
+      margin: 2px 0;
+      border-radius: 9px;
+      color: var(--sidebar-text);
+      font-size: 13px;
+      transition: .15s ease;
+    }
+
+    .nav a:hover,
+    .nav a.active {
+      background: rgba(255,255,255,.09);
+      color: white;
+    }
+
+    .nav-icon {
+      width: 22px;
+      text-align: center;
+    }
+
+    /* MAIN */
+
+    .main {
+      width: calc(100% - 270px);
+      margin-left: 270px;
+      min-width: 0;
+    }
+
+    .topbar {
+      height: 72px;
+      background: white;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      position: sticky;
+      top: 0;
+      z-index: 500;
+    }
+
+    .top-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .menu-btn {
+      display: none;
+      border: 0;
+      background: transparent;
+      font-size: 23px;
+      cursor: pointer;
+    }
+
+    .search {
+      width: min(430px, 45vw);
+      position: relative;
+    }
+
+    .search input {
+      width: 100%;
+      padding: 11px 15px 11px 40px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      outline: none;
+      background: #f9fafb;
+    }
+
+    .search span {
+      position: absolute;
+      left: 13px;
+      top: 10px;
+    }
+
+    .admin-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+    }
+
+    .profile-name {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .profile-role {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .logout {
+      margin-left: 12px;
+      border: 1px solid var(--border);
+      background: white;
+      border-radius: 8px;
+      padding: 8px 11px;
+      cursor: pointer;
+    }
+
+    .logout:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    /* CONTENT */
+
+    .content {
+      padding: 28px;
+      max-width: 1600px;
+      margin: auto;
+    }
+
+    .welcome {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+
+    .welcome h1 {
+      font-size: clamp(24px, 3vw, 34px);
+      margin-bottom: 7px;
+    }
+
+    .welcome p,
+    .date {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* STATS */
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 25px;
+    }
+
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+    }
+
+    .stat-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stat-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      background: #eff6ff;
+      font-size: 19px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .stat-value {
+      font-size: 26px;
+      font-weight: 800;
+      margin-top: 5px;
+    }
+
+    /* GRID */
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns:
+        minmax(0, 1.5fr)
+        minmax(300px, 1fr);
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .card-header h2 {
+      font-size: 17px;
+    }
+
+    .card-header span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    /* ACTIONS */
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .action {
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 15px;
+      transition: .15s ease;
+    }
+
+    .action:hover {
+      border-color: var(--primary);
+      transform: translateY(-1px);
+    }
+
+    .action-icon {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+
+    .action strong {
+      display: block;
+      font-size: 13px;
+    }
+
+    .action small {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    /* ACTIVITY */
+
+    .activity {
+      list-style: none;
+    }
+
+    .activity li {
+      display: flex;
+      gap: 11px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .activity li:last-child {
+      border-bottom: 0;
+    }
+
+    .activity-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: #f3f4f6;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .activity strong {
+      display: block;
+      font-size: 12px;
+    }
+
+    .activity small {
+      display: block;
+      color: var(--muted);
+      margin-top: 3px;
+      font-size: 11px;
+    }
+
+    .loading {
+      opacity: .55;
+    }
+
+    /* MOBILE */
+
+    @media (max-width: 1050px) {
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 800px) {
+
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .main {
+        width: 100%;
+        margin-left: 0;
+      }
+
+      .menu-btn {
+        display: block;
+      }
+
+      .topbar {
+        padding: 0 15px;
+      }
+
+      .search {
+        display: none;
+      }
+
+      .profile-name,
+      .profile-role {
+        display: none;
+      }
+
+      .content {
+        padding: 18px;
+      }
+
+      .welcome {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 500px) {
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+      .logout {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+
+  <aside class="sidebar" id="sidebar">
+
+    <div class="brand">
+
+      <div class="brand-logo">🛡️</div>
+
+      <div>
+        <div class="brand-title">
+          Let'sStudy Pro
+        </div>
+
+        <div class="brand-subtitle">
+          Administrator Portal
+        </div>
+      </div>
+
+    </div>
+
+    <nav class="nav">
+
+      <div class="nav-title">Overview</div>
+
+      <a href="admin-dashboard.html" class="active">
+        <span class="nav-icon">📊</span>
+        Dashboard
+      </a>
+
+      <div class="nav-title">Learning</div>
+
+      <a href="admin-course-09/12/2025-ummy.html">
+        <span class="nav-icon">🎓</span>
+        Courses
+      </a>
+
+      <a href="admin-course-module-09/12/2025-ummy..html">
+        <span class="nav-icon">🧩</span>
+        Modules
+      </a>
+
+      <a href="admin-lessons-09/12/2025-ummy.html">
+        <span class="nav-icon">📖</span>
+        Lessons
+      </a>
+
+      <a href="admin-assignments-&-05.html">
+        <span class="nav-icon">📝</span>
+        Assignments
+      </a>
+
+      <a href="admin-quiz-x-power+99.html">
+        <span class="nav-icon">❓</span>
+        Quizzes
+      </a>
+
+      <a href="admin-course-faqs-1234.html">
+        <span class="nav-icon">💬</span>
+        Course FAQs
+      </a>
+
+      <a href="admin-resourses-09/12/2025-ummy.html">
+        <span class="nav-icon">📚</span>
+        Resources
+      </a>
+
+      <a href="admin-video.html">
+        <span class="nav-icon">🎬</span>
+        Video
+      </a>
+
+      <a href="admin-videos.html">
+        <span class="nav-icon">🎥</span>
+        Videos
+      </a>
+
+      <div class="nav-title">Community</div>
+
+      <a href="admin-community.html">
+        <span class="nav-icon">👥</span>
+        Community
+      </a>
+
+      <a href="admin-announcements~√~[]~.html">
+        <span class="nav-icon">📢</span>
+        Announcements
+      </a>
+
+      <a href="admin-notifications.html">
+        <span class="nav-icon">🔔</span>
+        Notifications
+      </a>
+
+      <div class="nav-title">Marketplace</div>
+
+      <a href="admin-marketplace-p09.html">
+        <span class="nav-icon">🛒</span>
+        Marketplace
+      </a>
+
+      <a href="admin-bussiness.html">
+        <span class="nav-icon">🏢</span>
+        Businesses
+      </a>
+
+      <a href="admin-service.html">
+        <span class="nav-icon">🛠️</span>
+        Services
+      </a>
+
+      <a href="admin-private-meeting.html">
+        <span class="nav-icon">🤝</span>
+        Private Meetings
+      </a>
+
+      <div class="nav-title">Finance</div>
+
+      <a href="admin-payments.html">
+        <span class="nav-icon">💳</span>
+        Payments
+      </a>
+
+      <a href="admin-payment-methods.html">
+        <span class="nav-icon">💰</span>
+        Payment Methods
+      </a>
+
+      <a href="admin-order.html">
+        <span class="nav-icon">📦</span>
+        Orders
+      </a>
+
+      <a href="admin-revenue.html">
+        <span class="nav-icon">📈</span>
+        Revenue
+      </a>
+
+      <a href="admin-payouts.html">
+        <span class="nav-icon">💵</span>
+        Payouts
+      </a>
+
+      <a href="admin-wallet.html">
+        <span class="nav-icon">👛</span>
+        Wallet
+      </a>
+
+      <a href="admin-withdrawal.html">
+        <span class="nav-icon">🏦</span>
+        Withdrawals
+      </a>
+
+      <a href="admin-refunds.html">
+        <span class="nav-icon">↩️</span>
+        Refunds
+      </a>
+
+      <div class="nav-title">Users</div>
+
+      <a href="admin-students.html">
+        <span class="nav-icon">🎒</span>
+        Students
+      </a>
+
+      <a href="admin-support.html">
+        <span class="nav-icon">🎧</span>
+        Support
+      </a>
+
+      <a href="admin-reports.html">
+        <span class="nav-icon">📑</span>
+        Reports
+      </a>
+
+      <div class="nav-title">Other</div>
+
+      <a href="admin-premium.html">
+        <span class="nav-icon">⭐</span>
+        Premium
+      </a>
+
+      <a href="admin-referrals.html">
+        <span class="nav-icon">🔗</span>
+        Referrals
+      </a>
+
+      <a href="admin-reviews.html">
+        <span class="nav-icon">⭐</span>
+        Reviews
+      </a>
+
+      <a href="admin-scholarships-00u.html">
+        <span class="nav-icon">🎓</span>
+        Scholarships
+      </a>
+
+      <a href="admin-career-09/12/2025-ummy.html">
+        <span class="nav-icon">💼</span>
+        Careers
+      </a>
+
+      <a href="admin-certificate-09/12/2025-ummy.html">
+        <span class="nav-icon">📜</span>
+        Certificates
+      </a>
+
+      <a href="admin-marketing+.html">
+        <span class="nav-icon">📣</span>
+        Marketing
+      </a>
+
+    </nav>
+
+  </aside>
+
+
+  <!-- MAIN -->
+
+  <main class="main">
+
+    <header class="topbar">
+
+      <div class="top-left">
+
+        <button
+          class="menu-btn"
+          id="menuBtn"
+          aria-label="Open menu"
+        >
+          ☰
+        </button>
+
+        <div class="search">
+
+          <span>🔎</span>
+
+          <input
+            type="search"
+            id="search"
+            placeholder="Search admin pages..."
+            aria-label="Search admin pages"
+          >
+
+        </div>
+
+      </div>
+
+
+      <div class="admin-profile">
+
+        <div>
+
+          <div
+            class="profile-name"
+            id="adminName"
+          >
+            Administrator
+          </div>
+
+          <div
+            class="profile-role"
+            id="adminRole"
+          >
+            Checking access...
+          </div>
+
+        </div>
+
+        <div
+          class="avatar"
+          id="avatar"
+        >
+          A
+        </div>
+
+        <button
+          class="logout"
+          id="logoutBtn"
+          type="button"
+        >
+          Sign out
+        </button>
+
+      </div>
+
+    </header>
+
+
+    <section class="content">
+
+      <div class="welcome">
+
+        <div>
+
+          <h1>
+            Admin Dashboard
+          </h1>
+
+          <p>
+            Manage Let'sStudy Pro from one central workspace.
+          </p>
+
+        </div>
+
+        <div
+          class="date"
+          id="date"
+        >
+          Loading...
+        </div>
+
+      </div>
+
+
+      <!-- STATS -->
+
+      <section class="stats">
+
+        <div class="stat">
+
+          <div class="stat-top">
+
+            <div>
+
+              <div class="stat-label">
+                Students
+              </div>
+
+              <div
+                class="stat-value loading"
+                id="studentsCount"
+              >
+                —
+              </div>
+
+            </div>
+
+            <div class="stat-icon">
+              👨‍🎓
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="stat">
+
+          <div class="stat-top">
+
+            <div>
+
+              <div class="stat-label">
+                Courses
+              </div>
+
+              <div
+                class="stat-value loading"
+                id="coursesCount"
+              >
+                —
+              </div>
+
+            </div>
+
+            <div class="stat-icon">
+              🎓
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="stat">
+
+          <div class="stat-top">
+
+            <div>
+
+              <div class="stat-label">
+                Orders
+              </div>
+
+              <div
+                class="stat-value loading"
+                id="ordersCount"
+              >
+                —
+              </div>
+
+            </div>
+
+            <div class="stat-icon">
+              📦
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="stat">
+
+          <div class="stat-top">
+
+            <div>
+
+              <div class="stat-label">
+                Revenue
+              </div>
+
+              <div
+                class="stat-value loading"
+                id="revenueCount"
+              >
+                —
+              </div>
+
+            </div>
+
+            <div class="stat-icon">
+              💰
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <div class="dashboard-grid">
+
+
+        <!-- QUICK ACTIONS -->
+
+        <section class="card">
+
+          <div class="card-header">
+
+            <h2>
+              Quick Actions
+            </h2>
+
+            <span>
+              Manage platform
+            </span>
+
+          </div>
+
+
+          <div class="actions">
+
+            <a
+              class="action"
+              href="admin-course-09/12/2025-ummy.html"
+            >
+              <div class="action-icon">🎓</div>
+              <strong>Add Course</strong>
+              <small>Create learning content</small>
+            </a>
+
+
+            <a
+              class="action"
+              href="admin-resourses-09/12/2025-ummy.html"
+            >
+              <div class="action-icon">📚</div>
+              <strong>Add Resource</strong>
+              <small>Manage learning material</small>
+            </a>
+
+
+            <a
+              class="action"
+              href="admin-videos.html"
+            >
+              <div class="action-icon">🎬</div>
+              <strong>Manage Videos</strong>
+              <small>Manage video lessons</small>
+            </a>
+
+
+            <a
+              class="action"
+              href="admin-announcements~√~[]~.html"
+            >
+              <div class="action-icon">📢</div>
+              <strong>Announcement</strong>
+              <small>Publish announcements</small>
+            </a>
+
+
+            <a
+              class="action"
+              href="admin-students.html"
+            >
+              <div class="action-icon">👨‍🎓</div>
+              <strong>Students</strong>
+              <small>Manage students</small>
+            </a>
+
+
+            <a
+              class="action"
+              href="admin-marketplace-p09.html"
+            >
+              <div class="action-icon">🛒</div>
+              <strong>Marketplace</strong>
+              <small>Manage marketplace</small>
+            </a>
+
+          </div>
+
+        </section>
+
+
+        <!-- ACTIVITY -->
+
+        <section class="card">
+
+          <div class="card-header">
+
+            <h2>
+              System Activity
+            </h2>
+
+            <span>
+              Admin
+            </span>
+
+          </div>
+
+
+          <ul class="activity">
+
+            <li>
+
+              <div class="activity-icon">
+                🔐
+              </div>
+
+              <div>
+
+                <strong>
+                  Administrator authenticated
+                </strong>
+
+                <small id="authStatus">
+                  Checking Firebase Authentication...
+                </small>
+
+              </div>
+
+            </li>
+
+
+            <li>
+
+              <div class="activity-icon">
+                🎓
+              </div>
+
+              <div>
+
+                <strong>
+                  Learning system
+                </strong>
+
+                <small>
+                  Courses, modules, lessons, quizzes and assignments
+                </small>
+
+              </div>
+
+            </li>
+
+
+            <li>
+
+              <div class="activity-icon">
+                💳
+              </div>
+
+              <div>
+
+                <strong>
+                  Finance system
+                </strong>
+
+                <small>
+                  Payments, orders, revenue and withdrawals
+                </small>
+
+              </div>
+
+            </li>
+
+
+            <li>
+
+              <div class="activity-icon">
+                🛡️
+              </div>
+
+              <div>
+
+                <strong>
+                  Access control
+                </strong>
+
+                <small>
+                  Administrator access is verified with Firebase Authentication and Firestore.
+                </small>
+
+              </div>
+
+            </li>
+
+          </ul>
+
+        </section>
+
+      </div>
+
+    </section>
+
+    <!-- FOOTER -->
+
+    <footer style="
+      text-align:center;
+      padding:25px 20px;
+      color:#667085;
+      font-size:12px;
+    ">
+      © 2026 Let'sStudy Pro · Administrator Portal
+    </footer>
+
+  </main>
+
+</div>
+
+
+<!-- MOBILE MENU OVERLAY -->
+
+<div
+  id="menuOverlay"
+  style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.35);
+    z-index:900;
+  "
+></div>
+
+
+<script type="module">
+
+  import {
+    initializeApp
+  } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    collection,
+    getCountFromServer
+  } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+
+  /* =========================================
+     FIREBASE
+  ========================================== */
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+    authDomain: "let-s-study-pro-course.firebaseapp.com",
+    databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+    projectId: "let-s-study-pro-course",
+    storageBucket: "let-s-study-pro-course.firebasestorage.app",
+    messagingSenderId: "474928293390",
+    appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+    measurementId: "G-85B7V5H5J0"
+  };
+
+
+  const app =
+    initializeApp(firebaseConfig);
+
+  const auth =
+    getAuth(app);
+
+  const db =
+    getFirestore(app);
+
+
+  /* =========================================
+     ELEMENTS
+  ========================================== */
+
+  const sidebar =
+    document.getElementById("sidebar");
+
+  const menuBtn =
+    document.getElementById("menuBtn");
+
+  const menuOverlay =
+    document.getElementById("menuOverlay");
+
+  const logoutBtn =
+    document.getElementById("logoutBtn");
+
+  const adminName =
+    document.getElementById("adminName");
+
+  const adminRole =
+    document.getElementById("adminRole");
+
+  const avatar =
+    document.getElementById("avatar");
+
+  const authStatus =
+    document.getElementById("authStatus");
+
+
+  /* =========================================
+     DATE
+  ========================================== */
+
+  const dateElement =
+    document.getElementById("date");
+
+  if (dateElement) {
+
+    dateElement.textContent =
+      new Date().toLocaleDateString(
+        undefined,
+        {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric"
+        }
+      );
+
+  }
+
+
+  /* =========================================
+     ADMIN AUTHORIZATION
+  ========================================== */
+
+  onAuthStateChanged(
+    auth,
+    async (user) => {
+
+      if (!user) {
+
+        window.location.replace(
+          "login-admin.html"
+        );
+
+        return;
+      }
+
+
+      try {
+
+        const adminRef =
+          doc(
+            db,
+            "admins",
+            user.uid
+          );
+
+        const adminSnapshot =
+          await getDoc(adminRef);
+
+
+        if (!adminSnapshot.exists()) {
+
+          console.error(
+            "Admin document not found."
+          );
+
+          await signOut(auth);
+
+          alert(
+            "Access denied. This account is not registered as an administrator."
+          );
+
+          window.location.replace(
+            "login-admin.html"
+          );
+
+          return;
+        }
+
+
+        const adminData =
+          adminSnapshot.data();
+
+
+        /* ROLE CHECK */
+
+        const validRole =
+          adminData.role === "admin" ||
+          adminData.role === "superadmin";
+
+
+        if (!validRole) {
+
+          await signOut(auth);
+
+          alert(
+            "Access denied. Invalid administrator role."
+          );
+
+          window.location.replace(
+            "login-admin.html"
+          );
+
+          return;
+        }
+
+
+        /* STATUS CHECK */
+
+        if (
+          adminData.status &&
+          adminData.status !== "active"
+        ) {
+
+          await signOut(auth);
+
+          alert(
+            "Access denied. Administrator account is inactive."
+          );
+
+          window.location.replace(
+            "login-admin.html"
+          );
+
+          return;
+        }
+
+
+        /* DISPLAY ADMIN */
+
+        const name =
+          adminData.name ||
+          user.displayName ||
+          "Administrator";
+
+
+        adminName.textContent =
+          name;
+
+
+        adminRole.textContent =
+          adminData.role === "superadmin"
+            ? "Super Administrator"
+            : "Administrator";
+
+
+        avatar.textContent =
+          name
+            .trim()
+            .charAt(0)
+            .toUpperCase();
+
+
+        authStatus.textContent =
+          "Administrator access verified successfully.";
+
+
+        /* LOAD DASHBOARD */
+
+        loadDashboardStats();
+
+
+      } catch (error) {
+
+        console.error(
+          "Admin authorization error:",
+          error
+        );
+
+
+        authStatus.textContent =
+          "Unable to verify administrator access.";
+
+
+        await signOut(auth);
+
+
+        alert(
+          "Unable to verify administrator access."
+        );
+
+
+        window.location.replace(
+          "login-admin.html"
+        );
+
+      }
+
+    }
+  );
+
+
+  /* =========================================
+     DASHBOARD STATISTICS
+  ========================================== */
+
+  async function loadDashboardStats() {
+
+    try {
+
+      const results =
+        await Promise.allSettled([
+
+          getCountFromServer(
+            collection(
+              db,
+              "users"
+            )
+          ),
+
+          getCountFromServer(
+            collection(
+              db,
+              "courses"
+            )
+          ),
+
+          getCountFromServer(
+            collection(
+              db,
+              "orders"
+            )
+          )
+
+        ]);
+
+
+      /* STUDENTS / USERS */
+
+      if (
+        results[0].status === "fulfilled"
+      ) {
+
+        setStat(
+          "studentsCount",
+          results[0]
+            .value
+            .data()
+            .count
+        );
+
+      }
+
+
+      /* COURSES */
+
+      if (
+        results[1].status === "fulfilled"
+      ) {
+
+        setStat(
+          "coursesCount",
+          results[1]
+            .value
+            .data()
+            .count
+        );
+
+      }
+
+
+      /* ORDERS */
+
+      if (
+        results[2].status === "fulfilled"
+      ) {
+
+        setStat(
+          "ordersCount",
+          results[2]
+            .value
+            .data()
+            .count
+        );
+
+      }
+
+
+      /*
+       * Revenue is left as —
+       * until the exact payment/revenue
+       * document structure is connected.
+       */
+
+      setStat(
+        "revenueCount",
+        "—"
+      );
+
+
+    } catch (error) {
+
+      console.error(
+        "Dashboard statistics error:",
+        error
+      );
+
+      setStat(
+        "studentsCount",
+        "—"
+      );
+
+      setStat(
+        "coursesCount",
+        "—"
+      );
+
+      setStat(
+        "ordersCount",
+        "—"
+      );
+
+      setStat(
+        "revenueCount",
+        "—"
+      );
+
+    }
+
+  }
+
+
+  /* =========================================
+     STAT HELPER
+  ========================================== */
+
+  function setStat(
+    id,
+    value
+  ) {
+
+    const element =
+      document.getElementById(id);
+
+
+    if (!element) {
+      return;
+    }
+
+
+    element.textContent =
+      typeof value === "number"
+        ? value.toLocaleString()
+        : value;
+
+
+    element.classList.remove(
+      "loading"
+    );
+
+  }
+
+
+  /* =========================================
+     LOGOUT
+  ========================================== */
+
+  if (logoutBtn) {
+
+    logoutBtn.addEventListener(
+      "click",
+      async () => {
+
+        logoutBtn.disabled = true;
+
+        logoutBtn.textContent =
+          "Signing out...";
+
+
+        try {
+
+          await signOut(auth);
+
+          window.location.replace(
+            "login-admin.html"
+          );
+
+        } catch (error) {
+
+          console.error(
+            "Logout error:",
+            error
+          );
+
+          logoutBtn.disabled = false;
+
+          logoutBtn.textContent =
+            "Sign out";
+
+        }
+
+      }
+    );
+
+  }
+
+
+  /* =========================================
+     MOBILE SIDEBAR
+  ========================================== */
+
+  function openMenu() {
+
+    sidebar.classList.add(
+      "open"
+    );
+
+    menuOverlay.style.display =
+      "block";
+
+  }
+
+
+  function closeMenu() {
+
+    sidebar.classList.remove(
+      "open"
+    );
+
+    menuOverlay.style.display =
+      "none";
+
+  }
+
+
+  if (menuBtn) {
+
+    menuBtn.addEventListener(
+      "click",
+      openMenu
+    );
+
+  }
+
+
+  if (menuOverlay) {
+
+    menuOverlay.addEventListener(
+      "click",
+      closeMenu
+    );
+
+  }
+
+
+  /* Close mobile menu after navigation */
+
+  document
+    .querySelectorAll(".nav a")
+    .forEach(
+      link => {
+
+        link.addEventListener(
+          "click",
+          closeMenu
+        );
+
+      }
+    );
+
+
+  /* =========================================
+     ADMIN PAGE SEARCH
+  ========================================== */
+
+  const search =
+    document.getElementById("search");
+
+
+  if (search) {
+
+    const navLinks =
+      document.querySelectorAll(
+        ".nav a"
+      );
+
+
+    search.addEventListener(
+      "input",
+      () => {
+
+        const query =
+          search.value
+            .trim()
+            .toLowerCase();
+
+
+        navLinks.forEach(
+          link => {
+
+            const text =
+              link.textContent
+                .trim()
+                .toLowerCase();
+
+
+            link.style.display =
+              !query ||
+              text.includes(query)
+                ? "flex"
+                : "none";
+
+          }
+        );
+
+      }
+    );
+
+  }
+
+</script>
+
+</body>
+</html>
