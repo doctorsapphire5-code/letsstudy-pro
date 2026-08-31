@@ -1,1041 +1,863 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8">
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
-<title>Search | LetsStudy Pro</title>
+  <title>Search | LetsStudy Pro</title>
 
-<meta name="description"
-content="Search courses, resources and community content on LetsStudy Pro.">
+  <meta
+    name="description"
+    content="Search LetsStudy Pro for courses, resources, scholarships, careers, videos and more."
+  >
 
-<style>
+  <meta name="robots" content="index,follow">
 
-*{
-box-sizing:border-box;
-margin:0;
-padding:0;
-}
+  <link rel="stylesheet" href="search.css">
 
-body{
-font-family:Arial,Helvetica,sans-serif;
-background:#f5f7fb;
-color:#0f172a;
-}
+  <style>
+    :root {
+      --primary: #2563eb;
+      --text: #111827;
+      --muted: #667085;
+      --border: #e5e7eb;
+      --bg: #f7f9fc;
+      --card: #ffffff;
+    }
 
-a{
-text-decoration:none;
-color:inherit;
-}
+    * {
+      box-sizing: border-box;
+    }
 
-header{
-background:#fff;
-border-bottom:1px solid #e2e8f0;
-padding:14px 22px;
-display:flex;
-align-items:center;
-justify-content:space-between;
-gap:15px;
-position:sticky;
-top:0;
-z-index:20;
-}
+    body {
+      margin: 0;
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Arial,
+        sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
 
-.logo{
-font-size:19px;
-font-weight:900;
-color:#2563eb;
-}
+    /* HEADER */
 
-nav{
-display:flex;
-gap:7px;
-flex-wrap:wrap;
-}
+    .search-header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(255,255,255,.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
 
-nav a{
-font-size:12px;
-font-weight:800;
-padding:9px 11px;
-border-radius:8px;
-}
+    .header-inner {
+      max-width: 1250px;
+      margin: auto;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
 
-nav a:hover{
-background:#eff6ff;
-color:#2563eb;
-}
+    .logo {
+      text-decoration: none;
+      color: var(--text);
+      font-size: 21px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
 
-.container{
-max-width:1100px;
-margin:auto;
-padding:28px 16px;
-}
+    .search-form {
+      flex: 1;
+      display: flex;
+      gap: 8px;
+    }
 
-.hero{
-margin-bottom:20px;
-}
+    .search-input {
+      flex: 1;
+      width: 100%;
+      min-width: 0;
+      padding: 14px 17px;
+      border: 1px solid #d0d5dd;
+      border-radius: 12px;
+      outline: none;
+      font-size: 16px;
+      background: white;
+    }
 
-.hero h1{
-font-size:28px;
-margin-bottom:7px;
-}
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.10);
+    }
 
-.hero p{
-font-size:13px;
-color:#64748b;
-line-height:1.6;
-}
+    .search-button {
+      border: 0;
+      border-radius: 12px;
+      padding: 0 23px;
+      background: var(--primary);
+      color: white;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
 
-.search-box{
-background:#fff;
-border:1px solid #e2e8f0;
-border-radius:16px;
-padding:17px;
-display:flex;
-gap:9px;
-margin-bottom:18px;
-}
+    .search-button:hover {
+      opacity: .92;
+    }
 
-.search-box input{
-flex:1;
-padding:13px;
-border:1px solid #cbd5e1;
-border-radius:9px;
-font-size:13px;
-outline:none;
-}
+    /* MAIN */
 
-.search-box input:focus{
-border-color:#2563eb;
-}
+    .main {
+      max-width: 1250px;
+      margin: auto;
+      padding: 35px 20px 70px;
+    }
 
-.search-btn{
-border:0;
-background:#2563eb;
-color:#fff;
-padding:0 20px;
-border-radius:9px;
-font-weight:900;
-cursor:pointer;
-}
+    .heading {
+      margin-bottom: 25px;
+    }
 
-.filters{
-display:flex;
-gap:8px;
-flex-wrap:wrap;
-margin-bottom:18px;
-}
+    .heading h1 {
+      margin: 0 0 8px;
+      font-size: 31px;
+      line-height: 1.2;
+    }
 
-.filters button{
-border:1px solid #cbd5e1;
-background:#fff;
-padding:9px 13px;
-border-radius:20px;
-font-size:11px;
-font-weight:800;
-cursor:pointer;
-}
+    .heading p {
+      margin: 0;
+      color: var(--muted);
+    }
 
-.filters button.active,
-.filters button:hover{
-background:#2563eb;
-color:#fff;
-border-color:#2563eb;
-}
+    /* RESULTS */
 
-.status{
-font-size:12px;
-color:#64748b;
-margin-bottom:14px;
-}
+    #results {
+      display: grid;
+      gap: 15px;
+    }
 
-.results{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:15px;
-}
+    .result-card {
+      display: flex;
+      gap: 18px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      text-decoration: none;
+      color: inherit;
+      transition:
+        transform .18s ease,
+        box-shadow .18s ease;
+    }
 
-.result{
-background:#fff;
-border:1px solid #e2e8f0;
-border-radius:15px;
-padding:17px;
-transition:.2s;
-}
+    .result-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0,0,0,.07);
+    }
 
-.result:hover{
-transform:translateY(-2px);
-box-shadow:0 8px 25px rgba(15,23,42,.07);
-}
+    .result-image {
+      width: 170px;
+      height: 110px;
+      border-radius: 11px;
+      object-fit: cover;
+      background: #eef2f7;
+      flex-shrink: 0;
+    }
 
-.type{
-display:inline-block;
-font-size:9px;
-font-weight:900;
-padding:5px 8px;
-border-radius:20px;
-background:#dbeafe;
-color:#1d4ed8;
-margin-bottom:10px;
-}
+    .result-body {
+      min-width: 0;
+      flex: 1;
+    }
 
-.result h3{
-font-size:15px;
-margin-bottom:7px;
-}
+    .result-type {
+      display: inline-block;
+      margin-bottom: 7px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: capitalize;
+    }
 
-.result p{
-font-size:11px;
-color:#64748b;
-line-height:1.6;
-min-height:36px;
-}
+    .result-title {
+      margin: 0 0 7px;
+      font-size: 20px;
+      line-height: 1.3;
+    }
 
-.meta{
-font-size:10px;
-color:#94a3b8;
-margin:12px 0;
-}
+    .result-description {
+      margin: 0 0 10px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
 
-.btn{
-display:inline-flex;
-align-items:center;
-justify-content:center;
-padding:9px 12px;
-border-radius:8px;
-font-size:11px;
-font-weight:900;
-background:#2563eb;
-color:#fff;
-}
+    .result-meta {
+      color: #98a2b3;
+      font-size: 13px;
+    }
 
-.empty{
-display:none;
-background:#fff;
-border:1px dashed #cbd5e1;
-border-radius:15px;
-padding:35px;
-text-align:center;
-color:#64748b;
-font-size:13px;
-}
+    /* STATES */
 
-.loading{
-text-align:center;
-padding:35px;
-color:#64748b;
-}
+    .state {
+      display: none;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 55px 20px;
+      text-align: center;
+    }
 
-footer{
-margin-top:35px;
-padding:20px 0;
-border-top:1px solid #e2e8f0;
-display:flex;
-justify-content:space-between;
-font-size:11px;
-color:#64748b;
-}
+    .state h2 {
+      margin: 0 0 8px;
+    }
 
-footer a{
-color:#2563eb;
-font-weight:800;
-}
+    .state p {
+      margin: 0;
+      color: var(--muted);
+    }
 
-@media(max-width:850px){
-.results{
-grid-template-columns:repeat(2,1fr);
-}
-}
+    .spinner {
+      width: 35px;
+      height: 35px;
+      margin: 0 auto 15px;
+      border: 4px solid #e5e7eb;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
 
-@media(max-width:600px){
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
 
-header{
-flex-direction:column;
-align-items:flex-start;
-}
+    /* MOBILE */
 
-nav{
-width:100%;
-}
+    @media (max-width: 700px) {
 
-.container{
-padding:20px 13px;
-}
+      .header-inner {
+        flex-direction: column;
+        align-items: stretch;
+      }
 
-.search-box{
-flex-direction:column;
-}
+      .search-form {
+        width: 100%;
+      }
 
-.search-btn{
-height:43px;
-}
+      .search-button {
+        padding: 0 17px;
+      }
 
-.results{
-grid-template-columns:1fr;
-}
+      .main {
+        padding-top: 25px;
+      }
 
-footer{
-flex-direction:column;
-gap:8px;
-}
+      .heading h1 {
+        font-size: 25px;
+      }
 
-}
+      .result-card {
+        flex-direction: column;
+      }
 
-</style>
-
+      .result-image {
+        width: 100%;
+        height: 190px;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
+<header class="search-header">
 
-<header>
+  <div class="header-inner">
 
-<a href="dashboard.html" class="logo">
-LetsStudy Pro
-</a>
+    <a
+      href="/"
+      class="logo"
+      aria-label="LetsStudy Pro Home"
+    >
+      LetsStudy Pro
+    </a>
 
-<nav>
+    <form
+      id="searchForm"
+      class="search-form"
+    >
 
-<a href="courses.html">
-Courses
-</a>
+      <input
+        id="searchInput"
+        class="search-input"
+        type="search"
+        placeholder="Search courses, resources, scholarships..."
+        autocomplete="off"
+        aria-label="Search LetsStudy Pro"
+      >
 
-<a href="resources.html">
-Resources
-</a>
+      <button
+        class="search-button"
+        type="submit"
+      >
+        Search
+      </button>
 
-<a href="community.html">
-Community
-</a>
+    </form>
 
-<a href="dashboard.html">
-Dashboard
-</a>
-
-</nav>
+  </div>
 
 </header>
 
 
-<main class="container">
+<main class="main">
+
+  <section class="heading">
+
+    <h1 id="searchTitle">
+      Search LetsStudy Pro
+    </h1>
+
+    <p id="searchSummary">
+      Search courses, resources, scholarships, careers, videos and more.
+    </p>
+
+  </section>
 
 
-<section class="hero">
+  <!-- LOADING -->
 
-<h1>
-Search LetsStudy Pro
-</h1>
+  <div
+    id="loading"
+    class="state"
+  >
 
-<p>
-Find courses, learning resources and community content
-from one place.
-</p>
+    <div class="spinner"></div>
 
-</section>
+    <h2>
+      Searching...
+    </h2>
 
+    <p>
+      Finding the best results from LetsStudy Pro.
+    </p>
 
-<section class="search-box">
-
-<input
-id="searchInput"
-type="search"
-placeholder="Search courses, resources, posts..."
-autocomplete="off">
-
-<button
-id="searchBtn"
-class="search-btn">
-
-Search
-
-</button>
-
-</section>
+  </div>
 
 
-<div class="filters">
+  <!-- ERROR -->
 
-<button
-class="active"
-data-type="all">
+  <div
+    id="error"
+    class="state"
+  >
 
-All
+    <h2>
+      Search unavailable
+    </h2>
 
-</button>
+    <p id="errorMessage">
+      Please try again.
+    </p>
 
-<button
-data-type="course">
-
-Courses
-
-</button>
-
-<button
-data-type="resource">
-
-Resources
-
-</button>
-
-<button
-data-type="post">
-
-Community Posts
-
-</button>
-
-</div>
+  </div>
 
 
-<div
-id="status"
-class="status">
+  <!-- EMPTY -->
 
-Enter something to search.
+  <div
+    id="empty"
+    class="state"
+  >
 
-</div>
+    <h2>
+      No results found
+    </h2>
 
+    <p>
+      Try another keyword or search phrase.
+    </p>
 
-<section
-id="results"
-class="results">
-</section>
-
-
-<div
-id="empty"
-class="empty">
-
-<h3>
-No results found
-</h3>
-
-<p style="margin-top:7px">
-Try a different keyword.
-</p>
-
-</div>
+  </div>
 
 
-<footer>
+  <!-- RESULTS -->
 
-<div>
-© <span id="year"></span> LetsStudy Pro
-</div>
-
-<div>
-
-<a href="courses.html">
-Courses
-</a>
-
-&nbsp;•&nbsp;
-
-<a href="resources.html">
-Resources
-</a>
-
-&nbsp;•&nbsp;
-
-<a href="community.html">
-Community
-</a>
-
-&nbsp;•&nbsp;
-
-<a href="dashboard.html">
-Dashboard
-</a>
-
-</div>
-
-</footer>
+  <section
+    id="results"
+  ></section>
 
 </main>
 
 
-<script type="module">
+<script>
 
-import {
-initializeApp
-}
-from
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-
-import {
-getAuth,
-onAuthStateChanged
-}
-from
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-
-import {
-getFirestore,
-collection,
-getDocs,
-limit,
-query
-}
-from
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+"use strict";
 
 
-/* ==========================================
-FIREBASE
-========================================== */
+/* =====================================================
+   ELEMENTS
+===================================================== */
 
-const firebaseConfig = {
+const searchForm =
+  document.getElementById("searchForm");
 
-apiKey:
-"AIzaSyBcOYDfAXKXbljsyRgI_0rjodBn678tCc",
+const searchInput =
+  document.getElementById("searchInput");
 
-authDomain:
-"let-s-study-pro-course.firebaseapp.com",
+const searchTitle =
+  document.getElementById("searchTitle");
 
-databaseURL:
-"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
-
-projectId:
-"let-s-study-pro-course",
-
-storageBucket:
-"let-s-study-pro-course.firebasestorage.app",
-
-messagingSenderId:
-"474928293390",
-
-appId:
-"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
-
-measurementId:
-"G-85B7V5H5J0"
-
-};
-
-
-const app =
-initializeApp(firebaseConfig);
-
-const auth =
-getAuth(app);
-
-const db =
-getFirestore(app);
-
-
-/* ==========================================
-ELEMENTS
-========================================== */
-
-const input =
-document.getElementById("searchInput");
-
-const searchBtn =
-document.getElementById("searchBtn");
+const searchSummary =
+  document.getElementById("searchSummary");
 
 const results =
-document.getElementById("results");
+  document.getElementById("results");
 
-const status =
-document.getElementById("status");
+const loading =
+  document.getElementById("loading");
 
 const empty =
-document.getElementById("empty");
+  document.getElementById("empty");
 
-const filterButtons =
-document.querySelectorAll(
-".filters button"
+const errorBox =
+  document.getElementById("error");
+
+const errorMessage =
+  document.getElementById("errorMessage");
+
+
+/* =====================================================
+   STATES
+===================================================== */
+
+function hideStates() {
+
+  loading.style.display = "none";
+
+  empty.style.display = "none";
+
+  errorBox.style.display = "none";
+
+}
+
+
+function showLoading() {
+
+  hideStates();
+
+  results.innerHTML = "";
+
+  loading.style.display = "block";
+
+}
+
+
+function showEmpty() {
+
+  hideStates();
+
+  results.innerHTML = "";
+
+  empty.style.display = "block";
+
+}
+
+
+function showError(message) {
+
+  hideStates();
+
+  results.innerHTML = "";
+
+  errorMessage.textContent =
+    message ||
+    "Please try again.";
+
+  errorBox.style.display = "block";
+
+}
+
+
+/* =====================================================
+   SEARCH
+===================================================== */
+
+async function searchLetsStudy(query) {
+
+  query =
+    String(query || "").trim();
+
+
+  if (!query) {
+
+    searchTitle.textContent =
+      "Search LetsStudy Pro";
+
+    searchSummary.textContent =
+      "Search courses, resources, scholarships, careers, videos and more.";
+
+    hideStates();
+
+    results.innerHTML = "";
+
+    return;
+
+  }
+
+
+  showLoading();
+
+
+  searchTitle.textContent =
+    `Search results for "${query}"`;
+
+
+  try {
+
+    /*
+     Search API.
+
+     Firebase Hosting will route:
+
+     /api/search
+
+     to the Cloud Function.
+    */
+
+    const response =
+      await fetch(
+        `/api/search?q=${encodeURIComponent(query)}`,
+        {
+          method: "GET",
+          headers: {
+            "Accept": "application/json"
+          }
+        }
+      );
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        `HTTP ${response.status}`
+      );
+
+    }
+
+
+    const data =
+      await response.json();
+
+
+    const items =
+      Array.isArray(data.results)
+        ? data.results
+        : [];
+
+
+    hideStates();
+
+
+    /*
+     Result count comes from API.
+     Nothing is hardcoded.
+    */
+
+    const total =
+      typeof data.total === "number"
+        ? data.total
+        : items.length;
+
+
+    searchSummary.textContent =
+      `${total} result${total === 1 ? "" : "s"} found`;
+
+
+    if (!items.length) {
+
+      showEmpty();
+
+      return;
+
+    }
+
+
+    renderResults(items);
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "LetsStudy Pro Search:",
+      error
+    );
+
+
+    showError(
+      "Something went wrong while searching."
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   RENDER RESULTS
+===================================================== */
+
+function renderResults(items) {
+
+  results.innerHTML = "";
+
+
+  items.forEach(item => {
+
+    /*
+     Every value comes from Search API,
+     which comes from Firebase.
+    */
+
+    const url =
+      item.url || "#";
+
+    const title =
+      item.title ||
+      "Untitled";
+
+    const description =
+      item.description ||
+      "";
+
+    const image =
+      item.image ||
+      "/assets/images/og-default.jpg";
+
+    const type =
+      item.type ||
+      item.collection ||
+      "content";
+
+    const category =
+      item.category ||
+      "";
+
+
+    const card =
+      document.createElement("a");
+
+
+    card.className =
+      "result-card";
+
+    card.href =
+      url;
+
+
+    const imageElement =
+      document.createElement("img");
+
+    imageElement.className =
+      "result-image";
+
+    imageElement.src =
+      image;
+
+    imageElement.alt =
+      title;
+
+    imageElement.loading =
+      "lazy";
+
+
+    /*
+     Fallback if Firebase image
+     is unavailable.
+    */
+
+    imageElement.onerror =
+      function() {
+
+        this.src =
+          "/assets/images/og-default.jpg";
+
+      };
+
+
+    const body =
+      document.createElement("div");
+
+    body.className =
+      "result-body";
+
+
+    const typeElement =
+      document.createElement("span");
+
+    typeElement.className =
+      "result-type";
+
+    typeElement.textContent =
+      type;
+
+
+    const titleElement =
+      document.createElement("h2");
+
+    titleElement.className =
+      "result-title";
+
+    titleElement.textContent =
+      title;
+
+
+    const descriptionElement =
+      document.createElement("p");
+
+    descriptionElement.className =
+      "result-description";
+
+    descriptionElement.textContent =
+      description;
+
+
+    const metaElement =
+      document.createElement("div");
+
+    metaElement.className =
+      "result-meta";
+
+    metaElement.textContent =
+      category;
+
+
+    body.appendChild(
+      typeElement
+    );
+
+    body.appendChild(
+      titleElement
+    );
+
+    body.appendChild(
+      descriptionElement
+    );
+
+    body.appendChild(
+      metaElement
+    );
+
+
+    card.appendChild(
+      imageElement
+    );
+
+    card.appendChild(
+      body
+    );
+
+
+    results.appendChild(
+      card
+    );
+
+  });
+
+}
+
+
+/* =====================================================
+   FORM
+===================================================== */
+
+searchForm.addEventListener(
+  "submit",
+  event => {
+
+    event.preventDefault();
+
+
+    const query =
+      searchInput.value.trim();
+
+
+    if (!query) {
+
+      searchInput.focus();
+
+      return;
+
+    }
+
+
+    /*
+     /search.html?q=biology
+    */
+
+    const url =
+      new URL(
+        window.location.href
+      );
+
+
+    url.searchParams.set(
+      "q",
+      query
+    );
+
+
+    window.history.pushState(
+      {},
+      "",
+      url
+    );
+
+
+    searchLetsStudy(
+      query
+    );
+
+  }
 );
 
 
-let activeFilter =
-"all";
+/* =====================================================
+   LOAD SEARCH FROM URL
+===================================================== */
 
-let allResults = [];
-
-
-/* ==========================================
-AUTH
-========================================== */
-
-onAuthStateChanged(
-auth,
-user => {
-
-console.log(
-user
-? "User authenticated"
-: "Guest user"
-);
-
-});
+const params =
+  new URLSearchParams(
+    window.location.search
+  );
 
 
-/* ==========================================
-SEARCH
-========================================== */
-
-async function performSearch(){
-
-const term =
-input.value
-.trim()
-.toLowerCase();
+const initialQuery =
+  params.get("q");
 
 
-if(!term){
+if (initialQuery) {
 
-results.innerHTML = "";
+  searchInput.value =
+    initialQuery;
 
-empty.style.display =
-"none";
-
-status.textContent =
-"Enter something to search.";
-
-return;
+  searchLetsStudy(
+    initialQuery
+  );
 
 }
-
-
-status.textContent =
-"Searching...";
-
-results.innerHTML = "";
-
-empty.style.display =
-"none";
-
-
-try{
-
-allResults = [];
-
-
-/* ========================================
-COURSES
-======================================== */
-
-if(
-activeFilter === "all" ||
-activeFilter === "course"
-){
-
-const snap =
-await getDocs(
-query(
-collection(db,"courses"),
-limit(100)
-)
-);
-
-
-snap.forEach(doc => {
-
-const data =
-doc.data();
-
-const text =
-(
-(data.title || "") +
-" " +
-(data.description || "") +
-" " +
-(data.category || "")
-).toLowerCase();
-
-
-if(text.includes(term)){
-
-allResults.push({
-
-id:doc.id,
-
-type:"course",
-
-title:
-data.title ||
-"Course",
-
-description:
-data.description ||
-"Explore this course.",
-
-category:
-data.category ||
-"Course",
-
-url:
-"item.html?id=" +
-encodeURIComponent(doc.id)
-
-});
-
-}
-
-});
-
-}
-
-
-/* ========================================
-RESOURCES
-======================================== */
-
-if(
-activeFilter === "all" ||
-activeFilter === "resource"
-){
-
-const snap =
-await getDocs(
-query(
-collection(db,"resources"),
-limit(100)
-)
-);
-
-
-snap.forEach(doc => {
-
-const data =
-doc.data();
-
-const text =
-(
-(data.title || "") +
-" " +
-(data.description || "") +
-" " +
-(data.category || "")
-).toLowerCase();
-
-
-if(text.includes(term)){
-
-allResults.push({
-
-id:doc.id,
-
-type:"resource",
-
-title:
-data.title ||
-"Resource",
-
-description:
-data.description ||
-"Learning resource.",
-
-category:
-data.category ||
-"Resource",
-
-url:
-"resources-details.html?id=" +
-encodeURIComponent(doc.id)
-
-});
-
-}
-
-});
-
-}
-
-
-/* ========================================
-COMMUNITY POSTS
-======================================== */
-
-if(
-activeFilter === "all" ||
-activeFilter === "post"
-){
-
-const snap =
-await getDocs(
-query(
-collection(db,"posts"),
-limit(100)
-)
-);
-
-
-snap.forEach(doc => {
-
-const data =
-doc.data();
-
-const text =
-(
-(data.title || "") +
-" " +
-(data.content || "") +
-" " +
-(data.category || "")
-).toLowerCase();
-
-
-if(text.includes(term)){
-
-allResults.push({
-
-id:doc.id,
-
-type:"post",
-
-title:
-data.title ||
-"Community Post",
-
-description:
-data.content ||
-"View this community post.",
-
-category:
-data.category ||
-"Community",
-
-url:
-"post-details.html?id=" +
-encodeURIComponent(doc.id)
-
-});
-
-}
-
-});
-
-}
-
-
-renderResults();
-
-}catch(error){
-
-console.error(
-"Search error:",
-error
-);
-
-status.textContent =
-"Search could not be completed.";
-
-results.innerHTML = "";
-
-empty.style.display =
-"block";
-
-}
-
-}
-
-
-/* ==========================================
-RENDER RESULTS
-========================================== */
-
-function renderResults(){
-
-results.innerHTML = "";
-
-
-if(!allResults.length){
-
-status.textContent =
-"No results found.";
-
-empty.style.display =
-"block";
-
-return;
-
-}
-
-
-empty.style.display =
-"none";
-
-status.textContent =
-`${allResults.length} result${
-allResults.length === 1 ? "" : "s"
-} found`;
-
-
-allResults.forEach(item => {
-
-const card =
-document.createElement("article");
-
-card.className =
-"result";
-
-
-card.innerHTML = `
-
-<span class="type">
-${typeName(item.type)}
-</span>
-
-<h3>
-${escapeHTML(item.title)}
-</h3>
-
-<p>
-${escapeHTML(
-truncate(item.description,120)
-)}
-</p>
-
-<div class="meta">
-${escapeHTML(item.category)}
-</div>
-
-<a
-class="btn"
-href="${item.url}">
-
-View
-
-</a>
-
-`;
-
-
-results.appendChild(card);
-
-});
-
-}
-
-
-/* ==========================================
-FILTERS
-========================================== */
-
-filterButtons.forEach(button => {
-
-button.addEventListener(
-"click",
-() => {
-
-filterButtons.forEach(
-b => b.classList.remove("active")
-);
-
-button.classList.add("active");
-
-activeFilter =
-button.dataset.type;
-
-
-if(input.value.trim()){
-
-performSearch();
-
-}
-
-});
-
-});
-
-
-/* ==========================================
-SEARCH EVENTS
-========================================== */
-
-searchBtn.addEventListener(
-"click",
-performSearch
-);
-
-
-input.addEventListener(
-"keydown",
-event => {
-
-if(event.key === "Enter"){
-
-performSearch();
-
-}
-
-});
-
-
-let timer;
-
-input.addEventListener(
-"input",
-() => {
-
-clearTimeout(timer);
-
-timer =
-setTimeout(
-performSearch,
-400
-);
-
-});
-
-
-/* ==========================================
-HELPERS
-========================================== */
-
-function typeName(type){
-
-if(type === "course")
-return "COURSE";
-
-if(type === "resource")
-return "RESOURCE";
-
-return "COMMUNITY POST";
-
-}
-
-
-function truncate(
-text,
-length
-){
-
-text =
-String(text);
-
-return text.length > length
-? text.substring(0,length) + "..."
-: text;
-
-}
-
-
-function escapeHTML(value){
-
-return String(value)
-.replaceAll("&","&amp;")
-.replaceAll("<","&lt;")
-.replaceAll(">","&gt;")
-.replaceAll('"',"&quot;")
-.replaceAll("'","&#039;");
-
-}
-
-
-/* ==========================================
-YEAR
-========================================== */
-
-document.getElementById(
-"year"
-).textContent =
-new Date().getFullYear();
 
 </script>
+
 
 </body>
 </html>
