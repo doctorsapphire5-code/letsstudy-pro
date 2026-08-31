@@ -3,36 +3,50 @@ const admin = require("firebase-admin");
 const db = admin.firestore();
 
 /*
- * Public/searchable Firebase collections.
- * These are the real collections identified in the LetsStudy Pro database.
- *
- * IMPORTANT:
- * This is only a security allow-list.
- * Documents, IDs, titles, URLs and counts are NEVER hardcoded.
- */
+=========================================================
+LETSSTUDY PRO — SEARCH INDEXER
+=========================================================
+
+Source collections are controlled here.
+
+IMPORTANT:
+- No document IDs are hardcoded.
+- No titles are hardcoded.
+- No result counts are hardcoded.
+- Source document data is read dynamically.
+- Private collections are NOT indexed.
+*/
+
 const SEARCHABLE_COLLECTIONS = [
+  "scholarships",
+  "careers",
   "courses",
+  "resources",
+  "marketplace",
+
   "modules",
   "module",
   "lessons",
   "assignments",
   "quizzes",
   "quizQuestions",
-  "resources",
-  "scholarships",
+
   "career",
-  "careers",
+
   "videos",
   "videoCategories",
   "playlists",
+
   "businesses",
   "business_ads",
   "services",
   "freelancees",
+
   "posts",
   "communityPosts",
   "communityTopics",
   "communityCategories",
+
   "studyGroups",
   "groups",
   "announcements",
@@ -41,14 +55,70 @@ const SEARCHABLE_COLLECTIONS = [
   "certificateTemplates"
 ];
 
+
 /*
- * Private collections are deliberately NOT included.
- */
+=========================================================
+PRIVATE COLLECTIONS
+=========================================================
+*/
 
-function cleanValue(value) {
-  if (value === null || value === undefined) return "";
+const PRIVATE_COLLECTIONS = new Set([
+  "admins",
+  "users",
+  "profiles",
+  "userSettings",
+  "systemSettings",
 
-  if (typeof value === "string") return value;
+  "payments",
+  "orders",
+  "carts",
+  "cart",
+  "wallets",
+  "withdrawals",
+  "subscriptions",
+  "premiumMembers",
+
+  "privateMeetings",
+  "notifications",
+  "reports",
+  "bannedUsers",
+  "blocks",
+  "connections",
+
+  "supportTickets",
+  "supportReplies",
+
+  "affiliateTransactions",
+  "affiliatepayments",
+
+  "automationIntegrations",
+  "automationScheduleActivity",
+
+  "emailCompaigns",
+  "smsCompaigns",
+  "whatsappCompaigns",
+  "marketingOrders"
+]);
+
+
+/*
+=========================================================
+CONVERT FIRESTORE VALUES TO SEARCHABLE TEXT
+=========================================================
+*/
+
+function valueToText(value) {
+
+  if (
+    value === null ||
+    value === undefined
+  ) {
+    return "";
+  }
+
+  if (typeof value === "string") {
+    return value;
+  }
 
   if (
     typeof value === "number" ||
@@ -57,20 +127,24 @@ function cleanValue(value) {
     return String(value);
   }
 
-  if (value instanceof admin.firestore.Timestamp) {
+  if (
+    value instanceof admin.firestore.Timestamp
+  ) {
     return value.toDate().toISOString();
   }
 
   if (Array.isArray(value)) {
+
     return value
-      .map(cleanValue)
+      .map(valueToText)
       .filter(Boolean)
       .join(" ");
   }
 
   if (typeof value === "object") {
+
     return Object.values(value)
-      .map(cleanValue)
+      .map(valueToText)
       .filter(Boolean)
       .join(" ");
   }
@@ -78,13 +152,41 @@ function cleanValue(value) {
   return "";
 }
 
-function firstValue(data, fields) {
+
+/*
+=========================================================
+NORMALIZE SEARCH TEXT
+=========================================================
+*/
+
+function normalizeText(value) {
+
+  return valueToText(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+
+/*
+=========================================================
+GET FIRST AVAILABLE FIELD
+=========================================================
+*/
+
+function firstField(data, fields) {
+
   for (const field of fields) {
+
     if (
       data[field] !== undefined &&
       data[field] !== null &&
       data[field] !== ""
     ) {
+
       return data[field];
     }
   }
@@ -92,296 +194,633 @@ function firstValue(data, fields) {
   return "";
 }
 
-function normalizeText(text) {
-  return String(text || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
 
-function detectType(collection, data) {
-  return (
-    firstValue(data, ["type", "contentType", "resourceType"]) ||
-    collection
+/*
+=========================================================
+GENERATE PUBLIC URL
+=========================================================
+
+Priority:
+1. Existing URL from Firebase
+2. Known LetsStudy Pro page route using REAL document ID
+3. Empty string
+
+No fake URL is created.
+=========================================================
+*/
+
+function getPublicUrl(
+  collection,
+  documentId,
+  data
+) {
+
+  const existingUrl = firstField(
+    data,
+    [
+      "url",
+      "publicUrl",
+      "pageUrl",
+      "link",
+      "href"
+    ]
   );
-}
 
-function buildPublicUrl(collection, documentId, data) {
-  /*
-   * Prefer a URL explicitly stored in Firebase.
-   */
-  const storedUrl = firstValue(data, [
-    "url",
-    "publicUrl",
-    "link",
-    "pageUrl"
-  ]);
+  if (existingUrl) {
+    return String(existingUrl);
+  }
 
-  if (storedUrl) return String(storedUrl);
 
-  /*
-   * Otherwise create a route from the REAL document ID.
-   */
-  const routes = {
-    courses: `/course.html?id=${encodeURIComponent(documentId)}`,
-    resources: `/resource.html?id=${encodeURIComponent(documentId)}`,
-    lessons: `/lesson.html?id=${encodeURIComponent(documentId)}`,
-    scholarships: `/scholarship.html?id=${encodeURIComponent(documentId)}`,
-    careers: `/career.html?id=${encodeURIComponent(documentId)}`,
-    career: `/career.html?id=${encodeURIComponent(documentId)}`,
-    videos: `/video.html?id=${encodeURIComponent(documentId)}`,
-    jobs: `/job.html?id=${encodeURIComponent(documentId)}`,
-    businesses: `/business.html?id=${encodeURIComponent(documentId)}`,
-    services: `/service.html?id=${encodeURIComponent(documentId)}`,
-    posts: `/post.html?id=${encodeURIComponent(documentId)}`,
-    communityPosts: `/community-post.html?id=${encodeURIComponent(documentId)}`
+  const pageMap = {
+
+    scholarships:
+      "scholarship.html",
+
+    careers:
+      "career.html",
+
+    career:
+      "career.html",
+
+    courses:
+      "course.html",
+
+    resources:
+      "resource.html",
+
+    marketplace:
+      "product.html",
+
+    lessons:
+      "lesson.html",
+
+    videos:
+      "video.html",
+
+    businesses:
+      "business.html",
+
+    services:
+      "service.html",
+
+    posts:
+      "post.html",
+
+    communityPosts:
+      "community-post.html"
   };
 
-  return routes[collection] || "";
-}
 
-function createSearchDocument(snapshot) {
-  const data = snapshot.data() || {};
-  const collection = snapshot.ref.parent.id;
-  const documentId = snapshot.id;
+  const page = pageMap[collection];
+
+  if (!page) {
+    return "";
+  }
+
 
   /*
-   * If the source explicitly says searchable:false,
-   * do not put it into the public index.
-   */
+   REAL Firestore Document ID
+  */
+
+  return `/${page}?id=${encodeURIComponent(
+    documentId
+  )}`;
+}
+
+
+/*
+=========================================================
+BUILD SEARCH DOCUMENT
+=========================================================
+*/
+
+function buildSearchDocument(
+  collection,
+  snapshot
+) {
+
+  const data = snapshot.data() || {};
+
+  const documentId = snapshot.id;
+
+
+  /*
+   Explicitly disabled documents
+  */
+
   if (data.searchable === false) {
     return null;
   }
 
-  const title = firstValue(data, [
-    "title",
-    "name",
-    "courseTitle",
-    "resourceTitle",
-    "lessonTitle",
-    "careerTitle",
-    "scholarshipTitle"
-  ]);
-
-  const description = firstValue(data, [
-    "description",
-    "summary",
-    "shortDescription",
-    "excerpt",
-    "details"
-  ]);
-
-  const category = firstValue(data, [
-    "category",
-    "categoryName",
-    "subject",
-    "topic"
-  ]);
-
-  const keywords = firstValue(data, [
-    "keywords",
-    "tags",
-    "searchKeywords"
-  ]);
-
-  const image = firstValue(data, [
-    "image",
-    "imageUrl",
-    "thumbnail",
-    "thumbnailUrl",
-    "coverImage",
-    "photo"
-  ]);
 
   /*
-   * Build searchable text dynamically from the actual document.
-   */
-  const searchableText = normalizeText(
+   TITLE
+  */
+
+  const title = firstField(
+    data,
     [
-      title,
-      description,
-      category,
-      keywords,
-      data.subject,
-      data.topic,
-      data.form,
-      data.level,
-      data.type,
-      data.content
+      "title",
+      "name",
+      "courseTitle",
+      "resourceTitle",
+      "lessonTitle",
+      "careerTitle",
+      "scholarshipTitle",
+      "productName",
+      "businessName"
     ]
-      .map(cleanValue)
-      .filter(Boolean)
-      .join(" ")
   );
 
-  const result = {
+
+  /*
+   DESCRIPTION
+  */
+
+  const description = firstField(
+    data,
+    [
+      "description",
+      "shortDescription",
+      "summary",
+      "excerpt",
+      "details",
+      "content"
+    ]
+  );
+
+
+  /*
+   CATEGORY
+  */
+
+  const category = firstField(
+    data,
+    [
+      "category",
+      "categoryName",
+      "subject",
+      "topic",
+      "field"
+    ]
+  );
+
+
+  /*
+   KEYWORDS
+  */
+
+  const keywords = firstField(
+    data,
+    [
+      "keywords",
+      "tags",
+      "searchKeywords"
+    ]
+  );
+
+
+  /*
+   IMAGE
+  */
+
+  const image = firstField(
+    data,
+    [
+      "image",
+      "imageUrl",
+      "thumbnail",
+      "thumbnailUrl",
+      "coverImage",
+      "photo"
+    ]
+  );
+
+
+  /*
+   TYPE
+  */
+
+  const type =
+    firstField(
+      data,
+      [
+        "type",
+        "contentType",
+        "resourceType"
+      ]
+    ) ||
+    collection;
+
+
+  /*
+   SEARCHABLE TEXT
+  */
+
+  const searchableText =
+    normalizeText(
+      [
+        title,
+        description,
+        category,
+        keywords,
+
+        data.subject,
+        data.topic,
+        data.form,
+        data.level,
+        data.class,
+        data.course,
+        data.module,
+        data.lesson,
+        data.content,
+
+        documentId
+      ]
+        .map(valueToText)
+        .filter(Boolean)
+        .join(" ")
+    );
+
+
+  /*
+   SEARCH INDEX DOCUMENT
+  */
+
+  const searchDocument = {
+
     collection,
+
     documentId,
 
-    title: cleanValue(title) || documentId,
-    description: cleanValue(description),
+    title:
+      valueToText(title) ||
+      documentId,
+
+    description:
+      valueToText(description),
 
     searchableText,
 
-    category: cleanValue(category),
-    type: detectType(collection, data),
+    category:
+      valueToText(category),
 
-    keywords: cleanValue(keywords),
+    type:
+      valueToText(type),
 
-    image: cleanValue(image),
+    keywords:
+      valueToText(keywords),
 
-    url: buildPublicUrl(
-      collection,
-      documentId,
-      data
-    ),
+    image:
+      valueToText(image),
+
+    url:
+      getPublicUrl(
+        collection,
+        documentId,
+        data
+      ),
 
     searchable: true,
 
     indexedAt:
-      admin.firestore.FieldValue.serverTimestamp()
+      admin.firestore.FieldValue
+        .serverTimestamp()
   };
 
+
   /*
-   * Preserve timestamps when available.
-   */
+   Preserve original timestamps
+   when available.
+  */
+
   if (data.createdAt) {
-    result.createdAt = data.createdAt;
+
+    searchDocument.createdAt =
+      data.createdAt;
   }
+
 
   if (data.updatedAt) {
-    result.updatedAt = data.updatedAt;
+
+    searchDocument.updatedAt =
+      data.updatedAt;
   }
 
-  return result;
+
+  return searchDocument;
 }
 
+
 /*
- * Use deterministic searchIndex document IDs.
- *
- * This prevents duplicates when the same source document
- * is indexed more than once.
- */
-function indexDocument(snapshot) {
-  const collection = snapshot.ref.parent.id;
+=========================================================
+INDEX ONE DOCUMENT
+=========================================================
+*/
+
+async function indexDocument(
+  collection,
+  snapshot
+) {
+
+  if (
+    !SEARCHABLE_COLLECTIONS.includes(
+      collection
+    )
+  ) {
+
+    return {
+      indexed: false,
+      reason: "collection_not_allowed"
+    };
+  }
+
+
+  if (
+    PRIVATE_COLLECTIONS.has(
+      collection
+    )
+  ) {
+
+    return {
+      indexed: false,
+      reason: "private_collection"
+    };
+  }
+
+
   const documentId = snapshot.id;
 
   const indexId =
     `${collection}__${documentId}`;
 
+
   const indexRef =
-    db.collection("searchIndex").doc(indexId);
+    db
+      .collection("searchIndex")
+      .doc(indexId);
+
 
   const searchDocument =
-    createSearchDocument(snapshot);
+    buildSearchDocument(
+      collection,
+      snapshot
+    );
+
+
+  /*
+   searchable:false
+   means remove it from index.
+  */
 
   if (!searchDocument) {
-    return indexRef.delete();
+
+    await indexRef.delete();
+
+    return {
+      indexed: false,
+      deletedFromIndex: true
+    };
   }
 
-  return indexRef.set(
+
+  await indexRef.set(
     searchDocument,
-    { merge: true }
+    {
+      merge: true
+    }
   );
+
+
+  return {
+    indexed: true,
+    collection,
+    documentId
+  };
 }
 
-async function indexCollection(collectionName) {
-  if (!SEARCHABLE_COLLECTIONS.includes(collectionName)) {
+
+/*
+=========================================================
+DELETE ONE DOCUMENT FROM INDEX
+=========================================================
+*/
+
+async function removeFromIndex(
+  collection,
+  documentId
+) {
+
+  const indexId =
+    `${collection}__${documentId}`;
+
+
+  await db
+    .collection("searchIndex")
+    .doc(indexId)
+    .delete();
+
+
+  return {
+    deleted: true,
+    collection,
+    documentId
+  };
+}
+
+
+/*
+=========================================================
+INDEX ONE COLLECTION
+=========================================================
+*/
+
+async function indexCollection(
+  collection
+) {
+
+  if (
+    !SEARCHABLE_COLLECTIONS.includes(
+      collection
+    )
+  ) {
+
     throw new Error(
-      `Collection not allowed: ${collectionName}`
+      `Collection is not searchable: ${collection}`
     );
   }
 
+
   const snapshot =
-    await db.collection(collectionName).get();
+    await db
+      .collection(collection)
+      .get();
+
 
   let indexed = 0;
   let skipped = 0;
 
-  let batch = db.batch();
-  let batchCount = 0;
+  let batch =
+    db.batch();
 
-  for (const document of snapshot.docs) {
-    const searchDocument =
-      createSearchDocument(document);
+  let operations = 0;
+
+
+  for (
+    const document of snapshot.docs
+  ) {
 
     const indexId =
-      `${collectionName}__${document.id}`;
+      `${collection}__${document.id}`;
+
 
     const indexRef =
-      db.collection("searchIndex").doc(indexId);
+      db
+        .collection("searchIndex")
+        .doc(indexId);
+
+
+    const searchDocument =
+      buildSearchDocument(
+        collection,
+        document
+      );
+
 
     if (!searchDocument) {
+
       batch.delete(indexRef);
-      batchCount++;
+
       skipped++;
+
     } else {
+
       batch.set(
         indexRef,
         searchDocument,
-        { merge: true }
+        {
+          merge: true
+        }
       );
 
-      batchCount++;
       indexed++;
     }
 
-    if (batchCount >= 450) {
+
+    operations++;
+
+
+    /*
+     Firestore batch limit is 500.
+     Keep below the limit.
+    */
+
+    if (operations >= 450) {
+
       await batch.commit();
 
-      batch = db.batch();
-      batchCount = 0;
+      batch =
+        db.batch();
+
+      operations = 0;
     }
   }
 
-  if (batchCount > 0) {
+
+  if (operations > 0) {
+
     await batch.commit();
   }
 
+
   return {
-    collection: collectionName,
-    documentsFound: snapshot.size,
+
+    collection,
+
+    documentsFound:
+      snapshot.size,
+
     indexed,
+
     skipped
   };
 }
 
+
+/*
+=========================================================
+INDEX ALL SEARCHABLE COLLECTIONS
+=========================================================
+*/
+
 async function indexAllCollections() {
+
   const results = [];
 
-  for (const collection of SEARCHABLE_COLLECTIONS) {
+
+  for (
+    const collection
+    of SEARCHABLE_COLLECTIONS
+  ) {
+
     try {
+
       const result =
-        await indexCollection(collection);
+        await indexCollection(
+          collection
+        );
+
 
       results.push(result);
 
+
       console.log(
-        `Indexed ${collection}:`,
+        "Search indexing completed:",
         result
       );
+
     } catch (error) {
+
       console.error(
-        `Failed indexing ${collection}`,
+        `Search indexing failed for ${collection}:`,
         error
       );
 
+
       results.push({
+
         collection,
-        error: error.message
+
+        error:
+          error.message
       });
     }
   }
 
+
   return results;
 }
 
+
+/*
+=========================================================
+EXPORT
+=========================================================
+*/
+
 module.exports = {
+
   SEARCHABLE_COLLECTIONS,
-  createSearchDocument,
+
+  PRIVATE_COLLECTIONS,
+
+  buildSearchDocument,
+
   indexDocument,
+
+  removeFromIndex,
+
   indexCollection,
+
   indexAllCollections
 };
