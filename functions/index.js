@@ -8,6 +8,20 @@ admin.initializeApp();
 
 const db = admin.firestore();
 
+const {
+  indexDocument,
+  removeFromIndex,
+  indexCollection,
+  indexAllCollections,
+  SEARCHABLE_COLLECTIONS
+} = require("./search-indexer");
+
+const {
+  onDocumentCreated,
+  onDocumentUpdated,
+  onDocumentDeleted
+} = require("firebase-functions/v2/firestore");
+
 const SITE_URL = "https://letsstudy.pro";
 
 const COLLECTIONS = {
