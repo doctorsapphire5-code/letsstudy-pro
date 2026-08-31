@@ -1,194 +1,412 @@
-const searchInput =
-  document.getElementById(
-    "siteSearch"
-  );
+"use strict";
 
-const searchBtn =
-  document.getElementById(
-    "searchBtn"
-  );
+/*
+=========================================================
+LETSSTUDY PRO SEARCH
+=========================================================
+*/
 
-const searchResults =
-  document.getElementById(
-    "searchResults"
-  );
+const form =
+  document.getElementById("searchForm");
 
+const input =
+  document.getElementById("searchInput");
 
-const searchablePages = [
+const results =
+  document.getElementById("searchResults");
 
-  {
-    title:
-      "Online Courses",
+const loading =
+  document.getElementById("searchLoading");
 
-    description:
-      "Learn through online courses and educational resources.",
+const empty =
+  document.getElementById("searchEmpty");
 
-    url:
-      "courses.html"
-  },
+const errorBox =
+  document.getElementById("searchError");
 
-  {
-    title:
-      "Scholarships",
+const title =
+  document.getElementById("searchTitle");
 
-    description:
-      "Discover scholarships and study opportunities.",
-
-    url:
-      "scholarships.html"
-  },
-
-  {
-    title:
-      "Career",
-
-    description:
-      "Explore careers, skills and professional opportunities.",
-
-    url:
-      "career.html"
-  },
-
-  {
-    title:
-      "Marketplace",
-
-    description:
-      "Discover educational products and services.",
-
-    url:
-      "marketplace.html"
-  },
-
-  {
-    title:
-      "Community",
-
-    description:
-      "Join discussions and connect with other learners.",
-
-    url:
-      "community.html"
-  },
-
-  {
-    title:
-      "Premium",
-
-    description:
-      "Access LetsStudy Pro Premium learning features.",
-
-    url:
-      "premium.html"
-  }
-
-];
+const summary =
+  document.getElementById("searchSummary");
 
 
-function performSearch(){
+/*
+=========================================================
+ESCAPE NOT REQUIRED
+=========================================================
 
-  const query =
-    searchInput.value
-      .trim()
-      .toLowerCase();
-
-
-  if(!query){
-
-    searchResults.innerHTML = `
-      <p>
-        Enter something to search.
-      </p>
-    `;
-
-    return;
-
-  }
+We use textContent instead of innerHTML for Firebase data.
+=========================================================
+*/
 
 
-  const results =
-    searchablePages.filter(
-      page => {
+function clearStates() {
 
-        const text =
-          (
-            page.title +
-            " " +
-            page.description
-          ).toLowerCase();
+  loading.style.display = "none";
 
-        return text.includes(
-          query
-        );
+  empty.style.display = "none";
 
-      }
-    );
-
-
-  if(!results.length){
-
-    searchResults.innerHTML = `
-      <div class="no-results">
-        <h3>
-          No results found
-        </h3>
-
-        <p>
-          Try another search term.
-        </p>
-      </div>
-    `;
-
-    return;
-
-  }
-
-
-  searchResults.innerHTML =
-    results
-      .map(
-        page => `
-
-          <article
-            class="search-result"
-          >
-
-            <h3>
-              <a href="${page.url}">
-                ${page.title}
-              </a>
-            </h3>
-
-            <p>
-              ${page.description}
-            </p>
-
-          </article>
-
-        `
-      )
-      .join("");
+  errorBox.style.display = "none";
 
 }
 
 
-searchBtn?.addEventListener(
-  "click",
-  performSearch
-);
+function showLoading() {
+
+  clearStates();
+
+  results.innerHTML = "";
+
+  loading.style.display = "block";
+
+}
 
 
-searchInput?.addEventListener(
-  "keydown",
-  event => {
+function showEmpty() {
 
-    if(
-      event.key === "Enter"
-    ){
+  clearStates();
 
-      performSearch();
+  results.innerHTML = "";
+
+  empty.style.display = "block";
+
+}
+
+
+function showError(message) {
+
+  clearStates();
+
+  results.innerHTML = "";
+
+  errorBox.textContent =
+    message ||
+    "Unable to complete your search.";
+
+  errorBox.style.display = "block";
+
+}
+
+
+/*
+=========================================================
+SEARCH API
+=========================================================
+*/
+
+async function performSearch(query) {
+
+  const cleanQuery =
+    String(query || "").trim();
+
+
+  if (!cleanQuery) {
+
+    title.textContent =
+      "Search LetsStudy Pro";
+
+    summary.textContent =
+      "Find courses, resources, careers, scholarships and more.";
+
+    clearStates();
+
+    results.innerHTML = "";
+
+    return;
+
+  }
+
+
+  showLoading();
+
+
+  title.textContent =
+    `Search results for "${cleanQuery}"`;
+
+
+  try {
+
+    const response =
+      await fetch(
+        `/api/search?q=${encodeURIComponent(cleanQuery)}`,
+        {
+          method: "GET",
+          headers: {
+            "Accept": "application/json"
+          }
+        }
+      );
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        `Search API returned ${response.status}`
+      );
 
     }
 
+
+    const data =
+      await response.json();
+
+
+    /*
+     API should return:
+
+     {
+       success: true,
+       results: [...]
+     }
+    */
+
+    const items =
+      Array.isArray(data.results)
+        ? data.results
+        : [];
+
+
+    clearStates();
+
+
+    /*
+     Dynamic count.
+    */
+
+    const count =
+      typeof data.total === "number"
+        ? data.total
+        : items.length;
+
+
+    summary.textContent =
+      `${count} result${count === 1 ? "" : "s"} found`;
+
+
+    if (items.length === 0) {
+
+      showEmpty();
+
+      return;
+
+    }
+
+
+    renderResults(items);
+
+
+  } catch (error) {
+
+    console.error(
+      "LetsStudy Pro Search Error:",
+      error
+    );
+
+
+    showError(
+      "Search is temporarily unavailable. Please try again."
+    );
+
+  }
+
+}
+
+
+/*
+=========================================================
+RENDER RESULTS
+=========================================================
+*/
+
+function renderResults(items) {
+
+  results.innerHTML = "";
+
+
+  items.forEach(item => {
+
+    const link =
+      document.createElement("a");
+
+    link.className =
+      "search-result";
+
+
+    /*
+     URL comes from Firebase/Search API.
+    */
+
+    link.href =
+      item.url || "#";
+
+
+    const image =
+      document.createElement("img");
+
+    image.className =
+      "search-result-image";
+
+    image.src =
+      item.image ||
+      "/assets/images/og-default.jpg";
+
+    image.alt =
+      item.title || "LetsStudy Pro";
+
+    image.loading =
+      "lazy";
+
+
+    const content =
+      document.createElement("div");
+
+    content.className =
+      "search-result-content";
+
+
+    const type =
+      document.createElement("span");
+
+    type.className =
+      "search-result-type";
+
+    type.textContent =
+      item.type ||
+      item.collection ||
+      "Content";
+
+
+    const itemTitle =
+      document.createElement("h2");
+
+    itemTitle.className =
+      "search-result-title";
+
+    itemTitle.textContent =
+      item.title ||
+      item.documentId ||
+      "Untitled";
+
+
+    const description =
+      document.createElement("p");
+
+    description.className =
+      "search-result-description";
+
+    description.textContent =
+      item.description ||
+      "";
+
+
+    const meta =
+      document.createElement("div");
+
+    meta.className =
+      "search-result-meta";
+
+    meta.textContent =
+      item.category ||
+      item.collection ||
+      "";
+
+
+    content.appendChild(type);
+
+    content.appendChild(itemTitle);
+
+    content.appendChild(description);
+
+    content.appendChild(meta);
+
+
+    link.appendChild(image);
+
+    link.appendChild(content);
+
+
+    results.appendChild(link);
+
+  });
+
+}
+
+
+/*
+=========================================================
+FORM
+=========================================================
+*/
+
+form.addEventListener(
+  "submit",
+  event => {
+
+    event.preventDefault();
+
+
+    const query =
+      input.value.trim();
+
+
+    if (!query) {
+
+      input.focus();
+
+      return;
+
+    }
+
+
+    const url =
+      new URL(
+        window.location.href
+      );
+
+
+    url.searchParams.set(
+      "q",
+      query
+    );
+
+
+    window.history.pushState(
+      {},
+      "",
+      url
+    );
+
+
+    performSearch(query);
+
   }
 );
+
+
+/*
+=========================================================
+INITIAL SEARCH
+=========================================================
+*/
+
+const params =
+  new URLSearchParams(
+    window.location.search
+  );
+
+
+const initialQuery =
+  params.get("q");
+
+
+if (initialQuery) {
+
+  input.value =
+    initialQuery;
+
+  performSearch(
+    initialQuery
+  );
+
+}
