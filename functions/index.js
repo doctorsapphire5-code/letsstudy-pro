@@ -2,6 +2,12 @@ const {
   onRequest
 } = require("firebase-functions/v2/https");
 
+const {
+  onDocumentCreated,
+  onDocumentUpdated,
+  onDocumentDeleted
+} = require("firebase-functions/v2/firestore");
+
 const admin = require("firebase-admin");
 
 admin.initializeApp();
@@ -16,13 +22,17 @@ const {
   SEARCHABLE_COLLECTIONS
 } = require("./search-indexer");
 
-const {
-  onDocumentCreated,
-  onDocumentUpdated,
-  onDocumentDeleted
-} = require("firebase-functions/v2/firestore");
+
+/* =========================================
+   SITE CONFIGURATION
+========================================= */
 
 const SITE_URL = "https://letsstudy.pro";
+
+
+/* =========================================
+   SHARE COLLECTIONS
+========================================= */
 
 const COLLECTIONS = {
   scholarships: "scholarships",
@@ -32,6 +42,11 @@ const COLLECTIONS = {
   marketplace: "marketplace"
 };
 
+
+/* =========================================
+   SHARE PAGE URLS
+========================================= */
+
 const PAGE_URLS = {
   scholarships: "scholarship.html",
   careers: "career.html",
@@ -39,6 +54,11 @@ const PAGE_URLS = {
   resources: "resource.html",
   marketplace: "product.html"
 };
+
+
+/* =========================================
+   DEFAULT SHARE IMAGE
+========================================= */
 
 const DEFAULT_IMAGE =
   `${SITE_URL}/assets/images/og-default.jpg`;
@@ -87,11 +107,13 @@ async function findBySlug(
   const collection =
     db.collection(collectionName);
 
+
   const result =
     await collection
       .where("slug", "==", slug)
       .limit(1)
       .get();
+
 
   if (!result.empty) {
 
@@ -99,11 +121,10 @@ async function findBySlug(
 
   }
 
+
   /*
-   -----------------------------------------
    Fallback:
-   allow document ID as slug
-   -----------------------------------------
+   Document ID can also be used as slug.
   */
 
   const direct =
@@ -111,11 +132,13 @@ async function findBySlug(
       .doc(slug)
       .get();
 
+
   if (direct.exists) {
 
     return direct;
 
   }
+
 
   return null;
 
@@ -123,7 +146,7 @@ async function findBySlug(
 
 
 /* =========================================
-   DYNAMIC OPEN GRAPH SHARE FUNCTION
+   SHARE PREVIEW
 ========================================= */
 
 exports.sharePreview = onRequest(
@@ -136,17 +159,20 @@ exports.sharePreview = onRequest(
     try {
 
       /*
-       URL:
+       Expected:
 
-       /share/scholarships/my-scholarship
-       /share/careers/software-engineer
-       /share/courses/web-development
-       */
+       /share/scholarships/SLUG
+       /share/careers/SLUG
+       /share/courses/SLUG
+       /share/resources/SLUG
+       /share/marketplace/SLUG
+      */
 
       const parts =
         req.path
           .split("/")
           .filter(Boolean);
+
 
       if (
         parts.length < 3 ||
@@ -159,13 +185,16 @@ exports.sharePreview = onRequest(
 
       }
 
+
       const type =
         parts[1];
+
 
       const slug =
         decodeURIComponent(
           parts.slice(2).join("/")
         );
+
 
       if (!COLLECTIONS[type]) {
 
@@ -175,8 +204,10 @@ exports.sharePreview = onRequest(
 
       }
 
+
       const collection =
         COLLECTIONS[type];
+
 
       const doc =
         await findBySlug(
@@ -184,37 +215,67 @@ exports.sharePreview = onRequest(
           slug
         );
 
+
       if (!doc) {
 
         return res
           .status(404)
           .send(`
-            <!DOCTYPE html>
-            <html>
-              <head>
-                <title>Content Not Found | LetsStudy Pro</title>
-              </head>
-              <body>
-                <h1>Content Not Found</h1>
-              </body>
-            </html>
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>
+Content Not Found | LetsStudy Pro
+</title>
+
+<meta
+  name="robots"
+  content="noindex, nofollow"
+>
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1"
+>
+
+</head>
+
+<body>
+
+<h1>
+Content Not Found
+</h1>
+
+<p>
+The requested content could not be found.
+</p>
+
+</body>
+
+</html>
           `);
 
       }
 
+
       const data =
         doc.data();
 
-      /*
-       ======================================
-       CONTENT DATA
-       ======================================
-      */
+
+      /* =====================================
+         CONTENT DATA
+      ===================================== */
 
       const title =
         data.title ||
         data.name ||
         "LetsStudy Pro";
+
 
       const description =
         cleanDescription(
@@ -224,6 +285,7 @@ exports.sharePreview = onRequest(
           `Discover this ${type} on LetsStudy Pro.`
         );
 
+
       const image =
         data.image ||
         data.imageUrl ||
@@ -231,39 +293,50 @@ exports.sharePreview = onRequest(
         data.coverImage ||
         DEFAULT_IMAGE;
 
+
+      /*
+       Use the actual Firebase slug.
+      */
+
+      const actualSlug =
+        data.slug || slug;
+
+
       const canonicalUrl =
         `${SITE_URL}/${PAGE_URLS[type]}?slug=${encodeURIComponent(
-          data.slug || slug
+          actualSlug
         )}`;
+
 
       const safeTitle =
         escapeHtml(title);
 
+
       const safeDescription =
         escapeHtml(description);
+
 
       const safeImage =
         escapeHtml(image);
 
+
       const safeCanonicalUrl =
         escapeHtml(canonicalUrl);
 
-      /*
-       ======================================
-       CACHE
-       ======================================
-      */
+
+      /* =====================================
+         CACHE
+      ===================================== */
 
       res.set(
         "Cache-Control",
         "public, max-age=300"
       );
 
-      /*
-       ======================================
-       HTML
-       ======================================
-      */
+
+      /* =====================================
+         SHARE PREVIEW HTML
+      ===================================== */
 
       return res
         .status(200)
@@ -280,15 +353,18 @@ exports.sharePreview = onRequest(
 ${safeTitle} | LetsStudy Pro
 </title>
 
+
 <meta
   name="description"
   content="${safeDescription}"
 >
 
+
 <meta
   name="robots"
   content="index, follow"
 >
+
 
 <link
   rel="canonical"
@@ -305,45 +381,54 @@ ${safeTitle} | LetsStudy Pro
   content="article"
 >
 
+
 <meta
   property="og:site_name"
   content="LetsStudy Pro"
 >
+
 
 <meta
   property="og:title"
   content="${safeTitle}"
 >
 
+
 <meta
   property="og:description"
   content="${safeDescription}"
 >
+
 
 <meta
   property="og:image"
   content="${safeImage}"
 >
 
+
 <meta
   property="og:image:secure_url"
   content="${safeImage}"
 >
+
 
 <meta
   property="og:image:type"
   content="image/jpeg"
 >
 
+
 <meta
   property="og:image:width"
   content="1200"
 >
 
+
 <meta
   property="og:image:height"
   content="630"
 >
+
 
 <meta
   property="og:url"
@@ -360,15 +445,18 @@ ${safeTitle} | LetsStudy Pro
   content="summary_large_image"
 >
 
+
 <meta
   name="twitter:title"
   content="${safeTitle}"
 >
 
+
 <meta
   name="twitter:description"
   content="${safeDescription}"
 >
+
 
 <meta
   name="twitter:image"
@@ -385,6 +473,7 @@ ${safeTitle} | LetsStudy Pro
   content="width=device-width, initial-scale=1"
 >
 
+
 </head>
 
 
@@ -393,6 +482,7 @@ ${safeTitle} | LetsStudy Pro
 <h1>
 ${safeTitle}
 </h1>
+
 
 <p>
 ${safeDescription}
@@ -407,6 +497,7 @@ window.location.replace(
 
 </script>
 
+
 </body>
 
 </html>
@@ -419,6 +510,7 @@ window.location.replace(
         error
       );
 
+
       return res
         .status(500)
         .send(
@@ -429,3 +521,434 @@ window.location.replace(
 
   }
 );
+
+
+/* =========================================================
+   LETSSTUDY PRO — SEARCH INDEX
+========================================================= */
+
+
+/* =========================================
+   SEARCH INDEX — CREATE
+========================================= */
+
+exports.indexSearchDocumentCreated =
+  onDocumentCreated(
+    {
+      document:
+        "{collectionId}/{documentId}",
+
+      region:
+        "africa-south1"
+    },
+
+    async (event) => {
+
+      const collection =
+        event.params.collectionId;
+
+
+      /*
+       Only approved searchable
+       collections are indexed.
+      */
+
+      if (
+        !SEARCHABLE_COLLECTIONS.includes(
+          collection
+        )
+      ) {
+
+        return null;
+
+      }
+
+
+      if (!event.data) {
+
+        return null;
+
+      }
+
+
+      try {
+
+        await indexDocument(
+          collection,
+          event.data
+        );
+
+
+        console.log(
+          "SEARCH INDEX CREATED:",
+          `${collection}/${event.params.documentId}`
+        );
+
+      } catch (error) {
+
+        console.error(
+          "SEARCH INDEX CREATE ERROR:",
+          error
+        );
+
+      }
+
+
+      return null;
+
+    }
+  );
+
+
+/* =========================================
+   SEARCH INDEX — UPDATE
+========================================= */
+
+exports.indexSearchDocumentUpdated =
+  onDocumentUpdated(
+    {
+      document:
+        "{collectionId}/{documentId}",
+
+      region:
+        "africa-south1"
+    },
+
+    async (event) => {
+
+      const collection =
+        event.params.collectionId;
+
+
+      if (
+        !SEARCHABLE_COLLECTIONS.includes(
+          collection
+        )
+      ) {
+
+        return null;
+
+      }
+
+
+      const snapshot =
+        event.data?.after;
+
+
+      if (!snapshot) {
+
+        return null;
+
+      }
+
+
+      try {
+
+        await indexDocument(
+          collection,
+          snapshot
+        );
+
+
+        console.log(
+          "SEARCH INDEX UPDATED:",
+          `${collection}/${event.params.documentId}`
+        );
+
+      } catch (error) {
+
+        console.error(
+          "SEARCH INDEX UPDATE ERROR:",
+          error
+        );
+
+      }
+
+
+      return null;
+
+    }
+  );
+
+
+/* =========================================
+   SEARCH INDEX — DELETE
+========================================= */
+
+exports.indexSearchDocumentDeleted =
+  onDocumentDeleted(
+    {
+      document:
+        "{collectionId}/{documentId}",
+
+      region:
+        "africa-south1"
+    },
+
+    async (event) => {
+
+      const collection =
+        event.params.collectionId;
+
+
+      if (
+        !SEARCHABLE_COLLECTIONS.includes(
+          collection
+        )
+      ) {
+
+        return null;
+
+      }
+
+
+      const documentId =
+        event.params.documentId;
+
+
+      try {
+
+        await removeFromIndex(
+          collection,
+          documentId
+        );
+
+
+        console.log(
+          "SEARCH INDEX DELETED:",
+          `${collection}/${documentId}`
+        );
+
+      } catch (error) {
+
+        console.error(
+          "SEARCH INDEX DELETE ERROR:",
+          error
+        );
+
+      }
+
+
+      return null;
+
+    }
+  );
+
+
+/* =========================================
+   FULL SEARCH RE-INDEX
+=========================================
+
+   POST /reindexSearch
+
+   This reads the REAL Firebase
+   collections and creates/updates
+   searchIndex automatically.
+========================================= */
+
+exports.reindexSearch =
+  onRequest(
+    {
+      region:
+        "africa-south1"
+    },
+
+    async (req, res) => {
+
+      /*
+       Only POST
+      */
+
+      if (req.method !== "POST") {
+
+        return res
+          .status(405)
+          .json({
+
+            success: false,
+
+            error:
+              "POST method required."
+
+          });
+
+      }
+
+
+      try {
+
+        console.log(
+          "LETSSTUDY SEARCH INDEXING STARTED"
+        );
+
+
+        const results =
+          await indexAllCollections();
+
+
+        console.log(
+          "LETSSTUDY SEARCH INDEXING COMPLETED"
+        );
+
+
+        return res
+          .status(200)
+          .json({
+
+            success: true,
+
+            message:
+              "LetsStudy Pro search index completed.",
+
+            results
+
+          });
+
+      } catch (error) {
+
+        console.error(
+          "FULL SEARCH INDEX ERROR:",
+          error
+        );
+
+
+        return res
+          .status(500)
+          .json({
+
+            success: false,
+
+            error:
+              error.message
+
+          });
+
+      }
+
+    }
+  );
+
+
+/* =========================================
+   RE-INDEX ONE COLLECTION
+=========================================
+
+   POST /reindexSearchCollection
+
+   Body:
+
+   {
+     "collection": "courses"
+   }
+
+========================================= */
+
+exports.reindexSearchCollection =
+  onRequest(
+    {
+      region:
+        "africa-south1"
+    },
+
+    async (req, res) => {
+
+      /*
+       Only POST
+      */
+
+      if (req.method !== "POST") {
+
+        return res
+          .status(405)
+          .json({
+
+            success: false,
+
+            error:
+              "POST method required."
+
+          });
+
+      }
+
+
+      const collection =
+        req.body?.collection;
+
+
+      /*
+       Validate collection
+      */
+
+      if (
+        !collection ||
+        !SEARCHABLE_COLLECTIONS.includes(
+          collection
+        )
+      ) {
+
+        return res
+          .status(400)
+          .json({
+
+            success: false,
+
+            error:
+              "Collection is not searchable."
+
+          });
+
+      }
+
+
+      try {
+
+        console.log(
+          `STARTING RE-INDEX: ${collection}`
+        );
+
+
+        const result =
+          await indexCollection(
+            collection
+          );
+
+
+        console.log(
+          `COMPLETED RE-INDEX: ${collection}`
+        );
+
+
+        return res
+          .status(200)
+          .json({
+
+            success: true,
+
+            result
+
+          });
+
+      } catch (error) {
+
+        console.error(
+          `COLLECTION INDEX ERROR: ${collection}`,
+          error
+        );
+
+
+        return res
+          .status(500)
+          .json({
+
+            success: false,
+
+            error:
+              error.message
+
+          });
+
+      }
+
+    }
+  );
