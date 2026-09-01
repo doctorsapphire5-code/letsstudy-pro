@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<title>Course Cart | LetsStudy Pro</title>
+
+<meta name="description"
+content="Review your selected LetsStudy Pro courses before checkout.">
+
+<meta name="robots" content="index,follow">
+
+<link rel="icon" href="favicon.ico">
+
+<style>
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Inter,Arial,sans-serif;
+  background:#f7f9fc;
+  color:#172033;
+}
+
+a{
+  text-decoration:none;
+  color:inherit;
+}
+
+.navbar{
+  height:64px;
+  background:#fff;
+  border-bottom:1px solid #e5eaf1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 6%;
+  position:sticky;
+  top:0;
+  z-index:20;
+}
+
+.logo{
+  font-size:21px;
+  font-weight:800;
+}
+
+.back{
+  color:#647184;
+  font-size:14px;
+}
+
+.container{
+  width:min(1100px,92%);
+  margin:auto;
+}
+
+.page{
+  padding:45px 0 80px;
+}
+
+h1{
+  font-size:35px;
+  margin:0 0 30px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr .55fr;
+  gap:30px;
+  align-items:start;
+}
+
+.card{
+  background:#fff;
+  border:1px solid #e3e8ef;
+  border-radius:18px;
+  padding:28px;
+  box-shadow:0 8px 30px rgba(20,35,60,.05);
+}
+
+.card h2{
+  margin-top:0;
+  font-size:21px;
+}
+
+.course{
+  display:flex;
+  gap:18px;
+  padding:18px 0;
+  border-bottom:1px solid #edf0f4;
+}
+
+.course:last-child{
+  border-bottom:0;
+}
+
+.course-image{
+  width:120px;
+  height:85px;
+  object-fit:cover;
+  border-radius:11px;
+  background:#e9eef5;
+  flex-shrink:0;
+}
+
+.course-info{
+  flex:1;
+}
+
+.course-title{
+  font-size:17px;
+  font-weight:800;
+  margin-bottom:8px;
+}
+
+.course-description{
+  color:#687486;
+  font-size:14px;
+  line-height:1.5;
+  margin-bottom:10px;
+}
+
+.price{
+  font-weight:800;
+}
+
+.remove{
+  margin-top:12px;
+  border:0;
+  background:transparent;
+  color:#c0392b;
+  cursor:pointer;
+  font-weight:700;
+  padding:0;
+}
+
+.badge{
+  display:inline-flex;
+  padding:6px 10px;
+  border-radius:999px;
+  background:#eee9ff;
+  color:#6040b5;
+  font-size:12px;
+  font-weight:800;
+  margin-bottom:10px;
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  padding:12px 0;
+}
+
+.total{
+  border-top:1px solid #e3e7ee;
+  margin-top:10px;
+  padding-top:20px;
+  font-size:25px;
+  font-weight:800;
+}
+
+.checkout{
+  display:block;
+  width:100%;
+  padding:15px;
+  border-radius:10px;
+  background:#111827;
+  color:#fff;
+  text-align:center;
+  font-weight:800;
+  margin-top:22px;
+}
+
+.continue{
+  display:block;
+  text-align:center;
+  margin-top:15px;
+  color:#586679;
+  font-size:14px;
+}
+
+.loading{
+  text-align:center;
+  padding:80px 20px;
+  color:#667386;
+}
+
+.empty{
+  text-align:center;
+  padding:80px 20px;
+}
+
+.error{
+  text-align:center;
+  padding:70px 20px;
+}
+
+@media(max-width:760px){
+
+  .grid{
+    grid-template-columns:1fr;
+  }
+
+  h1{
+    font-size:29px;
+  }
+
+  .course-image{
+    width:90px;
+    height:70px;
+  }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header class="navbar">
+
+  <a href="index.html" class="logo">
+    📚 LetsStudy Pro
+  </a>
+
+  <a href="search.html" class="back">
+    Continue Learning
+  </a>
+
+</header>
+
+
+<main class="page">
+
+  <div class="container">
+
+    <h1>
+      Course Cart
+    </h1>
+
+    <div id="app">
+
+      <div class="loading">
+        Loading your courses...
+      </div>
+
+    </div>
+
+  </div>
+
+</main>
+
+
+<script type="module">
+
+import {
+  initializeApp
+}
+from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc
+}
+from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+
+/* =====================================================
+   FIREBASE
+===================================================== */
+
+const firebaseConfig = {
+
+  apiKey:
+    "AIzaSyBcOYDfAVKX5bkljsyRgI_0rjodBn678tCc",
+
+  authDomain:
+    "let-s-study-pro-course.firebaseapp.com",
+
+  databaseURL:
+    "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+  projectId:
+    "let-s-study-pro-course",
+
+  storageBucket:
+    "let-s-study-pro-course.firebasestorage.app",
+
+  messagingSenderId:
+    "474928293390",
+
+  appId:
+    "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+  measurementId:
+    "G-85B7V5H5J0"
+
+};
+
+
+const app =
+  initializeApp(firebaseConfig);
+
+const db =
+  getFirestore(app);
+
+
+/* =====================================================
+   ELEMENTS
+===================================================== */
+
+const appContainer =
+  document.getElementById("app");
+
+
+/* =====================================================
+   HELPERS
+===================================================== */
+
+function text(value){
+
+  if(
+    value === undefined ||
+    value === null
+  ){
+
+    return "";
+
+  }
+
+  return String(value).trim();
+
+}
+
+
+function escapeHtml(value){
+
+  return text(value)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+
+}
+
+
+function number(value){
+
+  const n =
+    parseFloat(
+      String(value || "")
+        .replace(/[^0-9.-]/g,"")
+    );
+
+  return Number.isFinite(n)
+    ? n
+    : 0;
+
+}
+
+
+function money(value){
+
+  return number(value)
+    .toLocaleString(
+      "en-US",
+      {
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      }
+    );
+
+}
+
+
+function first(data,fields){
+
+  for(
+    const field of fields
+  ){
+
+    const value =
+      text(data?.[field]);
+
+    if(value){
+
+      return value;
+
+    }
+
+  }
+
+  return "";
+
+}
+
+
+function getImage(data){
+
+  return first(
+    data,
+    [
+      "thumbnail",
+      "thumbnailUrl",
+      "image",
+      "imageUrl",
+      "cover",
+      "coverImage"
+    ]
+  );
+
+}
+
+
+/* =====================================================
+   PLAN CHECK
+===================================================== */
+
+function isPlanCourse(data){
+
+  const access =
+    first(
+      data,
+      [
+        "access",
+        "accessType",
+        "membership",
+        "plan",
+        "pricing"
+      ]
+    ).toLowerCase();
+
+
+  if(
+    access === "plan" ||
+    access === "premium" ||
+    access === "paid" ||
+    access === "pro"
+  ){
+
+    return true;
+
+  }
+
+
+  if(
+    data?.premium === true ||
+    data?.isPremium === true ||
+    data?.paid === true
+  ){
+
+    return true;
+
+  }
+
+
+  return false;
+
+}
+
+
+/* =====================================================
+   GET FIREBASE COURSE IDs
+===================================================== */
+
+function getCartIds(){
+
+  try{
+
+    const cart =
+      JSON.parse(
+        localStorage.getItem(
+          "courseCart"
+        ) || "[]"
+      );
+
+
+    if(!Array.isArray(cart)){
+
+      return [];
+
+    }
+
+
+    /*
+     * Support both:
+     *
+     * ["firebaseDocumentId"]
+     *
+     * and older:
+     *
+     * [{ id:"firebaseDocumentId" }]
+     */
+
+    return [
+      ...new Set(
+        cart
+          .map(
+            item =>
+              typeof item === "string"
+                ? item
+                : item?.id
+          )
+          .filter(Boolean)
+      )
+    ];
+
+  }catch(error){
+
+    console.error(
+      "Cart parsing error:",
+      error
+    );
+
+    return [];
+
+  }
+
+}
+
+
+/* =====================================================
+   LOAD COURSES DIRECTLY FROM FIRESTORE
+===================================================== */
+
+async function loadCart(){
+
+  const ids =
+    getCartIds();
+
+
+  if(!ids.length){
+
+    showEmpty();
+
+    return;
+
+  }
+
+
+  try{
+
+    const courses = [];
+
+
+    for(
+      const id of ids
+    ){
+
+      const ref =
+        doc(
+          db,
+          "courses",
+          id
+        );
+
+
+      const snapshot =
+        await getDoc(ref);
+
+
+      if(
+        !snapshot.exists()
+      ){
+
+        console.warn(
+          "Course not found:",
+          id
+        );
+
+        continue;
+
+      }
+
+
+      const data =
+        snapshot.data() || {};
+
+
+      /*
+       * Cart is for Plan courses.
+       * Free courses are not allowed here.
+       */
+
+      if(
+        !isPlanCourse(data)
+      ){
+
+        continue;
+
+      }
+
+
+      courses.push({
+
+        id,
+
+        data
+
+      });
+
+    }
+
+
+    if(!courses.length){
+
+      showEmpty();
+
+      return;
+
+    }
+
+
+    renderCart(courses);
+
+
+  }catch(error){
+
+    console.error(
+      "Cart loading error:",
+      error
+    );
+
+
+    appContainer.innerHTML = `
+
+      <div class="card error">
+
+        <h2>
+          Unable to load cart
+        </h2>
+
+        <p>
+          Please refresh the page and try again.
+        </p>
+
+      </div>
+
+    `;
+
+  }
+
+}
+
+
+/* =====================================================
+   RENDER
+===================================================== */
+
+function renderCart(courses){
+
+  let total = 0;
+
+
+  const courseHtml =
+    courses.map(
+      item => {
+
+        const data =
+          item.data;
+
+
+        const title =
+          first(
+            data,
+            [
+              "title",
+              "name",
+              "courseTitle"
+            ]
+          ) ||
+          "Untitled Course";
+
+
+        const description =
+          first(
+            data,
+            [
+              "shortDescription",
+              "description",
+              "summary",
+              "excerpt"
+            ]
+          );
+
+
+        const image =
+          getImage(data);
+
+
+        const price =
+          first(
+            data,
+            [
+              "price",
+              "amount",
+              "coursePrice",
+              "planPrice"
+            ]
+          );
+
+
+        total +=
+          number(price);
+
+
+        return `
+
+          <div class="course">
+
+            ${
+              image
+                ? `
+                  <img
+                    class="course-image"
+                    src="${escapeHtml(image)}"
+                    alt="${escapeHtml(title)}"
+                  >
+                `
+                : `
+                  <div class="course-image"></div>
+                `
+            }
+
+
+            <div class="course-info">
+
+              <span class="badge">
+                Plan
+              </span>
+
+
+              <div class="course-title">
+                ${escapeHtml(title)}
+              </div>
+
+
+              ${
+                description
+                  ? `
+                    <div class="course-description">
+                      ${escapeHtml(description)}
+                    </div>
+                  `
+                  : ""
+              }
+
+
+              <div class="price">
+                ${money(price)}
+              </div>
+
+
+              <button
+                class="remove"
+                data-id="${escapeHtml(item.id)}">
+
+                Remove
+
+              </button>
+
+            </div>
+
+          </div>
+
+        `;
+
+      }
+    ).join("");
+
+
+  appContainer.innerHTML = `
+
+    <div class="grid">
+
+
+      <section class="card">
+
+        <h2>
+          Selected Courses
+        </h2>
+
+        ${courseHtml}
+
+      </section>
+
+
+      <aside class="card">
+
+        <h2>
+          Order Summary
+        </h2>
+
+
+        <div class="row">
+
+          <span>
+            Courses
+          </span>
+
+          <strong>
+            ${courses.length}
+          </strong>
+
+        </div>
+
+
+        <div class="row">
+
+          <span>
+            Subtotal
+          </span>
+
+          <strong>
+            ${money(total)}
+          </strong>
+
+        </div>
+
+
+        <div class="row total">
+
+          <span>
+            Total
+          </span>
+
+          <strong>
+            ${money(total)}
+          </strong>
+
+        </div>
+
+
+        <a
+          href="course-checkout.html"
+          class="checkout">
+
+          Proceed to Checkout
+
+        </a>
+
+
+        <a
+          href="search.html"
+          class="continue">
+
+          Continue Learning
+
+        </a>
+
+      </aside>
+
+    </div>
+
+  `;
+
+
+  document
+    .querySelectorAll(".remove")
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            removeCourse(
+              button.dataset.id
+            );
+
+          }
+        );
+
+      }
+    );
+
+}
+
+
+/* =====================================================
+   REMOVE
+===================================================== */
+
+function removeCourse(id){
+
+  const ids =
+    getCartIds()
+      .filter(
+        item =>
+          item !== id
+      );
+
+
+  localStorage.setItem(
+    "courseCart",
+    JSON.stringify(ids)
+  );
+
+
+  loadCart();
+
+}
+
+
+/* =====================================================
+   EMPTY
+===================================================== */
+
+function showEmpty(){
+
+  appContainer.innerHTML = `
+
+    <div class="card empty">
+
+      <h2>
+        Your course cart is empty
+      </h2>
+
+      <p>
+        Add a Plan course to your cart to continue.
+      </p>
+
+      <br>
+
+      <a
+        href="search.html"
+        class="checkout"
+        style="display:inline-block;width:auto">
+
+        Browse Courses
+
+      </a>
+
+    </div>
+
+  `;
+
+}
+
+
+/* =====================================================
+   START
+===================================================== */
+
+loadCart();
+
+</script>
+
+</body>
+</html>
