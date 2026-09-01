@@ -2,1384 +2,967 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
-<title>Quizzes | LetsStudy Pro</title>
+<title>Quiz | LetsStudy Pro</title>
 
 <style>
-*{
-  box-sizing:border-box;
-}
-
-html,body{
-  margin:0;
-  padding:0;
-  font-family:Arial,Helvetica,sans-serif;
-  background:#f5f7fb;
-  color:#172033;
-}
+*{box-sizing:border-box;margin:0;padding:0}
 
 body{
-  min-height:100vh;
+  font-family:Arial,sans-serif;
+  background:#f5f7fb;
+  color:#172033
 }
 
-button{
-  font:inherit;
-}
-
-.topbar{
-  position:sticky;
-  top:0;
-  z-index:100;
+header{
+  height:64px;
   background:#fff;
   border-bottom:1px solid #e5e7eb;
-}
-
-.topbar-inner{
-  max-width:1400px;
-  margin:auto;
-  min-height:64px;
-  padding:0 20px;
   display:flex;
   align-items:center;
   justify-content:space-between;
+  padding:0 6%
 }
 
 .logo{
+  text-decoration:none;
+  color:#172033;
   font-size:21px;
-  font-weight:800;
-  color:#2563eb;
+  font-weight:800
 }
 
-.logo span{
-  color:#111827;
+.logo span{color:#2563eb}
+
+.timer{
+  background:#eef2f7;
+  padding:9px 13px;
+  border-radius:8px;
+  font-size:12px;
+  font-weight:800
 }
 
-.back-btn{
-  border:1px solid #e5e7eb;
-  background:#fff;
-  color:#374151;
-  padding:9px 14px;
-  border-radius:9px;
-  cursor:pointer;
-  font-weight:700;
-}
-
-.back-btn:hover{
-  background:#f8fafc;
-}
-
-.page{
-  width:100%;
-  max-width:1400px;
-  margin:auto;
-  padding:25px 20px 40px;
-}
-
-.layout{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 340px;
-  gap:22px;
-}
-
-.card,
-.sidebar,
-.loading,
-.error{
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:16px;
-  box-shadow:0 8px 30px rgba(15,23,42,.05);
+.container{
+  width:92%;
+  max-width:800px;
+  margin:25px auto
 }
 
 .card{
-  overflow:hidden;
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  padding:22px;
+  margin-bottom:15px
 }
 
-.quiz-header{
-  padding:28px;
-  border-bottom:1px solid #e5e7eb;
-}
-
-.quiz-title{
-  margin:0 0 10px;
-  font-size:clamp(24px,3vw,35px);
-  line-height:1.25;
-  color:#111827;
-}
-
-.quiz-description{
-  margin:0;
-  color:#64748b;
-  line-height:1.7;
-  white-space:pre-wrap;
-}
-
-.quiz-meta{
-  padding:16px 28px;
+.top{
   display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  border-bottom:1px solid #e5e7eb;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:18px
 }
 
-.badge{
-  padding:7px 11px;
-  border-radius:8px;
-  background:#f8fafc;
-  border:1px solid #e5e7eb;
-  color:#475569;
-  font-size:12px;
-  font-weight:700;
+.title{
+  font-size:22px
 }
 
-.quiz-info{
-  padding:28px;
-}
-
-.quiz-info h2{
-  margin:0 0 18px;
-  font-size:19px;
-}
-
-.info-grid{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:12px;
-}
-
-.info-box{
-  padding:14px;
-  background:#f8fafc;
-  border:1px solid #e5e7eb;
-  border-radius:10px;
-  min-width:0;
-}
-
-.info-box small{
-  display:block;
-  color:#64748b;
-  font-size:11px;
-  margin-bottom:6px;
-}
-
-.info-box strong{
-  display:block;
-  color:#111827;
-  font-size:13px;
-  overflow-wrap:anywhere;
-}
-
-.sidebar{
-  position:sticky;
-  top:85px;
-  max-height:calc(100vh - 105px);
+.progress{
+  height:7px;
+  background:#e5e7eb;
+  border-radius:20px;
   overflow:hidden;
+  margin-top:10px
 }
 
-.sidebar-header{
-  padding:18px;
-  border-bottom:1px solid #e5e7eb;
+.progress span{
+  display:block;
+  height:100%;
+  background:#2563eb;
+  width:0
 }
 
-.sidebar-header h2{
-  margin:0;
+.question{
   font-size:17px;
-}
-
-.sidebar-header p{
-  margin:5px 0 0;
-  color:#64748b;
-  font-size:12px;
-}
-
-.quiz-list{
-  padding:10px;
-  overflow-y:auto;
-  max-height:calc(100vh - 205px);
-}
-
-.quiz-item{
-  width:100%;
-  text-align:left;
-  border:1px solid transparent;
-  background:#f8fafc;
-  border-radius:10px;
-  padding:14px;
-  margin-bottom:8px;
-  cursor:pointer;
-}
-
-.quiz-item:hover{
-  background:#eff6ff;
-  border-color:#bfdbfe;
-}
-
-.quiz-item.active{
-  background:#eff6ff;
-  border-color:#2563eb;
-}
-
-.quiz-item-title{
-  display:block;
-  color:#111827;
-  font-size:13px;
-  font-weight:750;
-  line-height:1.4;
-}
-
-.quiz-item-meta{
-  display:block;
-  margin-top:7px;
-  color:#64748b;
-  font-size:11px;
-}
-
-.quiz-item-number{
-  display:block;
-  color:#2563eb;
-  font-size:10px;
   font-weight:800;
-  margin-bottom:5px;
-  text-transform:uppercase;
+  line-height:1.5;
+  margin-bottom:15px
 }
 
-.loading,
-.error{
-  padding:60px 25px;
-  text-align:center;
+.options{
+  display:grid;
+  gap:9px
 }
 
-.loader{
-  width:42px;
-  height:42px;
-  margin:0 auto 16px;
-  border:4px solid #e5e7eb;
-  border-top-color:#2563eb;
-  border-radius:50%;
-  animation:spin .8s linear infinite;
+.option{
+  border:1px solid #dbe2ea;
+  background:#fff;
+  padding:13px;
+  border-radius:9px;
+  cursor:pointer;
+  font-size:12px;
+  text-align:left
 }
 
-@keyframes spin{
-  to{
-    transform:rotate(360deg);
-  }
+.option:hover{
+  background:#f8fafc
 }
 
-.loading h2,
-.error h2{
-  margin:0 0 9px;
+.option.selected{
+  border:2px solid #2563eb;
+  background:#eef5ff
 }
 
-.loading p,
-.error p{
-  margin:0;
-  color:#64748b;
-  line-height:1.6;
+.actions{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  margin-top:20px
 }
 
-.error button{
-  margin-top:18px;
+.btn{
   border:0;
   background:#2563eb;
   color:#fff;
-  padding:11px 18px;
-  border-radius:9px;
-  cursor:pointer;
-  font-weight:700;
+  padding:11px 17px;
+  border-radius:8px;
+  font-size:11px;
+  font-weight:800;
+  cursor:pointer
+}
+
+.btn.secondary{
+  background:#eef2f7;
+  color:#172033
+}
+
+.result{
+  text-align:center;
+  padding:35px 20px
+}
+
+.score{
+  font-size:48px;
+  font-weight:900;
+  color:#2563eb;
+  margin:12px 0
+}
+
+.result p{
+  color:#64748b;
+  font-size:12px;
+  line-height:1.6
 }
 
 .hidden{
-  display:none!important;
+  display:none!important
 }
 
-footer{
+.loading{
   text-align:center;
-  padding:25px;
-  color:#64748b;
-  font-size:12px;
+  padding:50px;
+  color:#64748b
 }
 
-@media(max-width:1000px){
-
-  .layout{
-    grid-template-columns:1fr;
-  }
-
-  .sidebar{
-    position:static;
-    max-height:none;
-  }
-
-  .quiz-list{
-    max-height:420px;
-  }
-}
-
-@media(max-width:650px){
-
-  .topbar-inner{
-    padding:0 13px;
-  }
-
-  .logo{
-    font-size:18px;
-  }
-
-  .page{
-    padding:12px 0 30px;
-  }
-
-  .card{
-    border-radius:0;
-    border-left:0;
-    border-right:0;
-  }
-
-  .quiz-header{
-    padding:20px 16px;
-  }
-
-  .quiz-meta{
-    padding:14px 16px;
-  }
-
-  .quiz-info{
-    padding:20px 16px;
-  }
-
-  .info-grid{
-    grid-template-columns:1fr;
-  }
-
-  .sidebar{
-    margin:0 10px;
-  }
+@media(max-width:550px){
+  .container{width:94%}
+  .question{font-size:15px}
 }
 </style>
 </head>
 
 <body>
 
-<header class="topbar">
+<header>
 
-  <div class="topbar-inner">
+<a href="index.html" class="logo">
+LetsStudy <span>Pro</span>
+</a>
 
-    <div class="logo">
-      LetsStudy <span>Pro</span>
-    </div>
-
-    <button
-      id="backBtn"
-      class="back-btn"
-      type="button"
-    >
-      ← Back
-    </button>
-
-  </div>
+<div id="timer" class="timer">
+10:00
+</div>
 
 </header>
 
 
-<main class="page">
+<main class="container">
 
-  <!-- ================================================
-       LOADING
-  ================================================= -->
+<div id="loading" class="card loading">
+Loading quiz...
+</div>
 
-  <div
-    id="loading"
-    class="loading"
-  >
 
-    <div class="loader"></div>
+<section id="quiz" class="card hidden">
 
-    <h2>
-      Loading Quizzes...
-    </h2>
+<div class="top">
 
-    <p>
-      Loading quiz data from Firestore.
-    </p>
+<div>
 
-  </div>
+<div id="quizTitle" class="title">
+Quiz
+</div>
 
+<div
+id="questionNumber"
+style="font-size:10px;color:#64748b;margin-top:5px">
+Question 1
+</div>
 
-  <!-- ================================================
-       ERROR
-  ================================================= -->
+</div>
 
-  <div
-    id="errorBox"
-    class="error hidden"
-  ></div>
+</div>
 
 
-  <!-- ================================================
-       MAIN
-  ================================================= -->
+<div class="progress">
+<span id="progressBar"></span>
+</div>
 
-  <div
-    id="layout"
-    class="layout hidden"
-  >
 
-    <section>
+<div
+id="question"
+class="question"
+style="margin-top:22px">
+Question
+</div>
 
-      <article class="card">
 
-        <div class="quiz-header">
+<div
+id="options"
+class="options">
+</div>
 
-          <h1
-            id="quizTitle"
-            class="quiz-title"
-          >
-            —
-          </h1>
 
-          <p
-            id="quizDescription"
-            class="quiz-description"
-          >
-            —
-          </p>
+<div class="actions">
 
-        </div>
+<button
+id="previous"
+class="btn secondary">
+Previous
+</button>
 
+<button
+id="next"
+class="btn">
+Next
+</button>
 
-        <div
-          id="quizMeta"
-          class="quiz-meta"
-        ></div>
+</div>
 
+</section>
 
-        <div class="quiz-info">
 
-          <h2>
-            Quiz Information
-          </h2>
+<section
+id="result"
+class="card result hidden">
 
-          <div class="info-grid">
+<h2>
+Quiz Complete
+</h2>
 
-            <div class="info-box">
+<div
+id="score"
+class="score">
+0%
+</div>
 
-              <small>
-                Quiz ID
-              </small>
+<p id="resultText">
+You completed the quiz.
+</p>
 
-              <strong id="quizId">
-                —
-              </strong>
+<div
+class="actions"
+style="justify-content:center">
 
-            </div>
+<button
+id="retry"
+class="btn">
+Retry Quiz
+</button>
 
+<a
+href="my-course.html"
+class="btn secondary">
+My Courses
+</a>
 
-            <div class="info-box">
+</div>
 
-              <small>
-                Course ID
-              </small>
-
-              <strong id="courseId">
-                —
-              </strong>
-
-            </div>
-
-
-            <div class="info-box">
-
-              <small>
-                Passing Score
-              </small>
-
-              <strong id="passingScore">
-                —
-              </strong>
-
-            </div>
-
-
-            <div class="info-box">
-
-              <small>
-                Time Limit
-              </small>
-
-              <strong id="timeLimit">
-                —
-              </strong>
-
-            </div>
-
-
-            <div class="info-box">
-
-              <small>
-                Attempts
-              </small>
-
-              <strong id="attempts">
-                —
-              </strong>
-
-            </div>
-
-
-            <div class="info-box">
-
-              <small>
-                Created By
-              </small>
-
-              <strong id="createdBy">
-                —
-              </strong>
-
-            </div>
-
-
-            <div class="info-box">
-
-              <small>
-                Created At
-              </small>
-
-              <strong id="createdAt">
-                —
-              </strong>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </article>
-
-    </section>
-
-
-    <!-- ================================================
-         QUIZ LIST
-    ================================================= -->
-
-    <aside class="sidebar">
-
-      <div class="sidebar-header">
-
-        <h2>
-          Course Quizzes
-        </h2>
-
-        <p>
-          Select a quiz to view its information.
-        </p>
-
-      </div>
-
-
-      <div
-        id="quizList"
-        class="quiz-list"
-      ></div>
-
-    </aside>
-
-  </div>
+</section>
 
 </main>
 
 
-<footer>
-  © 2026 LetsStudy Pro. All rights reserved.
-</footer>
+<script>
+
+/*
+==================================================
+LETSSTUDY PRO QUIZ SYSTEM
+==================================================
+
+URL EXAMPLE:
+
+quiz.html?quizId=QUIZ_ID&courseId=COURSE_ID
+
+API:
+
+GET /api/quiz/QUIZ_ID
+
+EXPECTED:
+
+{
+  title:"Biology Quiz",
+  duration:10,
+  questions:[
+    {
+      id:"q1",
+      question:"What is photosynthesis?",
+      options:[
+        "Process A",
+        "Process B",
+        "Process C",
+        "Process D"
+      ],
+      answer:1
+    }
+  ]
+}
+
+answer = correct option index.
+
+SUBMIT:
+
+POST /api/quiz/submit
+
+{
+  quizId,
+  userId,
+  answers,
+  score,
+  total
+}
+
+==================================================
+*/
 
 
-<script type="module">
+const params =
+new URLSearchParams(location.search);
 
-/* =====================================================
-   FIREBASE SDK
-===================================================== */
-
-import {
-  initializeApp
-} from
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+const quizId =
+params.get("quizId") ||
+params.get("id") ||
+"demo";
 
 
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  doc,
-  getDoc
-} from
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+const courseId =
+params.get("courseId") ||
+"";
 
 
-/* =====================================================
-   FIREBASE CONFIG
-===================================================== */
+const userId =
+localStorage.getItem("userId") ||
+"";
 
-const firebaseConfig = {
 
-  apiKey:
-    "AIzaSyBcOYDfAVKXKbljsyRgI_0rjodBn678tCc",
+let quizData = null;
 
-  authDomain:
-    "let-s-study-pro-course.firebaseapp.com",
+let questions = [];
 
-  databaseURL:
-    "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+let current = 0;
 
-  projectId:
-    "let-s-study-pro-course",
+let answers = {};
 
-  storageBucket:
-    "let-s-study-pro-course.firebasestorage.app",
+let seconds = 600;
 
-  messagingSenderId:
-    "474928293390",
+let timerInterval;
 
-  appId:
-    "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
 
-  measurementId:
-    "G-85B7V5H5J0"
+/* =========================
+   START
+========================= */
+
+loadQuiz();
+
+
+/* =========================
+   LOAD QUIZ
+========================= */
+
+async function loadQuiz(){
+
+try{
+
+if(quizId === "demo"){
+
+quizData = demoQuiz();
+
+}else{
+
+const response =
+await fetch(
+"/api/quiz/" +
+encodeURIComponent(quizId)
+);
+
+if(!response.ok){
+
+throw new Error(
+"Unable to load quiz."
+);
+
+}
+
+const result =
+await response.json();
+
+quizData =
+result.quiz ||
+result;
+
+}
+
+
+questions =
+quizData.questions ||
+[];
+
+
+if(!questions.length){
+
+throw new Error(
+"This quiz has no questions."
+);
+
+}
+
+
+seconds =
+Number(
+quizData.duration || 10
+) * 60;
+
+
+document.getElementById(
+"quizTitle"
+).textContent =
+quizData.title ||
+"Quiz";
+
+
+document.getElementById(
+"loading"
+).classList.add(
+"hidden"
+);
+
+
+document.getElementById(
+"quiz"
+).classList.remove(
+"hidden"
+);
+
+
+renderQuestion();
+
+startTimer();
+
+
+}catch(error){
+
+document.getElementById(
+"loading"
+).textContent =
+error.message;
+
+}
+
+}
+
+
+/* =========================
+   QUESTION
+========================= */
+
+function renderQuestion(){
+
+const q =
+questions[current];
+
+
+document.getElementById(
+"questionNumber"
+).textContent =
+"Question " +
+(current + 1) +
+" of " +
+questions.length;
+
+
+document.getElementById(
+"question"
+).textContent =
+q.question;
+
+
+const options =
+document.getElementById(
+"options"
+);
+
+
+options.innerHTML = "";
+
+
+(q.options || []).forEach(
+(option,index)=>{
+
+const button =
+document.createElement(
+"button"
+);
+
+button.className =
+"option";
+
+
+button.textContent =
+option;
+
+
+if(
+answers[q.id] === index
+){
+
+button.classList.add(
+"selected"
+);
+
+}
+
+
+button.onclick =
+()=>{
+selectAnswer(
+q.id,
+index
+);
+};
+
+
+options.appendChild(
+button
+);
+
+}
+);
+
+
+const progress =
+((current + 1) /
+questions.length) *
+100;
+
+
+document.getElementById(
+"progressBar"
+).style.width =
+progress + "%";
+
+
+document.getElementById(
+"previous"
+).disabled =
+current === 0;
+
+
+document.getElementById(
+"next"
+).textContent =
+current === questions.length - 1
+? "Submit Quiz"
+: "Next";
+
+}
+
+
+/* =========================
+   ANSWER
+========================= */
+
+function selectAnswer(
+questionId,
+index
+){
+
+answers[
+questionId
+] = index;
+
+
+renderQuestion();
+
+}
+
+
+/* =========================
+   NEXT
+========================= */
+
+document.getElementById(
+"next"
+).onclick =
+()=>{
+
+if(
+current <
+questions.length - 1
+){
+
+current++;
+
+renderQuestion();
+
+}else{
+
+finishQuiz();
+
+}
 
 };
 
 
-/* =====================================================
-   INITIALIZE FIREBASE
-===================================================== */
+/* =========================
+   PREVIOUS
+========================= */
 
-const app =
-  initializeApp(
-    firebaseConfig
-  );
+document.getElementById(
+"previous"
+).onclick =
+()=>{
 
-const db =
-  getFirestore(
-    app
-  );
+if(current > 0){
 
+current--;
 
-/* =====================================================
-   ELEMENTS
-===================================================== */
+renderQuestion();
 
-const loading =
-  document.getElementById(
-    "loading"
-  );
+}
 
-const errorBox =
-  document.getElementById(
-    "errorBox"
-  );
-
-const layout =
-  document.getElementById(
-    "layout"
-  );
-
-const quizList =
-  document.getElementById(
-    "quizList"
-  );
+};
 
 
-/* =====================================================
-   STATE
-===================================================== */
+/* =========================
+   TIMER
+========================= */
 
-const quizzesMap =
-  new Map();
+function startTimer(){
 
-let currentQuizId =
-  null;
+updateTimer();
 
 
-/* =====================================================
-   ESCAPE HTML
-===================================================== */
+timerInterval =
+setInterval(
+()=>{
 
-function escapeHtml(value){
+seconds--;
 
-  return String(
-    value ?? ""
-  )
-  .replace(
-    /&/g,
-    "&amp;"
-  )
-  .replace(
-    /</g,
-    "&lt;"
-  )
-  .replace(
-    />/g,
-    "&gt;"
-  )
-  .replace(
-    /"/g,
-    "&quot;"
-  )
-  .replace(
-    /'/g,
-    "&#039;"
-  );
+updateTimer();
+
+
+if(seconds <= 0){
+
+clearInterval(
+timerInterval
+);
+
+finishQuiz();
+
+}
+
+},
+1000
+);
 
 }
 
 
-/* =====================================================
-   FORMAT DATE
-===================================================== */
+function updateTimer(){
 
-function formatDate(value){
+const min =
+Math.floor(
+seconds / 60
+);
 
-  if(!value){
-    return "—";
-  }
-
-  try{
-
-    if(
-      typeof value.toDate ===
-      "function"
-    ){
-
-      return value
-        .toDate()
-        .toLocaleString(
-          "en-US",
-          {
-            dateStyle:"medium",
-            timeStyle:"short"
-          }
-        );
-
-    }
+const sec =
+seconds % 60;
 
 
-    const date =
-      new Date(value);
-
-
-    if(
-      !isNaN(
-        date.getTime()
-      )
-    ){
-
-      return date.toLocaleString(
-        "en-US",
-        {
-          dateStyle:"medium",
-          timeStyle:"short"
-        }
-      );
-
-    }
-
-  }catch(error){
-
-    console.warn(
-      "Date formatting error:",
-      error
-    );
-
-  }
-
-  return String(value);
+document.getElementById(
+"timer"
+).textContent =
+String(min).padStart(
+2,"0"
+) +
+":" +
+String(sec).padStart(
+2,"0"
+);
 
 }
 
 
-/* =====================================================
-   DISPLAY QUIZ
-===================================================== */
+/* =========================
+   FINISH
+========================= */
 
-function displayQuiz(
-  quizId,
-  data
+async function finishQuiz(){
+
+clearInterval(
+timerInterval
+);
+
+
+let correct = 0;
+
+
+questions.forEach(
+q=>{
+
+if(
+answers[q.id] ===
+q.answer
 ){
 
-  currentQuizId =
-    quizId;
+correct++;
+
+}
+
+}
+);
 
 
-  document.title =
-    `${
-      data.title ||
-      "Quiz"
-    } | LetsStudy Pro`;
+const total =
+questions.length;
 
 
-  document.getElementById(
-    "quizTitle"
-  ).textContent =
-    data.title ||
-    "Untitled Quiz";
+const percentage =
+Math.round(
+(correct / total) * 100
+);
 
 
-  document.getElementById(
-    "quizDescription"
-  ).textContent =
-    data.description ||
-    "No quiz description available.";
+document.getElementById(
+"quiz"
+).classList.add(
+"hidden"
+);
 
 
-  document.getElementById(
-    "quizId"
-  ).textContent =
-    quizId;
+document.getElementById(
+"result"
+).classList.remove(
+"hidden"
+);
 
 
-  document.getElementById(
-    "courseId"
-  ).textContent =
-    data.courseId ||
-    "—";
+document.getElementById(
+"score"
+).textContent =
+percentage + "%";
 
 
-  document.getElementById(
-    "passingScore"
-  ).textContent =
-    data.passingScore ??
-    "—";
+document.getElementById(
+"resultText"
+).textContent =
+"You scored " +
+correct +
+" out of " +
+total +
+" questions.";
 
 
-  document.getElementById(
-    "timeLimit"
-  ).textContent =
-    data.timeLimit ??
-    "—";
-
-
-  document.getElementById(
-    "attempts"
-  ).textContent =
-    data.attempts ??
-    "—";
-
-
-  document.getElementById(
-    "createdBy"
-  ).textContent =
-    data.createdBy ||
-    "—";
-
-
-  document.getElementById(
-    "createdAt"
-  ).textContent =
-    formatDate(
-      data.createdAt
-    );
-
-
-  document.getElementById(
-    "quizMeta"
-  ).innerHTML = `
-
-    <span class="badge">
-      Passing Score:
-      ${escapeHtml(
-        data.passingScore ??
-        "—"
-      )}
-    </span>
-
-    <span class="badge">
-      Time Limit:
-      ${escapeHtml(
-        data.timeLimit ??
-        "—"
-      )}
-    </span>
-
-    <span class="badge">
-      Attempts:
-      ${escapeHtml(
-        data.attempts ??
-        "—"
-      )}
-    </span>
-
-  `;
-
-
-  document
-    .querySelectorAll(
-      ".quiz-item"
-    )
-    .forEach(
-      item => {
-
-        item.classList.toggle(
-          "active",
-          item.dataset.id ===
-          quizId
-        );
-
-      }
-    );
+saveResult(
+correct,
+total,
+percentage
+);
 
 }
 
 
-/* =====================================================
-   OPEN QUIZ DOCUMENT
-===================================================== */
+/* =========================
+   SAVE RESULT
+========================= */
 
-async function openQuiz(
-  quizId
+async function saveResult(
+correct,
+total,
+score
 ){
 
-  try{
+try{
 
-    const quizRef =
-      doc(
-        db,
-        "quizzes",
-        quizId
-      );
+await fetch(
+"/api/quiz/submit",
+{
+method:"POST",
 
+headers:{
+"Content-Type":
+"application/json"
+},
 
-    const quizSnap =
-      await getDoc(
-        quizRef
-      );
+body:JSON.stringify({
 
+quizId:
+quizId,
 
-    if(
-      !quizSnap.exists()
-    ){
+courseId:
+courseId,
 
-      showError(
-        "This quiz does not exist in Firestore."
-      );
+userId:
+userId,
 
-      return;
+answers:
+answers,
 
-    }
+correct:
+correct,
 
+total:
+total,
 
-    const data =
-      quizSnap.data();
+score:
+score
 
+})
 
-    quizzesMap.set(
-      quizId,
-      data
-    );
+}
+);
 
+}catch(error){
 
-    displayQuiz(
-      quizId,
-      data
-    );
+console.warn(
+"Result could not be saved.",
+error
+);
 
-
-  }catch(error){
-
-    console.error(
-      "Failed to load quiz:",
-      error
-    );
-
-
-    showError(
-      error.message ||
-      "Unable to load quiz from Firestore."
-    );
-
-  }
+}
 
 }
 
 
-/* =====================================================
-   RENDER QUIZ LIST
-===================================================== */
+/* =========================
+   RETRY
+========================= */
 
-function renderQuizList(){
+document.getElementById(
+"retry"
+).onclick =
+()=>{
 
-  quizList.innerHTML =
-    "";
+current = 0;
 
+answers = {};
 
-  const quizzes =
-    Array.from(
-      quizzesMap.entries()
-    );
-
-
-  quizzes.forEach(
-    (
-      [quizId,data],
-      index
-    ) => {
-
-      const button =
-        document.createElement(
-          "button"
-        );
+seconds =
+Number(
+quizData.duration || 10
+) * 60;
 
 
-      button.type =
-        "button";
+document.getElementById(
+"result"
+).classList.add(
+"hidden"
+);
 
 
-      button.className =
-        "quiz-item";
+document.getElementById(
+"quiz"
+).classList.remove(
+"hidden"
+);
 
 
-      button.dataset.id =
-        quizId;
+renderQuestion();
+
+startTimer();
+
+};
 
 
-      button.innerHTML = `
+/* =========================
+   DEMO QUIZ
+========================= */
 
-        <span class="quiz-item-number">
-          Quiz ${index + 1}
-        </span>
+function demoQuiz(){
 
-        <span class="quiz-item-title">
-          ${escapeHtml(
-            data.title ||
-            "Untitled Quiz"
-          )}
-        </span>
+return {
 
-        <span class="quiz-item-meta">
+title:
+"Sample Quiz",
 
-          Passing:
-          ${escapeHtml(
-            data.passingScore ??
-            "—"
-          )}
+duration:
+10,
 
-          •
+questions:[
 
-          Attempts:
-          ${escapeHtml(
-            data.attempts ??
-            "—"
-          )}
+{
+id:"q1",
 
-        </span>
+question:
+"Which organelle is known as the powerhouse of the cell?",
 
-      `;
+options:[
+"Nucleus",
+"Mitochondria",
+"Ribosome",
+"Chloroplast"
+],
 
+answer:1
+},
 
-      button.addEventListener(
-        "click",
-        () => {
+{
+id:"q2",
 
-          openQuiz(
-            quizId
-          );
+question:
+"What is the basic unit of life?",
 
-        }
-      );
+options:[
+"Tissue",
+"Organ",
+"Cell",
+"System"
+],
 
+answer:2
+},
 
-      quizList.appendChild(
-        button
-      );
+{
+id:"q3",
 
-    }
-  );
+question:
+"Which gas is mainly used during photosynthesis?",
 
+options:[
+"Oxygen",
+"Nitrogen",
+"Carbon dioxide",
+"Hydrogen"
+],
+
+answer:2
 }
 
+]
 
-/* =====================================================
-   ERROR
-===================================================== */
-
-function showError(
-  message
-){
-
-  loading.classList.add(
-    "hidden"
-  );
-
-  layout.classList.add(
-    "hidden"
-  );
-
-  errorBox.classList.remove(
-    "hidden"
-  );
-
-
-  errorBox.innerHTML = `
-
-    <h2>
-      Failed to Load Quiz
-    </h2>
-
-    <p>
-      ${escapeHtml(
-        message
-      )}
-    </p>
-
-    <button
-      id="retryButton"
-      type="button"
-    >
-      Retry
-    </button>
-
-  `;
-
-
-  document
-    .getElementById(
-      "retryButton"
-    )
-    ?.addEventListener(
-      "click",
-      () => {
-
-        errorBox.classList.add(
-          "hidden"
-        );
-
-        loading.classList.remove(
-          "hidden"
-        );
-
-        loadQuizzes();
-
-      }
-    );
+};
 
 }
-
-
-/* =====================================================
-   LOAD FIRESTORE COLLECTION
-===================================================== */
-
-async function loadQuizzes(){
-
-  try{
-
-    console.log(
-      "Loading quizzes collection..."
-    );
-
-
-    /*
-     * READ:
-     *
-     * quizzes/{quizId}
-     */
-
-    const quizzesRef =
-      collection(
-        db,
-        "quizzes"
-      );
-
-
-    const snapshot =
-      await getDocs(
-        quizzesRef
-      );
-
-
-    console.log(
-      "Quizzes found:",
-      snapshot.size
-    );
-
-
-    quizzesMap.clear();
-
-
-    /* =================================================
-       READ EVERY DOCUMENT
-    ================================================= */
-
-    snapshot.forEach(
-      quizDoc => {
-
-        /*
-         * REAL FIRESTORE DOCUMENT ID
-         */
-
-        const quizId =
-          quizDoc.id;
-
-
-        /*
-         * ALL DOCUMENT DATA
-         */
-
-        const data =
-          quizDoc.data();
-
-
-        console.log(
-          "Loaded quiz:",
-          quizId,
-          data
-        );
-
-
-        quizzesMap.set(
-          quizId,
-          data
-        );
-
-      }
-    );
-
-
-    /* =================================================
-       STOP LOADING
-    ================================================= */
-
-    loading.classList.add(
-      "hidden"
-    );
-
-
-    /* =================================================
-       EMPTY COLLECTION
-    ================================================= */
-
-    if(
-      quizzesMap.size === 0
-    ){
-
-      errorBox.classList.remove(
-        "hidden"
-      );
-
-
-      errorBox.innerHTML = `
-
-        <h2>
-          No Quizzes Found
-        </h2>
-
-        <p>
-          No documents were found in the
-          <strong>quizzes</strong>
-          Firestore collection.
-        </p>
-
-      `;
-
-      return;
-
-    }
-
-
-    /* =================================================
-       SHOW PAGE
-    ================================================= */
-
-    errorBox.classList.add(
-      "hidden"
-    );
-
-
-    layout.classList.remove(
-      "hidden"
-    );
-
-
-    /* =================================================
-       RENDER LIST
-    ================================================= */
-
-    renderQuizList();
-
-
-    /* =================================================
-       OPEN FIRST QUIZ
-    ================================================= */
-
-    const firstQuiz =
-      Array.from(
-        quizzesMap.entries()
-      )[0];
-
-
-    if(firstQuiz){
-
-      displayQuiz(
-        firstQuiz[0],
-        firstQuiz[1]
-      );
-
-    }
-
-  }catch(error){
-
-    console.error(
-      "Failed to load quizzes:",
-      error
-    );
-
-
-    showError(
-      error.message ||
-      "Unable to read quizzes from Firestore."
-    );
-
-  }
-
-}
-
-
-/* =====================================================
-   BACK BUTTON
-===================================================== */
-
-document
-  .getElementById(
-    "backBtn"
-  )
-  .addEventListener(
-    "click",
-    () => {
-
-      if(
-        window.history.length > 1
-      ){
-
-        window.history.back();
-
-      }else{
-
-        window.location.href =
-          "courses.html";
-
-      }
-
-    }
-  );
-
-
-/* =====================================================
-   START
-===================================================== */
-
-loadQuizzes();
 
 </script>
 
