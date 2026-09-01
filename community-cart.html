@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Community Cart · LetsStudy Pro</title>
+  <meta name="description" content="Review your LetsStudy Pro premium communities before checkout.">
+
+  <style>
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:Inter,Arial,sans-serif;
+      background:#f5f7fb;
+      color:#172033;
+    }
+
+    .topbar{
+      background:#fff;
+      border-bottom:1px solid #e7eaf0;
+      padding:16px 20px;
+      position:sticky;
+      top:0;
+      z-index:20;
+    }
+
+    .nav{
+      max-width:1150px;
+      margin:auto;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:15px;
+    }
+
+    .brand{
+      font-size:20px;
+      font-weight:800;
+      color:#2563eb;
+    }
+
+    .back{
+      text-decoration:none;
+      color:#475569;
+      font-weight:700;
+    }
+
+    .container{
+      max-width:1150px;
+      margin:35px auto;
+      padding:0 18px;
+    }
+
+    h1{
+      font-size:36px;
+      margin:0 0 8px;
+    }
+
+    .subtitle{
+      color:#64748b;
+      margin-bottom:28px;
+    }
+
+    .layout{
+      display:grid;
+      grid-template-columns:1fr 330px;
+      gap:25px;
+      align-items:start;
+    }
+
+    .items{
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+
+    .item{
+      background:#fff;
+      border:1px solid #e5e9f0;
+      border-radius:18px;
+      padding:18px;
+      display:flex;
+      gap:18px;
+      align-items:center;
+      box-shadow:0 6px 22px rgba(15,23,42,.04);
+    }
+
+    .thumb{
+      width:130px;
+      height:95px;
+      object-fit:cover;
+      border-radius:12px;
+      background:#e9eef7;
+      flex-shrink:0;
+    }
+
+    .item-info{
+      flex:1;
+      min-width:0;
+    }
+
+    .item-title{
+      font-size:19px;
+      font-weight:800;
+      margin-bottom:7px;
+    }
+
+    .description{
+      color:#64748b;
+      line-height:1.5;
+      font-size:14px;
+      margin-bottom:9px;
+    }
+
+    .category{
+      color:#2563eb;
+      font-size:13px;
+      font-weight:700;
+    }
+
+    .price{
+      font-size:20px;
+      font-weight:900;
+      white-space:nowrap;
+    }
+
+    .remove{
+      border:0;
+      background:#fee2e2;
+      color:#b91c1c;
+      padding:9px 12px;
+      border-radius:9px;
+      cursor:pointer;
+      font-weight:700;
+    }
+
+    .summary{
+      background:#fff;
+      border:1px solid #e5e9f0;
+      border-radius:18px;
+      padding:24px;
+      position:sticky;
+      top:90px;
+    }
+
+    .summary h2{
+      margin-top:0;
+    }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      gap:15px;
+      padding:13px 0;
+      border-bottom:1px solid #edf0f4;
+    }
+
+    .total{
+      font-size:22px;
+      font-weight:900;
+      padding-top:18px;
+    }
+
+    .checkout{
+      display:block;
+      width:100%;
+      margin-top:20px;
+      padding:15px;
+      background:#2563eb;
+      color:#fff;
+      border-radius:12px;
+      text-align:center;
+      text-decoration:none;
+      font-weight:900;
+    }
+
+    .clear{
+      width:100%;
+      margin-top:10px;
+      padding:12px;
+      border:1px solid #fecaca;
+      background:#fff;
+      color:#b91c1c;
+      border-radius:12px;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+    .empty,
+    .loading,
+    .error{
+      background:#fff;
+      border:1px solid #e5e9f0;
+      border-radius:18px;
+      padding:60px 20px;
+      text-align:center;
+      color:#64748b;
+    }
+
+    .empty a{
+      display:inline-block;
+      margin-top:18px;
+      background:#2563eb;
+      color:#fff;
+      text-decoration:none;
+      padding:12px 18px;
+      border-radius:10px;
+      font-weight:800;
+    }
+
+    @media(max-width:850px){
+      .layout{
+        grid-template-columns:1fr;
+      }
+
+      .summary{
+        position:static;
+      }
+    }
+
+    @media(max-width:600px){
+      .item{
+        align-items:flex-start;
+        flex-wrap:wrap;
+      }
+
+      .thumb{
+        width:100%;
+        height:180px;
+      }
+
+      .price{
+        width:100%;
+      }
+
+      .remove{
+        margin-left:auto;
+      }
+
+      h1{
+        font-size:29px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <nav class="nav">
+    <div class="brand">LetsStudy Pro</div>
+    <a href="community.html" class="back">← Communities</a>
+  </nav>
+</header>
+
+<main class="container">
+
+  <h1>Community Cart</h1>
+
+  <p class="subtitle">
+    Review your selected premium communities before checkout.
+  </p>
+
+  <div id="loading" class="loading">
+    Loading your community cart...
+  </div>
+
+  <div id="error" class="error" style="display:none"></div>
+
+  <div id="empty" class="empty" style="display:none">
+
+    <h2>Your community cart is empty</h2>
+
+    <p>
+      Add a premium community to continue.
+    </p>
+
+    <a href="community.html">
+      Browse Communities
+    </a>
+
+  </div>
+
+  <section id="cartLayout" class="layout" style="display:none">
+
+    <div id="items" class="items"></div>
+
+    <aside class="summary">
+
+      <h2>Order Summary</h2>
+
+      <div class="row">
+        <span>Communities</span>
+        <strong id="count">0</strong>
+      </div>
+
+      <div class="row">
+        <span>Subtotal</span>
+        <strong id="subtotal">0</strong>
+      </div>
+
+      <div class="row total">
+        <span>Total</span>
+        <strong id="total">0</strong>
+      </div>
+
+      <a
+        id="checkout"
+        class="checkout"
+        href="community-checkout.html"
+      >
+        Continue to Checkout
+      </a>
+
+      <button id="clearBtn" class="clear">
+        Clear Cart
+      </button>
+
+    </aside>
+
+  </section>
+
+</main>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBcOYDfAVK5XbkljsyRgI_0rj0odBn678tCc",
+  authDomain: "let-s-study-pro-course.firebaseapp.com",
+  databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId: "let-s-study-pro-course",
+  storageBucket: "let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId: "474928293390",
+  appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId: "G-85B7V5H5J0"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const $ = id => document.getElementById(id);
+
+function firstValue(data, keys, fallback = "") {
+
+  for (const key of keys) {
+
+    const value = data?.[key];
+
+    if (
+      value !== undefined &&
+      value !== null &&
+      value !== ""
+    ) {
+      return value;
+    }
+
+  }
+
+  return fallback;
+}
+
+function getTitle(data) {
+
+  return firstValue(data, [
+    "title",
+    "name",
+    "communityTitle",
+    "communityName"
+  ], "Community");
+
+}
+
+function getDescription(data) {
+
+  return firstValue(data, [
+    "description",
+    "summary",
+    "shortDescription",
+    "overview",
+    "content"
+  ], "");
+
+}
+
+function getCategory(data) {
+
+  return firstValue(data, [
+    "category",
+    "communityCategory",
+    "field",
+    "topic",
+    "sector"
+  ], "Community");
+
+}
+
+function getImage(data) {
+
+  return firstValue(data, [
+    "thumbnail",
+    "thumbnailUrl",
+    "cover",
+    "coverImage",
+    "image",
+    "imageUrl"
+  ], "");
+
+}
+
+function getPrice(data) {
+
+  const value = firstValue(data, [
+    "price",
+    "amount",
+    "cost",
+    "communityPrice"
+  ], 0);
+
+  const number = Number(
+    String(value)
+      .replace(/[^0-9.-]/g,"")
+  );
+
+  return Number.isFinite(number)
+    ? number
+    : 0;
+}
+
+function isPlan(data) {
+
+  const access = String(
+    firstValue(data, [
+      "access",
+      "accessType",
+      "membership",
+      "plan"
+    ], "")
+  ).toLowerCase();
+
+  return (
+    data?.isPremium === true ||
+    data?.premium === true ||
+    data?.paid === true ||
+    ["plan","premium","paid","pro"].includes(access)
+  );
+
+}
+
+function escapeHtml(value) {
+
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+
+}
+
+function formatPrice(amount) {
+
+  return new Intl.NumberFormat(
+    undefined,
+    {
+      minimumFractionDigits:0,
+      maximumFractionDigits:2
+    }
+  ).format(amount);
+
+}
+
+/*
+  Cart stores IDs only.
+  Example:
+  ["community123","community456"]
+*/
+
+function getCartIds() {
+
+  try {
+
+    const raw =
+      JSON.parse(
+        localStorage.getItem("communityCart") || "[]"
+      );
+
+    if (!Array.isArray(raw)) return [];
+
+    return [
+      ...new Set(
+        raw
+          .map(item => {
+
+            if (typeof item === "string") {
+              return item;
+            }
+
+            if (item && typeof item === "object") {
+              return item.id ||
+                     item.communityId ||
+                     "";
+            }
+
+            return "";
+
+          })
+          .filter(Boolean)
+      )
+    ];
+
+  } catch {
+
+    return [];
+
+  }
+
+}
+
+function saveCart(ids) {
+
+  localStorage.setItem(
+    "communityCart",
+    JSON.stringify([
+      ...new Set(ids)
+    ])
+  );
+
+}
+
+function removeCommunity(id) {
+
+  const ids =
+    getCartIds()
+      .filter(item => item !== id);
+
+  saveCart(ids);
+
+  loadCart();
+
+}
+
+function renderItems(items) {
+
+  $("items").innerHTML = items
+    .map(item => {
+
+      const image = item.image
+        ? `<img class="thumb"
+             src="${escapeHtml(item.image)}"
+             alt="${escapeHtml(item.title)}"
+             onerror="this.style.display='none'">`
+        : `<div class="thumb"></div>`;
+
+      return `
+        <article class="item">
+
+          ${image}
+
+          <div class="item-info">
+
+            <div class="item-title">
+              ${escapeHtml(item.title)}
+            </div>
+
+            <div class="description">
+              ${escapeHtml(item.description)}
+            </div>
+
+            <div class="category">
+              ${escapeHtml(item.category)}
+            </div>
+
+          </div>
+
+          <div class="price">
+            ${formatPrice(item.price)}
+          </div>
+
+          <button
+            class="remove"
+            data-remove="${escapeHtml(item.id)}"
+          >
+            Remove
+          </button>
+
+        </article>
+      `;
+
+    })
+    .join("");
+
+  document
+    .querySelectorAll("[data-remove]")
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => removeCommunity(
+          button.dataset.remove
+        )
+      );
+
+    });
+
+}
+
+async function loadCart() {
+
+  $("loading").style.display = "block";
+  $("error").style.display = "none";
+  $("empty").style.display = "none";
+  $("cartLayout").style.display = "none";
+
+  const ids = getCartIds();
+
+  if (!ids.length) {
+
+    $("loading").style.display = "none";
+    $("empty").style.display = "block";
+
+    return;
+
+  }
+
+  const items = [];
+  const validIds = [];
+
+  for (const id of ids) {
+
+    try {
+
+      const snap = await getDoc(
+        doc(db, "communities", id)
+      );
+
+      if (!snap.exists()) continue;
+
+      const data = snap.data();
+
+      /*
+        Cart should contain PLAN communities only.
+        Free communities are automatically removed.
+      */
+
+      if (!isPlan(data)) continue;
+
+      const item = {
+        id: snap.id,
+        title: getTitle(data),
+        description: getDescription(data),
+        category: getCategory(data),
+        image: getImage(data),
+        price: getPrice(data)
+      };
+
+      items.push(item);
+      validIds.push(snap.id);
+
+    } catch(error) {
+
+      console.error(
+        "Unable to load community:",
+        id,
+        error
+      );
+
+    }
+
+  }
+
+  /*
+    Clean invalid/free/missing IDs.
+  */
+
+  saveCart(validIds);
+
+  if (!items.length) {
+
+    $("loading").style.display = "none";
+    $("empty").style.display = "block";
+
+    return;
+
+  }
+
+  renderItems(items);
+
+  const subtotal =
+    items.reduce(
+      (sum,item) => sum + item.price,
+      0
+    );
+
+  $("count").textContent =
+    items.length;
+
+  $("subtotal").textContent =
+    formatPrice(subtotal);
+
+  $("total").textContent =
+    formatPrice(subtotal);
+
+  $("loading").style.display = "none";
+  $("cartLayout").style.display = "grid";
+
+}
+
+$("clearBtn").addEventListener(
+  "click",
+  () => {
+
+    saveCart([]);
+
+    loadCart();
+
+  }
+);
+
+loadCart().catch(error => {
+
+  console.error(error);
+
+  $("loading").style.display = "none";
+
+  $("error").textContent =
+    "Unable to load your community cart.";
+
+  $("error").style.display = "block";
+
+});
+
+</script>
+
+</body>
+</html>
