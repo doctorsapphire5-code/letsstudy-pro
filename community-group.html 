@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Community Group · LetsStudy Pro</title>
+  <meta name="description" content="Join your LetsStudy Pro community group and connect, learn and collaborate.">
+
+  <style>
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,Arial,sans-serif;
+      background:#f5f7fb;
+      color:#172033;
+    }
+    .topbar{
+      background:#fff;
+      border-bottom:1px solid #e7eaf0;
+      padding:16px 20px;
+      position:sticky;
+      top:0;
+      z-index:20;
+    }
+    .nav{
+      max-width:1100px;
+      margin:auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:15px;
+    }
+    .brand{
+      font-size:20px;
+      font-weight:800;
+      color:#2563eb;
+    }
+    .back{
+      text-decoration:none;
+      color:#334155;
+      font-weight:600;
+    }
+    .container{
+      max-width:1100px;
+      margin:35px auto;
+      padding:0 18px;
+    }
+    .hero{
+      background:#fff;
+      border-radius:22px;
+      padding:30px;
+      border:1px solid #e7eaf0;
+      box-shadow:0 8px 30px rgba(15,23,42,.06);
+    }
+    .cover{
+      width:100%;
+      height:280px;
+      object-fit:cover;
+      border-radius:17px;
+      background:#e9eef7;
+      display:none;
+    }
+    .badge{
+      display:inline-flex;
+      margin-top:22px;
+      padding:7px 12px;
+      border-radius:999px;
+      background:#dcfce7;
+      color:#166534;
+      font-size:13px;
+      font-weight:800;
+    }
+    h1{
+      margin:12px 0 10px;
+      font-size:clamp(30px,5vw,48px);
+    }
+    .description{
+      color:#64748b;
+      line-height:1.7;
+      font-size:16px;
+      max-width:800px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 320px;
+      gap:22px;
+      margin-top:22px;
+    }
+    .card{
+      background:#fff;
+      border:1px solid #e7eaf0;
+      border-radius:18px;
+      padding:24px;
+    }
+    .card h2{
+      margin-top:0;
+      font-size:21px;
+    }
+    ul{
+      padding-left:20px;
+      line-height:1.9;
+      color:#475569;
+    }
+    .info{
+      display:flex;
+      justify-content:space-between;
+      padding:13px 0;
+      border-bottom:1px solid #edf0f4;
+      gap:10px;
+    }
+    .info:last-child{border-bottom:0}
+    .info span:first-child{
+      color:#64748b;
+    }
+    .join{
+      display:block;
+      width:100%;
+      padding:14px 18px;
+      border:0;
+      border-radius:12px;
+      background:#2563eb;
+      color:#fff;
+      text-align:center;
+      font-weight:800;
+      text-decoration:none;
+      cursor:pointer;
+      margin-top:18px;
+    }
+    .join:hover{background:#1d4ed8}
+    .loading,.error{
+      text-align:center;
+      padding:70px 20px;
+      color:#64748b;
+    }
+    .error{color:#dc2626}
+    @media(max-width:800px){
+      .grid{grid-template-columns:1fr}
+      .hero{padding:20px}
+      .cover{height:210px}
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <nav class="nav">
+    <div class="brand">LetsStudy Pro</div>
+    <a class="back" href="community.html">← Communities</a>
+  </nav>
+</header>
+
+<main class="container">
+
+  <div id="loading" class="loading">
+    Loading community...
+  </div>
+
+  <div id="error" class="error" style="display:none"></div>
+
+  <section id="content" style="display:none">
+
+    <div class="hero">
+
+      <img id="cover" class="cover" alt="Community cover">
+
+      <span class="badge">FREE COMMUNITY</span>
+
+      <h1 id="title">Community</h1>
+
+      <p id="description" class="description"></p>
+
+    </div>
+
+    <div class="grid">
+
+      <div>
+
+        <div class="card">
+          <h2>About This Community</h2>
+          <p id="about" class="description"></p>
+        </div>
+
+        <div id="featuresCard" class="card" style="margin-top:22px">
+          <h2>What You Can Do</h2>
+          <ul id="features"></ul>
+        </div>
+
+      </div>
+
+      <aside class="card">
+
+        <h2>Community Information</h2>
+
+        <div class="info">
+          <span>Category</span>
+          <strong id="category">—</strong>
+        </div>
+
+        <div class="info">
+          <span>Members</span>
+          <strong id="members">—</strong>
+        </div>
+
+        <div class="info">
+          <span>Access</span>
+          <strong>Free</strong>
+        </div>
+
+        <a id="joinBtn" class="join" href="#">
+          Join Community
+        </a>
+
+      </aside>
+
+    </div>
+
+  </section>
+
+</main>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBcOYDfAVK5XbkljsyRgI_0rj0odBn678tCc",
+  authDomain: "let-s-study-pro-course.firebaseapp.com",
+  databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId: "let-s-study-pro-course",
+  storageBucket: "let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId: "474928293390",
+  appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId: "G-85B7V5H5J0"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const params = new URLSearchParams(location.search);
+const communityId = params.get("id");
+
+const $ = id => document.getElementById(id);
+
+function firstValue(data, keys, fallback = "") {
+  for (const key of keys) {
+    const value = data?.[key];
+    if (value !== undefined && value !== null && value !== "") {
+      return value;
+    }
+  }
+  return fallback;
+}
+
+function toArray(value) {
+  if (Array.isArray(value)) return value;
+
+  if (typeof value === "string") {
+    return value
+      .split(/\r?\n|,/)
+      .map(x => x.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+function isPlan(data) {
+
+  const access = String(
+    firstValue(data, [
+      "access",
+      "accessType",
+      "membership",
+      "plan"
+    ], "")
+  ).toLowerCase();
+
+  return (
+    data?.isPremium === true ||
+    data?.premium === true ||
+    data?.paid === true ||
+    ["plan","premium","paid","pro"].includes(access)
+  );
+}
+
+async function loadCommunity() {
+
+  if (!communityId) {
+    throw new Error("Community not found.");
+  }
+
+  const snap = await getDoc(
+    doc(db, "communities", communityId)
+  );
+
+  if (!snap.exists()) {
+    throw new Error("This community is not available.");
+  }
+
+  const data = snap.data();
+
+  /*
+    This page is ONLY for FREE communities.
+    Plan communities are redirected to cart.
+  */
+
+  if (isPlan(data)) {
+    location.href =
+      `community-cart.html?id=${encodeURIComponent(communityId)}`;
+    return;
+  }
+
+  const title = firstValue(data, [
+    "title",
+    "name",
+    "communityTitle",
+    "communityName"
+  ], "Community");
+
+  const description = firstValue(data, [
+    "description",
+    "summary",
+    "shortDescription",
+    "overview",
+    "content"
+  ], "");
+
+  const about = firstValue(data, [
+    "about",
+    "overview",
+    "description",
+    "details",
+    "content"
+  ], description);
+
+  const category = firstValue(data, [
+    "category",
+    "communityCategory",
+    "field",
+    "topic",
+    "sector"
+  ], "General");
+
+  const members = firstValue(data, [
+    "members",
+    "memberCount",
+    "membersCount",
+    "totalMembers"
+  ], "Open");
+
+  const image = firstValue(data, [
+    "cover",
+    "coverImage",
+    "image",
+    "imageUrl",
+    "thumbnail",
+    "thumbnailUrl"
+  ], "");
+
+  const features = toArray(firstValue(data, [
+    "features",
+    "benefits",
+    "activities",
+    "whatYouGet"
+  ], []));
+
+  $("title").textContent = title;
+  $("description").textContent = description;
+  $("about").textContent = about;
+  $("category").textContent = category;
+  $("members").textContent = members;
+
+  if (image) {
+    $("cover").src = image;
+    $("cover").style.display = "block";
+  }
+
+  if (features.length) {
+
+    $("features").innerHTML = features
+      .map(item => `<li>${escapeHtml(item)}</li>`)
+      .join("");
+
+  } else {
+
+    $("featuresCard").style.display = "none";
+
+  }
+
+  /*
+    Internal ID is used only for routing.
+    It is never displayed.
+  */
+
+  $("joinBtn").href =
+    `community-join.html?id=${encodeURIComponent(communityId)}`;
+
+  $("loading").style.display = "none";
+  $("content").style.display = "block";
+}
+
+loadCommunity().catch(error => {
+
+  console.error(error);
+
+  $("loading").style.display = "none";
+  $("error").textContent =
+    error.message || "Unable to load community.";
+
+  $("error").style.display = "block";
+
+});
+
+</script>
+
+</body>
+</html>
