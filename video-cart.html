@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Video Cart · LetsStudy Pro</title>
+  <meta name="description" content="Review your selected LetsStudy Pro videos before checkout.">
+
+  <link rel="icon" href="favicon.png">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f6f8fc;
+      color: #172033;
+    }
+
+    header {
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .nav {
+      max-width: 1200px;
+      margin: auto;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      color: #2563eb;
+      font-size: 21px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .back {
+      color: #475569;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 35px auto;
+      padding: 0 20px;
+    }
+
+    .heading {
+      margin-bottom: 25px;
+    }
+
+    .heading h1 {
+      font-size: 34px;
+      margin-bottom: 7px;
+    }
+
+    .heading p {
+      color: #64748b;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 350px;
+      gap: 25px;
+      align-items: start;
+    }
+
+    .cart-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .item {
+      background: #fff;
+      border-radius: 18px;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 180px 1fr auto;
+      gap: 18px;
+      align-items: center;
+      box-shadow: 0 7px 25px rgba(0,0,0,.06);
+    }
+
+    .thumb {
+      width: 180px;
+      height: 105px;
+      object-fit: cover;
+      border-radius: 12px;
+      background: #e2e8f0;
+    }
+
+    .category {
+      display: inline-block;
+      background: #eff6ff;
+      color: #2563eb;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 7px;
+    }
+
+    .item h2 {
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+
+    .item p {
+      color: #64748b;
+      font-size: 14px;
+      margin-bottom: 7px;
+    }
+
+    .item-price {
+      font-weight: 800;
+      color: #2563eb;
+    }
+
+    .remove {
+      border: 0;
+      background: #fee2e2;
+      color: #dc2626;
+      padding: 9px 12px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .remove:hover {
+      background: #fecaca;
+    }
+
+    .summary {
+      background: #fff;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 7px 25px rgba(0,0,0,.06);
+      position: sticky;
+      top: 90px;
+    }
+
+    .summary h2 {
+      margin-bottom: 20px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      margin: 13px 0;
+      color: #64748b;
+    }
+
+    .row strong {
+      color: #172033;
+    }
+
+    .total {
+      border-top: 1px solid #e5e7eb;
+      padding-top: 18px;
+      margin-top: 18px;
+      font-size: 21px;
+      font-weight: 900;
+      color: #172033;
+    }
+
+    .checkout {
+      display: block;
+      width: 100%;
+      margin-top: 20px;
+      padding: 15px;
+      border: 0;
+      border-radius: 12px;
+      background: #2563eb;
+      color: white;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .checkout:hover {
+      background: #1d4ed8;
+    }
+
+    .clear {
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      background: white;
+      color: #dc2626;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .empty,
+    .loading,
+    .error {
+      background: #fff;
+      border-radius: 18px;
+      padding: 50px 20px;
+      text-align: center;
+      box-shadow: 0 7px 25px rgba(0,0,0,.05);
+    }
+
+    .empty h2 {
+      margin-bottom: 8px;
+    }
+
+    .empty p {
+      color: #64748b;
+      margin-bottom: 20px;
+    }
+
+    .browse {
+      display: inline-block;
+      background: #2563eb;
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    footer {
+      text-align: center;
+      color: #64748b;
+      padding: 45px 20px;
+    }
+
+    @media (max-width: 850px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .summary {
+        position: static;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .item {
+        grid-template-columns: 1fr;
+      }
+
+      .thumb {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16 / 9;
+      }
+
+      .remove {
+        width: 100%;
+      }
+
+      .heading h1 {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="index.html" class="brand">LetsStudy Pro</a>
+    <a href="videos.html" class="back">← Videos</a>
+  </nav>
+</header>
+
+<main>
+
+  <div class="heading">
+    <h1>Your Video Cart</h1>
+    <p>Review your selected videos before checkout.</p>
+  </div>
+
+  <div id="loading" class="loading">
+    Loading your video cart...
+  </div>
+
+  <div id="error" class="error" style="display:none;"></div>
+
+  <div id="empty" class="empty" style="display:none;">
+    <h2>Your video cart is empty</h2>
+    <p>Add a plan video to continue.</p>
+    <a href="videos.html" class="browse">Browse Videos</a>
+  </div>
+
+  <section id="cartLayout" class="layout" style="display:none;">
+
+    <div id="cartList" class="cart-list"></div>
+
+    <aside class="summary">
+
+      <h2>Order Summary</h2>
+
+      <div class="row">
+        <span>Videos</span>
+        <strong id="itemCount">0</strong>
+      </div>
+
+      <div class="row">
+        <span>Subtotal</span>
+        <strong id="subtotal">TZS 0</strong>
+      </div>
+
+      <div class="row">
+        <span>Access</span>
+        <strong>Plan</strong>
+      </div>
+
+      <div class="row total">
+        <span>Total</span>
+        <strong id="total">TZS 0</strong>
+      </div>
+
+      <button id="checkoutBtn" class="checkout">
+        Continue to Checkout
+      </button>
+
+      <button id="clearBtn" class="clear">
+        Clear Cart
+      </button>
+
+    </aside>
+
+  </section>
+
+</main>
+
+<footer>
+  © <span id="year"></span> LetsStudy Pro. All rights reserved.
+</footer>
+
+
+<script type="module">
+
+  import {
+    initializeApp
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
+  import {
+    getFirestore,
+    doc,
+    getDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+
+  /* =========================
+     FIREBASE
+  ========================= */
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBcOYDfAVK5XbkljsyRgI_0rj0odBn678tCc",
+    authDomain: "let-s-study-pro-course.firebaseapp.com",
+    databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+    projectId: "let-s-study-pro-course",
+    storageBucket: "let-s-study-pro-course.firebasestorage.app",
+    messagingSenderId: "474928293390",
+    appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+    measurementId: "G-85B7V5H5J0"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+
+  /* =========================
+     DOM
+  ========================= */
+
+  const loading =
+    document.getElementById("loading");
+
+  const errorBox =
+    document.getElementById("error");
+
+  const empty =
+    document.getElementById("empty");
+
+  const cartLayout =
+    document.getElementById("cartLayout");
+
+  const cartList =
+    document.getElementById("cartList");
+
+  const itemCount =
+    document.getElementById("itemCount");
+
+  const subtotal =
+    document.getElementById("subtotal");
+
+  const total =
+    document.getElementById("total");
+
+  const checkoutBtn =
+    document.getElementById("checkoutBtn");
+
+  const clearBtn =
+    document.getElementById("clearBtn");
+
+
+  document.getElementById("year").textContent =
+    new Date().getFullYear();
+
+
+  /* =========================
+     HELPERS
+  ========================= */
+
+  function firstValue(obj, keys, fallback = "") {
+
+    for (const key of keys) {
+
+      const value = obj?.[key];
+
+      if (
+        value !== undefined &&
+        value !== null &&
+        String(value).trim() !== ""
+      ) {
+        return value;
+      }
+    }
+
+    return fallback;
+  }
+
+
+  function escapeHtml(value) {
+
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+
+  }
+
+
+  function getPrice(data) {
+
+    const value = firstValue(
+      data,
+      [
+        "price",
+        "amount",
+        "cost",
+        "videoPrice"
+      ],
+      0
+    );
+
+    const number = Number(value);
+
+    return Number.isFinite(number)
+      ? number
+      : 0;
+  }
+
+
+  function formatPrice(value) {
+
+    return new Intl.NumberFormat(
+      undefined,
+      {
+        style: "currency",
+        currency: "TZS",
+        maximumFractionDigits: 0
+      }
+    ).format(value || 0);
+
+  }
+
+
+  function isPlanVideo(data) {
+
+    const access = String(
+      firstValue(
+        data,
+        [
+          "access",
+          "accessType",
+          "membership",
+          "plan"
+        ],
+        ""
+      )
+    ).toLowerCase().trim();
+
+
+    if (
+      access === "plan" ||
+      access === "premium" ||
+      access === "paid"
+    ) {
+      return true;
+    }
+
+
+    if (
+      data?.isPremium === true ||
+      data?.premium === true ||
+      data?.paid === true
+    ) {
+      return true;
+    }
+
+
+    return false;
+  }
+
+
+  /* =========================
+     CART STORAGE
+  ========================= */
+
+  function getCart() {
+
+    try {
+
+      const data =
+        JSON.parse(
+          localStorage.getItem("videoCart") || "[]"
+        );
+
+
+      if (!Array.isArray(data)) {
+        return [];
+      }
+
+
+      return data
+        .map(item => {
+
+          if (typeof item === "string") {
+            return item;
+          }
+
+          return item?.id ||
+                 item?.videoId ||
+                 null;
+
+        })
+        .filter(Boolean);
+
+    } catch {
+
+      return [];
+
+    }
+
+  }
+
+
+  function saveCart(cart) {
+
+    localStorage.setItem(
+      "videoCart",
+      JSON.stringify([...new Set(cart)])
+    );
+
+  }
+
+
+  /* =========================
+     ERROR
+  ========================= */
+
+  function showError(message) {
+
+    loading.style.display = "none";
+    cartLayout.style.display = "none";
+    empty.style.display = "none";
+
+    errorBox.textContent = message;
+    errorBox.style.display = "block";
+
+  }
+
+
+  /* =========================
+     REMOVE
+  ========================= */
+
+  function removeVideo(id) {
+
+    const cart =
+      getCart().filter(
+        videoId => videoId !== id
+      );
+
+    saveCart(cart);
+
+    loadCart();
+
+  }
+
+
+  /* =========================
+     CLEAR
+  ========================= */
+
+  clearBtn.onclick = () => {
+
+    if (!confirm("Clear your video cart?")) {
+      return;
+    }
+
+    localStorage.removeItem("videoCart");
+
+    loadCart();
+
+  };
+
+
+  /* =========================
+     LOAD CART
+  ========================= */
+
+  async function loadCart() {
+
+    loading.style.display = "block";
+    errorBox.style.display = "none";
+    empty.style.display = "none";
+    cartLayout.style.display = "none";
+
+    cartList.innerHTML = "";
+
+
+    const cart =
+      getCart();
+
+
+    if (!cart.length) {
+
+      loading.style.display = "none";
+      empty.style.display = "block";
+
+      return;
+    }
+
+
+    const videos = [];
+    const validIds = [];
+
+
+    try {
+
+      for (const id of cart) {
+
+        const snap =
+          await getDoc(
+            doc(db, "videos", id)
+          );
+
+
+        if (!snap.exists()) {
+          continue;
+        }
+
+
+        const data =
+          snap.data();
+
+
+        /*
+          Only PLAN videos belong
+          in the paid cart.
+        */
+
+        if (!isPlanVideo(data)) {
+          continue;
+        }
+
+
+        videos.push({
+          id,
+          data
+        });
+
+        validIds.push(id);
+
+      }
+
+
+      /*
+        Clean missing/free videos
+        from local cart.
+      */
+
+      saveCart(validIds);
+
+
+      if (!videos.length) {
+
+        loading.style.display = "none";
+        empty.style.display = "block";
+
+        return;
+      }
+
+
+      let sum = 0;
+
+
+      videos.forEach(item => {
+
+        const data = item.data;
+
+        const title =
+          firstValue(
+            data,
+            [
+              "title",
+              "name",
+              "videoTitle",
+              "videoName"
+            ],
+            "Untitled Video"
+          );
+
+
+        const description =
+          firstValue(
+            data,
+            [
+              "description",
+              "summary",
+              "shortDescription",
+              "overview"
+            ],
+            "Educational video."
+          );
+
+
+        const category =
+          firstValue(
+            data,
+            [
+              "category",
+              "subject",
+              "field",
+              "topic"
+            ],
+            "Video"
+          );
+
+
+        const image =
+          firstValue(
+            data,
+            [
+              "thumbnail",
+              "thumbnailUrl",
+              "image",
+              "imageUrl",
+              "poster",
+              "posterUrl"
+            ],
+            "https://via.placeholder.com/640x360?text=LetsStudy+Pro"
+          );
+
+
+        const duration =
+          firstValue(
+            data,
+            [
+              "duration",
+              "length",
+              "videoDuration"
+            ],
+            ""
+          );
+
+
+        const videoPrice =
+          getPrice(data);
+
+
+        sum += videoPrice;
+
+
+        const itemEl =
+          document.createElement("article");
+
+        itemEl.className = "item";
+
+
+        itemEl.innerHTML = `
+
+          <img
+            class="thumb"
+            src="${escapeHtml(image)}"
+            alt="${escapeHtml(title)}"
+            loading="lazy"
+          >
+
+          <div>
+
+            <span class="category">
+              ${escapeHtml(category)}
+            </span>
+
+            <h2>
+              ${escapeHtml(title)}
+            </h2>
+
+            <p>
+              ${escapeHtml(description)}
+            </p>
+
+            ${
+              duration
+                ? `<p>Duration: ${escapeHtml(duration)}</p>`
+                : ""
+            }
+
+            <div class="item-price">
+              ${formatPrice(videoPrice)}
+            </div>
+
+          </div>
+
+          <button
+            class="remove"
+            type="button"
+            data-id="${escapeHtml(item.id)}"
+          >
+            Remove
+          </button>
+
+        `;
+
+
+        const removeBtn =
+          itemEl.querySelector(".remove");
+
+
+        removeBtn.addEventListener(
+          "click",
+          () => removeVideo(item.id)
+        );
+
+
+        cartList.appendChild(itemEl);
+
+      });
+
+
+      itemCount.textContent =
+        videos.length;
+
+      subtotal.textContent =
+        formatPrice(sum);
+
+      total.textContent =
+        formatPrice(sum);
+
+
+      checkoutBtn.onclick = () => {
+
+        if (!videos.length) {
+          return;
+        }
+
+        window.location.href =
+          "video-checkout.html";
+
+      };
+
+
+      loading.style.display = "none";
+      cartLayout.style.display = "grid";
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      showError(
+        "Unable to load your video cart. Please try again."
+      );
+
+    }
+
+  }
+
+
+  /* =========================
+     START
+  ========================= */
+
+  loadCart();
+
+</script>
+
+</body>
+</html>
