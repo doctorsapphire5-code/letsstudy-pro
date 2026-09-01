@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Marketplace Item | LetsStudy Pro</title>
+
+<meta name="description"
+content="View marketplace item details on LetsStudy Pro.">
+
+<meta name="robots" content="index,follow">
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0
+}
+
+body{
+  font-family:Arial,sans-serif;
+  background:#f5f7fb;
+  color:#172033;
+  line-height:1.55
+}
+
+header{
+  background:#fff;
+  border-bottom:1px solid #e5e7eb;
+  padding:15px 6%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  z-index:20
+}
+
+.logo{
+  color:#172033;
+  text-decoration:none;
+  font-size:21px;
+  font-weight:800
+}
+
+.logo span{
+  color:#2563eb
+}
+
+.back{
+  border:0;
+  background:#eef2f7;
+  padding:9px 14px;
+  border-radius:8px;
+  cursor:pointer
+}
+
+.container{
+  width:92%;
+  max-width:950px;
+  margin:30px auto
+}
+
+.card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:17px;
+  padding:25px;
+  margin-bottom:16px
+}
+
+.hero{
+  padding:32px 25px
+}
+
+.tag{
+  display:inline-block;
+  background:#eff6ff;
+  color:#2563eb;
+  padding:6px 10px;
+  border-radius:7px;
+  font-size:11px;
+  font-weight:700;
+  margin-bottom:12px
+}
+
+h1{
+  font-size:32px;
+  line-height:1.2;
+  margin-bottom:10px
+}
+
+h2{
+  font-size:19px;
+  margin-bottom:13px
+}
+
+.description{
+  color:#64748b;
+  font-size:14px;
+  max-width:780px
+}
+
+.price{
+  font-size:28px;
+  font-weight:800;
+  margin-top:20px
+}
+
+.meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px 20px;
+  margin-top:17px;
+  color:#64748b;
+  font-size:12px
+}
+
+.actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:20px
+}
+
+.btn{
+  display:inline-block;
+  padding:11px 16px;
+  border-radius:9px;
+  text-decoration:none;
+  font-size:13px;
+  font-weight:800
+}
+
+.primary{
+  background:#2563eb;
+  color:#fff
+}
+
+.secondary{
+  background:#eef2f7;
+  color:#172033
+}
+
+.content{
+  color:#475569;
+  font-size:14px;
+  overflow-wrap:anywhere
+}
+
+.features{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px
+}
+
+.feature{
+  border:1px solid #e5e7eb;
+  border-radius:9px;
+  padding:12px;
+  font-size:13px
+}
+
+.loading,
+.error{
+  background:#fff;
+  border-radius:15px;
+  padding:55px 20px;
+  text-align:center
+}
+
+.loading{
+  color:#64748b
+}
+
+.error{
+  color:#b91c1c
+}
+
+@media(max-width:600px){
+
+  .hero{
+    padding:24px 18px
+  }
+
+  h1{
+    font-size:27px
+  }
+
+  .features{
+    grid-template-columns:1fr
+  }
+
+}
+</style>
+</head>
+
+<body>
+
+<header>
+
+  <a
+    href="index.html"
+    class="logo"
+  >
+    LetsStudy <span>Pro</span>
+  </a>
+
+  <button
+    class="back"
+    onclick="history.back()"
+  >
+    Back
+  </button>
+
+</header>
+
+
+<main class="container">
+
+  <div
+    id="page"
+    class="loading"
+  >
+    Loading marketplace item...
+  </div>
+
+</main>
+
+
+<script>
+
+/*
+==================================================
+MARKETPLACE-VIEW.HTML
+
+URL:
+
+marketplace-view.html?id=ITEM_ID
+
+API:
+
+GET
+/api/data?collection=marketplace&id=ITEM_ID
+
+SUPPORTED FIELDS:
+
+id
+documentId
+title
+name
+description
+summary
+content
+details
+category
+price
+amount
+currency
+type
+availability
+stock
+seller
+features
+image
+featured
+published
+
+CHECKOUT:
+
+checkout-marketplace.html?id=ITEM_ID
+
+NO DIRECT FIREBASE
+==================================================
+*/
+
+
+const params =
+  new URLSearchParams(
+    location.search
+  );
+
+
+const itemId =
+  params.get("id") ||
+  params.get("documentId") ||
+  "";
+
+
+const page =
+  document.getElementById(
+    "page"
+  );
+
+
+let item = null;
+
+
+/* =========================
+   VALIDATE ID
+========================= */
+
+if(!itemId){
+
+  showError(
+    "No marketplace item was selected."
+  );
+
+}else{
+
+  loadItem();
+
+}
+
+
+/* =========================
+   LOAD ITEM
+========================= */
+
+async function loadItem(){
+
+  try{
+
+    const response =
+      await fetch(
+        "/api/data?collection=marketplace&id=" +
+        encodeURIComponent(
+          itemId
+        )
+      );
+
+
+    const result =
+      await response.json();
+
+
+    if(!response.ok){
+
+      throw new Error(
+        result.error ||
+        "Unable to load marketplace item."
+      );
+
+    }
+
+
+    item =
+      result.data ||
+      result.item ||
+      result.product;
+
+
+    if(!item){
+
+      throw new Error(
+        "Marketplace item not found."
+      );
+
+    }
+
+
+    renderItem();
+
+  }catch(error){
+
+    console.error(
+      "MARKETPLACE VIEW:",
+      error
+    );
+
+
+    showError(
+      error.message
+    );
+
+  }
+
+}
+
+
+/* =========================
+   RENDER
+========================= */
+
+function renderItem(){
+
+  const id =
+    item.documentId ||
+    item.id ||
+    itemId;
+
+
+  const title =
+    item.title ||
+    item.name ||
+    "Marketplace Item";
+
+
+  const description =
+    item.description ||
+    item.summary ||
+    "Marketplace item available on LetsStudy Pro.";
+
+
+  const category =
+    item.category ||
+    "Marketplace";
+
+
+  const price =
+    Number(
+      item.price ||
+      item.amount ||
+      0
+    );
+
+
+  const currency =
+    item.currency ||
+    "TZS";
+
+
+  const availability =
+    item.availability ||
+    "";
+
+
+  const stock =
+    item.stock;
+
+
+  const features =
+    Array.isArray(
+      item.features
+    )
+    ? item.features
+    : [];
+
+
+  const content =
+    item.content ||
+    item.details ||
+    "";
+
+
+  const checkout =
+    "checkout-marketplace.html?id=" +
+    encodeURIComponent(
+      id
+    );
+
+
+  page.className = "";
+
+
+  page.innerHTML = `
+
+    <section class="card hero">
+
+      ${
+        item.featured === true
+        ? `
+
+          <div
+            class="tag"
+          >
+            FEATURED
+          </div>
+
+        `
+        : `
+
+          <div
+            class="tag"
+          >
+            ${escapeHTML(category)}
+          </div>
+
+        `
+      }
+
+
+      <h1>
+
+        ${escapeHTML(title)}
+
+      </h1>
+
+
+      <p class="description">
+
+        ${escapeHTML(
+          description
+        )}
+
+      </p>
+
+
+      ${
+        price > 0
+        ? `
+
+          <div class="price">
+
+            ${escapeHTML(currency)}
+            ${formatNumber(price)}
+
+          </div>
+
+        `
+        : `
+
+          <div class="price">
+            Contact for price
+          </div>
+
+        `
+      }
+
+
+      <div class="meta">
+
+        ${
+          availability
+          ? `
+
+            <span>
+
+              Availability:
+              ${escapeHTML(
+                availability
+              )}
+
+            </span>
+
+          `
+          : ""
+        }
+
+
+        ${
+          stock !== undefined &&
+          stock !== null &&
+          stock !== ""
+          ? `
+
+            <span>
+
+              Stock:
+              ${escapeHTML(stock)}
+
+            </span>
+
+          `
+          : ""
+        }
+
+
+        ${
+          item.type
+          ? `
+
+            <span>
+
+              Type:
+              ${escapeHTML(
+                item.type
+              )}
+
+            </span>
+
+          `
+          : ""
+        }
+
+      </div>
+
+
+      <div class="actions">
+
+        <a
+          href="${checkout}"
+          class="btn primary"
+        >
+          Buy / Continue
+        </a>
+
+
+        <a
+          href="marketplace.html"
+          class="btn secondary"
+        >
+          Marketplace
+        </a>
+
+      </div>
+
+    </section>
+
+
+    ${
+      content
+      ? `
+
+        <section class="card">
+
+          <h2>
+            About This Item
+          </h2>
+
+          <div class="content">
+
+            ${escapeHTML(
+              content
+            ).replace(
+              /\n/g,
+              "<br>"
+            )}
+
+          </div>
+
+        </section>
+
+      `
+      : ""
+    }
+
+
+    ${
+      features.length
+      ? `
+
+        <section class="card">
+
+          <h2>
+            What's Included
+          </h2>
+
+          <div class="features">
+
+            ${
+              features
+                .map(
+                  feature => `
+
+                    <div class="feature">
+
+                      ✓
+                      ${escapeHTML(
+                        typeof feature ===
+                        "object"
+                        ? feature.title ||
+                          feature.name ||
+                          ""
+                        : feature
+                      )}
+
+                    </div>
+
+                  `
+                )
+                .join("")
+            }
+
+          </div>
+
+        </section>
+
+      `
+      : ""
+    }
+
+
+    <section class="card">
+
+      <h2>
+        Ready to continue?
+      </h2>
+
+      <p class="description">
+
+        Continue to checkout to complete your order.
+
+      </p>
+
+
+      <div class="actions">
+
+        <a
+          href="${checkout}"
+          class="btn primary"
+        >
+          Continue to Checkout
+        </a>
+
+      </div>
+
+    </section>
+
+  `;
+
+}
+
+
+/* =========================
+   ERROR
+========================= */
+
+function showError(
+  message
+){
+
+  page.className =
+    "error";
+
+
+  page.innerHTML = `
+
+    <h2>
+      Unable to open item
+    </h2>
+
+    <p style="margin-top:10px">
+
+      ${escapeHTML(message)}
+
+    </p>
+
+
+    <button
+      class="back"
+      style="margin-top:20px"
+      onclick="history.back()"
+    >
+      Go Back
+    </button>
+
+  `;
+
+}
+
+
+/* =========================
+   NUMBER
+========================= */
+
+function formatNumber(
+  value
+){
+
+  return new Intl.NumberFormat(
+    undefined,
+    {
+      maximumFractionDigits:0
+    }
+  ).format(
+    Number(value) || 0
+  );
+
+}
+
+
+/* =========================
+   SECURITY
+========================= */
+
+function escapeHTML(
+  value
+){
+
+  return String(
+    value ?? ""
+  )
+  .replace(/&/g,"&amp;")
+  .replace(/</g,"&lt;")
+  .replace(/>/g,"&gt;")
+  .replace(/"/g,"&quot;")
+  .replace(/'/g,"&#039;");
+
+}
+
+</script>
+
+</body>
+</html>
