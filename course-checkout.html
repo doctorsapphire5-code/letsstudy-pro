@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<title>Course Checkout | LetsStudy Pro</title>
+
+<meta name="description"
+      content="Secure course checkout on LetsStudy Pro. Review your selected courses and complete your order.">
+
+<link rel="icon" href="favicon.ico">
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Inter,Arial,sans-serif;
+  background:#f5f7fb;
+  color:#172033;
+}
+
+header{
+  background:#fff;
+  border-bottom:1px solid #e8ebf2;
+  padding:18px 24px;
+  position:sticky;
+  top:0;
+  z-index:20;
+}
+
+.header-inner{
+  max-width:1150px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+}
+
+.logo{
+  font-size:21px;
+  font-weight:800;
+  text-decoration:none;
+  color:#111827;
+}
+
+.logo span{
+  color:#2563eb;
+}
+
+.back{
+  text-decoration:none;
+  color:#2563eb;
+  font-weight:700;
+}
+
+.container{
+  max-width:1150px;
+  margin:40px auto;
+  padding:0 20px;
+}
+
+h1{
+  margin:0 0 8px;
+  font-size:34px;
+}
+
+.subtitle{
+  color:#667085;
+  margin-bottom:30px;
+}
+
+.layout{
+  display:grid;
+  grid-template-columns:1fr 380px;
+  gap:28px;
+  align-items:start;
+}
+
+.card{
+  background:#fff;
+  border:1px solid #e7eaf0;
+  border-radius:18px;
+  padding:24px;
+  box-shadow:0 8px 30px rgba(15,23,42,.05);
+}
+
+.card h2{
+  margin-top:0;
+  font-size:20px;
+}
+
+.course{
+  display:flex;
+  gap:15px;
+  padding:15px 0;
+  border-bottom:1px solid #edf0f5;
+}
+
+.course:last-child{
+  border-bottom:0;
+}
+
+.course img{
+  width:90px;
+  height:65px;
+  object-fit:cover;
+  border-radius:10px;
+  background:#eef2f7;
+}
+
+.course-info{
+  flex:1;
+}
+
+.course-title{
+  font-weight:800;
+  margin-bottom:7px;
+}
+
+.course-description{
+  color:#667085;
+  font-size:13px;
+  line-height:1.5;
+}
+
+.price{
+  font-weight:800;
+  white-space:nowrap;
+}
+
+.field{
+  margin-bottom:18px;
+}
+
+label{
+  display:block;
+  font-weight:700;
+  margin-bottom:7px;
+}
+
+input,
+select{
+  width:100%;
+  padding:13px 14px;
+  border:1px solid #d9dee8;
+  border-radius:10px;
+  font-size:15px;
+  outline:none;
+}
+
+input:focus,
+select:focus{
+  border-color:#2563eb;
+}
+
+.summary-row{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  margin:14px 0;
+}
+
+.total{
+  border-top:1px solid #e5e7eb;
+  margin-top:18px;
+  padding-top:18px;
+  font-size:21px;
+  font-weight:900;
+}
+
+.btn{
+  width:100%;
+  border:0;
+  border-radius:11px;
+  padding:15px;
+  font-size:16px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.primary{
+  background:#2563eb;
+  color:#fff;
+}
+
+.primary:hover{
+  background:#1d4ed8;
+}
+
+.primary:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
+.note{
+  margin-top:15px;
+  padding:12px;
+  background:#f8fafc;
+  border-radius:10px;
+  color:#667085;
+  font-size:13px;
+  line-height:1.5;
+}
+
+.status{
+  margin-bottom:20px;
+  padding:14px;
+  border-radius:10px;
+  display:none;
+}
+
+.error{
+  background:#fef2f2;
+  color:#b42318;
+}
+
+.success{
+  background:#ecfdf3;
+  color:#027a48;
+}
+
+.loading{
+  text-align:center;
+  padding:40px;
+  color:#667085;
+}
+
+.empty{
+  text-align:center;
+  padding:60px 20px;
+}
+
+.hidden{
+  display:none!important;
+}
+
+@media(max-width:800px){
+  .layout{
+    grid-template-columns:1fr;
+  }
+
+  h1{
+    font-size:28px;
+  }
+
+  .header-inner{
+    padding:0;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="header-inner">
+    <a class="logo" href="index.html">
+      LetsStudy <span>Pro</span>
+    </a>
+
+    <a class="back" href="course-cart.html">
+      ← Back to Cart
+    </a>
+  </div>
+</header>
+
+<main class="container">
+
+  <h1>Course Checkout</h1>
+  <div class="subtitle">
+    Review your courses and complete your order.
+  </div>
+
+  <div id="errorBox" class="status error"></div>
+  <div id="successBox" class="status success"></div>
+
+  <div id="loading" class="loading">
+    Loading your courses...
+  </div>
+
+  <div id="empty" class="empty card hidden">
+    <h2>Your cart is empty</h2>
+    <p>Add a course before continuing to checkout.</p>
+    <a href="courses.html" class="back">Browse Courses</a>
+  </div>
+
+  <div id="checkoutArea" class="layout hidden">
+
+    <!-- CUSTOMER INFORMATION -->
+    <section class="card">
+
+      <h2>Customer Information</h2>
+
+      <div class="field">
+        <label for="fullName">Full Name</label>
+        <input
+          id="fullName"
+          type="text"
+          placeholder="Enter your full name"
+          autocomplete="name">
+      </div>
+
+      <div class="field">
+        <label for="email">Email Address</label>
+        <input
+          id="email"
+          type="email"
+          placeholder="Enter your email address"
+          autocomplete="email">
+      </div>
+
+      <h2>Payment Method</h2>
+
+      <div class="field">
+        <label for="paymentMethod">Select payment method</label>
+
+        <select id="paymentMethod">
+          <option value="">Choose payment method</option>
+          <option value="mobile">Mobile Money</option>
+          <option value="card">Credit / Debit Card</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <button
+        id="checkoutBtn"
+        class="btn primary"
+        type="button">
+        Continue to Payment
+      </button>
+
+      <div class="note">
+        Your payment is not considered successful until it is
+        verified by the payment system. Do not close the page
+        while the payment process is starting.
+      </div>
+
+    </section>
+
+    <!-- ORDER SUMMARY -->
+    <aside class="card">
+
+      <h2>Order Summary</h2>
+
+      <div id="coursesList"></div>
+
+      <div class="summary-row">
+        <span>Subtotal</span>
+        <strong id="subtotal">0</strong>
+      </div>
+
+      <div class="summary-row">
+        <span>Discount</span>
+        <strong>0</strong>
+      </div>
+
+      <div class="summary-row total">
+        <span>Total</span>
+        <span id="total">0</span>
+      </div>
+
+    </aside>
+
+  </div>
+
+</main>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc
+}
+from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+
+/* =====================================================
+   FIREBASE
+===================================================== */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBcOYDfAVK5XbkljsyRgI_0rj0odBn678tCc",
+  authDomain: "let-s-study-pro-course.firebaseapp.com",
+  databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId: "let-s-study-pro-course",
+  storageBucket: "let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId: "474928293390",
+  appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId: "G-85B7V5H5J0"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+
+/* =====================================================
+   ELEMENTS
+===================================================== */
+
+const loading = document.getElementById("loading");
+const empty = document.getElementById("empty");
+const checkoutArea = document.getElementById("checkoutArea");
+
+const coursesList = document.getElementById("coursesList");
+const subtotalEl = document.getElementById("subtotal");
+const totalEl = document.getElementById("total");
+
+const errorBox = document.getElementById("errorBox");
+const successBox = document.getElementById("successBox");
+
+const checkoutBtn = document.getElementById("checkoutBtn");
+
+
+/* =====================================================
+   HELPERS
+===================================================== */
+
+function showError(message){
+  errorBox.textContent = message;
+  errorBox.style.display = "block";
+  successBox.style.display = "none";
+}
+
+function showSuccess(message){
+  successBox.textContent = message;
+  successBox.style.display = "block";
+  errorBox.style.display = "none";
+}
+
+function hideMessages(){
+  errorBox.style.display = "none";
+  successBox.style.display = "none";
+}
+
+function first(obj, fields, fallback=""){
+  for(const field of fields){
+    if(
+      obj &&
+      obj[field] !== undefined &&
+      obj[field] !== null &&
+      String(obj[field]).trim() !== ""
+    ){
+      return obj[field];
+    }
+  }
+
+  return fallback;
+}
+
+function getTitle(course){
+  return first(
+    course,
+    ["title","name","courseTitle"],
+    "Untitled Course"
+  );
+}
+
+function getDescription(course){
+  return first(
+    course,
+    ["description","shortDescription","summary"],
+    ""
+  );
+}
+
+function getImage(course){
+  return first(
+    course,
+    [
+      "thumbnail",
+      "thumbnailUrl",
+      "image",
+      "imageUrl",
+      "cover",
+      "coverImage"
+    ],
+    "assets/default-course.jpg"
+  );
+}
+
+function getPrice(course){
+
+  const value = first(
+    course,
+    [
+      "price",
+      "amount",
+      "coursePrice",
+      "planPrice",
+      "sellingPrice"
+    ],
+    0
+  );
+
+  const number = Number(value);
+
+  return Number.isFinite(number) ? number : 0;
+}
+
+function getAccess(course){
+
+  const value = first(
+    course,
+    [
+      "access",
+      "accessType",
+      "membership",
+      "plan",
+      "pricing"
+    ],
+    ""
+  );
+
+  return String(value).toLowerCase();
+}
+
+function isPaidCourse(course){
+
+  const access = getAccess(course);
+
+  if(
+    access.includes("plan") ||
+    access.includes("premium") ||
+    access.includes("paid")
+  ){
+    return true;
+  }
+
+  if(
+    course?.premium === true ||
+    course?.isPremium === true ||
+    course?.paid === true
+  ){
+    return true;
+  }
+
+  const price = getPrice(course);
+
+  return price > 0;
+}
+
+function formatPrice(amount){
+
+  return new Intl.NumberFormat(
+    undefined,
+    {
+      maximumFractionDigits:2
+    }
+  ).format(amount);
+}
+
+
+/* =====================================================
+   READ COURSE IDS FROM CART
+===================================================== */
+
+function getCartIds(){
+
+  let cart = [];
+
+  try{
+    cart = JSON.parse(
+      localStorage.getItem("courseCart") || "[]"
+    );
+  }catch(error){
+    cart = [];
+  }
+
+  if(!Array.isArray(cart)){
+    return [];
+  }
+
+  /*
+    Supports:
+
+    ["abc123","xyz789"]
+
+    and older:
+
+    [
+      {id:"abc123"},
+      {id:"xyz789"}
+    ]
+  */
+
+  return cart
+    .map(item => {
+
+      if(typeof item === "string"){
+        return item;
+      }
+
+      if(item && item.id){
+        return String(item.id);
+      }
+
+      return "";
+    })
+    .filter(Boolean);
+
+}
+
+
+/* =====================================================
+   LOAD COURSES FROM FIRESTORE
+===================================================== */
+
+let cartCourses = [];
+let subtotal = 0;
+
+async function loadCheckout(){
+
+  hideMessages();
+
+  const ids = getCartIds();
+
+  if(ids.length === 0){
+
+    loading.classList.add("hidden");
+    empty.classList.remove("hidden");
+
+    return;
+  }
+
+  try{
+
+    const loaded = [];
+
+    for(const courseId of ids){
+
+      /*
+        IMPORTANT:
+
+        Firebase document ID is used here.
+
+        courses/{COURSE_ID}
+      */
+
+      const courseRef = doc(
+        db,
+        "courses",
+        courseId
+      );
+
+      const snapshot = await getDoc(courseRef);
+
+      if(!snapshot.exists()){
+        continue;
+      }
+
+      const data = snapshot.data();
+
+      /*
+        Only paid/Plan courses belong
+        in this checkout.
+      */
+
+      if(!isPaidCourse(data)){
+        continue;
+      }
+
+      loaded.push({
+        id: courseId,
+        ...data
+      });
+
+    }
+
+    cartCourses = loaded;
+
+    if(cartCourses.length === 0){
+
+      loading.classList.add("hidden");
+      empty.classList.remove("hidden");
+
+      showError(
+        "No valid Plan courses were found in your cart."
+      );
+
+      return;
+    }
+
+    renderCourses();
+
+    loading.classList.add("hidden");
+    checkoutArea.classList.remove("hidden");
+
+  }catch(error){
+
+    console.error(error);
+
+    loading.classList.add("hidden");
+
+    showError(
+      "Unable to load your courses. Please try again."
+    );
+  }
+
+}
+
+
+/* =====================================================
+   RENDER COURSES
+===================================================== */
+
+function renderCourses(){
+
+  coursesList.innerHTML = "";
+
+  subtotal = 0;
+
+  cartCourses.forEach(course => {
+
+    const title = getTitle(course);
+    const description = getDescription(course);
+    const image = getImage(course);
+    const price = getPrice(course);
+
+    subtotal += price;
+
+    const item = document.createElement("div");
+
+    item.className = "course";
+
+    item.innerHTML = `
+      <img
+        src="${image}"
+        alt=""
+        onerror="this.style.visibility='hidden'">
+
+      <div class="course-info">
+
+        <div class="course-title">
+          ${escapeHTML(title)}
+        </div>
+
+        <div class="course-description">
+          ${escapeHTML(
+            description.slice(0,120)
+          )}
+        </div>
+
+      </div>
+
+      <div class="price">
+        ${formatPrice(price)}
+      </div>
+    `;
+
+    coursesList.appendChild(item);
+
+  });
+
+  subtotalEl.textContent = formatPrice(subtotal);
+  totalEl.textContent = formatPrice(subtotal);
+
+}
+
+
+/* =====================================================
+   HTML ESCAPE
+===================================================== */
+
+function escapeHTML(value){
+
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+
+/* =====================================================
+   CREATE PENDING ORDER
+===================================================== */
+
+checkoutBtn.addEventListener(
+  "click",
+  async () => {
+
+    hideMessages();
+
+    const fullName =
+      document.getElementById("fullName")
+        .value.trim();
+
+    const email =
+      document.getElementById("email")
+        .value.trim();
+
+    const paymentMethod =
+      document.getElementById("paymentMethod")
+        .value;
+
+    if(!fullName){
+
+      showError(
+        "Please enter your full name."
+      );
+
+      return;
+    }
+
+    if(!email){
+
+      showError(
+        "Please enter your email address."
+      );
+
+      return;
+    }
+
+    if(!paymentMethod){
+
+      showError(
+        "Please select a payment method."
+      );
+
+      return;
+    }
+
+    if(!cartCourses.length){
+
+      showError(
+        "Your cart does not contain any valid course."
+      );
+
+      return;
+    }
+
+    checkoutBtn.disabled = true;
+    checkoutBtn.textContent =
+      "Preparing Payment...";
+
+    try{
+
+      const orderId =
+        "ORD-" +
+        Date.now() +
+        "-" +
+        Math.random()
+          .toString(36)
+          .substring(2,8)
+          .toUpperCase();
+
+      /*
+        Store Firebase IDs only.
+
+        The IDs remain internal and are
+        never displayed to the customer.
+      */
+
+      const orderCourses =
+        cartCourses.map(course => ({
+          courseId: course.id,
+          title: getTitle(course),
+          price: getPrice(course)
+        }));
+
+      const pendingOrder = {
+
+        orderId,
+
+        customer:{
+          name:fullName,
+          email:email
+        },
+
+        courses:orderCourses,
+
+        total:subtotal,
+
+        paymentMethod,
+
+        status:"pending",
+
+        createdAt:
+          new Date().toISOString()
+
+      };
+
+      localStorage.setItem(
+        "pendingCourseOrder",
+        JSON.stringify(pendingOrder)
+      );
+
+      /*
+        Payment gateway page.
+
+        IMPORTANT:
+        course-payment.html must verify payment
+        with the real backend/provider.
+      */
+
+      showSuccess(
+        "Order prepared. Redirecting to payment..."
+      );
+
+      setTimeout(() => {
+
+        window.location.href =
+          "course-payment.html";
+
+      },700);
+
+    }catch(error){
+
+      console.error(error);
+
+      checkoutBtn.disabled = false;
+
+      checkoutBtn.textContent =
+        "Continue to Payment";
+
+      showError(
+        "Unable to prepare your order."
+      );
+
+    }
+
+  }
+);
+
+
+/* =====================================================
+   START
+===================================================== */
+
+loadCheckout();
+
+</script>
+
+</body>
+</html>
