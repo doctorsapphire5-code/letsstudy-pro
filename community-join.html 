@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Join Community · LetsStudy Pro</title>
+  <meta name="description" content="Join a free LetsStudy Pro community and start learning, connecting and collaborating.">
+
+  <style>
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:Inter,Arial,sans-serif;
+      background:#f5f7fb;
+      color:#172033;
+    }
+
+    .topbar{
+      background:#fff;
+      border-bottom:1px solid #e5e9f0;
+      position:sticky;
+      top:0;
+      z-index:50;
+    }
+
+    .nav{
+      max-width:1100px;
+      margin:auto;
+      padding:16px 20px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+
+    .brand{
+      font-size:21px;
+      font-weight:900;
+      color:#2563eb;
+    }
+
+    .back{
+      color:#475569;
+      text-decoration:none;
+      font-weight:700;
+    }
+
+    .container{
+      max-width:900px;
+      margin:45px auto;
+      padding:0 18px;
+    }
+
+    .card{
+      background:#fff;
+      border:1px solid #e5e9f0;
+      border-radius:22px;
+      padding:30px;
+      box-shadow:0 10px 35px rgba(15,23,42,.06);
+    }
+
+    .cover{
+      width:100%;
+      height:250px;
+      object-fit:cover;
+      border-radius:17px;
+      background:#e9eef7;
+      display:none;
+      margin-bottom:25px;
+    }
+
+    .badge{
+      display:inline-flex;
+      padding:7px 12px;
+      border-radius:999px;
+      background:#dcfce7;
+      color:#166534;
+      font-size:12px;
+      font-weight:900;
+    }
+
+    h1{
+      font-size:clamp(30px,5vw,45px);
+      margin:15px 0 10px;
+    }
+
+    .description{
+      color:#64748b;
+      line-height:1.7;
+    }
+
+    .form{
+      margin-top:28px;
+      display:grid;
+      gap:17px;
+    }
+
+    label{
+      font-weight:800;
+      font-size:14px;
+      color:#334155;
+    }
+
+    input{
+      width:100%;
+      margin-top:8px;
+      padding:14px;
+      border:1px solid #dbe2ea;
+      border-radius:11px;
+      outline:none;
+      font-size:15px;
+    }
+
+    input:focus{
+      border-color:#2563eb;
+    }
+
+    button{
+      width:100%;
+      border:0;
+      padding:15px;
+      border-radius:12px;
+      background:#2563eb;
+      color:#fff;
+      font-weight:900;
+      font-size:15px;
+      cursor:pointer;
+    }
+
+    button:hover{
+      background:#1d4ed8;
+    }
+
+    button:disabled{
+      opacity:.6;
+      cursor:not-allowed;
+    }
+
+    .message{
+      margin-top:18px;
+      padding:14px;
+      border-radius:11px;
+      display:none;
+      line-height:1.5;
+    }
+
+    .success{
+      background:#dcfce7;
+      color:#166534;
+    }
+
+    .error{
+      background:#fee2e2;
+      color:#991b1b;
+    }
+
+    .loading{
+      text-align:center;
+      color:#64748b;
+      padding:70px 20px;
+    }
+
+    .join-info{
+      margin-top:22px;
+      padding:17px;
+      border-radius:13px;
+      background:#f8fafc;
+      color:#64748b;
+      line-height:1.6;
+      font-size:14px;
+    }
+
+    @media(max-width:600px){
+      .container{
+        margin:25px auto;
+        padding:0 12px;
+      }
+
+      .card{
+        padding:20px;
+      }
+
+      .cover{
+        height:190px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <nav class="nav">
+    <div class="brand">LetsStudy Pro</div>
+    <a href="community.html" class="back">← Communities</a>
+  </nav>
+</header>
+
+<main class="container">
+
+  <div id="loading" class="loading">
+    Loading community...
+  </div>
+
+  <div id="error" class="message error"></div>
+
+  <section id="content" class="card" style="display:none">
+
+    <img id="cover" class="cover" alt="Community cover">
+
+    <span class="badge">FREE COMMUNITY</span>
+
+    <h1 id="title">Community</h1>
+
+    <p id="description" class="description"></p>
+
+    <div class="join-info">
+      Join this free community to connect with other learners,
+      participate in discussions and access community activities.
+    </div>
+
+    <form id="joinForm" class="form">
+
+      <div>
+        <label for="name">
+          Full Name
+        </label>
+
+        <input
+          id="name"
+          type="text"
+          placeholder="Enter your full name"
+          autocomplete="name"
+          required
+        >
+      </div>
+
+      <div>
+        <label for="email">
+          Email Address
+        </label>
+
+        <input
+          id="email"
+          type="email"
+          placeholder="Enter your email address"
+          autocomplete="email"
+          required
+        >
+      </div>
+
+      <button id="joinBtn" type="submit">
+        Join Community
+      </button>
+
+    </form>
+
+    <div id="message" class="message"></div>
+
+  </section>
+
+</main>
+
+<script type="module">
+
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBcOYDfAVK5XbkljsyRgI_0rj0odBn678tCc",
+  authDomain: "let-s-study-pro-course.firebaseapp.com",
+  databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId: "let-s-study-pro-course",
+  storageBucket: "let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId: "474928293390",
+  appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId: "G-85B7V5H5J0"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const params =
+  new URLSearchParams(location.search);
+
+const communityId =
+  params.get("id");
+
+const $ =
+  id => document.getElementById(id);
+
+function firstValue(
+  data,
+  keys,
+  fallback = ""
+){
+
+  for(const key of keys){
+
+    const value =
+      data?.[key];
+
+    if(
+      value !== undefined &&
+      value !== null &&
+      value !== ""
+    ){
+      return value;
+    }
+
+  }
+
+  return fallback;
+}
+
+function isPlan(data){
+
+  const access =
+    String(
+      firstValue(
+        data,
+        [
+          "access",
+          "accessType",
+          "membership",
+          "plan"
+        ],
+        ""
+      )
+    ).toLowerCase()
+     .trim();
+
+  return (
+    data?.isPremium === true ||
+    data?.premium === true ||
+    data?.paid === true ||
+    [
+      "plan",
+      "premium",
+      "paid",
+      "pro"
+    ].includes(access)
+  );
+
+}
+
+async function loadCommunity(){
+
+  if(!communityId){
+
+    throw new Error(
+      "Community information is missing."
+    );
+
+  }
+
+  const snapshot =
+    await getDoc(
+      doc(
+        db,
+        "communities",
+        communityId
+      )
+    );
+
+  if(!snapshot.exists()){
+
+    throw new Error(
+      "This community could not be found."
+    );
+
+  }
+
+  const data =
+    snapshot.data();
+
+  /*
+    This page is ONLY for FREE communities.
+  */
+
+  if(isPlan(data)){
+
+    location.href =
+      `community-cart.html?id=${encodeURIComponent(
+        communityId
+      )}`;
+
+    return;
+
+  }
+
+  const title =
+    firstValue(
+      data,
+      [
+        "title",
+        "name",
+        "communityTitle",
+        "communityName"
+      ],
+      "Community"
+    );
+
+  const description =
+    firstValue(
+      data,
+      [
+        "description",
+        "summary",
+        "shortDescription",
+        "overview",
+        "content"
+      ],
+      "Join this community."
+    );
+
+  const image =
+    firstValue(
+      data,
+      [
+        "cover",
+        "coverImage",
+        "image",
+        "imageUrl",
+        "thumbnail",
+        "thumbnailUrl"
+      ],
+      ""
+    );
+
+  $("title").textContent =
+    title;
+
+  $("description").textContent =
+    description;
+
+  if(image){
+
+    $("cover").src =
+      image;
+
+    $("cover").style.display =
+      "block";
+
+  }
+
+  $("loading").style.display =
+    "none";
+
+  $("content").style.display =
+    "block";
+
+}
+
+$("joinForm").addEventListener(
+  "submit",
+  async event => {
+
+    event.preventDefault();
+
+    const name =
+      $("name").value.trim();
+
+    const email =
+      $("email").value.trim()
+        .toLowerCase();
+
+    if(!name || !email){
+
+      showMessage(
+        "Please complete all required fields.",
+        "error"
+      );
+
+      return;
+
+    }
+
+    const button =
+      $("joinBtn");
+
+    button.disabled =
+      true;
+
+    button.textContent =
+      "Joining...";
+
+    try{
+
+      /*
+        A browser-generated membership ID is used here.
+        It does not expose the community document ID in the UI.
+      */
+
+      const memberKey =
+        `${communityId}_${btoa(
+          email
+        ).replace(
+          /[^a-zA-Z0-9]/g,
+          ""
+        )}`;
+
+      await setDoc(
+        doc(
+          db,
+          "communityMembers",
+          memberKey
+        ),
+        {
+          communityId: communityId,
+
+          name: name,
+
+          email: email,
+
+          status: "active",
+
+          access: "free",
+
+          joinedAt:
+            serverTimestamp()
+        },
+        {
+          merge:true
+        }
+      );
+
+      /*
+        Save local membership for quick UI access.
+      */
+
+      let memberships = [];
+
+      try{
+
+        memberships =
+          JSON.parse(
+            localStorage.getItem(
+              "communityMemberships"
+            ) || "[]"
+          );
+
+      }catch{
+
+        memberships = [];
+
+      }
+
+      if(!Array.isArray(memberships)){
+        memberships = [];
+      }
+
+      if(!memberships.includes(
+        communityId
+      )){
+
+        memberships.push(
+          communityId
+        );
+
+      }
+
+      localStorage.setItem(
+        "communityMemberships",
+        JSON.stringify(
+          memberships
+        )
+      );
+
+      showMessage(
+        "You have successfully joined the community.",
+        "success"
+      );
+
+      button.textContent =
+        "Joined Successfully";
+
+      setTimeout(() => {
+
+        location.href =
+          `community-group.html?id=${encodeURIComponent(
+            communityId
+          )}`;
+
+      },1200);
+
+    }catch(error){
+
+      console.error(
+        "Community join error:",
+        error
+      );
+
+      showMessage(
+        "Unable to join the community. Please try again.",
+        "error"
+      );
+
+      button.disabled =
+        false;
+
+      button.textContent =
+        "Join Community";
+
+    }
+
+  }
+);
+
+function showMessage(
+  text,
+  type
+){
+
+  const message =
+    $("message");
+
+  message.textContent =
+    text;
+
+  message.className =
+    `message ${type}`;
+
+  message.style.display =
+    "block";
+
+}
+
+loadCommunity().catch(error => {
+
+  console.error(error);
+
+  $("loading").style.display =
+    "none";
+
+  $("error").textContent =
+    error.message ||
+    "Unable to load community.";
+
+  $("error").style.display =
+    "block";
+
+});
+
+</script>
+
+</body>
+</html>
