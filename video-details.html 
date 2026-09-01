@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Video Details · LetsStudy Pro</title>
+  <meta name="description" content="Watch and access educational videos on LetsStudy Pro.">
+
+  <link rel="icon" href="favicon.png">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      color: #172033;
+      line-height: 1.6;
+    }
+
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav {
+      max-width: 1200px;
+      margin: auto;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .brand {
+      font-size: 21px;
+      font-weight: 800;
+      color: #2563eb;
+      text-decoration: none;
+    }
+
+    .back {
+      text-decoration: none;
+      color: #475569;
+      font-weight: 600;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 35px auto;
+      padding: 0 20px;
+    }
+
+    .loading,
+    .error {
+      background: #fff;
+      padding: 40px 20px;
+      border-radius: 18px;
+      text-align: center;
+      box-shadow: 0 8px 30px rgba(0,0,0,.06);
+    }
+
+    .error {
+      color: #dc2626;
+    }
+
+    .video-page {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+      gap: 30px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0,0,0,.07);
+    }
+
+    .hero-image {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      display: block;
+      background: #e2e8f0;
+    }
+
+    .content {
+      padding: 28px;
+    }
+
+    .category {
+      display: inline-block;
+      background: #eff6ff;
+      color: #2563eb;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font-size: clamp(28px, 4vw, 46px);
+      line-height: 1.15;
+      margin-bottom: 15px;
+    }
+
+    .description {
+      color: #64748b;
+      font-size: 16px;
+      margin-bottom: 25px;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 25px;
+    }
+
+    .meta-item {
+      background: #f8fafc;
+      padding: 15px;
+      border-radius: 12px;
+    }
+
+    .meta-label {
+      display: block;
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 4px;
+    }
+
+    .meta-value {
+      font-weight: 700;
+    }
+
+    .side {
+      padding: 25px;
+    }
+
+    .access-badge {
+      display: inline-block;
+      padding: 7px 13px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 18px;
+    }
+
+    .free {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .plan {
+      background: #fef3c7;
+      color: #b45309;
+    }
+
+    .price {
+      font-size: 34px;
+      font-weight: 900;
+      margin: 10px 0 22px;
+    }
+
+    .price.free-price {
+      color: #16a34a;
+    }
+
+    .price.plan-price {
+      color: #2563eb;
+    }
+
+    .action {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      padding: 15px 18px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .watch-btn {
+      background: #16a34a;
+      color: #fff;
+    }
+
+    .watch-btn:hover {
+      background: #15803d;
+    }
+
+    .cart-btn {
+      background: #2563eb;
+      color: #fff;
+    }
+
+    .cart-btn:hover {
+      background: #1d4ed8;
+    }
+
+    .cart-message {
+      margin-top: 12px;
+      color: #16a34a;
+      font-size: 14px;
+      display: none;
+      text-align: center;
+    }
+
+    .features {
+      margin-top: 25px;
+      border-top: 1px solid #e5e7eb;
+      padding-top: 20px;
+    }
+
+    .features h3 {
+      margin-bottom: 12px;
+    }
+
+    .features p {
+      color: #64748b;
+      margin: 8px 0;
+    }
+
+    footer {
+      margin-top: 60px;
+      padding: 30px 20px;
+      text-align: center;
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    @media (max-width: 800px) {
+      .video-page {
+        grid-template-columns: 1fr;
+      }
+
+      .meta {
+        grid-template-columns: 1fr;
+      }
+
+      main {
+        margin-top: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="index.html" class="brand">LetsStudy Pro</a>
+    <a href="videos.html" class="back">← Videos</a>
+  </nav>
+</header>
+
+<main>
+
+  <div id="loading" class="loading">
+    Loading video...
+  </div>
+
+  <div id="error" class="error" style="display:none;"></div>
+
+  <section id="videoPage" class="video-page" style="display:none;">
+
+    <div class="card">
+
+      <img
+        id="thumbnail"
+        class="hero-image"
+        src=""
+        alt="Video thumbnail"
+      >
+
+      <div class="content">
+
+        <span id="category" class="category">
+          Video
+        </span>
+
+        <h1 id="title"></h1>
+
+        <p id="description" class="description"></p>
+
+        <div class="meta">
+
+          <div class="meta-item">
+            <span class="meta-label">Duration</span>
+            <span id="duration" class="meta-value">—</span>
+          </div>
+
+          <div class="meta-item">
+            <span class="meta-label">Level</span>
+            <span id="level" class="meta-value">—</span>
+          </div>
+
+          <div class="meta-item">
+            <span class="meta-label">Instructor</span>
+            <span id="instructor" class="meta-value">—</span>
+          </div>
+
+          <div class="meta-item">
+            <span class="meta-label">Language</span>
+            <span id="language" class="meta-value">—</span>
+          </div>
+
+        </div>
+
+        <div class="features">
+          <h3>About this video</h3>
+          <p>✓ Educational video content</p>
+          <p>✓ Watch anytime after access</p>
+          <p>✓ Available across supported devices</p>
+        </div>
+
+      </div>
+    </div>
+
+    <aside class="card side">
+
+      <span id="accessBadge" class="access-badge">
+        FREE
+      </span>
+
+      <div id="price" class="price">
+        Free
+      </div>
+
+      <button
+        id="actionBtn"
+        class="action watch-btn"
+        type="button">
+        Watch Free
+      </button>
+
+      <div id="cartMessage" class="cart-message">
+        Added to video cart.
+      </div>
+
+    </aside>
+
+  </section>
+
+</main>
+
+<footer>
+  © <span id="year"></span> LetsStudy Pro. All rights reserved.
+</footer>
+
+<script type="module">
+
+  import {
+    initializeApp
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
+  import {
+    getFirestore,
+    doc,
+    getDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+
+  /* ================================
+     FIREBASE
+  ================================= */
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBcOYDfAVK5XbkljsyRgI_0rj0odBn678tCc",
+    authDomain: "let-s-study-pro-course.firebaseapp.com",
+    databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+    projectId: "let-s-study-pro-course",
+    storageBucket: "let-s-study-pro-course.firebasestorage.app",
+    messagingSenderId: "474928293390",
+    appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+    measurementId: "G-85B7V5H5J0"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+
+  /* ================================
+     DOM
+  ================================= */
+
+  const loading = document.getElementById("loading");
+  const errorBox = document.getElementById("error");
+  const videoPage = document.getElementById("videoPage");
+
+  const thumbnail = document.getElementById("thumbnail");
+  const title = document.getElementById("title");
+  const description = document.getElementById("description");
+  const category = document.getElementById("category");
+
+  const duration = document.getElementById("duration");
+  const level = document.getElementById("level");
+  const instructor = document.getElementById("instructor");
+  const language = document.getElementById("language");
+
+  const accessBadge = document.getElementById("accessBadge");
+  const price = document.getElementById("price");
+  const actionBtn = document.getElementById("actionBtn");
+  const cartMessage = document.getElementById("cartMessage");
+
+  document.getElementById("year").textContent =
+    new Date().getFullYear();
+
+
+  /* ================================
+     HELPERS
+  ================================= */
+
+  function firstValue(obj, keys, fallback = "") {
+
+    for (const key of keys) {
+
+      const value = obj?.[key];
+
+      if (
+        value !== undefined &&
+        value !== null &&
+        String(value).trim() !== ""
+      ) {
+        return value;
+      }
+
+    }
+
+    return fallback;
+  }
+
+
+  function escapeHtml(value) {
+
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+
+  function getPrice(data) {
+
+    const value = firstValue(
+      data,
+      [
+        "price",
+        "amount",
+        "cost",
+        "videoPrice"
+      ],
+      0
+    );
+
+    const number = Number(value);
+
+    return Number.isFinite(number)
+      ? number
+      : 0;
+  }
+
+
+  function formatPrice(value) {
+
+    if (!value || value <= 0) {
+      return "Free";
+    }
+
+    return new Intl.NumberFormat(
+      undefined,
+      {
+        style: "currency",
+        currency: "TZS",
+        maximumFractionDigits: 0
+      }
+    ).format(value);
+  }
+
+
+  function isPlanVideo(data) {
+
+    const access = String(
+      firstValue(
+        data,
+        [
+          "access",
+          "accessType",
+          "membership",
+          "plan"
+        ],
+        ""
+      )
+    ).toLowerCase().trim();
+
+    if (
+      access === "plan" ||
+      access === "premium" ||
+      access === "paid"
+    ) {
+      return true;
+    }
+
+    if (
+      data?.isPremium === true ||
+      data?.premium === true ||
+      data?.paid === true
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
+
+  /* ================================
+     GET VIDEO ID
+  ================================= */
+
+  const params = new URLSearchParams(
+    window.location.search
+  );
+
+  const videoId = params.get("id");
+
+
+  /* ================================
+     ERROR
+  ================================= */
+
+  function showError(message) {
+
+    loading.style.display = "none";
+    videoPage.style.display = "none";
+
+    errorBox.textContent = message;
+    errorBox.style.display = "block";
+  }
+
+
+  /* ================================
+     LOAD VIDEO
+  ================================= */
+
+  async function loadVideo() {
+
+    if (!videoId) {
+
+      showError(
+        "Video not found. Please select a video first."
+      );
+
+      return;
+    }
+
+    try {
+
+      const snap = await getDoc(
+        doc(db, "videos", videoId)
+      );
+
+      if (!snap.exists()) {
+
+        showError(
+          "This video could not be found."
+        );
+
+        return;
+      }
+
+      const data = snap.data();
+
+      const videoTitle = firstValue(
+        data,
+        [
+          "title",
+          "name",
+          "videoTitle",
+          "videoName"
+        ],
+        "Untitled Video"
+      );
+
+      const videoDescription = firstValue(
+        data,
+        [
+          "description",
+          "summary",
+          "shortDescription",
+          "overview",
+          "content"
+        ],
+        "Educational video from LetsStudy Pro."
+      );
+
+      const videoCategory = firstValue(
+        data,
+        [
+          "category",
+          "subject",
+          "field",
+          "topic"
+        ],
+        "Educational Video"
+      );
+
+      const image = firstValue(
+        data,
+        [
+          "thumbnail",
+          "thumbnailUrl",
+          "image",
+          "imageUrl",
+          "poster",
+          "posterUrl"
+        ],
+        "https://via.placeholder.com/1280x720?text=LetsStudy+Pro"
+      );
+
+      const videoDuration = firstValue(
+        data,
+        [
+          "duration",
+          "length",
+          "videoDuration"
+        ],
+        "—"
+      );
+
+      const videoLevel = firstValue(
+        data,
+        [
+          "level",
+          "class",
+          "form",
+          "grade"
+        ],
+        "—"
+      );
+
+      const videoInstructor = firstValue(
+        data,
+        [
+          "instructor",
+          "teacher",
+          "author",
+          "creator"
+        ],
+        "—"
+      );
+
+      const videoLanguage = firstValue(
+        data,
+        [
+          "language",
+          "lang"
+        ],
+        "—"
+      );
+
+      const planVideo = isPlanVideo(data);
+      const videoPrice = getPrice(data);
+
+
+      /* ================================
+         DISPLAY
+      ================================= */
+
+      document.title =
+        `${videoTitle} · LetsStudy Pro`;
+
+      thumbnail.src = image;
+      thumbnail.alt =
+        `${videoTitle} · LetsStudy Pro`;
+
+      title.textContent = videoTitle;
+
+      description.textContent =
+        videoDescription;
+
+      category.textContent =
+        videoCategory;
+
+      duration.textContent =
+        videoDuration;
+
+      level.textContent =
+        videoLevel;
+
+      instructor.textContent =
+        videoInstructor;
+
+      language.textContent =
+        videoLanguage;
+
+
+      /* ================================
+         ACCESS
+      ================================= */
+
+      if (planVideo) {
+
+        accessBadge.textContent = "PLAN";
+        accessBadge.className =
+          "access-badge plan";
+
+        price.textContent =
+          formatPrice(videoPrice);
+
+        price.className =
+          "price plan-price";
+
+        actionBtn.textContent =
+          "Add to Video Cart";
+
+        actionBtn.className =
+          "action cart-btn";
+
+        actionBtn.onclick = () => {
+
+          addToVideoCart(videoId);
+
+        };
+
+      } else {
+
+        accessBadge.textContent = "FREE";
+        accessBadge.className =
+          "access-badge free";
+
+        price.textContent = "Free";
+
+        price.className =
+          "price free-price";
+
+        actionBtn.textContent =
+          "Watch Free";
+
+        actionBtn.className =
+          "action watch-btn";
+
+        actionBtn.onclick = () => {
+
+          window.location.href =
+            `video-watch.html?id=${encodeURIComponent(videoId)}`;
+
+        };
+
+      }
+
+
+      loading.style.display = "none";
+      videoPage.style.display = "grid";
+
+    } catch (error) {
+
+      console.error(error);
+
+      showError(
+        "Unable to load this video. Please try again."
+      );
+
+    }
+
+  }
+
+
+  /* ================================
+     VIDEO CART
+  ================================= */
+
+  function getVideoCart() {
+
+    try {
+
+      const cart =
+        JSON.parse(
+          localStorage.getItem("videoCart") || "[]"
+        );
+
+      if (!Array.isArray(cart)) {
+        return [];
+      }
+
+      return cart
+        .map(item => {
+
+          if (typeof item === "string") {
+            return item;
+          }
+
+          return item?.id ||
+                 item?.videoId ||
+                 null;
+
+        })
+        .filter(Boolean);
+
+    } catch {
+
+      return [];
+
+    }
+
+  }
+
+
+  function saveVideoCart(cart) {
+
+    const unique =
+      [...new Set(cart)];
+
+    localStorage.setItem(
+      "videoCart",
+      JSON.stringify(unique)
+    );
+
+  }
+
+
+  function addToVideoCart(id) {
+
+    const cart =
+      getVideoCart();
+
+    if (!cart.includes(id)) {
+
+      cart.push(id);
+
+      saveVideoCart(cart);
+
+      cartMessage.textContent =
+        "Video added to your cart.";
+
+    } else {
+
+      cartMessage.textContent =
+        "This video is already in your cart.";
+
+    }
+
+    cartMessage.style.display =
+      "block";
+
+
+    setTimeout(() => {
+
+      window.location.href =
+        "video-cart.html";
+
+    }, 700);
+
+  }
+
+
+  /* ================================
+     START
+  ================================= */
+
+  loadVideo();
+
+</script>
+
+</body>
+</html>
