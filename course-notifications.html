@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Course Notifications | LetsStudy Pro</title>
+  <meta name="description" content="View important course notifications, announcements and updates on LetsStudy Pro.">
+
+  <link rel="icon" href="favicon.ico">
+
+  <style>
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+    }
+
+    body{
+      font-family:Inter,Arial,sans-serif;
+      background:#f5f7fb;
+      color:#172033;
+      min-height:100vh;
+    }
+
+    header{
+      background:#fff;
+      border-bottom:1px solid #e5e7eb;
+      position:sticky;
+      top:0;
+      z-index:20;
+    }
+
+    .nav{
+      max-width:1150px;
+      margin:auto;
+      padding:15px 20px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:15px;
+    }
+
+    .brand{
+      text-decoration:none;
+      color:#111827;
+      font-size:21px;
+      font-weight:800;
+    }
+
+    .brand span{
+      color:#2563eb;
+    }
+
+    .back{
+      color:#2563eb;
+      text-decoration:none;
+      font-weight:700;
+      font-size:14px;
+    }
+
+    main{
+      max-width:1050px;
+      margin:auto;
+      padding:32px 20px 60px;
+    }
+
+    .hero{
+      background:linear-gradient(135deg,#111827,#2563eb);
+      color:#fff;
+      padding:32px;
+      border-radius:22px;
+      margin-bottom:25px;
+    }
+
+    .hero small{
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.7px;
+      opacity:.8;
+    }
+
+    .hero h1{
+      margin:8px 0;
+      font-size:32px;
+    }
+
+    .hero p{
+      max-width:750px;
+      line-height:1.6;
+      opacity:.9;
+    }
+
+    .toolbar{
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:16px;
+      padding:14px;
+      margin-bottom:18px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .count{
+      color:#667085;
+      font-size:14px;
+      font-weight:600;
+    }
+
+    .filter {
+      display:flex;
+      gap:8px;
+    }
+
+    button{
+      border:0;
+      cursor:pointer;
+      padding:10px 14px;
+      border-radius:9px;
+      font-weight:700;
+      background:#eef2f7;
+      color:#344054;
+    }
+
+    button.active,
+    button:hover{
+      background:#2563eb;
+      color:#fff;
+    }
+
+    .notifications{
+      display:grid;
+      gap:15px;
+    }
+
+    .notification{
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:17px;
+      padding:21px;
+      box-shadow:0 4px 16px rgba(0,0,0,.035);
+      position:relative;
+    }
+
+    .notification.unread{
+      border-left:4px solid #2563eb;
+    }
+
+    .notification-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:15px;
+      margin-bottom:9px;
+    }
+
+    .title{
+      font-size:19px;
+      font-weight:800;
+      color:#101828;
+    }
+
+    .badge{
+      font-size:11px;
+      font-weight:800;
+      padding:6px 9px;
+      border-radius:999px;
+      background:#eef2ff;
+      color:#4338ca;
+      white-space:nowrap;
+    }
+
+    .message{
+      color:#667085;
+      line-height:1.65;
+      margin-bottom:14px;
+      white-space:pre-wrap;
+    }
+
+    .meta{
+      display:flex;
+      gap:9px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .date{
+      font-size:12px;
+      color:#98a2b3;
+    }
+
+    .mark{
+      margin-left:auto;
+      font-size:12px;
+      color:#2563eb;
+      background:transparent;
+      padding:5px;
+    }
+
+    .loading,
+    .empty,
+    .error{
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:17px;
+      padding:35px;
+      text-align:center;
+    }
+
+    .empty h2,
+    .error h2{
+      margin-bottom:8px;
+    }
+
+    .empty p,
+    .error p{
+      color:#667085;
+    }
+
+    footer{
+      text-align:center;
+      padding:25px;
+      color:#667085;
+      font-size:13px;
+    }
+
+    @media(max-width:650px){
+
+      main{
+        padding:24px 15px 50px;
+      }
+
+      .hero{
+        padding:24px;
+      }
+
+      .hero h1{
+        font-size:26px;
+      }
+
+      .notification-top{
+        flex-direction:column;
+      }
+
+      .mark{
+        margin-left:0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="nav">
+
+    <a href="index.html" class="brand">
+      LetsStudy <span>Pro</span>
+    </a>
+
+    <a id="backLink" href="#" class="back">
+      ← Course
+    </a>
+
+  </div>
+</header>
+
+<main>
+
+  <section class="hero">
+
+    <small>COURSE NOTIFICATIONS</small>
+
+    <h1 id="courseTitle">
+      Loading course...
+    </h1>
+
+    <p id="courseDescription">
+      Stay updated with important course announcements and changes.
+    </p>
+
+  </section>
+
+  <div id="loading" class="loading">
+    Loading notifications...
+  </div>
+
+  <div id="error" class="error" style="display:none;">
+    <h2>Unable to load notifications</h2>
+    <p id="errorText">
+      Please try again later.
+    </p>
+  </div>
+
+  <div id="empty" class="empty" style="display:none;">
+    <h2>No notifications</h2>
+    <p>
+      There are no notifications available for this course yet.
+    </p>
+  </div>
+
+  <div id="content" style="display:none;">
+
+    <div class="toolbar">
+
+      <div class="count" id="count">
+        0 notifications
+      </div>
+
+      <div class="filter">
+
+        <button
+          id="allBtn"
+          class="active"
+          type="button">
+          All
+        </button>
+
+        <button
+          id="unreadBtn"
+          type="button">
+          Unread
+        </button>
+
+      </div>
+
+    </div>
+
+    <section
+      id="notifications"
+      class="notifications">
+    </section>
+
+  </div>
+
+</main>
+
+<footer>
+  © <span id="year"></span> LetsStudy Pro. Learn. Practice. Grow.
+</footer>
+
+<script type="module">
+
+  import {
+    initializeApp
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
+  import {
+    getFirestore,
+    doc,
+    getDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBcOYDfAVK5XbkljsyRgI_0rj0odBn678tCc",
+    authDomain: "let-s-study-pro-course.firebaseapp.com",
+    databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+    projectId: "let-s-study-pro-course",
+    storageBucket: "let-s-study-pro-course.firebasestorage.app",
+    messagingSenderId: "474928293390",
+    appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+    measurementId: "G-85B7V5H5J0"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const params =
+    new URLSearchParams(window.location.search);
+
+  const courseId =
+    params.get("id");
+
+  const courseTitle =
+    document.getElementById("courseTitle");
+
+  const courseDescription =
+    document.getElementById("courseDescription");
+
+  const notificationsContainer =
+    document.getElementById("notifications");
+
+  const loading =
+    document.getElementById("loading");
+
+  const empty =
+    document.getElementById("empty");
+
+  const error =
+    document.getElementById("error");
+
+  const errorText =
+    document.getElementById("errorText");
+
+  const content =
+    document.getElementById("content");
+
+  const count =
+    document.getElementById("count");
+
+  const allBtn =
+    document.getElementById("allBtn");
+
+  const unreadBtn =
+    document.getElementById("unreadBtn");
+
+  const backLink =
+    document.getElementById("backLink");
+
+  let notifications = [];
+
+  let currentFilter = "all";
+
+  document.getElementById("year").textContent =
+    new Date().getFullYear();
+
+  backLink.href = courseId
+    ? `course-details.html?id=${encodeURIComponent(courseId)}`
+    : "course-details.html";
+
+
+  function first(obj, fields, fallback=""){
+
+    for(const field of fields){
+
+      if(
+        obj &&
+        obj[field] !== undefined &&
+        obj[field] !== null &&
+        String(obj[field]).trim() !== ""
+      ){
+
+        return obj[field];
+
+      }
+
+    }
+
+    return fallback;
+  }
+
+
+  function getNotifications(course){
+
+    let data =
+      course.notifications ??
+      course.notification ??
+      course.announcements ??
+      course.announcement ??
+      course.courseNotifications ??
+      course.updates ??
+      [];
+
+    if(Array.isArray(data)){
+      return data;
+    }
+
+    if(data && Array.isArray(data.items)){
+      return data.items;
+    }
+
+    if(data && Array.isArray(data.notifications)){
+      return data.notifications;
+    }
+
+    if(data && typeof data === "object"){
+
+      return Object.entries(data).map(
+        ([id,value]) => ({
+          ...(typeof value === "object"
+            ? value
+            : {}),
+          notificationId:id
+        })
+      );
+
+    }
+
+    return [];
+  }
+
+
+  function getTitle(item,index){
+
+    return first(
+      item,
+      [
+        "title",
+        "name",
+        "notificationTitle",
+        "announcementTitle"
+      ],
+      `Course Update ${index + 1}`
+    );
+
+  }
+
+
+  function getMessage(item){
+
+    return first(
+      item,
+      [
+        "message",
+        "description",
+        "content",
+        "body",
+        "text",
+        "details"
+      ],
+      "There is a new update available for this course."
+    );
+
+  }
+
+
+  function getType(item){
+
+    return first(
+      item,
+      [
+        "type",
+        "notificationType",
+        "category"
+      ],
+      "Update"
+    );
+
+  }
+
+
+  function getDate(item){
+
+    return first(
+      item,
+      [
+        "createdAt",
+        "date",
+        "publishedAt",
+        "timestamp",
+        "createdDate"
+      ],
+      ""
+    );
+
+  }
+
+
+  function isUnread(item,index){
+
+    if(
+      item.read === true ||
+      item.isRead === true
+    ){
+      return false;
+    }
+
+    const key =
+      `courseNotificationRead_${courseId}_${index}`;
+
+    return localStorage.getItem(key) !== "true";
+  }
+
+
+  function formatDate(value){
+
+    if(!value){
+      return "";
+    }
+
+    try{
+
+      let date;
+
+      if(
+        typeof value === "object" &&
+        value.seconds
+      ){
+
+        date =
+          new Date(value.seconds * 1000);
+
+      }else{
+
+        date =
+          new Date(value);
+
+      }
+
+      if(Number.isNaN(date.getTime())){
+        return String(value);
+      }
+
+      return date.toLocaleDateString(
+        undefined,
+        {
+          year:"numeric",
+          month:"short",
+          day:"numeric"
+        }
+      );
+
+    }catch{
+
+      return String(value);
+
+    }
+
+  }
+
+
+  function escapeHTML(value){
+
+    return String(value ?? "")
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#039;");
+
+  }
+
+
+  function render(){
+
+    notificationsContainer.innerHTML = "";
+
+    let filtered =
+      notifications.filter((item,index)=>{
+
+        if(currentFilter === "all"){
+          return true;
+        }
+
+        return isUnread(item,index);
+
+      });
+
+    const unreadCount =
+      notifications.filter(
+        (item,index)=>isUnread(item,index)
+      ).length;
+
+    count.textContent =
+      currentFilter === "all"
+        ? `${notifications.length} notification${notifications.length === 1 ? "" : "s"}`
+        : `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}`;
+
+
+    if(!filtered.length){
+
+      notificationsContainer.innerHTML = `
+        <div class="empty">
+          <h2>No ${currentFilter === "unread" ? "unread " : ""}notifications</h2>
+          <p>
+            You're all caught up.
+          </p>
+        </div>
+      `;
+
+      return;
+    }
+
+
+    filtered.forEach((item,index)=>{
+
+      const originalIndex =
+        notifications.indexOf(item);
+
+      const title =
+        getTitle(item,originalIndex);
+
+      const message =
+        getMessage(item);
+
+      const type =
+        getType(item);
+
+      const date =
+        getDate(item);
+
+      const unread =
+        isUnread(item,originalIndex);
+
+      const card =
+        document.createElement("article");
+
+      card.className =
+        `notification ${unread ? "unread" : ""}`;
+
+
+      card.innerHTML = `
+
+        <div class="notification-top">
+
+          <div class="title">
+            ${escapeHTML(title)}
+          </div>
+
+          <span class="badge">
+            ${escapeHTML(type)}
+          </span>
+
+        </div>
+
+        <div class="message">
+          ${escapeHTML(message)}
+        </div>
+
+        <div class="meta">
+
+          ${
+            date
+              ? `
+                <span class="date">
+                  ${escapeHTML(formatDate(date))}
+                </span>
+              `
+              : ""
+          }
+
+          ${
+            unread
+              ? `
+                <button
+                  class="mark"
+                  type="button">
+                  Mark as read
+                </button>
+              `
+              : `
+                <span class="date">
+                  Read
+                </span>
+              `
+          }
+
+        </div>
+
+      `;
+
+
+      const markButton =
+        card.querySelector(".mark");
+
+
+      if(markButton){
+
+        markButton.addEventListener(
+          "click",
+          ()=>{
+
+            localStorage.setItem(
+              `courseNotificationRead_${courseId}_${originalIndex}`,
+              "true"
+            );
+
+            render();
+
+          }
+        );
+
+      }
+
+
+      notificationsContainer.appendChild(card);
+
+    });
+
+  }
+
+
+  allBtn.addEventListener(
+    "click",
+    ()=>{
+
+      currentFilter = "all";
+
+      allBtn.classList.add("active");
+      unreadBtn.classList.remove("active");
+
+      render();
+
+    }
+  );
+
+
+  unreadBtn.addEventListener(
+    "click",
+    ()=>{
+
+      currentFilter = "unread";
+
+      unreadBtn.classList.add("active");
+      allBtn.classList.remove("active");
+
+      render();
+
+    }
+  );
+
+
+  async function loadCourse(){
+
+    if(!courseId){
+
+      loading.style.display = "none";
+
+      error.style.display = "block";
+
+      errorText.textContent =
+        "Course information is missing.";
+
+      return;
+
+    }
+
+
+    try{
+
+      const courseRef =
+        doc(
+          db,
+          "courses",
+          courseId
+        );
+
+      const snapshot =
+        await getDoc(courseRef);
+
+
+      if(!snapshot.exists()){
+
+        loading.style.display = "none";
+
+        error.style.display = "block";
+
+        errorText.textContent =
+          "The requested course could not be found.";
+
+        return;
+
+      }
+
+
+      const course =
+        snapshot.data();
+
+
+      courseTitle.textContent =
+        first(
+          course,
+          [
+            "title",
+            "name",
+            "courseTitle"
+          ],
+          "Course"
+        );
+
+
+      courseDescription.textContent =
+        first(
+          course,
+          [
+            "description",
+            "summary",
+            "shortDescription"
+          ],
+          "Stay updated with important course announcements and changes."
+        );
+
+
+      notifications =
+        getNotifications(course);
+
+
+      loading.style.display = "none";
+
+
+      if(!notifications.length){
+
+        empty.style.display = "block";
+
+        return;
+
+      }
+
+
+      content.style.display = "block";
+
+      render();
+
+
+    }catch(err){
+
+      console.error(err);
+
+      loading.style.display = "none";
+
+      error.style.display = "block";
+
+      errorText.textContent =
+        "There was a problem loading course notifications.";
+
+    }
+
+  }
+
+
+  loadCourse();
+
+</script>
+
+</body>
+</html>
