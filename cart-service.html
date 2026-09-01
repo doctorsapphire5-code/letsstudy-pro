@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Marketplace Cart | LetsStudy Pro</title>
+<title>Service Cart | LetsStudy Pro</title>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -69,16 +69,16 @@ h1{margin-bottom:6px}
   gap:8px;
 }
 .qty{
-  width:45px;
-  text-align:center;
+  width:48px;
   padding:8px;
+  text-align:center;
   border:1px solid #ddd;
   border-radius:6px;
 }
 .remove{
+  border:0;
   background:#fee2e2;
   color:#b91c1c;
-  border:0;
   padding:8px;
   border-radius:6px;
   cursor:pointer;
@@ -101,19 +101,18 @@ h1{margin-bottom:6px}
   width:100%;
   margin-top:15px;
   padding:14px;
-  background:#16a34a;
-  color:white;
   border:0;
   border-radius:9px;
+  background:#16a34a;
+  color:white;
   font-size:16px;
   cursor:pointer;
 }
-.empty{
+.empty,.loading{
   text-align:center;
   padding:60px 20px;
   color:#64748b;
 }
-.loading{text-align:center;padding:40px}
 @media(max-width:650px){
   .item{align-items:flex-start}
   .item img{width:65px;height:65px}
@@ -125,25 +124,39 @@ h1{margin-bottom:6px}
 <body>
 
 <header>
-  <div class="logo">LetsStudy <span>Pro</span></div>
+  <div class="logo">
+    LetsStudy <span>Pro</span>
+  </div>
 
-  <button class="btn" onclick="location.href='marketplace.html'">
-    Marketplace
+  <button
+    class="btn"
+    onclick="location.href='services.html'"
+  >
+    Services
   </button>
 </header>
 
 <main class="container">
 
-  <h1>Marketplace Cart</h1>
-  <p class="sub">Review your products before checkout.</p>
+  <h1>Service Cart</h1>
+
+  <p class="sub">
+    Review your selected services before checkout.
+  </p>
 
   <section class="cart">
 
     <div id="cartItems">
-      <div class="loading">Loading cart...</div>
+      <div class="loading">
+        Loading services...
+      </div>
     </div>
 
-    <div id="summary" class="summary" style="display:none">
+    <div
+      id="summary"
+      class="summary"
+      style="display:none"
+    >
 
       <div class="row">
         <span>Subtotal</span>
@@ -151,7 +164,7 @@ h1{margin-bottom:6px}
       </div>
 
       <div class="row">
-        <span>Items</span>
+        <span>Services</span>
         <strong id="count">0</strong>
       </div>
 
@@ -160,8 +173,11 @@ h1{margin-bottom:6px}
         <span id="total">0</span>
       </div>
 
-      <button class="checkout" onclick="checkout()">
-        Proceed to Checkout
+      <button
+        class="checkout"
+        onclick="checkout()"
+      >
+        Proceed to Service Checkout
       </button>
 
     </div>
@@ -175,40 +191,48 @@ h1{margin-bottom:6px}
 const API = "/api/data";
 
 let cart = JSON.parse(
-  localStorage.getItem("marketplaceCart") || "[]"
+  localStorage.getItem("serviceCart") || "[]"
 );
 
-let products = [];
+let services = [];
 
 
 /* =========================
-   LOAD PRODUCTS FROM API
+   LOAD SERVICES FROM API
 ========================= */
 
-async function loadProducts(){
+async function loadServices(){
 
   try{
 
     const response = await fetch(
-      API + "?collection=products&limit=100"
+      API + "?collection=services&limit=100"
     );
 
     if(!response.ok)
-      throw new Error("API failed");
+      throw new Error("API request failed");
 
-    const data = await response.json();
+    const data =
+      await response.json();
 
-    products = data.results || [];
+    services =
+      data.results || [];
 
     renderCart();
 
   }catch(error){
 
-    console.error(error);
+    console.error(
+      "SERVICE CART API:",
+      error
+    );
 
-    document.getElementById("cartItems").innerHTML = `
+    document.getElementById(
+      "cartItems"
+    ).innerHTML = `
       <div class="empty">
-        Unable to load marketplace data.
+        <h3>Unable to load services</h3>
+        <p>Please try again later.</p>
       </div>
     `;
 
@@ -218,13 +242,13 @@ async function loadProducts(){
 
 
 /* =========================
-   SAVE CART
+   SAVE
 ========================= */
 
 function saveCart(){
 
   localStorage.setItem(
-    "marketplaceCart",
+    "serviceCart",
     JSON.stringify(cart)
   );
 
@@ -238,25 +262,37 @@ function saveCart(){
 function renderCart(){
 
   const container =
-    document.getElementById("cartItems");
+    document.getElementById(
+      "cartItems"
+    );
+
 
   if(!cart.length){
 
     container.innerHTML = `
       <div class="empty">
-        <h3>Your cart is empty</h3>
-        <p>Add products from the marketplace.</p>
+
+        <h3>Your service cart is empty</h3>
+
+        <p>
+          Select a service from LetsStudy Pro.
+        </p>
+
         <br>
+
         <button
           class="btn"
-          onclick="location.href='marketplace.html'"
+          onclick="location.href='services.html'"
         >
-          Browse Marketplace
+          Browse Services
         </button>
+
       </div>
     `;
 
-    document.getElementById("summary").style.display="none";
+    document.getElementById(
+      "summary"
+    ).style.display = "none";
 
     return;
   }
@@ -267,104 +303,146 @@ function renderCart(){
   let count = 0;
 
 
-  cart.forEach((item,index)=>{
+  cart.forEach(
+    (item,index)=>{
 
-    const product =
-      products.find(
-        p => p.id === item.id
-      ) || item;
-
-
-    const price =
-      Number(
-        product.price ||
-        item.price ||
-        0
-      );
-
-    const quantity =
-      Number(item.quantity || 1);
-
-    subtotal += price * quantity;
-    count += quantity;
+      const service =
+        services.find(
+          s => s.id === item.id
+        ) || item;
 
 
-    html += `
+      const price =
+        Number(
+          service.price ||
+          item.price ||
+          0
+        );
 
-      <article class="item">
 
-        <img
-          src="${image(product.image || product.thumbnail)}"
-          alt=""
-          onerror="this.style.display='none'"
-        >
+      const quantity =
+        Math.max(
+          1,
+          Number(
+            item.quantity || 1
+          )
+        );
 
-        <div class="info">
 
-          <div class="name">
-            ${escapeHTML(
-              product.name ||
-              product.title ||
-              "Product"
-            )}
-          </div>
+      subtotal +=
+        price * quantity;
 
-          <div class="price">
-            ${formatMoney(
-              price,
-              product.currency
-            )}
-          </div>
+      count += quantity;
 
-        </div>
 
-        <div class="controls">
+      html += `
 
-          <button
-            class="btn"
-            onclick="changeQty(${index},-1)"
-          >−</button>
+        <article class="item">
 
-          <input
-            class="qty"
-            value="${quantity}"
-            min="1"
-            type="number"
-            onchange="setQty(${index},this.value)"
+          <img
+            src="${safeImage(
+              service.image ||
+              service.thumbnail ||
+              service.coverImage
+            )}"
+            alt=""
+            onerror="
+              this.style.display='none'
+            "
           >
 
-          <button
-            class="btn"
-            onclick="changeQty(${index},1)"
-          >+</button>
+          <div class="info">
 
-          <button
-            class="remove"
-            onclick="removeItem(${index})"
-          >
-            Remove
-          </button>
+            <div class="name">
+              ${escapeHTML(
+                service.name ||
+                service.title ||
+                "Service"
+              )}
+            </div>
 
-        </div>
+            <div class="price">
+              ${formatMoney(
+                price,
+                service.currency
+              )}
+            </div>
 
-      </article>
+          </div>
 
-    `;
+          <div class="controls">
 
-  });
+            <button
+              class="btn"
+              onclick="
+                changeQty(${index},-1)
+              "
+            >
+              −
+            </button>
+
+            <input
+              class="qty"
+              type="number"
+              min="1"
+              value="${quantity}"
+              onchange="
+                setQty(${index},this.value)
+              "
+            >
+
+            <button
+              class="btn"
+              onclick="
+                changeQty(${index},1)
+              "
+            >
+              +
+            </button>
+
+            <button
+              class="remove"
+              onclick="
+                removeItem(${index})
+              "
+            >
+              Remove
+            </button>
+
+          </div>
+
+        </article>
+
+      `;
+
+    }
+  );
 
 
-  container.innerHTML = html;
+  container.innerHTML =
+    html;
 
-  document.getElementById("summary").style.display="block";
 
-  document.getElementById("subtotal").textContent =
+  document.getElementById(
+    "summary"
+  ).style.display = "block";
+
+
+  document.getElementById(
+    "subtotal"
+  ).textContent =
     formatMoney(subtotal);
 
-  document.getElementById("total").textContent =
+
+  document.getElementById(
+    "total"
+  ).textContent =
     formatMoney(subtotal);
 
-  document.getElementById("count").textContent =
+
+  document.getElementById(
+    "count"
+  ).textContent =
     count;
 
 }
@@ -374,26 +452,39 @@ function renderCart(){
    QUANTITY
 ========================= */
 
-function changeQty(index,value){
+function changeQty(
+  index,
+  amount
+){
 
   cart[index].quantity =
     Math.max(
       1,
-      Number(cart[index].quantity || 1) + value
+      Number(
+        cart[index].quantity || 1
+      ) + amount
     );
 
   saveCart();
+
   renderCart();
 
 }
 
 
-function setQty(index,value){
+function setQty(
+  index,
+  value
+){
 
   cart[index].quantity =
-    Math.max(1,Number(value)||1);
+    Math.max(
+      1,
+      Number(value) || 1
+    );
 
   saveCart();
+
   renderCart();
 
 }
@@ -405,9 +496,13 @@ function setQty(index,value){
 
 function removeItem(index){
 
-  cart.splice(index,1);
+  cart.splice(
+    index,
+    1
+  );
 
   saveCart();
+
   renderCart();
 
 }
@@ -424,13 +519,13 @@ function checkout(){
 
 
   localStorage.setItem(
-    "marketplaceCheckout",
+    "serviceCheckout",
     JSON.stringify(cart)
   );
 
 
   location.href =
-    "checkout-marketplace.html";
+    "checkout-service.html";
 
 }
 
@@ -441,36 +536,44 @@ function checkout(){
 
 function escapeHTML(value){
 
-  return String(value ?? "")
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#039;");
+  return String(
+    value ?? ""
+  )
+  .replace(/&/g,"&amp;")
+  .replace(/</g,"&lt;")
+  .replace(/>/g,"&gt;")
+  .replace(/"/g,"&quot;")
+  .replace(/'/g,"&#039;");
 
 }
 
 
-function image(url){
+function safeImage(url){
 
   if(!url)
-    return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='100%25' height='100%25' fill='%23eee'/%3E%3C/svg%3E";
+    return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='100%25' height='100%25' fill='%23eeeeee'/%3E%3C/svg%3E";
 
   return escapeHTML(url);
 
 }
 
 
-function formatMoney(amount,currency){
+function formatMoney(
+  amount,
+  currency
+){
 
   return new Intl.NumberFormat(
     undefined,
     {
       style:"currency",
-      currency:currency || "TZS",
+      currency:
+        currency || "TZS",
       maximumFractionDigits:2
     }
-  ).format(Number(amount)||0);
+  ).format(
+    Number(amount) || 0
+  );
 
 }
 
@@ -479,7 +582,7 @@ function formatMoney(amount,currency){
    START
 ========================= */
 
-loadProducts();
+loadServices();
 
 </script>
 
