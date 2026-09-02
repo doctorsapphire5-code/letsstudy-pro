@@ -1,1311 +1,1046 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Watch Video | LetsStudy Pro</title>
-  <meta name="description" content="Watch educational videos on LetsStudy Pro.">
-  <meta name="robots" content="index, follow">
-
-  <link rel="icon" href="favicon.ico">
-
-  <style>
-    *{
-      box-sizing:border-box;
-      margin:0;
-      padding:0;
-    }
-
-    body{
-      font-family:Arial,Helvetica,sans-serif;
-      background:#f4f6f9;
-      color:#172033;
-      line-height:1.6;
-    }
-
-    header{
-      height:68px;
-      background:#fff;
-      border-bottom:1px solid #e5e7eb;
-      position:sticky;
-      top:0;
-      z-index:100;
-    }
-
-    .header-inner{
-      max-width:1200px;
-      height:100%;
-      margin:auto;
-      padding:0 20px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:20px;
-    }
-
-    .logo{
-      text-decoration:none;
-      font-size:22px;
-      font-weight:800;
-      color:#111827;
-    }
-
-    .logo span{
-      color:#2563eb;
-    }
-
-    .back{
-      text-decoration:none;
-      color:#2563eb;
-      border:1px solid #dbe3ef;
-      background:#fff;
-      padding:9px 15px;
-      border-radius:10px;
-      font-weight:700;
-    }
-
-    .back:hover{
-      background:#eff6ff;
-    }
-
-    main{
-      max-width:1200px;
-      margin:30px auto;
-      padding:0 20px;
-    }
-
-    .loading,
-    .error{
-      background:#fff;
-      border-radius:18px;
-      padding:50px 20px;
-      text-align:center;
-      box-shadow:0 8px 30px rgba(15,23,42,.06);
-    }
-
-    .error{
-      color:#b91c1c;
-      display:none;
-    }
-
-    #content{
-      display:none;
-    }
-
-    .video-card{
-      background:#000;
-      border-radius:18px;
-      overflow:hidden;
-      box-shadow:0 10px 35px rgba(15,23,42,.12);
-    }
-
-    video,
-    iframe{
-      width:100%;
-      height:620px;
-      display:block;
-      border:0;
-      background:#000;
-    }
-
-    .video-info{
-      background:#fff;
-      padding:28px;
-      border-radius:0 0 18px 18px;
-    }
-
-    .badge{
-      display:inline-block;
-      background:#eff6ff;
-      color:#2563eb;
-      padding:6px 12px;
-      border-radius:999px;
-      font-size:13px;
-      font-weight:800;
-      margin-bottom:12px;
-    }
-
-    h1{
-      font-size:34px;
-      line-height:1.2;
-      color:#111827;
-      margin-bottom:10px;
-    }
-
-    .meta{
-      display:flex;
-      flex-wrap:wrap;
-      gap:18px;
-      color:#64748b;
-      font-size:14px;
-      margin-top:14px;
-    }
-
-    .layout{
-      display:grid;
-      grid-template-columns:minmax(0,2fr) minmax(280px,1fr);
-      gap:24px;
-      margin-top:24px;
-    }
-
-    .card{
-      background:#fff;
-      border-radius:18px;
-      padding:25px;
-      box-shadow:0 8px 30px rgba(15,23,42,.06);
-      margin-bottom:24px;
-    }
-
-    .card h2{
-      font-size:20px;
-      color:#111827;
-      margin-bottom:14px;
-    }
-
-    .description{
-      white-space:pre-line;
-      color:#475569;
-    }
-
-    .info-list{
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-    }
-
-    .info-item{
-      border-bottom:1px solid #edf0f4;
-      padding-bottom:12px;
-    }
-
-    .info-item:last-child{
-      border-bottom:0;
-    }
-
-    .label{
-      color:#94a3b8;
-      text-transform:uppercase;
-      font-size:11px;
-      font-weight:800;
-      letter-spacing:.5px;
-    }
-
-    .value{
-      color:#1e293b;
-      font-weight:600;
-      margin-top:2px;
-      word-break:break-word;
-    }
-
-    .actions{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-top:20px;
-    }
-
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      text-decoration:none;
-      border-radius:10px;
-      padding:11px 17px;
-      font-weight:800;
-      cursor:pointer;
-    }
-
-    .primary{
-      background:#2563eb;
-      color:#fff;
-    }
-
-    .secondary{
-      background:#fff;
-      color:#2563eb;
-      border:1px solid #dbe3ef;
-    }
-
-    footer{
-      text-align:center;
-      color:#94a3b8;
-      padding:35px 20px;
-      font-size:14px;
-    }
-
-    @media(max-width:850px){
-
-      video,
-      iframe{
-        height:420px;
-      }
-
-      .layout{
-        grid-template-columns:1fr;
-      }
-
-      h1{
-        font-size:28px;
-      }
-    }
-
-    @media(max-width:550px){
-
-      header{
-        height:62px;
-      }
-
-      .header-inner{
-        padding:0 13px;
-      }
-
-      .logo{
-        font-size:19px;
-      }
-
-      .back{
-        font-size:13px;
-        padding:8px 10px;
-      }
-
-      main{
-        margin:18px auto;
-        padding:0 12px;
-      }
-
-      video,
-      iframe{
-        height:230px;
-      }
-
-      .video-info{
-        padding:21px;
-      }
-
-      .card{
-        padding:20px;
-      }
-
-      h1{
-        font-size:24px;
-      }
-
-      .meta{
-        gap:10px;
-      }
-    }
-  </style>
-</head>
-
-<body>
-
-<header>
-  <div class="header-inner">
-
-    <a href="search.html" class="logo">
-      LetsStudy <span>Pro</span>
-    </a>
-
-    <a href="search.html" class="back">
-      ← Back to Search
-    </a>
-
-  </div>
-</header>
-
-
-<main>
-
-  <div id="loading" class="loading">
-    Loading video...
-  </div>
-
-  <div id="error" class="error">
-    Video not found.
-  </div>
-
-
-  <section id="content">
-
-    <div class="video-card">
-
-      <video
-        id="videoPlayer"
-        controls
-        playsinline
-        preload="metadata"
-        style="display:none;">
-      </video>
-
-      <iframe
-        id="videoFrame"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowfullscreen
-        style="display:none;">
-      </iframe>
-
-      <div class="video-info">
-
-        <div
-          id="category"
-          class="badge"
-          style="display:none;">
-        </div>
-
-        <h1 id="title">
-          Video
-        </h1>
-
-        <div class="meta">
-
-          <span id="instructorMeta"
-                style="display:none;">
-            👤 <span id="instructor"></span>
-          </span>
-
-          <span id="durationMeta"
-                style="display:none;">
-            ⏱ <span id="duration"></span>
-          </span>
-
-          <span id="levelMeta"
-                style="display:none;">
-            🎓 <span id="level"></span>
-          </span>
-
-        </div>
-
-        <div class="actions">
-
-          <a
-            id="sourceBtn"
-            class="btn primary"
-            href="#"
-            target="_blank"
-            rel="noopener noreferrer"
-            style="display:none;">
-            Open Video
-          </a>
-
-          <a
-            href="search.html"
-            class="btn secondary">
-            More Videos
-          </a>
-
-        </div>
-
+<!DOCTYPE html><html lang="en">
+<head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Watch Video | LetsStudy Pro</title><meta name="description" content="Watch educational videos on LetsStudy Pro."><style>
+
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  background:#f5f7fb;
+  color:#111827;
+}
+
+a{
+  text-decoration:none;
+  color:inherit;
+}
+
+/* HEADER */
+
+.header{
+  height:64px;
+  background:#fff;
+  border-bottom:1px solid #e5e7eb;
+  display:flex;
+  align-items:center;
+  position:sticky;
+  top:0;
+  z-index:1000;
+}
+
+.header-inner{
+  width:100%;
+  max-width:1250px;
+  margin:auto;
+  padding:0 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.logo{
+  font-size:21px;
+  font-weight:800;
+}
+
+.logo span{
+  color:#2563eb;
+}
+
+.back{
+  color:#4b5563;
+  font-size:14px;
+  font-weight:600;
+}
+
+.back:hover{
+  color:#2563eb;
+}
+
+/* PAGE */
+
+.container{
+  max-width:1250px;
+  margin:auto;
+  padding:28px 20px 60px;
+}
+
+/* VIDEO */
+
+.video-wrapper{
+  background:#000;
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:0 15px 40px rgba(0,0,0,.15);
+}
+
+.video-wrapper video{
+  width:100%;
+  display:block;
+  max-height:680px;
+  background:#000;
+}
+
+/* CONTENT */
+
+.content{
+  margin-top:25px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 330px;
+  gap:25px;
+}
+
+.main-card,
+.side-card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+}
+
+.main-card{
+  padding:25px;
+}
+
+.side-card{
+  padding:20px;
+  height:max-content;
+}
+
+.category{
+  display:inline-block;
+  background:#eff6ff;
+  color:#2563eb;
+  padding:7px 11px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:700;
+  margin-bottom:12px;
+}
+
+h1{
+  font-size:30px;
+  line-height:1.25;
+  margin-bottom:12px;
+}
+
+.description{
+  color:#6b7280;
+  line-height:1.7;
+  font-size:15px;
+}
+
+/* META */
+
+.meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-top:20px;
+}
+
+.meta-item{
+  background:#f8fafc;
+  border:1px solid #e5e7eb;
+  padding:10px 13px;
+  border-radius:9px;
+  font-size:13px;
+  color:#4b5563;
+}
+
+/* SIDEBAR */
+
+.side-card h3{
+  font-size:18px;
+  margin-bottom:16px;
+}
+
+.info{
+  padding:13px 0;
+  border-bottom:1px solid #f0f0f0;
+}
+
+.info:last-child{
+  border-bottom:0;
+}
+
+.info-label{
+  font-size:11px;
+  color:#9ca3af;
+  text-transform:uppercase;
+  margin-bottom:4px;
+}
+
+.info-value{
+  font-size:14px;
+  font-weight:600;
+}
+
+/* BUTTONS */
+
+.actions{
+  display:flex;
+  gap:10px;
+  margin-top:25px;
+  flex-wrap:wrap;
+}
+
+.btn{
+  border:0;
+  padding:12px 17px;
+  border-radius:9px;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.primary{
+  background:#2563eb;
+  color:#fff;
+}
+
+.secondary{
+  background:#f3f4f6;
+  color:#374151;
+}
+
+.btn:hover{
+  opacity:.9;
+}
+
+/* NOTES */
+
+.extra{
+  margin-top:25px;
+}
+
+.extra-card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  padding:25px;
+}
+
+.extra-card h2{
+  font-size:21px;
+  margin-bottom:13px;
+}
+
+.extra-text{
+  white-space:pre-wrap;
+  color:#4b5563;
+  line-height:1.7;
+  font-size:14px;
+}
+
+/* LOADING */
+
+.loading{
+  text-align:center;
+  padding:100px 20px;
+  color:#6b7280;
+}
+
+.spinner{
+  width:40px;
+  height:40px;
+  border:4px solid #e5e7eb;
+  border-top-color:#2563eb;
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+  margin:0 auto 15px;
+}
+
+@keyframes spin{
+  to{
+    transform:rotate(360deg);
+  }
+}
+
+/* ERROR */
+
+.error{
+  max-width:600px;
+  margin:80px auto;
+  background:#fff;
+  border:1px solid #fecaca;
+  border-radius:16px;
+  padding:30px;
+  text-align:center;
+  color:#dc2626;
+}
+
+/* HIDDEN */
+
+.hidden{
+  display:none;
+}
+
+/* MOBILE */
+
+@media(max-width:850px){
+
+  .content{
+    grid-template-columns:1fr;
+  }
+
+  h1{
+    font-size:24px;
+  }
+
+  .container{
+    padding:18px 12px 40px;
+  }
+
+  .video-wrapper{
+    border-radius:10px;
+  }
+
+  .main-card,
+  .side-card,
+  .extra-card{
+    padding:18px;
+  }
+
+}
+
+</style></head><body><header class="header">  <div class="header-inner"><a href="index.html" class="logo">
+  LetsStudy <span>Pro</span>
+</a>
+
+<a href="videos.html" class="back">
+  ← Back to Videos
+</a>
+
+  </div></header><main class="container">  <!-- LOADING -->  <div id="loading" class="loading"><div class="spinner"></div>
+
+<p>Loading video...</p>
+
+  </div>  <!-- ERROR -->  <div id="errorBox" class="error hidden"><h2>Video unavailable</h2>
+
+<p id="errorMessage" style="margin-top:10px;">
+  Unable to load this video.
+</p>
+
+<a
+  href="videos.html"
+  class="btn secondary"
+  style="display:inline-block;margin-top:20px;"
+>
+  Back to Videos
+</a>
+
+  </div>  <!-- VIDEO PAGE -->  <div id="videoPage" class="hidden"><!-- VIDEO PLAYER -->
+
+<section class="video-wrapper">
+
+  <video
+    id="videoPlayer"
+    controls
+    playsinline
+    preload="metadata"
+  >
+
+    <source
+      id="videoSource"
+      src=""
+      type="video/mp4"
+    >
+
+    Your browser does not support video playback.
+
+  </video>
+
+</section>
+
+
+<!-- CONTENT -->
+
+<section class="content">
+
+
+  <div class="main-card">
+
+    <span
+      id="videoCategory"
+      class="category"
+    >
+      Video
+    </span>
+
+
+    <h1 id="videoTitle">
+      Video Title
+    </h1>
+
+
+    <p
+      id="videoDescription"
+      class="description"
+    >
+      Video description.
+    </p>
+
+
+    <div class="meta">
+
+      <div class="meta-item">
+        🎓 <span id="videoInstructor">Instructor</span>
+      </div>
+
+      <div class="meta-item">
+        ⏱ <span id="videoDuration">--</span>
+      </div>
+
+      <div class="meta-item">
+        📚 <span id="videoLevel">All Levels</span>
+      </div>
+
+      <div class="meta-item">
+        🌐 <span id="videoLanguage">English</span>
       </div>
 
     </div>
 
 
-    <div class="layout">
+    <div class="actions">
 
-      <div>
+      <button
+        class="btn primary"
+        id="playButton"
+      >
+        ▶ Play Video
+      </button>
 
-        <div
-          id="descriptionCard"
-          class="card"
-          style="display:none;">
+      <button
+        class="btn secondary"
+        id="fullscreenButton"
+      >
+        ⛶ Fullscreen
+      </button>
 
-          <h2>About This Video</h2>
-
-          <p
-            id="description"
-            class="description">
-          </p>
-
-        </div>
-
-
-        <div
-          id="transcriptCard"
-          class="card"
-          style="display:none;">
-
-          <h2>Transcript</h2>
-
-          <p
-            id="transcript"
-            class="description">
-          </p>
-
-        </div>
-
-
-        <div
-          id="notesCard"
-          class="card"
-          style="display:none;">
-
-          <h2>Learning Notes</h2>
-
-          <p
-            id="notes"
-            class="description">
-          </p>
-
-        </div>
-
-      </div>
-
-
-      <aside>
-
-        <div class="card">
-
-          <h2>Video Information</h2>
-
-          <div class="info-list">
-
-            <div
-              id="subjectItem"
-              class="info-item"
-              style="display:none;">
-
-              <div class="label">
-                Subject
-              </div>
-
-              <div
-                id="subject"
-                class="value">
-              </div>
-
-            </div>
-
-
-            <div
-              id="courseItem"
-              class="info-item"
-              style="display:none;">
-
-              <div class="label">
-                Course
-              </div>
-
-              <div
-                id="course"
-                class="value">
-              </div>
-
-            </div>
-
-
-            <div
-              id="moduleItem"
-              class="info-item"
-              style="display:none;">
-
-              <div class="label">
-                Module
-              </div>
-
-              <div
-                id="module"
-                class="value">
-              </div>
-
-            </div>
-
-
-            <div
-              id="languageItem"
-              class="info-item"
-              style="display:none;">
-
-              <div class="label">
-                Language
-              </div>
-
-              <div
-                id="language"
-                class="value">
-              </div>
-
-            </div>
-
-
-            <div
-              id="dateItem"
-              class="info-item"
-              style="display:none;">
-
-              <div class="label">
-                Published
-              </div>
-
-              <div
-                id="date"
-                class="value">
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <div
-          id="resourcesCard"
-          class="card"
-          style="display:none;">
-
-          <h2>Resources</h2>
-
-          <div
-            id="resources"
-            class="description">
-          </div>
-
-        </div>
-
-      </aside>
+      <button
+        class="btn secondary"
+        id="nextButton"
+      >
+        Next Lesson →
+      </button>
 
     </div>
 
-  </section>
-
-</main>
+  </div>
 
 
-<footer>
-  © 2026 LetsStudy Pro. All rights reserved.
-</footer>
+  <!-- INFO -->
+
+  <aside class="side-card">
+
+    <h3>Video Information</h3>
 
 
-<script type="module">
+    <div class="info">
 
-  import {
-    initializeApp
-  } from
-  "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+      <div class="info-label">
+        Subject
+      </div>
 
+      <div
+        class="info-value"
+        id="videoSubject"
+      >
+        —
+      </div>
 
-  import {
-    getFirestore,
-    doc,
-    getDoc
-  } from
-  "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-
-  const firebaseConfig = {
-
-    apiKey:
-      "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
-
-    authDomain:
-      "let-s-study-pro-course.firebaseapp.com",
-
-    databaseURL:
-      "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
-
-    projectId:
-      "let-s-study-pro-course",
-
-    storageBucket:
-      "let-s-study-pro-course.firebasestorage.app",
-
-    messagingSenderId:
-      "474928293390",
-
-    appId:
-      "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
-
-    measurementId:
-      "G-85B7V5H5J0"
-
-  };
+    </div>
 
 
-  const app =
-    initializeApp(firebaseConfig);
+    <div class="info">
 
-  const db =
-    getFirestore(app);
+      <div class="info-label">
+        Course
+      </div>
 
+      <div
+        class="info-value"
+        id="videoCourse"
+      >
+        —
+      </div>
+
+    </div>
+
+
+    <div class="info">
+
+      <div class="info-label">
+        Module
+      </div>
+
+      <div
+        class="info-value"
+        id="videoModule"
+      >
+        —
+      </div>
+
+    </div>
+
+
+    <div class="info">
+
+      <div class="info-label">
+        Published
+      </div>
+
+      <div
+        class="info-value"
+        id="videoDate"
+      >
+        —
+      </div>
+
+    </div>
+
+  </aside>
+
+</section>
+
+
+<!-- NOTES -->
+
+<section
+  id="notesSection"
+  class="extra hidden"
+>
+
+  <div class="extra-card">
+
+    <h2>Lesson Notes</h2>
+
+    <div
+      id="videoNotes"
+      class="extra-text"
+    ></div>
+
+  </div>
+
+</section>
+
+
+<!-- TRANSCRIPT -->
+
+<section
+  id="transcriptSection"
+  class="extra hidden"
+>
+
+  <div class="extra-card">
+
+    <h2>Transcript</h2>
+
+    <div
+      id="videoTranscript"
+      class="extra-text"
+    ></div>
+
+  </div>
+
+</section>
+
+  </div></main><script type="module">
+
+import {
+  initializeApp
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+
+import {
+  getFirestore,
+  doc,
+  getDoc
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
+const firebaseConfig = {
+
+  apiKey:
+    "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+  authDomain:
+    "let-s-study-pro-course.firebaseapp.com",
+
+  databaseURL:
+    "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+  projectId:
+    "let-s-study-pro-course",
+
+  storageBucket:
+    "let-s-study-pro-course.firebasestorage.app",
+
+  messagingSenderId:
+    "474928293390",
+
+  appId:
+    "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+  measurementId:
+    "G-85B7V5H5J0"
+
+};
+
+
+const app =
+  initializeApp(firebaseConfig);
+
+const db =
+  getFirestore(app);
+
+
+const loading =
+  document.getElementById("loading");
+
+const videoPage =
+  document.getElementById("videoPage");
+
+const errorBox =
+  document.getElementById("errorBox");
+
+const errorMessage =
+  document.getElementById("errorMessage");
+
+const player =
+  document.getElementById("videoPlayer");
+
+const source =
+  document.getElementById("videoSource");
+
+
+function first(data, fields){
+
+  for(const field of fields){
+
+    if(
+      data[field] !== undefined &&
+      data[field] !== null &&
+      String(data[field]).trim()
+    ){
+
+      return String(data[field]).trim();
+
+    }
+
+  }
+
+  return "";
+
+}
+
+
+function showError(message){
+
+  loading.classList.add("hidden");
+
+  videoPage.classList.add("hidden");
+
+  errorMessage.textContent =
+    message;
+
+  errorBox.classList.remove("hidden");
+
+}
+
+
+async function loadVideo(){
 
   const params =
     new URLSearchParams(
       window.location.search
     );
 
-
   const videoId =
     params.get("id");
 
 
-  const loading =
-    document.getElementById("loading");
+  if(!videoId){
 
-  const errorBox =
-    document.getElementById("error");
+    showError(
+      "No video ID was provided."
+    );
 
-  const content =
-    document.getElementById("content");
-
-
-  function value(data, fields){
-
-    for(const field of fields){
-
-      const v = data[field];
-
-      if(
-        v !== undefined &&
-        v !== null &&
-        String(v).trim() !== ""
-      ){
-
-        return v;
-
-      }
-
-    }
-
-    return "";
+    return;
 
   }
 
 
-  function text(v){
+  try{
 
-    if(
-      v === undefined ||
-      v === null
-    ){
+    const ref =
+      doc(
+        db,
+        "videos",
+        videoId
+      );
 
-      return "";
 
-    }
+    const snapshot =
+      await getDoc(ref);
 
-    if(Array.isArray(v)){
 
-      return v.join(", ");
+    if(!snapshot.exists()){
 
-    }
-
-    if(typeof v === "object"){
-
-      return Object.values(v).join(", ");
-
-    }
-
-    return String(v).trim();
-
-  }
-
-
-  function showText(
-    elementId,
-    itemId,
-    v
-  ){
-
-    const item =
-      document.getElementById(itemId);
-
-    const element =
-      document.getElementById(elementId);
-
-    const clean =
-      text(v);
-
-    if(
-      !clean ||
-      !item ||
-      !element
-    ){
-
-      if(item){
-        item.style.display = "none";
-      }
-
-      return;
-
-    }
-
-    element.textContent = clean;
-
-    item.style.display = "";
-
-  }
-
-
-  function normalizeUrl(v){
-
-    if(!v) return "";
-
-    let url =
-      String(v).trim();
-
-    if(
-      !url.startsWith("http://") &&
-      !url.startsWith("https://")
-    ){
-
-      url =
-        "https://" + url;
-
-    }
-
-    return url;
-
-  }
-
-
-  function getVideoType(url){
-
-    const lower =
-      url.toLowerCase();
-
-    if(
-      lower.includes("youtube.com") ||
-      lower.includes("youtu.be")
-    ){
-
-      return "youtube";
-
-    }
-
-    if(
-      lower.includes("vimeo.com")
-    ){
-
-      return "vimeo";
-
-    }
-
-    return "file";
-
-  }
-
-
-  function youtubeEmbed(url){
-
-    try{
-
-      const parsed =
-        new URL(url);
-
-      let id = "";
-
-      if(
-        parsed.hostname.includes("youtu.be")
-      ){
-
-        id =
-          parsed.pathname.replace(
-            "/",
-            ""
-          );
-
-      }else{
-
-        id =
-          parsed.searchParams.get("v");
-
-        if(!id){
-
-          const parts =
-            parsed.pathname.split("/");
-
-          const index =
-            parts.indexOf("embed");
-
-          if(index >= 0){
-
-            id =
-              parts[index + 1];
-
-          }
-
-        }
-
-      }
-
-      if(!id) return "";
-
-      return
-        "https://www.youtube.com/embed/" +
-        encodeURIComponent(id);
-
-    }catch(e){
-
-      return "";
-
-    }
-
-  }
-
-
-  function vimeoEmbed(url){
-
-    try{
-
-      const parsed =
-        new URL(url);
-
-      const parts =
-        parsed.pathname
-          .split("/")
-          .filter(Boolean);
-
-      const id =
-        parts[parts.length - 1];
-
-      if(!id) return "";
-
-      return
-        "https://player.vimeo.com/video/" +
-        encodeURIComponent(id);
-
-    }catch(e){
-
-      return "";
-
-    }
-
-  }
-
-
-  async function loadVideo(){
-
-    if(!videoId){
-
-      loading.style.display =
-        "none";
-
-      errorBox.textContent =
-        "No video ID was provided.";
-
-      errorBox.style.display =
-        "block";
+      showError(
+        "This video could not be found."
+      );
 
       return;
 
     }
 
 
-    try{
-
-      const videoRef =
-        doc(
-          db,
-          "videos",
-          videoId
-        );
+    const data =
+      snapshot.data() || {};
 
 
-      const snapshot =
-        await getDoc(videoRef);
+    const title =
+      first(data,[
+        "title",
+        "name",
+        "videoTitle"
+      ]) || "Untitled Video";
 
 
-      if(!snapshot.exists()){
-
-        loading.style.display =
-          "none";
-
-        errorBox.textContent =
-          "Video not found.";
-
-        errorBox.style.display =
-          "block";
-
-        return;
-
-      }
+    const description =
+      first(data,[
+        "description",
+        "details",
+        "content"
+      ]);
 
 
-      const data =
-        snapshot.data() || {};
+    const category =
+      first(data,[
+        "category",
+        "type"
+      ]) || "Video";
 
 
-      const title =
-        value(data,[
-          "title",
-          "name",
-          "videoTitle",
-          "lessonTitle"
-        ]) || "Untitled Video";
+    const instructor =
+      first(data,[
+        "instructor",
+        "teacher",
+        "author"
+      ]) || "LetsStudy Pro";
 
 
-      const description =
-        value(data,[
-          "description",
-          "about",
-          "details",
-          "content",
-          "summary"
-        ]);
+    const duration =
+      first(data,[
+        "duration",
+        "length"
+      ]) || "--";
 
 
-      const category =
-        value(data,[
-          "category",
-          "type",
-          "videoCategory"
-        ]);
+    const level =
+      first(data,[
+        "level",
+        "difficulty"
+      ]) || "All Levels";
 
 
-      const instructor =
-        value(data,[
-          "instructor",
-          "instructorName",
-          "teacher",
-          "teacherName",
-          "author",
-          "authorName"
-        ]);
+    const language =
+      first(data,[
+        "language"
+      ]) || "English";
 
 
-      const duration =
-        value(data,[
-          "duration",
-          "videoDuration",
-          "length"
-        ]);
+    const subject =
+      first(data,[
+        "subject"
+      ]) || "—";
 
 
-      const level =
-        value(data,[
-          "level",
-          "educationLevel",
-          "studyLevel"
-        ]);
+    const course =
+      first(data,[
+        "course",
+        "courseName"
+      ]) || "—";
 
 
-      const subject =
-        value(data,[
-          "subject",
-          "field",
-          "fieldOfStudy"
-        ]);
+    const moduleName =
+      first(data,[
+        "module",
+        "moduleName"
+      ]) || "—";
 
 
-      const course =
-        value(data,[
-          "course",
-          "courseName",
-          "courseTitle"
-        ]);
+    const videoUrl =
+      first(data,[
+        "videoUrl",
+        "videoURL",
+        "video",
+        "mp4Url",
+        "fileUrl",
+        "url"
+      ]);
 
 
-      const module =
-        value(data,[
-          "module",
-          "moduleName",
-          "moduleTitle"
-        ]);
+    const notes =
+      first(data,[
+        "notes",
+        "lessonNotes"
+      ]);
 
 
-      const language =
-        value(data,[
-          "language",
-          "videoLanguage"
-        ]);
+    const transcript =
+      first(data,[
+        "transcript",
+        "captions"
+      ]);
 
 
-      const transcript =
-        value(data,[
-          "transcript",
-          "captions",
-          "subtitles"
-        ]);
+    const published =
+      first(data,[
+        "publishedDate",
+        "date",
+        "createdAt"
+      ]);
 
 
-      const notes =
-        value(data,[
-          "notes",
-          "learningNotes",
-          "studyNotes"
-        ]);
+    if(!videoUrl){
+
+      showError(
+        "This video does not have a playable video URL."
+      );
+
+      return;
+
+    }
 
 
-      const videoUrl =
-        value(data,[
-          "videoUrl",
-          "videoURL",
-          "video",
-          "url",
-          "videoLink",
-          "link",
-          "source"
-        ]);
+    document.title =
+      title + " | LetsStudy Pro";
 
 
-      const thumbnail =
-        value(data,[
-          "thumbnail",
-          "thumbnailUrl",
-          "image",
-          "imageUrl",
-          "coverImage"
-        ]);
+    document.getElementById(
+      "videoTitle"
+    ).textContent =
+      title;
 
 
-      const published =
-        value(data,[
-          "publishedAt",
-          "publishDate",
-          "date",
-          "createdAt"
-        ]);
+    document.getElementById(
+      "videoDescription"
+    ).textContent =
+      description ||
+      "Watch this lesson on LetsStudy Pro.";
 
 
-      document.title =
-        title +
-        " | Watch Video | LetsStudy Pro";
+    document.getElementById(
+      "videoCategory"
+    ).textContent =
+      category;
 
+
+    document.getElementById(
+      "videoInstructor"
+    ).textContent =
+      instructor;
+
+
+    document.getElementById(
+      "videoDuration"
+    ).textContent =
+      duration;
+
+
+    document.getElementById(
+      "videoLevel"
+    ).textContent =
+      level;
+
+
+    document.getElementById(
+      "videoLanguage"
+    ).textContent =
+      language;
+
+
+    document.getElementById(
+      "videoSubject"
+    ).textContent =
+      subject;
+
+
+    document.getElementById(
+      "videoCourse"
+    ).textContent =
+      course;
+
+
+    document.getElementById(
+      "videoModule"
+    ).textContent =
+      moduleName;
+
+
+    document.getElementById(
+      "videoDate"
+    ).textContent =
+      published || "—";
+
+
+    source.src =
+      videoUrl;
+
+
+    player.load();
+
+
+    if(notes){
 
       document.getElementById(
-        "title"
+        "videoNotes"
       ).textContent =
-        text(title);
-
-
-      if(category){
-
-        document.getElementById(
-          "category"
-        ).textContent =
-          text(category);
-
-        document.getElementById(
-          "category"
-        ).style.display =
-          "inline-block";
-
-      }
-
-
-      showText(
-        "instructor",
-        "instructorMeta",
-        instructor
-      );
-
-
-      showText(
-        "duration",
-        "durationMeta",
-        duration
-      );
-
-
-      showText(
-        "level",
-        "levelMeta",
-        level
-      );
-
-
-      if(description){
-
-        document.getElementById(
-          "description"
-        ).textContent =
-          text(description);
-
-        document.getElementById(
-          "descriptionCard"
-        ).style.display =
-          "block";
-
-      }
-
-
-      if(transcript){
-
-        document.getElementById(
-          "transcript"
-        ).textContent =
-          text(transcript);
-
-        document.getElementById(
-          "transcriptCard"
-        ).style.display =
-          "block";
-
-      }
-
-
-      if(notes){
-
-        document.getElementById(
-          "notes"
-        ).textContent =
-          text(notes);
-
-        document.getElementById(
-          "notesCard"
-        ).style.display =
-          "block";
-
-      }
-
-
-      showText(
-        "subject",
-        "subjectItem",
-        subject
-      );
-
-
-      showText(
-        "course",
-        "courseItem",
-        course
-      );
-
-
-      showText(
-        "module",
-        "moduleItem",
-        module
-      );
-
-
-      showText(
-        "language",
-        "languageItem",
-        language
-      );
-
-
-      showText(
-        "date",
-        "dateItem",
-        published
-      );
-
-
-      const player =
-        document.getElementById(
-          "videoPlayer"
-        );
-
-      const frame =
-        document.getElementById(
-          "videoFrame"
-        );
-
-      const sourceBtn =
-        document.getElementById(
-          "sourceBtn"
-        );
-
-
-      const normalized =
-        normalizeUrl(videoUrl);
-
-
-      if(normalized){
-
-        const type =
-          getVideoType(normalized);
-
-
-        if(type === "youtube"){
-
-          const embed =
-            youtubeEmbed(normalized);
-
-          if(embed){
-
-            frame.src = embed;
-
-            frame.style.display =
-              "block";
-
-          }
-
-        }else if(type === "vimeo"){
-
-          const embed =
-            vimeoEmbed(normalized);
-
-          if(embed){
-
-            frame.src = embed;
-
-            frame.style.display =
-              "block";
-
-          }
-
-        }else{
-
-          player.src =
-            normalized;
-
-          player.style.display =
-            "block";
-
-
-          if(thumbnail){
-
-            player.poster =
-              text(thumbnail);
-
-          }
-
-        }
-
-
-        sourceBtn.href =
-          normalized;
-
-        sourceBtn.style.display =
-          "inline-flex";
-
-      }else{
-
-        frame.style.display =
-          "none";
-
-        player.style.display =
-          "none";
-
-      }
-
-
-      loading.style.display =
-        "none";
-
-      content.style.display =
-        "block";
-
-
-    }catch(error){
-
-      console.error(
-        "Video loading error:",
-        error
-      );
-
-
-      loading.style.display =
-        "none";
-
-      errorBox.textContent =
-        "Unable to load this video. Please try again.";
-
-      errorBox.style.display =
-        "block";
+        notes;
+
+      document.getElementById(
+        "notesSection"
+      ).classList.remove("hidden");
 
     }
 
+
+    if(transcript){
+
+      document.getElementById(
+        "videoTranscript"
+      ).textContent =
+        transcript;
+
+      document.getElementById(
+        "transcriptSection"
+      ).classList.remove("hidden");
+
+    }
+
+
+    loading.classList.add("hidden");
+
+    videoPage.classList.remove("hidden");
+
+
+  }catch(error){
+
+    console.error(
+      "Video loading error:",
+      error
+    );
+
+    showError(
+      "Unable to load this video. Please try again."
+    );
+
   }
 
+}
 
-  loadVideo();
 
-</script>
+document
+  .getElementById("playButton")
+  .addEventListener(
+    "click",
+    () => {
 
-</body>
+      if(player.paused){
+
+        player.play();
+
+      }else{
+
+        player.pause();
+
+      }
+
+    }
+  );
+
+
+player.addEventListener(
+  "play",
+  () => {
+
+    document.getElementById(
+      "playButton"
+    ).textContent =
+      "⏸ Pause Video";
+
+  }
+);
+
+
+player.addEventListener(
+  "pause",
+  () => {
+
+    document.getElementById(
+      "playButton"
+    ).textContent =
+      "▶ Play Video";
+
+  }
+);
+
+
+document
+  .getElementById("fullscreenButton")
+  .addEventListener(
+    "click",
+    async () => {
+
+      try{
+
+        if(player.requestFullscreen){
+
+          await player.requestFullscreen();
+
+        }else if(player.webkitEnterFullscreen){
+
+          player.webkitEnterFullscreen();
+
+        }
+
+      }catch(error){
+
+        console.error(
+          "Fullscreen error:",
+          error
+        );
+
+      }
+
+    }
+  );
+
+
+document
+  .getElementById("nextButton")
+  .addEventListener(
+    "click",
+    () => {
+
+      alert(
+        "Next lesson system will be connected to your course lessons."
+      );
+
+    }
+  );
+
+
+loadVideo();
+
+</script></body>
 </html>
