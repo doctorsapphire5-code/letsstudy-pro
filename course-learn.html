@@ -1,1363 +1,755 @@
-cat > course-learn.html <<'EOF'
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Course Learning | LetsStudy Pro</title>
 
-  <title>Course Learning | LetsStudy Pro</title>
-  <meta name="description" content="Learn, track your progress and complete your course on LetsStudy Pro.">
-  <link rel="icon" href="favicon.ico">
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
 
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  background:#f5f7fb;
+  color:#172033;
+}
 
-    body{
-      font-family:Inter,Arial,sans-serif;
-      background:#f5f7fb;
-      color:#172033;
-    }
+/* HEADER */
+.topbar{
+  height:64px;
+  background:#ffffff;
+  border-bottom:1px solid #e5e7eb;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 18px;
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  z-index:1000;
+}
 
-    header{
-      height:66px;
-      background:#fff;
-      border-bottom:1px solid #e5e7eb;
-      display:flex;
-      align-items:center;
-      position:sticky;
-      top:0;
-      z-index:50;
-    }
+.brand{
+  font-size:20px;
+  font-weight:800;
+  color:#111827;
+  text-decoration:none;
+}
 
-    .nav{
-      width:100%;
-      max-width:1250px;
-      margin:auto;
-      padding:0 18px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:15px;
-    }
+.menu-btn{
+  width:42px;
+  height:42px;
+  border:0;
+  border-radius:10px;
+  background:#f1f5f9;
+  font-size:21px;
+  cursor:pointer;
+}
 
-    .brand{
-      color:#111827;
-      text-decoration:none;
-      font-size:21px;
-      font-weight:900;
-    }
+.top-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
 
-    .brand span{color:#2563eb}
+.back-btn{
+  text-decoration:none;
+  padding:9px 14px;
+  border-radius:9px;
+  background:#111827;
+  color:white;
+  font-size:14px;
+}
 
-    .course-name{
-      flex:1;
-      text-align:center;
-      font-weight:700;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
+/* SIDEBAR */
+.sidebar{
+  position:fixed;
+  top:64px;
+  left:0;
+  bottom:0;
+  width:260px;
+  background:#111827;
+  color:white;
+  overflow-y:auto;
+  transition:width .25s ease, transform .25s ease;
+  z-index:900;
+}
 
-    .back{
-      color:#2563eb;
-      text-decoration:none;
-      font-size:14px;
-      font-weight:700;
-    }
+.sidebar.collapsed{
+  width:78px;
+}
 
-    .layout{
-      max-width:1250px;
-      margin:auto;
-      display:grid;
-      grid-template-columns:320px minmax(0,1fr);
-      min-height:calc(100vh - 66px);
-    }
+.sidebar-header{
+  padding:20px 16px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
 
-    .sidebar{
-      background:#111827;
-      color:#fff;
-      min-height:calc(100vh - 66px);
-      overflow:auto;
-    }
+.course-title{
+  font-size:15px;
+  font-weight:700;
+  line-height:1.4;
+}
 
-    .sidebar-head{
-      padding:22px 18px;
-      border-bottom:1px solid rgba(255,255,255,.1);
-    }
+.course-subtitle{
+  margin-top:5px;
+  font-size:12px;
+  color:#9ca3af;
+}
 
-    .sidebar-head h2{
-      font-size:17px;
-      margin-bottom:12px;
-    }
+.sidebar.collapsed .course-title,
+.sidebar.collapsed .course-subtitle,
+.sidebar.collapsed .nav-text,
+.sidebar.collapsed .section-title,
+.sidebar.collapsed .progress-info{
+  display:none;
+}
 
-    .progress-label{
-      display:flex;
-      justify-content:space-between;
-      font-size:12px;
-      color:#cbd5e1;
-      margin-bottom:7px;
-    }
+.nav{
+  padding:12px 10px;
+}
 
-    .progress-bar{
-      height:7px;
-      background:#374151;
-      border-radius:20px;
-      overflow:hidden;
-    }
+.section-title{
+  font-size:11px;
+  color:#9ca3af;
+  text-transform:uppercase;
+  letter-spacing:.8px;
+  padding:12px 10px 7px;
+}
 
-    .progress-fill{
-      height:100%;
-      width:0;
-      background:#60a5fa;
-      transition:.3s;
-    }
+.nav-link{
+  display:flex;
+  align-items:center;
+  gap:13px;
+  padding:12px 12px;
+  margin:3px 0;
+  color:#d1d5db;
+  text-decoration:none;
+  border-radius:9px;
+  transition:.2s;
+  white-space:nowrap;
+}
 
-    .modules{
-      padding:10px;
-    }
+.nav-link:hover{
+  background:#1f2937;
+  color:white;
+}
 
-    .module{
-      margin-bottom:8px;
-    }
+.nav-link.active{
+  background:#2563eb;
+  color:white;
+}
 
-    .module-title{
-      width:100%;
-      background:#1f2937;
-      border:0;
-      color:#fff;
-      text-align:left;
-      padding:13px;
-      border-radius:9px;
-      cursor:pointer;
-      font-weight:700;
-      font-size:13px;
-    }
+.nav-icon{
+  width:24px;
+  min-width:24px;
+  text-align:center;
+  font-size:18px;
+}
 
-    .lessons{
-      padding:5px 0 5px 8px;
-    }
+.progress-box{
+  margin:14px 12px;
+  padding:14px;
+  background:#1f2937;
+  border-radius:10px;
+}
 
-    .lesson{
-      width:100%;
-      border:0;
-      background:transparent;
-      color:#cbd5e1;
-      padding:11px 10px;
-      text-align:left;
-      cursor:pointer;
-      border-radius:8px;
-      display:flex;
-      gap:8px;
-      align-items:flex-start;
-      font-size:13px;
-    }
+.progress-info{
+  display:flex;
+  justify-content:space-between;
+  font-size:12px;
+  margin-bottom:8px;
+  color:#d1d5db;
+}
 
-    .lesson:hover,
-    .lesson.active{
-      background:#2563eb;
-      color:#fff;
-    }
+.progress-bar{
+  width:100%;
+  height:7px;
+  background:#374151;
+  border-radius:20px;
+  overflow:hidden;
+}
 
-    .check{
-      width:18px;
-      flex:none;
-    }
+.progress-fill{
+  width:42%;
+  height:100%;
+  background:#3b82f6;
+}
 
-    .main{
-      min-width:0;
-      padding:25px;
-    }
+/* MAIN */
+.main{
+  margin-left:260px;
+  padding:88px 28px 40px;
+  transition:margin-left .25s ease;
+}
 
-    .welcome{
-      background:#fff;
-      border:1px solid #e5e7eb;
-      border-radius:18px;
-      padding:25px;
-      margin-bottom:18px;
-    }
+.sidebar.collapsed ~ .main{
+  margin-left:78px;
+}
 
-    .welcome h1{
-      font-size:28px;
-      margin-bottom:8px;
-    }
+/* HERO */
+.hero{
+  background:white;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  padding:28px;
+  margin-bottom:22px;
+}
 
-    .welcome p{
-      color:#667085;
-      line-height:1.6;
-    }
+.eyebrow{
+  font-size:13px;
+  color:#2563eb;
+  font-weight:700;
+  margin-bottom:8px;
+}
 
-    .lesson-card{
-      background:#fff;
-      border:1px solid #e5e7eb;
-      border-radius:18px;
-      overflow:hidden;
-    }
+.hero h1{
+  font-size:30px;
+  margin-bottom:10px;
+}
 
-    .lesson-head{
-      padding:24px;
-      border-bottom:1px solid #e5e7eb;
-    }
+.hero p{
+  color:#64748b;
+  line-height:1.6;
+  max-width:800px;
+}
 
-    .lesson-type{
-      display:inline-block;
-      background:#eef2ff;
-      color:#4338ca;
-      padding:6px 9px;
-      border-radius:999px;
-      font-size:11px;
-      font-weight:800;
-      margin-bottom:9px;
-    }
+.continue-btn{
+  display:inline-block;
+  margin-top:20px;
+  padding:12px 18px;
+  background:#2563eb;
+  color:white;
+  text-decoration:none;
+  border-radius:9px;
+  font-weight:700;
+}
 
-    .lesson-head h2{
-      font-size:25px;
-      margin-bottom:6px;
-    }
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:18px;
+  margin-bottom:22px;
+}
 
-    .duration{
-      color:#667085;
-      font-size:13px;
-    }
+.card{
+  background:white;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:20px;
+}
 
-    .media{
-      width:100%;
-      aspect-ratio:16/9;
-      background:#111827;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
+.card-icon{
+  font-size:26px;
+  margin-bottom:12px;
+}
 
-    .media video,
-    .media iframe{
-      width:100%;
-      height:100%;
-      border:0;
-    }
+.card h3{
+  font-size:16px;
+  margin-bottom:7px;
+}
 
-    .media-placeholder{
-      color:#fff;
-      text-align:center;
-      padding:25px;
-    }
+.card p{
+  color:#64748b;
+  font-size:13px;
+  line-height:1.5;
+}
 
-    .content{
-      padding:25px;
-      line-height:1.75;
-      color:#344054;
-    }
+.card a{
+  display:inline-block;
+  margin-top:13px;
+  color:#2563eb;
+  text-decoration:none;
+  font-size:13px;
+  font-weight:700;
+}
 
-    .content h1,
-    .content h2,
-    .content h3{
-      color:#101828;
-      margin:20px 0 10px;
-    }
+/* LESSON */
+.lesson-section{
+  background:white;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  overflow:hidden;
+}
 
-    .content p{
-      margin-bottom:14px;
-    }
+.section-header{
+  padding:20px;
+  border-bottom:1px solid #e5e7eb;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
 
-    .content ul,
-    .content ol{
-      margin:10px 0 18px 25px;
-    }
+.section-header h2{
+  font-size:19px;
+}
 
-    .bottom-actions{
-      padding:20px 25px;
-      border-top:1px solid #e5e7eb;
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-    }
+.lesson{
+  display:flex;
+  align-items:center;
+  gap:15px;
+  padding:16px 20px;
+  border-bottom:1px solid #eef0f4;
+}
 
-    button,
-    .btn{
-      border:0;
-      cursor:pointer;
-      padding:11px 16px;
-      border-radius:10px;
-      text-decoration:none;
-      font-weight:700;
-      font-size:14px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-    }
+.lesson:last-child{
+  border-bottom:0;
+}
 
-    .primary{
-      background:#2563eb;
-      color:#fff;
-    }
+.lesson-number{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:#eff6ff;
+  color:#2563eb;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+}
 
-    .secondary{
-      background:#eef2f7;
-      color:#344054;
-    }
+.lesson-info{
+  flex:1;
+}
 
-    .success{
-      background:#dcfce7;
-      color:#166534;
-    }
+.lesson-info h4{
+  font-size:14px;
+  margin-bottom:5px;
+}
 
-    .quick-links{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:12px;
-      margin-top:18px;
-    }
+.lesson-info span{
+  font-size:12px;
+  color:#64748b;
+}
 
-    .quick{
-      background:#fff;
-      border:1px solid #e5e7eb;
-      border-radius:14px;
-      padding:17px;
-      text-decoration:none;
-      color:#172033;
-    }
+.lesson-status{
+  font-size:12px;
+  color:#16a34a;
+  font-weight:700;
+}
 
-    .quick strong{
-      display:block;
-      margin-bottom:5px;
-    }
+/* MOBILE OVERLAY */
+.overlay{
+  display:none;
+  position:fixed;
+  inset:64px 0 0 0;
+  background:rgba(0,0,0,.45);
+  z-index:850;
+}
 
-    .quick span{
-      font-size:12px;
-      color:#667085;
-    }
+/* MOBILE */
+@media(max-width:900px){
 
-    .loading,
-    .error{
-      max-width:600px;
-      margin:60px auto;
-      background:#fff;
-      border:1px solid #e5e7eb;
-      border-radius:18px;
-      padding:35px;
-      text-align:center;
-    }
+  .sidebar{
+    width:260px;
+    transform:translateX(-100%);
+  }
 
-    footer{
-      text-align:center;
-      padding:25px;
-      color:#667085;
-      font-size:13px;
-    }
+  .sidebar.mobile-open{
+    transform:translateX(0);
+  }
 
-    @media(max-width:850px){
+  .sidebar.collapsed{
+    width:260px;
+  }
 
-      .layout{
-        grid-template-columns:1fr;
-      }
+  .sidebar.collapsed .course-title,
+  .sidebar.collapsed .course-subtitle,
+  .sidebar.collapsed .nav-text,
+  .sidebar.collapsed .section-title,
+  .sidebar.collapsed .progress-info{
+    display:block;
+  }
 
-      .sidebar{
-        min-height:auto;
-        max-height:420px;
-      }
+  .main,
+  .sidebar.collapsed ~ .main{
+    margin-left:0;
+    padding:84px 15px 30px;
+  }
 
-      .course-name{
-        display:none;
-      }
+  .overlay.active{
+    display:block;
+  }
 
-      .main{
-        padding:15px;
-      }
+  .grid{
+    grid-template-columns:1fr;
+  }
 
-      .quick-links{
-        grid-template-columns:1fr;
-      }
-    }
+  .hero{
+    padding:21px;
+  }
 
-    @media(max-width:550px){
+  .hero h1{
+    font-size:24px;
+  }
 
-      .welcome h1{
-        font-size:23px;
-      }
+  .back-btn{
+    display:none;
+  }
+}
 
-      .lesson-head h2{
-        font-size:21px;
-      }
+@media(min-width:901px){
 
-      .bottom-actions{
-        flex-direction:column;
-      }
-
-      .bottom-actions button,
-      .bottom-actions a{
-        width:100%;
-      }
-    }
-  </style>
+  .menu-btn{
+    margin-left:8px;
+  }
+}
+</style>
 </head>
 
 <body>
 
-<header>
-  <div class="nav">
+<!-- TOPBAR -->
+<header class="topbar">
+
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button class="menu-btn" id="menuBtn" aria-label="Toggle sidebar">
+      ☰
+    </button>
 
     <a href="index.html" class="brand">
-      LetsStudy <span>Pro</span>
+      LetsStudy Pro
     </a>
+  </div>
 
-    <div id="courseNameTop" class="course-name">
+  <div class="top-actions">
+    <a href="courses.html" class="back-btn">
+      ← Courses
+    </a>
+  </div>
+
+</header>
+
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay"></div>
+
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+
+  <div class="sidebar-header">
+
+    <div class="course-title">
+      Course Learning
+    </div>
+
+    <div class="course-subtitle">
+      Continue your learning journey
+    </div>
+
+  </div>
+
+
+  <nav class="nav">
+
+    <div class="section-title">
       Course
     </div>
 
-    <a id="backLink" href="#" class="back">
-      Exit
+    <a href="course-learn.html" class="nav-link active">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-text">Overview</span>
     </a>
 
-  </div>
-</header>
+    <a href="course-modules.html" class="nav-link">
+      <span class="nav-icon">📚</span>
+      <span class="nav-text">Modules</span>
+    </a>
 
-<div id="loading" class="loading">
-  Loading course...
-</div>
+    <a href="course-lesson.html" class="nav-link">
+      <span class="nav-icon">▶️</span>
+      <span class="nav-text">Lessons</span>
+    </a>
 
-<div id="error" class="error" style="display:none">
-  <h2>Unable to load course</h2>
-  <p id="errorText"></p>
-</div>
 
-<div id="learningApp" style="display:none">
+    <div class="section-title">
+      Learning
+    </div>
 
-  <div class="layout">
+    <a href="course-quiz.html" class="nav-link">
+      <span class="nav-icon">📝</span>
+      <span class="nav-text">Quizzes</span>
+    </a>
 
-    <aside class="sidebar">
+    <a href="course-assignments.html" class="nav-link">
+      <span class="nav-icon">📋</span>
+      <span class="nav-text">Assignments</span>
+    </a>
 
-      <div class="sidebar-head">
+    <a href="course-resources.html" class="nav-link">
+      <span class="nav-icon">📂</span>
+      <span class="nav-text">Resources</span>
+    </a>
 
-        <h2 id="sidebarCourse">
-          Course Content
-        </h2>
 
-        <div class="progress-label">
-          <span>Course Progress</span>
-          <span id="progressText">0%</span>
-        </div>
+    <div class="section-title">
+      Updates
+    </div>
 
-        <div class="progress-bar">
-          <div id="progressFill" class="progress-fill"></div>
-        </div>
+    <a href="course-notifications.html" class="nav-link">
+      <span class="nav-icon">🔔</span>
+      <span class="nav-text">Notifications</span>
+    </a>
 
+
+    <div class="progress-box">
+
+      <div class="progress-info">
+        <span>Course Progress</span>
+        <strong>42%</strong>
       </div>
 
-      <div id="modules" class="modules"></div>
-
-    </aside>
-
-    <main class="main">
-
-      <section class="welcome">
-
-        <h1 id="welcomeTitle">
-          Welcome to your course
-        </h1>
-
-        <p id="welcomeDescription">
-          Continue learning from where you stopped.
-        </p>
-
-      </section>
-
-      <article class="lesson-card">
-
-        <div class="lesson-head">
-
-          <span id="lessonType" class="lesson-type">
-            Lesson
-          </span>
-
-          <h2 id="lessonTitle">
-            Select a lesson
-          </h2>
-
-          <div id="lessonDuration" class="duration">
-            —
-          </div>
-
-        </div>
-
-        <div id="media" class="media">
-
-          <div class="media-placeholder">
-            <strong>Select a lesson</strong><br>
-            Choose a lesson from the course content.
-          </div>
-
-        </div>
-
-        <div id="content" class="content">
-          <p>
-            Select a lesson to start learning.
-          </p>
-        </div>
-
-        <div class="bottom-actions">
-
-          <button id="previousBtn" class="secondary">
-            ← Previous
-          </button>
-
-          <button id="completeBtn" class="primary">
-            Mark as Complete
-          </button>
-
-          <button id="nextBtn" class="primary">
-            Next →
-          </button>
-
-        </div>
-
-      </article>
-
-      <section class="quick-links">
-
-        <a id="quizLink" class="quick" href="#">
-          <strong>Course Quiz</strong>
-          <span>Test your knowledge</span>
-        </a>
-
-        <a id="assignmentLink" class="quick" href="#">
-          <strong>Assignments</strong>
-          <span>Complete course assignments</span>
-        </a>
-
-        <a id="certificateLink" class="quick" href="#">
-          <strong>Certificate</strong>
-          <span>View your completion certificate</span>
-        </a>
-
-      </section>
-
-    </main>
-
-  </div>
-
-</div>
-
-<footer>
-  © <span id="year"></span> LetsStudy Pro. Learn. Practice. Grow.
-</footer>
-
-<script type="module">
-
-  import {
-    initializeApp
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-
-  import {
-    getFirestore,
-    doc,
-    getDoc
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyBcOYDfAVK5XbkljsyRgI_0rj0odBn678tCc",
-    authDomain: "let-s-study-pro-course.firebaseapp.com",
-    databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
-    projectId: "let-s-study-pro-course",
-    storageBucket: "let-s-study-pro-course.firebasestorage.app",
-    messagingSenderId: "474928293390",
-    appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
-    measurementId: "G-85B7V5H5J0"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  const params =
-    new URLSearchParams(location.search);
-
-  const courseId =
-    params.get("id");
-
-  let course = null;
-  let lessons = [];
-  let currentIndex = 0;
-
-
-  document.getElementById("year").textContent =
-    new Date().getFullYear();
-
-
-  function first(obj, fields, fallback=""){
-
-    for(const field of fields){
-
-      if(
-        obj &&
-        obj[field] !== undefined &&
-        obj[field] !== null &&
-        String(obj[field]).trim() !== ""
-      ){
-        return obj[field];
-      }
-
-    }
-
-    return fallback;
-  }
-
-
-  function getModules(course){
-
-    const data =
-      course.modules ??
-      course.sections ??
-      course.courseModules ??
-      course.curriculum ??
-      [];
-
-    if(Array.isArray(data)){
-      return data;
-    }
-
-    if(data && Array.isArray(data.items)){
-      return data.items;
-    }
-
-    if(data && typeof data === "object"){
-
-      return Object.entries(data).map(
-        ([id,value]) => ({
-          ...(typeof value === "object" ? value : {}),
-          moduleId:id
-        })
-      );
-
-    }
-
-    return [];
-  }
-
-
-  function getLessons(module){
-
-    const data =
-      module.lessons ??
-      module.items ??
-      module.contents ??
-      [];
-
-    if(Array.isArray(data)){
-      return data;
-    }
-
-    if(data && typeof data === "object"){
-
-      return Object.entries(data).map(
-        ([id,value]) => ({
-          ...(typeof value === "object" ? value : {}),
-          lessonId:id
-        })
-      );
-
-    }
-
-    return [];
-  }
-
-
-  function buildLessons(){
-
-    lessons = [];
-
-    getModules(course).forEach(
-      (module,moduleIndex)=>{
-
-        getLessons(module).forEach(
-          (lesson,lessonIndex)=>{
-
-            lessons.push({
-              ...lesson,
-              _moduleIndex:moduleIndex,
-              _lessonIndex:lessonIndex
-            });
-
-          }
-        );
-
-      }
-    );
-
-  }
-
-
-  function getLessonId(lesson,index){
-
-    return first(
-      lesson,
-      [
-        "id",
-        "lessonId",
-        "lessonID",
-        "uid",
-        "slug",
-        "lessonSlug"
-      ],
-      `lesson-${index}`
-    );
-
-  }
-
-
-  function isComplete(lesson,index){
-
-    const id =
-      getLessonId(lesson,index);
-
-    return localStorage.getItem(
-      `courseLessonCompleted_${courseId}_${id}`
-    ) === "true";
-
-  }
-
-
-  function calculateProgress(){
-
-    if(!lessons.length){
-      return 0;
-    }
-
-    const completed =
-      lessons.filter(
-        (lesson,index)=>
-          isComplete(lesson,index)
-      ).length;
-
-    return Math.round(
-      (completed / lessons.length) * 100
-    );
-
-  }
-
-
-  function updateProgress(){
-
-    const progress =
-      calculateProgress();
-
-    document.getElementById("progressText")
-      .textContent =
-      `${progress}%`;
-
-    document.getElementById("progressFill")
-      .style.width =
-      `${progress}%`;
-
-  }
-
-
-  function escapeHTML(value){
-
-    return String(value ?? "")
-      .replace(/&/g,"&amp;")
-      .replace(/</g,"&lt;")
-      .replace(/>/g,"&gt;")
-      .replace(/"/g,"&quot;")
-      .replace(/'/g,"&#039;");
-
-  }
-
-
-  function renderModules(){
-
-    const container =
-      document.getElementById("modules");
-
-    container.innerHTML = "";
-
-    const modules =
-      getModules(course);
-
-
-    modules.forEach(
-      (module,moduleIndex)=>{
-
-        const moduleTitle =
-          first(
-            module,
-            [
-              "title",
-              "name",
-              "moduleTitle",
-              "sectionTitle"
-            ],
-            `Module ${moduleIndex + 1}`
-          );
-
-
-        const lessonsInModule =
-          getLessons(module);
-
-
-        const wrapper =
-          document.createElement("div");
-
-        wrapper.className = "module";
-
-
-        const title =
-          document.createElement("button");
-
-        title.className =
-          "module-title";
-
-        title.type = "button";
-
-        title.textContent =
-          `${moduleIndex + 1}. ${moduleTitle}`;
-
-
-        const lessonContainer =
-          document.createElement("div");
-
-        lessonContainer.className =
-          "lessons";
-
-
-        lessonsInModule.forEach(
-          (lesson,lessonIndex)=>{
-
-            const globalIndex =
-              lessons.findIndex(
-                x => x === lesson
-              );
-
-
-            const button =
-              document.createElement("button");
-
-            button.className =
-              "lesson";
-
-            button.type = "button";
-
-
-            const complete =
-              isComplete(
-                lesson,
-                globalIndex
-              );
-
-
-            button.innerHTML = `
-              <span class="check">
-                ${complete ? "✓" : "○"}
-              </span>
-              <span>
-                ${escapeHTML(
-                  first(
-                    lesson,
-                    [
-                      "title",
-                      "name",
-                      "lessonTitle"
-                    ],
-                    `Lesson ${lessonIndex + 1}`
-                  )
-                )}
-              </span>
-            `;
-
-
-            if(globalIndex === currentIndex){
-              button.classList.add("active");
-            }
-
-
-            button.addEventListener(
-              "click",
-              ()=>{
-                openLesson(globalIndex);
-              }
-            );
-
-
-            lessonContainer.appendChild(button);
-
-          }
-        );
-
-
-        title.addEventListener(
-          "click",
-          ()=>{
-            const hidden =
-              lessonContainer.style.display === "none";
-
-            lessonContainer.style.display =
-              hidden ? "block" : "none";
-          }
-        );
-
-
-        wrapper.appendChild(title);
-        wrapper.appendChild(lessonContainer);
-
-        container.appendChild(wrapper);
-
-      }
-    );
-
-  }
-
-
-  function renderVideo(lesson){
-
-    const media =
-      document.getElementById("media");
-
-    const url =
-      first(
-        lesson,
-        [
-          "videoUrl",
-          "videoURL",
-          "video",
-          "videoLink",
-          "youtubeUrl",
-          "youtube"
-        ],
-        ""
-      );
-
-
-    if(!url){
-
-      media.innerHTML = `
-        <div class="media-placeholder">
-          <strong>Lesson Content</strong><br>
-          No video is available for this lesson.
-        </div>
-      `;
-
-      return;
-    }
-
-
-    if(
-      /\.mp4(\?.*)?$/i.test(url)
-    ){
-
-      media.innerHTML = `
-        <video
-          controls
-          playsinline
-          preload="metadata">
-          <source
-            src="${escapeHTML(url)}"
-            type="video/mp4">
-        </video>
-      `;
-
-      return;
-    }
-
-
-    const youtube =
-      url.match(
-        /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/
-      );
-
-
-    let embed =
-      youtube
-        ? `https://www.youtube.com/embed/${youtube[1]}`
-        : url;
-
-
-    if(
-      embed.includes("youtube.com/embed") ||
-      embed.includes("player.vimeo.com")
-    ){
-
-      media.innerHTML = `
-        <iframe
-          src="${escapeHTML(embed)}"
-          title="Course lesson video"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen>
-        </iframe>
-      `;
-
-      return;
-    }
-
-
-    media.innerHTML = `
-      <div class="media-placeholder">
-        <strong>Lesson Video</strong><br>
-        <a
-          href="${escapeHTML(url)}"
-          target="_blank"
-          rel="noopener"
-          style="color:white">
-          Open video
-        </a>
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
       </div>
-    `;
+
+    </div>
+
+  </nav>
+
+</aside>
+
+
+<!-- MAIN -->
+<main class="main">
+
+  <section class="hero">
+
+    <div class="eyebrow">
+      CONTINUE LEARNING
+    </div>
+
+    <h1>
+      Welcome to your course
+    </h1>
+
+    <p>
+      Continue your lessons, complete quizzes and assignments,
+      access course resources, and track your learning progress
+      from one place.
+    </p>
+
+    <a href="course-lesson.html" class="continue-btn">
+      Continue Learning →
+    </a>
+
+  </section>
+
+
+  <!-- QUICK ACCESS -->
+  <section class="grid">
+
+    <div class="card">
+      <div class="card-icon">📚</div>
+      <h3>Course Modules</h3>
+      <p>
+        Explore all modules and organize your learning progress.
+      </p>
+      <a href="course-modules.html">
+        View Modules →
+      </a>
+    </div>
+
+
+    <div class="card">
+      <div class="card-icon">▶️</div>
+      <h3>Lessons</h3>
+      <p>
+        Continue watching and completing your course lessons.
+      </p>
+      <a href="course-lesson.html">
+        Open Lessons →
+      </a>
+    </div>
+
+
+    <div class="card">
+      <div class="card-icon">📝</div>
+      <h3>Quizzes</h3>
+      <p>
+        Test your knowledge and track your quiz performance.
+      </p>
+      <a href="course-quiz.html">
+        Take Quiz →
+      </a>
+    </div>
+
+
+    <div class="card">
+      <div class="card-icon">📋</div>
+      <h3>Assignments</h3>
+      <p>
+        View, submit, and track your course assignments.
+      </p>
+      <a href="course-assignments.html">
+        View Assignments →
+      </a>
+    </div>
+
+
+    <div class="card">
+      <div class="card-icon">📂</div>
+      <h3>Resources</h3>
+      <p>
+        Access notes, PDFs, files, and other learning materials.
+      </p>
+      <a href="course-resources.html">
+        View Resources →
+      </a>
+    </div>
+
+
+    <div class="card">
+      <div class="card-icon">🔔</div>
+      <h3>Notifications</h3>
+      <p>
+        Stay updated with new lessons, quizzes, assignments,
+        and course announcements.
+      </p>
+      <a href="course-notifications.html">
+        View Notifications →
+      </a>
+    </div>
+
+  </section>
+
+
+  <!-- RECENT LESSONS -->
+  <section class="lesson-section">
+
+    <div class="section-header">
+      <h2>Recent Lessons</h2>
+
+      <a href="course-lesson.html"
+         style="color:#2563eb;text-decoration:none;font-size:13px;font-weight:700;">
+        View All
+      </a>
+    </div>
+
+
+    <div class="lesson">
+
+      <div class="lesson-number">
+        1
+      </div>
+
+      <div class="lesson-info">
+        <h4>
+          Introduction to the Course
+        </h4>
+
+        <span>
+          Module 1 • Video Lesson
+        </span>
+      </div>
+
+      <div class="lesson-status">
+        ✓ Completed
+      </div>
+
+    </div>
+
+
+    <div class="lesson">
+
+      <div class="lesson-number">
+        2
+      </div>
+
+      <div class="lesson-info">
+        <h4>
+          Core Concepts
+        </h4>
+
+        <span>
+          Module 1 • Video Lesson
+        </span>
+      </div>
+
+      <div class="lesson-status">
+        ✓ Completed
+      </div>
+
+    </div>
+
+
+    <div class="lesson">
+
+      <div class="lesson-number">
+        3
+      </div>
+
+      <div class="lesson-info">
+        <h4>
+          Practical Application
+        </h4>
+
+        <span>
+          Module 2 • Video Lesson
+        </span>
+      </div>
+
+      <div style="font-size:12px;color:#2563eb;font-weight:700;">
+        Continue
+      </div>
+
+    </div>
+
+
+  </section>
+
+</main>
+
+
+<script>
+
+const sidebar = document.getElementById("sidebar");
+const menuBtn = document.getElementById("menuBtn");
+const overlay = document.getElementById("overlay");
+
+
+menuBtn.addEventListener("click", function(){
+
+  if(window.innerWidth <= 900){
+
+    sidebar.classList.toggle("mobile-open");
+    overlay.classList.toggle("active");
+
+  }else{
+
+    sidebar.classList.toggle("collapsed");
 
   }
 
+});
 
-  function renderLesson(){
 
-    if(!lessons.length){
+overlay.addEventListener("click", function(){
 
-      document.getElementById("lessonTitle")
-        .textContent =
-        "No lessons available";
+  sidebar.classList.remove("mobile-open");
+  overlay.classList.remove("active");
 
-      document.getElementById("content")
-        .innerHTML =
-        "<p>This course does not have lessons yet.</p>";
+});
 
-      return;
 
-    }
+window.addEventListener("resize", function(){
 
+  if(window.innerWidth > 900){
 
-    const lesson =
-      lessons[currentIndex];
+    sidebar.classList.remove("mobile-open");
+    overlay.classList.remove("active");
 
+  }
 
-    const title =
-      first(
-        lesson,
-        [
-          "title",
-          "name",
-          "lessonTitle"
-        ],
-        `Lesson ${currentIndex + 1}`
-      );
+});
 
-
-    const type =
-      first(
-        lesson,
-        [
-          "type",
-          "lessonType",
-          "contentType"
-        ],
-        "Lesson"
-      );
-
-
-    const duration =
-      first(
-        lesson,
-        [
-          "duration",
-          "length",
-          "time"
-        ],
-        "—"
-      );
-
-
-    const content =
-      first(
-        lesson,
-        [
-          "content",
-          "description",
-          "body",
-          "lessonContent",
-          "text",
-          "notes"
-        ],
-        "This lesson does not have text content yet."
-      );
-
-
-    document.getElementById("lessonTitle")
-      .textContent =
-      title;
-
-
-    document.getElementById("lessonType")
-      .textContent =
-      type;
-
-
-    document.getElementById("lessonDuration")
-      .textContent =
-      duration;
-
-
-    if(
-      /<[a-z][\s\S]*>/i.test(String(content))
-    ){
-
-      document.getElementById("content")
-        .innerHTML =
-        String(content);
-
-    }else{
-
-      document.getElementById("content")
-        .innerHTML =
-        `<p>${escapeHTML(content)
-          .replace(/\n\n/g,"</p><p>")
-          .replace(/\n/g,"<br>")}</p>`;
-
-    }
-
-
-    renderVideo(lesson);
-
-
-    const completed =
-      isComplete(
-        lesson,
-        currentIndex
-      );
-
-
-    const completeBtn =
-      document.getElementById("completeBtn");
-
-
-    if(completed){
-
-      completeBtn.textContent =
-        "Completed ✓";
-
-      completeBtn.className =
-        "success";
-
-    }else{
-
-            completeBtn.textContent = "Mark as Complete";
-      completeBtn.className = "complete-btn";
-
-      completeBtn.addEventListener("click", async () => {
-        if (!currentLesson) return;
-
-        const lessonKey =
-          `courseLessonCompleted_${courseId}_${currentLesson.id}`;
-
-        const isCompleted =
-          localStorage.getItem(lessonKey) === "true";
-
-        if (isCompleted) {
-          localStorage.removeItem(lessonKey);
-          completeBtn.textContent = "Mark as Complete";
-          completeBtn.classList.remove("completed");
-        } else {
-          localStorage.setItem(lessonKey, "true");
-          completeBtn.textContent = "Completed ✓";
-          completeBtn.classList.add("completed");
-        }
-
-        updateProgress();
-        renderSidebar();
-      });
-
-      if (
-        localStorage.getItem(
-          `courseLessonCompleted_${courseId}_${currentLesson.id}`
-        ) === "true"
-      ) {
-        completeBtn.textContent = "Completed ✓";
-        completeBtn.classList.add("completed");
-      }
-
-      actions.appendChild(prevBtn);
-      actions.appendChild(completeBtn);
-      actions.appendChild(nextBtn);
-
-      lessonContent.appendChild(actions);
-
-      updateProgress();
-      renderSidebar();
-    }
-
-    function updateProgress() {
-      const completed = lessons.filter(lesson =>
-        localStorage.getItem(
-          `courseLessonCompleted_${courseId}_${lesson.id}`
-        ) === "true"
-      ).length;
-
-      const total = lessons.length;
-      const percentage = total
-        ? Math.round((completed / total) * 100)
-        : 0;
-
-      progressText.textContent =
-        `${completed} of ${total} lessons completed`;
-
-      progressBar.style.width = `${percentage}%`;
-
-      if (percentage === 100) {
-        localStorage.setItem(
-          `courseCompletion_${courseId}`,
-          JSON.stringify({
-            completed: true,
-            completedAt: new Date().toISOString()
-          })
-        );
-
-        completionMessage.innerHTML = `
-          <div class="completion-box">
-            <strong>Course Completed!</strong>
-            <p>
-              Congratulations! You have completed all lessons
-              in this course.
-            </p>
-            <a href="course-certificate.html?id=${encodeURIComponent(courseId)}"
-               class="certificate-btn">
-              View Certificate
-            </a>
-          </div>
-        `;
-      } else {
-        completionMessage.innerHTML = "";
-      }
-    }
-
-    function getLessonIndex() {
-      return lessons.findIndex(
-        lesson => lesson.id === currentLesson?.id
-      );
-    }
-
-    function openPreviousLesson() {
-      const index = getLessonIndex();
-
-      if (index > 0) {
-        const previous = lessons[index - 1];
-
-        window.location.href =
-          `course-learn.html?id=${encodeURIComponent(courseId)}&lesson=${encodeURIComponent(previous.id)}`;
-      }
-    }
-
-    function openNextLesson() {
-      const index = getLessonIndex();
-
-      if (index < lessons.length - 1) {
-        const next = lessons[index + 1];
-
-        window.location.href =
-          `course-learn.html?id=${encodeURIComponent(courseId)}&lesson=${encodeURIComponent(next.id)}`;
-      }
-    }
-
-    prevBtn.addEventListener("click", openPreviousLesson);
-    nextBtn.addEventListener("click", openNextLesson);
-
-    document.getElementById("modulesBtn").addEventListener("click", () => {
-      window.location.href =
-        `course-modules.html?id=${encodeURIComponent(courseId)}`;
-    });
-
-    document.getElementById("quizBtn").addEventListener("click", () => {
-      window.location.href =
-        `course-quiz.html?id=${encodeURIComponent(courseId)}`;
-    });
-
-    document.getElementById("assignmentBtn").addEventListener("click", () => {
-      window.location.href =
-        `course-assignments.html?id=${encodeURIComponent(courseId)}`;
-    });
-
-    document.getElementById("certificateBtn").addEventListener("click", () => {
-      window.location.href =
-        `course-certificate.html?id=${encodeURIComponent(courseId)}`;
-    });
-
-    document.getElementById("exitCourse").addEventListener("click", () => {
-      window.location.href =
-        `course-details.html?id=${encodeURIComponent(courseId)}`;
-    });
-
-    async function loadCourse() {
-      try {
-        if (!courseId) {
-          showError("Course not found.");
-          return;
-        }
-
-        const courseRef = doc(db, "courses", courseId);
-        const courseSnap = await getDoc(courseRef);
-
-        if (!courseSnap.exists()) {
-          showError("This course does not exist.");
-          return;
-        }
-
-        course = {
-          id: courseSnap.id,
-          ...courseSnap.data()
-        };
-
-        courseTitle.textContent =
-          course.title ||
-          course.name ||
-          course.courseTitle ||
-          "Course";
-
-        courseDescription.textContent =
-          course.description ||
-          course.summary ||
-          "Start learning this course.";
-
-        buildLessons();
-
-        if (!lessons.length) {
-          showError("No lessons are available for this course yet.");
-          return;
-        }
-
-        renderSidebar();
-
-        const requestedLesson =
-          new URLSearchParams(window.location.search)
-            .get("lesson");
-
-        let selectedLesson = lessons[0];
-
-        if (requestedLesson) {
-          const found = lessons.find(
-            lesson => lesson.id === requestedLesson
-          );
-
-          if (found) {
-            selectedLesson = found;
-          }
-        }
-
-        renderLesson(selectedLesson);
-
-      } catch (error) {
-        console.error(error);
-        showError("Unable to load this course.");
-      }
-    }
-
-    function showError(message) {
-      document.body.innerHTML = `
-        <div class="error-page">
-          <div class="error-card">
-            <h2>Something went wrong</h2>
-            <p>${message}</p>
-            <button onclick="history.back()">
-              Go Back
-            </button>
-          </div>
-        </div>
-      `;
-    }
-
-    loadCourse();
-  </script>
+</script>
 
 </body>
 </html>
