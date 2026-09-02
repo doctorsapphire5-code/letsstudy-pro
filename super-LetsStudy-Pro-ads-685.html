@@ -1,0 +1,2553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Ads Management | LetsStudy Pro</title>
+
+  <meta
+    name="description"
+    content="LetsStudy Pro advertising management dashboard."
+  >
+
+  <style>
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+    }
+
+    body{
+      font-family:Inter,Arial,sans-serif;
+      background:#f5f7fb;
+      color:#111827;
+    }
+
+    button,
+    input,
+    textarea,
+    select{
+      font:inherit;
+    }
+
+    button{
+      cursor:pointer;
+    }
+
+    .sidebar{
+      position:fixed;
+      left:0;
+      top:0;
+      width:250px;
+      height:100vh;
+      background:#111827;
+      color:#fff;
+      z-index:1000;
+      overflow-y:auto;
+    }
+
+    .brand{
+      padding:22px 20px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+
+    .brand h2{
+      font-size:20px;
+    }
+
+    .brand span{
+      color:#60a5fa;
+    }
+
+    .brand small{
+      display:block;
+      margin-top:5px;
+      color:#9ca3af;
+    }
+
+    .nav{
+      padding:15px 10px;
+    }
+
+    .nav a{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:12px 14px;
+      margin-bottom:5px;
+      border-radius:10px;
+      color:#d1d5db;
+      text-decoration:none;
+      transition:.2s;
+    }
+
+    .nav a:hover,
+    .nav a.active{
+      background:#2563eb;
+      color:#fff;
+    }
+
+    .main{
+      margin-left:250px;
+      min-height:100vh;
+    }
+
+    .topbar{
+      height:70px;
+      background:#fff;
+      border-bottom:1px solid #e5e7eb;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 28px;
+      position:sticky;
+      top:0;
+      z-index:900;
+    }
+
+    .topbar h1{
+      font-size:22px;
+    }
+
+    .admin-label{
+      color:#6b7280;
+      font-size:14px;
+    }
+
+    .content{
+      padding:28px;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:16px;
+      margin-bottom:25px;
+    }
+
+    .stat{
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:14px;
+      padding:20px;
+      box-shadow:0 3px 12px rgba(0,0,0,.04);
+    }
+
+    .stat-label{
+      color:#6b7280;
+      font-size:13px;
+      margin-bottom:8px;
+    }
+
+    .stat-value{
+      font-size:27px;
+      font-weight:800;
+    }
+
+    .toolbar{
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:14px;
+      padding:18px;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+
+    .toolbar input,
+    .toolbar select{
+      border:1px solid #d1d5db;
+      border-radius:9px;
+      padding:11px 13px;
+      background:#fff;
+      min-width:190px;
+      outline:none;
+    }
+
+    .toolbar input:focus,
+    .toolbar select:focus,
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus{
+      border-color:#2563eb;
+      box-shadow:0 0 0 3px rgba(37,99,235,.1);
+    }
+
+    .btn{
+      border:0;
+      border-radius:9px;
+      padding:11px 16px;
+      font-weight:700;
+      transition:.2s;
+    }
+
+    .btn-primary{
+      background:#2563eb;
+      color:#fff;
+    }
+
+    .btn-primary:hover{
+      background:#1d4ed8;
+    }
+
+    .btn-secondary{
+      background:#e5e7eb;
+      color:#111827;
+    }
+
+    .btn-success{
+      background:#16a34a;
+      color:#fff;
+    }
+
+    .btn-warning{
+      background:#f59e0b;
+      color:#fff;
+    }
+
+    .btn-danger{
+      background:#dc2626;
+      color:#fff;
+    }
+
+    .btn-info{
+      background:#0891b2;
+      color:#fff;
+    }
+
+    .table-card{
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:14px;
+      overflow:hidden;
+      box-shadow:0 3px 12px rgba(0,0,0,.04);
+    }
+
+    .table-header{
+      padding:18px 20px;
+      border-bottom:1px solid #e5e7eb;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+    }
+
+    .table-header h2{
+      font-size:18px;
+    }
+
+    .table-wrap{
+      width:100%;
+      overflow-x:auto;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:1150px;
+    }
+
+    th,
+    td{
+      padding:14px 16px;
+      text-align:left;
+      border-bottom:1px solid #eef0f4;
+      vertical-align:middle;
+    }
+
+    th{
+      font-size:12px;
+      text-transform:uppercase;
+      color:#6b7280;
+      background:#fafafa;
+    }
+
+    td{
+      font-size:14px;
+    }
+
+    .ad-info{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:230px;
+    }
+
+    .ad-image{
+      width:55px;
+      height:55px;
+      object-fit:cover;
+      border-radius:10px;
+      background:#e5e7eb;
+      flex-shrink:0;
+    }
+
+    .ad-title{
+      font-weight:800;
+      color:#111827;
+      max-width:220px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    .ad-subtitle{
+      color:#6b7280;
+      font-size:12px;
+      margin-top:3px;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      padding:5px 9px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      text-transform:capitalize;
+    }
+
+    .badge-active{
+      background:#dcfce7;
+      color:#166534;
+    }
+
+    .badge-inactive{
+      background:#fee2e2;
+      color:#991b1b;
+    }
+
+    .badge-sponsored{
+      background:#dbeafe;
+      color:#1e40af;
+    }
+
+    .badge-expired{
+      background:#fef3c7;
+      color:#92400e;
+    }
+
+    .actions{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+    }
+
+    .actions button{
+      padding:7px 9px;
+      border:0;
+      border-radius:7px;
+      font-size:11px;
+      font-weight:700;
+    }
+
+    .empty{
+      text-align:center;
+      padding:50px 20px;
+      color:#6b7280;
+    }
+
+    .loading{
+      text-align:center;
+      padding:40px;
+      color:#6b7280;
+    }
+
+    .mobile-menu{
+      display:none;
+      border:0;
+      background:#111827;
+      color:#fff;
+      font-size:24px;
+      padding:8px 11px;
+      border-radius:8px;
+    }
+
+    .overlay{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.5);
+      z-index:999;
+    }
+
+    /* MODAL */
+
+    .modal{
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.6);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      z-index:2000;
+    }
+
+    .modal.show{
+      display:flex;
+    }
+
+    .modal-box{
+      width:min(1000px,100%);
+      max-height:92vh;
+      overflow-y:auto;
+      background:#fff;
+      border-radius:18px;
+      box-shadow:0 20px 60px rgba(0,0,0,.25);
+    }
+
+    .modal-header{
+      position:sticky;
+      top:0;
+      z-index:2;
+      background:#fff;
+      border-bottom:1px solid #e5e7eb;
+      padding:18px 22px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+
+    .modal-header h2{
+      font-size:19px;
+    }
+
+    .close{
+      border:0;
+      background:#f3f4f6;
+      width:36px;
+      height:36px;
+      border-radius:50%;
+      font-size:20px;
+    }
+
+    .form{
+      padding:22px;
+    }
+
+    .form-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:17px;
+    }
+
+    .full{
+      grid-column:1/-1;
+    }
+
+    .form-group label{
+      display:block;
+      font-size:13px;
+      font-weight:700;
+      margin-bottom:7px;
+      color:#374151;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select{
+      width:100%;
+      border:1px solid #d1d5db;
+      border-radius:9px;
+      padding:11px 12px;
+      outline:none;
+      background:#fff;
+    }
+
+    .form-group textarea{
+      min-height:100px;
+      resize:vertical;
+    }
+
+    .checkbox-row{
+      display:flex;
+      gap:20px;
+      flex-wrap:wrap;
+      padding-top:10px;
+    }
+
+    .checkbox{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:14px;
+      font-weight:600;
+    }
+
+    .checkbox input{
+      width:17px;
+      height:17px;
+    }
+
+    .form-actions{
+      margin-top:22px;
+      padding-top:18px;
+      border-top:1px solid #e5e7eb;
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+    }
+
+    /* VIEW MODAL */
+
+    .view-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:15px;
+      padding:22px;
+    }
+
+    .view-item{
+      background:#f9fafb;
+      border:1px solid #e5e7eb;
+      border-radius:11px;
+      padding:14px;
+    }
+
+    .view-item.full{
+      grid-column:1/-1;
+    }
+
+    .view-label{
+      color:#6b7280;
+      font-size:11px;
+      text-transform:uppercase;
+      font-weight:800;
+      margin-bottom:5px;
+    }
+
+    .view-value{
+      font-size:14px;
+      word-break:break-word;
+    }
+
+    .view-image{
+      width:100%;
+      max-height:300px;
+      object-fit:cover;
+      border-radius:12px;
+      margin-bottom:15px;
+    }
+
+    @media(max-width:1100px){
+      .stats{
+        grid-template-columns:repeat(3,1fr);
+      }
+    }
+
+    @media(max-width:800px){
+      .sidebar{
+        transform:translateX(-100%);
+        transition:.25s;
+      }
+
+      .sidebar.open{
+        transform:translateX(0);
+      }
+
+      .overlay.show{
+        display:block;
+      }
+
+      .main{
+        margin-left:0;
+      }
+
+      .mobile-menu{
+        display:block;
+      }
+
+      .topbar{
+        padding:0 15px;
+      }
+
+      .content{
+        padding:15px;
+      }
+
+      .stats{
+        grid-template-columns:repeat(2,1fr);
+      }
+
+      .form-grid,
+      .view-grid{
+        grid-template-columns:1fr;
+      }
+
+      .full{
+        grid-column:auto;
+      }
+
+      .view-item.full{
+        grid-column:auto;
+      }
+
+      .admin-label{
+        display:none;
+      }
+    }
+
+    @media(max-width:500px){
+      .stats{
+        grid-template-columns:1fr;
+      }
+
+      .toolbar input,
+      .toolbar select{
+        width:100%;
+        min-width:0;
+      }
+
+      .toolbar .btn{
+        width:100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="overlay" id="overlay"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+
+    <div class="brand">
+      <h2>LetsStudy <span>Pro</span></h2>
+      <small>Admin Dashboard</small>
+    </div>
+
+    <nav class="nav">
+
+      <a href="admin-dashboard.html">
+        📊 Dashboard
+      </a>
+
+      <a href="admin-ads.html" class="active">
+        📢 Ads
+      </a>
+
+      <a href="admin-website.html">
+        🌐 Websites
+      </a>
+
+      <a href="admin-resources.html">
+        📚 Resources
+      </a>
+
+      <a href="admin-course.html">
+        🎓 Courses
+      </a>
+
+      <a href="admin-career.html">
+        💼 Careers
+      </a>
+
+      <a href="admin-marketplace.html">
+        🛒 Marketplace
+      </a>
+
+      <a href="admin-sponsor.html">
+        🤝 Sponsors
+      </a>
+
+      <a href="profile-admin.html">
+        👤 Profile
+      </a>
+
+      <a href="settings.html">
+        ⚙️ Settings
+      </a>
+
+      <a href="logout-admin.html">
+        🚪 Logout
+      </a>
+
+    </nav>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <header class="topbar">
+
+      <div style="display:flex;align-items:center;gap:12px;">
+
+        <button
+          class="mobile-menu"
+          id="mobileMenu"
+          type="button"
+        >
+          ☰
+        </button>
+
+        <h1>Ads Management</h1>
+
+      </div>
+
+      <div class="admin-label">
+        LetsStudy Pro Administration
+      </div>
+
+    </header>
+
+    <section class="content">
+
+      <!-- STATS -->
+
+      <div class="stats">
+
+        <div class="stat">
+          <div class="stat-label">Total Ads</div>
+          <div class="stat-value" id="totalAds">0</div>
+        </div>
+
+        <div class="stat">
+          <div class="stat-label">Active</div>
+          <div class="stat-value" id="activeAds">0</div>
+        </div>
+
+        <div class="stat">
+          <div class="stat-label">Inactive</div>
+          <div class="stat-value" id="inactiveAds">0</div>
+        </div>
+
+        <div class="stat">
+          <div class="stat-label">Sponsored</div>
+          <div class="stat-value" id="sponsoredAds">0</div>
+        </div>
+
+        <div class="stat">
+          <div class="stat-label">Impressions</div>
+          <div class="stat-value" id="totalImpressions">0</div>
+        </div>
+
+      </div>
+
+      <!-- TOOLBAR -->
+
+      <div class="toolbar">
+
+        <input
+          type="search"
+          id="searchInput"
+          placeholder="Search ads..."
+        >
+
+        <select id="statusFilter">
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="expired">Expired</option>
+        </select>
+
+        <select id="typeFilter">
+          <option value="all">All Types</option>
+          <option value="banner">Banner</option>
+          <option value="text">Text</option>
+          <option value="video">Video</option>
+          <option value="native">Native</option>
+          <option value="sponsored">Sponsored</option>
+        </select>
+
+        <button
+          class="btn btn-primary"
+          id="newAdButton"
+          type="button"
+        >
+          + New Ad
+        </button>
+
+      </div>
+
+      <!-- TABLE -->
+
+      <div class="table-card">
+
+        <div class="table-header">
+
+          <h2>Advertisements</h2>
+
+          <button
+            class="btn btn-secondary"
+            id="refreshButton"
+            type="button"
+          >
+            ↻ Refresh
+          </button>
+
+        </div>
+
+        <div class="table-wrap">
+
+          <div
+            class="loading"
+            id="loading"
+          >
+            Loading advertisements...
+          </div>
+
+          <table id="adsTable" style="display:none;">
+
+            <thead>
+              <tr>
+                <th>Advertisement</th>
+                <th>Advertiser</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Period</th>
+                <th>Budget</th>
+                <th>Performance</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+
+            <tbody id="adsBody"></tbody>
+
+          </table>
+
+          <div
+            class="empty"
+            id="emptyState"
+            style="display:none;"
+          >
+            No advertisements found.
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ADD / EDIT MODAL -->
+
+  <div class="modal" id="adModal">
+
+    <div class="modal-box">
+
+      <div class="modal-header">
+
+        <h2 id="modalTitle">
+          Create Advertisement
+        </h2>
+
+        <button
+          class="close"
+          id="closeModal"
+          type="button"
+        >
+          ×
+        </button>
+
+      </div>
+
+      <form class="form" id="adForm">
+
+        <input
+          type="hidden"
+          id="editingId"
+        >
+
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label>Title *</label>
+            <input
+              id="title"
+              required
+              placeholder="Advertisement title"
+            >
+          </div>
+
+          <div class="form-group">
+            <label>Advertiser Name</label>
+            <input
+              id="advertiserName"
+              placeholder="Advertiser name"
+            >
+          </div>
+
+          <div class="form-group">
+            <label>Advertiser ID</label>
+            <input
+              id="advertiserId"
+              placeholder="Advertiser ID"
+            >
+          </div>
+
+          <div class="form-group">
+            <label>Advertiser Email</label>
+            <input
+              type="email"
+              id="advertiserEmail"
+              placeholder="advertiser@example.com"
+            >
+          </div>
+
+          <div class="form-group full">
+            <label>Description *</label>
+            <textarea
+              id="description"
+              required
+              placeholder="Advertisement description"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Image URL</label>
+            <input
+              type="url"
+              id="image"
+              placeholder="https://..."
+            >
+          </div>
+
+          <div class="form-group">
+            <label>Logo URL</label>
+            <input
+              type="url"
+              id="logo"
+              placeholder="https://..."
+            >
+          </div>
+
+          <div class="form-group">
+            <label>Website</label>
+            <input
+              type="url"
+              id="website"
+              placeholder="https://..."
+            >
+          </div>
+
+          <div class="form-group">
+            <label>Target URL *</label>
+            <input
+              type="url"
+              id="targetUrl"
+              required
+              placeholder="https://..."
+            >
+          </div>
+
+          <div class="form-group">
+            <label>Type</label>
+            <select id="type">
+              <option value="banner">Banner</option>
+              <option value="text">Text</option>
+              <option value="video">Video</option>
+              <option value="native">Native</option>
+              <option value="sponsored">Sponsored</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Category</label>
+            <input
+              id="category"
+              placeholder="Education, Technology..."
+            >
+          </div>
+
+          <div class="form-group">
+            <label>Keywords</label>
+            <input
+              id="keywords"
+              placeholder="education, course, technology"
+            >
+          </div>
+
+          <div class="form-group">
+            <label>Country</label>
+            <input
+              id="country"
+              placeholder="Worldwide"
+            >
+          </div>
+
+          <div class="form-group">
+            <label>Language</label>
+            <input
+              id="language"
+              value="English"
+              placeholder="English"
+            >
+          </div>
+
+          <div class="form-group">
+            <label>Placement</label>
+            <select id="placement">
+              <option value="website">Website</option>
+              <option value="homepage">Homepage</option>
+              <option value="sidebar">Sidebar</option>
+              <option value="search">Search</option>
+              <option value="course">Course</option>
+              <option value="resources">Resources</option>
+              <option value="video">Video</option>
+              <option value="community">Community</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Priority</label>
+            <input
+              type="number"
+              id="priority"
+              value="0"
+              min="0"
+            >
+          </div>
+
+          <div class="form-group">
+            <label>Budget</label>
+            <input
+              type="number"
+              id="budget"
+              value="0"
+              min="0"
+              step="0.01"
+            >
+          </div>
+
+          <div class="form-group">
+            <label>Daily Budget</label>
+            <input
+              type="number"
+              id="dailyBudget"
+              value="0"
+              min="0"
+              step="0.01"
+            >
+          </div>
+
+          <div class="form-group">
+            <label>CPC</label>
+            <input
+              type="number"
+              id="cpc"
+              value="0"
+              min="0"
+              step="0.01"
+            >
+          </div>
+
+          <div class="form-group">
+            <label>CPM</label>
+            <input
+              type="number"
+              id="cpm"
+              value="0"
+              min="0"
+              step="0.01"
+            >
+          </div>
+
+          <div class="form-group">
+  <label>Start Date & Time *</label>
+  <input
+    type="datetime-local"
+    id="startDate"
+    required
+  >
+</div>
+
+<div class="form-group">
+  <label>End Date & Time *</label>
+  <input
+    type="datetime-local"
+    id="endDate"
+    required
+  >
+</div>
+
+<div class="form-group">
+  <label>Priority</label>
+  <input
+    type="number"
+    id="priority"
+    min="0"
+    value="0"
+  >
+</div>
+
+<div class="form-group checkbox-group">
+  <label>
+    <input
+      type="checkbox"
+      id="isSponsored"
+    >
+    Sponsored Advertisement
+  </label>
+</div>
+
+<div class="form-group checkbox-group">
+  <label>
+    <input
+      type="checkbox"
+      id="isActive"
+      checked
+    >
+    Active Advertisement
+  </label>
+</div>
+
+<div class="modal-actions">
+  <button
+    type="button"
+    class="btn btn-secondary"
+    onclick="closeModal()"
+  >
+    Cancel
+  </button>
+
+  <button
+    type="submit"
+    class="btn btn-primary"
+  >
+    Save Advertisement
+  </button>
+</div>
+
+</form>
+</div>
+</div>
+
+<!-- VIEW MODAL -->
+<div class="modal" id="viewModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Advertisement Details</h2>
+      <button
+        type="button"
+        class="modal-close"
+        onclick="closeViewModal()"
+      >
+        &times;
+      </button>
+    </div>
+
+    <div id="viewContent"></div>
+
+    <div class="modal-actions">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        onclick="closeViewModal()"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  getDoc,
+  doc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  Timestamp,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+  authDomain: "let-s-study-pro-course.firebaseapp.com",
+  databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId: "let-s-study-pro-course",
+  storageBucket: "let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId: "474928293390",
+  appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId: "G-85B7V5H5J0"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const adsCollection = collection(db, "ads");
+
+let ads = [];
+let editingId = null;
+
+
+/* =========================
+   HELPERS
+========================= */
+
+function value(id){
+  return document.getElementById(id)?.value?.trim() || "";
+}
+
+function checked(id){
+  return document.getElementById(id)?.checked === true;
+}
+
+function numberValue(id){
+  const n = Number(value(id));
+  return Number.isFinite(n) ? n : 0;
+}
+
+function timestampValue(value){
+  if(!value) return null;
+
+  if(value instanceof Timestamp){
+    return value;
+  }
+
+  if(value?.seconds){
+    return new Timestamp(
+      value.seconds,
+      value.nanoseconds || 0
+    );
+  }
+
+  const date = new Date(value);
+
+  if(Number.isNaN(date.getTime())){
+    return null;
+  }
+
+  return Timestamp.fromDate(date);
+}
+
+function formatDate(value){
+  const ts = timestampValue(value);
+
+  if(!ts) return "—";
+
+  return ts
+    .toDate()
+    .toLocaleString();
+}
+
+function formatNumber(value){
+  return Number(value || 0).toLocaleString();
+}
+
+function formatMoney(value){
+  return Number(value || 0).toLocaleString(
+    undefined,
+    {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    }
+  );
+}
+
+function isExpired(ad){
+
+  const end = timestampValue(ad.endDate);
+
+  if(!end) return false;
+
+  return end.toDate().getTime() <= Date.now();
+}
+
+function effectiveStatus(ad){
+
+  if(isExpired(ad)){
+    return "expired";
+  }
+
+  if(ad.status === "inactive" || ad.isActive === false){
+    return "inactive";
+  }
+
+  return "active";
+}
+
+
+/* =========================
+   LOAD ADS
+========================= */
+
+async function loadAds(){
+
+  try{
+
+    const snapshot = await getDocs(adsCollection);
+
+    ads = [];
+
+    snapshot.forEach(item => {
+
+      ads.push({
+        id: item.id,
+        ...item.data()
+      });
+
+    });
+
+    renderStats();
+    renderAds();
+
+  }catch(error){
+
+    console.error("Load ads error:", error);
+
+    alert(
+      "Unable to load advertisements."
+    );
+  }
+}
+
+
+/* =========================
+   STATS
+========================= */
+
+function renderStats(){
+
+  const total = ads.length;
+
+  const active = ads.filter(
+    ad => effectiveStatus(ad) === "active"
+  ).length;
+
+  const inactive = ads.filter(
+    ad => effectiveStatus(ad) === "inactive"
+  ).length;
+
+  const sponsored = ads.filter(
+    ad => ad.isSponsored === true
+  ).length;
+
+  const impressions = ads.reduce(
+    (total, ad) =>
+      total + Number(ad.impressions || 0),
+    0
+  );
+
+  document.getElementById("totalAds").textContent =
+    formatNumber(total);
+
+  document.getElementById("activeAds").textContent =
+    formatNumber(active);
+
+  document.getElementById("inactiveAds").textContent =
+    formatNumber(inactive);
+
+  document.getElementById("sponsoredAds").textContent =
+    formatNumber(sponsored);
+
+  document.getElementById("impressions").textContent =
+    formatNumber(impressions);
+}
+
+
+/* =========================
+   RENDER ADS
+========================= */
+
+function renderAds(){
+
+  const search =
+    document.getElementById("searchInput")
+      ?.value
+      ?.toLowerCase()
+      .trim() || "";
+
+  const status =
+    document.getElementById("statusFilter")
+      ?.value || "all";
+
+  const type =
+    document.getElementById("typeFilter")
+      ?.value || "all";
+
+  const filtered = ads.filter(ad => {
+
+    const searchable = [
+      ad.title,
+      ad.description,
+      ad.advertiserName,
+      ad.category,
+      ad.type,
+      ad.country
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    const matchesSearch =
+      !search ||
+      searchable.includes(search);
+
+    const matchesStatus =
+      status === "all" ||
+      effectiveStatus(ad) === status;
+
+    const matchesType =
+      type === "all" ||
+      ad.type === type;
+
+    return (
+      matchesSearch &&
+      matchesStatus &&
+      matchesType
+    );
+  });
+
+
+  const tbody =
+    document.getElementById("adsTableBody");
+
+  if(!filtered.length){
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="10"
+            style="text-align:center;padding:40px;">
+          No advertisements found.
+        </td>
+      </tr>
+    `;
+
+    return;
+  }
+
+
+  tbody.innerHTML =
+    filtered.map(ad => {
+
+      const status =
+        effectiveStatus(ad);
+
+      const image =
+        ad.image ||
+        ad.logo ||
+        "https://via.placeholder.com/80x50?text=Ad";
+
+      return `
+        <tr>
+
+          <td>
+            <div class="ad-title">
+
+              <img
+                src="${escapeHtml(image)}"
+                alt=""
+                onerror="this.src='https://via.placeholder.com/80x50?text=Ad'"
+              >
+
+              <div>
+                <strong>
+                  ${escapeHtml(ad.title || "Untitled")}
+                </strong>
+
+                <small>
+                  ${escapeHtml(ad.category || "General")}
+                </small>
+              </div>
+
+            </div>
+          </td>
+
+          <td>
+            ${escapeHtml(
+              ad.advertiserName || "—"
+            )}
+          </td>
+
+          <td>
+            ${escapeHtml(
+              ad.type || "—"
+            )}
+          </td>
+
+          <td>
+            <span class="status ${status}">
+              ${status}
+            </span>
+          </td>
+
+          <td>
+            ${formatDate(ad.startDate)}
+          </td>
+
+          <td>
+            ${formatDate(ad.endDate)}
+          </td>
+
+          <td>
+            ${formatMoney(ad.budget)}
+          </td>
+
+          <td>
+            ${formatNumber(ad.impressions)}
+          </td>
+
+          <td>
+            ${formatNumber(ad.clicks)}
+          </td>
+
+          <td>
+
+            <div class="actions">
+
+              <button
+                class="action-btn view"
+                onclick="viewAd('${ad.id}')"
+              >
+                View
+              </button>
+
+              <button
+                class="action-btn edit"
+                onclick="editAd('${ad.id}')"
+              >
+                Edit
+              </button>
+
+              ${
+                status !== "expired"
+                ? `
+                  <button
+                    class="action-btn toggle"
+                    onclick="toggleAd('${ad.id}')"
+                  >
+                    ${
+                      ad.isActive === false
+                      ? "Activate"
+                      : "Deactivate"
+                    }
+                  </button>
+                `
+                : ""
+              }
+
+              <button
+                class="action-btn delete"
+                onclick="deleteAd('${ad.id}')"
+              >
+                Delete
+              </button>
+
+            </div>
+
+          </td>
+
+        </tr>
+      `;
+
+    }).join("");
+}
+
+
+/* =========================
+   ESCAPE HTML
+========================= */
+
+function escapeHtml(value){
+
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+
+/* =========================
+   OPEN ADD MODAL
+========================= */
+
+window.openAdModal = function(){
+
+  editingId = null;
+
+  document.getElementById(
+    "adModalTitle"
+  ).textContent =
+    "Create Advertisement";
+
+  document.getElementById(
+    "adForm"
+  ).reset();
+
+  document.getElementById(
+    "isActive"
+  ).checked = true;
+
+  document.getElementById(
+    "isSponsored"
+  ).checked = false;
+
+  document.getElementById(
+    "adModal"
+  ).classList.add("show");
+};
+
+
+/* =========================
+   CLOSE MODAL
+========================= */
+
+window.closeModal = function(){
+
+  document.getElementById(
+    "adModal"
+  ).classList.remove("show");
+
+  editingId = null;
+};
+
+
+/* =========================
+   SAVE AD
+========================= */
+
+document.getElementById(
+  "adForm"
+).addEventListener(
+  "submit",
+  async event => {
+
+    event.preventDefault();
+
+    const startDate =
+      timestampValue(
+        value("startDate")
+      );
+
+    const endDate =
+      timestampValue(
+        value("endDate")
+      );
+
+    if(!startDate || !endDate){
+
+      alert(
+        "Start Date and End Date are required."
+      );
+
+      return;
+    }
+
+    if(
+      endDate.toDate().getTime()
+      <=
+      startDate.toDate().getTime()
+    ){
+
+      alert(
+        "End Date must be after Start Date."
+      );
+
+      return;
+    }
+
+
+    const data = {
+
+      advertiserId:
+        value("advertiserId"),
+
+      advertiserName:
+        value("advertiserName"),
+
+      advertiserEmail:
+        value("advertiserEmail"),
+
+      title:
+        value("title"),
+
+      description:
+        value("description"),
+
+      logo:
+        value("logo"),
+
+      image:
+        value("image"),
+
+      website:
+        value("website"),
+
+      targetUrl:
+        value("targetUrl"),
+
+      type:
+        value("type"),
+
+      category:
+        value("category"),
+
+      keywords:
+        value("keywords"),
+
+      country:
+        value("country"),
+
+      language:
+        value("language"),
+
+      placement:
+        value("placement"),
+
+      status:
+        checked("isActive")
+        ? "active"
+        : "inactive",
+
+      budget:
+        numberValue("budget"),
+
+      dailyBudget:
+        numberValue("dailyBudget"),
+
+      cpc:
+        numberValue("cpc"),
+
+      cpm:
+        numberValue("cpm"),
+
+      startDate,
+
+      endDate,
+
+      priority:
+        numberValue("priority"),
+
+      isSponsored:
+        checked("isSponsored"),
+
+      isActive:
+        checked("isActive"),
+
+      updatedAt:
+        serverTimestamp()
+    };
+
+
+    try{
+
+      if(editingId){
+
+        await updateDoc(
+          doc(
+            db,
+            "ads",
+            editingId
+          ),
+          data
+        );
+
+        alert(
+          "Advertisement updated successfully."
+        );
+
+      }else{
+
+        const newAd =
+          await addDoc(
+            adsCollection,
+            {
+              ...data,
+
+              adId: "",
+
+              spent: 0,
+
+              impressions: 0,
+
+              clicks: 0,
+
+              ctr: 0,
+
+              createdAt:
+                serverTimestamp()
+            }
+          );
+
+        await updateDoc(
+          newAd,
+          {
+            adId: newAd.id
+          }
+        );
+
+        alert(
+          "Advertisement created successfully."
+        );
+      }
+
+      closeModal();
+
+      await loadAds();
+
+    }catch(error){
+
+      console.error(
+        "Save advertisement error:",
+        error
+      );
+
+      alert(
+        "Unable to save advertisement."
+      );
+    }
+
+  }
+);
+
+
+/* =========================
+   EDIT AD
+========================= */
+
+window.editAd = async function(id){
+
+  try{
+
+    const snapshot =
+      await getDoc(
+        doc(db,"ads",id)
+      );
+
+    if(!snapshot.exists()){
+
+      alert(
+        "Advertisement not found."
+      );
+
+      return;
+    }
+
+    const ad =
+      snapshot.data();
+
+    editingId = id;
+
+    document.getElementById(
+      "adModalTitle"
+    ).textContent =
+      "Edit Advertisement";
+
+
+    const fields = {
+
+      advertiserId:
+        ad.advertiserId,
+
+      advertiserName:
+        ad.advertiserName,
+
+      advertiserEmail:
+        ad.advertiserEmail,
+
+      title:
+        ad.title,
+
+      description:
+        ad.description,
+
+      logo:
+        ad.logo,
+
+      image:
+        ad.image,
+
+      website:
+        ad.website,
+
+      targetUrl:
+        ad.targetUrl,
+
+      type:
+        ad.type,
+
+      category:
+        ad.category,
+
+      keywords:
+        ad.keywords,
+
+      country:
+        ad.country,
+
+      language:
+        ad.language,
+
+      placement:
+        ad.placement,
+
+      budget:
+        ad.budget,
+
+      dailyBudget:
+        ad.dailyBudget,
+
+      cpc:
+        ad.cpc,
+
+      cpm:
+        ad.cpm,
+
+      priority:
+        ad.priority
+
+    };
+
+
+    Object.entries(fields)
+      .forEach(([key,val]) => {
+
+        const element =
+          document.getElementById(key);
+
+        if(element){
+
+          element.value =
+            val ?? "";
+
+        }
+
+      });
+
+
+    const start =
+      timestampValue(
+        ad.startDate
+      );
+
+    const end =
+      timestampValue(
+        ad.endDate
+      );
+
+
+    if(start){
+
+      document.getElementById(
+        "startDate"
+      ).value =
+        toDateTimeLocal(
+          start.toDate()
+        );
+
+    }
+
+
+    if(end){
+
+      document.getElementById(
+        "endDate"
+      ).value =
+        toDateTimeLocal(
+          end.toDate()
+        );
+
+    }
+
+
+    document.getElementById(
+      "isSponsored"
+    ).checked =
+      ad.isSponsored === true;
+
+
+    document.getElementById(
+      "isActive"
+    ).checked =
+      ad.isActive !== false;
+
+
+    document.getElementById(
+      "adModal"
+    ).classList.add("show");
+
+  }catch(error){
+
+    console.error(
+      "Edit advertisement error:",
+      error
+    );
+
+    alert(
+      "Unable to open advertisement."
+    );
+  }
+};
+
+
+/* =========================
+   DATETIME LOCAL
+========================= */
+
+function toDateTimeLocal(date){
+
+  const pad =
+    n =>
+      String(n).padStart(2,"0");
+
+  return (
+    date.getFullYear()
+    + "-"
+    + pad(date.getMonth()+1)
+    + "-"
+    + pad(date.getDate())
+    + "T"
+    + pad(date.getHours())
+    + ":"
+    + pad(date.getMinutes())
+  );
+}
+
+
+/* =========================
+   TOGGLE
+========================= */
+
+window.toggleAd = async function(id){
+
+  try{
+
+    const ad =
+      ads.find(
+        item => item.id === id
+      );
+
+    if(!ad) return;
+
+    if(isExpired(ad)){
+
+      alert(
+        "This advertisement has already expired."
+      );
+
+      return;
+    }
+
+
+    const newActive =
+      ad.isActive === false;
+
+
+    await updateDoc(
+      doc(db,"ads",id),
+      {
+        isActive:
+          newActive,
+
+        status:
+          newActive
+          ? "active"
+          : "inactive",
+
+        updatedAt:
+          serverTimestamp()
+      }
+    );
+
+
+    await loadAds();
+
+  }catch(error){
+
+    console.error(
+      "Toggle advertisement error:",
+      error
+    );
+
+    alert(
+      "Unable to update advertisement."
+    );
+  }
+};
+
+
+/* =========================
+   DELETE
+========================= */
+
+window.deleteAd = async function(id){
+
+  const confirmDelete =
+    confirm(
+      "Delete this advertisement permanently?"
+    );
+
+  if(!confirmDelete) return;
+
+  try{
+
+    await deleteDoc(
+      doc(db,"ads",id)
+    );
+
+    await loadAds();
+
+  }catch(error){
+
+    console.error(
+      "Delete advertisement error:",
+      error
+    );
+
+    alert(
+      "Unable to delete advertisement."
+    );
+  }
+};
+
+
+/* =========================
+   VIEW
+========================= */
+
+window.viewAd = async function(id){
+
+  try{
+
+    const snapshot =
+      await getDoc(
+        doc(db,"ads",id)
+      );
+
+    if(!snapshot.exists()){
+
+      alert(
+        "Advertisement not found."
+      );
+
+      return;
+    }
+
+    const ad =
+      snapshot.data();
+
+    const status =
+      effectiveStatus(ad);
+
+
+    document.getElementById(
+      "viewContent"
+    ).innerHTML = `
+
+      <div class="view-ad">
+
+        ${
+          ad.image
+          ? `
+            <img
+              src="${escapeHtml(ad.image)}"
+              class="view-image"
+              alt=""
+            >
+          `
+          : ""
+        }
+
+        <h2>
+          ${escapeHtml(
+            ad.title || "Untitled"
+          )}
+        </h2>
+
+        <p>
+          ${escapeHtml(
+            ad.description || "No description."
+          )}
+        </p>
+
+        <div class="view-grid">
+
+          <div>
+            <strong>Advertiser</strong>
+            <span>
+              ${escapeHtml(
+                ad.advertiserName || "—"
+              )}
+            </span>
+          </div>
+
+          <div>
+            <strong>Status</strong>
+            <span>
+              ${escapeHtml(status)}
+            </span>
+          </div>
+
+          <div>
+            <strong>Type</strong>
+            <span>
+              ${escapeHtml(
+                ad.type || "—"
+              )}
+            </span>
+          </div>
+
+          <div>
+            <strong>Category</strong>
+            <span>
+              ${escapeHtml(
+                ad.category || "—"
+              )}
+            </span>
+          </div>
+
+          <div>
+            <strong>Start</strong>
+            <span>
+              ${formatDate(ad.startDate)}
+            </span>
+          </div>
+
+          <div>
+            <strong>End</strong>
+            <span>
+              ${formatDate(ad.endDate)}
+            </span>
+          </div>
+
+          <div>
+            <strong>Budget</strong>
+            <span>
+              ${formatMoney(ad.budget)}
+            </span>
+          </div>
+
+          <div>
+            <strong>Spent</strong>
+            <span>
+              ${formatMoney(ad.spent)}
+            </span>
+          </div>
+
+          <div>
+            <strong>Impressions</strong>
+            <span>
+              ${formatNumber(ad.impressions)}
+            </span>
+          </div>
+
+          <div>
+            <strong>Clicks</strong>
+            <span>
+              ${formatNumber(ad.clicks)}
+            </span>
+          </div>
+
+          <div>
+            <strong>CTR</strong>
+            <span>
+              ${formatNumber(ad.ctr)}%
+            </span>
+          </div>
+
+        </div>
+
+        ${
+          ad.targetUrl
+          ? `
+            <a
+              href="${escapeHtml(ad.targetUrl)}"
+              target="_blank"
+              rel="noopener"
+              class="visit-ad"
+            >
+              Visit Advertisement
+            </a>
+          `
+          : ""
+        }
+
+      </div>
+
+    `;
+
+    document.getElementById(
+      "viewModal"
+    ).classList.add("show");
+
+  }catch(error){
+
+  console.error(
+    "View advertisement error:",
+    error
+  );
+
+  alert(
+    "Unable to load advertisement details."
+  );
+
+}
+
+function closeViewModal(){
+
+  document
+    .getElementById("viewModal")
+    .classList.remove("show");
+
+}
+
+document
+  .getElementById("closeViewModal")
+  .onclick = closeViewModal;
+
+document
+  .getElementById("cancelView")
+  .onclick = closeViewModal;
+
+
+document
+  .getElementById("viewModal")
+  .addEventListener(
+    "click",
+    function(event){
+
+      if(
+        event.target === this
+      ){
+        closeViewModal();
+      }
+
+    }
+  );
+
+
+/* =========================
+   SEARCH
+========================= */
+
+document
+  .getElementById("searchInput")
+  .addEventListener(
+    "input",
+    function(){
+
+      searchTerm =
+        this.value
+          .trim()
+          .toLowerCase();
+
+      renderAds();
+
+    }
+  );
+
+
+/* =========================
+   STATUS FILTER
+========================= */
+
+document
+  .getElementById("statusFilter")
+  .addEventListener(
+    "change",
+    function(){
+
+      statusFilter =
+        this.value;
+
+      renderAds();
+
+    }
+  );
+
+
+/* =========================
+   TYPE FILTER
+========================= */
+
+document
+  .getElementById("typeFilter")
+  .addEventListener(
+    "change",
+    function(){
+
+      typeFilter =
+        this.value;
+
+      renderAds();
+
+    }
+  );
+
+
+/* =========================
+   NEW AD BUTTON
+========================= */
+
+document
+  .getElementById("newAdBtn")
+  .addEventListener(
+    "click",
+    function(){
+
+      openCreateModal();
+
+    }
+  );
+
+
+/* =========================
+   CLOSE CREATE / EDIT MODAL
+========================= */
+
+document
+  .getElementById("closeAdModal")
+  .addEventListener(
+    "click",
+    closeAdModal
+  );
+
+
+document
+  .getElementById("cancelAdBtn")
+  .addEventListener(
+    "click",
+    closeAdModal
+  );
+
+
+document
+  .getElementById("adModal")
+  .addEventListener(
+    "click",
+    function(event){
+
+      if(
+        event.target === this
+      ){
+        closeAdModal();
+      }
+
+    }
+  );
+
+
+/* =========================
+   FORM SUBMIT
+========================= */
+
+document
+  .getElementById("adForm")
+  .addEventListener(
+    "submit",
+    saveAdvertisement
+  );
+
+
+/* =========================
+   MOBILE SIDEBAR
+========================= */
+
+const menuButton =
+  document.getElementById(
+    "menuButton"
+  );
+
+const sidebar =
+  document.getElementById(
+    "sidebar"
+  );
+
+const overlay =
+  document.getElementById(
+    "overlay"
+  );
+
+
+if(menuButton){
+
+  menuButton.addEventListener(
+    "click",
+    function(){
+
+      sidebar.classList.add(
+        "open"
+      );
+
+      overlay.classList.add(
+        "show"
+      );
+
+    }
+  );
+
+}
+
+
+if(overlay){
+
+  overlay.addEventListener(
+    "click",
+    function(){
+
+      sidebar.classList.remove(
+        "open"
+      );
+
+      overlay.classList.remove(
+        "show"
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================
+   ESC KEY
+========================= */
+
+document.addEventListener(
+  "keydown",
+  function(event){
+
+    if(
+      event.key === "Escape"
+    ){
+
+      closeAdModal();
+      closeViewModal();
+
+      sidebar?.classList.remove(
+        "open"
+      );
+
+      overlay?.classList.remove(
+        "show"
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================
+   INITIAL LOAD
+========================= */
+
+loadAds();
+
+</script>
+
+</body>
+</html>
