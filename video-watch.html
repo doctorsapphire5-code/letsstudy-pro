@@ -1,390 +1,788 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Watch Video | LetsStudy Pro</title>
+  <title>Watch Video | LetsStudy Pro</title>
 
-<style>
-*{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
-}
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-body{
-  font-family:Inter,Arial,sans-serif;
-  background:#f5f7fb;
-  color:#172033;
-}
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f5f7fb;
+      color: #172033;
+    }
 
-a{
-  text-decoration:none;
-  color:inherit;
-}
+    button,
+    a {
+      font: inherit;
+    }
 
-.header{
-  height:70px;
-  background:#fff;
-  border-bottom:1px solid #e5e7eb;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 28px;
-  position:sticky;
-  top:0;
-  z-index:100;
-}
+    a {
+      text-decoration: none;
+    }
 
-.brand{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  font-size:20px;
-  font-weight:800;
-}
+    .header {
+      height: 70px;
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+    }
 
-.brand-icon{
-  width:40px;
-  height:40px;
-  border-radius:12px;
-  background:#2563eb;
-  color:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
+    .header-inner {
+      width: 100%;
+      max-width: 1400px;
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-.back-btn{
-  border:1px solid #dbe1ea;
-  background:#fff;
-  padding:10px 16px;
-  border-radius:10px;
-  cursor:pointer;
-  font-weight:700;
-}
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 800;
+    }
 
-.container{
-  width:min(1180px,94%);
-  margin:30px auto 60px;
-}
+    .menu-btn {
+      display: none;
+      border: 0;
+      background: #f1f5f9;
+      border-radius: 10px;
+      width: 42px;
+      height: 42px;
+      font-size: 22px;
+    }
 
-.breadcrumb{
-  color:#64748b;
-  font-size:14px;
-  margin-bottom:18px;
-}
+    .sidebar {
+      position: fixed;
+      top: 70px;
+      left: 0;
+      bottom: 0;
+      width: 260px;
+      background: #fff;
+      border-right: 1px solid #e5e7eb;
+      padding: 25px 16px;
+      z-index: 900;
+    }
 
-.breadcrumb span{
-  color:#2563eb;
-  font-weight:700;
-}
+    .sidebar-title {
+      font-size: 12px;
+      color: #94a3b8;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 0 12px 12px;
+    }
 
-.video-card{
-  background:#000;
-  border-radius:18px;
-  overflow:hidden;
-  margin-bottom:25px;
-  box-shadow:0 15px 40px rgba(15,23,42,.12);
-}
+    .sidebar a {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 12px;
+      margin-bottom: 4px;
+      border-radius: 10px;
+      color: #475569;
+      font-weight: 600;
+    }
 
-.video-wrapper{
-  width:100%;
-  aspect-ratio:16/9;
-  background:#000;
-}
+    .sidebar a:hover,
+    .sidebar a.active {
+      background: #eef2ff;
+      color: #4f46e5;
+    }
 
-video,
-iframe{
-  width:100%;
-  height:100%;
-  border:0;
-  display:block;
-}
+    .close-sidebar {
+      display: none;
+      position: absolute;
+      right: 12px;
+      top: 10px;
+      border: 0;
+      background: transparent;
+      font-size: 26px;
+    }
 
-video{
-  background:#000;
-  object-fit:contain;
-}
+    .overlay {
+      display: none;
+    }
 
-.video-error{
-  height:100%;
-  min-height:350px;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  color:#fff;
-  text-align:center;
-  padding:25px;
-}
+    .main {
+      margin-left: 260px;
+      padding: 100px 30px 50px;
+    }
 
-.video-error .icon{
-  font-size:50px;
-  margin-bottom:12px;
-}
+    .container {
+      max-width: 1100px;
+      margin: auto;
+    }
 
-.video-error p{
-  color:#cbd5e1;
-  margin-top:6px;
-}
+    .loading {
+      min-height: 400px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
 
-.content-grid{
-  display:grid;
-  grid-template-columns:1fr 320px;
-  gap:24px;
-}
+    .spinner {
+      width: 45px;
+      height: 45px;
+      border: 4px solid #e2e8f0;
+      border-top-color: #4f46e5;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin: auto auto 15px;
+    }
 
-.card{
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:16px;
-  padding:25px;
-}
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
 
-.badges{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin-bottom:14px;
-}
+    .video-card {
+      background: #000;
+      border-radius: 18px;
+      overflow: hidden;
+      margin-bottom: 22px;
+    }
 
-.badge{
-  padding:6px 10px;
-  border-radius:999px;
-  background:#eff6ff;
-  color:#2563eb;
-  font-size:12px;
-  font-weight:700;
-}
+    .video-player {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #000;
+    }
 
-.badge.green{
-  background:#ecfdf5;
-  color:#059669;
-}
+    .video-player iframe,
+    .video-player video {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border: 0;
+    }
 
-.badge.gray{
-  background:#f1f5f9;
-  color:#475569;
-}
+    .video-player video {
+      object-fit: contain;
+      background: #000;
+    }
 
-.title{
-  font-size:30px;
-  line-height:1.25;
-  margin-bottom:14px;
-}
+    .unavailable {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      color: #fff;
+      text-align: center;
+      padding: 30px;
+    }
 
-.description{
-  color:#64748b;
-  font-size:16px;
-  white-space:pre-line;
-}
+    .unavailable-icon {
+      font-size: 50px;
+      margin-bottom: 10px;
+    }
 
-.channel{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  margin-top:22px;
-  padding-top:20px;
-  border-top:1px solid #edf0f4;
-}
+    .lesson-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+      padding: 28px;
+      margin-bottom: 20px;
+    }
 
-.channel-image{
-  width:48px;
-  height:48px;
-  border-radius:50%;
-  object-fit:cover;
-  background:#e2e8f0;
-}
+    .badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
 
-.channel-name{
-  font-weight:800;
-}
+    .badge {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
 
-.channel-handle{
-  color:#94a3b8;
-  font-size:13px;
-}
+    .badge-type {
+      background: #eef2ff;
+      color: #4f46e5;
+    }
 
-.stats{
-  display:flex;
-  flex-wrap:wrap;
-  gap:15px;
-  margin-top:20px;
-  color:#64748b;
-  font-size:14px;
-}
+    .badge-status {
+      background: #dcfce7;
+      color: #166534;
+    }
 
-.info-list{
-  display:grid;
-  gap:14px;
-}
+    h1 {
+      font-size: 32px;
+      line-height: 1.25;
+      margin-bottom: 10px;
+    }
 
-.info-item{
-  display:flex;
-  gap:12px;
-  padding-bottom:13px;
-  border-bottom:1px solid #edf0f4;
-}
+    .description {
+      color: #64748b;
+      font-size: 16px;
+      line-height: 1.7;
+    }
 
-.info-item:last-child{
-  border-bottom:0;
-}
+    .channel {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 20px;
+    }
 
-.info-icon{
-  width:36px;
-  height:36px;
-  border-radius:10px;
-  background:#eff6ff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex-shrink:0;
-}
+    .channel img {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #e2e8f0;
+    }
 
-.info-label{
-  color:#94a3b8;
-  font-size:12px;
-}
+    .channel-name {
+      font-weight: 800;
+    }
 
-.info-value{
-  color:#1e293b;
-  font-size:14px;
-  font-weight:700;
-  word-break:break-word;
-}
+    .channel-handle {
+      color: #64748b;
+      font-size: 13px;
+    }
 
-.tags{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin-top:20px;
-}
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 22px;
+      margin-top: 20px;
+      color: #64748b;
+      font-size: 14px;
+    }
 
-.tag{
-  background:#f8fafc;
-  border:1px solid #e2e8f0;
-  padding:6px 10px;
-  border-radius:8px;
-  font-size:12px;
-  color:#475569;
-}
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
 
-.share-btn{
-  width:100%;
-  border:0;
-  background:#2563eb;
-  color:#fff;
-  padding:13px;
-  border-radius:10px;
-  font-weight:700;
-  cursor:pointer;
-  margin-top:22px;
-}
+    .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 17px;
+      font-weight: 700;
+      cursor: pointer;
+    }
 
-.share-btn:hover{
-  background:#1d4ed8;
-}
+    .primary {
+      background: #4f46e5;
+      color: #fff;
+    }
 
-.loading,
-.error{
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:14px;
-  padding:30px;
-  text-align:center;
-  color:#64748b;
-}
+    .secondary {
+      background: #f1f5f9;
+      color: #334155;
+    }
 
-.error{
-  color:#b91c1c;
-  border-color:#fecaca;
-}
+    .info-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+      padding: 25px;
+    }
 
-@media(max-width:850px){
+    .info-card h2 {
+      margin-bottom: 18px;
+    }
 
-  .content-grid{
-    grid-template-columns:1fr;
-  }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
 
-  .title{
-    font-size:25px;
-  }
-}
+    .info-item {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 15px;
+    }
 
-@media(max-width:600px){
+    .info-label {
+      color: #64748b;
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
 
-  .header{
-    height:62px;
-    padding:0 15px;
-  }
+    .info-value {
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
 
-  .brand{
-    font-size:17px;
-  }
+    .error {
+      display: none;
+      background: #fff;
+      border: 1px solid #fecaca;
+      border-radius: 18px;
+      padding: 40px;
+      text-align: center;
+    }
 
-  .brand-icon{
-    width:35px;
-    height:35px;
-  }
+    .footer {
+      text-align: center;
+      color: #94a3b8;
+      padding: 30px 0;
+      font-size: 13px;
+    }
 
-  .container{
-    width:96%;
-    margin-top:20px;
-  }
+    @media (max-width: 800px) {
 
-  .video-card{
-    border-radius:12px;
-  }
+      .header {
+        padding: 0 15px;
+      }
 
-  .card{
-    padding:18px;
-  }
+      .menu-btn {
+        display: block;
+      }
 
-  .title{
-    font-size:22px;
-  }
+      .sidebar {
+        transform: translateX(-100%);
+        transition: .25s;
+        width: 280px;
+      }
 
-  .back-btn{
-    padding:8px 11px;
-    font-size:13px;
-  }
-}
-</style>
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .close-sidebar {
+        display: block;
+      }
+
+      .overlay {
+        position: fixed;
+        inset: 70px 0 0;
+        background: rgba(0,0,0,.45);
+        z-index: 850;
+      }
+
+      .overlay.show {
+        display: block;
+      }
+
+      .main {
+        margin-left: 0;
+        padding: 90px 15px 35px;
+      }
+
+      .lesson-card,
+      .info-card {
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 25px;
+      }
+
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+
+      .brand {
+        font-size: 17px;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
 <header class="header">
 
-  <a href="index.html" class="brand">
-    <div class="brand-icon">🎓</div>
-    <span>LetsStudy Pro</span>
-  </a>
+  <div class="header-inner">
 
-  <button
-    class="back-btn"
-    onclick="goBack()"
-  >
-    ← Back
-  </button>
+    <div class="brand">
+
+      <button
+        id="menuBtn"
+        class="menu-btn"
+      >
+        ☰
+      </button>
+
+      <span>🎓</span>
+
+      <span>LetsStudy Pro</span>
+
+    </div>
+
+  </div>
 
 </header>
 
 
-<main class="container">
+<aside
+  id="sidebar"
+  class="sidebar"
+>
 
-  <div class="breadcrumb">
-    Videos /
-    <span id="breadcrumbTitle">Watch Video</span>
+  <button
+    id="closeSidebar"
+    class="close-sidebar"
+  >
+    ×
+  </button>
+
+  <div class="sidebar-title">
+    Learning
   </div>
 
+  <a href="course-learn.html">
+    🏠 Course Home
+  </a>
 
-  <div id="page">
+  <a href="course-modules.html">
+    📦 Modules
+  </a>
 
-    <div class="loading">
-      Loading video...
+  <a href="course-lessons.html">
+    🎬 Lessons
+  </a>
+
+  <a href="course-quiz.html">
+    📝 Quizzes
+  </a>
+
+  <a href="course-assignments.html">
+    📚 Assignments
+  </a>
+
+  <a href="course-resources.html">
+    📂 Resources
+  </a>
+
+  <a href="course-notifications.html">
+    🔔 Notifications
+  </a>
+
+</aside>
+
+<div
+  id="overlay"
+  class="overlay"
+></div>
+
+
+<main class="main">
+
+  <div class="container">
+
+
+    <div
+      id="loading"
+      class="loading"
+    >
+
+      <div>
+
+        <div class="spinner"></div>
+
+        <p>
+          Loading video...
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div
+      id="errorBox"
+      class="error"
+    ></div>
+
+
+    <div
+      id="content"
+      style="display:none;"
+    >
+
+
+      <div class="video-card">
+
+        <div
+          id="videoPlayer"
+          class="video-player"
+        ></div>
+
+      </div>
+
+
+      <section class="lesson-card">
+
+        <div class="badges">
+
+          <span
+            id="videoType"
+            class="badge badge-type"
+          >
+            video
+          </span>
+
+          <span
+            id="status"
+            class="badge badge-status"
+          >
+            published
+          </span>
+
+        </div>
+
+
+        <h1 id="title">
+          Video
+        </h1>
+
+
+        <p
+          id="description"
+          class="description"
+        >
+        </p>
+
+
+        <div
+          id="channel"
+          class="channel"
+          style="display:none;"
+        >
+
+          <img
+            id="channelImage"
+            alt="Channel"
+          >
+
+          <div>
+
+            <div
+              id="channelName"
+              class="channel-name"
+            >
+            </div>
+
+            <div
+              id="channelHandle"
+              class="channel-handle"
+            >
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="stats">
+
+          <span>
+            👁
+            <strong id="views">
+              0
+            </strong>
+            views
+          </span>
+
+          <span>
+            👍
+            <strong id="likes">
+              0
+            </strong>
+            likes
+          </span>
+
+          <span>
+            💬
+            <strong id="comments">
+              0
+            </strong>
+            comments
+          </span>
+
+          <span>
+            🔗
+            <strong id="shares">
+              0
+            </strong>
+            shares
+          </span>
+
+        </div>
+
+
+        <div class="actions">
+
+          <button
+            id="backBtn"
+            class="btn secondary"
+          >
+            ← Back
+          </button>
+
+          <button
+            id="shareBtn"
+            class="btn primary"
+          >
+            🔗 Share Video
+          </button>
+
+          <button
+            id="copyBtn"
+            class="btn secondary"
+          >
+            📋 Copy Link
+          </button>
+
+        </div>
+
+      </section>
+
+
+      <section class="info-card">
+
+        <h2>
+          Video Information
+        </h2>
+
+
+        <div class="info-grid">
+
+          <div class="info-item">
+
+            <div class="info-label">
+              📚 Category
+            </div>
+
+            <div
+              id="category"
+              class="info-value"
+            >
+              —
+            </div>
+
+          </div>
+
+
+          <div class="info-item">
+
+            <div class="info-label">
+              ⏱ Duration
+            </div>
+
+            <div
+              id="duration"
+              class="info-value"
+            >
+              —
+            </div>
+
+          </div>
+
+
+          <div class="info-item">
+
+            <div class="info-label">
+              🎬 Video Type
+            </div>
+
+            <div
+              id="typeInfo"
+              class="info-value"
+            >
+              —
+            </div>
+
+          </div>
+
+
+          <div class="info-item">
+
+            <div class="info-label">
+              🔓 Access
+            </div>
+
+            <div
+              id="access"
+              class="info-value"
+            >
+              —
+            </div>
+
+          </div>
+
+
+          <div class="info-item">
+
+            <div class="info-label">
+              🟢 Status
+            </div>
+
+            <div
+              id="statusInfo"
+              class="info-value"
+            >
+              —
+            </div>
+
+          </div>
+
+
+          <div class="info-item">
+
+            <div class="info-label">
+              🆔 Video ID
+            </div>
+
+            <div
+              id="videoId"
+              class="info-value"
+            >
+              —
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <footer class="footer">
+        © 2026 LetsStudy Pro. All rights reserved.
+      </footer>
+
     </div>
 
   </div>
@@ -394,452 +792,266 @@ video{
 
 <script type="module">
 
-import {
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-  getFirestore,
-  doc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-
-/* =====================================================
-   FIREBASE
-===================================================== */
-
-const firebaseConfig = {
-
-  apiKey:
-    "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
-
-  authDomain:
-    "let-s-study-pro-course.firebaseapp.com",
-
-  databaseURL:
-    "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
-
-  projectId:
-    "let-s-study-pro-course",
-
-  storageBucket:
-    "let-s-study-pro-course.firebasestorage.app",
-
-  messagingSenderId:
-    "474928293390",
-
-  appId:
-    "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
-
-  measurementId:
-    "G-85B7V5H5J0"
-
-};
-
-const app =
-  initializeApp(firebaseConfig);
-
-const db =
-  getFirestore(app);
-
-
-/* =====================================================
-   VIDEO ID
-===================================================== */
-
-const params =
-  new URLSearchParams(
-    window.location.search
-  );
-
-const videoId =
-  params.get("id") ||
-  params.get("videoId") ||
-  "";
-
-
-/* =====================================================
-   HELPERS
-===================================================== */
-
-function safe(value){
-
-  if(
-    value === undefined ||
-    value === null
-  ){
-    return "";
+  import {
+    initializeApp
   }
-
-  return String(value).trim();
-
-}
+  from
+  "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 
-function escapeHtml(value){
-
-  return safe(value)
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#039;");
-
-}
+  import {
+    getFirestore,
+    doc,
+    getDoc
+  }
+  from
+  "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
-/* =====================================================
-   YOUTUBE
-===================================================== */
+  const firebaseConfig = {
 
-function getYouTubeId(url){
+    apiKey:
+      "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
 
-  try{
+    authDomain:
+      "let-s-study-pro-course.firebaseapp.com",
 
-    const parsed =
-      new URL(url);
+    databaseURL:
+      "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
 
-    const host =
-      parsed.hostname
-        .replace("www.","")
-        .replace("m.","");
+    projectId:
+      "let-s-study-pro-course",
 
+    storageBucket:
+      "let-s-study-pro-course.firebasestorage.app",
 
-    if(host === "youtube.com"){
+    messagingSenderId:
+      "474928293390",
 
-      if(
-        parsed.pathname === "/watch"
-      ){
+    appId:
+      "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
 
-        return parsed.searchParams.get("v");
+    measurementId:
+      "G-85B7V5H5J0"
 
-      }
-
-
-      if(
-        parsed.pathname.startsWith("/shorts/")
-      ){
-
-        return parsed.pathname
-          .split("/shorts/")[1]
-          .split("/")[0];
-
-      }
+  };
 
 
-      if(
-        parsed.pathname.startsWith("/embed/")
-      ){
+  const app =
+    initializeApp(firebaseConfig);
 
-        return parsed.pathname
-          .split("/embed/")[1]
-          .split("/")[0];
+  const db =
+    getFirestore(app);
 
-      }
 
+  let videoData = null;
+
+
+  function safe(value) {
+
+    if (
+      value === undefined ||
+      value === null ||
+      value === ""
+    ) {
+      return "—";
     }
 
-
-    if(host === "youtu.be"){
-
-      return parsed.pathname
-        .replace("/","")
-        .split("/")[0];
-
-    }
-
-  }catch(error){
-
-    console.error(error);
+    return String(value);
 
   }
 
-  return null;
 
-}
+  function escapeHtml(value) {
+
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+  }
 
 
-/* =====================================================
-   VIMEO
-===================================================== */
+  /* =========================================
+     YOUTUBE
+  ========================================= */
 
-function getVimeoId(url){
+  function youtubeEmbed(url) {
 
-  try{
+    try {
 
-    const parsed =
-      new URL(url);
+      const parsed =
+        new URL(url);
 
-    if(
-      parsed.hostname.includes("vimeo.com")
-    ){
+      const host =
+        parsed.hostname.toLowerCase();
+
+      let id = "";
+
+
+      if (
+        host === "youtu.be" ||
+        host.endsWith(".youtu.be")
+      ) {
+
+        id =
+          parsed.pathname
+            .split("/")
+            .filter(Boolean)[0] || "";
+
+      }
+
+
+      if (
+        host.includes("youtube.com")
+      ) {
+
+        id =
+          parsed.searchParams.get("v") || "";
+
+
+        const parts =
+          parsed.pathname
+            .split("/")
+            .filter(Boolean);
+
+
+        if (!id) {
+
+          if (
+            parts[0] === "embed" ||
+            parts[0] === "shorts" ||
+            parts[0] === "live"
+          ) {
+
+            id =
+              parts[1] || "";
+
+          }
+
+        }
+
+      }
+
+
+      if (!id) {
+        return null;
+      }
+
+
+      return (
+        "https://www.youtube-nocookie.com/embed/" +
+        encodeURIComponent(id)
+      );
+
+    } catch {
+
+      return null;
+
+    }
+
+  }
+
+
+  /* =========================================
+     VIMEO
+  ========================================= */
+
+  function vimeoEmbed(url) {
+
+    try {
+
+      const parsed =
+        new URL(url);
+
+      if (
+        !parsed.hostname
+          .toLowerCase()
+          .includes("vimeo.com")
+      ) {
+
+        return null;
+
+      }
+
 
       const parts =
         parsed.pathname
           .split("/")
           .filter(Boolean);
 
+
+      const id =
+        parts[parts.length - 1];
+
+
+      if (
+        !id ||
+        !/^\d+$/.test(id)
+      ) {
+
+        return null;
+
+      }
+
+
       return (
-        parts.find(
-          part => /^\d+$/.test(part)
-        ) || null
+        "https://player.vimeo.com/video/" +
+        id
       );
+
+    } catch {
+
+      return null;
 
     }
 
-  }catch(error){
-
-    console.error(error);
-
   }
 
-  return null;
 
-}
+  /* =========================================
+     DIRECT VIDEO
+  ========================================= */
 
+  function isDirectVideo(url) {
 
-/* =====================================================
-   DIRECT VIDEO
-===================================================== */
-
-function isDirectVideo(url){
-
-  const value =
-    safe(url).toLowerCase();
-
-  return (
-    value.includes(".mp4") ||
-    value.includes(".webm") ||
-    value.includes(".ogg") ||
-    value.includes(".m4v") ||
-    value.includes(".mov")
-  );
-
-}
-
-
-/* =====================================================
-   PLAYER
-===================================================== */
-
-function createPlayer(
-  videoUrl,
-  thumbnail
-){
-
-  const url =
-    safe(videoUrl);
-
-
-  if(!url){
-
-    return `
-
-      <div class="video-error">
-
-        <div class="icon">
-          🎬
-        </div>
-
-        <h3>
-          Video unavailable
-        </h3>
-
-        <p>
-          This video does not have a valid video link.
-        </p>
-
-      </div>
-
-    `;
+    return /\.(mp4|webm|ogg|m4v|mov)(\?.*)?$/i
+      .test(url);
 
   }
 
 
-  /* DIRECT VIDEO */
+  /* =========================================
+     PLAYER
+  ========================================= */
 
-  if(isDirectVideo(url)){
+  function renderVideo(url) {
 
-    return `
-
-      <video
-        controls
-        playsinline
-        preload="metadata"
-        ${thumbnail
-          ? `poster="${escapeHtml(thumbnail)}"`
-          : ""
-        }
-      >
-
-        <source
-          src="${escapeHtml(url)}"
-        >
-
-        Your browser does not support HTML5 video.
-
-      </video>
-
-    `;
-
-  }
-
-
-  /* YOUTUBE */
-
-  const youtubeId =
-    getYouTubeId(url);
-
-  if(youtubeId){
-
-    return `
-
-      <iframe
-
-        src="https://www.youtube.com/embed/${encodeURIComponent(youtubeId)}"
-
-        title="Video Player"
-
-        allow="
-          accelerometer;
-          autoplay;
-          clipboard-write;
-          encrypted-media;
-          gyroscope;
-          picture-in-picture;
-          web-share
-        "
-
-        allowfullscreen>
-
-      </iframe>
-
-    `;
-
-  }
-
-
-  /* VIMEO */
-
-  const vimeoId =
-    getVimeoId(url);
-
-  if(vimeoId){
-
-    return `
-
-      <iframe
-
-        src="https://player.vimeo.com/video/${encodeURIComponent(vimeoId)}"
-
-        title="Video Player"
-
-        allow="
-          autoplay;
-          fullscreen;
-          picture-in-picture
-        "
-
-        allowfullscreen>
-
-      </iframe>
-
-    `;
-
-  }
-
-
-  /* OTHER DIRECT URL */
-
-  return `
-
-    <video
-      controls
-      playsinline
-      preload="metadata"
-      ${thumbnail
-        ? `poster="${escapeHtml(thumbnail)}"`
-        : ""
-      }
-    >
-
-      <source
-        src="${escapeHtml(url)}"
-      >
-
-      Your browser does not support HTML5 video.
-
-    </video>
-
-  `;
-
-}
-
-
-/* =====================================================
-   LOAD VIDEO
-===================================================== */
-
-async function loadVideo(){
-
-  const page =
-    document.getElementById("page");
-
-
-  if(!videoId){
-
-    page.innerHTML = `
-
-      <div class="error">
-
-        <h2>
-          Video ID missing
-        </h2>
-
-        <p>
-          Open this page using a valid video ID.
-        </p>
-
-      </div>
-
-    `;
-
-    return;
-
-  }
-
-
-  try{
-
-    /*
-      Read ONLY the requested video document.
-    */
-
-    const videoRef =
-      doc(
-        db,
-        "videos",
-        videoId
+    const player =
+      document.getElementById(
+        "videoPlayer"
       );
 
 
-    const videoSnap =
-      await getDoc(videoRef);
+    if (!url) {
 
+      player.innerHTML = `
 
-    if(!videoSnap.exists()){
+        <div class="unavailable">
 
-      page.innerHTML = `
-
-        <div class="error">
+          <div class="unavailable-icon">
+            🎬
+          </div>
 
           <h2>
-            Video not found
+            Video Unavailable
           </h2>
 
           <p>
-            This video does not exist.
+            No video URL is available
+            for this video.
           </p>
 
         </div>
@@ -851,923 +1063,719 @@ async function loadVideo(){
     }
 
 
-    renderVideo(
-      videoSnap.id,
-      videoSnap.data()
-    );
+    const youtube =
+      youtubeEmbed(url);
 
 
-  }catch(error){
+    if (youtube) {
 
-    console.error(
-      "Video loading error:",
-      error
-    );
+      player.innerHTML = `
 
+        <iframe
+          src="${youtube}"
+          title="${escapeHtml(
+            videoData?.title ||
+            "LetsStudy Pro Video"
+          )}"
+          allow="
+            accelerometer;
+            autoplay;
+            clipboard-write;
+            encrypted-media;
+            gyroscope;
+            picture-in-picture;
+            web-share
+          "
+          allowfullscreen>
+        </iframe>
 
-    page.innerHTML = `
+      `;
 
-      <div class="error">
+      return;
 
-        <h2>
-          Unable to load video
-        </h2>
+    }
 
-        <p>
-          ${escapeHtml(error.message)}
-        </p>
 
-      </div>
+    const vimeo =
+      vimeoEmbed(url);
 
-    `;
 
-  }
+    if (vimeo) {
 
-}
+      player.innerHTML = `
 
+        <iframe
+          src="${vimeo}"
+          title="${escapeHtml(
+            videoData?.title ||
+            "LetsStudy Pro Video"
+          )}"
+          allow="
+            autoplay;
+            fullscreen;
+            picture-in-picture
+          "
+          allowfullscreen>
+        </iframe>
 
-/* =====================================================
-   RENDER VIDEO
-===================================================== */
+      `;
 
-function renderVideo(
-  id,
-  video
-){
+      return;
 
-  const title =
-    safe(video.title) ||
-    "Untitled Video";
+    }
 
-  const description =
-    safe(video.description) ||
-    "No description available.";
 
-  const videoUrl =
-    safe(video.videoUrl);
+    if (isDirectVideo(url)) {
 
-  const thumbnail =
-    safe(video.thumbnail);
+      player.innerHTML = `
 
-  const videoType =
-    safe(video.videoType) ||
-    "video";
+        <video
+          controls
+          playsinline
+          preload="metadata"
+        >
 
-  const duration =
-    safe(video.duration) ||
-    "—";
-
-  const category =
-    safe(video.category) ||
-    "General";
-
-  const status =
-    safe(video.status) ||
-    "published";
-
-  const channelName =
-    safe(video.channelName) ||
-    "LetsStudy Pro";
-
-  const channelHandle =
-    safe(video.channelHandle);
-
-  const channelImage =
-    safe(video.channelImage);
-
-  const creatorName =
-    safe(video.creatorName);
-
-  const views =
-    safe(video.views) || "0";
-
-  const likes =
-    safe(video.likes) || "0";
-
-  const comments =
-    safe(video.commentsCount) || "0";
-
-  const shares =
-    safe(video.shares) || "0";
-
-  const isFree =
-    video.isFree === true;
-
-  const featured =
-    video.featured === true;
-
-  const verified =
-    video.verified === true;
-
-  const price =
-    safe(video.price);
-
-  const currency =
-    safe(video.currency);
-
-
-  document.title =
-    title + " | LetsStudy Pro";
-
-
-  document.getElementById(
-    "breadcrumbTitle"
-  ).textContent = title;
-
-
-  let tags = [];
-
-
-  if(Array.isArray(video.tags)){
-
-    tags =
-      video.tags;
-
-  }else if(video.tags){
-
-    tags =
-      String(video.tags)
-        .split(",")
-        .map(tag => tag.trim())
-        .filter(Boolean);
-
-  }
-
-
-  document.getElementById(
-    "page"
-  ).innerHTML = `
-
-
-    <!-- VIDEO PLAYER -->
-
-    <div class="video-card">
-
-      <div class="video-wrapper">
-
-        ${createPlayer(
-          videoUrl,
-          thumbnail
-        )}
-
-      </div>
-
-    </div>
-
-
-    <!-- CONTENT -->
-
-    <div class="content-grid">
-
-
-      <!-- MAIN -->
-
-      <section class="card">
-
-        <div class="badges">
-
-          ${
-            isFree
-            ?
-            `
-            <span class="badge green">
-              FREE
-            </span>
-            `
-            :
-            `
-            <span class="badge">
-              PAID
-            </span>
-            `
-          }
-
-
-          ${
-            featured
-            ?
-            `
-            <span class="badge">
-              ⭐ Featured
-            </span>
-            `
-            :
-            ""
-          }
-
-
-          ${
-            verified
-            ?
-            `
-            <span class="badge green">
-              ✓ Verified
-            </span>
-            `
-            :
-            ""
-          }
-
-
-          <span class="badge gray">
-            ${escapeHtml(videoType)}
-          </span>
-
-        </div>
-
-
-        <h1 class="title">
-
-          ${escapeHtml(title)}
-
-        </h1>
-
-
-        <p class="description">
-
-          ${escapeHtml(description)}
-
-        </p>
-
-
-        <!-- CHANNEL -->
-
-        <div class="channel">
-
-          ${
-            channelImage
-            ?
-            `
-            <img
-              class="channel-image"
-              src="${escapeHtml(channelImage)}"
-              alt="${escapeHtml(channelName)}"
-            >
-            `
-            :
-            `
-            <div class="channel-image"
-              style="
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                font-size:22px;
-              "
-            >
-              🎓
-            </div>
-            `
-          }
-
-
-          <div>
-
-            <div class="channel-name">
-
-              ${escapeHtml(channelName)}
-
-            </div>
-
-
-            ${
-              channelHandle
-              ?
-              `
-              <div class="channel-handle">
-
-                ${escapeHtml(channelHandle)}
-
-              </div>
-              `
-              :
-              ""
-            }
-
-          </div>
-
-        </div>
-
-
-        <!-- STATS -->
-
-        <div class="stats">
-
-          <span>
-            👁 ${escapeHtml(views)} views
-          </span>
-
-          <span>
-            👍 ${escapeHtml(likes)}
-          </span>
-
-          <span>
-            💬 ${escapeHtml(comments)}
-          </span>
-
-          <span>
-            🔗 ${escapeHtml(shares)}
-          </span>
-
-        </div>
-
-
-        ${
-          tags.length
-          ?
-          `
-          <div class="tags">
-
-            ${tags.map(tag => `
-
-              <span class="tag">
-
-                #${escapeHtml(tag)}
-
-              </span>
-
-            `).join("")}
-
-          </div>
-          `
-          :
-          ""
-        }
-
-
-        ${
-          videoUrl
-          ?
-          `
-          <button
-            class="share-btn"
-            id="shareBtn"
+          <source
+            src="${escapeHtml(url)}"
           >
 
-            🔗 Share Video
+          Your browser does not
+          support HTML5 video.
 
-          </button>
-          `
-          :
-          ""
+        </video>
+
+      `;
+
+      return;
+
+    }
+
+
+    player.innerHTML = `
+
+      <iframe
+        src="${escapeHtml(url)}"
+        title="${escapeHtml(
+          videoData?.title ||
+          "LetsStudy Pro Video"
+        )}"
+        allowfullscreen>
+      </iframe>
+
+    `;
+
+  }
+
+
+  /* =========================================
+     LOAD VIDEO
+  ========================================= */
+
+  async function loadVideo() {
+
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
+
+
+    const videoId =
+      params.get("id") ||
+      params.get("videoId");
+
+
+    if (!videoId) {
+
+      showError(
+        "No video ID was provided."
+      );
+
+      return;
+
+    }
+
+
+    try {
+
+      const videoRef =
+        doc(
+          db,
+          "videos",
+          videoId
+        );
+
+
+      const snapshot =
+        await getDoc(videoRef);
+
+
+      if (!snapshot.exists()) {
+
+        showError(
+          "This video could not be found."
+        );
+
+        return;
+
+      }
+
+
+      videoData = {
+
+        id:
+          snapshot.id,
+
+        ...snapshot.data()
+
+      };
+
+
+      document.title =
+        safe(videoData.title) +
+        " | LetsStudy Pro";
+
+
+      document.getElementById(
+        "title"
+      ).textContent =
+        safe(videoData.title);
+
+
+      document.getElementById(
+        "description"
+      ).textContent =
+        safe(videoData.description);
+
+
+      document.getElementById(
+        "videoType"
+      ).textContent =
+        safe(videoData.videoType);
+
+
+      document.getElementById(
+        "status"
+      ).textContent =
+        safe(videoData.status);
+
+
+      document.getElementById(
+        "category"
+      ).textContent =
+        safe(videoData.category);
+
+
+      document.getElementById(
+        "duration"
+      ).textContent =
+        safe(videoData.duration);
+
+
+      document.getElementById(
+        "typeInfo"
+      ).textContent =
+        safe(videoData.videoType);
+
+
+      document.getElementById(
+        "access"
+      ).textContent =
+        videoData.isFree === true
+          ? "Free"
+          : "Paid";
+
+
+      document.getElementById(
+        "statusInfo"
+      ).textContent =
+        safe(videoData.status);
+
+
+      document.getElementById(
+        "videoId"
+      ).textContent =
+        snapshot.id;
+
+
+            document.getElementById(
+        "views"
+      ).textContent =
+        safe(videoData.views || 0);
+
+
+      document.getElementById(
+        "likes"
+      ).textContent =
+        safe(videoData.likes || 0);
+
+
+      document.getElementById(
+        "comments"
+      ).textContent =
+        safe(videoData.commentsCount || 0);
+
+
+      document.getElementById(
+        "shares"
+      ).textContent =
+        safe(videoData.shares || 0);
+
+
+      /* =========================================
+         CHANNEL
+      ========================================= */
+
+      if (
+        videoData.channelName ||
+        videoData.channelImage
+      ) {
+
+        document.getElementById(
+          "channel"
+        ).style.display = "flex";
+
+
+        document.getElementById(
+          "channelName"
+        ).textContent =
+          safe(videoData.channelName);
+
+
+        document.getElementById(
+          "channelHandle"
+        ).textContent =
+          safe(videoData.channelHandle);
+
+
+        const channelImage =
+          document.getElementById(
+            "channelImage"
+          );
+
+
+        if (
+          videoData.channelImage
+        ) {
+
+          channelImage.src =
+            videoData.channelImage;
+
+          channelImage.style.display =
+            "block";
+
+        } else {
+
+          channelImage.style.display =
+            "none";
+
         }
 
-      </section>
+      }
 
 
-      <!-- SIDEBAR -->
+      /* =========================================
+         RENDER VIDEO
+      ========================================= */
 
-      <aside class="card">
+      renderVideo(
+        videoData.videoUrl
+      );
 
-        <h3 style="margin-bottom:18px;">
-          Video Information
-        </h3>
 
+      document.getElementById(
+        "loading"
+      ).style.display =
+        "none";
 
-        <div class="info-list">
 
+      document.getElementById(
+        "content"
+      ).style.display =
+        "block";
 
-          <div class="info-item">
 
-            <div class="info-icon">
-              📂
-            </div>
+    } catch (error) {
 
-            <div>
+      console.error(
+        "Video loading error:",
+        error
+      );
 
-              <div class="info-label">
-                Category
-              </div>
 
-              <div class="info-value">
-                ${escapeHtml(category)}
-              </div>
+      showError(
+        error.message ||
+        "An unexpected error occurred."
+      );
 
-            </div>
+    }
 
-          </div>
+  }
 
 
-          <div class="info-item">
+  /* =========================================
+     ERROR
+  ========================================= */
 
-            <div class="info-icon">
-              🎬
-            </div>
+  function showError(message) {
 
-            <div>
-
-              <div class="info-label">
-                Video Type
-              </div>
-
-              <div class="info-value">
-                ${escapeHtml(videoType)}
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div class="info-item">
-
-            <div class="info-icon">
-              ⏱
-            </div>
-
-            <div>
-
-              <div class="info-label">
-                Duration
-              </div>
-
-              <div class="info-value">
-                ${escapeHtml(duration)}
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div class="info-item">
-
-            <div class="info-icon">
-              💳
-            </div>
-
-            <div>
-
-              <div class="info-label">
-                Access
-              </div>
-
-              <div class="info-value">
-
-                ${
-                  isFree
-                  ?
-                  "Free"
-                  :
-                  (
-                    price
-                    ?
-                    `${escapeHtml(
-                      currency
-                    )} ${escapeHtml(price)}`
-                    :
-                    "Paid"
-                  )
-                }
-
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div class="info-item">
-
-            <div class="info-icon">
-              🟢
-            </div>
-
-            <div>
-
-              <div class="info-label">
-                Status
-              </div>
-
-              <div class="info-value">
-                ${escapeHtml(status)}
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div class="info-item">
-
-            <div class="info-icon">
-              🆔
-            </div>
-
-            <div>
-
-              <div class="info-label">
-                Video ID
-              </div>
-
-              <div class="info-value">
-                ${escapeHtml(id)}
-              </div>
-
-            </div>
-
-          </div>
-
-
-        </div>
-
-      </aside>
-
-    </div>
-
-  `;
-
-
-  /* ===================================================
-     SHARE
-  =================================================== */
-
-  const shareBtn =
     document.getElementById(
-      "shareBtn"
-    );
+      "loading"
+    ).style.display =
+      "none";
 
 
-  if(shareBtn){
+    const box =
+      document.getElementById(
+        "errorBox"
+      );
 
-    shareBtn.addEventListener(
-      "click",
-      async () => {
 
-        try{
+    box.style.display =
+      "block";
 
-          if(navigator.share){
 
-            await navigator.share({
-  title: title,
-  text:
-    "Watch this video on LetsStudy Pro: " + title,
-  url: window.location.href
-});
+    box.innerHTML = `
 
-} catch (error) {
-  console.error("Share failed:", error);
-}
-}
-
-function goBack() {
-  window.location.href = "course-lessons.html?moduleId=" +
-    encodeURIComponent(lesson.moduleId || "") +
-    "&courseId=" +
-    encodeURIComponent(lesson.courseId || "");
-}
-
-document.getElementById("shareBtn").addEventListener("click", shareLesson);
-
-document.getElementById("backBtn").addEventListener("click", goBack);
-
-document.getElementById("copyBtn").addEventListener("click", async () => {
-  try {
-    await navigator.clipboard.writeText(window.location.href);
-
-    const btn = document.getElementById("copyBtn");
-    const original = btn.innerHTML;
-
-    btn.innerHTML = "✓ Link Copied";
-
-    setTimeout(() => {
-      btn.innerHTML = original;
-    }, 2000);
-
-  } catch (error) {
-    console.error("Copy failed:", error);
-    alert("Unable to copy link.");
-  }
-});
-
-function formatDate(value) {
-  if (!value) return "—";
-
-  try {
-    if (value.toDate) {
-      return value.toDate().toLocaleDateString();
-    }
-
-    const date = new Date(value);
-
-    if (!isNaN(date.getTime())) {
-      return date.toLocaleDateString();
-    }
-
-  } catch (error) {
-    console.error(error);
-  }
-
-  return "—";
-}
-
-function safe(value) {
-  return value || "—";
-}
-
-function showError(message) {
-  document.getElementById("loading").style.display = "none";
-  document.getElementById("lessonContent").style.display = "none";
-
-  const errorBox = document.getElementById("errorBox");
-
-  errorBox.style.display = "block";
-  errorBox.innerHTML = `
-    <div class="error-icon">⚠️</div>
-    <h2>Unable to Load Lesson</h2>
-    <p>${escapeHtml(message)}</p>
-
-    <button onclick="history.back()" class="btn primary">
-      ← Go Back
-    </button>
-  `;
-}
-
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-function getYouTubeEmbed(url) {
-  try {
-    const parsed = new URL(url);
-
-    let videoId = "";
-
-    if (parsed.hostname.includes("youtu.be")) {
-      videoId = parsed.pathname.replace("/", "");
-    }
-
-    if (parsed.hostname.includes("youtube.com")) {
-      videoId =
-        parsed.searchParams.get("v") ||
-        parsed.pathname.split("/").filter(Boolean).pop();
-    }
-
-    if (!videoId) return null;
-
-    return `https://www.youtube.com/embed/${videoId}`;
-  } catch {
-    return null;
-  }
-}
-
-function getVimeoEmbed(url) {
-  try {
-    const parsed = new URL(url);
-
-    if (!parsed.hostname.includes("vimeo.com")) {
-      return null;
-    }
-
-    const parts = parsed.pathname
-      .split("/")
-      .filter(Boolean);
-
-    const videoId = parts[parts.length - 1];
-
-    if (!videoId || !/^\d+$/.test(videoId)) {
-      return null;
-    }
-
-    return `https://player.vimeo.com/video/${videoId}`;
-  } catch {
-    return null;
-  }
-}
-
-function isDirectVideo(url) {
-  return /\.(mp4|webm|ogg|m4v|mov)(\?.*)?$/i.test(url);
-}
-
-function renderVideo(url) {
-  const player = document.getElementById("videoPlayer");
-
-  if (!url) {
-    player.innerHTML = `
-      <div class="video-unavailable">
-        <div class="video-icon">🎬</div>
-        <h3>Video Unavailable</h3>
-        <p>This lesson does not have a video URL yet.</p>
+      <div style="
+        font-size:48px;
+        margin-bottom:10px;
+      ">
+        ⚠️
       </div>
-    `;
-    return;
-  }
 
-  const youtube = getYouTubeEmbed(url);
+      <h2>
+        Unable to Load Video
+      </h2>
 
-  if (youtube) {
-    player.innerHTML = `
-      <iframe
-        src="${youtube}"
-        title="Lesson Video"
-        allow="
-          accelerometer;
-          autoplay;
-          clipboard-write;
-          encrypted-media;
-          gyroscope;
-          picture-in-picture;
-          web-share
-        "
-        allowfullscreen>
-      </iframe>
-    `;
-    return;
-  }
+      <p style="
+        color:#64748b;
+        margin:10px 0 20px;
+      ">
+        ${escapeHtml(message)}
+      </p>
 
-  const vimeo = getVimeoEmbed(url);
-
-  if (vimeo) {
-    player.innerHTML = `
-      <iframe
-        src="${vimeo}"
-        title="Lesson Video"
-        allow="autoplay; fullscreen; picture-in-picture"
-        allowfullscreen>
-      </iframe>
-    `;
-    return;
-  }
-
-  if (isDirectVideo(url)) {
-    player.innerHTML = `
-      <video
-        controls
-        playsinline
-        preload="metadata"
-        controlsList="nodownload"
+      <button
+        onclick="history.back()"
+        class="btn primary"
       >
-        <source src="${escapeHtml(url)}">
+        ← Go Back
+      </button>
 
-        Your browser does not support HTML5 video.
-      </video>
     `;
-    return;
+
   }
 
-  player.innerHTML = `
-    <iframe
-      src="${escapeHtml(url)}"
-      title="Lesson Content"
-      allowfullscreen>
-    </iframe>
-  `;
-}
 
-async function loadLesson() {
-  const params = new URLSearchParams(window.location.search);
+  /* =========================================
+     SHARE VIDEO
+  ========================================= */
 
-  const lessonId =
-    params.get("id") ||
-    params.get("lessonId");
+  async function shareVideo() {
 
-  if (!lessonId) {
-    showError("No lesson ID was provided.");
-    return;
-  }
-
-  try {
-    const lessonRef = doc(db, "lessons", lessonId);
-    const lessonSnap = await getDoc(lessonRef);
-
-    if (!lessonSnap.exists()) {
-      showError("This lesson could not be found.");
+    if (!videoData) {
       return;
     }
 
-    lesson = {
-      id: lessonSnap.id,
-      ...lessonSnap.data()
-    };
 
-    document.title =
-      `${lesson.title || "Lesson"} | LetsStudy Pro`;
+    const title =
+      safe(videoData.title);
 
-    document.getElementById("lessonTitle").textContent =
-      safe(lesson.title);
 
-    document.getElementById("lessonDescription").textContent =
-      safe(lesson.description);
+    const shareUrl =
+      window.location.href;
 
-    document.getElementById("lessonType").textContent =
-      safe(lesson.type);
 
-    document.getElementById("lessonDuration").textContent =
-      safe(lesson.duration);
+    try {
 
-    document.getElementById("lessonOrder").textContent =
-      safe(lesson.order);
+      if (
+        navigator.share
+      ) {
 
-    document.getElementById("lessonStatus").textContent =
-      safe(lesson.status);
+        await navigator.share({
 
-    document.getElementById("courseId").textContent =
-      safe(lesson.courseId);
+          title:
+            title,
 
-    document.getElementById("moduleId").textContent =
-      safe(lesson.moduleId);
+          text:
+            "Watch this video on LetsStudy Pro: " +
+            title,
 
-    document.getElementById("createdBy").textContent =
-      safe(lesson.createdBy);
+          url:
+            shareUrl
 
-    document.getElementById("createdAt").textContent =
-      formatDate(lesson.createdAt);
+        });
 
-    renderVideo(lesson.contentUrl);
+      } else {
 
-    document.getElementById("loading").style.display = "none";
-    document.getElementById("lessonContent").style.display = "block";
+        await navigator.clipboard
+          .writeText(shareUrl);
 
-  } catch (error) {
-    console.error("Lesson loading error:", error);
+        alert(
+          "Video link copied."
+        );
 
-    showError(
-          error.message || "An unexpected error occurred."
+      }
+
+    } catch (error) {
+
+      if (
+        error.name !==
+        "AbortError"
+      ) {
+
+        console.error(
+          "Share failed:",
+          error
+        );
+
+      }
+
+    }
+
+  }
+
+
+  /* =========================================
+     COPY VIDEO LINK
+  ========================================= */
+
+  async function copyLink() {
+
+    try {
+
+      await navigator.clipboard
+        .writeText(
+          window.location.href
+        );
+
+
+      const button =
+        document.getElementById(
+          "copyBtn"
+        );
+
+
+      const originalText =
+        button.innerHTML;
+
+
+      button.innerHTML =
+        "✓ Link Copied";
+
+
+      setTimeout(() => {
+
+        button.innerHTML =
+          originalText;
+
+      }, 2000);
+
+
+    } catch (error) {
+
+      console.error(
+        "Copy failed:",
+        error
+      );
+
+
+      alert(
+        "Unable to copy video link."
+      );
+
+    }
+
+  }
+
+
+  /* =========================================
+     BACK TO VIDEOS
+  ========================================= */
+
+  function goBack() {
+
+    window.location.href =
+      "videos.html";
+
+  }
+
+
+  /* =========================================
+     BUTTON EVENTS
+  ========================================= */
+
+  document
+    .getElementById("shareBtn")
+    .addEventListener(
+      "click",
+      shareVideo
     );
+
+
+  document
+    .getElementById("copyBtn")
+    .addEventListener(
+      "click",
+      copyLink
+    );
+
+
+  document
+    .getElementById("backBtn")
+    .addEventListener(
+      "click",
+      goBack
+    );
+
+
+  /* =========================================
+     MOBILE SIDEBAR
+  ========================================= */
+
+  const menuBtn =
+    document.getElementById(
+      "menuBtn"
+    );
+
+
+  const sidebar =
+    document.getElementById(
+      "sidebar"
+    );
+
+
+  const overlay =
+    document.getElementById(
+      "overlay"
+    );
+
+
+  const closeSidebar =
+    document.getElementById(
+      "closeSidebar"
+    );
+
+
+  if (menuBtn) {
+
+    menuBtn.addEventListener(
+      "click",
+      () => {
+
+        sidebar.classList.add(
+          "open"
+        );
+
+        overlay.classList.add(
+          "show"
+        );
+
+      }
+    );
+
   }
-}
 
-loadLesson();
 
-/* =====================================================
-   VIDEO PLAYER EVENTS
-===================================================== */
+  if (closeSidebar) {
 
-document.addEventListener("contextmenu", function (event) {
-  const video = event.target.closest("video");
+    closeSidebar.addEventListener(
+      "click",
+      () => {
 
-  if (video) {
-    event.preventDefault();
+        sidebar.classList.remove(
+          "open"
+        );
+
+        overlay.classList.remove(
+          "show"
+        );
+
+      }
+    );
+
   }
-});
 
-/* =====================================================
-   PREVENT ACCIDENTAL PAGE RELOAD
-===================================================== */
 
-window.addEventListener("beforeunload", function () {
-  const video = document.querySelector("video");
+  if (overlay) {
 
-  if (video && !video.paused) {
-    video.pause();
+    overlay.addEventListener(
+      "click",
+      () => {
+
+        sidebar.classList.remove(
+          "open"
+        );
+
+        overlay.classList.remove(
+          "show"
+        );
+
+      }
+    );
+
   }
-});
 
-/* =====================================================
-   MOBILE MENU
-===================================================== */
 
-const menuBtn = document.getElementById("menuBtn");
-const sidebar = document.getElementById("sidebar");
-const overlay = document.getElementById("overlay");
-const closeSidebar = document.getElementById("closeSidebar");
+  /* =========================================
+     CLOSE MENU AFTER LINK CLICK
+  ========================================= */
 
-if (menuBtn) {
-  menuBtn.addEventListener("click", () => {
-    sidebar.classList.add("open");
-    overlay.classList.add("show");
-  });
-}
+  document
+    .querySelectorAll(
+      "#sidebar a"
+    )
+    .forEach(link => {
 
-if (closeSidebar) {
-  closeSidebar.addEventListener("click", () => {
-    sidebar.classList.remove("open");
-    overlay.classList.remove("show");
-  });
-}
+      link.addEventListener(
+        "click",
+        () => {
 
-if (overlay) {
-  overlay.addEventListener("click", () => {
-    sidebar.classList.remove("open");
-    overlay.classList.remove("show");
-  });
-}
+          sidebar.classList.remove(
+            "open"
+          );
 
-/* =====================================================
-   CLOSE SIDEBAR WHEN LINK IS CLICKED
-===================================================== */
+          overlay.classList.remove(
+            "show"
+          );
 
-document.querySelectorAll("#sidebar a").forEach(link => {
-  link.addEventListener("click", () => {
-    sidebar?.classList.remove("open");
-    overlay?.classList.remove("show");
-  });
-});
+        }
+      );
 
-/* =====================================================
-   ESC KEY
-===================================================== */
+    });
 
-document.addEventListener("keydown", event => {
-  if (event.key === "Escape") {
-    sidebar?.classList.remove("open");
-    overlay?.classList.remove("show");
-  }
-});
+
+  /* =========================================
+     ESCAPE KEY
+  ========================================= */
+
+  document.addEventListener(
+    "keydown",
+    event => {
+
+      if (
+        event.key === "Escape"
+      ) {
+
+        sidebar.classList.remove(
+          "open"
+        );
+
+        overlay.classList.remove(
+          "show"
+        );
+
+      }
+
+    }
+  );
+
+
+  /* =========================================
+     START
+  ========================================= */
+
+  loadVideo();
+
 </script>
 
 </body>
