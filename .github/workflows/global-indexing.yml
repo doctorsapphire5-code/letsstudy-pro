@@ -1,0 +1,61 @@
+name: LetsStudy Pro Global Automatic Indexing
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+  schedule:
+    - cron: "*/30 * * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  indexing:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate static sitemap
+        run: npm run sitemap:static
+
+      - name: Read Firestore public content
+        run: npm run firestore:index
+
+      - name: Generate merged sitemap
+        run: npm run sitemap:index
+
+      - name: Submit URLs to IndexNow
+        env:
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+        run: npm run indexnow
+
+      - name: Commit sitemap changes
+        run: |
+          git config user.name "LetsStudy Pro Indexing Bot"
+          git config user.email "actions@github.com"
+
+          git add sitemap.xml
+          git add sitemap-pages-*.xml
+          git add sitemap-firestore-*.xml
+
+          if git diff --cached --quiet; then
+            echo "No sitemap changes."
+          else
+            git commit -m "chore: update global sitemaps [skip ci]"
+            git push
+          fi
