@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Blog Analytics Admin</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f5f7fb;color:#172033}
+header{background:#111827;color:white;padding:18px;font-size:20px;font-weight:bold}
+main{max-width:1200px;margin:auto;padding:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:15px}
+.card{background:white;padding:18px;border-radius:14px;box-shadow:0 3px 12px #0001}
+.card small{color:#667085}.num{font-size:28px;font-weight:bold;margin-top:8px}
+section{margin-top:20px}.table{width:100%;border-collapse:collapse;background:white;border-radius:12px;overflow:hidden}
+th,td{padding:13px;text-align:left;border-bottom:1px solid #eee}
+button{border:0;padding:10px 15px;border-radius:8px;cursor:pointer}
+.refresh{background:#2563eb;color:white}
+.error{color:#dc2626;margin:10px 0}
+</style>
+</head>
+
+<body>
+<header>📊 LetsStudy Pro — Blog Analytics</header>
+
+<main>
+<button class="refresh" onclick="loadAnalytics()">↻ Refresh</button>
+<div id="error" class="error"></div>
+
+<section class="grid">
+<div class="card"><small>Total Blogs</small><div class="num" id="blogs">0</div></div>
+<div class="card"><small>Total Posts</small><div class="num" id="posts">0</div></div>
+<div class="card"><small>Total Pages</small><div class="num" id="pages">0</div></div>
+<div class="card"><small>Total Views</small><div class="num" id="views">0</div></div>
+<div class="card"><small>Comments</small><div class="num" id="comments">0</div></div>
+<div class="card"><small>Estimated Revenue</small><div class="num" id="revenue">$0</div></div>
+</section>
+
+<section>
+<h2>🔥 Top Posts</h2>
+<table class="table">
+<thead><tr><th>Post</th><th>Views</th><th>Status</th></tr></thead>
+<tbody id="topPosts"><tr><td colspan="3">Loading...</td></tr></tbody>
+</table>
+</section>
+
+<section>
+<h2>🌍 Blog Performance</h2>
+<table class="table">
+<thead><tr><th>Blog</th><th>Posts</th><th>Views</th></tr></thead>
+<tbody id="blogStats"><tr><td colspan="3">Loading...</td></tr></tbody>
+</table>
+</section>
+</main>
+
+<script type="module">
+import{initializeApp}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import{getAuth,onAuthStateChanged}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import{
+ getFirestore,collection,getDocs,query,where
+}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig={
+ apiKey:"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+ authDomain:"let-s-study-pro-course.firebaseapp.com",
+ databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+ projectId:"let-s-study-pro-course",
+ storageBucket:"let-s-study-pro-course.firebasestorage.app",
+ messagingSenderId:"474928293390",
+ appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+ measurementId:"G-85B7V5H5J0"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+const $=id=>document.getElementById(id);
+const n=v=>Number(v||0);
+
+onAuthStateChanged(auth,async user=>{
+ if(!user){
+   $("error").textContent="Please login as administrator.";
+   return;
+ }
+ loadAnalytics();
+});
+
+async function loadAnalytics(){
+ try{
+  $("error").textContent="Loading...";
+
+  const [
+   blogsSnap,
+   postsSnap,
+   pagesSnap,
+   commentsSnap
+  ]=await Promise.all([
+   getDocs(collection(db,"blogs")),
+   getDocs(collection(db,"posts")),
+   getDocs(collection(db,"pages")),
+   getDocs(collection(db,"comments"))
+  ]);
+
+  const blogs=blogsSnap.docs.map(x=>({id:x.id,...x.data()}));
+  const posts=postsSnap.docs.map(x=>({id:x.id,...x.data()}));
+  const pages=pagesSnap.docs.map(x=>({id:x.id,...x.data()}));
+  const comments=commentsSnap.docs.map(x=>({id:x.id,...x.data()}));
+
+  let views=0;
+
+  posts.forEach(p=>{
+    views+=n(p.views||p.viewCount||0);
+  });
+
+  blogs.forEach(b=>{
+    views+=n(b.views||b.viewCount||0);
+  });
+
+  $("blogs").textContent=blogs.length;
+  $("posts").textContent=posts.length;
+  $("pages").textContent=pages.length;
+  $("comments").textContent=comments.length;
+  $("views").textContent=views.toLocaleString();
+
+  // Simple revenue estimate
+  $("revenue").textContent="$"+((views/1000)*1.5).toFixed(2);
+
+  // TOP POSTS
+  posts.sort((a,b)=>
+    n(b.views||b.viewCount)-n(a.views||a.viewCount)
+  );
+
+  $("topPosts").innerHTML=posts.slice(0,10).map(p=>`
+   <tr>
+    <td>${safe(p.title||"Untitled")}</td>
+    <td>${n(p.views||p.viewCount).toLocaleString()}</td>
+    <td>${safe(p.status||"published")}</td>
+   </tr>
+  `).join("")||`
+   <tr><td colspan="3">No posts found</td></tr>`;
+
+  // BLOG PERFORMANCE
+  $("blogStats").innerHTML=blogs.map(b=>{
+   const bp=posts.filter(p=>
+    p.blogId===b.id ||
+    p.ownerId===b.ownerId
+   );
+   const bv=n(b.views||b.viewCount)+
+    bp.reduce((s,p)=>s+n(p.views||p.viewCount),0);
+
+   return`
+   <tr>
+    <td>${safe(b.title||b.name||"Untitled Blog")}</td>
+    <td>${bp.length}</td>
+    <td>${bv.toLocaleString()}</td>
+   </tr>`;
+  }).join("")||`
+   <tr><td colspan="3">No blogs found</td></tr>`;
+
+  $("error").textContent="";
+ }catch(e){
+  console.error(e);
+  $("error").textContent="Analytics error: "+e.message;
+ }
+}
+
+function safe(v){
+ return String(v).replace(/[&<>"']/g,m=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",
+  '"':"&quot;","'":"&#039;"
+ }[m]));
+}
+
+window.loadAnalytics=loadAnalytics;
+</script>
+</body>
+</html>
