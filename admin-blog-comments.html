@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Blog Comments</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;background:#f5f7fb;color:#172033}
+header{background:#111827;color:#fff;padding:18px;font-size:20px;font-weight:bold}
+main{max-width:1200px;margin:auto;padding:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:15px}
+.card{background:#fff;padding:18px;border-radius:14px;box-shadow:0 3px 12px #0001}
+.num{font-size:28px;font-weight:bold;margin-top:7px}
+.box{background:#fff;padding:18px;border-radius:14px;margin-top:20px}
+input,select{padding:12px;border:1px solid #ddd;border-radius:8px;margin:5px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:12px;border-bottom:1px solid #eee;text-align:left}
+button{border:0;padding:9px 12px;border-radius:7px;cursor:pointer}
+.approve{background:#16a34a;color:white}
+.hide{background:#f59e0b;color:white}
+.del{background:#dc2626;color:white}
+.refresh{background:#2563eb;color:white}
+.actions{display:flex;gap:5px;flex-wrap:wrap}
+.msg{margin:10px 0}.error{color:#dc2626}
+</style>
+</head>
+
+<body>
+
+<header>💬 LetsStudy Pro — Blog Comments</header>
+
+<main>
+
+<button class="refresh" onclick="loadComments()">↻ Refresh</button>
+
+<div id="msg"></div>
+
+<div class="grid">
+<div class="card">Total<div class="num" id="total">0</div></div>
+<div class="card">Approved<div class="num" id="approved">0</div></div>
+<div class="card">Pending<div class="num" id="pending">0</div></div>
+<div class="card">Hidden<div class="num" id="hidden">0</div></div>
+</div>
+
+<div class="box">
+
+<input id="search"
+placeholder="🔎 Search comments..."
+oninput="render()">
+
+<select id="filter" onchange="render()">
+<option value="all">All</option>
+<option value="approved">Approved</option>
+<option value="pending">Pending</option>
+<option value="hidden">Hidden</option>
+</select>
+
+<table>
+<thead>
+<tr>
+<th>Author</th>
+<th>Comment</th>
+<th>Post</th>
+<th>Status</th>
+<th>Date</th>
+<th>Actions</th>
+</tr>
+</thead>
+
+<tbody id="list">
+<tr><td colspan="6">Loading...</td></tr>
+</tbody>
+</table>
+
+</div>
+</main>
+
+<script type="module">
+
+import{initializeApp}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import{getAuth,onAuthStateChanged}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import{
+getFirestore,collection,getDocs,
+doc,updateDoc,deleteDoc
+}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+const firebaseConfig={
+apiKey:"AIzaSyBcOYDfAVKXbljsyRgI_0rjodBn678tCc",
+authDomain:"let-s-study-pro-course.firebaseapp.com",
+databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+projectId:"let-s-study-pro-course",
+storageBucket:"let-s-study-pro-course.firebasestorage.app",
+messagingSenderId:"474928293390",
+appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+measurementId:"G-85B7V5H5J0"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let comments=[];
+
+const $=id=>document.getElementById(id);
+
+onAuthStateChanged(auth,user=>{
+ if(!user){
+  $("msg").innerHTML=
+  "<span class='error'>Admin login required.</span>";
+  return;
+ }
+ loadComments();
+});
+
+
+async function loadComments(){
+
+ try{
+
+  const snap=await getDocs(
+   collection(db,"comments")
+  );
+
+  comments=snap.docs.map(d=>({
+   id:d.id,...d.data()
+  }));
+
+  updateStats();
+  render();
+
+ }catch(e){
+
+  $("msg").innerHTML=
+  "<span class='error'>"+safe(e.message)+"</span>";
+
+ }
+}
+
+
+function status(c){
+
+ if(c.status)return c.status;
+
+ if(c.approved===true)return"approved";
+
+ if(c.hidden===true)return"hidden";
+
+ return"pending";
+}
+
+
+function updateStats(){
+
+ $("total").textContent=comments.length;
+
+ $("approved").textContent=
+ comments.filter(c=>status(c)==="approved").length;
+
+ $("pending").textContent=
+ comments.filter(c=>status(c)==="pending").length;
+
+ $("hidden").textContent=
+ comments.filter(c=>status(c)==="hidden").length;
+}
+
+
+async function setStatus(id,newStatus){
+
+ try{
+
+  await updateDoc(
+   doc(db,"comments",id),
+   {
+    status:newStatus,
+    approved:newStatus==="approved",
+    hidden:newStatus==="hidden",
+    updatedAt:new Date()
+   }
+  );
+
+  await loadComments();
+
+ }catch(e){
+
+  $("msg").innerHTML=
+  "<span class='error'>"+safe(e.message)+"</span>";
+
+ }
+}
+
+
+async function deleteComment(id){
+
+ if(!confirm("Delete this comment permanently?"))
+  return;
+
+ try{
+
+  await deleteDoc(
+   doc(db,"comments",id)
+  );
+
+  await loadComments();
+
+ }catch(e){
+
+  $("msg").innerHTML=
+  "<span class='error'>"+safe(e.message)+"</span>";
+
+ }
+}
+
+
+function render(){
+
+ const q=$("search").value.toLowerCase();
+ const f=$("filter").value;
+
+ const data=comments.filter(c=>{
+
+  const s=status(c);
+
+  const text=(
+   (c.authorName||"")+" "+
+   (c.email||"")+" "+
+   (c.text||c.comment||"")+" "+
+   (c.postTitle||"")
+  ).toLowerCase();
+
+  return text.includes(q)&&(f==="all"||s===f);
+
+ });
+
+ $("list").innerHTML=data.map(c=>{
+
+  const s=status(c);
+
+  return`
+
+  <tr>
+
+   <td>
+    <b>${safe(c.authorName||c.name||"Anonymous")}</b><br>
+    <small>${safe(c.email||"")}</small>
+   </td>
+
+   <td>
+    ${safe(c.text||c.comment||"")}
+   </td>
+
+   <td>
+    ${safe(c.postTitle||c.postId||"—")}
+   </td>
+
+   <td>${safe(s)}</td>
+
+   <td>${formatDate(c.createdAt)}</td>
+
+   <td class="actions">
+
+    <button class="approve"
+    onclick="setStatus('${c.id}','approved')">
+    Approve
+    </button>
+
+    <button class="hide"
+    onclick="setStatus('${c.id}','hidden')">
+    Hide
+    </button>
+
+    <button class="del"
+    onclick="deleteComment('${c.id}')">
+    Delete
+    </button>
+
+   </td>
+
+  </tr>`;
+
+ }).join("")||`
+ <tr>
+ <td colspan="6">No comments found.</td>
+ </tr>`;
+}
+
+
+function formatDate(t){
+
+ if(!t)return"—";
+
+ try{
+
+  const d=t.seconds?
+   new Date(t.seconds*1000):
+   new Date(t);
+
+  return d.toLocaleString();
+
+ }catch{
+  return"—";
+ }
+}
+
+
+function safe(v){
+
+ return String(v).replace(/[&<>"']/g,m=>({
+
+  "&":"&amp;",
+  "<":"&lt;",
+  ">":"&gt;",
+  '"':"&quot;",
+  "'":"&#039;"
+
+ }[m]));
+
+}
+
+
+window.loadComments=loadComments;
+window.render=render;
+window.setStatus=setStatus;
+window.deleteComment=deleteComment;
+
+</script>
+
+</body>
+</html>
