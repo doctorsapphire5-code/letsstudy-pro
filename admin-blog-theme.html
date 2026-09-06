@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Blog Themes</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;background:#f5f7fb;color:#172033}
+header{background:#111827;color:#fff;padding:18px;font-size:20px;font-weight:bold}
+main{max-width:1100px;margin:auto;padding:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px}
+.card,.box{background:#fff;padding:18px;border-radius:14px;
+box-shadow:0 3px 12px #0001;margin-bottom:18px}
+.num{font-size:28px;font-weight:bold;margin-top:7px}
+input,textarea,select{width:100%;padding:12px;margin:6px 0 12px;
+border:1px solid #ddd;border-radius:8px}
+button{border:0;padding:10px 14px;border-radius:8px;cursor:pointer}
+.save{background:#2563eb;color:white}
+.edit{background:#f59e0b;color:white}
+.del{background:#dc2626;color:white}
+.on{background:#16a34a;color:white}
+.preview{background:#64748b;color:white}
+table{width:100%;border-collapse:collapse;background:#fff}
+th,td{padding:13px;border-bottom:1px solid #eee;text-align:left}
+.actions{display:flex;gap:5px;flex-wrap:wrap}
+.msg{margin:10px 0}.error{color:#dc2626}
+</style>
+</head>
+
+<body>
+
+<header>🎨 LetsStudy Pro — Blog Theme Administration</header>
+
+<main>
+
+<div class="grid">
+<div class="card">Total Themes<div class="num" id="total">0</div></div>
+<div class="card">Active<div class="num" id="active">0</div></div>
+<div class="card">Free<div class="num" id="free">0</div></div>
+<div class="card">Premium<div class="num" id="premium">0</div></div>
+</div>
+
+<div class="box">
+<h3 id="title">➕ Add Theme</h3>
+
+<input id="name" placeholder="Theme name">
+<input id="slug" placeholder="theme-slug">
+<input id="preview" placeholder="Preview URL">
+<input id="image" placeholder="Theme image URL">
+
+<select id="type">
+<option value="free">Free</option>
+<option value="premium">Premium</option>
+</select>
+
+<textarea id="description"
+placeholder="Theme description"></textarea>
+
+<button class="save" onclick="saveTheme()">Save Theme</button>
+<button onclick="resetForm()">Cancel</button>
+
+<div id="msg"></div>
+</div>
+
+<div class="box">
+<input id="search" placeholder="🔎 Search themes..."
+oninput="render()">
+
+<table>
+<thead>
+<tr>
+<th>Theme</th>
+<th>Type</th>
+<th>Status</th>
+<th>Uses</th>
+<th>Actions</th>
+</tr>
+</thead>
+
+<tbody id="list">
+<tr><td colspan="5">Loading...</td></tr>
+</tbody>
+</table>
+</div>
+
+</main>
+
+<script type="module">
+
+import{initializeApp}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import{getAuth,onAuthStateChanged}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import{
+getFirestore,collection,getDocs,addDoc,
+doc,updateDoc,deleteDoc,serverTimestamp
+}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+const firebaseConfig={
+apiKey:"AIzaSyBcOYDfAVKXbljsyRgI_0rjodBn678tCc",
+authDomain:"let-s-study-pro-course.firebaseapp.com",
+databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+projectId:"let-s-study-pro-course",
+storageBucket:"let-s-study-pro-course.firebasestorage.app",
+messagingSenderId:"474928293390",
+appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+measurementId:"G-85B7V5H5J0"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let themes=[];
+let blogs=[];
+let editingId=null;
+
+const $=id=>document.getElementById(id);
+
+onAuthStateChanged(auth,user=>{
+ if(!user){
+  $("msg").innerHTML=
+  "<span class='error'>Admin login required.</span>";
+  return;
+ }
+ loadData();
+});
+
+
+async function loadData(){
+
+ try{
+
+  const [themeSnap,blogSnap]=await Promise.all([
+
+   getDocs(collection(db,"blogThemes")),
+   getDocs(collection(db,"blogs"))
+
+  ]);
+
+  themes=themeSnap.docs.map(d=>({
+   id:d.id,...d.data()
+  }));
+
+  blogs=blogSnap.docs.map(d=>({
+   id:d.id,...d.data()
+  }));
+
+  stats();
+  render();
+
+ }catch(e){
+
+  $("msg").innerHTML=
+  "<span class='error'>"+safe(e.message)+"</span>";
+
+ }
+}
+
+
+function stats(){
+
+ $("total").textContent=themes.length;
+
+ $("active").textContent=
+ themes.filter(t=>t.active===true).length;
+
+ $("free").textContent=
+ themes.filter(t=>t.type!=="premium").length;
+
+ $("premium").textContent=
+ themes.filter(t=>t.type==="premium").length;
+}
+
+
+async function saveTheme(){
+
+ const name=$("name").value.trim();
+
+ if(!name){
+
+  $("msg").innerHTML=
+  "<span class='error'>Theme name required.</span>";
+
+  return;
+ }
+
+ const slug=$("slug").value.trim()||
+ name.toLowerCase()
+ .replace(/[^a-z0-9]+/g,"-")
+ .replace(/^-|-$/g,"");
+
+ const data={
+  name,
+  slug,
+  previewUrl:$("preview").value.trim(),
+  imageUrl:$("image").value.trim(),
+  type:$("type").value,
+  description:$("description").value.trim(),
+  active:true,
+  updatedAt:serverTimestamp()
+ };
+
+ try{
+
+  if(editingId){
+
+   await updateDoc(
+    doc(db,"blogThemes",editingId),
+    data
+   );
+
+   $("msg").textContent="Theme updated.";
+
+  }else{
+
+   await addDoc(
+    collection(db,"blogThemes"),
+    {
+     ...data,
+     createdAt:serverTimestamp()
+    }
+   );
+
+   $("msg").textContent="Theme created.";
+  }
+
+  resetForm();
+  await loadData();
+
+ }catch(e){
+
+  $("msg").innerHTML=
+  "<span class='error'>"+safe(e.message)+"</span>";
+
+ }
+}
+
+
+function editTheme(id){
+
+ const t=themes.find(x=>x.id===id);
+ if(!t)return;
+
+ editingId=id;
+
+ $("name").value=t.name||"";
+ $("slug").value=t.slug||"";
+ $("preview").value=t.previewUrl||"";
+ $("image").value=t.imageUrl||"";
+ $("type").value=t.type||"free";
+ $("description").value=t.description||"";
+
+ $("title").textContent="✏️ Edit Theme";
+}
+
+
+async function deleteTheme(id){
+
+ const t=themes.find(x=>x.id===id);
+ if(!t)return;
+
+ if(!confirm(`Delete "${t.name}" theme?`))return;
+
+ try{
+
+  await deleteDoc(
+   doc(db,"blogThemes",id)
+  );
+
+  await loadData();
+
+ }catch(e){
+
+  $("msg").innerHTML=
+  "<span class='error'>"+safe(e.message)+"</span>";
+
+ }
+}
+
+
+async function activateTheme(id){
+
+ try{
+
+  // Disable all themes
+  await Promise.all(
+   themes.map(t=>
+    updateDoc(
+     doc(db,"blogThemes",t.id),
+     {active:t.id===id}
+    )
+   )
+  );
+
+  await loadData();
+
+ }catch(e){
+
+  $("msg").innerHTML=
+  "<span class='error'>"+safe(e.message)+"</span>";
+
+ }
+}
+
+
+function previewTheme(id){
+
+ const t=themes.find(x=>x.id===id);
+
+ if(t?.previewUrl){
+  window.open(t.previewUrl,"_blank");
+ }else{
+  alert("No preview URL available.");
+ }
+}
+
+
+function render(){
+
+ const q=$("search").value.toLowerCase();
+
+ const data=themes.filter(t=>
+  String(t.name||"").toLowerCase().includes(q)||
+  String(t.slug||"").toLowerCase().includes(q)
+ );
+
+ $("list").innerHTML=data.map(t=>{
+
+  const uses=blogs.filter(b=>
+   b.themeId===t.id||
+   b.theme===t.slug
+  ).length;
+
+  return`
+
+  <tr>
+
+   <td>
+    <b>${safe(t.name||"Untitled")}</b><br>
+    <small>${safe(t.slug||"")}</small>
+   </td>
+
+   <td>${safe(t.type||"free")}</td>
+
+   <td>
+    ${t.active===true?"🟢 Active":"⚪ Inactive"}
+   </td>
+
+   <td>${uses}</td>
+
+   <td class="actions">
+
+    <button class="edit"
+    onclick="editTheme('${t.id}')">
+    Edit
+    </button>
+
+    <button class="preview"
+    onclick="previewTheme('${t.id}')">
+    Preview
+    </button>
+
+    <button class="on"
+    onclick="activateTheme('${t.id}')">
+    Activate
+    </button>
+
+    <button class="del"
+    onclick="deleteTheme('${t.id}')">
+    Delete
+    </button>
+
+   </td>
+
+  </tr>`;
+
+ }).join("")||`
+ <tr><td colspan="5">No themes found.</td></tr>`;
+}
+
+
+function resetForm(){
+
+ editingId=null;
+
+ $("name").value="";
+ $("slug").value="";
+ $("preview").value="";
+ $("image").value="";
+ $("type").value="free";
+ $("description").value="";
+
+ $("title").textContent="➕ Add Theme";
+}
+
+
+function safe(v){
+
+ return String(v).replace(/[&<>"']/g,m=>({
+  "&":"&amp;",
+  "<":"&lt;",
+  ">":"&gt;",
+  '"':"&quot;",
+  "'":"&#039;"
+ }[m]));
+
+}
+
+
+window.saveTheme=saveTheme;
+window.editTheme=editTheme;
+window.deleteTheme=deleteTheme;
+window.activateTheme=activateTheme;
+window.previewTheme=previewTheme;
+window.resetForm=resetForm;
+window.render=render;
+
+</script>
+
+</body>
+</html>
