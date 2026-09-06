@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Blog Achievements - LetsStudy Pro</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f5f7fb;
+  color:#172033
+}
+header{
+  background:#111827;
+  color:#fff;
+  padding:18px 22px
+}
+header h1{margin:0;font-size:22px}
+.container{
+  max-width:1200px;
+  margin:auto;
+  padding:20px
+}
+.hero{
+  background:#fff;
+  padding:25px;
+  border-radius:18px;
+  margin-bottom:20px;
+  box-shadow:0 3px 12px #0000000d
+}
+.hero h2{margin:0 0 8px}
+.hero p{color:#667085}
+.stats{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+  gap:15px;
+  margin-bottom:20px
+}
+.card{
+  background:#fff;
+  padding:20px;
+  border-radius:15px;
+  box-shadow:0 3px 12px #0000000d
+}
+.card small{
+  color:#667085
+}
+.card strong{
+  display:block;
+  font-size:28px;
+  margin-top:8px
+}
+.progress-box{
+  background:#fff;
+  padding:20px;
+  border-radius:15px;
+  margin-bottom:20px
+}
+.progress{
+  height:12px;
+  background:#e5e7eb;
+  border-radius:20px;
+  overflow:hidden;
+  margin:12px 0
+}
+.progress div{
+  height:100%;
+  width:0%;
+  background:#2563eb
+}
+.badges{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:15px
+}
+.badge{
+  background:#fff;
+  padding:20px;
+  border-radius:15px;
+  border:2px solid #eee
+}
+.badge.unlocked{
+  border-color:#f59e0b
+}
+.icon{
+  font-size:35px
+}
+.badge h3{
+  margin:10px 0 5px
+}
+.badge p{
+  margin:0;
+  color:#667085;
+  font-size:14px
+}
+.badge.locked{
+  opacity:.55
+}
+button{
+  padding:11px 15px;
+  border:0;
+  border-radius:9px;
+  background:#111827;
+  color:#fff;
+  cursor:pointer
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🏆 LetsStudy Pro — Blog Achievements</h1>
+</header>
+
+<div class="container">
+
+  <div class="hero">
+    <h2 id="blogName">Your Blog</h2>
+    <p>
+      Track your blogging progress, milestones and achievements.
+    </p>
+    <button onclick="location.href='blog-dashboard.html'">
+      ← Back to Dashboard
+    </button>
+  </div>
+
+  <div class="stats">
+
+    <div class="card">
+      <small>📝 Posts</small>
+      <strong id="posts">0</strong>
+    </div>
+
+    <div class="card">
+      <small>👁️ Views</small>
+      <strong id="views">0</strong>
+    </div>
+
+    <div class="card">
+      <small>💬 Comments</small>
+      <strong id="comments">0</strong>
+    </div>
+
+    <div class="card">
+      <small>📄 Pages</small>
+      <strong id="pages">0</strong>
+    </div>
+
+    <div class="card">
+      <small>⭐ Featured</small>
+      <strong id="featured">No</strong>
+    </div>
+
+  </div>
+
+  <div class="progress-box">
+    <h2>🚀 Blogging Progress</h2>
+
+    <p id="progressText">
+      0% completed
+    </p>
+
+    <div class="progress">
+      <div id="progressBar"></div>
+    </div>
+
+    <small>
+      Keep publishing quality content to unlock more achievements.
+    </small>
+  </div>
+
+  <h2>🏅 Achievements</h2>
+
+  <div class="badges" id="badges"></div>
+
+</div>
+
+<script type="module">
+
+import {initializeApp}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  getDoc
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/* =========================
+   FIREBASE
+========================= */
+
+const firebaseConfig={
+  apiKey:"AIzaSyBcOYDfAVKXbljsyRgI_0rjodBn678tCc",
+  authDomain:"let-s-study-pro-course.firebaseapp.com",
+  databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId:"let-s-study-pro-course",
+  storageBucket:"let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId:"474928293390",
+  appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId:"G-85B7V5H5J0"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+
+/* =========================
+   BLOG ID
+========================= */
+
+const params=new URLSearchParams(location.search);
+
+const blogId=params.get("blogId");
+
+
+if(!blogId){
+
+  document.getElementById("blogName").textContent=
+    "Blog ID missing";
+
+}
+
+
+/* =========================
+   AUTH
+========================= */
+
+onAuthStateChanged(auth,async user=>{
+
+  if(!user){
+
+    location.href="login.html";
+    return;
+
+  }
+
+  if(blogId){
+
+    await loadAchievements(user);
+
+  }
+
+});
+
+
+/* =========================
+   LOAD
+========================= */
+
+async function loadAchievements(user){
+
+  try{
+
+    const blogRef=doc(db,"blogs",blogId);
+
+    const blogSnap=await getDoc(blogRef);
+
+    if(!blogSnap.exists()){
+
+      alert("Blog not found.");
+      return;
+
+    }
+
+    const blog=blogSnap.data();
+
+
+    /* OWNER CHECK */
+
+    if(
+      blog.ownerId &&
+      blog.ownerId!==user.uid
+    ){
+
+      alert("You do not have permission to access this blog.");
+      return;
+
+    }
+
+
+    document.getElementById("blogName").textContent=
+      blog.title || "Your Blog";
+
+
+    /* POSTS */
+
+    const postSnap=await getDocs(
+      query(
+        collection(db,"posts"),
+        where("blogId","==",blogId)
+      )
+    );
+
+    const postList=[];
+
+    postSnap.forEach(d=>{
+      postList.push({
+        id:d.id,
+        ...d.data()
+      });
+    });
+
+
+    /* PAGES */
+
+    const pageSnap=await getDocs(
+      query(
+        collection(db,"pages"),
+        where("blogId","==",blogId)
+      )
+    );
+
+
+    /* COMMENTS */
+
+    const commentSnap=await getDocs(
+      query(
+        collection(db,"comments"),
+        where("blogId","==",blogId)
+      )
+    );
+
+
+    const postViews=postList.reduce(
+      (sum,p)=>sum+Number(p.views||0),
+      0
+    );
+
+    const blogViews=
+      Number(blog.views||0);
+
+    const totalViews=
+      blogViews+postViews;
+
+
+    document.getElementById("posts").textContent=
+      postList.length.toLocaleString();
+
+    document.getElementById("pages").textContent=
+      pageSnap.size.toLocaleString();
+
+    document.getElementById("comments").textContent=
+      commentSnap.size.toLocaleString();
+
+    document.getElementById("views").textContent=
+      totalViews.toLocaleString();
+
+    document.getElementById("featured").textContent=
+      blog.featured===true ? "Yes" : "No";
+
+
+    calculateProgress({
+      posts:postList.length,
+      views:totalViews,
+      comments:commentSnap.size,
+      pages:pageSnap.size,
+      featured:blog.featured===true
+    });
+
+  }catch(error){
+
+    console.error(error);
+
+    alert("Failed to load achievements.");
+
+  }
+
+}
+
+
+/* =========================
+   PROGRESS
+========================= */
+
+function calculateProgress(data){
+
+  let points=0;
+
+  if(data.posts>=1)
+    points+=20;
+
+  if(data.posts>=10)
+    points+=20;
+
+  if(data.posts>=25)
+    points+=10;
+
+  if(data.views>=100)
+    points+=10;
+
+  if(data.views>=1000)
+    points+=10;
+
+  if(data.comments>=10)
+    points+=10;
+
+  if(data.pages>=3)
+    points+=5;
+
+  if(data.featured)
+    points+=5;
+
+
+  points=Math.min(points,100);
+
+
+  document.getElementById("progressBar")
+    .style.width=points+"%";
+
+  document.getElementById("progressText")
+    .textContent=
+      points+"% achievement progress";
+
+  renderBadges(data);
+
+}
+
+
+/* =========================
+   BADGES
+========================= */
+
+function renderBadges(data){
+
+  const badges=[
+
+    {
+      icon:"🌱",
+      title:"First Post",
+      description:"Publish your first post.",
+      unlocked:data.posts>=1
+    },
+
+    {
+      icon:"✍️",
+      title:"10 Posts",
+      description:"Create at least 10 posts.",
+      unlocked:data.posts>=10
+    },
+
+    {
+      icon:"🚀",
+      title:"25 Posts",
+      description:"Create at least 25 posts.",
+      unlocked:data.posts>=25
+    },
+
+    {
+      icon:"👁️",
+      title:"100 Views",
+      description:"Reach 100 blog views.",
+      unlocked:data.views>=100
+    },
+
+    {
+      icon:"🔥",
+      title:"1K Views",
+      description:"Reach 1,000 total views.",
+      unlocked:data.views>=1000
+    },
+
+    {
+      icon:"💬",
+      title:"Community",
+      description:"Receive 10 comments.",
+      unlocked:data.comments>=10
+    },
+
+    {
+      icon:"📚",
+      title:"Complete Blog",
+      description:"Create at least 3 pages.",
+      unlocked:data.pages>=3
+    },
+
+    {
+      icon:"⭐",
+      title:"Featured Blogger",
+      description:"Have your blog featured.",
+      unlocked:data.featured
+    }
+
+  ];
+
+
+  document.getElementById("badges").innerHTML=
+    badges.map(b=>`
+
+      <div class="badge ${
+        b.unlocked
+          ? "unlocked"
+          : "locked"
+      }">
+
+        <div class="icon">
+          ${b.unlocked ? b.icon : "🔒"}
+        </div>
+
+        <h3>${b.title}</h3>
+
+        <p>${b.description}</p>
+
+        <br>
+
+        <small>
+          ${
+            b.unlocked
+              ? "✅ Unlocked"
+              : "🔒 Locked"
+          }
+        </small>
+
+      </div>
+
+    `).join("");
+
+}
+
+</script>
+
+</body>
+</html>
