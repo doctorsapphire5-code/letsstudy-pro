@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Blogs - LetsStudy Pro</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+header{background:#111827;color:white;padding:18px 22px}
+header h1{margin:0;font-size:22px}
+.container{max-width:1400px;margin:auto;padding:20px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:15px}
+.card{background:white;padding:18px;border-radius:14px;box-shadow:0 2px 10px #0000000d}
+.card h3{margin:0;color:#667085;font-size:13px}
+.card strong{display:block;font-size:28px;margin-top:8px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}
+input,select,button{padding:11px 13px;border-radius:9px;border:1px solid #d0d5dd}
+input{flex:1;min-width:220px}
+button{cursor:pointer;background:#111827;color:white;border:0}
+table{width:100%;border-collapse:collapse;background:white;border-radius:14px;overflow:hidden}
+th,td{padding:13px;border-bottom:1px solid #eee;text-align:left;font-size:14px}
+th{background:#f9fafb}
+.badge{padding:5px 9px;border-radius:20px;font-size:12px}
+.active{background:#dcfce7;color:#166534}
+.suspended{background:#fee2e2;color:#991b1b}
+.featured{background:#fef3c7;color:#92400e}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.actions button{font-size:12px;padding:8px}
+.view{background:#2563eb}
+.warn{background:#dc2626}
+.green{background:#16a34a}
+.orange{background:#d97706}
+.empty{text-align:center;padding:30px}
+@media(max-width:700px){
+table{display:block;overflow-x:auto;white-space:nowrap}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🌍 LetsStudy Pro — Admin Blogs</h1>
+</header>
+
+<div class="container">
+
+  <div class="stats">
+    <div class="card">
+      <h3>Total Blogs</h3>
+      <strong id="totalBlogs">0</strong>
+    </div>
+
+    <div class="card">
+      <h3>Active</h3>
+      <strong id="activeBlogs">0</strong>
+    </div>
+
+    <div class="card">
+      <h3>Suspended</h3>
+      <strong id="suspendedBlogs">0</strong>
+    </div>
+
+    <div class="card">
+      <h3>Featured</h3>
+      <strong id="featuredBlogs">0</strong>
+    </div>
+
+    <div class="card">
+      <h3>Total Posts</h3>
+      <strong id="totalPosts">0</strong>
+    </div>
+
+    <div class="card">
+      <h3>Total Views</h3>
+      <strong id="totalViews">0</strong>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <input id="search" placeholder="🔎 Search blog, owner or email...">
+
+    <select id="statusFilter">
+      <option value="all">All Status</option>
+      <option value="active">Active</option>
+      <option value="suspended">Suspended</option>
+    </select>
+
+    <select id="featureFilter">
+      <option value="all">All Blogs</option>
+      <option value="featured">Featured</option>
+      <option value="normal">Normal</option>
+    </select>
+
+    <select id="sortFilter">
+      <option value="newest">Newest</option>
+      <option value="oldest">Oldest</option>
+      <option value="views">Most Views</option>
+      <option value="posts">Most Posts</option>
+      <option value="title">Title A-Z</option>
+    </select>
+
+    <button onclick="loadBlogs()">↻ Refresh</button>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden">
+    <table>
+      <thead>
+        <tr>
+          <th>Blog</th>
+          <th>Owner</th>
+          <th>Status</th>
+          <th>Posts</th>
+          <th>Views</th>
+          <th>Featured</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody id="blogTable">
+        <tr>
+          <td colspan="8" class="empty">Loading blogs...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  deleteDoc
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/* =========================
+   FIREBASE
+========================= */
+
+const firebaseConfig = {
+  apiKey:"AIzaSyBcOYDfAVKXbljsyRgI_0rjodBn678tCc",
+  authDomain:"let-s-study-pro-course.firebaseapp.com",
+  databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId:"let-s-study-pro-course",
+  storageBucket:"let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId:"474928293390",
+  appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId:"G-85B7V5H5J0"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let blogs = [];
+let posts = [];
+
+
+/* =========================
+   AUTH
+========================= */
+
+onAuthStateChanged(auth, async user => {
+
+  if(!user){
+    location.href = "login-admin.html";
+    return;
+  }
+
+  await loadBlogs();
+
+});
+
+
+/* =========================
+   LOAD BLOGS
+========================= */
+
+async function loadBlogs(){
+
+  try{
+
+    const blogSnap = await getDocs(collection(db,"blogs"));
+    const postSnap = await getDocs(collection(db,"posts"));
+
+    blogs = [];
+    posts = [];
+
+    blogSnap.forEach(d=>{
+      blogs.push({
+        id:d.id,
+        ...d.data()
+      });
+    });
+
+    postSnap.forEach(d=>{
+      posts.push({
+        id:d.id,
+        ...d.data()
+      });
+    });
+
+    updateStats();
+    renderBlogs();
+
+  }catch(error){
+
+    console.error(error);
+
+    document.getElementById("blogTable").innerHTML =
+      `<tr>
+        <td colspan="8" class="empty">
+          Failed to load blogs.
+        </td>
+      </tr>`;
+
+  }
+
+}
+
+
+/* =========================
+   STATS
+========================= */
+
+function updateStats(){
+
+  const active = blogs.filter(b =>
+    b.suspended !== true &&
+    b.status !== "suspended"
+  ).length;
+
+  const suspended = blogs.filter(b =>
+    b.suspended === true ||
+    b.status === "suspended"
+  ).length;
+
+  const featured = blogs.filter(b =>
+    b.featured === true
+  ).length;
+
+  const views = blogs.reduce((sum,b)=>
+    sum + Number(b.views || 0),0
+  );
+
+  document.getElementById("totalBlogs").textContent =
+    blogs.length;
+
+  document.getElementById("activeBlogs").textContent =
+    active;
+
+  document.getElementById("suspendedBlogs").textContent =
+    suspended;
+
+  document.getElementById("featuredBlogs").textContent =
+    featured;
+
+  document.getElementById("totalPosts").textContent =
+    posts.length;
+
+  document.getElementById("totalViews").textContent =
+    views.toLocaleString();
+}
+
+
+/* =========================
+   RENDER
+========================= */
+
+function renderBlogs(){
+
+  let data = [...blogs];
+
+  const search =
+    document.getElementById("search").value
+    .toLowerCase();
+
+  const status =
+    document.getElementById("statusFilter").value;
+
+  const feature =
+    document.getElementById("featureFilter").value;
+
+  const sort =
+    document.getElementById("sortFilter").value;
+
+
+  data = data.filter(b=>{
+
+    const text = `
+      ${b.title || ""}
+      ${b.description || ""}
+      ${b.ownerName || ""}
+      ${b.ownerEmail || ""}
+      ${b.email || ""}
+    `.toLowerCase();
+
+    if(search && !text.includes(search))
+      return false;
+
+    const isSuspended =
+      b.suspended === true ||
+      b.status === "suspended";
+
+    if(status === "active" && isSuspended)
+      return false;
+
+    if(status === "suspended" && !isSuspended)
+      return false;
+
+    if(feature === "featured" && b.featured !== true)
+      return false;
+
+    if(feature === "normal" && b.featured === true)
+      return false;
+
+    return true;
+  });
+
+
+  if(sort === "newest"){
+    data.sort((a,b)=>
+      dateValue(b.createdAt)-dateValue(a.createdAt)
+    );
+  }
+
+  if(sort === "oldest"){
+    data.sort((a,b)=>
+      dateValue(a.createdAt)-dateValue(b.createdAt)
+    );
+  }
+
+  if(sort === "views"){
+    data.sort((a,b)=>
+      Number(b.views||0)-Number(a.views||0)
+    );
+  }
+
+  if(sort === "posts"){
+    data.sort((a,b)=>
+      postCount(b.id)-postCount(a.id)
+    );
+  }
+
+  if(sort === "title"){
+    data.sort((a,b)=>
+      String(a.title||"").localeCompare(
+        String(b.title||"")
+      )
+    );
+  }
+
+
+  const table =
+    document.getElementById("blogTable");
+
+  if(!data.length){
+
+    table.innerHTML =
+      `<tr>
+        <td colspan="8" class="empty">
+          No blogs found.
+        </td>
+      </tr>`;
+
+    return;
+  }
+
+
+  table.innerHTML = data.map(b=>{
+
+    const suspended =
+      b.suspended === true ||
+      b.status === "suspended";
+
+    const count =
+      postCount(b.id);
+
+    return `
+      <tr>
+
+        <td>
+          <strong>${escapeHtml(b.title || "Untitled Blog")}</strong><br>
+          <small>${escapeHtml(
+            b.description || ""
+          )}</small>
+        </td>
+
+        <td>
+          ${escapeHtml(
+            b.ownerName ||
+            b.author ||
+            "Unknown"
+          )}<br>
+          <small>${escapeHtml(
+            b.ownerEmail ||
+            b.email ||
+            ""
+          )}</small>
+        </td>
+
+        <td>
+          <span class="badge ${
+            suspended
+              ? "suspended"
+              : "active"
+          }">
+            ${suspended
+              ? "Suspended"
+              : "Active"}
+          </span>
+        </td>
+
+        <td>${count}</td>
+
+        <td>${Number(
+          b.views || 0
+        ).toLocaleString()}</td>
+
+        <td>
+          ${
+            b.featured === true
+            ? `<span class="badge featured">⭐ Featured</span>`
+            : "—"
+          }
+        </td>
+
+        <td>
+          ${formatDate(b.createdAt)}
+        </td>
+
+        <td>
+          <div class="actions">
+
+            <button
+              class="view"
+              onclick="viewBlog('${b.id}')">
+              View
+            </button>
+
+            ${
+              suspended
+              ?
+              `<button
+                class="green"
+                onclick="toggleSuspend('${b.id}',false)">
+                Activate
+              </button>`
+              :
+              `<button
+                class="warn"
+                onclick="toggleSuspend('${b.id}',true)">
+                Suspend
+              </button>`
+            }
+
+            <button
+              class="orange"
+              onclick="toggleFeatured(
+                '${b.id}',
+                ${b.featured === true}
+              )">
+              ${
+                b.featured === true
+                ? "Unfeature"
+                : "Feature"
+              }
+            </button>
+
+            <button
+              class="warn"
+              onclick="deleteBlog('${b.id}')">
+              Delete
+            </button>
+
+          </div>
+        </td>
+
+      </tr>
+    `;
+
+  }).join("");
+
+}
+
+
+/* =========================
+   POST COUNT
+========================= */
+
+function postCount(blogId){
+
+  return posts.filter(p =>
+    p.blogId === blogId
+  ).length;
+
+}
+
+
+/* =========================
+   VIEW BLOG
+========================= */
+
+window.viewBlog = function(blogId){
+
+  const blog =
+    blogs.find(b=>b.id === blogId);
+
+  if(!blog) return;
+
+  if(blog.url){
+    window.open(blog.url,"_blank");
+    return;
+  }
+
+  window.open(
+    `blog.html?blogId=${encodeURIComponent(blogId)}`,
+    "_blank"
+  );
+
+};
+
+
+/* =========================
+   SUSPEND / ACTIVATE
+========================= */
+
+window.toggleSuspend = async function(
+  blogId,
+  suspend
+){
+
+  const action =
+    suspend ? "suspend" : "activate";
+
+  if(!confirm(
+    `Are you sure you want to ${action} this blog?`
+  )) return;
+
+  try{
+
+    await updateDoc(
+      doc(db,"blogs",blogId),
+      {
+        suspended:suspend,
+        status:suspend
+          ? "suspended"
+          : "active"
+      }
+    );
+
+    await loadBlogs();
+
+  }catch(error){
+
+    console.error(error);
+
+    alert("Operation failed.");
+
+  }
+
+};
+
+
+/* =========================
+   FEATURE
+========================= */
+
+window.toggleFeatured = async function(
+  blogId,
+  current
+){
+
+  try{
+
+    await updateDoc(
+      doc(db,"blogs",blogId),
+      {
+        featured:!current
+      }
+    );
+
+    await loadBlogs();
+
+  }catch(error){
+
+    console.error(error);
+
+    alert("Failed to update feature.");
+
+  }
+
+};
+
+
+/* =========================
+   DELETE
+========================= */
+
+window.deleteBlog = async function(blogId){
+
+  const blog =
+    blogs.find(b=>b.id === blogId);
+
+  if(!blog) return;
+
+  const ok = confirm(
+    `Delete "${blog.title || "this blog"}"?\n\n` +
+    `This deletes the blog document. ` +
+    `Related posts/pages/comments are not automatically deleted.`
+  );
+
+  if(!ok) return;
+
+  try{
+
+    await deleteDoc(
+      doc(db,"blogs",blogId)
+    );
+
+    await loadBlogs();
+
+  }catch(error){
+
+    console.error(error);
+
+    alert("Failed to delete blog.");
+
+  }
+
+};
+
+
+/* =========================
+   HELPERS
+========================= */
+
+function dateValue(value){
+
+  if(!value) return 0;
+
+  if(typeof value.toDate === "function")
+    return value.toDate().getTime();
+
+  return new Date(value).getTime() || 0;
+
+}
+
+
+function formatDate(value){
+
+  const time = dateValue(value);
+
+  if(!time) return "—";
+
+  return new Date(time).toLocaleDateString(
+    undefined,
+    {
+      year:"numeric",
+      month:"short",
+      day:"numeric"
+    }
+  );
+
+}
+
+
+function escapeHtml(value){
+
+  return String(value)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+}
+
+
+/* =========================
+   FILTER EVENTS
+========================= */
+
+document
+  .getElementById("search")
+  .addEventListener(
+    "input",
+    renderBlogs
+  );
+
+document
+  .getElementById("statusFilter")
+  .addEventListener(
+    "change",
+    renderBlogs
+  );
+
+document
+  .getElementById("featureFilter")
+  .addEventListener(
+    "change",
+    renderBlogs
+  );
+
+document
+  .getElementById("sortFilter")
+  .addEventListener(
+    "change",
+    renderBlogs
+  );
+
+</script>
+
+</body>
+</html>
