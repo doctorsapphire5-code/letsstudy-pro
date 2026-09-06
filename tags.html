@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tags - LetsStudy Pro</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f5f7fb;
+  color:#172033;
+}
+
+header{
+  background:#111827;
+  color:#fff;
+  padding:18px 22px;
+}
+
+header h1{
+  margin:0;
+  font-size:22px;
+}
+
+.container{
+  max-width:1200px;
+  margin:auto;
+  padding:20px;
+}
+
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:20px;
+}
+
+button{
+  border:0;
+  padding:11px 15px;
+  border-radius:9px;
+  cursor:pointer;
+  background:#111827;
+  color:#fff;
+}
+
+.primary{
+  background:#2563eb;
+}
+
+.danger{
+  background:#dc2626;
+}
+
+.edit{
+  background:#d97706;
+}
+
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:15px;
+  margin-bottom:20px;
+}
+
+.card{
+  background:#fff;
+  padding:18px;
+  border-radius:14px;
+  box-shadow:0 2px 10px #0000000d;
+}
+
+.card small{
+  color:#667085;
+}
+
+.card strong{
+  display:block;
+  font-size:28px;
+  margin-top:7px;
+}
+
+.form{
+  background:#fff;
+  padding:20px;
+  border-radius:15px;
+  margin-bottom:20px;
+  display:none;
+}
+
+.form h2{
+  margin-top:0;
+}
+
+input,textarea{
+  width:100%;
+  padding:12px;
+  margin:7px 0 13px;
+  border:1px solid #d0d5dd;
+  border-radius:9px;
+  font:inherit;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+}
+
+th,td{
+  padding:13px;
+  border-bottom:1px solid #eee;
+  text-align:left;
+  font-size:14px;
+}
+
+th{
+  background:#f9fafb;
+}
+
+.table-wrap{
+  overflow-x:auto;
+  border-radius:15px;
+}
+
+.tag{
+  display:inline-block;
+  background:#eef2ff;
+  color:#3730a3;
+  padding:6px 10px;
+  border-radius:20px;
+  font-size:13px;
+}
+
+.actions{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+.actions button{
+  padding:8px 10px;
+  font-size:12px;
+}
+
+.search{
+  margin-bottom:15px;
+}
+
+.empty{
+  text-align:center;
+  padding:30px;
+}
+
+.post-list{
+  margin-top:20px;
+}
+
+.post-item{
+  background:#fff;
+  padding:15px;
+  margin-bottom:10px;
+  border-radius:12px;
+}
+
+.post-item a{
+  color:#2563eb;
+  text-decoration:none;
+  font-weight:bold;
+}
+
+small{
+  color:#667085;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🏷️ LetsStudy Pro — Blog Tags</h1>
+</header>
+
+<div class="container">
+
+  <div class="top">
+    <div>
+      <h2>Tags Management</h2>
+      <small>Create and manage tags for your blog posts.</small>
+    </div>
+
+    <button class="primary" onclick="openForm()">
+      + New Tag
+    </button>
+  </div>
+
+
+  <!-- STATS -->
+
+  <div class="cards">
+
+    <div class="card">
+      <small>Total Tags</small>
+      <strong id="totalTags">0</strong>
+    </div>
+
+    <div class="card">
+      <small>Used Tags</small>
+      <strong id="usedTags">0</strong>
+    </div>
+
+    <div class="card">
+      <small>Total Posts</small>
+      <strong id="totalPosts">0</strong>
+    </div>
+
+    <div class="card">
+      <small>Unused Tags</small>
+      <strong id="unusedTags">0</strong>
+    </div>
+
+  </div>
+
+
+  <!-- FORM -->
+
+  <div class="form" id="tagForm">
+
+    <h2 id="formTitle">Create Tag</h2>
+
+    <input
+      id="tagName"
+      placeholder="Tag name e.g. Physics"
+    >
+
+    <input
+      id="tagSlug"
+      placeholder="Slug e.g. physics"
+    >
+
+    <textarea
+      id="tagDescription"
+      rows="3"
+      placeholder="Tag description..."
+    ></textarea>
+
+    <button class="primary" onclick="saveTag()">
+      Save Tag
+    </button>
+
+    <button onclick="closeForm()">
+      Cancel
+    </button>
+
+  </div>
+
+
+  <!-- SEARCH -->
+
+  <input
+    class="search"
+    id="search"
+    placeholder="🔎 Search tags..."
+  >
+
+
+  <!-- TABLE -->
+
+  <div class="table-wrap">
+
+    <table>
+
+      <thead>
+        <tr>
+          <th>Tag</th>
+          <th>Slug</th>
+          <th>Description</th>
+          <th>Posts</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody id="tagTable">
+
+        <tr>
+          <td colspan="6" class="empty">
+            Loading tags...
+          </td>
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+
+  <!-- POSTS USING TAG -->
+
+  <div class="post-list" id="postList"></div>
+
+</div>
+
+
+<script type="module">
+
+import {initializeApp}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  doc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/* =========================
+   FIREBASE
+========================= */
+
+const firebaseConfig={
+  apiKey:"AIzaSyBcOYDfAVKXbljsyRgI_0rjodBn678tCc",
+  authDomain:"let-s-study-pro-course.firebaseapp.com",
+  databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId:"let-s-study-pro-course",
+  storageBucket:"let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId:"474928293390",
+  appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId:"G-85B7V5H5J0"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+
+/* =========================
+   BLOG ID
+========================= */
+
+const params=
+  new URLSearchParams(location.search);
+
+const blogId=
+  params.get("blogId");
+
+
+let currentUser=null;
+let tags=[];
+let posts=[];
+let editingId=null;
+
+
+/* =========================
+   AUTH
+========================= */
+
+onAuthStateChanged(auth,async user=>{
+
+  if(!user){
+
+    location.href="login.html";
+    return;
+
+  }
+
+  currentUser=user;
+
+  await loadData();
+
+});
+
+
+/* =========================
+   LOAD DATA
+========================= */
+
+async function loadData(){
+
+  try{
+
+    let tagQuery;
+
+    if(blogId){
+
+      tagQuery=query(
+        collection(db,"tags"),
+        where("blogId","==",blogId)
+      );
+
+    }else{
+
+      tagQuery=query(
+        collection(db,"tags"),
+        where("ownerId","==",currentUser.uid)
+      );
+
+    }
+
+    const tagSnap=
+      await getDocs(tagQuery);
+
+    tags=[];
+
+    tagSnap.forEach(d=>{
+
+      tags.push({
+        id:d.id,
+        ...d.data()
+      });
+
+    });
+
+
+    let postQuery;
+
+    if(blogId){
+
+      postQuery=query(
+        collection(db,"posts"),
+        where("blogId","==",blogId)
+      );
+
+    }else{
+
+      postQuery=query(
+        collection(db,"posts"),
+        where("ownerId","==",currentUser.uid)
+      );
+
+    }
+
+    const postSnap=
+      await getDocs(postQuery);
+
+    posts=[];
+
+    postSnap.forEach(d=>{
+
+      posts.push({
+        id:d.id,
+        ...d.data()
+      });
+
+    });
+
+
+    updateStats();
+    renderTags();
+
+  }catch(error){
+
+    console.error(error);
+
+    document.getElementById("tagTable").innerHTML=
+      `<tr>
+        <td colspan="6" class="empty">
+          Failed to load tags.
+        </td>
+      </tr>`;
+
+  }
+
+}
+
+
+/* =========================
+   STATS
+========================= */
+
+function updateStats(){
+
+  let used=0;
+
+  tags.forEach(tag=>{
+
+    if(getPostCount(tag)>0)
+      used++;
+
+  });
+
+
+  document.getElementById("totalTags")
+    .textContent=tags.length;
+
+  document.getElementById("usedTags")
+    .textContent=used;
+
+  document.getElementById("unusedTags")
+    .textContent=
+      tags.length-used;
+
+  document.getElementById("totalPosts")
+    .textContent=posts.length;
+
+}
+
+
+/* =========================
+   POST COUNT
+========================= */
+
+function getPostCount(tag){
+
+  return posts.filter(post=>{
+
+    const values=
+      normalizeTags(post.tags);
+
+    return values.includes(
+      String(tag.slug || tag.name)
+        .toLowerCase()
+    );
+
+  }).length;
+
+}
+
+
+/* =========================
+   NORMALIZE TAGS
+========================= */
+
+function normalizeTags(value){
+
+  if(Array.isArray(value)){
+
+    return value.map(x=>
+      String(
+        typeof x==="object"
+          ? x.slug || x.name || ""
+          : x
+      ).toLowerCase().trim()
+    );
+
+  }
+
+  if(typeof value==="string"){
+
+    return value
+      .split(",")
+      .map(x=>x.toLowerCase().trim())
+      .filter(Boolean);
+
+  }
+
+  return [];
+
+}
+
+
+/* =========================
+   RENDER
+========================= */
+
+function renderTags(){
+
+  const search=
+    document.getElementById("search")
+      .value
+      .toLowerCase()
+      .trim();
+
+
+  const filtered=
+    tags.filter(tag=>{
+
+      const text=`
+        ${tag.name || ""}
+        ${tag.slug || ""}
+        ${tag.description || ""}
+      `.toLowerCase();
+
+      return !search || text.includes(search);
+
+    });
+
+
+  const table=
+    document.getElementById("tagTable");
+
+
+  if(!filtered.length){
+
+    table.innerHTML=
+      `<tr>
+        <td colspan="6" class="empty">
+          No tags found.
+        </td>
+      </tr>`;
+
+    return;
+
+  }
+
+
+  table.innerHTML=
+    filtered.map(tag=>{
+
+      const count=
+        getPostCount(tag);
+
+      return `
+        <tr>
+
+          <td>
+            <span class="tag">
+              #${escapeHtml(tag.name || "")}
+            </span>
+          </td>
+
+          <td>
+            ${escapeHtml(tag.slug || "")}
+          </td>
+
+          <td>
+            ${escapeHtml(
+              tag.description || "—"
+            )}
+          </td>
+
+          <td>
+            <strong>${count}</strong>
+          </td>
+
+          <td>
+            ${formatDate(tag.createdAt)}
+          </td>
+
+          <td>
+
+            <div class="actions">
+
+              <button
+                class="primary"
+                onclick="viewTag('${tag.id}')">
+                View
+              </button>
+
+              <button
+                class="edit"
+                onclick="editTag('${tag.id}')">
+                Edit
+              </button>
+
+              <button
+                class="danger"
+                onclick="deleteTag('${tag.id}')">
+                Delete
+              </button>
+
+            </div>
+
+          </td>
+
+        </tr>
+      `;
+
+    }).join("");
+
+}
+
+
+/* =========================
+   OPEN FORM
+========================= */
+
+window.openForm=function(){
+
+  editingId=null;
+
+  document.getElementById("formTitle")
+    .textContent="Create Tag";
+
+  document.getElementById("tagName").value="";
+  document.getElementById("tagSlug").value="";
+  document.getElementById("tagDescription").value="";
+
+  document.getElementById("tagForm")
+    .style.display="block";
+
+};
+
+
+/* =========================
+   CLOSE FORM
+========================= */
+
+window.closeForm=function(){
+
+  document.getElementById("tagForm")
+    .style.display="none";
+
+  editingId=null;
+
+};
+
+
+/* =========================
+   EDIT
+========================= */
+
+window.editTag=function(id){
+
+  const tag=
+    tags.find(x=>x.id===id);
+
+  if(!tag)return;
+
+  editingId=id;
+
+  document.getElementById("formTitle")
+    .textContent="Edit Tag";
+
+  document.getElementById("tagName").value=
+    tag.name || "";
+
+  document.getElementById("tagSlug").value=
+    tag.slug || "";
+
+  document.getElementById("tagDescription").value=
+    tag.description || "";
+
+  document.getElementById("tagForm")
+    .style.display="block";
+
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
+  });
+
+};
+
+
+/* =========================
+   SAVE
+========================= */
+
+window.saveTag=async function(){
+
+  const name=
+    document.getElementById("tagName")
+      .value.trim();
+
+  const slug=
+    document.getElementById("tagSlug")
+      .value.trim()
+      .toLowerCase()
+      .replace(/\s+/g,"-")
+      .replace(/[^a-z0-9-]/g,"");
+
+  const description=
+    document.getElementById("tagDescription")
+      .value.trim();
+
+
+  if(!name){
+
+    alert("Enter tag name.");
+    return;
+
+  }
+
+
+  if(!slug){
+
+    alert("Enter a valid slug.");
+    return;
+
+  }
+
+
+  try{
+
+    if(editingId){
+
+      await updateDoc(
+        doc(db,"tags",editingId),
+        {
+          name,
+          slug,
+          description,
+          updatedAt:serverTimestamp()
+        }
+      );
+
+    }else{
+
+      await addDoc(
+        collection(db,"tags"),
+        {
+          name,
+          slug,
+          description,
+          blogId:blogId || null,
+          ownerId:currentUser.uid,
+          createdAt:serverTimestamp(),
+          updatedAt:serverTimestamp()
+        }
+      );
+
+    }
+
+
+    closeForm();
+
+    await loadData();
+
+  }catch(error){
+
+    console.error(error);
+
+    alert("Failed to save tag.");
+
+  }
+
+};
+
+
+/* =========================
+   DELETE
+========================= */
+
+window.deleteTag=async function(id){
+
+  const tag=
+    tags.find(x=>x.id===id);
+
+  if(!tag)return;
+
+
+  const count=
+    getPostCount(tag);
+
+
+  if(count>0){
+
+    const confirmDelete=
+      confirm(
+        `This tag is used by ${count} post(s).\n\n`+
+        `Delete the tag anyway?`
+      );
+
+    if(!confirmDelete)return;
+
+  }else{
+
+    if(!confirm(
+      `Delete "${tag.name}"?`
+    ))return;
+
+  }
+
+
+  try{
+
+    await deleteDoc(
+      doc(db,"tags",id)
+    );
+
+    await loadData();
+
+  }catch(error){
+
+    console.error(error);
+
+    alert("Failed to delete tag.");
+
+  }
+
+};
+
+
+/* =========================
+   VIEW TAG POSTS
+========================= */
+
+window.viewTag=function(id){
+
+  const tag=
+    tags.find(x=>x.id===id);
+
+  if(!tag)return;
+
+
+  const matched=
+    posts.filter(post=>{
+
+      return normalizeTags(post.tags)
+        .includes(
+          String(
+            tag.slug || tag.name
+          ).toLowerCase()
+        );
+
+    });
+
+
+  const box=
+    document.getElementById("postList");
+
+
+  if(!matched.length){
+
+    box.innerHTML=`
+      <div class="card">
+        <h3>#${escapeHtml(tag.name)}</h3>
+        <p>No posts are using this tag yet.</p>
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  box.innerHTML=`
+    <div class="card">
+      <h3>
+        Posts tagged
+        #${escapeHtml(tag.name)}
+      </h3>
+
+      ${matched.map(post=>`
+
+        <div class="post-item">
+
+          <a href="edit-post.html?postId=${post.id}">
+            ${escapeHtml(
+              post.title || "Untitled Post"
+            )}
+          </a>
+
+          <br>
+
+          <small>
+            ${escapeHtml(
+              post.status || "draft"
+            )}
+          </small>
+
+        </div>
+
+      `).join("")}
+
+    </div>
+  `;
+
+
+  box.scrollIntoView({
+    behavior:"smooth"
+  });
+
+};
+
+
+/* =========================
+   HELPERS
+========================= */
+
+function formatDate(value){
+
+  if(!value)return "—";
+
+  let date;
+
+  if(typeof value.toDate==="function")
+    date=value.toDate();
+  else
+    date=new Date(value);
+
+  if(isNaN(date))return "—";
+
+  return date.toLocaleDateString(
+    undefined,
+    {
+      year:"numeric",
+      month:"short",
+      day:"numeric"
+    }
+  );
+
+}
+
+
+function escapeHtml(value){
+
+  return String(value)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+}
+
+
+document
+  .getElementById("search")
+  .addEventListener(
+    "input",
+    renderTags
+  );
+
+</script>
+
+</body>
+</html>
