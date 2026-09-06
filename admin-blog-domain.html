@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Domains - LetsStudy Pro</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;background:#f5f7fb;color:#172033}
+header{background:#111827;color:#fff;padding:18px;font-size:20px;font-weight:bold}
+main{max-width:1200px;margin:auto;padding:20px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px}
+.card{background:#fff;padding:20px;border-radius:14px;box-shadow:0 3px 12px #0001}
+.num{font-size:28px;font-weight:bold;margin-top:8px}
+.toolbar{margin:20px 0;display:flex;gap:10px}
+input{padding:12px;border:1px solid #ddd;border-radius:8px;flex:1}
+button{padding:11px 16px;border:0;border-radius:8px;cursor:pointer}
+.refresh{background:#2563eb;color:#fff}
+table{width:100%;background:#fff;border-collapse:collapse;border-radius:12px;overflow:hidden}
+th,td{padding:13px;border-bottom:1px solid #eee;text-align:left}
+.badge{padding:5px 9px;border-radius:20px;background:#eee}
+.ok{background:#dcfce7;color:#166534}
+.pending{background:#fef3c7;color:#92400e}
+.error{color:#dc2626;margin:10px 0}
+</style>
+</head>
+
+<body>
+<header>🌐 LetsStudy Pro — Domain Administration</header>
+
+<main>
+
+<button class="refresh" onclick="loadDomains()">↻ Refresh</button>
+<div id="error" class="error"></div>
+
+<div class="cards">
+<div class="card">Total Domains<div class="num" id="total">0</div></div>
+<div class="card">Verified<div class="num" id="verified">0</div></div>
+<div class="card">Pending<div class="num" id="pending">0</div></div>
+<div class="card">Active Blogs<div class="num" id="active">0</div></div>
+</div>
+
+<div class="toolbar">
+<input id="search" placeholder="Search domain..." oninput="render()">
+</div>
+
+<table>
+<thead>
+<tr>
+<th>Domain</th>
+<th>Blog</th>
+<th>Owner</th>
+<th>Status</th>
+<th>Created</th>
+</tr>
+</thead>
+<tbody id="list">
+<tr><td colspan="5">Loading...</td></tr>
+</tbody>
+</table>
+
+</main>
+
+<script type="module">
+import{initializeApp}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import{getAuth,onAuthStateChanged}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import{
+ getFirestore,collection,getDocs
+}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyBcOYDfAVKXbljsyRgI_0rjodBn678tCc",
+authDomain:"let-s-study-pro-course.firebaseapp.com",
+databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+projectId:"let-s-study-pro-course",
+storageBucket:"let-s-study-pro-course.firebasestorage.app",
+messagingSenderId:"474928293390",
+appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+measurementId:"G-85B7V5H5J0"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let domains=[];
+
+const $=id=>document.getElementById(id);
+const val=x=>String(x||"");
+
+onAuthStateChanged(auth,user=>{
+ if(!user){
+  $("error").textContent="Admin login required.";
+  return;
+ }
+ loadDomains();
+});
+
+async function loadDomains(){
+ try{
+  $("error").textContent="Loading...";
+
+  const snap=await getDocs(collection(db,"domains"));
+
+  domains=snap.docs.map(d=>({
+   id:d.id,...d.data()
+  }));
+
+  updateStats();
+  render();
+
+  $("error").textContent="";
+ }catch(e){
+  console.error(e);
+  $("error").textContent=e.message;
+ }
+}
+
+function updateStats(){
+
+ const total=domains.length;
+
+ const verified=domains.filter(d=>
+  d.status==="verified" ||
+  d.verified===true
+ ).length;
+
+ const pending=domains.filter(d=>
+  d.status==="pending" ||
+  !d.status
+ ).length;
+
+ const active=domains.filter(d=>
+  d.active!==false
+ ).length;
+
+ $("total").textContent=total;
+ $("verified").textContent=verified;
+ $("pending").textContent=pending;
+ $("active").textContent=active;
+}
+
+function render(){
+
+ const q=$("search").value.toLowerCase();
+
+ const data=domains.filter(d=>
+  val(d.domain||d.hostname).toLowerCase().includes(q) ||
+  val(d.blogName).toLowerCase().includes(q)
+ );
+
+ $("list").innerHTML=data.map(d=>{
+
+  const status=d.status||(
+   d.verified===true?"verified":"pending"
+  );
+
+  const cls=status==="verified"?"ok":"pending";
+
+  return`
+  <tr>
+   <td><b>${safe(d.domain||d.hostname||"—")}</b></td>
+   <td>${safe(d.blogName||d.blogId||"—")}</td>
+   <td>${safe(d.ownerEmail||d.ownerId||"—")}</td>
+   <td>
+    <span class="badge ${cls}">
+     ${safe(status)}
+    </span>
+   </td>
+   <td>${formatDate(d.createdAt)}</td>
+  </tr>`;
+ }).join("")||`
+ <tr><td colspan="5">No domains found.</td></tr>`;
+}
+
+function formatDate(t){
+ if(!t)return"—";
+ try{
+  return new Date(
+   t.seconds?t.seconds*1000:t
+  ).toLocaleDateString();
+ }catch{
+  return"—";
+ }
+}
+
+function safe(v){
+ return String(v).replace(/[&<>"']/g,m=>({
+  "&":"&amp;",
+  "<":"&lt;",
+  ">":"&gt;",
+  '"':"&quot;",
+  "'":"&#039;"
+ }[m]));
+}
+
+window.loadDomains=loadDomains;
+window.render=render;
+</script>
+
+</body>
+</html>
