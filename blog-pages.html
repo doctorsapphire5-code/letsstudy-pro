@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Blog Pages — LetsStudy Pro</title>
+<meta name="description" content="Manage your blog pages on LetsStudy Pro.">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+header{background:#fff;border-bottom:1px solid #e5e7eb;padding:16px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.logo{font-size:21px;font-weight:800;color:#2563eb}
+.container{max-width:1250px;margin:auto;padding:25px 18px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+h1{margin:0 0 6px;font-size:28px}
+.muted{color:#6b7280}
+button,.btn{border:0;border-radius:9px;padding:10px 15px;cursor:pointer;font-weight:700;text-decoration:none;display:inline-block}
+.primary{background:#2563eb;color:white}
+.secondary{background:#eef2ff;color:#3730a3}
+.danger{background:#fee2e2;color:#b91c1c}
+.success{background:#dcfce7;color:#166534}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin:25px 0}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:18px}
+.card small{color:#6b7280}
+.number{font-size:27px;font-weight:800;margin-top:7px}
+.toolbar{background:#fff;border:1px solid #e5e7eb;padding:15px;border-radius:14px;display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}
+input,select{padding:11px;border:1px solid #d1d5db;border-radius:9px;background:#fff}
+.search{flex:1;min-width:220px}
+.table-wrap{background:#fff;border:1px solid #e5e7eb;border-radius:14px;overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:850px}
+th,td{padding:14px;border-bottom:1px solid #eef0f3;text-align:left}
+th{background:#f8fafc;font-size:13px;color:#6b7280}
+.title{font-weight:800}
+.badge{padding:5px 9px;border-radius:20px;font-size:12px;font-weight:700}
+.published{background:#dcfce7;color:#166534}
+.draft{background:#fef3c7;color:#92400e}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.actions button{font-size:12px;padding:7px 9px}
+.empty{text-align:center;padding:45px;color:#6b7280}
+.pagination{display:flex;justify-content:center;gap:8px;margin:20px}
+.page-btn{background:#fff;border:1px solid #ddd}
+.page-btn.active{background:#2563eb;color:#fff}
+@media(max-width:800px){
+.stats{grid-template-columns:repeat(2,1fr)}
+h1{font-size:23px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">LetsStudy Pro</div>
+  <a href="blog-dashboard.html" class="btn secondary">← Dashboard</a>
+</header>
+
+<div class="container">
+
+  <div class="top">
+    <div>
+      <h1>Blog Pages</h1>
+      <div class="muted">Create and manage your blog pages.</div>
+    </div>
+
+    <a id="newPageBtn" class="btn primary">＋ New Page</a>
+  </div>
+
+  <div class="stats">
+    <div class="card">
+      <small>Total Pages</small>
+      <div class="number" id="totalPages">0</div>
+    </div>
+
+    <div class="card">
+      <small>Published</small>
+      <div class="number" id="publishedPages">0</div>
+    </div>
+
+    <div class="card">
+      <small>Drafts</small>
+      <div class="number" id="draftPages">0</div>
+    </div>
+
+    <div class="card">
+      <small>Total Views</small>
+      <div class="number" id="totalViews">0</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <input id="search" class="search"
+      placeholder="Search pages...">
+
+    <select id="statusFilter">
+      <option value="all">All Pages</option>
+      <option value="published">Published</option>
+      <option value="draft">Drafts</option>
+    </select>
+
+    <select id="sortFilter">
+      <option value="newest">Newest</option>
+      <option value="oldest">Oldest</option>
+      <option value="views">Most Views</option>
+      <option value="az">Title A-Z</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Page</th>
+          <th>Status</th>
+          <th>Views</th>
+          <th>Updated</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody id="pagesTable">
+        <tr>
+          <td colspan="5" class="empty">Loading pages...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="pagination" class="pagination"></div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+const firebaseConfig = {
+  apiKey:"AIzaSyBcOYDfAVKXbljsyRgI_0rjodBn678tCc",
+  authDomain:"let-s-study-pro-course.firebaseapp.com",
+  databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId:"let-s-study-pro-course",
+  storageBucket:"let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId:"474928293390",
+  appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId:"G-85B7V5H5J0"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const params = new URLSearchParams(location.search);
+const blogId = params.get("blogId");
+
+let user = null;
+let pages = [];
+let filteredPages = [];
+let currentPage = 1;
+
+const PER_PAGE = 10;
+
+
+if(!blogId){
+  alert("Blog ID is missing.");
+  location.href = "my-blogs.html";
+}
+
+
+document.getElementById("newPageBtn").href =
+  `new-page.html?blogId=${encodeURIComponent(blogId)}`;
+
+
+onAuthStateChanged(auth, async currentUser => {
+
+  if(!currentUser){
+    location.href =
+      `login.html?redirect=${encodeURIComponent(location.href)}`;
+    return;
+  }
+
+  user = currentUser;
+
+  await loadPages();
+});
+
+
+async function loadPages(){
+
+  try{
+
+    const q = query(
+      collection(db,"pages"),
+      where("blogId","==",blogId)
+    );
+
+    const snap = await getDocs(q);
+
+    pages = [];
+
+    snap.forEach(item => {
+
+      const data = item.data();
+
+      pages.push({
+        id:item.id,
+        ...data
+      });
+
+    });
+
+    updateStats();
+    applyFilters();
+
+  }catch(error){
+
+    console.error(error);
+
+    document.getElementById("pagesTable").innerHTML = `
+      <tr>
+        <td colspan="5" class="empty">
+          Failed to load pages.
+        </td>
+      </tr>
+    `;
+  }
+}
+
+
+function updateStats(){
+
+  const total = pages.length;
+
+  const published = pages.filter(p =>
+    p.published === true ||
+    p.status === "published"
+  ).length;
+
+  const drafts = total - published;
+
+  const views = pages.reduce(
+    (sum,p) => sum + Number(p.views || 0),0
+  );
+
+  document.getElementById("totalPages").textContent = total;
+  document.getElementById("publishedPages").textContent = published;
+  document.getElementById("draftPages").textContent = drafts;
+  document.getElementById("totalViews").textContent =
+    views.toLocaleString();
+}
+
+
+function applyFilters(){
+
+  const search =
+    document.getElementById("search").value
+      .toLowerCase()
+      .trim();
+
+  const status =
+    document.getElementById("statusFilter").value;
+
+  const sort =
+    document.getElementById("sortFilter").value;
+
+
+  filteredPages = pages.filter(p => {
+
+    const title = String(p.title || "").toLowerCase();
+    const slug = String(p.slug || "").toLowerCase();
+
+    const matchesSearch =
+      !search ||
+      title.includes(search) ||
+      slug.includes(search);
+
+    const isPublished =
+      p.published === true ||
+      p.status === "published";
+
+    const matchesStatus =
+      status === "all" ||
+      (status === "published" && isPublished) ||
+      (status === "draft" && !isPublished);
+
+    return matchesSearch && matchesStatus;
+  });
+
+
+  filteredPages.sort((a,b)=>{
+
+    if(sort === "views"){
+      return Number(b.views||0) - Number(a.views||0);
+    }
+
+    if(sort === "az"){
+      return String(a.title||"")
+        .localeCompare(String(b.title||""));
+    }
+
+    const da = getDate(a.updatedAt || a.createdAt);
+    const dbb = getDate(b.updatedAt || b.createdAt);
+
+    return sort === "oldest"
+      ? da - dbb
+      : dbb - da;
+  });
+
+
+  currentPage = 1;
+  render();
+}
+
+
+function render(){
+
+  const start =
+    (currentPage - 1) * PER_PAGE;
+
+  const items =
+    filteredPages.slice(start,start + PER_PAGE);
+
+  const tbody =
+    document.getElementById("pagesTable");
+
+  if(!items.length){
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="empty">
+          No pages found.
+        </td>
+      </tr>
+    `;
+
+    document.getElementById("pagination").innerHTML = "";
+    return;
+  }
+
+
+  tbody.innerHTML = items.map(p => {
+
+    const published =
+      p.published === true ||
+      p.status === "published";
+
+    const date =
+      formatDate(p.updatedAt || p.createdAt);
+
+    return `
+      <tr>
+
+        <td>
+          <div class="title">
+            ${escapeHtml(p.title || "Untitled Page")}
+          </div>
+
+          <div class="muted">
+            /${escapeHtml(p.slug || "")}
+          </div>
+        </td>
+
+        <td>
+          <span class="badge ${published
+            ? "published"
+            : "draft"}">
+            ${published ? "Published" : "Draft"}
+          </span>
+        </td>
+
+        <td>
+          ${Number(p.views || 0).toLocaleString()}
+        </td>
+
+        <td>
+          ${date}
+        </td>
+
+        <td>
+
+          <div class="actions">
+
+            <button class="secondary"
+              onclick="editPage('${p.id}')">
+              Edit
+            </button>
+
+            <button class="${published
+              ? "danger"
+              : "success"}"
+              onclick="togglePublish('${p.id}',${published})">
+              ${published ? "Draft" : "Publish"}
+            </button>
+
+            ${
+              published
+              ? `
+              <button class="secondary"
+                onclick="viewPage('${p.id}')">
+                View
+              </button>
+              `
+              : ""
+            }
+
+            <button class="danger"
+              onclick="deletePage('${p.id}')">
+              Delete
+            </button>
+
+          </div>
+
+        </td>
+
+      </tr>
+    `;
+
+  }).join("");
+
+  renderPagination();
+}
+
+
+function renderPagination(){
+
+  const total =
+    Math.ceil(filteredPages.length / PER_PAGE);
+
+  const box =
+    document.getElementById("pagination");
+
+  if(total <= 1){
+    box.innerHTML = "";
+    return;
+  }
+
+  let html = "";
+
+  for(let i=1;i<=total;i++){
+
+    html += `
+      <button
+        class="btn page-btn ${i===currentPage?"active":""}"
+        onclick="goPage(${i})">
+        ${i}
+      </button>
+    `;
+  }
+
+  box.innerHTML = html;
+}
+
+
+window.goPage = function(page){
+
+  currentPage = page;
+  render();
+
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
+  });
+};
+
+
+window.editPage = function(id){
+
+  location.href =
+    `edit-page.html?pageId=${encodeURIComponent(id)}`;
+};
+
+
+window.viewPage = function(id){
+
+  const page =
+    pages.find(p => p.id === id);
+
+  if(!page) return;
+
+  if(page.url){
+    window.open(page.url,"_blank");
+    return;
+  }
+
+  location.href =
+    `page.html?pageId=${encodeURIComponent(id)}`;
+};
+
+
+window.togglePublish = async function(id,isPublished){
+
+  try{
+
+    await updateDoc(
+      doc(db,"pages",id),
+      {
+        published:!isPublished,
+        status:isPublished ? "draft" : "published",
+        updatedAt:serverTimestamp()
+      }
+    );
+
+    await loadPages();
+
+  }catch(error){
+
+    console.error(error);
+    alert("Failed to update page status.");
+  }
+};
+
+
+window.deletePage = async function(id){
+
+  const page =
+    pages.find(p => p.id === id);
+
+  const title =
+    page?.title || "this page";
+
+  if(!confirm(
+    `Delete "${title}" permanently?`
+  )) return;
+
+
+  try{
+
+    await deleteDoc(
+      doc(db,"pages",id)
+    );
+
+    await loadPages();
+
+  }catch(error){
+
+    console.error(error);
+    alert("Failed to delete page.");
+  }
+};
+
+
+function getDate(value){
+
+  if(!value) return 0;
+
+  if(typeof value.toDate === "function"){
+    return value.toDate().getTime();
+  }
+
+  const d = new Date(value);
+  return isNaN(d) ? 0 : d.getTime();
+}
+
+
+function formatDate(value){
+
+  const time = getDate(value);
+
+  if(!time) return "—";
+
+  return new Date(time).toLocaleDateString(
+    undefined,
+    {
+      year:"numeric",
+      month:"short",
+      day:"numeric"
+    }
+  );
+}
+
+
+function escapeHtml(value){
+
+  return String(value)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+
+document.getElementById("search")
+  .addEventListener("input",applyFilters);
+
+document.getElementById("statusFilter")
+  .addEventListener("change",applyFilters);
+
+document.getElementById("sortFilter")
+  .addEventListener("change",applyFilters);
+
+</script>
+
+</body>
+</html>
