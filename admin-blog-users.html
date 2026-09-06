@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Blog Users - LetsStudy Pro</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;background:#f5f7fb;color:#172033}
+header{background:#111827;color:#fff;padding:18px;font-size:20px;font-weight:bold}
+main{max-width:1250px;margin:auto;padding:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:15px}
+.card,.box{background:#fff;padding:18px;border-radius:14px;
+box-shadow:0 3px 12px #0001;margin-bottom:18px}
+.num{font-size:28px;font-weight:bold;margin-top:7px}
+input,select{padding:12px;border:1px solid #ddd;border-radius:8px;margin:5px}
+button{border:0;padding:9px 12px;border-radius:7px;cursor:pointer}
+.refresh{background:#2563eb;color:#fff}
+.activate{background:#16a34a;color:#fff}
+.suspend{background:#f59e0b;color:#fff}
+.del{background:#dc2626;color:#fff}
+.view{background:#6366f1;color:#fff}
+table{width:100%;border-collapse:collapse}
+th,td{padding:12px;border-bottom:1px solid #eee;text-align:left}
+.actions{display:flex;gap:5px;flex-wrap:wrap}
+.error{color:#dc2626}
+</style>
+</head>
+
+<body>
+
+<header>👥 LetsStudy Pro — Blog Users Administration</header>
+
+<main>
+
+<button class="refresh" onclick="loadUsers()">↻ Refresh</button>
+
+<div id="msg"></div>
+
+<div class="grid">
+
+<div class="card">
+Total Bloggers
+<div class="num" id="total">0</div>
+</div>
+
+<div class="card">
+Active
+<div class="num" id="active">0</div>
+</div>
+
+<div class="card">
+Suspended
+<div class="num" id="suspended">0</div>
+</div>
+
+<div class="card">
+Total Blogs
+<div class="num" id="blogs">0</div>
+</div>
+
+<div class="card">
+Total Posts
+<div class="num" id="posts">0</div>
+</div>
+
+</div>
+
+<div class="box">
+
+<input id="search"
+placeholder="🔎 Search name or email..."
+oninput="render()">
+
+<select id="filter" onchange="render()">
+<option value="all">All Users</option>
+<option value="active">Active</option>
+<option value="suspended">Suspended</option>
+</select>
+
+<table>
+
+<thead>
+<tr>
+<th>User</th>
+<th>Email</th>
+<th>Blogs</th>
+<th>Posts</th>
+<th>Status</th>
+<th>Joined</th>
+<th>Actions</th>
+</tr>
+</thead>
+
+<tbody id="list">
+<tr>
+<td colspan="7">Loading...</td>
+</tr>
+</tbody>
+
+</table>
+
+</div>
+
+</main>
+
+<script type="module">
+
+import{initializeApp}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import{getAuth,onAuthStateChanged}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import{
+getFirestore,collection,getDocs,
+doc,updateDoc,deleteDoc
+}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+const firebaseConfig={
+apiKey:"AIzaSyBcOYDfAVKXbljsyRgI_0rjodBn678tCc",
+authDomain:"let-s-study-pro-course.firebaseapp.com",
+databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+projectId:"let-s-study-pro-course",
+storageBucket:"let-s-study-pro-course.firebasestorage.app",
+messagingSenderId:"474928293390",
+appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+measurementId:"G-85B7V5H5J0"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let users=[];
+let blogs=[];
+let posts=[];
+
+const $=id=>document.getElementById(id);
+
+onAuthStateChanged(auth,user=>{
+
+ if(!user){
+
+  $("msg").innerHTML=
+  "<span class='error'>Admin login required.</span>";
+
+  return;
+ }
+
+ loadUsers();
+
+});
+
+
+async function loadUsers(){
+
+ try{
+
+  const [u,b,p]=await Promise.all([
+
+   getDocs(collection(db,"users")),
+
+   getDocs(collection(db,"blogs")),
+
+   getDocs(collection(db,"posts"))
+
+  ]);
+
+  users=u.docs.map(d=>({
+   id:d.id,
+   ...d.data()
+  }));
+
+  blogs=b.docs.map(d=>({
+   id:d.id,
+   ...d.data()
+  }));
+
+  posts=p.docs.map(d=>({
+   id:d.id,
+   ...d.data()
+  }));
+
+  stats();
+  render();
+
+ }catch(e){
+
+  $("msg").innerHTML=
+  "<span class='error'>"+
+  safe(e.message)+
+  "</span>";
+
+ }
+
+}
+
+
+function status(u){
+
+ return u.status||
+ (u.suspended===true?"suspended":"active");
+
+}
+
+
+function userBlogs(u){
+
+ return blogs.filter(b=>
+  b.ownerId===u.id||
+  b.userId===u.id
+ ).length;
+
+}
+
+
+function userPosts(u){
+
+ return posts.filter(p=>
+  p.ownerId===u.id||
+  p.userId===u.id
+ ).length;
+
+}
+
+
+function stats(){
+
+ $("total").textContent=users.length;
+
+ $("active").textContent=
+ users.filter(u=>status(u)==="active").length;
+
+ $("suspended").textContent=
+ users.filter(u=>status(u)==="suspended").length;
+
+ $("blogs").textContent=blogs.length;
+
+ $("posts").textContent=posts.length;
+
+}
+
+
+async function changeStatus(id,newStatus){
+
+ try{
+
+  await updateDoc(
+   doc(db,"users",id),
+   {
+    status:newStatus,
+    suspended:newStatus==="suspended",
+    updatedAt:new Date()
+   }
+  );
+
+  await loadUsers();
+
+ }catch(e){
+
+  alert(e.message);
+
+ }
+
+}
+
+
+function viewUser(id){
+
+ location.href=
+ "admin-blog-user.html?userId="+
+ encodeURIComponent(id);
+
+}
+
+
+async function deleteUser(id){
+
+ if(!confirm(
+  "Delete this user's Firestore record?"
+ ))return;
+
+ try{
+
+  await deleteDoc(
+   doc(db,"users",id)
+  );
+
+  await loadUsers();
+
+ }catch(e){
+
+  alert(e.message);
+
+ }
+
+}
+
+
+function render(){
+
+ const q=$("search").value.toLowerCase();
+ const f=$("filter").value;
+
+ const data=users.filter(u=>{
+
+  const s=status(u);
+
+  const text=(
+   u.name||u.displayName||""
+  )+" "+
+   (u.email||"");
+
+  return text.toLowerCase().includes(q)&&
+   (f==="all"||s===f);
+
+ });
+
+
+ $("list").innerHTML=data.map(u=>{
+
+  const s=status(u);
+
+  return`
+
+  <tr>
+
+   <td>
+    <b>${safe(
+     u.name||u.displayName||"User"
+    )}</b>
+   </td>
+
+   <td>
+    ${safe(u.email||"—")}
+   </td>
+
+   <td>
+    ${userBlogs(u)}
+   </td>
+
+   <td>
+    ${userPosts(u)}
+   </td>
+
+   <td>
+    ${
+     s==="active"
+     ?"🟢 Active"
+     :"🔴 Suspended"
+    }
+   </td>
+
+   <td>
+    ${date(u.createdAt)}
+   </td>
+
+   <td class="actions">
+
+    <button class="view"
+    onclick="viewUser('${u.id}')">
+    View
+    </button>
+
+    ${
+     s==="active"
+
+     ?
+
+     `<button class="suspend"
+      onclick="changeStatus('${u.id}','suspended')">
+      Suspend
+      </button>`
+
+     :
+
+     `<button class="activate"
+      onclick="changeStatus('${u.id}','active')">
+      Activate
+      </button>`
+    }
+
+    <button class="del"
+    onclick="deleteUser('${u.id}')">
+    Delete
+    </button>
+
+   </td>
+
+  </tr>`;
+
+ }).join("")||`
+
+ <tr>
+ <td colspan="7">
+ No users found.
+ </td>
+ </tr>`;
+
+}
+
+
+function date(t){
+
+ if(!t)return"—";
+
+ try{
+
+  return new Date(
+   t.seconds?t.seconds*1000:t
+  ).toLocaleDateString();
+
+ }catch{
+
+  return"—";
+
+ }
+
+}
+
+
+function safe(v){
+
+ return String(v).replace(
+  /[&<>"']/g,
+  m=>({
+
+   "&":"&amp;",
+   "<":"&lt;",
+   ">":"&gt;",
+   '"':"&quot;",
+   "'":"&#039;"
+
+  }[m])
+ );
+
+}
+
+
+window.loadUsers=loadUsers;
+window.render=render;
+window.changeStatus=changeStatus;
+window.viewUser=viewUser;
+window.deleteUser=deleteUser;
+
+</script>
+
+</body>
+</html>
