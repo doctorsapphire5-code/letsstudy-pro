@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Search Blog | LetsStudy Pro</title>
+<meta name="description" content="Search articles and content on this blog.">
+<meta name="robots" content="index,follow">
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:#f5f7fb;
+  color:#172033
+}
+
+header{
+  background:#fff;
+  border-bottom:1px solid #e5e7eb;
+  padding:16px 20px
+}
+
+.header{
+  max-width:1150px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px
+}
+
+.logo{
+  color:#2563eb;
+  font-size:21px;
+  font-weight:800
+}
+
+.blog-link{
+  color:#475569;
+  text-decoration:none;
+  font-weight:700
+}
+
+.container{
+  max-width:1150px;
+  margin:30px auto;
+  padding:0 16px
+}
+
+.hero{
+  text-align:center;
+  margin-bottom:25px
+}
+
+.hero h1{
+  margin:0 0 8px;
+  font-size:32px
+}
+
+.hero p{
+  margin:0;
+  color:#64748b
+}
+
+.search-box{
+  max-width:750px;
+  margin:0 auto 30px;
+  display:flex;
+  gap:10px
+}
+
+.search-box input{
+  flex:1;
+  padding:15px;
+  border:1px solid #d7dce5;
+  border-radius:12px;
+  font-size:16px;
+  outline:none
+}
+
+.search-box input:focus{
+  border-color:#2563eb
+}
+
+.search-box button{
+  border:0;
+  background:#2563eb;
+  color:#fff;
+  padding:0 24px;
+  border-radius:12px;
+  font-weight:800;
+  cursor:pointer
+}
+
+.info{
+  margin-bottom:18px;
+  color:#64748b
+}
+
+.results{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:20px
+}
+
+.card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:15px;
+  overflow:hidden
+}
+
+.image{
+  width:100%;
+  height:180px;
+  background:#e2e8f0;
+  object-fit:cover
+}
+
+.content{
+  padding:17px
+}
+
+.category{
+  color:#2563eb;
+  font-size:12px;
+  font-weight:800;
+  text-transform:uppercase
+}
+
+.title{
+  margin:7px 0;
+  font-size:19px;
+  line-height:1.35
+}
+
+.title a{
+  color:#172033;
+  text-decoration:none
+}
+
+.excerpt{
+  color:#64748b;
+  font-size:14px;
+  line-height:1.55
+}
+
+.meta{
+  margin-top:14px;
+  font-size:12px;
+  color:#94a3b8;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap
+}
+
+.empty{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:15px;
+  padding:45px 20px;
+  text-align:center;
+  color:#64748b
+}
+
+.loading{
+  text-align:center;
+  padding:35px;
+  color:#64748b
+}
+
+.pagination{
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  margin:30px 0
+}
+
+.pagination button{
+  border:1px solid #d7dce5;
+  background:#fff;
+  padding:9px 13px;
+  border-radius:8px;
+  cursor:pointer
+}
+
+.pagination button.active{
+  background:#2563eb;
+  color:#fff;
+  border-color:#2563eb
+}
+
+@media(max-width:900px){
+  .results{
+    grid-template-columns:repeat(2,1fr)
+  }
+}
+
+@media(max-width:600px){
+  .results{
+    grid-template-columns:1fr
+  }
+
+  .hero h1{
+    font-size:26px
+  }
+
+  .search-box{
+    flex-direction:column
+  }
+
+  .search-box button{
+    height:48px
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="header">
+    <div class="logo">LetsStudy Pro</div>
+
+    <a id="blogLink" class="blog-link" href="#">
+      ← Back to Blog
+    </a>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="hero">
+    <h1>Search Blog</h1>
+    <p id="blogDescription">
+      Find articles and resources from this blog.
+    </p>
+  </section>
+
+  <form id="searchForm" class="search-box">
+
+    <input
+      id="searchInput"
+      type="search"
+      placeholder="Search articles..."
+      autocomplete="off"
+    >
+
+    <button type="submit">
+      Search
+    </button>
+
+  </form>
+
+  <div id="info" class="info"></div>
+
+  <div id="results" class="results">
+    <div class="loading">
+      Loading...
+    </div>
+  </div>
+
+  <div id="pagination" class="pagination"></div>
+
+</main>
+
+
+<script type="module">
+
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  query,
+  where
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
+const firebaseConfig = {
+  apiKey:"AIzaSyBcOYDfAVKXbljsyRgI_0rjodBn678tCc",
+  authDomain:"let-s-study-pro-course.firebaseapp.com",
+  databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId:"let-s-study-pro-course",
+  storageBucket:"let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId:"474928293390",
+  appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId:"G-85B7V5H5J0"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+const params=new URLSearchParams(location.search);
+
+const blogId=params.get("blogId");
+const initialQuery=params.get("q") || "";
+
+let posts=[];
+let filtered=[];
+let currentPage=1;
+
+const perPage=9;
+
+
+const $=id=>document.getElementById(id);
+
+
+function escapeHtml(value){
+
+  return String(value||"")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+
+function safeUrl(url){
+
+  if(!url)return "";
+
+  try{
+
+    const parsed=new URL(
+      url,
+      location.origin
+    );
+
+    if(
+      parsed.protocol==="http:" ||
+      parsed.protocol==="https:"
+    ){
+      return parsed.href;
+    }
+
+  }catch(e){}
+
+  return "";
+}
+
+
+function formatDate(value){
+
+  if(!value)return "";
+
+  let date;
+
+  if(value.toDate){
+    date=value.toDate();
+  }else{
+    date=new Date(value);
+  }
+
+  if(isNaN(date.getTime())){
+    return "";
+  }
+
+  return date.toLocaleDateString(
+    undefined,
+    {
+      year:"numeric",
+      month:"short",
+      day:"numeric"
+    }
+  );
+}
+
+
+function getExcerpt(post){
+
+  if(post.excerpt){
+    return post.excerpt;
+  }
+
+  const text=String(
+    post.content||""
+  )
+  .replace(/<[^>]*>/g," ")
+  .replace(/\s+/g," ")
+  .trim();
+
+  return text.length>150
+    ? text.slice(0,150)+"..."
+    : text;
+}
+
+
+function isPublished(post){
+
+  return (
+    post.published===true ||
+    post.status==="published"
+  );
+}
+
+
+async function loadBlog(){
+
+  if(!blogId)return;
+
+  try{
+
+    const q=query(
+      collection(db,"blogs"),
+      where("__name__","==",blogId)
+    );
+
+    const snap=await getDocs(q);
+
+    if(snap.empty)return;
+
+    const data=snap.docs[0].data();
+
+    document.title=
+      "Search "+(data.title||"Blog")+
+      " | LetsStudy Pro";
+
+    $("blogDescription").textContent=
+      "Search articles from "+
+      (data.title||"this blog")+".";
+
+    $("blogLink").href=
+      "blog.html?blogId="+
+      encodeURIComponent(blogId);
+
+  }catch(error){
+
+    console.error(error);
+
+  }
+}
+
+
+async function loadPosts(){
+
+  if(!blogId){
+
+    $("results").innerHTML=`
+      <div class="empty">
+        <h2>No blog selected</h2>
+        <p>
+          Open this page using
+          <b>?blogId=YOUR_BLOG_ID</b>
+        </p>
+      </div>
+    `;
+
+    return;
+  }
+
+  try{
+
+    const q=query(
+      collection(db,"posts"),
+      where("blogId","==",blogId)
+    );
+
+    const snap=await getDocs(q);
+
+    posts=[];
+
+    snap.forEach(item=>{
+
+      const data=item.data();
+
+      if(isPublished(data)){
+
+        posts.push({
+          id:item.id,
+          ...data
+        });
+
+      }
+
+    });
+
+    posts.sort((a,b)=>{
+
+      const dateA=
+        a.publishedAt ||
+        a.createdAt ||
+        a.updatedAt;
+
+      const dateB=
+        b.publishedAt ||
+        b.createdAt ||
+        b.updatedAt;
+
+      const timeA=
+        dateA?.toMillis
+          ? dateA.toMillis()
+          : new Date(dateA||0).getTime();
+
+      const timeB=
+        dateB?.toMillis
+          ? dateB.toMillis()
+          : new Date(dateB||0).getTime();
+
+      return timeB-timeA;
+    });
+
+    performSearch(
+      initialQuery
+    );
+
+  }catch(error){
+
+    console.error(error);
+
+    $("results").innerHTML=`
+      <div class="empty">
+        Unable to load blog posts.
+      </div>
+    `;
+  }
+}
+
+
+function performSearch(term){
+
+  const search=String(
+    term||""
+  ).trim().toLowerCase();
+
+  currentPage=1;
+
+  if(!search){
+
+    filtered=[...posts];
+
+  }else{
+
+    filtered=posts.filter(post=>{
+
+      const title=String(
+        post.title||""
+      ).toLowerCase();
+
+      const excerpt=String(
+        post.excerpt||""
+      ).toLowerCase();
+
+      const content=String(
+        post.content||""
+      ).replace(/<[^>]*>/g," ")
+       .toLowerCase();
+
+      const category=String(
+        post.category||""
+      ).toLowerCase();
+
+      let tags="";
+
+      if(Array.isArray(post.tags)){
+
+        tags=post.tags
+          .map(tag=>{
+
+            if(typeof tag==="string"){
+              return tag;
+            }
+
+            return tag?.name||"";
+          })
+          .join(" ")
+          .toLowerCase();
+
+      }else{
+
+        tags=String(
+          post.tags||""
+        ).toLowerCase();
+
+      }
+
+      return (
+        title.includes(search) ||
+        excerpt.includes(search) ||
+        content.includes(search) ||
+        category.includes(search) ||
+        tags.includes(search)
+      );
+
+    });
+
+  }
+
+  render();
+}
+
+
+function render(){
+
+  const results=$("results");
+
+  $("info").textContent=
+    filtered.length+
+    " result"+
+    (filtered.length===1?"":"s")+
+    (
+      $("searchInput").value.trim()
+        ? " for \""+
+          $("searchInput").value.trim()+
+          "\""
+        : ""
+    );
+
+
+  if(!filtered.length){
+
+    results.innerHTML=`
+      <div class="empty">
+        <h2>No results found</h2>
+        <p>
+          Try another keyword or search term.
+        </p>
+      </div>
+    `;
+
+    $("pagination").innerHTML="";
+    return;
+  }
+
+
+  const start=
+    (currentPage-1)*perPage;
+
+  const pagePosts=
+    filtered.slice(
+      start,
+      start+perPage
+    );
+
+
+  results.innerHTML=
+    pagePosts.map(post=>{
+
+      const image=
+        safeUrl(
+          post.imageUrl ||
+          post.image ||
+          post.thumbnail ||
+          post.coverImage
+        );
+
+      const title=
+        escapeHtml(
+          post.title||
+          "Untitled Post"
+        );
+
+      const excerpt=
+        escapeHtml(
+          getExcerpt(post)
+        );
+
+      const category=
+        escapeHtml(
+          post.category||
+          "Article"
+        );
+
+      const author=
+        escapeHtml(
+          post.authorName||
+          post.author||
+          "Author"
+        );
+
+      const date=
+        formatDate(
+          post.publishedAt||
+          post.createdAt||
+          post.updatedAt
+        );
+
+      const views=
+        Number(post.views||0);
+
+
+      return `
+
+        <article class="card">
+
+          ${
+            image
+            ? `
+              <img
+                class="image"
+                src="${escapeHtml(image)}"
+                alt="${title}"
+                loading="lazy"
+              >
+            `
+            : `
+              <div
+                class="image"
+                aria-hidden="true">
+              </div>
+            `
+          }
+
+          <div class="content">
+
+            <div class="category">
+              ${category}
+            </div>
+
+            <h2 class="title">
+              <a
+                href="post.html?postId=${encodeURIComponent(post.id)}">
+                ${title}
+              </a>
+            </h2>
+
+            <div class="excerpt">
+              ${excerpt}
+            </div>
+
+            <div class="meta">
+              <span>✍ ${author}</span>
+              ${date ? `<span>• ${date}</span>` : ""}
+              <span>• ${number(views)} views</span>
+            </div>
+
+          </div>
+
+        </article>
+
+      `;
+
+    }).join("");
+
+
+  renderPagination();
+}
+
+
+function number(value){
+
+  return Number(value||0)
+    .toLocaleString();
+}
+
+
+function renderPagination(){
+
+  const box=$("pagination");
+
+  const totalPages=
+    Math.ceil(
+      filtered.length/perPage
+    );
+
+  if(totalPages<=1){
+
+    box.innerHTML="";
+    return;
+  }
+
+
+  let html="";
+
+
+  if(currentPage>1){
+
+    html+=`
+      <button data-page="${currentPage-1}">
+        ←
+      </button>
+    `;
+  }
+
+
+  for(
+    let i=1;
+    i<=totalPages;
+    i++
+  ){
+
+    if(
+      i===1 ||
+      i===totalPages ||
+      Math.abs(i-currentPage)<=2
+    ){
+
+      html+=`
+        <button
+          class="${i===currentPage?"active":""}"
+          data-page="${i}">
+          ${i}
+        </button>
+      `;
+
+    }else if(
+      i===currentPage-3 ||
+      i===currentPage+3
+    ){
+
+      html+=`<span>...</span>`;
+
+    }
+
+  }
+
+
+  if(currentPage<totalPages){
+
+    html+=`
+      <button data-page="${currentPage+1}">
+        →
+      </button>
+    `;
+  }
+
+
+  box.innerHTML=html;
+
+
+  box.querySelectorAll(
+    "button[data-page]"
+  ).forEach(button=>{
+
+    button.addEventListener(
+      "click",
+      ()=>{
+
+        currentPage=
+          Number(
+            button.dataset.page
+          );
+
+        render();
+
+        window.scrollTo({
+          top:0,
+          behavior:"smooth"
+        });
+
+      }
+    );
+
+  });
+}
+
+
+$("searchForm").addEventListener(
+  "submit",
+  event=>{
+
+    event.preventDefault();
+
+    const term=
+      $("searchInput").value.trim();
+
+    const url=
+      new URL(location.href);
+
+    if(term){
+      url.searchParams.set("q",term);
+    }else{
+      url.searchParams.delete("q");
+    }
+
+    history.replaceState(
+      {},
+      "",
+      url
+    );
+
+    performSearch(term);
+  }
+);
+
+
+$("searchInput").value=
+  initialQuery;
+
+
+loadBlog();
+loadPosts();
+
+</script>
+
+</body>
+</html>
