@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Blog Categories Admin</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;background:#f5f7fb;color:#172033}
+header{background:#111827;color:white;padding:18px;font-size:20px;font-weight:bold}
+main{max-width:1100px;margin:auto;padding:20px}
+.box,.card{background:white;padding:18px;border-radius:14px;
+box-shadow:0 3px 12px #0001;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px}
+.num{font-size:28px;font-weight:bold;margin-top:7px}
+input{width:100%;padding:12px;border:1px solid #ddd;
+border-radius:8px;margin:6px 0 12px}
+button{border:0;padding:10px 14px;border-radius:8px;cursor:pointer}
+.save{background:#2563eb;color:white}
+.edit{background:#f59e0b;color:white}
+.del{background:#dc2626;color:white}
+table{width:100%;border-collapse:collapse;background:white}
+th,td{padding:13px;border-bottom:1px solid #eee;text-align:left}
+.actions{display:flex;gap:6px}
+.msg{margin:10px 0;color:#2563eb}
+.error{color:#dc2626}
+</style>
+</head>
+
+<body>
+
+<header>📂 LetsStudy Pro — Blog Categories</header>
+
+<main>
+
+<div class="grid">
+<div class="card">Total Categories<div class="num" id="total">0</div></div>
+<div class="card">Active<div class="num" id="active">0</div></div>
+<div class="card">Total Posts<div class="num" id="posts">0</div></div>
+</div>
+
+<div class="box">
+<h3 id="formTitle">➕ Add Category</h3>
+
+<input id="name" placeholder="Category name">
+<input id="slug" placeholder="category-slug">
+<input id="description" placeholder="Description">
+
+<button class="save" onclick="saveCategory()">Save Category</button>
+<button onclick="resetForm()">Cancel</button>
+
+<div id="msg"></div>
+</div>
+
+<div class="box">
+<input id="search" placeholder="🔎 Search category..." oninput="render()">
+
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Slug</th>
+<th>Description</th>
+<th>Posts</th>
+<th>Actions</th>
+</tr>
+</thead>
+
+<tbody id="list">
+<tr><td colspan="5">Loading...</td></tr>
+</tbody>
+</table>
+</div>
+
+</main>
+
+<script type="module">
+
+import{initializeApp}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import{getAuth,onAuthStateChanged}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import{
+getFirestore,collection,getDocs,addDoc,
+doc,updateDoc,deleteDoc,serverTimestamp
+}from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+const firebaseConfig={
+apiKey:"AIzaSyBcOYDfAVKXbljsyRgI_0rjodBn678tCc",
+authDomain:"let-s-study-pro-course.firebaseapp.com",
+databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+projectId:"let-s-study-pro-course",
+storageBucket:"let-s-study-pro-course.firebasestorage.app",
+messagingSenderId:"474928293390",
+appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+measurementId:"G-85B7V5H5J0"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let categories=[];
+let posts=[];
+let editingId=null;
+
+const $=id=>document.getElementById(id);
+
+onAuthStateChanged(auth,user=>{
+ if(!user){
+  $("msg").innerHTML=
+  "<span class='error'>Admin login required.</span>";
+  return;
+ }
+
+ loadData();
+});
+
+
+async function loadData(){
+
+ try{
+
+  const [catSnap,postSnap]=await Promise.all([
+
+   getDocs(collection(db,"blogCategories")),
+
+   getDocs(collection(db,"posts"))
+
+  ]);
+
+  categories=catSnap.docs.map(d=>({
+   id:d.id,...d.data()
+  }));
+
+  posts=postSnap.docs.map(d=>({
+   id:d.id,...d.data()
+  }));
+
+  updateStats();
+  render();
+
+ }catch(e){
+
+  $("msg").innerHTML=
+  "<span class='error'>"+safe(e.message)+"</span>";
+
+ }
+}
+
+
+function updateStats(){
+
+ $("total").textContent=categories.length;
+
+ $("active").textContent=
+ categories.filter(c=>c.active!==false).length;
+
+ $("posts").textContent=posts.length;
+}
+
+
+async function saveCategory(){
+
+ const name=$("name").value.trim();
+
+ if(!name){
+
+  $("msg").innerHTML=
+  "<span class='error'>Category name required.</span>";
+
+  return;
+ }
+
+ const slug=$("slug").value.trim()||
+ name.toLowerCase()
+ .replace(/[^a-z0-9]+/g,"-")
+ .replace(/^-|-$/g,"");
+
+ const data={
+
+  name:name,
+
+  slug:slug,
+
+  description:$("description").value.trim(),
+
+  active:true,
+
+  updatedAt:serverTimestamp()
+
+ };
+
+ try{
+
+  if(editingId){
+
+   await updateDoc(
+    doc(db,"blogCategories",editingId),
+    data
+   );
+
+   $("msg").textContent="Category updated.";
+
+  }else{
+
+   await addDoc(
+    collection(db,"blogCategories"),
+    {
+     ...data,
+     createdAt:serverTimestamp()
+    }
+   );
+
+   $("msg").textContent="Category created.";
+  }
+
+  resetForm();
+  await loadData();
+
+ }catch(e){
+
+  $("msg").innerHTML=
+  "<span class='error'>"+safe(e.message)+"</span>";
+
+ }
+}
+
+
+function editCategory(id){
+
+ const c=categories.find(x=>x.id===id);
+
+ if(!c)return;
+
+ editingId=id;
+
+ $("name").value=c.name||"";
+ $("slug").value=c.slug||"";
+ $("description").value=c.description||"";
+
+ $("formTitle").textContent="✏️ Edit Category";
+}
+
+
+async function removeCategory(id){
+
+ const c=categories.find(x=>x.id===id);
+
+ if(!c)return;
+
+ if(!confirm(
+  `Delete "${c.name}" category?`
+ ))return;
+
+ try{
+
+  await deleteDoc(
+   doc(db,"blogCategories",id)
+  );
+
+  await loadData();
+
+ }catch(e){
+
+  $("msg").innerHTML=
+  "<span class='error'>"+safe(e.message)+"</span>";
+
+ }
+}
+
+
+function resetForm(){
+
+ editingId=null;
+
+ $("name").value="";
+ $("slug").value="";
+ $("description").value="";
+
+ $("formTitle").textContent="➕ Add Category";
+}
+
+
+function render(){
+
+ const q=$("search").value.toLowerCase();
+
+ const data=categories.filter(c=>
+  String(c.name||"").toLowerCase().includes(q)||
+  String(c.slug||"").toLowerCase().includes(q)
+ );
+
+ $("list").innerHTML=data.map(c=>{
+
+  const count=posts.filter(p=>
+   p.categoryId===c.id||
+   p.category===c.name||
+   p.categorySlug===c.slug
+  ).length;
+
+  return`
+
+  <tr>
+
+   <td><b>${safe(c.name||"")}</b></td>
+
+   <td>${safe(c.slug||"")}</td>
+
+   <td>${safe(c.description||"")}</td>
+
+   <td>${count}</td>
+
+   <td class="actions">
+
+    <button class="edit"
+    onclick="editCategory('${c.id}')">
+    Edit
+    </button>
+
+    <button class="del"
+    onclick="removeCategory('${c.id}')">
+    Delete
+    </button>
+
+   </td>
+
+  </tr>
+
+  `;
+
+ }).join("")||`
+ <tr>
+  <td colspan="5">No categories found.</td>
+ </tr>`;
+}
+
+
+function safe(v){
+
+ return String(v).replace(/[&<>"']/g,m=>({
+
+  "&":"&amp;",
+  "<":"&lt;",
+  ">":"&gt;",
+  '"':"&quot;",
+  "'":"&#039;"
+
+ }[m]));
+
+}
+
+
+window.saveCategory=saveCategory;
+window.editCategory=editCategory;
+window.removeCategory=removeCategory;
+window.resetForm=resetForm;
+window.render=render;
+
+</script>
+
+</body>
+</html>
