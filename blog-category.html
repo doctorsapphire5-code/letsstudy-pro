@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Blog Categories - LetsStudy Pro</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f5f7fb;
+  color:#172033
+}
+header{
+  background:#111827;
+  color:#fff;
+  padding:18px 22px
+}
+header h1{margin:0;font-size:22px}
+.container{
+  max-width:1100px;
+  margin:auto;
+  padding:20px
+}
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap
+}
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:15px;
+  margin:20px 0
+}
+.card{
+  background:#fff;
+  padding:18px;
+  border-radius:14px;
+  box-shadow:0 2px 10px #0000000d
+}
+.card small{color:#667085}
+.card strong{
+  display:block;
+  font-size:28px;
+  margin-top:7px
+}
+.form{
+  display:none;
+  background:#fff;
+  padding:20px;
+  border-radius:15px;
+  margin-bottom:20px
+}
+input,textarea{
+  width:100%;
+  padding:12px;
+  margin:7px 0 13px;
+  border:1px solid #d0d5dd;
+  border-radius:9px;
+  font:inherit
+}
+button{
+  border:0;
+  padding:10px 14px;
+  border-radius:9px;
+  cursor:pointer;
+  background:#111827;
+  color:#fff
+}
+.primary{background:#2563eb}
+.edit{background:#d97706}
+.danger{background:#dc2626}
+.search{
+  margin:15px 0
+}
+.table-wrap{
+  overflow-x:auto;
+  background:#fff;
+  border-radius:15px
+}
+table{
+  width:100%;
+  border-collapse:collapse
+}
+th,td{
+  padding:14px;
+  border-bottom:1px solid #eee;
+  text-align:left;
+  font-size:14px
+}
+th{background:#f9fafb}
+.badge{
+  display:inline-block;
+  padding:5px 9px;
+  border-radius:20px;
+  background:#eef2ff;
+  color:#3730a3
+}
+.actions{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap
+}
+.actions button{
+  padding:7px 10px;
+  font-size:12px
+}
+.empty{
+  text-align:center;
+  padding:35px
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🏷️ LetsStudy Pro — Blog Categories</h1>
+</header>
+
+<div class="container">
+
+  <div class="top">
+
+    <div>
+      <h2>Categories</h2>
+      <small>Organize your blog posts into categories.</small>
+    </div>
+
+    <button
+      class="primary"
+      onclick="openForm()">
+      + New Category
+    </button>
+
+  </div>
+
+
+  <!-- STATS -->
+
+  <div class="cards">
+
+    <div class="card">
+      <small>Total Categories</small>
+      <strong id="totalCategories">0</strong>
+    </div>
+
+    <div class="card">
+      <small>Used Categories</small>
+      <strong id="usedCategories">0</strong>
+    </div>
+
+    <div class="card">
+      <small>Unused Categories</small>
+      <strong id="unusedCategories">0</strong>
+    </div>
+
+    <div class="card">
+      <small>Total Posts</small>
+      <strong id="totalPosts">0</strong>
+    </div>
+
+  </div>
+
+
+  <!-- FORM -->
+
+  <div class="form" id="categoryForm">
+
+    <h2 id="formTitle">Create Category</h2>
+
+    <label>Category Name</label>
+
+    <input
+      id="categoryName"
+      placeholder="e.g. Physics"
+    >
+
+    <label>Slug</label>
+
+    <input
+      id="categorySlug"
+      placeholder="physics"
+    >
+
+    <label>Description</label>
+
+    <textarea
+      id="categoryDescription"
+      rows="4"
+      placeholder="Describe this category..."
+    ></textarea>
+
+    <button
+      class="primary"
+      onclick="saveCategory()">
+      Save Category
+    </button>
+
+    <button onclick="closeForm()">
+      Cancel
+    </button>
+
+  </div>
+
+
+  <!-- SEARCH -->
+
+  <input
+    class="search"
+    id="search"
+    placeholder="🔎 Search categories..."
+  >
+
+
+  <!-- TABLE -->
+
+  <div class="table-wrap">
+
+    <table>
+
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Slug</th>
+          <th>Description</th>
+          <th>Posts</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody id="categoryTable">
+
+        <tr>
+          <td colspan="5" class="empty">
+            Loading categories...
+          </td>
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</div>
+
+
+<script type="module">
+
+import {initializeApp}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  serverTimestamp
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/* =========================
+   FIREBASE
+========================= */
+
+const firebaseConfig={
+  apiKey:"AIzaSyBcOYDfAVKXbljsyRgI_0rjodBn678tCc",
+  authDomain:"let-s-study-pro-course.firebaseapp.com",
+  databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId:"let-s-study-pro-course",
+  storageBucket:"let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId:"474928293390",
+  appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId:"G-85B7V5H5J0"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+
+/* =========================
+   BLOG ID
+========================= */
+
+const params=
+  new URLSearchParams(location.search);
+
+const blogId=
+  params.get("blogId");
+
+
+let user=null;
+let categories=[];
+let posts=[];
+let editingId=null;
+
+
+/* =========================
+   AUTH
+========================= */
+
+onAuthStateChanged(auth,async currentUser=>{
+
+  if(!currentUser){
+
+    location.href="login.html";
+    return;
+
+  }
+
+  user=currentUser;
+
+  await loadData();
+
+});
+
+
+/* =========================
+   LOAD
+========================= */
+
+async function loadData(){
+
+  try{
+
+    if(!blogId){
+
+      alert(
+        "Blog ID is missing. Open this page with ?blogId=YOUR_BLOG_ID"
+      );
+
+      return;
+
+    }
+
+
+    /* CATEGORIES */
+
+    const categorySnap=
+      await getDocs(
+        query(
+          collection(db,"blogCategories"),
+          where("blogId","==",blogId)
+        )
+      );
+
+
+    categories=[];
+
+    categorySnap.forEach(d=>{
+
+      categories.push({
+        id:d.id,
+        ...d.data()
+      });
+
+    });
+
+
+    /* POSTS */
+
+    const postSnap=
+      await getDocs(
+        query(
+          collection(db,"posts"),
+          where("blogId","==",blogId)
+        )
+      );
+
+
+    posts=[];
+
+    postSnap.forEach(d=>{
+
+      posts.push({
+        id:d.id,
+        ...d.data()
+      });
+
+    });
+
+
+    updateStats();
+    render();
+
+  }catch(error){
+
+    console.error(error);
+
+    document.getElementById(
+      "categoryTable"
+    ).innerHTML=`
+
+      <tr>
+        <td colspan="5" class="empty">
+          Failed to load categories.
+        </td>
+      </tr>
+
+    `;
+
+  }
+
+}
+
+
+/* =========================
+   STATS
+========================= */
+
+function updateStats(){
+
+  let used=0;
+
+  categories.forEach(category=>{
+
+    if(getPostCount(category)>0)
+      used++;
+
+  });
+
+
+  document.getElementById(
+    "totalCategories"
+  ).textContent=categories.length;
+
+  document.getElementById(
+    "usedCategories"
+  ).textContent=used;
+
+  document.getElementById(
+    "unusedCategories"
+  ).textContent=
+    categories.length-used;
+
+  document.getElementById(
+    "totalPosts"
+  ).textContent=posts.length;
+
+}
+
+
+/* =========================
+   POST COUNT
+========================= */
+
+function getPostCount(category){
+
+  return posts.filter(post=>{
+
+    if(
+      post.categoryId &&
+      post.categoryId===category.id
+    ){
+
+      return true;
+
+    }
+
+
+    const postSlug=
+      String(
+        post.categorySlug ||
+        post.category ||
+        ""
+      )
+      .toLowerCase()
+      .trim();
+
+
+    return postSlug===
+      String(
+        category.slug ||
+        category.name ||
+        ""
+      )
+      .toLowerCase()
+      .trim();
+
+  }).length;
+
+}
+
+
+/* =========================
+   RENDER
+========================= */
+
+function render(){
+
+  const search=
+    document.getElementById("search")
+      .value
+      .toLowerCase()
+      .trim();
+
+
+  const data=
+    categories.filter(category=>{
+
+      const text=`
+
+        ${category.name || ""}
+
+        ${category.slug || ""}
+
+        ${category.description || ""}
+
+      `.toLowerCase();
+
+      return !search ||
+        text.includes(search);
+
+    });
+
+
+  const table=
+    document.getElementById(
+      "categoryTable"
+    );
+
+
+  if(!data.length){
+
+    table.innerHTML=`
+
+      <tr>
+        <td colspan="5" class="empty">
+          No categories found.
+        </td>
+      </tr>
+
+    `;
+
+    return;
+
+  }
+
+
+  table.innerHTML=
+    data.map(category=>`
+
+      <tr>
+
+        <td>
+          <span class="badge">
+            ${escapeHtml(
+              category.name || ""
+            )}
+          </span>
+        </td>
+
+        <td>
+          ${escapeHtml(
+            category.slug || ""
+          )}
+        </td>
+
+        <td>
+          ${escapeHtml(
+            category.description || "—"
+          )}
+        </td>
+
+        <td>
+          <strong>
+            ${getPostCount(category)}
+          </strong>
+        </td>
+
+        <td>
+
+          <div class="actions">
+
+            <button
+              class="primary"
+              onclick="viewCategory(
+                '${category.id}'
+              )">
+              View
+            </button>
+
+            <button
+              class="edit"
+              onclick="editCategory(
+                '${category.id}'
+              )">
+              Edit
+            </button>
+
+            <button
+              class="danger"
+              onclick="deleteCategory(
+                '${category.id}'
+              )">
+              Delete
+            </button>
+
+          </div>
+
+        </td>
+
+      </tr>
+
+    `).join("");
+
+}
+
+
+/* =========================
+   FORM
+========================= */
+
+window.openForm=function(){
+
+  editingId=null;
+
+  document.getElementById(
+    "formTitle"
+  ).textContent=
+    "Create Category";
+
+  document.getElementById(
+    "categoryName"
+  ).value="";
+
+  document.getElementById(
+    "categorySlug"
+  ).value="";
+
+  document.getElementById(
+    "categoryDescription"
+  ).value="";
+
+  document.getElementById(
+    "categoryForm"
+  ).style.display="block";
+
+};
+
+
+window.closeForm=function(){
+
+  document.getElementById(
+    "categoryForm"
+  ).style.display="none";
+
+  editingId=null;
+
+};
+
+
+/* =========================
+   AUTO SLUG
+========================= */
+
+document
+  .getElementById("categoryName")
+  .addEventListener(
+    "input",
+    function(){
+
+      if(editingId)return;
+
+      document.getElementById(
+        "categorySlug"
+      ).value=
+        slugify(this.value);
+
+    }
+  );
+
+
+/* =========================
+   EDIT
+========================= */
+
+window.editCategory=function(id){
+
+  const category=
+    categories.find(
+      x=>x.id===id
+    );
+
+  if(!category)return;
+
+  editingId=id;
+
+  document.getElementById(
+    "formTitle"
+  ).textContent=
+    "Edit Category";
+
+  document.getElementById(
+    "categoryName"
+  ).value=
+    category.name || "";
+
+  document.getElementById(
+    "categorySlug"
+  ).value=
+    category.slug || "";
+
+  document.getElementById(
+    "categoryDescription"
+  ).value=
+    category.description || "";
+
+  document.getElementById(
+    "categoryForm"
+  ).style.display="block";
+
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
+  });
+
+};
+
+
+/* =========================
+   SAVE
+========================= */
+
+window.saveCategory=async function(){
+
+  const name=
+    document.getElementById(
+      "categoryName"
+    ).value.trim();
+
+  const slug=
+    slugify(
+      document.getElementById(
+        "categorySlug"
+      ).value.trim()
+    );
+
+  const description=
+    document.getElementById(
+      "categoryDescription"
+    ).value.trim();
+
+
+  if(!name){
+
+    alert("Enter category name.");
+    return;
+
+  }
+
+
+  if(!slug){
+
+    alert("Enter a valid slug.");
+    return;
+
+  }
+
+
+  /* DUPLICATE CHECK */
+
+  const duplicate=
+    categories.find(c=>
+      c.slug===slug &&
+      c.id!==editingId
+    );
+
+
+  if(duplicate){
+
+    alert(
+      "A category with this slug already exists."
+    );
+
+    return;
+
+  }
+
+
+  try{
+
+    if(editingId){
+
+      await updateDoc(
+        doc(
+          db,
+          "blogCategories",
+          editingId
+        ),
+        {
+          name,
+          slug,
+          description,
+          updatedAt:
+            serverTimestamp()
+        }
+      );
+
+    }else{
+
+      await addDoc(
+        collection(
+          db,
+          "blogCategories"
+        ),
+        {
+          name,
+          slug,
+          description,
+          blogId,
+          ownerId:user.uid,
+          createdAt:
+            serverTimestamp(),
+          updatedAt:
+            serverTimestamp()
+        }
+      );
+
+    }
+
+
+    closeForm();
+
+    await loadData();
+
+  }catch(error){
+
+    console.error(error);
+
+    alert(
+      "Failed to save category."
+    );
+
+  }
+
+};
+
+
+/* =========================
+   DELETE
+========================= */
+
+window.deleteCategory=async function(id){
+
+  const category=
+    categories.find(
+      x=>x.id===id
+    );
+
+  if(!category)return;
+
+
+  const count=
+    getPostCount(category);
+
+
+  let message=
+    `Delete "${category.name}"?`;
+
+
+  if(count>0){
+
+    message+=
+      `\n\nThis category is currently used by ${count} post(s).`;
+
+  }
+
+
+  if(!confirm(message))
+    return;
+
+
+  try{
+
+    await deleteDoc(
+      doc(
+        db,
+        "blogCategories",
+        id
+      )
+    );
+
+
+    await loadData();
+
+  }catch(error){
+
+    console.error(error);
+
+    alert(
+      "Failed to delete category."
+    );
+
+  }
+
+};
+
+
+/* =========================
+   VIEW CATEGORY
+========================= */
+
+window.viewCategory=function(id){
+
+  const category=
+    categories.find(
+      x=>x.id===id
+    );
+
+  if(!category)return;
+
+
+  location.href=
+    `category.html?blogId=${
+      encodeURIComponent(blogId)
+    }&categoryId=${
+      encodeURIComponent(id)
+    }`;
+
+};
+
+
+/* =========================
+   HELPERS
+========================= */
+
+function slugify(text){
+
+  return String(text)
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g,"-")
+    .replace(/[^a-z0-9-]/g,"")
+    .replace(/-+/g,"-");
+
+}
+
+
+function escapeHtml(value){
+
+  return String(value)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+}
+
+
+document
+  .getElementById("search")
+  .addEventListener(
+    "input",
+    render
+  );
+
+</script>
+
+</body>
+</html>
