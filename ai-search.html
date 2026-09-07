@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>AI Search | LetsStudy Pro</title>
+  <meta name="description" content="Search, learn and understand anything with LetsStudy Pro AI Search.">
+
+  <style>
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+    }
+
+    body{
+      font-family:Arial,Helvetica,sans-serif;
+      background:#f5f7fb;
+      color:#172033;
+      min-height:100vh;
+    }
+
+    header{
+      background:#fff;
+      border-bottom:1px solid #e7eaf0;
+      padding:16px 20px;
+      position:sticky;
+      top:0;
+      z-index:10;
+    }
+
+    .nav{
+      max-width:1100px;
+      margin:auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:15px;
+    }
+
+    .logo{
+      font-size:22px;
+      font-weight:800;
+      color:#2563eb;
+    }
+
+    .back{
+      text-decoration:none;
+      color:#475569;
+      font-size:14px;
+      font-weight:600;
+    }
+
+    main{
+      max-width:900px;
+      margin:0 auto;
+      padding:55px 20px;
+    }
+
+    .hero{
+      text-align:center;
+      margin-bottom:30px;
+    }
+
+    .badge{
+      display:inline-block;
+      background:#e8f0ff;
+      color:#2563eb;
+      padding:7px 13px;
+      border-radius:30px;
+      font-size:13px;
+      font-weight:700;
+      margin-bottom:15px;
+    }
+
+    h1{
+      font-size:42px;
+      line-height:1.15;
+      margin-bottom:12px;
+    }
+
+    .subtitle{
+      color:#64748b;
+      max-width:650px;
+      margin:auto;
+      line-height:1.6;
+    }
+
+    .search-box{
+      background:#fff;
+      border:1px solid #e2e8f0;
+      border-radius:18px;
+      padding:10px;
+      display:flex;
+      gap:10px;
+      margin:30px auto 15px;
+      box-shadow:0 10px 35px rgba(15,23,42,.08);
+    }
+
+    #question{
+      flex:1;
+      border:0;
+      outline:0;
+      padding:15px;
+      font-size:16px;
+      background:transparent;
+    }
+
+    #searchBtn{
+      border:0;
+      background:#2563eb;
+      color:#fff;
+      padding:0 25px;
+      border-radius:12px;
+      font-weight:700;
+      cursor:pointer;
+    }
+
+    #searchBtn:hover{
+      background:#1d4ed8;
+    }
+
+    #searchBtn:disabled{
+      opacity:.6;
+      cursor:not-allowed;
+    }
+
+    .suggestions{
+      display:flex;
+      justify-content:center;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-bottom:35px;
+    }
+
+    .suggestions button{
+      border:1px solid #dbe3ef;
+      background:#fff;
+      padding:9px 13px;
+      border-radius:20px;
+      cursor:pointer;
+      color:#475569;
+    }
+
+    .suggestions button:hover{
+      border-color:#2563eb;
+      color:#2563eb;
+    }
+
+    .status{
+      display:none;
+      text-align:center;
+      color:#64748b;
+      margin:25px 0;
+    }
+
+    .loader{
+      width:30px;
+      height:30px;
+      border:3px solid #dbeafe;
+      border-top-color:#2563eb;
+      border-radius:50%;
+      animation:spin 1s linear infinite;
+      margin:0 auto 10px;
+    }
+
+    @keyframes spin{
+      to{transform:rotate(360deg)}
+    }
+
+    .result{
+      display:none;
+    }
+
+    .ai-card{
+      background:#fff;
+      border:1px solid #e2e8f0;
+      border-radius:18px;
+      padding:25px;
+      margin-bottom:20px;
+      box-shadow:0 5px 20px rgba(15,23,42,.05);
+    }
+
+    .ai-title{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:18px;
+      font-weight:800;
+      margin-bottom:15px;
+    }
+
+    .ai-icon{
+      width:35px;
+      height:35px;
+      display:grid;
+      place-items:center;
+      border-radius:10px;
+      background:#e8f0ff;
+    }
+
+    #answer{
+      color:#334155;
+      line-height:1.75;
+      white-space:pre-wrap;
+    }
+
+    .resources{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:12px;
+      margin-top:15px;
+    }
+
+    .resource{
+      border:1px solid #e2e8f0;
+      border-radius:12px;
+      padding:15px;
+      text-decoration:none;
+      color:#172033;
+      background:#fff;
+    }
+
+    .resource:hover{
+      border-color:#2563eb;
+    }
+
+    .resource-title{
+      font-weight:700;
+      margin-bottom:6px;
+    }
+
+    .resource-type{
+      font-size:12px;
+      color:#64748b;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:20px;
+    }
+
+    .action{
+      border:1px solid #dbe3ef;
+      background:#fff;
+      padding:10px 14px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:600;
+      color:#334155;
+    }
+
+    .action:hover{
+      border-color:#2563eb;
+      color:#2563eb;
+    }
+
+    .error{
+      display:none;
+      background:#fff1f2;
+      color:#be123c;
+      border:1px solid #fecdd3;
+      padding:15px;
+      border-radius:12px;
+      margin-top:20px;
+    }
+
+    footer{
+      text-align:center;
+      color:#94a3b8;
+      font-size:13px;
+      padding:30px 20px;
+    }
+
+    @media(max-width:600px){
+      main{
+        padding:35px 15px;
+      }
+
+      h1{
+        font-size:32px;
+      }
+
+      .search-box{
+        flex-direction:column;
+      }
+
+      #searchBtn{
+        height:50px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="nav">
+    <div class="logo">LetsStudy Pro</div>
+    <a class="back" href="/">← Back</a>
+  </div>
+</header>
+
+<main>
+
+  <section class="hero">
+    <span class="badge">🤖 AI POWERED</span>
+
+    <h1>Ask Anything.<br>Learn Smarter.</h1>
+
+    <p class="subtitle">
+      Search topics, ask questions and get clear explanations
+      powered by AI.
+    </p>
+  </section>
+
+  <form class="search-box" id="searchForm">
+
+    <input
+      id="question"
+      type="text"
+      placeholder="Ask a question... e.g. Explain Newton's First Law"
+      autocomplete="off"
+      required
+    >
+
+    <button id="searchBtn" type="submit">
+      Search
+    </button>
+
+  </form>
+
+  <div class="suggestions">
+    <button type="button" onclick="useSuggestion('Explain photosynthesis')">
+      Explain photosynthesis
+    </button>
+
+    <button type="button" onclick="useSuggestion('What is Newton’s First Law?')">
+      Newton's First Law
+    </button>
+
+    <button type="button" onclick="useSuggestion('Explain quadratic equations')">
+      Quadratic equations
+    </button>
+
+    <button type="button" onclick="useSuggestion('How does the human heart work?')">
+      Human heart
+    </button>
+  </div>
+
+  <div class="status" id="status">
+    <div class="loader"></div>
+    <div>AI is thinking...</div>
+  </div>
+
+  <div class="error" id="error"></div>
+
+  <section class="result" id="result">
+
+    <div class="ai-card">
+
+      <div class="ai-title">
+        <div class="ai-icon">🤖</div>
+        <span>AI Answer</span>
+      </div>
+
+      <div id="answer"></div>
+
+      <div class="actions">
+
+        <button class="action" onclick="copyAnswer()">
+          📋 Copy
+        </button>
+
+        <button class="action" onclick="speakAnswer()">
+          🔊 Listen
+        </button>
+
+        <button class="action" onclick="newSearch()">
+          🔎 New Search
+        </button>
+
+      </div>
+
+    </div>
+
+    <div class="ai-card" id="resourcesCard" style="display:none">
+
+      <div class="ai-title">
+        📚 Related Resources
+      </div>
+
+      <div class="resources" id="resources"></div>
+
+    </div>
+
+  </section>
+
+</main>
+
+<footer>
+  © 2026 LetsStudy Pro · AI Learning Platform
+</footer>
+
+<script>
+"use strict";
+
+/*
+  LetsStudy Pro AI Search
+
+  Expected backend:
+
+  POST /api/search
+
+  Body:
+  {
+    "query": "Explain photosynthesis"
+  }
+
+  Expected response:
+  {
+    "answer": "Photosynthesis is...",
+    "resources": [
+      {
+        "title": "Biology Form 4",
+        "type": "Notes",
+        "url": "/course.html?id=123"
+      }
+    ]
+  }
+*/
+
+const API_URL = "/api/search";
+
+const form = document.getElementById("searchForm");
+const question = document.getElementById("question");
+const searchBtn = document.getElementById("searchBtn");
+
+const statusBox = document.getElementById("status");
+const resultBox = document.getElementById("result");
+const errorBox = document.getElementById("error");
+
+const answerBox = document.getElementById("answer");
+const resourcesCard = document.getElementById("resourcesCard");
+const resourcesBox = document.getElementById("resources");
+
+
+form.addEventListener("submit", async function(e){
+
+  e.preventDefault();
+
+  const query = question.value.trim();
+
+  if(!query){
+    showError("Please enter a question.");
+    return;
+  }
+
+  await searchAI(query);
+
+});
+
+
+async function searchAI(query){
+
+  hideError();
+
+  resultBox.style.display = "none";
+  statusBox.style.display = "block";
+
+  searchBtn.disabled = true;
+  searchBtn.textContent = "Searching...";
+
+  try{
+
+    const response = await fetch(API_URL, {
+
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify({
+        query: query
+      })
+
+    });
+
+
+    if(!response.ok){
+
+      throw new Error(
+        "AI server returned error " + response.status
+      );
+
+    }
+
+
+    const data = await response.json();
+
+
+    const answer =
+      data.answer ||
+      data.response ||
+      data.message ||
+      "No answer was returned.";
+
+
+    answerBox.textContent = answer;
+
+
+    renderResources(
+      data.resources ||
+      data.results ||
+      []
+    );
+
+
+    resultBox.style.display = "block";
+
+
+  }catch(error){
+
+    console.error("AI Search Error:", error);
+
+    showError(
+      "Unable to connect to AI Search. Please try again."
+    );
+
+  }finally{
+
+    statusBox.style.display = "none";
+
+    searchBtn.disabled = false;
+    searchBtn.textContent = "Search";
+
+  }
+
+}
+
+
+function renderResources(items){
+
+  resourcesBox.innerHTML = "";
+
+  if(!Array.isArray(items) || items.length === 0){
+
+    resourcesCard.style.display = "none";
+
+    return;
+  }
+
+
+  items.slice(0,8).forEach(item => {
+
+    const link = document.createElement("a");
+
+    link.className = "resource";
+
+    link.href = item.url || "#";
+
+    link.textContent = "";
+
+
+    const title = document.createElement("div");
+
+    title.className = "resource-title";
+
+    title.textContent =
+      item.title ||
+      item.name ||
+      "Learning Resource";
+
+
+    const type = document.createElement("div");
+
+    type.className = "resource-type";
+
+    type.textContent =
+      item.type ||
+      item.category ||
+      "Resource";
+
+
+    link.appendChild(title);
+
+    link.appendChild(type);
+
+    resourcesBox.appendChild(link);
+
+  });
+
+
+  resourcesCard.style.display = "block";
+
+}
+
+
+function useSuggestion(text){
+
+  question.value = text;
+
+  question.focus();
+
+}
+
+
+function copyAnswer(){
+
+  const text = answerBox.innerText;
+
+  if(!text) return;
+
+
+  navigator.clipboard.writeText(text)
+    .then(() => {
+
+      alert("Answer copied.");
+
+    })
+    .catch(() => {
+
+      alert("Unable to copy answer.");
+
+    });
+
+}
+
+
+function speakAnswer(){
+
+  const text = answerBox.innerText;
+
+  if(!text){
+
+    return;
+
+  }
+
+
+  if(!("speechSynthesis" in window)){
+
+    alert("Voice playback is not supported.");
+
+    return;
+
+  }
+
+
+  speechSynthesis.cancel();
+
+
+  const speech =
+    new SpeechSynthesisUtterance(text);
+
+  speech.rate = 0.95;
+
+  speech.pitch = 1;
+
+
+  speechSynthesis.speak(speech);
+
+}
+
+
+function newSearch(){
+
+  resultBox.style.display = "none";
+
+  question.value = "";
+
+  question.focus();
+
+}
+
+
+function showError(message){
+
+  errorBox.textContent = message;
+
+  errorBox.style.display = "block";
+
+}
+
+
+function hideError(){
+
+  errorBox.style.display = "none";
+
+}
+
+
+question.addEventListener("keydown", function(e){
+
+  if(e.key === "Enter"){
+
+    e.preventDefault();
+
+    form.requestSubmit();
+
+  }
+
+});
+</script>
+
+</body>
+</html>
