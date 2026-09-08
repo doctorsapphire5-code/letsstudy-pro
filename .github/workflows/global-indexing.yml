@@ -20,12 +20,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - name: Install dependencies
         run: npm install
@@ -40,9 +41,15 @@ jobs:
         run: npm run sitemap:index
 
       - name: Submit URLs to IndexNow
+        if: ${{ secrets.INDEXNOW_KEY != '' }}
         env:
           INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
         run: npm run indexnow
+
+      - name: Check generated files
+        run: |
+          echo "=== Sitemap files ==="
+          ls -lah sitemap*.xml || true
 
       - name: Commit sitemap changes
         run: |
