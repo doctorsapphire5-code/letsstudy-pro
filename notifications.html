@@ -21,7 +21,8 @@ content="View your latest LetsStudy Pro notifications and updates.">
 body{
   font-family:Arial,sans-serif;
   background:#f5f7fb;
-  color:#172033
+  color:#172033;
+  min-height:100vh
 }
 
 header{
@@ -50,9 +51,11 @@ header{
 .back{
   border:0;
   background:#eef2f7;
+  color:#172033;
   padding:9px 14px;
   border-radius:8px;
-  cursor:pointer
+  cursor:pointer;
+  font-weight:600
 }
 
 .container{
@@ -65,7 +68,8 @@ header{
   background:#fff;
   border-radius:17px;
   padding:25px;
-  margin-bottom:15px
+  margin-bottom:15px;
+  border:1px solid #e5e7eb
 }
 
 .hero h1{
@@ -75,7 +79,8 @@ header{
 .hero p{
   color:#64748b;
   font-size:13px;
-  margin-top:5px
+  margin-top:6px;
+  line-height:1.6
 }
 
 .count{
@@ -97,7 +102,13 @@ header{
   padding:11px 13px;
   border:1px solid #dbe2ea;
   border-radius:8px;
-  outline:none
+  outline:none;
+  font:inherit;
+  min-width:0
+}
+
+.search:focus{
+  border-color:#2563eb
 }
 
 select,
@@ -106,7 +117,8 @@ select,
   background:#fff;
   padding:10px;
   border-radius:8px;
-  cursor:pointer
+  cursor:pointer;
+  font:inherit
 }
 
 .button{
@@ -114,6 +126,11 @@ select,
   color:#fff;
   border-color:#2563eb;
   font-weight:700
+}
+
+.button:disabled{
+  opacity:.6;
+  cursor:not-allowed
 }
 
 .list{
@@ -128,7 +145,13 @@ select,
   border-radius:13px;
   padding:15px;
   display:flex;
-  gap:12px
+  gap:12px;
+  transition:.2s
+}
+
+.notification:hover{
+  border-color:#cbd5e1;
+  transform:translateY(-1px)
 }
 
 .notification.unread{
@@ -149,18 +172,22 @@ select,
 }
 
 .content{
-  flex:1
+  flex:1;
+  min-width:0
 }
 
 .title{
   font-size:14px;
-  font-weight:800
+  font-weight:800;
+  line-height:1.4
 }
 
 .message{
   color:#64748b;
   font-size:13px;
-  margin-top:4px
+  margin-top:4px;
+  line-height:1.5;
+  word-break:break-word
 }
 
 .time{
@@ -173,13 +200,14 @@ select,
 .actions{
   display:flex;
   gap:7px;
-  margin-top:9px
+  margin-top:9px;
+  flex-wrap:wrap
 }
 
 .action{
   border:0;
   background:#eef2f7;
-  padding:6px 9px;
+  padding:7px 10px;
   border-radius:7px;
   font-size:10px;
   cursor:pointer;
@@ -187,7 +215,7 @@ select,
   color:#172033
 }
 
-.open{
+.action.open{
   background:#2563eb;
   color:#fff
 }
@@ -196,6 +224,7 @@ select,
 .empty,
 .error{
   background:#fff;
+  border:1px solid #e5e7eb;
   border-radius:15px;
   padding:55px 20px;
   text-align:center;
@@ -206,7 +235,17 @@ select,
   color:#b91c1c
 }
 
+.empty h3{
+  color:#172033;
+  margin-bottom:7px
+}
+
 @media(max-width:650px){
+
+  .container{
+    width:94%;
+    margin:20px auto
+  }
 
   .toolbar{
     flex-direction:column
@@ -215,6 +254,14 @@ select,
   select,
   .button{
     width:100%
+  }
+
+  .hero h1{
+    font-size:24px
+  }
+
+  .notification{
+    padding:13px
   }
 }
 </style>
@@ -229,9 +276,9 @@ select,
   </a>
 
   <button
+    type="button"
     class="back"
-    onclick="history.back()"
-  >
+    id="backBtn">
     Back
   </button>
 
@@ -244,12 +291,7 @@ select,
 
     <h1>
       Notifications
-      <span
-        id="count"
-        class="count"
-      >
-        0
-      </span>
+      <span id="count" class="count">0</span>
     </h1>
 
     <p>
@@ -267,40 +309,28 @@ select,
       class="search"
       type="search"
       placeholder="Search notifications..."
+      autocomplete="off"
     >
-
 
     <select id="filter">
 
-      <option value="all">
-        All
-      </option>
-
-      <option value="unread">
-        Unread
-      </option>
-
-      <option value="read">
-        Read
-      </option>
+      <option value="all">All</option>
+      <option value="unread">Unread</option>
+      <option value="read">Read</option>
 
     </select>
 
-
     <button
+      type="button"
       id="markAll"
-      class="button"
-    >
+      class="button">
       Mark all read
     </button>
 
   </section>
 
 
-  <section
-    id="list"
-    class="list"
-  >
+  <section id="list" class="list">
 
     <div class="loading">
       Loading notifications...
@@ -312,36 +342,32 @@ select,
 
 
 <script>
+"use strict";
 
 /*
 ==================================================
 LETSSTUDY PRO NOTIFICATIONS
 
-USER:
+USER ID:
 
-localStorage.userId
+notifications.html?userId=FIREBASE_USER_ID
 
 OR:
 
-notifications.html?userId=USER_ID
+localStorage.userId
 
+API:
 
-GET:
-
+GET
 /api/notifications?userId=USER_ID
 
-
-PATCH:
-
+PATCH
 /api/notifications/:id/read
 
-
-POST:
-
+POST
 /api/notifications/read-all
 
-
-EXPECTED:
+EXPECTED NOTIFICATION:
 
 {
   id:"",
@@ -353,52 +379,75 @@ EXPECTED:
   link:""
 }
 
-NO DIRECT FIREBASE
+NO DIRECT FIREBASE SDK
 ==================================================
 */
 
 
-const params =
-  new URLSearchParams(
-    location.search
-  );
+/* =========================
+   DOM
+========================= */
 
+const params =
+  new URLSearchParams(location.search);
+
+const list =
+  document.getElementById("list");
+
+const search =
+  document.getElementById("search");
+
+const filter =
+  document.getElementById("filter");
+
+const count =
+  document.getElementById("count");
+
+const markAll =
+  document.getElementById("markAll");
+
+const backBtn =
+  document.getElementById("backBtn");
+
+
+/* =========================
+   USER ID
+========================= */
 
 const userId =
   params.get("userId") ||
-  localStorage.getItem(
-    "userId"
-  ) ||
+  localStorage.getItem("userId") ||
   "";
 
 
-const list =
-  document.getElementById(
-    "list"
-  );
-
-const search =
-  document.getElementById(
-    "search"
-  );
-
-const filter =
-  document.getElementById(
-    "filter"
-  );
-
-const count =
-  document.getElementById(
-    "count"
-  );
-
-const markAll =
-  document.getElementById(
-    "markAll"
-  );
-
+/* =========================
+   STATE
+========================= */
 
 let notifications = [];
+
+let loading = false;
+
+
+/* =========================
+   BACK
+========================= */
+
+backBtn.addEventListener(
+  "click",
+  function(){
+    if(
+      document.referrer &&
+      document.referrer.startsWith(
+        location.origin
+      )
+    ){
+      history.back();
+    }else{
+      location.href = "index.html";
+    }
+  }
+);
 
 
 /* =========================
@@ -419,30 +468,46 @@ if(!userId){
 
 
 /* =========================
-   LOAD
+   LOAD NOTIFICATIONS
 ========================= */
 
 async function loadNotifications(){
+
+  if(loading || !userId)
+    return;
+
+  loading = true;
 
   try{
 
     const response =
       await fetch(
         "/api/notifications?userId=" +
-        encodeURIComponent(
-          userId
-        )
+        encodeURIComponent(userId),
+        {
+          method:"GET",
+          headers:{
+            "Accept":"application/json"
+          },
+          cache:"no-store"
+        }
       );
 
 
-    const result =
-      await response.json();
+    let result = {};
+
+    try{
+      result = await response.json();
+    }catch{
+      result = {};
+    }
 
 
     if(!response.ok){
 
       throw new Error(
         result.error ||
+        result.message ||
         "Unable to load notifications."
       );
 
@@ -454,24 +519,60 @@ async function loadNotifications(){
         result.notifications
       )
       ? result.notifications
+
       : Array.isArray(
           result.results
         )
         ? result.results
-        : [];
+
+        : Array.isArray(
+            result.data
+          )
+          ? result.data
+
+          : Array.isArray(
+              result
+            )
+            ? result
+
+            : [];
+
+
+    /*
+      Sort newest first.
+    */
+
+    notifications.sort(
+      function(a,b){
+
+        return (
+          getTime(b.createdAt || b.timestamp) -
+          getTime(a.createdAt || a.timestamp)
+        );
+
+      }
+    );
 
 
     render();
 
+
   }catch(error){
 
     console.error(
+      "Notifications error:",
       error
     );
 
     showError(
-      error.message
+      error.message ||
+      "Unable to load notifications."
     );
+
+
+  }finally{
+
+    loading = false;
 
   }
 
@@ -496,7 +597,9 @@ function render(){
 
   const unread =
     notifications.filter(
-      n => !isRead(n)
+      function(notification){
+        return !isRead(notification);
+      }
     ).length;
 
 
@@ -504,49 +607,63 @@ function render(){
     unread;
 
 
+  /*
+    FIXED SEARCH BUG:
+    Previously operator precedence
+    caused title/message search to
+    behave incorrectly.
+
+    Now both fields are combined safely.
+  */
+
   const filtered =
     notifications.filter(
-      notification => {
+      function(notification){
 
-        const text =
-          (
-            notification.title ||
-            "" +
-            " " +
+        const title =
+          String(
+            notification.title || ""
+          ).toLowerCase();
+
+        const message =
+          String(
             notification.message ||
+            notification.body ||
             ""
           ).toLowerCase();
 
+        const text =
+          title +
+          " " +
+          message;
+
 
         const read =
-          isRead(
-            notification
+          isRead(notification);
+
+
+        const matchesSearch =
+          !keyword ||
+          text.includes(keyword);
+
+
+        const matchesFilter =
+          selected === "all" ||
+
+          (
+            selected === "unread" &&
+            !read
+          ) ||
+
+          (
+            selected === "read" &&
+            read
           );
 
 
         return (
-
-          (
-            !keyword ||
-            text.includes(
-              keyword
-            )
-          )
-
-          &&
-
-          (
-            selected === "all" ||
-            (
-              selected === "unread" &&
-              !read
-            ) ||
-            (
-              selected === "read" &&
-              read
-            )
-          )
-
+          matchesSearch &&
+          matchesFilter
         );
 
       }
@@ -555,15 +672,27 @@ function render(){
 
   if(!filtered.length){
 
+    list.className = "list";
+
     list.innerHTML = `
 
       <div class="empty">
 
-        ${
-          notifications.length
-          ? "No matching notifications."
-          : "No notifications yet."
-        }
+        <h3>
+          ${
+            notifications.length
+            ? "No matching notifications"
+            : "No notifications yet"
+          }
+        </h3>
+
+        <p>
+          ${
+            notifications.length
+            ? "Try another search or filter."
+            : "New updates will appear here."
+          }
+        </p>
 
       </div>
 
@@ -574,11 +703,11 @@ function render(){
   }
 
 
+  list.className = "list";
+
   list.innerHTML =
     filtered
-      .map(
-        createNotification
-      )
+      .map(createNotification)
       .join("");
 
 
@@ -588,7 +717,7 @@ function render(){
 
 
 /* =========================
-   CARD
+   CREATE NOTIFICATION
 ========================= */
 
 function createNotification(
@@ -596,9 +725,9 @@ function createNotification(
 ){
 
   const id =
-    notification.id ||
-    notification.documentId ||
-    "";
+    getNotificationId(
+      notification
+    );
 
 
   const read =
@@ -613,13 +742,30 @@ function createNotification(
 
 
   const icon =
-    getIcon(
-      type
-    );
+    getIcon(type);
 
 
   const link =
     notification.link ||
+    notification.url ||
+    notification.actionUrl ||
+    "";
+
+
+  const title =
+    notification.title ||
+    "LetsStudy Pro";
+
+
+  const message =
+    notification.message ||
+    notification.body ||
+    "";
+
+
+  const createdAt =
+    notification.createdAt ||
+    notification.timestamp ||
     "";
 
 
@@ -627,51 +773,32 @@ function createNotification(
 
     <article
       class="notification ${
-        read
-        ? ""
-        : "unread"
+        read ? "" : "unread"
       }"
+      data-id="${escapeAttr(id)}"
     >
 
       <div class="icon">
-
         ${icon}
-
       </div>
 
 
       <div class="content">
 
         <div class="title">
-
-          ${escapeHTML(
-            notification.title ||
-            "LetsStudy Pro"
-          )}
-
+          ${escapeHTML(title)}
         </div>
 
 
         <div class="message">
-
-          ${escapeHTML(
-            notification.message ||
-            notification.body ||
-            ""
-          )}
-
+          ${escapeHTML(message)}
         </div>
 
 
         <span class="time">
-
           ${escapeHTML(
-            formatDate(
-              notification.createdAt ||
-              notification.timestamp
-            )
+            formatDate(createdAt)
           )}
-
         </span>
 
 
@@ -680,7 +807,6 @@ function createNotification(
           ${
             link
             ? `
-
               <a
                 href="${safeLink(link)}"
                 class="action open"
@@ -688,23 +814,21 @@ function createNotification(
               >
                 Open
               </a>
-
             `
             : ""
           }
 
 
           ${
-            !read
+            !read && id
             ? `
-
               <button
+                type="button"
                 class="action mark-read"
                 data-id="${escapeAttr(id)}"
               >
                 Mark as read
               </button>
-
             `
             : ""
           }
@@ -721,24 +845,43 @@ function createNotification(
 
 
 /* =========================
-   ACTIONS
+   GET NOTIFICATION ID
+========================= */
+
+function getNotificationId(
+  notification
+){
+
+  return String(
+    notification.id ||
+    notification.documentId ||
+    notification.notificationId ||
+    ""
+  );
+
+}
+
+
+/* =========================
+   BIND ACTIONS
 ========================= */
 
 function bindActions(){
 
   document
-    .querySelectorAll(
-      ".mark-read"
-    )
+    .querySelectorAll(".mark-read")
     .forEach(
-      button => {
+      function(button){
 
         button.addEventListener(
           "click",
-          () =>
+          function(){
+
             markRead(
               button.dataset.id
-            )
+            );
+
+          }
         );
 
       }
@@ -746,20 +889,29 @@ function bindActions(){
 
 
   document
-    .querySelectorAll(
-      ".open"
-    )
+    .querySelectorAll(".open")
     .forEach(
-      link => {
+      function(link){
 
         link.addEventListener(
           "click",
-          () => {
+          function(){
 
-            markRead(
-              link.dataset.id,
-              true
-            );
+            /*
+              Mark read before navigation.
+            */
+
+            const id =
+              link.dataset.id;
+
+            if(id){
+
+              markRead(
+                id,
+                true
+              );
+
+            }
 
           }
         );
@@ -771,15 +923,15 @@ function bindActions(){
 
 
 /* =========================
-   MARK READ
+   MARK ONE READ
 ========================= */
 
 async function markRead(
   id,
-  silent=false
+  silent = false
 ){
 
-  if(!id)
+  if(!id || !userId)
     return;
 
 
@@ -792,10 +944,15 @@ async function markRead(
         "/read",
         {
           method:"PATCH",
+
           headers:{
             "Content-Type":
+              "application/json",
+
+            "Accept":
               "application/json"
           },
+
           body:JSON.stringify({
             userId:userId
           })
@@ -803,9 +960,18 @@ async function markRead(
       );
 
 
+    let result = {};
+
+    try{
+      result = await response.json();
+    }catch{}
+
+
     if(!response.ok){
 
       throw new Error(
+        result.error ||
+        result.message ||
         "Unable to mark notification as read."
       );
 
@@ -814,30 +980,40 @@ async function markRead(
 
     const notification =
       notifications.find(
-        n =>
-          (
-            n.id ||
-            n.documentId
-          ) === id
+        function(n){
+
+          return (
+            getNotificationId(n) ===
+            String(id)
+          );
+
+        }
       );
 
 
     if(notification){
 
-      notification.read =
-        true;
+      notification.read = true;
+      notification.isRead = true;
+      notification.status = "read";
 
     }
 
 
     render();
 
+
   }catch(error){
+
+    console.error(
+      error
+    );
 
     if(!silent){
 
       alert(
-        error.message
+        error.message ||
+        "Unable to mark notification as read."
       );
 
     }
@@ -848,15 +1024,40 @@ async function markRead(
 
 
 /* =========================
-   MARK ALL
+   MARK ALL READ
 ========================= */
 
 markAll.addEventListener(
   "click",
-  async () => {
+  async function(){
 
-    markAll.disabled =
-      true;
+    if(!userId)
+      return;
+
+
+    const unread =
+      notifications.filter(
+        function(n){
+          return !isRead(n);
+        }
+      );
+
+
+    if(!unread.length){
+
+      alert(
+        "All notifications are already read."
+      );
+
+      return;
+
+    }
+
+
+    markAll.disabled = true;
+
+    markAll.textContent =
+      "Updating...";
 
 
     try{
@@ -866,10 +1067,15 @@ markAll.addEventListener(
           "/api/notifications/read-all",
           {
             method:"POST",
+
             headers:{
               "Content-Type":
+                "application/json",
+
+              "Accept":
                 "application/json"
             },
+
             body:JSON.stringify({
               userId:userId
             })
@@ -877,9 +1083,18 @@ markAll.addEventListener(
         );
 
 
+      let result = {};
+
+      try{
+        result = await response.json();
+      }catch{}
+
+
       if(!response.ok){
 
         throw new Error(
+          result.error ||
+          result.message ||
           "Unable to mark all as read."
         );
 
@@ -887,24 +1102,37 @@ markAll.addEventListener(
 
 
       notifications.forEach(
-        n => {
+        function(n){
+
           n.read = true;
+          n.isRead = true;
+          n.status = "read";
+
         }
       );
 
 
       render();
 
+
     }catch(error){
 
-      alert(
-        error.message
+      console.error(
+        error
       );
+
+      alert(
+        error.message ||
+        "Unable to mark all as read."
+      );
+
 
     }finally{
 
-      markAll.disabled =
-        false;
+      markAll.disabled = false;
+
+      markAll.textContent =
+        "Mark all read";
 
     }
 
@@ -913,17 +1141,22 @@ markAll.addEventListener(
 
 
 /* =========================
-   FILTER
+   SEARCH
 ========================= */
 
 search.addEventListener(
   "input",
-  render
+  function(){
+    render();
+  }
 );
+
 
 filter.addEventListener(
   "change",
-  render
+  function(){
+    render();
+  }
 );
 
 
@@ -932,7 +1165,18 @@ filter.addEventListener(
 ========================= */
 
 setInterval(
-  loadNotifications,
+  function(){
+
+    if(
+      document.visibilityState ===
+      "visible"
+    ){
+
+      loadNotifications();
+
+    }
+
+  },
   30000
 );
 
@@ -948,6 +1192,7 @@ function getIcon(
   switch(
     String(type)
       .toLowerCase()
+      .trim()
   ){
 
     case "course":
@@ -980,6 +1225,15 @@ function getIcon(
     case "event":
       return "📅";
 
+    case "success":
+      return "✅";
+
+    case "warning":
+      return "⚠️";
+
+    case "error":
+      return "❌";
+
     case "system":
       return "⚙️";
 
@@ -992,7 +1246,7 @@ function getIcon(
 
 
 /* =========================
-   READ
+   READ STATE
 ========================= */
 
 function isRead(
@@ -1001,8 +1255,12 @@ function isRead(
 
   return (
     notification.read === true ||
+
     notification.isRead === true ||
-    notification.status === "read"
+
+    String(
+      notification.status || ""
+    ).toLowerCase() === "read"
   );
 
 }
@@ -1012,27 +1270,59 @@ function isRead(
    DATE
 ========================= */
 
-function formatDate(
+function getTime(
   value
 ){
 
   if(!value)
-    return "";
+    return 0;
+
+
+  /*
+    Firebase Timestamp support.
+  */
+
+  if(
+    typeof value === "object" &&
+    value.seconds
+  ){
+
+    return Number(
+      value.seconds
+    ) * 1000;
+
+  }
 
 
   const date =
     new Date(value);
 
 
-  if(
-    Number.isNaN(
-      date.getTime()
-    )
-  ){
+  const time =
+    date.getTime();
 
+
+  return Number.isNaN(time)
+    ? 0
+    : time;
+
+}
+
+
+function formatDate(
+  value
+){
+
+  const time =
+    getTime(value);
+
+
+  if(!time)
     return "";
 
-  }
+
+  const date =
+    new Date(time);
 
 
   return date.toLocaleString(
@@ -1040,6 +1330,7 @@ function formatDate(
     {
       month:"short",
       day:"numeric",
+      year:"numeric",
       hour:"2-digit",
       minute:"2-digit"
     }
@@ -1060,16 +1351,14 @@ function safeLink(
 
     const parsed =
       new URL(
-        url,
+        String(url),
         location.origin
       );
 
 
     if(
-      parsed.protocol ===
-      "http:" ||
-      parsed.protocol ===
-      "https:"
+      parsed.protocol === "http:" ||
+      parsed.protocol === "https:"
     ){
 
       return escapeAttr(
@@ -1078,7 +1367,15 @@ function safeLink(
 
     }
 
-  }catch{}
+  }catch(error){
+
+    console.warn(
+      "Invalid notification URL:",
+      url
+    );
+
+  }
+
 
   return "#";
 
@@ -1093,9 +1390,7 @@ function showError(
   message
 ){
 
-  list.className =
-    "error";
-
+  list.className = "error";
 
   list.innerHTML = `
 
@@ -1104,11 +1399,10 @@ function showError(
     </h2>
 
     <p style="margin-top:10px">
-
       ${escapeHTML(
-        message
+        message ||
+        "Something went wrong."
       )}
-
     </p>
 
   `;
