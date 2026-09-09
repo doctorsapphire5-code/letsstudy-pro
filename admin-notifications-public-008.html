@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Notifications | LetsStudy Pro</title>
+
+<meta name="description"
+content="Read the latest LetsStudy Pro notifications, announcements and updates.">
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0
+}
+
+body{
+  font-family:Arial,sans-serif;
+  background:#f5f7fb;
+  color:#172033;
+  line-height:1.6
+}
+
+header{
+  background:#fff;
+  border-bottom:1px solid #e5e7eb;
+  padding:15px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  position:sticky;
+  top:0;
+  z-index:100
+}
+
+.logo{
+  color:#2563eb;
+  font-size:21px;
+  font-weight:800
+}
+
+nav{
+  display:flex;
+  gap:15px
+}
+
+nav a{
+  text-decoration:none;
+  color:#475569;
+  font-weight:600
+}
+
+.container{
+  max-width:950px;
+  margin:auto;
+  padding:25px 16px
+}
+
+.hero{
+  background:linear-gradient(
+    135deg,
+    #2563eb,
+    #4f46e5
+  );
+  color:#fff;
+  padding:30px;
+  border-radius:18px;
+  margin-bottom:20px
+}
+
+.hero h1{
+  font-size:30px;
+  margin-bottom:7px
+}
+
+.hero p{
+  opacity:.92
+}
+
+.toolbar{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:15px;
+  margin-bottom:18px
+}
+
+.search{
+  width:100%;
+  padding:12px 14px;
+  border:1px solid #dbe1ea;
+  border-radius:9px;
+  outline:none;
+  font-size:14px
+}
+
+.search:focus{
+  border-color:#2563eb
+}
+
+.notification{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:15px;
+  padding:20px;
+  margin-bottom:13px;
+  box-shadow:0 4px 18px #00000008
+}
+
+.notification.unread{
+  border-left:4px solid #2563eb
+}
+
+.top{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  align-items:flex-start
+}
+
+.title{
+  font-size:19px;
+  font-weight:800;
+  color:#172033
+}
+
+.message{
+  margin-top:10px;
+  color:#475569;
+  white-space:pre-wrap
+}
+
+.meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-top:14px
+}
+
+.badge{
+  display:inline-block;
+  padding:4px 9px;
+  border-radius:20px;
+  font-size:11px;
+  font-weight:bold
+}
+
+.info{
+  background:#dbeafe;
+  color:#1d4ed8
+}
+
+.success{
+  background:#dcfce7;
+  color:#15803d
+}
+
+.warning{
+  background:#fef3c7;
+  color:#92400e
+}
+
+.danger{
+  background:#fee2e2;
+  color:#b91c1c
+}
+
+.date{
+  color:#64748b;
+  font-size:12px
+}
+
+.loading,
+.empty,
+.error{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:15px;
+  padding:40px 20px;
+  text-align:center;
+  color:#64748b
+}
+
+.error{
+  color:#b91c1c
+}
+
+.refresh{
+  margin-top:10px;
+  border:0;
+  background:#2563eb;
+  color:#fff;
+  padding:10px 15px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:bold
+}
+
+@media(max-width:600px){
+
+  header{
+    padding:13px 15px
+  }
+
+  nav a{
+    display:none
+  }
+
+  .hero{
+    padding:23px 18px
+  }
+
+  .hero h1{
+    font-size:25px
+  }
+
+  .top{
+    flex-direction:column
+  }
+
+}
+</style>
+</head>
+
+<body>
+
+<header>
+
+  <div class="logo">
+    LetsStudy Pro
+  </div>
+
+  <nav>
+
+    <a href="index.html">
+      Home
+    </a>
+
+    <a href="notifications.html">
+      Notifications
+    </a>
+
+  </nav>
+
+</header>
+
+
+<main class="container">
+
+  <section class="hero">
+
+    <h1>
+      🔔 Notifications
+    </h1>
+
+    <p>
+      Stay updated with the latest announcements,
+      opportunities and updates from LetsStudy Pro.
+    </p>
+
+  </section>
+
+
+  <div class="toolbar">
+
+    <input
+      id="search"
+      class="search"
+      type="search"
+      placeholder="Search notifications...">
+
+  </div>
+
+
+  <div id="notifications">
+
+    <div class="loading">
+      Loading notifications...
+    </div>
+
+  </div>
+
+</main>
+
+
+<script type="module">
+
+import {
+  initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  query,
+  where,
+  orderBy
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/* =========================
+   FIREBASE
+========================= */
+
+const firebaseConfig = {
+
+  apiKey:
+  "AIzaSyBcOYDfAVKXKbljsyRgI_0rjodBn678tCc",
+
+  authDomain:
+  "let-s-study-pro-course.firebaseapp.com",
+
+  databaseURL:
+  "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+  projectId:
+  "let-s-study-pro-course",
+
+  storageBucket:
+  "let-s-study-pro-course.firebasestorage.app",
+
+  messagingSenderId:
+  "474928293390",
+
+  appId:
+  "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+  measurementId:
+  "G-85B7V5H5J0"
+
+};
+
+
+const app =
+initializeApp(firebaseConfig);
+
+const db =
+getFirestore(app);
+
+
+const container =
+document.getElementById(
+  "notifications"
+);
+
+let allNotifications = [];
+
+
+/* =========================
+   SECURITY
+========================= */
+
+function escapeHTML(value){
+
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+
+}
+
+
+/* =========================
+   DATE
+========================= */
+
+function formatDate(timestamp){
+
+  if(!timestamp){
+    return "";
+  }
+
+  try{
+
+    let date;
+
+    if(
+      typeof timestamp.toDate ===
+      "function"
+    ){
+
+      date =
+      timestamp.toDate();
+
+    }else{
+
+      date =
+      new Date(timestamp);
+
+    }
+
+    if(
+      Number.isNaN(
+        date.getTime()
+      )
+    ){
+
+      return "";
+
+    }
+
+    return date.toLocaleString(
+      undefined,
+      {
+        year:"numeric",
+        month:"short",
+        day:"numeric",
+        hour:"2-digit",
+        minute:"2-digit"
+      }
+    );
+
+  }catch(error){
+
+    return "";
+
+  }
+
+}
+
+
+/* =========================
+   TYPE BADGE
+========================= */
+
+function typeBadge(type){
+
+  const value =
+  String(type || "info")
+  .toLowerCase();
+
+
+  let cls = "info";
+
+  if(value === "success")
+    cls = "success";
+
+  if(value === "warning")
+    cls = "warning";
+
+  if(value === "danger" ||
+     value === "error")
+    cls = "danger";
+
+
+  return `
+
+    <span class="badge ${cls}">
+      ${escapeHTML(value)}
+    </span>
+
+  `;
+
+}
+
+
+/* =========================
+   LOAD NOTIFICATIONS
+========================= */
+
+async function loadNotifications(){
+
+  container.innerHTML = `
+
+    <div class="loading">
+      Loading notifications...
+    </div>
+
+  `;
+
+
+  try{
+
+    /*
+      Public notifications only.
+      Admin can create notifications
+      with status = "published".
+    */
+
+    const q =
+    query(
+      collection(
+        db,
+        "notifications"
+      ),
+      where(
+        "status",
+        "==",
+        "published"
+      ),
+      orderBy(
+        "createdAt",
+        "desc"
+      )
+    );
+
+
+    const snapshot =
+    await getDocs(q);
+
+
+    allNotifications =
+    snapshot.docs.map(doc => ({
+
+      id:doc.id,
+      ...doc.data()
+
+    }));
+
+
+    renderNotifications(
+      allNotifications
+    );
+
+
+  }catch(error){
+
+    console.error(error);
+
+
+    /*
+      Fallback query in case the
+      createdAt index is missing.
+    */
+
+    try{
+
+      const snapshot =
+      await getDocs(
+        collection(
+          db,
+          "notifications"
+        )
+      );
+
+
+      allNotifications =
+      snapshot.docs
+      .map(doc => ({
+        id:doc.id,
+        ...doc.data()
+      }))
+      .filter(
+        item =>
+        item.status ===
+        "published"
+      );
+
+
+      allNotifications.sort(
+        (a,b) => {
+
+          const aTime =
+          a.createdAt?.seconds || 0;
+
+          const bTime =
+          b.createdAt?.seconds || 0;
+
+          return bTime-aTime;
+
+        }
+      );
+
+
+      renderNotifications(
+        allNotifications
+      );
+
+
+    }catch(fallbackError){
+
+      console.error(
+        fallbackError
+      );
+
+
+      container.innerHTML = `
+
+        <div class="error">
+
+          <h3>
+            Unable to load notifications
+          </h3>
+
+          <p style="margin-top:8px">
+            ${escapeHTML(
+              fallbackError.message
+            )}
+          </p>
+
+          <button
+            class="refresh"
+            onclick="loadNotifications()">
+
+            Try Again
+
+          </button>
+
+        </div>
+
+      `;
+
+    }
+
+  }
+
+}
+
+
+/* =========================
+   RENDER
+========================= */
+
+function renderNotifications(
+  notifications
+){
+
+  if(!notifications.length){
+
+    container.innerHTML = `
+
+      <div class="empty">
+
+        <h3>
+          No Notifications
+        </h3>
+
+        <p style="margin-top:7px">
+          There are no published notifications
+          at the moment.
+        </p>
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  container.innerHTML =
+  notifications.map(
+    notification => {
+
+      const title =
+      notification.title ||
+      "LetsStudy Pro Update";
+
+
+      const message =
+      notification.message ||
+      notification.description ||
+      "";
+
+
+      const created =
+      formatDate(
+        notification.createdAt
+      );
+
+
+      const type =
+      notification.type ||
+      "info";
+
+
+      return `
+
+        <article
+          class="notification unread">
+
+          <div class="top">
+
+            <div>
+
+              <div class="title">
+
+                🔔
+                ${escapeHTML(title)}
+
+              </div>
+
+            </div>
+
+            ${
+              created
+              ?`
+
+                <div class="date">
+
+                  ${escapeHTML(created)}
+
+                </div>
+
+              `
+              :""
+            }
+
+          </div>
+
+
+          ${
+            message
+            ?`
+
+              <div class="message">
+
+                ${escapeHTML(message)}
+
+              </div>
+
+            `
+            :""
+          }
+
+
+          <div class="meta">
+
+            ${typeBadge(type)}
+
+            ${
+              notification.category
+              ?`
+
+                <span class="badge info">
+
+                  ${escapeHTML(
+                    notification.category
+                  )}
+
+                </span>
+
+              `
+              :""
+            }
+
+            ${
+              notification.priority
+              ?`
+
+                <span class="badge warning">
+
+                  ${escapeHTML(
+                    notification.priority
+                  )}
+
+                </span>
+
+              `
+              :""
+            }
+
+          </div>
+
+        </article>
+
+      `;
+
+    }
+  ).join("");
+
+}
+
+
+/* =========================
+   SEARCH
+========================= */
+
+document.getElementById(
+  "search"
+).addEventListener(
+  "input",
+  function(){
+
+    const term =
+    this.value
+      .toLowerCase()
+      .trim();
+
+
+    if(!term){
+
+      renderNotifications(
+        allNotifications
+      );
+
+      return;
+
+    }
+
+
+    const filtered =
+    allNotifications.filter(
+      notification => {
+
+        const text = [
+
+          notification.title,
+          notification.message,
+          notification.description,
+          notification.category,
+          notification.type
+
+        ]
+        .join(" ")
+        .toLowerCase();
+
+
+        return text.includes(term);
+
+      }
+    );
+
+
+    renderNotifications(
+      filtered
+    );
+
+  }
+);
+
+
+/* =========================
+   START
+========================= */
+
+loadNotifications();
+
+</script>
+
+</body>
+</html>
