@@ -8,7 +8,12 @@
     content="width=device-width, initial-scale=1"
   >
 
-  <title>Logging Out | Let'sStudy Pro</title>
+  <title>Admin Logout | Let'sStudy Pro</title>
+
+  <meta
+    name="description"
+    content="Securely sign out of the Let'sStudy Pro administrator portal."
+  >
 
   <meta
     name="robots"
@@ -101,6 +106,8 @@
       font-size: 14px;
 
       font-weight: 600;
+
+      line-height: 1.5;
     }
 
     .error {
@@ -131,6 +138,32 @@
       font-weight: 700;
     }
 
+    .login:hover {
+      background: #1d4ed8;
+    }
+
+    .retry {
+      display: inline-block;
+
+      margin-top: 10px;
+
+      padding: 10px 17px;
+
+      border: 1px solid #fecaca;
+
+      border-radius: 10px;
+
+      background: #fef2f2;
+
+      color: #dc2626;
+
+      font-size: 14px;
+
+      font-weight: 700;
+
+      cursor: pointer;
+    }
+
     footer {
       margin-top: 20px;
 
@@ -152,10 +185,10 @@
       🔐
     </div>
 
-    <h1>Logging Out</h1>
+    <h1>Admin Logout</h1>
 
     <p>
-      Please wait while we securely sign you out.
+      Securely sign out of your Let'sStudy Pro administrator account.
     </p>
 
     <div
@@ -166,6 +199,7 @@
       Signing out...
     </div>
 
+    <!-- MANUAL LOGIN BUTTON -->
     <a
       id="loginLink"
       class="login"
@@ -174,6 +208,16 @@
     >
       Admin Login
     </a>
+
+    <!-- MANUAL RETRY BUTTON -->
+    <button
+      id="retryBtn"
+      class="retry"
+      type="button"
+      hidden
+    >
+      Try Logout Again
+    </button>
 
     <footer>
       © <span id="year"></span> Let'sStudy Pro
@@ -184,13 +228,17 @@
 
   <script type="module">
 
-    import { initializeApp }
-      from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+    import {
+      initializeApp
+    } from
+      "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
 
     import {
       getAuth,
       signOut
-    } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+    } from
+      "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
 
     /* =========================
@@ -240,6 +288,10 @@
     const loginLink =
       document.getElementById("loginLink");
 
+    const retryBtn =
+      document.getElementById("retryBtn");
+
+
     document.getElementById("year").textContent =
       new Date().getFullYear();
 
@@ -250,10 +302,35 @@
 
     async function logoutAdmin() {
 
+      /*
+       * Reset UI
+       */
+
+      status.textContent =
+        "Signing out...";
+
+      status.className =
+        "status";
+
+      loginLink.hidden =
+        true;
+
+      retryBtn.hidden =
+        true;
+
+
       try {
+
+        /*
+         * Firebase sign out
+         */
 
         await signOut(auth);
 
+
+        /*
+         * SUCCESS
+         */
 
         status.textContent =
           "You have been securely logged out.";
@@ -263,17 +340,15 @@
 
 
         /*
-         * Small delay so the admin
-         * can see the success message.
+         * IMPORTANT:
+         *
+         * NO automatic redirect.
+         *
+         * The page remains here.
          */
 
-        setTimeout(() => {
-
-          window.location.replace(
-            "login-admin.html"
-          );
-
-        }, 800);
+        loginLink.hidden =
+          false;
 
 
       } catch (error) {
@@ -291,10 +366,31 @@
           "status error";
 
 
-        loginLink.hidden = false;
+        /*
+         * Show manual retry.
+         */
+
+        retryBtn.hidden =
+          false;
+
       }
+
     }
 
+
+    /* =========================
+       RETRY
+    ========================== */
+
+    retryBtn.addEventListener(
+      "click",
+      logoutAdmin
+    );
+
+
+    /* =========================
+       START LOGOUT
+    ========================== */
 
     logoutAdmin();
 
