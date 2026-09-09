@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Course Announcements | LetsStudy Pro</title>
+
+<meta name="description"
+content="View the latest announcements, updates and important information for your LetsStudy Pro premium course.">
+
+<meta name="robots" content="index,follow">
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+body{
+  font-family:Inter,Arial,sans-serif;
+  background:#f5f7fb;
+  color:#172033;
+  line-height:1.6;
+}
+
+a{
+  text-decoration:none;
+  color:inherit;
+}
+
+.header{
+  background:#fff;
+  border-bottom:1px solid #e8ebf2;
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+
+.nav{
+  max-width:1200px;
+  margin:auto;
+  padding:15px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+}
+
+.logo{
+  font-size:22px;
+  font-weight:800;
+  color:#2563eb;
+}
+
+.logo span{
+  color:#111827;
+}
+
+.nav-links{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.nav-links a{
+  padding:9px 13px;
+  border-radius:9px;
+  font-size:14px;
+  font-weight:600;
+}
+
+.nav-links a:hover{
+  background:#eef4ff;
+  color:#2563eb;
+}
+
+.hero{
+  background:linear-gradient(135deg,#2563eb,#4f46e5);
+  color:#fff;
+  padding:55px 20px;
+}
+
+.hero-inner{
+  max-width:1200px;
+  margin:auto;
+}
+
+.back{
+  display:inline-block;
+  margin-bottom:20px;
+  background:rgba(255,255,255,.14);
+  padding:8px 13px;
+  border-radius:8px;
+  font-size:14px;
+}
+
+.hero h1{
+  font-size:clamp(28px,5vw,48px);
+  line-height:1.15;
+  margin-bottom:12px;
+}
+
+.hero p{
+  max-width:800px;
+  opacity:.92;
+  font-size:16px;
+}
+
+.course-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:22px;
+}
+
+.meta{
+  background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.18);
+  padding:8px 12px;
+  border-radius:8px;
+  font-size:13px;
+}
+
+.container{
+  max-width:1100px;
+  margin:auto;
+  padding:35px 20px 70px;
+}
+
+.toolbar{
+  background:#fff;
+  border:1px solid #e7eaf0;
+  border-radius:14px;
+  padding:16px;
+  margin-bottom:25px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+.search{
+  width:100%;
+  border:1px solid #dce1ea;
+  border-radius:10px;
+  padding:12px 14px;
+  outline:none;
+  font-size:15px;
+}
+
+.search:focus{
+  border-color:#2563eb;
+  box-shadow:0 0 0 3px rgba(37,99,235,.1);
+}
+
+.section-title{
+  margin-bottom:18px;
+}
+
+.section-title h2{
+  font-size:25px;
+}
+
+.section-title p{
+  color:#667085;
+  font-size:14px;
+}
+
+.announcement-list{
+  display:grid;
+  gap:16px;
+}
+
+.announcement{
+  background:#fff;
+  border:1px solid #e7eaf0;
+  border-radius:15px;
+  padding:22px;
+  transition:.2s;
+}
+
+.announcement:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 30px rgba(16,24,40,.07);
+}
+
+.announcement-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:15px;
+  margin-bottom:12px;
+}
+
+.announcement h3{
+  font-size:20px;
+  line-height:1.35;
+}
+
+.message{
+  color:#4b5563;
+  white-space:pre-line;
+  margin-top:10px;
+}
+
+.badges{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+  margin-top:16px;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  padding:5px 9px;
+  border-radius:7px;
+  font-size:12px;
+  font-weight:700;
+}
+
+.important{
+  background:#fff1f2;
+  color:#be123c;
+}
+
+.normal{
+  background:#eef4ff;
+  color:#2563eb;
+}
+
+.date{
+  color:#667085;
+  font-size:13px;
+  margin-top:16px;
+}
+
+.empty{
+  text-align:center;
+  background:#fff;
+  border:1px solid #e7eaf0;
+  border-radius:15px;
+  padding:50px 20px;
+  color:#667085;
+}
+
+.empty-icon{
+  font-size:45px;
+  margin-bottom:10px;
+}
+
+.loading{
+  position:fixed;
+  inset:0;
+  background:rgba(255,255,255,.92);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index:999;
+}
+
+.loader{
+  width:42px;
+  height:42px;
+  border:4px solid #e5e7eb;
+  border-top-color:#2563eb;
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+
+@keyframes spin{
+  to{transform:rotate(360deg)}
+}
+
+.error{
+  background:#fff1f2;
+  border:1px solid #fecdd3;
+  color:#be123c;
+  padding:16px;
+  border-radius:12px;
+  margin-bottom:20px;
+}
+
+.footer{
+  background:#111827;
+  color:#cbd5e1;
+  text-align:center;
+  padding:30px 20px;
+}
+
+.footer strong{
+  color:#fff;
+}
+
+@media(max-width:700px){
+  .nav{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .nav-links{
+    width:100%;
+  }
+
+  .nav-links a{
+    font-size:13px;
+  }
+
+  .hero{
+    padding:40px 18px;
+  }
+
+  .container{
+    padding:25px 15px 55px;
+  }
+
+  .announcement{
+    padding:18px;
+  }
+
+  .announcement-top{
+    flex-direction:column;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="loading" id="loading">
+  <div class="loader"></div>
+</div>
+
+<header class="header">
+  <nav class="nav">
+    <a href="premium.html" class="logo">
+      LetsStudy <span>Pro</span>
+    </a>
+
+    <div class="nav-links">
+      <a href="premium.html">Premium</a>
+      <a id="coursesLink" href="courses.html">Courses</a>
+      <a id="lessonsLink" href="#">Lessons</a>
+      <a id="faqLink" href="#">FAQ</a>
+      <a id="questionsLink" href="#">Questions</a>
+    </div>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="hero-inner">
+
+    <a href="premium.html" class="back">
+      ← Back to Premium
+    </a>
+
+    <h1 id="courseTitle">
+      Course Announcements
+    </h1>
+
+    <p id="courseDescription">
+      Stay updated with the latest information, important notices and course updates.
+    </p>
+
+    <div class="course-meta">
+      <span class="meta" id="courseInstructor">
+        👨‍🏫 Instructor
+      </span>
+
+      <span class="meta" id="courseCategory">
+        📚 Category
+      </span>
+
+      <span class="meta" id="courseLevel">
+        🎯 Level
+      </span>
+    </div>
+
+  </div>
+</section>
+
+<main class="container">
+
+  <div id="errorBox" class="error" style="display:none"></div>
+
+  <div class="toolbar">
+    <input
+      type="search"
+      id="searchInput"
+      class="search"
+      placeholder="Search announcements..."
+      autocomplete="off">
+  </div>
+
+  <div class="section-title">
+    <h2>📢 Course Announcements</h2>
+    <p id="announcementCount">
+      Latest updates from your course.
+    </p>
+  </div>
+
+  <div id="announcementList" class="announcement-list"></div>
+
+</main>
+
+<footer class="footer">
+  <strong>LetsStudy Pro</strong>
+  <br>
+  Learn. Grow. Build Your Future.
+</footer>
+
+<script type="module">
+
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  collection,
+  getDocs,
+  query,
+  where
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/* ===============================
+   FIREBASE CONFIG
+================================ */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBcOYDfAVKXblsyjRgI_0rjodBn678tCc",
+  authDomain: "let-s-study-pro-course.firebaseapp.com",
+  databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId: "let-s-study-pro-course",
+  storageBucket: "let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId: "474928293390",
+  appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId: "G-85B7V5H5J0"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+
+/* ===============================
+   GLOBAL VARIABLES
+================================ */
+
+const params =
+  new URLSearchParams(window.location.search);
+
+const courseId =
+  params.get("courseId");
+
+let courseData = null;
+let announcements = [];
+let filteredAnnouncements = [];
+
+
+/* ===============================
+   ELEMENTS
+================================ */
+
+const loading =
+  document.getElementById("loading");
+
+const announcementList =
+  document.getElementById("announcementList");
+
+const announcementCount =
+  document.getElementById("announcementCount");
+
+const searchInput =
+  document.getElementById("searchInput");
+
+const errorBox =
+  document.getElementById("errorBox");
+
+const courseTitle =
+  document.getElementById("courseTitle");
+
+const courseDescription =
+  document.getElementById("courseDescription");
+
+const courseInstructor =
+  document.getElementById("courseInstructor");
+
+const courseCategory =
+  document.getElementById("courseCategory");
+
+const courseLevel =
+  document.getElementById("courseLevel");
+
+
+/* ===============================
+   HELPERS
+================================ */
+
+function escapeHTML(value){
+
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+
+function showError(message){
+
+  errorBox.textContent = message;
+  errorBox.style.display = "block";
+}
+
+
+function formatDate(value){
+
+  if(!value) return "";
+
+  try{
+
+    let date;
+
+    if(
+      typeof value === "object" &&
+      typeof value.toDate === "function"
+    ){
+
+      date = value.toDate();
+
+    }else{
+
+      date = new Date(value);
+
+    }
+
+    if(isNaN(date.getTime())) return "";
+
+    return date.toLocaleDateString(
+      undefined,
+      {
+        year:"numeric",
+        month:"long",
+        day:"numeric"
+      }
+    );
+
+  }catch(error){
+
+    return "";
+
+  }
+}
+
+
+function getTimestamp(value){
+
+  if(!value) return 0;
+
+  try{
+
+    if(
+      typeof value === "object" &&
+      typeof value.toMillis === "function"
+    ){
+
+      return value.toMillis();
+
+    }
+
+    const time =
+      new Date(value).getTime();
+
+    return isNaN(time) ? 0 : time;
+
+  }catch(error){
+
+    return 0;
+
+  }
+}
+
+
+/* ===============================
+   LOAD COURSE
+================================ */
+
+async function loadCourse(){
+
+  if(!courseId){
+
+    throw new Error(
+      "No course ID was provided."
+    );
+
+  }
+
+  const courseRef =
+    doc(
+      db,
+      "premiumCourses",
+      courseId
+    );
+
+  const courseSnap =
+    await getDoc(courseRef);
+
+  if(!courseSnap.exists()){
+
+    throw new Error(
+      "The requested course could not be found."
+    );
+
+  }
+
+  courseData = {
+    id: courseSnap.id,
+    ...courseSnap.data()
+  };
+
+
+  document.title =
+    `${courseData.title || "Course"} Announcements | LetsStudy Pro`;
+
+
+  courseTitle.textContent =
+    courseData.title ||
+    "Course Announcements";
+
+  courseDescription.textContent =
+    courseData.description ||
+    "Stay updated with the latest course information.";
+
+  courseInstructor.textContent =
+    "👨‍🏫 " +
+    (courseData.instructor || "Instructor");
+
+  courseCategory.textContent =
+    "📚 " +
+    (courseData.category || "Course");
+
+  courseLevel.textContent =
+    "🎯 " +
+    (courseData.level || "All Levels");
+
+
+  /* NAVIGATION */
+
+  document.getElementById("lessonsLink").href =
+    `premium-lessons.html?courseId=${encodeURIComponent(courseId)}`;
+
+  document.getElementById("faqLink").href =
+    `premium-coursefaq.html?courseId=${encodeURIComponent(courseId)}`;
+
+  document.getElementById("questionsLink").href =
+    `premium-coursequestions.html?courseId=${encodeURIComponent(courseId)}`;
+}
+
+
+/* ===============================
+   LOAD ANNOUNCEMENTS
+================================ */
+
+async function loadAnnouncements(){
+
+  announcements = [];
+
+  try{
+
+    const announcementQuery =
+      query(
+        collection(
+          db,
+          "premiumCourseAnnouncements"
+        ),
+        where(
+          "courseId",
+          "==",
+          courseId
+        )
+      );
+
+    const snapshot =
+      await getDocs(
+        announcementQuery
+      );
+
+    announcements =
+      snapshot.docs
+        .map(item => ({
+          id:item.id,
+          ...item.data()
+        }))
+        .filter(
+          item =>
+            item.status === "published"
+        );
+
+  }catch(error){
+
+    /*
+      Fallback in case Firestore requires
+      an index or query fails.
+    */
+
+    console.warn(
+      "Filtered announcement query failed. Using fallback.",
+      error
+    );
+
+    const snapshot =
+      await getDocs(
+        collection(
+          db,
+          "premiumCourseAnnouncements"
+        )
+      );
+
+    announcements =
+      snapshot.docs
+        .map(item => ({
+          id:item.id,
+          ...item.data()
+        }))
+        .filter(
+          item =>
+            item.courseId === courseId &&
+            item.status === "published"
+        );
+  }
+
+
+  announcements.sort(
+    (a,b) => {
+
+      const orderA =
+        Number(a.order ?? 0);
+
+      const orderB =
+        Number(b.order ?? 0);
+
+      if(orderA !== orderB){
+
+        return orderA - orderB;
+
+      }
+
+      return (
+        getTimestamp(b.publishDate) -
+        getTimestamp(a.publishDate)
+      );
+
+    }
+  );
+
+
+  filteredAnnouncements =
+    [...announcements];
+
+  renderAnnouncements();
+}
+
+
+/* ===============================
+   RENDER ANNOUNCEMENTS
+================================ */
+
+function renderAnnouncements(){
+
+  announcementList.innerHTML = "";
+
+  if(!filteredAnnouncements.length){
+
+    announcementList.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">📢</div>
+        <h3>No announcements found</h3>
+        <p>
+          There are currently no published announcements
+          for this course.
+        </p>
+      </div>
+    `;
+
+    announcementCount.textContent =
+      "No announcements available.";
+
+    return;
+  }
+
+
+  announcementCount.textContent =
+    `${filteredAnnouncements.length} published announcement${
+      filteredAnnouncements.length === 1 ? "" : "s"
+    }`;
+
+
+  filteredAnnouncements.forEach(
+    item => {
+
+      const priority =
+        String(
+          item.priority || "normal"
+        ).toLowerCase();
+
+      const isImportant =
+        priority === "important" ||
+        priority === "high";
+
+
+      const date =
+        formatDate(
+          item.publishDate ||
+          item.createdAt
+        );
+
+
+      const card =
+        document.createElement("article");
+
+      card.className =
+        "announcement";
+
+
+      card.innerHTML = `
+
+        <div class="announcement-top">
+
+          <div>
+            <h3>
+              ${escapeHTML(
+                item.title ||
+                "Untitled Announcement"
+              )}
+            </h3>
+          </div>
+
+        </div>
+
+        <div class="message">
+          ${escapeHTML(
+            item.message ||
+            "No announcement message."
+          )}
+        </div>
+
+        <div class="badges">
+
+          <span class="badge ${
+            isImportant
+              ? "important"
+              : "normal"
+          }">
+
+            ${
+              isImportant
+                ? "⚠️ Important"
+                : "📢 Announcement"
+            }
+
+          </span>
+
+          ${
+            item.category
+              ? `
+                <span class="badge normal">
+                  ${escapeHTML(item.category)}
+                </span>
+              `
+              : ""
+          }
+
+        </div>
+
+        ${
+          date
+            ? `
+              <div class="date">
+                📅 Published ${escapeHTML(date)}
+              </div>
+            `
+            : ""
+        }
+
+      `;
+
+      announcementList.appendChild(card);
+
+    }
+  );
+}
+
+
+/* ===============================
+   SEARCH
+================================ */
+
+searchInput.addEventListener(
+  "input",
+  () => {
+
+    const term =
+      searchInput.value
+        .trim()
+        .toLowerCase();
+
+
+    filteredAnnouncements =
+      announcements.filter(
+        item => {
+
+          const text = [
+
+            item.title,
+            item.message,
+            item.category,
+            item.priority
+
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+
+          return text.includes(term);
+
+        }
+      );
+
+
+    renderAnnouncements();
+
+  }
+);
+
+
+/* ===============================
+   START APPLICATION
+================================ */
+
+async function init(){
+
+  try{
+
+    await loadCourse();
+
+    await loadAnnouncements();
+
+  }catch(error){
+
+    console.error(error);
+
+    showError(
+      error.message ||
+      "Unable to load course announcements."
+    );
+
+    announcementList.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">⚠️</div>
+
+        <h3>
+          Unable to load announcements
+        </h3>
+
+        <p>
+          Please check the course link and try again.
+        </p>
+      </div>
+    `;
+
+  }finally{
+
+    loading.style.display = "none";
+
+  }
+}
+
+
+init();
+
+</script>
+
+</body>
+</html>
