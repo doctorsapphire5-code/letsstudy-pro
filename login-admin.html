@@ -1300,93 +1300,91 @@ togglePassword.addEventListener(
    VERIFY ADMIN
 ========================================= */
 
-async function verifyAdmin(
-  user
-){
+async function verifyAdmin(user) {
 
-  if(!user){
+  /* =========================================
+     BASIC USER CHECK
+  ========================================= */
+
+  if (!user) {
 
     return {
-
-      allowed:false,
-
-      reason:
-        "No authenticated Firebase user."
-
+      allowed: false,
+      reason: "No authenticated Firebase user."
     };
 
   }
 
 
-  try{
+  try {
 
+    /* =========================================
+       FIREBASE AUTH UID
+    ========================================= */
 
     const uid =
+      String(user.uid || "").trim();
 
-      String(
-        user.uid || ""
-      ).trim();
+    const email =
+      String(user.email || "").trim().toLowerCase();
 
 
-    if(!uid){
+    console.log("========== ADMIN VERIFICATION ==========");
+    console.log("Firebase Auth UID:", uid);
+    console.log("Firebase Auth Email:", email);
+
+
+    if (!uid) {
 
       return {
-
-        allowed:false,
-
+        allowed: false,
         reason:
           "Firebase Authentication UID is missing."
-
       };
 
     }
 
 
-    /*
-      IMPORTANT
+    /* =========================================
+       FIRESTORE ADMIN DOCUMENT
 
-      Firestore:
+       Required path:
 
-      admins/{Firebase UID}
-    */
-
+       admins/{Firebase UID}
+    ========================================= */
 
     const adminRef =
-
       doc(
-
         db,
-
         "admins",
-
         uid
-
       );
+
+
+    console.log(
+      "Checking Firestore document:",
+      `admins/${uid}`
+    );
 
 
     const adminSnap =
-
-      await getDoc(
-        adminRef
-      );
+      await getDoc(adminRef);
 
 
-    if(
-      !adminSnap.exists()
-    ){
+    /* =========================================
+       ADMIN DOCUMENT NOT FOUND
+    ========================================= */
+
+    if (!adminSnap.exists()) {
 
       console.error(
-
         "ADMIN DOCUMENT NOT FOUND:",
-
         `admins/${uid}`
-
       );
-
 
       return {
 
-        allowed:false,
+        allowed: false,
 
         code:
           "ADMIN_DOCUMENT_NOT_FOUND",
@@ -1394,16 +1392,330 @@ async function verifyAdmin(
         reason:
           "Login successful, but this Firebase account is not registered as an administrator.",
 
-        uid:uid
+        uid: uid,
+
+        email: email
 
       };
 
     }
 
 
-    const adminData =
+    /* =========================================
+       READ ADMIN DATA
+    ========================================= */
 
+    const adminData =
       adminSnap.data() || {};
+
+
+    console.log(
+      "Admin document found:",
+      adminData
+    );
+
+
+    /* =========================================
+       NORMALIZE VALUES
+    ========================================= */
+
+    const adminUid =
+      String(
+        adminData.uid || ""
+      ).trim();
+
+
+    const adminEmail =
+      String(
+        adminData.email || ""
+      ).trim().toLowerCase();
+
+
+    const role =
+      String(
+        adminData.role || ""
+      ).trim().toLowerCase();
+
+
+    const status =
+      String(
+        adminData.status || ""
+      ).trim().toLowerCase();
+
+
+    console.log(
+      "Admin UID:",
+      adminUid
+    );
+
+    console.log(
+      "Admin Email:",
+      adminEmail
+    );
+
+    console.log(
+      "Admin Role:",
+      role
+    );
+
+    console.log(
+      "Admin Status:",
+      status
+    );
+
+
+    /* =========================================
+       UID SECURITY CHECK
+
+       Firestore document ID must match
+       Firebase Authentication UID.
+    ========================================= */
+
+    if (
+      adminUid &&
+      adminUid !== uid
+    ) {
+
+      console.error(
+        "ADMIN UID MISMATCH",
+        {
+          authUID: uid,
+          firestoreUID: adminUid
+        }
+      );
+
+
+      return {
+
+        allowed: false,
+
+        code:
+          "ADMIN_UID_MISMATCH",
+
+        reason:
+          "Administrator UID does not match the Firebase Authentication UID.",
+
+        uid: uid,
+
+        adminUid: adminUid
+
+      };
+
+    }
+
+
+    /* =========================================
+       ROLE CHECK
+    ========================================= */
+
+    const validRoles = [
+      "admin",
+      "administrator",
+      "superadmin"
+    ];
+
+
+    if (
+      !validRoles.includes(role)
+    ) {
+
+      console.error(
+        "INVALID ADMIN ROLE:",
+        role
+      );
+
+
+      return {
+
+        allowed: false,
+
+        code:
+          "INVALID_ADMIN_ROLE",
+
+        reason:
+          "This account does not have a valid administrator role.",
+
+        role: role
+
+      };
+
+    }
+
+
+    /* =========================================
+       STATUS CHECK
+    ========================================= */
+
+    if (
+      status !== "active"
+    ) {
+
+      console.error(
+        "ADMIN ACCOUNT NOT ACTIVE:",
+        status
+      );
+
+
+      return {
+
+        allowed: false,
+
+        code:
+          "ADMIN_NOT_ACTIVE",
+
+        reason:
+          `Administrator account status is "${adminData.status || "unknown"}".`,
+
+        status: status
+
+      };
+
+    }
+
+
+    /* =========================================
+       OPTIONAL EMAIL CHECK
+
+       Only check if Firestore has an email.
+    ========================================= */
+
+    if (
+      adminEmail &&
+      email &&
+      adminEmail !== email
+    ) {
+
+      console.error(
+        "ADMIN EMAIL MISMATCH",
+        {
+          authEmail: email,
+          firestoreEmail: adminEmail
+        }
+      );
+
+
+      return {
+
+        allowed: false,
+
+        code:
+          "ADMIN_EMAIL_MISMATCH",
+
+        reason:
+          "Administrator email does not match the authenticated Firebase account.",
+
+        authEmail: email,
+
+        adminEmail: adminEmail
+
+      };
+
+    }
+
+
+    /* =========================================
+       EVERYTHING PASSED
+    ========================================= */
+
+    console.log(
+      "✅ ADMIN VERIFIED SUCCESSFULLY"
+    );
+
+
+    return {
+
+      allowed: true,
+
+      uid: uid,
+
+      email: email,
+
+      adminData: adminData
+
+    };
+
+
+  } catch (error) {
+
+    console.error(
+      "ADMIN VERIFICATION ERROR:",
+      error
+    );
+
+
+    /* =========================================
+       FIRESTORE PERMISSION ERROR
+    ========================================= */
+
+    if (
+      error?.code ===
+      "permission-denied"
+    ) {
+
+      return {
+
+        allowed: false,
+
+        permissionError: true,
+
+        code:
+          "FIRESTORE_PERMISSION_DENIED",
+
+        reason:
+          "Firebase Authentication succeeded, but Firestore denied access to the administrator document."
+
+      };
+
+    }
+
+
+    /* =========================================
+       NETWORK ERROR
+    ========================================= */
+
+    if (
+      error?.code ===
+        "unavailable" ||
+      error?.code ===
+        "failed-precondition"
+    ) {
+
+      return {
+
+        allowed: false,
+
+        code:
+          "FIRESTORE_UNAVAILABLE",
+
+        reason:
+          "Unable to connect to Cloud Firestore. Check your internet connection and try again."
+
+      };
+
+    }
+
+
+    /* =========================================
+       GENERIC ERROR
+    ========================================= */
+
+    return {
+
+      allowed: false,
+
+      code:
+        error?.code ||
+        "ADMIN_VERIFICATION_ERROR",
+
+      reason:
+        error?.message ||
+        "Unable to verify administrator."
+
+    };
+
+  }
+
+}
 
 
 
