@@ -16,6 +16,11 @@
   content="Premium learning analysis and performance insights on LetsStudy Pro."
 >
 
+<meta
+  name="robots"
+  content="noindex,nofollow"
+>
+
 <style>
 
 *{
@@ -54,12 +59,27 @@ header{
   color:#2563eb;
 }
 
-.back{
+.header-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.back,
+.login-btn{
   border:0;
   background:#eef2f7;
+  color:#172033;
   padding:9px 14px;
   border-radius:8px;
   cursor:pointer;
+  font-size:12px;
+  font-weight:700;
+}
+
+.login-btn{
+  background:#2563eb;
+  color:#fff;
 }
 
 .container{
@@ -95,6 +115,20 @@ header{
   border-radius:7px;
   font-size:10px;
   font-weight:800;
+}
+
+.user-info{
+  margin-top:14px;
+  background:#f8fafc;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  padding:11px 13px;
+  font-size:11px;
+  color:#64748b;
+}
+
+.user-info strong{
+  color:#172033;
 }
 
 .grid{
@@ -160,7 +194,9 @@ header{
 .bar span{
   display:block;
   height:100%;
+  width:0%;
   background:#2563eb;
+  transition:width .4s ease;
 }
 
 .insights{
@@ -196,6 +232,10 @@ header{
   padding:25px;
 }
 
+.upgrade h2{
+  font-size:20px;
+}
+
 .upgrade p{
   color:#cbd5e1;
   font-size:12px;
@@ -216,7 +256,8 @@ header{
 }
 
 .loading,
-.error{
+.error,
+.auth-message{
   background:#fff;
   border:1px solid #e5e7eb;
   border-radius:15px;
@@ -227,6 +268,30 @@ header{
 
 .error{
   color:#b91c1c;
+}
+
+.auth-message h3{
+  color:#172033;
+  margin-bottom:8px;
+}
+
+.auth-message p{
+  font-size:13px;
+  line-height:1.5;
+  margin-bottom:18px;
+}
+
+.uid-box{
+  margin:15px auto;
+  max-width:520px;
+  background:#f8fafc;
+  border:1px solid #e5e7eb;
+  border-radius:9px;
+  padding:12px;
+  font-family:monospace;
+  font-size:11px;
+  word-break:break-all;
+  color:#475569;
 }
 
 .hidden{
@@ -243,6 +308,14 @@ header{
 
 @media(max-width:550px){
 
+  header{
+    padding:0 4%;
+  }
+
+  .logo{
+    font-size:18px;
+  }
+
   .grid,
   .insights{
     grid-template-columns:1fr;
@@ -250,6 +323,16 @@ header{
 
   .container{
     width:94%;
+  }
+
+  .header-actions{
+    gap:5px;
+  }
+
+  .back,
+  .login-btn{
+    padding:8px 10px;
+    font-size:10px;
   }
 
 }
@@ -272,12 +355,26 @@ header{
   </a>
 
 
-  <button
-    class="back"
-    onclick="history.back()"
-  >
-    Back
-  </button>
+  <div class="header-actions">
+
+    <button
+      id="loginButton"
+      class="login-btn hidden"
+      type="button"
+    >
+      Login
+    </button>
+
+
+    <button
+      id="backButton"
+      class="back"
+      type="button"
+    >
+      Back
+    </button>
+
+  </div>
 
 </header>
 
@@ -290,7 +387,33 @@ header{
     id="loading"
     class="loading"
   >
-    Loading analysis...
+    Checking your Firebase account...
+  </div>
+
+
+
+  <div
+    id="authMessage"
+    class="auth-message hidden"
+  >
+
+    <h3>
+      Login Required
+    </h3>
+
+    <p>
+      Please sign in to your LetsStudy Pro account
+      to view your learning analysis.
+    </p>
+
+    <button
+      id="authLoginButton"
+      class="login-btn"
+      type="button"
+    >
+      Go to Login
+    </button>
+
   </div>
 
 
@@ -315,6 +438,17 @@ header{
         Understand your progress, performance,
         strengths and areas that need improvement.
       </p>
+
+
+      <div class="user-info">
+
+        Firebase User ID:
+
+        <strong id="firebaseUserId">
+          Loading...
+        </strong>
+
+      </div>
 
     </section>
 
@@ -401,10 +535,11 @@ header{
         </div>
 
         <div class="bar">
+
           <span
             id="courseBar"
-            style="width:0%"
           ></span>
+
         </div>
 
       </div>
@@ -425,10 +560,11 @@ header{
         </div>
 
         <div class="bar">
+
           <span
             id="quizBar"
-            style="width:0%"
           ></span>
+
         </div>
 
       </div>
@@ -449,10 +585,11 @@ header{
         </div>
 
         <div class="bar">
+
           <span
             id="assignmentBar"
-            style="width:0%"
           ></span>
+
         </div>
 
       </div>
@@ -508,68 +645,91 @@ header{
 
 
 
-<script>
+<script type="module">
+
 
 /*
 ==================================================
-LETSSTUDY PRO PREMIUM ANALYSIS
-
-URL:
-
-premium-analysis.html
-
-OPTIONAL:
-
-premium-analysis.html?userId=USER_ID
-
-API:
-
-GET /api/learning/analysis?userId=...
-
-EXPECTED:
-
-{
-  premium:true,
-
-  coursesCompleted:10,
-
-  lessonsCompleted:85,
-
-  learningHours:42,
-
-  averageScore:78,
-
-  courseProgress:82,
-
-  quizPerformance:76,
-
-  assignmentPerformance:71,
-
-  insights:[
-    {
-      title:"Strong Area",
-      text:"..."
-    }
-  ]
-}
-
+FIREBASE IMPORTS
 ==================================================
 */
 
+import {
+  initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
-const params =
-  new URLSearchParams(
-    location.search
+
+import {
+  getAuth,
+  onAuthStateChanged
+}
+from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+
+
+/*
+==================================================
+FIREBASE CONFIG
+==================================================
+*/
+
+const firebaseConfig = {
+
+  apiKey:
+    "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+  authDomain:
+    "let-s-study-pro-course.firebaseapp.com",
+
+  databaseURL:
+    "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+  projectId:
+    "let-s-study-pro-course",
+
+  storageBucket:
+    "let-s-study-pro-course.firebasestorage.app",
+
+  messagingSenderId:
+    "474928293390",
+
+  appId:
+    "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+  measurementId:
+    "G-85B7V5H5J0"
+
+};
+
+
+
+/*
+==================================================
+INITIALIZE FIREBASE
+==================================================
+*/
+
+const app =
+  initializeApp(
+    firebaseConfig
   );
 
 
-const userId =
-  params.get("userId") ||
-  localStorage.getItem(
-    "userId"
-  ) ||
-  "";
+const auth =
+  getAuth(
+    app
+  );
 
+
+
+/*
+==================================================
+DOM ELEMENTS
+==================================================
+*/
 
 const loading =
   document.getElementById(
@@ -583,46 +743,337 @@ const content =
   );
 
 
+const authMessage =
+  document.getElementById(
+    "authMessage"
+  );
+
+
+const loginButton =
+  document.getElementById(
+    "loginButton"
+  );
+
+
+const authLoginButton =
+  document.getElementById(
+    "authLoginButton"
+  );
+
+
 const upgrade =
   document.getElementById(
     "upgrade"
   );
 
 
-loadAnalysis();
+const firebaseUserId =
+  document.getElementById(
+    "firebaseUserId"
+  );
 
 
-/* =========================
-   LOAD ANALYSIS
-========================= */
 
-async function loadAnalysis(){
+/*
+==================================================
+MANUAL BACK BUTTON
+==================================================
+*/
+
+document
+  .getElementById(
+    "backButton"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      if(
+        history.length > 1
+      ){
+
+        history.back();
+
+      }else{
+
+        window.location.href =
+          "premium.html";
+
+      }
+
+    }
+  );
+
+
+
+/*
+==================================================
+MANUAL LOGIN
+==================================================
+*/
+
+loginButton
+  .addEventListener(
+    "click",
+    () => {
+
+      window.location.href =
+        "login.html";
+
+    }
+  );
+
+
+authLoginButton
+  .addEventListener(
+    "click",
+    () => {
+
+      window.location.href =
+        "login.html";
+
+    }
+  );
+
+
+
+/*
+==================================================
+FIREBASE AUTH STATE
+==================================================
+
+Firebase User ID = user.uid
+
+==================================================
+*/
+
+onAuthStateChanged(
+  auth,
+  async user => {
+
+    if(!user){
+
+      showLoginRequired();
+
+      return;
+
+    }
+
+
+    /*
+    ----------------------------------------------
+    FIREBASE USER ID
+    ----------------------------------------------
+    */
+
+    const userId =
+      user.uid;
+
+
+    console.log(
+      "LetsStudy Pro Firebase User ID:",
+      userId
+    );
+
+
+    /*
+    ----------------------------------------------
+    SHOW USER ID
+    ----------------------------------------------
+    */
+
+    firebaseUserId
+      .textContent =
+      userId;
+
+
+    loginButton
+      .classList
+      .add(
+        "hidden"
+      );
+
+
+    /*
+    ----------------------------------------------
+    LOAD USER ANALYSIS
+    ----------------------------------------------
+    */
+
+    await loadAnalysis(
+      user,
+      userId
+    );
+
+  }
+);
+
+
+
+/*
+==================================================
+LOGIN REQUIRED
+==================================================
+*/
+
+function showLoginRequired(){
+
+  loading
+    .classList
+    .add(
+      "hidden"
+    );
+
+
+  content
+    .classList
+    .add(
+      "hidden"
+    );
+
+
+  authMessage
+    .classList
+    .remove(
+      "hidden"
+    );
+
+
+  loginButton
+    .classList
+    .remove(
+      "hidden"
+    );
+
+}
+
+
+
+/*
+==================================================
+LOAD ANALYSIS
+==================================================
+*/
+
+async function loadAnalysis(
+  user,
+  userId
+){
+
+  loading
+    .classList
+    .remove(
+      "hidden"
+    );
+
+
+  authMessage
+    .classList
+    .add(
+      "hidden"
+    );
+
+
+  content
+    .classList
+    .add(
+      "hidden"
+    );
+
 
   try{
 
+
+    /*
+    ----------------------------------------------
+    GET FIREBASE ID TOKEN
+    ----------------------------------------------
+    */
+
+    const idToken =
+      await user.getIdToken();
+
+
+
+    /*
+    ----------------------------------------------
+    API URL
+    ----------------------------------------------
+
+    Firebase UID is used as userId.
+
+    ----------------------------------------------
+    */
+
     const url =
-      "/api/learning/analysis" +
-      (
+      "/api/learning/analysis?userId=" +
+      encodeURIComponent(
         userId
-        ? "?userId=" +
-          encodeURIComponent(
-            userId
-          )
-        : ""
       );
 
+
+
+    /*
+    ----------------------------------------------
+    API REQUEST
+    ----------------------------------------------
+    */
 
     const response =
       await fetch(
-        url
+        url,
+        {
+
+          method:
+            "GET",
+
+          headers:{
+
+            "Authorization":
+              "Bearer " +
+              idToken,
+
+            "Accept":
+              "application/json"
+
+          }
+
+        }
       );
 
 
-    const result =
-      await response.json();
+
+    /*
+    ----------------------------------------------
+    PARSE RESPONSE
+    ----------------------------------------------
+    */
+
+    let result = {};
 
 
-    if(!response.ok){
+    try{
+
+      result =
+        await response.json();
+
+    }catch{
+
+      result = {};
+
+    }
+
+
+
+    /*
+    ----------------------------------------------
+    API ERROR
+    ----------------------------------------------
+    */
+
+    if(
+      !response.ok
+    ){
 
       throw new Error(
         result.error ||
@@ -632,15 +1083,52 @@ async function loadAnalysis(){
     }
 
 
+
+    /*
+    ----------------------------------------------
+    ANALYSIS DATA
+    ----------------------------------------------
+    */
+
     const data =
       result.analysis ||
       result;
 
 
+
     /*
-    ------------------------------------------
+    ----------------------------------------------
+    OPTIONAL UID VALIDATION
+    ----------------------------------------------
+
+    If backend returns a userId,
+    make sure it belongs to the
+    Firebase account currently logged in.
+
+    ----------------------------------------------
+    */
+
+    if(
+      data.userId &&
+      String(
+        data.userId
+      ) !== String(
+        userId
+      )
+    ){
+
+      throw new Error(
+        "The analysis account does not match your Firebase account."
+      );
+
+    }
+
+
+
+    /*
+    ----------------------------------------------
     PREMIUM CHECK
-    ------------------------------------------
+    ----------------------------------------------
     */
 
     if(
@@ -655,6 +1143,13 @@ async function loadAnalysis(){
     }
 
 
+
+    /*
+    ----------------------------------------------
+    RENDER
+    ----------------------------------------------
+    */
+
     renderAnalysis(
       data
     );
@@ -662,7 +1157,9 @@ async function loadAnalysis(){
 
   }catch(error){
 
+
     console.error(
+      "Premium Analysis Error:",
       error
     );
 
@@ -677,7 +1174,9 @@ async function loadAnalysis(){
 
         <p style="margin-top:7px">
           ${escapeHTML(
-            error.message
+            getReadableError(
+              error
+            )
           )}
         </p>
 
@@ -690,16 +1189,21 @@ async function loadAnalysis(){
 }
 
 
-/* =========================
-   RENDER
-========================= */
+
+/*
+==================================================
+RENDER ANALYSIS
+==================================================
+*/
 
 function renderAnalysis(
   data
 ){
 
+
   setText(
     "courses",
+
     data.coursesCompleted ??
     data.completedCourses ??
     0
@@ -708,6 +1212,7 @@ function renderAnalysis(
 
   setText(
     "lessons",
+
     data.lessonsCompleted ??
     data.completedLessons ??
     0
@@ -716,10 +1221,12 @@ function renderAnalysis(
 
   setText(
     "hours",
+
     data.learningHours ??
     data.hours ??
     0
   );
+
 
 
   const score =
@@ -736,9 +1243,11 @@ function renderAnalysis(
   );
 
 
+
   setProgress(
     "courseProgress",
     "courseBar",
+
     data.courseProgress ??
     0
   );
@@ -747,6 +1256,7 @@ function renderAnalysis(
   setProgress(
     "quizProgress",
     "quizBar",
+
     data.quizPerformance ??
     0
   );
@@ -755,9 +1265,11 @@ function renderAnalysis(
   setProgress(
     "assignmentProgress",
     "assignmentBar",
+
     data.assignmentPerformance ??
     0
   );
+
 
 
   renderInsights(
@@ -765,21 +1277,29 @@ function renderAnalysis(
   );
 
 
-  loading.classList.add(
-    "hidden"
-  );
+
+  loading
+    .classList
+    .add(
+      "hidden"
+    );
 
 
-  content.classList.remove(
-    "hidden"
-  );
+  content
+    .classList
+    .remove(
+      "hidden"
+    );
 
 }
 
 
-/* =========================
-   INSIGHTS
-========================= */
+
+/*
+==================================================
+INSIGHTS
+==================================================
+*/
 
 function renderInsights(
   insights
@@ -801,31 +1321,43 @@ function renderInsights(
     insights = [
 
       {
+
         title:
           "Keep Learning",
+
         text:
           "Continue completing lessons consistently to improve your learning progress."
+
       },
 
       {
+
         title:
           "Review Weak Areas",
+
         text:
           "Revisit topics where your quiz and assignment scores are lower."
+
       },
 
       {
+
         title:
           "Stay Consistent",
+
         text:
           "Regular study sessions can help you maintain steady progress."
+
       },
 
       {
+
         title:
           "Challenge Yourself",
+
         text:
           "Try advanced lessons and assessments after mastering the fundamentals."
+
       }
 
     ];
@@ -833,9 +1365,13 @@ function renderInsights(
   }
 
 
+
   box.innerHTML =
     insights
-      .slice(0,6)
+      .slice(
+        0,
+        6
+      )
       .map(
         insight => `
 
@@ -865,20 +1401,27 @@ function renderInsights(
 }
 
 
-/* =========================
-   FREE USER
-========================= */
+
+/*
+==================================================
+FREE USER
+==================================================
+*/
 
 function renderFree(){
 
-  loading.classList.add(
-    "hidden"
-  );
+  loading
+    .classList
+    .add(
+      "hidden"
+    );
 
 
-  content.classList.remove(
-    "hidden"
-  );
+  content
+    .classList
+    .remove(
+      "hidden"
+    );
 
 
   document
@@ -886,23 +1429,33 @@ function renderFree(){
       ".stat,.panel"
     )
     .forEach(
-      element =>
-        element.classList.add(
-          "hidden"
-        )
+      element => {
+
+        element
+          .classList
+          .add(
+            "hidden"
+          );
+
+      }
     );
 
 
-  upgrade.classList.remove(
-    "hidden"
-  );
+  upgrade
+    .classList
+    .remove(
+      "hidden"
+    );
 
 }
 
 
-/* =========================
-   PROGRESS
-========================= */
+
+/*
+==================================================
+PROGRESS
+==================================================
+*/
 
 function setProgress(
   textId,
@@ -938,9 +1491,12 @@ function setProgress(
 }
 
 
-/* =========================
-   HELPERS
-========================= */
+
+/*
+==================================================
+SAFE PERCENT
+==================================================
+*/
 
 function safePercent(
   value
@@ -976,6 +1532,13 @@ function safePercent(
 }
 
 
+
+/*
+==================================================
+SET TEXT
+==================================================
+*/
+
 function setText(
   id,
   value
@@ -996,6 +1559,13 @@ function setText(
 
 }
 
+
+
+/*
+==================================================
+ESCAPE HTML
+==================================================
+*/
 
 function escapeHTML(
   value
@@ -1023,6 +1593,102 @@ function escapeHTML(
   .replace(
     /'/g,
     "&#039;"
+  );
+
+}
+
+
+/*
+==================================================
+READABLE ERRORS
+==================================================
+*/
+
+function getReadableError(
+  error
+){
+
+  const message =
+    String(
+      error?.message ||
+      ""
+    );
+
+
+  const lower =
+    message.toLowerCase();
+
+
+  if(
+    lower.includes(
+      "401"
+    ) ||
+    lower.includes(
+      "unauthorized"
+    )
+  ){
+
+    return(
+      "Your Firebase login session is invalid or has expired. Please login again."
+    );
+
+  }
+
+
+  if(
+    lower.includes(
+      "403"
+    ) ||
+    lower.includes(
+      "forbidden"
+    ) ||
+    lower.includes(
+      "permission"
+    )
+  ){
+
+    return(
+      "You do not have permission to access Premium Analysis."
+    );
+
+  }
+
+
+  if(
+    lower.includes(
+      "network"
+    ) ||
+    lower.includes(
+      "failed to fetch"
+    )
+  ){
+
+    return(
+      "Network error. Please check your internet connection and try again."
+    );
+
+  }
+
+
+  if(
+    lower.includes(
+      "premium"
+    ) &&
+    lower.includes(
+      "required"
+    )
+  ){
+
+    return(
+      "Premium membership is required to access this analysis."
+    );
+
+  }
+
+
+  return(
+    message ||
+    "Something went wrong while loading your analysis."
   );
 
 }
