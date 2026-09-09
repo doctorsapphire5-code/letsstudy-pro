@@ -1496,31 +1496,90 @@ document
 ========================================= */
 
 /*
-     * EXISTING SESSION
-     */
+     onAuthStateChanged(
+  auth,
+  async user => {
 
-    onAuthStateChanged(
-      auth,
-      user => {
+    if(!user){
 
-        if (!user) {
-          return;
-        }
+      window.location.href =
+        "login-admin.html";
 
-        /*
-         * No role check.
-         * No Firestore admin check.
-         *
-         * Any successfully authenticated
-         * Firebase user can continue.
-         */
+      return;
 
-        window.location.replace(
-          "admin-dashboard.html"
+    }
+
+    try{
+
+      const adminRef =
+        doc(
+          db,
+          "admins",
+          user.uid
         );
 
+      const adminSnap =
+        await getDoc(adminRef);
+
+
+      if(!adminSnap.exists()){
+
+        await signOut(auth);
+
+        window.location.href =
+          "login-admin.html";
+
+        return;
+
       }
-    );
+
+
+      const admin =
+        adminSnap.data();
+
+
+      if(
+        admin.role &&
+        admin.role !== "admin"
+      ){
+
+        await signOut(auth);
+
+        window.location.href =
+          "login-admin.html";
+
+        return;
+
+      }
+
+
+      currentAdmin = user;
+
+      adminEmail.textContent =
+        user.email || "Administrator";
+
+      authScreen.style.display =
+        "none";
+
+      await loadCommunities();
+
+    }catch(error){
+
+      console.error(error);
+
+      alert(
+        "Unable to verify administrator access."
+      );
+
+      await signOut(auth);
+
+      window.location.href =
+        "login-admin.html";
+
+    }
+
+  }
+);
 
   </script>
 
