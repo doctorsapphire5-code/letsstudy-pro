@@ -62,6 +62,15 @@ body{
   font-size:13px;
 }
 
+.user-info{
+  margin-top:14px;
+  padding:10px 12px;
+  border-radius:9px;
+  background:#f8fafc;
+  color:#64748b;
+  font-size:12px;
+}
+
 .message{
   display:none;
   padding:12px 14px;
@@ -379,6 +388,7 @@ button:disabled{
 <div class="container">
 
   <div class="header">
+
     <div class="header-top">
 
       <div class="header-icon">
@@ -387,10 +397,15 @@ button:disabled{
 
       <div>
         <h1>Admin Lessons</h1>
-        <p>Manage course lessons</p>
+        <p>Manage your course lessons</p>
       </div>
 
     </div>
+
+    <div id="userInfo" class="user-info">
+      Checking administrator authentication...
+    </div>
+
   </div>
 
   <div id="message" class="message"></div>
@@ -428,70 +443,104 @@ button:disabled{
     <div class="form-grid">
 
       <div class="field">
+
         <label>Course</label>
 
         <select id="courseId">
           <option value="">Select course</option>
         </select>
+
       </div>
 
       <div class="field">
+
         <label>Module</label>
 
         <select id="moduleId">
           <option value="">Select module</option>
         </select>
+
       </div>
 
       <div class="field">
+
         <label>Lesson Title</label>
 
         <input
           id="title"
           type="text"
           placeholder="Lesson title">
+
       </div>
 
       <div class="field">
+
         <label>Lesson Type</label>
 
         <select id="type">
-          <option value="video">Video</option>
-          <option value="text">Text</option>
-          <option value="pdf">PDF</option>
-          <option value="audio">Audio</option>
-          <option value="live">Live</option>
-          <option value="other">Other</option>
+
+          <option value="video">
+            Video
+          </option>
+
+          <option value="text">
+            Text
+          </option>
+
+          <option value="pdf">
+            PDF
+          </option>
+
+          <option value="audio">
+            Audio
+          </option>
+
+          <option value="live">
+            Live
+          </option>
+
+          <option value="other">
+            Other
+          </option>
+
         </select>
+
       </div>
 
       <div class="field full">
+
         <label>Description</label>
 
         <textarea
           id="description"
           placeholder="Lesson description"></textarea>
+
       </div>
 
       <div class="field full">
+
         <label>Content URL</label>
 
         <input
           id="contentUrl"
           type="url"
           placeholder="https://...">
+
       </div>
 
       <div class="field">
+
         <label>Duration</label>
 
         <input
           id="duration"
           type="text"
           placeholder="10:30">
+
       </div>
 
       <div class="field">
+
         <label>Order</label>
 
         <input
@@ -499,17 +548,33 @@ button:disabled{
           type="number"
           min="1"
           value="1">
+
       </div>
 
       <div class="field">
+
         <label>Status</label>
 
         <select id="status">
-          <option value="draft">Draft</option>
-          <option value="published">Published</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
+
+          <option value="draft">
+            Draft
+          </option>
+
+          <option value="published">
+            Published
+          </option>
+
+          <option value="active">
+            Active
+          </option>
+
+          <option value="inactive">
+            Inactive
+          </option>
+
         </select>
+
       </div>
 
     </div>
@@ -519,7 +584,8 @@ button:disabled{
       <button
         id="saveBtn"
         class="btn-primary"
-        type="button">
+        type="button"
+        disabled>
 
         <i class="fa-solid fa-plus"></i>
         Add Lesson
@@ -545,7 +611,7 @@ button:disabled{
     <div class="list-header">
 
       <div class="list-title">
-        Course Lessons
+        My Course Lessons
       </div>
 
       <input
@@ -559,9 +625,13 @@ button:disabled{
     <div id="lessonsList">
 
       <div class="loading">
+
         <i class="fa-solid fa-spinner fa-spin"></i>
+
         <br><br>
-        Loading lessons...
+
+        Checking authentication...
+
       </div>
 
     </div>
@@ -569,6 +639,7 @@ button:disabled{
   </div>
 
 </div>
+
 
 <script type="module">
 
@@ -590,7 +661,9 @@ import {
   updateDoc,
   deleteDoc,
   doc,
-  serverTimestamp
+  serverTimestamp,
+  query,
+  where
 }
 from
 "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
@@ -710,15 +783,22 @@ const videoLessons =
 const formTitle =
   document.getElementById("formTitle");
 
+const userInfo =
+  document.getElementById("userInfo");
+
 
 /* =====================================================
    STATE
 ===================================================== */
 
 let lessons = [];
+
 let courses = [];
+
 let modules = [];
+
 let editingLessonId = null;
+
 let currentUser = null;
 
 
@@ -731,9 +811,13 @@ function escapeHTML(value){
   return String(value ?? "")
 
     .replaceAll("&","&amp;")
+
     .replaceAll("<","&lt;")
+
     .replaceAll(">","&gt;")
+
     .replaceAll('"',"&quot;")
+
     .replaceAll("'","&#039;");
 }
 
@@ -747,7 +831,8 @@ function showMessage(
   type = "success"
 ){
 
-  message.textContent = text;
+  message.textContent =
+    text;
 
   message.className =
     "message " + type;
@@ -773,7 +858,9 @@ function getCourseName(courseId){
   const course =
     courses.find(
       item =>
-        item.id === courseId
+        String(item.id)
+        ===
+        String(courseId)
     );
 
   return course
@@ -782,7 +869,8 @@ function getCourseName(courseId){
         course.name ||
         course.id
       )
-    : courseId || "Unknown Course";
+    : courseId ||
+      "Unknown Course";
 }
 
 
@@ -795,7 +883,9 @@ function getModuleName(moduleId){
   const module =
     modules.find(
       item =>
-        item.id === moduleId
+        String(item.id)
+        ===
+        String(moduleId)
     );
 
   return module
@@ -804,7 +894,8 @@ function getModuleName(moduleId){
         module.name ||
         module.id
       )
-    : moduleId || "Unknown Module";
+    : moduleId ||
+      "Unknown Module";
 }
 
 
@@ -814,79 +905,64 @@ function getModuleName(moduleId){
 
 async function loadCourses(){
 
-  try{
+  const snapshot =
+    await getDocs(
+      collection(
+        db,
+        "courses"
+      )
+    );
 
-    const snapshot =
-      await getDocs(
-        collection(
-          db,
-          "courses"
-        )
-      );
+  courses =
+    snapshot.docs.map(
+      item => ({
+        id:item.id,
+        ...item.data()
+      })
+    );
 
-    courses =
-      snapshot.docs.map(
-        item => ({
-          id:item.id,
-          ...item.data()
-        })
-      );
-
-    courses.sort(
-      (a,b) =>
+  courses.sort(
+    (a,b) =>
+      String(
+        a.title ||
+        a.name ||
+        ""
+      ).localeCompare(
         String(
-          a.title ||
-          a.name ||
+          b.title ||
+          b.name ||
           ""
-        ).localeCompare(
-          String(
-            b.title ||
-            b.name ||
-            ""
-          )
         )
-    );
+      )
+  );
 
-    courseSelect.innerHTML = `
-      <option value="">
-        Select course
-      </option>
-    `;
+  courseSelect.innerHTML = `
+    <option value="">
+      Select course
+    </option>
+  `;
 
-    courses.forEach(
-      course => {
+  courses.forEach(
+    course => {
 
-        const option =
-          document.createElement(
-            "option"
-          );
-
-        option.value =
-          course.id;
-
-        option.textContent =
-          course.title ||
-          course.name ||
-          course.id;
-
-        courseSelect.appendChild(
-          option
+      const option =
+        document.createElement(
+          "option"
         );
-      }
-    );
 
-  }catch(error){
+      option.value =
+        course.id;
 
-    console.error(
-      "Courses error:",
-      error
-    );
+      option.textContent =
+        course.title ||
+        course.name ||
+        course.id;
 
-    showMessage(
-      "Unable to load courses.",
-      "error"
-    );
-  }
+      courseSelect.appendChild(
+        option
+      );
+    }
+  );
 }
 
 
@@ -896,70 +972,53 @@ async function loadCourses(){
 
 async function loadModules(){
 
-  try{
+  const snapshot =
+    await getDocs(
+      collection(
+        db,
+        "modules"
+      )
+    );
 
-    const snapshot =
-      await getDocs(
-        collection(
-          db,
-          "modules"
-        )
-      );
+  modules =
+    snapshot.docs.map(
+      item => ({
+        id:item.id,
+        ...item.data()
+      })
+    );
 
-    modules =
-      snapshot.docs.map(
-        item => ({
-          id:item.id,
-          ...item.data()
-        })
-      );
+  modules.sort(
+    (a,b) => {
 
-    modules.sort(
-      (a,b) => {
+      const courseA =
+        String(
+          a.courseId || ""
+        );
 
-        const courseA =
-          String(
-            a.courseId || ""
-          );
+      const courseB =
+        String(
+          b.courseId || ""
+        );
 
-        const courseB =
-          String(
-            b.courseId || ""
-          );
+      if(courseA !== courseB){
 
-        if(
-          courseA !== courseB
-        ){
-
-          return courseA.localeCompare(
-            courseB
-          );
-        }
-
-        return Number(
-          a.order || 0
-        )
-        -
-        Number(
-          b.order || 0
+        return courseA.localeCompare(
+          courseB
         );
       }
-    );
 
-    updateModuleSelect();
+      return Number(
+        a.order || 0
+      )
+      -
+      Number(
+        b.order || 0
+      );
+    }
+  );
 
-  }catch(error){
-
-    console.error(
-      "Modules error:",
-      error
-    );
-
-    showMessage(
-      "Unable to load modules.",
-      "error"
-    );
-  }
+  updateModuleSelect();
 }
 
 
@@ -1050,22 +1109,70 @@ courseSelect.addEventListener(
 
 async function loadLessons(){
 
+  if(!currentUser){
+
+    lessons = [];
+
+    updateStats();
+
+    lessonsList.innerHTML = `
+      <div class="empty">
+
+        <i class="fa-solid fa-lock"></i>
+
+        <br>
+
+        <strong>Authentication Required</strong>
+
+        <br><br>
+
+        Please sign in as an administrator.
+
+      </div>
+    `;
+
+    return;
+  }
+
   lessonsList.innerHTML = `
     <div class="loading">
+
       <i class="fa-solid fa-spinner fa-spin"></i>
+
       <br><br>
-      Loading lessons...
+
+      Loading your lessons...
+
     </div>
   `;
 
   try{
 
-    const snapshot =
-      await getDocs(
+    /*
+      IMPORTANT:
+
+      Firebase Auth UID is the source
+      of the owner ID.
+
+      We NEVER take the UID from URL.
+    */
+
+    const lessonsQuery =
+      query(
         collection(
           db,
           "lessons"
+        ),
+        where(
+          "ownerId",
+          "==",
+          currentUser.uid
         )
+      );
+
+    const snapshot =
+      await getDocs(
+        lessonsQuery
       );
 
     lessons =
@@ -1128,6 +1235,7 @@ async function loadLessons(){
     );
 
     updateStats();
+
     renderLessons();
 
   }catch(error){
@@ -1143,17 +1251,26 @@ async function loadLessons(){
 
     lessonsList.innerHTML = `
       <div class="empty">
+
         <i class="fa-solid fa-triangle-exclamation"></i>
+
         <br>
+
         <strong>Unable to Load Lessons</strong>
+
         <br><br>
-        Unable to load course lessons.
+
+        Unable to load your lessons.
+
         <br><br>
+
         <small>
           ${escapeHTML(
-            error.message || "Permission denied"
+            error.message ||
+            "Permission denied"
           )}
         </small>
+
       </div>
     `;
   }
@@ -1231,22 +1348,28 @@ function renderLessons(){
         if(!search)
           return true;
 
-        const text =
-  [
-    lesson.title,
-    lesson.description,
-    lesson.type,
-    lesson.status,
-    lesson.courseId,
-    lesson.moduleId,
-    lesson.contentUrl,
-    getCourseName(lesson.courseId),
-    getModuleName(lesson.moduleId)
-  ]
-  .join(" ")
-  .toLowerCase();
+        const text = [
 
-return text.includes(search);
+          lesson.title,
+          lesson.description,
+          lesson.type,
+          lesson.status,
+          lesson.duration,
+          lesson.courseId,
+          lesson.moduleId,
+          lesson.id
+
+        ]
+        .map(
+          val =>
+            String(
+              val ?? ""
+            )
+            .toLowerCase()
+        )
+        .join(" ");
+
+        return text.includes(search);
       }
     );
 
@@ -1254,9 +1377,27 @@ return text.includes(search);
 
     lessonsList.innerHTML = `
       <div class="empty">
+
         <i class="fa-solid fa-book-open"></i>
+
         <br>
-        No lessons found.
+
+        <strong>
+          ${
+            search
+              ? "No lessons found"
+              : "No lessons yet"
+          }
+        </strong>
+
+        <br><br>
+
+        ${
+          search
+            ? "Try another search."
+            : "Create your first lesson above."
+        }
+
       </div>
     `;
 
@@ -1264,212 +1405,622 @@ return text.includes(search);
   }
 
   lessonsList.innerHTML =
-    filtered.map(lesson => {
+    filtered.map(
+      lesson => {
 
-      const statusClass =
-        String(
-          lesson.status || "draft"
-        )
-        .toLowerCase()
-        .replace(/\s+/g, "-");
+        const status =
+          String(
+            lesson.status ||
+            "draft"
+          )
+          .toLowerCase();
 
-      const statusText =
-        String(
-          lesson.status || "draft"
-        );
-
-      const typeText =
-        String(
-          lesson.type || "other"
-        );
-
-      const typeIcon =
-        typeText.toLowerCase() === "video"
-          ? "video"
-          : typeText.toLowerCase() === "audio"
-          ? "volume-high"
-          : typeText.toLowerCase() === "pdf"
-          ? "file-pdf"
-          : "file-lines";
-
-      return `
-        <div class="lesson">
-
-          <div class="lesson-order">
-            ${escapeHTML(
-              lesson.order || 1
-            )}
-          </div>
-
-          <div class="lesson-content">
-
-            <div class="lesson-title">
-              ${escapeHTML(
-                lesson.title ||
-                "Untitled Lesson"
-              )}
-            </div>
-
-            <div class="lesson-description">
-              ${escapeHTML(
-                lesson.description ||
-                "No description"
-              )}
-            </div>
-
-            <div class="meta">
-
-              <span class="badge">
-                <i class="fa-solid fa-graduation-cap"></i>
-                ${escapeHTML(
-                  getCourseName(
-                    lesson.courseId
-                  )
-                )}
-              </span>
-
-              <span class="badge">
-                <i class="fa-solid fa-layer-group"></i>
-                ${escapeHTML(
-                  getModuleName(
-                    lesson.moduleId
-                  )
-                )}
-              </span>
-
-              <span class="badge">
-                <i class="fa-solid fa-${typeIcon}"></i>
-                ${escapeHTML(
-                  typeText
-                )}
-              </span>
-
-              <span class="badge ${escapeHTML(
-                statusClass
-              )}">
-                ${escapeHTML(
-                  statusText
-                )}
-              </span>
-
-              ${
-                lesson.duration
-                ? `
-                  <span class="badge">
-                    <i class="fa-regular fa-clock"></i>
-                    ${escapeHTML(
-                      lesson.duration
-                    )}
-                  </span>
-                `
-                : ""
-              }
-
-            </div>
-
-            ${
-              lesson.contentUrl
-              ? `
-                <div style="margin-top:10px">
-                  <a
-                    href="${escapeHTML(
-                      lesson.contentUrl
-                    )}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style="
-                      color:#2563eb;
-                      font-size:12px;
-                      text-decoration:none;
-                    "
-                  >
-                    <i class="fa-solid fa-link"></i>
-                    Open Content
-                  </a>
-                </div>
-              `
-              : ""
-            }
-
-          </div>
-
-          <div class="lesson-actions">
-
-            <button
-              class="icon-btn edit"
-              type="button"
-              title="Edit"
-              data-edit="${escapeHTML(
-                lesson.id
-              )}">
-
-              <i class="fa-solid fa-pen"></i>
-
-            </button>
-
-            <button
-              class="icon-btn delete"
-              type="button"
-              title="Delete"
-              data-delete="${escapeHTML(
-                lesson.id
-              )}">
-
-              <i class="fa-solid fa-trash"></i>
-
-            </button>
-
-          </div>
-
-        </div>
-      `;
-    })
-    .join("");
-
-  document
-    .querySelectorAll("[data-edit]")
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          editLesson(
-            button.dataset.edit
+        const statusClass =
+          status.replace(
+            /\s+/g,
+            "-"
           );
 
-        }
-      );
+        const type =
+          String(
+            lesson.type ||
+            "other"
+          ).toLowerCase();
 
-    });
-
-  document
-    .querySelectorAll("[data-delete]")
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          removeLesson(
-            button.dataset.delete
+        const courseName =
+          getCourseName(
+            lesson.courseId
           );
 
-        }
-      );
+        const moduleName =
+          getModuleName(
+            lesson.moduleId
+          );
 
-    });
+        let typeIcon =
+          "file";
 
+        if(type === "video")
+          typeIcon = "video";
+
+        else if(type === "pdf")
+          typeIcon = "file-pdf";
+
+        else if(type === "audio")
+          typeIcon = "volume-high";
+
+        else if(type === "text")
+          typeIcon = "file-lines";
+
+        else if(type === "live")
+          typeIcon = "tower-broadcast";
+
+        return `
+
+          <div
+            class="lesson"
+            data-id="${escapeHTML(lesson.id)}"
+          >
+
+            <div class="lesson-order">
+
+              ${escapeHTML(
+                lesson.order || "—"
+              )}
+
+            </div>
+
+            <div class="lesson-content">
+
+              <div class="lesson-title">
+
+                ${escapeHTML(
+                  lesson.title ||
+                  "Untitled Lesson"
+                )}
+
+              </div>
+
+              <div class="lesson-description">
+
+                ${escapeHTML(
+                  lesson.description ||
+                  "No description"
+                )}
+
+              </div>
+
+              <div class="meta">
+
+                <span class="badge">
+
+                  <i class="fa-solid fa-book"></i>
+
+                  ${escapeHTML(
+                    courseName
+                  )}
+
+                </span>
+
+                <span class="badge">
+
+                  <i class="fa-solid fa-layer-group"></i>
+
+                  ${escapeHTML(
+                    moduleName
+                  )}
+
+                </span>
+
+                <span class="badge">
+
+                  <i class="fa-solid fa-${typeIcon}"></i>
+
+                  ${escapeHTML(
+                    type
+                  )}
+
+                </span>
+
+                ${
+                  lesson.duration
+                    ? `
+                      <span class="badge">
+
+                        <i class="fa-regular fa-clock"></i>
+
+                        ${escapeHTML(
+                          lesson.duration
+                        )}
+
+                      </span>
+                    `
+                    : ""
+                }
+
+                <span
+                  class="badge ${escapeHTML(
+                    statusClass
+                  )}"
+                >
+
+                  ${escapeHTML(
+                    status
+                  )}
+
+                </span>
+
+              </div>
+
+            </div>
+
+            <div class="lesson-actions">
+
+              <button
+                class="icon-btn edit"
+                type="button"
+                data-action="edit"
+                data-id="${escapeHTML(
+                  lesson.id
+                )}"
+                title="Edit lesson"
+              >
+
+                <i class="fa-solid fa-pen"></i>
+
+              </button>
+
+              <button
+                class="icon-btn delete"
+                type="button"
+                data-action="delete"
+                data-id="${escapeHTML(
+                  lesson.id
+                )}"
+                title="Delete lesson"
+              >
+
+                <i class="fa-solid fa-trash"></i>
+
+              </button>
+
+            </div>
+
+          </div>
+
+        `;
+      }
+    ).join("");
 }
 
 
 /* =====================================================
-   SEARCH
+   SAVE LESSON
 ===================================================== */
 
-searchInput.addEventListener(
-  "input",
-  renderLessons
+async function saveLesson(){
+
+  if(!currentUser){
+
+    showMessage(
+      "Please sign in first.",
+      "error"
+    );
+
+    return;
+  }
+
+  const courseId =
+    courseSelect.value;
+
+  const moduleId =
+    moduleSelect.value;
+
+  const title =
+    titleInput.value.trim();
+
+  const type =
+    typeSelect.value;
+
+  const description =
+    descriptionInput.value.trim();
+
+  const contentUrl =
+    contentUrlInput.value.trim();
+
+  const duration =
+    durationInput.value.trim();
+
+  const order =
+    Number(
+      orderInput.value || 1
+    );
+
+  const status =
+    statusSelect.value;
+
+  if(!courseId){
+
+    showMessage(
+      "Please select a course.",
+      "error"
+    );
+
+    return;
+  }
+
+  if(!moduleId){
+
+    showMessage(
+      "Please select a module.",
+      "error"
+    );
+
+    return;
+  }
+
+  if(!title){
+
+    showMessage(
+      "Please enter lesson title.",
+      "error"
+    );
+
+    titleInput.focus();
+
+    return;
+  }
+
+  if(!Number.isFinite(order) || order < 1){
+
+    showMessage(
+      "Lesson order must be 1 or greater.",
+      "error"
+    );
+
+    return;
+  }
+
+  saveBtn.disabled = true;
+
+  const oldButtonText =
+    saveBtn.innerHTML;
+
+  saveBtn.innerHTML = `
+    <i class="fa-solid fa-spinner fa-spin"></i>
+    Saving...
+  `;
+
+  try{
+
+    const data = {
+
+      ownerId:
+        currentUser.uid,
+
+      courseId:
+        courseId,
+
+      moduleId:
+        moduleId,
+
+      title:
+        title,
+
+      type:
+        type,
+
+      description:
+        description,
+
+      contentUrl:
+        contentUrl,
+
+      duration:
+        duration,
+
+      order:
+        order,
+
+      status:
+        status,
+
+      updatedAt:
+        serverTimestamp()
+    };
+
+
+    if(!editingLessonId){
+
+      await addDoc(
+        collection(
+          db,
+          "lessons"
+        ),
+        {
+          ...data,
+          createdAt:
+            serverTimestamp()
+        }
+      );
+
+      showMessage(
+        "Lesson created successfully."
+      );
+
+    }else{
+
+      const existingLesson =
+        lessons.find(
+          item =>
+            item.id ===
+            editingLessonId
+        );
+
+      if(!existingLesson){
+
+        throw new Error(
+          "Lesson not found."
+        );
+      }
+
+      if(
+        existingLesson.ownerId !==
+        currentUser.uid
+      ){
+
+        throw new Error(
+          "You cannot edit another administrator's lesson."
+        );
+      }
+
+      await updateDoc(
+        doc(
+          db,
+          "lessons",
+          editingLessonId
+        ),
+        data
+      );
+
+      showMessage(
+        "Lesson updated successfully."
+      );
+    }
+
+    resetForm();
+
+    await loadLessons();
+
+  }catch(error){
+
+    console.error(
+      "Save lesson error:",
+      error
+    );
+
+    showMessage(
+      error.message ||
+      "Unable to save lesson.",
+      "error"
+    );
+
+  }finally{
+
+    saveBtn.disabled =
+      !currentUser;
+
+    saveBtn.innerHTML =
+      oldButtonText;
+  }
+}
+
+
+/* =====================================================
+   EDIT LESSON
+===================================================== */
+
+function editLesson(id){
+
+  if(!currentUser)
+    return;
+
+  const lesson =
+    lessons.find(
+      item =>
+        item.id === id
+    );
+
+  if(!lesson)
+    return;
+
+  if(
+    lesson.ownerId !==
+    currentUser.uid
+  ){
+
+    showMessage(
+      "You cannot edit another administrator's lesson.",
+      "error"
+    );
+
+    return;
+  }
+
+  editingLessonId =
+    id;
+
+  formTitle.textContent =
+    "Edit Lesson";
+
+  saveBtn.innerHTML = `
+    <i class="fa-solid fa-save"></i>
+    Update Lesson
+  `;
+
+  cancelBtn.style.display =
+    "inline-block";
+
+  courseSelect.value =
+    lesson.courseId || "";
+
+  updateModuleSelect();
+
+  moduleSelect.value =
+    lesson.moduleId || "";
+
+  titleInput.value =
+    lesson.title || "";
+
+  typeSelect.value =
+    lesson.type || "video";
+
+  descriptionInput.value =
+    lesson.description || "";
+
+  contentUrlInput.value =
+    lesson.contentUrl ||
+    lesson.videoUrl ||
+    lesson.videoURL ||
+    lesson.url ||
+    lesson.video ||
+    "";
+
+  durationInput.value =
+    lesson.duration || "";
+
+  orderInput.value =
+    lesson.order || 1;
+
+  statusSelect.value =
+    lesson.status || "draft";
+
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
+  });
+}
+
+
+/* =====================================================
+   DELETE LESSON
+===================================================== */
+
+async function deleteLesson(id){
+
+  if(!currentUser){
+
+    showMessage(
+      "Please sign in first.",
+      "error"
+    );
+
+    return;
+  }
+
+  const lesson =
+    lessons.find(
+      item =>
+        item.id === id
+    );
+
+  if(!lesson)
+    return;
+
+  if(
+    lesson.ownerId !==
+    currentUser.uid
+  ){
+
+    showMessage(
+      "You cannot delete another administrator's lesson.",
+      "error"
+    );
+
+    return;
+  }
+
+  const confirmed =
+    confirm(
+      `Delete "${lesson.title || "this lesson"}"?`
+    );
+
+  if(!confirmed)
+    return;
+
+  try{
+
+    await deleteDoc(
+      doc(
+        db,
+        "lessons",
+        id
+      )
+    );
+
+    showMessage(
+      "Lesson deleted successfully."
+    );
+
+    if(
+      editingLessonId === id
+    ){
+
+      resetForm();
+    }
+
+    await loadLessons();
+
+  }catch(error){
+
+    console.error(
+      "Delete lesson error:",
+      error
+    );
+
+    showMessage(
+      error.message ||
+      "Unable to delete lesson.",
+      "error"
+    );
+  }
+}
+
+
+/* =====================================================
+   LESSON LIST ACTIONS
+===================================================== */
+
+lessonsList.addEventListener(
+  "click",
+  event => {
+
+    const button =
+      event.target.closest(
+        "button[data-action]"
+      );
+
+    if(!button)
+      return;
+
+    const action =
+      button.dataset.action;
+
+    const id =
+      button.dataset.id;
+
+    if(action === "edit"){
+
+      editLesson(id);
+
+    }
+
+    else if(action === "delete"){
+
+      deleteLesson(id);
+
+    }
+  }
 );
 
 
@@ -1526,351 +2077,49 @@ function resetForm(){
 
 
 /* =====================================================
-   EDIT LESSON
-===================================================== */
-
-function editLesson(id){
-
-  const lesson =
-    lessons.find(
-      item =>
-        item.id === id
-    );
-
-  if(!lesson)
-    return;
-
-  editingLessonId =
-    id;
-
-  formTitle.textContent =
-    "Edit Lesson";
-
-  saveBtn.innerHTML = `
-    <i class="fa-solid fa-save"></i>
-    Update Lesson
-  `;
-
-  cancelBtn.style.display =
-    "inline-block";
-
-  courseSelect.value =
-    lesson.courseId || "";
-
-  updateModuleSelect();
-
-  moduleSelect.value =
-    lesson.moduleId || "";
-
-  titleInput.value =
-    lesson.title || "";
-
-  typeSelect.value =
-    lesson.type || "video";
-
-  descriptionInput.value =
-    lesson.description || "";
-
-  contentUrlInput.value =
-    lesson.contentUrl || "";
-
-  durationInput.value =
-    lesson.duration || "";
-
-  orderInput.value =
-    lesson.order || 1;
-
-  statusSelect.value =
-    lesson.status || "draft";
-
-  window.scrollTo({
-    top:0,
-    behavior:"smooth"
-  });
-
-}
-
-
-/* =====================================================
-   CANCEL EDIT
+   CANCEL
 ===================================================== */
 
 cancelBtn.addEventListener(
   "click",
-  resetForm
+  () => {
+
+    resetForm();
+
+  }
 );
 
 
 /* =====================================================
-   SAVE / UPDATE LESSON
+   SAVE BUTTON
 ===================================================== */
 
 saveBtn.addEventListener(
   "click",
-  async () => {
+  () => {
 
-    if(!currentUser){
-
-      showMessage(
-        "Please sign in first.",
-        "error"
-      );
-
-      return;
-    }
-
-    const courseId =
-      courseSelect.value.trim();
-
-    const moduleId =
-      moduleSelect.value.trim();
-
-    const title =
-      titleInput.value.trim();
-
-    const type =
-      typeSelect.value;
-
-    const description =
-      descriptionInput.value.trim();
-
-    const contentUrl =
-      contentUrlInput.value.trim();
-
-    const duration =
-      durationInput.value.trim();
-
-    const order =
-      Number(
-        orderInput.value || 1
-      );
-
-    const status =
-      statusSelect.value;
-
-    if(!courseId){
-
-      showMessage(
-        "Please select a course.",
-        "error"
-      );
-
-      return;
-    }
-
-    if(!moduleId){
-
-      showMessage(
-        "Please select a module.",
-        "error"
-      );
-
-      return;
-    }
-
-    if(!title){
-
-      showMessage(
-        "Please enter lesson title.",
-        "error"
-      );
-
-      return;
-    }
-
-    saveBtn.disabled =
-      true;
-
-    try{
-
-      const data = {
-
-        ownerId:
-          currentUser.uid,
-
-        courseId:
-          courseId,
-
-        moduleId:
-          moduleId,
-
-        title:
-          title,
-
-        type:
-          type,
-
-        description:
-          description,
-
-        contentUrl:
-          contentUrl,
-
-        duration:
-          duration,
-
-        order:
-          order,
-
-        status:
-          status,
-
-        updatedAt:
-          serverTimestamp()
-
-      };
-
-
-      if(editingLessonId){
-
-        await updateDoc(
-          doc(
-            db,
-            "lessons",
-            editingLessonId
-          ),
-          data
-        );
-
-        showMessage(
-          "Lesson updated successfully."
-        );
-
-      }else{
-
-        await addDoc(
-          collection(
-            db,
-            "lessons"
-          ),
-          {
-            ...data,
-
-            createdAt:
-              serverTimestamp()
-          }
-        );
-
-        showMessage(
-          "Lesson created successfully."
-        );
-
-      }
-
-      resetForm();
-
-      await loadLessons();
-
-    }catch(error){
-
-      console.error(
-        "Save lesson error:",
-        error
-      );
-
-      showMessage(
-        error.message ||
-        "Unable to save lesson.",
-        "error"
-      );
-
-    }finally{
-
-      saveBtn.disabled =
-        false;
-
-    }
+    saveLesson();
 
   }
 );
 
 
 /* =====================================================
-   DELETE LESSON
+   SEARCH
 ===================================================== */
 
-async function removeLesson(id){
+searchInput.addEventListener(
+  "input",
+  () => {
 
-  if(!currentUser){
-
-    showMessage(
-      "Please sign in first.",
-      "error"
-    );
-
-    return;
-  }
-
-  const lesson =
-    lessons.find(
-      item =>
-        item.id === id
-    );
-
-  if(!lesson)
-    return;
-
-  if(
-    lesson.ownerId &&
-    lesson.ownerId !==
-      currentUser.uid
-  ){
-
-    showMessage(
-      "You can only delete your own lessons.",
-      "error"
-    );
-
-    return;
-  }
-
-  const confirmed =
-    confirm(
-      `Delete "${
-        lesson.title ||
-        "this lesson"
-      }"?`
-    );
-
-  if(!confirmed)
-    return;
-
-  try{
-
-    await deleteDoc(
-      doc(
-        db,
-        "lessons",
-        id
-      )
-    );
-
-    showMessage(
-      "Lesson deleted successfully."
-    );
-
-    await loadLessons();
-
-  }catch(error){
-
-    console.error(
-      "Delete lesson error:",
-      error
-    );
-
-    showMessage(
-      error.message ||
-      "Unable to delete lesson.",
-      "error"
-    );
+    renderLessons();
 
   }
-
-}
+);
 
 
 /* =====================================================
-   AUTH STATE
+   AUTHENTICATION
 ===================================================== */
 
 onAuthStateChanged(
@@ -1882,24 +2131,69 @@ onAuthStateChanged(
       currentUser =
         null;
 
-      lessonsList.innerHTML = `
-        <div class="empty">
-          <i class="fa-solid fa-lock"></i>
-          <br><br>
-          Administrator login required.
-        </div>
+      saveBtn.disabled =
+        true;
+
+      userInfo.innerHTML = `
+        <i class="fa-solid fa-lock"></i>
+        Not authenticated
       `;
 
-      showMessage(
-        "Please sign in as an administrator.",
-        "error"
-      );
+      lessons = [];
+
+      updateStats();
+
+      lessonsList.innerHTML = `
+        <div class="empty">
+
+          <i class="fa-solid fa-lock"></i>
+
+          <br>
+
+          <strong>
+            Login Required
+          </strong>
+
+          <br><br>
+
+          Please sign in to access
+          Admin Lessons.
+
+        </div>
+      `;
 
       return;
     }
 
+
     currentUser =
       user;
+
+    saveBtn.disabled =
+      false;
+
+    userInfo.innerHTML = `
+      <i class="fa-solid fa-user-shield"></i>
+
+      Signed in as:
+      <strong>
+        ${escapeHTML(
+          user.email ||
+          user.displayName ||
+          "Administrator"
+        )}
+      </strong>
+
+      <br>
+
+      <small>
+        Firebase UID:
+        ${escapeHTML(
+          user.uid
+        )}
+      </small>
+    `;
+
 
     try{
 
@@ -1912,16 +2206,36 @@ onAuthStateChanged(
     }catch(error){
 
       console.error(
-        "Initialization error:",
+        "Admin initialization error:",
         error
       );
 
+      lessonsList.innerHTML = `
+        <div class="empty">
+
+          <i class="fa-solid fa-triangle-exclamation"></i>
+
+          <br>
+
+          <strong>
+            Unable to Initialize
+          </strong>
+
+          <br><br>
+
+          ${escapeHTML(
+            error.message ||
+            "An unexpected error occurred."
+          )}
+
+        </div>
+      `;
+
       showMessage(
         error.message ||
-        "Unable to initialize page.",
+        "Unable to initialize admin lessons.",
         "error"
       );
-
     }
 
   }
