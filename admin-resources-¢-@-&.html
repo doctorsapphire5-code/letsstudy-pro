@@ -46,7 +46,9 @@ body{
   box-shadow:0 4px 18px rgba(0,0,0,.06);
 }
 
-h1,h2{margin-top:0}
+h1,h2{
+  margin-top:0;
+}
 
 .grid{
   display:grid;
@@ -54,7 +56,9 @@ h1,h2{margin-top:0}
   gap:15px;
 }
 
-.full{grid-column:1/-1}
+.full{
+  grid-column:1/-1;
+}
 
 label{
   display:block;
@@ -63,13 +67,16 @@ label{
   margin-bottom:7px;
 }
 
-input,select,textarea{
+input,
+select,
+textarea{
   width:100%;
   padding:12px;
   border:1px solid #dbe2ea;
   border-radius:9px;
   outline:none;
   font-family:inherit;
+  background:#fff;
 }
 
 textarea{
@@ -91,6 +98,11 @@ button{
   font-weight:bold;
 }
 
+button:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
 .primary{
   background:#2563eb;
   color:white;
@@ -110,6 +122,7 @@ button{
   display:flex;
   gap:10px;
   margin-top:15px;
+  flex-wrap:wrap;
 }
 
 .search{
@@ -141,6 +154,7 @@ button{
   color:#64748b;
   font-size:13px;
   line-height:1.6;
+  white-space:pre-wrap;
 }
 
 .badges{
@@ -160,6 +174,21 @@ button{
 .item-actions{
   display:flex;
   gap:7px;
+  flex-shrink:0;
+}
+
+.open-link{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  color:#2563eb;
+  text-decoration:none;
+  font-size:13px;
+  font-weight:bold;
+}
+
+.open-link:hover{
+  text-decoration:underline;
 }
 
 .message{
@@ -189,9 +218,27 @@ button{
 }
 
 @media(max-width:700px){
-  .grid{grid-template-columns:1fr}
-  .full{grid-column:auto}
-  .resource-top{flex-direction:column}
+
+  .grid{
+    grid-template-columns:1fr;
+  }
+
+  .full{
+    grid-column:auto;
+  }
+
+  .resource-top{
+    flex-direction:column;
+  }
+
+  .item-actions{
+    width:100%;
+  }
+
+  .item-actions button{
+    flex:1;
+  }
+
 }
 </style>
 </head>
@@ -204,6 +251,7 @@ button{
 <i class="fa-solid fa-shield-halved"></i>
 ADMIN
 </div>
+
 
 <div class="card">
 
@@ -218,10 +266,16 @@ Manage course resources.
 
 </div>
 
-<div id="message" class="message"></div>
+
+<div
+id="message"
+class="message">
+</div>
 
 
-<!-- FORM -->
+<!-- =========================================
+     FORM
+========================================= -->
 
 <div class="card">
 
@@ -233,9 +287,12 @@ Add Resource
 
 <div class="grid">
 
+
 <div>
 
-<label>Course ID</label>
+<label>
+Course ID
+</label>
 
 <input
 id="courseId"
@@ -247,7 +304,9 @@ placeholder="Course ID">
 
 <div>
 
-<label>Resource Name</label>
+<label>
+Resource Name
+</label>
 
 <input
 id="name"
@@ -259,17 +318,39 @@ placeholder="Resource name">
 
 <div>
 
-<label>Type</label>
+<label>
+Type
+</label>
 
 <select id="type">
 
-<option value="pdf">PDF</option>
-<option value="document">Document</option>
-<option value="video">Video</option>
-<option value="audio">Audio</option>
-<option value="link">Link</option>
-<option value="image">Image</option>
-<option value="other">Other</option>
+<option value="pdf">
+PDF
+</option>
+
+<option value="document">
+Document
+</option>
+
+<option value="video">
+Video
+</option>
+
+<option value="audio">
+Audio
+</option>
+
+<option value="link">
+Link
+</option>
+
+<option value="image">
+Image
+</option>
+
+<option value="other">
+Other
+</option>
 
 </select>
 
@@ -278,7 +359,9 @@ placeholder="Resource name">
 
 <div>
 
-<label>URL</label>
+<label>
+URL
+</label>
 
 <input
 id="url"
@@ -291,7 +374,9 @@ placeholder="https://...">
 
 <div class="full">
 
-<label>Description</label>
+<label>
+Description
+</label>
 
 <textarea
 id="description"
@@ -314,12 +399,14 @@ Add Resource
 
 </button>
 
+
 <button
 type="button"
 id="cancelBtn"
 class="secondary"
 style="display:none">
 
+<i class="fa-solid fa-xmark"></i>
 Cancel
 
 </button>
@@ -331,7 +418,9 @@ Cancel
 </div>
 
 
-<!-- LIST -->
+<!-- =========================================
+     LIST
+========================================= -->
 
 <div class="card">
 
@@ -348,12 +437,17 @@ placeholder="Search resources...">
 
 </div>
 
+
 <div id="resourceList">
 
 <div class="empty">
+
 <i class="fa-solid fa-spinner fa-spin"></i>
+
 <br><br>
+
 Loading...
+
 </div>
 
 </div>
@@ -365,11 +459,16 @@ Loading...
 
 <script type="module">
 
+/* =====================================================
+   FIREBASE
+===================================================== */
+
 import {
 initializeApp
 }
 from
 "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+
 
 import {
 getFirestore,
@@ -384,139 +483,237 @@ serverTimestamp
 from
 "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-import {
-getAuth,
-onAuthStateChanged
-}
-from
-"https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 
+const firebaseConfig = {
 
-const firebaseConfig={
-apiKey:"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
-authDomain:"let-s-study-pro-course.firebaseapp.com",
-databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
-projectId:"let-s-study-pro-course",
-storageBucket:"let-s-study-pro-course.firebasestorage.app",
-messagingSenderId:"474928293390",
-appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
-measurementId:"G-85B7V5H5J0"
+apiKey:
+"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+authDomain:
+"let-s-study-pro-course.firebaseapp.com",
+
+databaseURL:
+"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+projectId:
+"let-s-study-pro-course",
+
+storageBucket:
+"let-s-study-pro-course.firebasestorage.app",
+
+messagingSenderId:
+"474928293390",
+
+appId:
+"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+measurementId:
+"G-85B7V5H5J0"
+
 };
 
 
-const app=initializeApp(firebaseConfig);
+const app =
+initializeApp(firebaseConfig);
 
-const db=getFirestore(app);
-
-const auth=getAuth(app);
-
-
-const form=
-document.getElementById("resourceForm");
-
-const courseId=
-document.getElementById("courseId");
-
-const name=
-document.getElementById("name");
-
-const type=
-document.getElementById("type");
-
-const url=
-document.getElementById("url");
-
-const description=
-document.getElementById("description");
-
-const list=
-document.getElementById("resourceList");
-
-const search=
-document.getElementById("search");
-
-const message=
-document.getElementById("message");
-
-const saveBtn=
-document.getElementById("saveBtn");
-
-const cancelBtn=
-document.getElementById("cancelBtn");
-
-const formTitle=
-document.getElementById("formTitle");
+const db =
+getFirestore(app);
 
 
-let resources=[];
+/* =====================================================
+   ELEMENTS
+===================================================== */
 
-let editId=null;
+const form =
+document.getElementById(
+"resourceForm"
+);
 
-let currentUser=null;
+const courseId =
+document.getElementById(
+"courseId"
+);
+
+const name =
+document.getElementById(
+"name"
+);
+
+const type =
+document.getElementById(
+"type"
+);
+
+const url =
+document.getElementById(
+"url"
+);
+
+const description =
+document.getElementById(
+"description"
+);
+
+const list =
+document.getElementById(
+"resourceList"
+);
+
+const search =
+document.getElementById(
+"search"
+);
+
+const message =
+document.getElementById(
+"message"
+);
+
+const saveBtn =
+document.getElementById(
+"saveBtn"
+);
+
+const cancelBtn =
+document.getElementById(
+"cancelBtn"
+);
+
+const formTitle =
+document.getElementById(
+"formTitle"
+);
 
 
-/* ===============================
+/* =====================================================
+   STATE
+===================================================== */
+
+let resources = [];
+
+let editId = null;
+
+
+/* =====================================================
    MESSAGE
-================================ */
+===================================================== */
 
-function showMessage(text,error=false){
+function showMessage(
+text,
+error = false
+){
 
-message.textContent=text;
+message.textContent =
+text;
 
-message.className=
-"message "+(error?"error":"success");
+message.className =
+"message " +
+(error ? "error" : "success");
 
-setTimeout(()=>{
-message.className="message";
-},3500);
+
+setTimeout(
+() => {
+
+message.className =
+"message";
+
+},
+3500
+);
 
 }
 
 
-/* ===============================
-   ESCAPE
-================================ */
+/* =====================================================
+   ESCAPE HTML
+===================================================== */
 
 function esc(value){
 
-return String(value??"")
-.replaceAll("&","&amp;")
-.replaceAll("<","&lt;")
-.replaceAll(">","&gt;")
-.replaceAll('"',"&quot;")
-.replaceAll("'","&#039;");
+return String(
+value ?? ""
+)
+
+.replaceAll(
+"&",
+"&amp;"
+)
+
+.replaceAll(
+"<",
+"&lt;"
+)
+
+.replaceAll(
+">",
+"&gt;"
+)
+
+.replaceAll(
+'"',
+"&quot;"
+)
+
+.replaceAll(
+"'",
+"&#039;"
+);
 
 }
 
 
-/* ===============================
+/* =====================================================
    LOAD
-================================ */
+===================================================== */
 
 async function loadResources(){
 
+list.innerHTML = `
+
+<div class="empty">
+
+<i class="fa-solid fa-spinner fa-spin"></i>
+
+<br><br>
+
+Loading...
+
+</div>
+
+`;
+
+
 try{
 
-const snap=
+const snap =
 await getDocs(
-collection(db,"resources")
+collection(
+db,
+"resources"
+)
 );
 
-resources=
-snap.docs.map(d=>({
+
+resources =
+snap.docs.map(
+d => ({
 
 id:d.id,
+
 ...d.data()
 
-}));
+})
+);
+
 
 render();
 
-}catch(error){
+}
+catch(error){
 
 console.error(error);
 
-list.innerHTML=`
+list.innerHTML = `
 
 <div class="empty">
 
@@ -525,6 +722,12 @@ list.innerHTML=`
 <br><br>
 
 Failed to load resources.
+
+<br><br>
+
+${esc(
+error.message
+)}
 
 </div>
 
@@ -535,34 +738,49 @@ Failed to load resources.
 }
 
 
-/* ===============================
+/* =====================================================
    RENDER
-================================ */
+===================================================== */
 
 function render(){
 
-const q=
+const q =
 search.value
 .trim()
 .toLowerCase();
 
 
-const filtered=
-resources.filter(r=>
+const filtered =
+resources.filter(
+r =>
 
-String(r.name||"")
+String(
+r.name || ""
+)
 .toLowerCase()
 .includes(q)
 
 ||
 
-String(r.courseId||"")
+String(
+r.courseId || ""
+)
 .toLowerCase()
 .includes(q)
 
 ||
 
-String(r.type||"")
+String(
+r.type || ""
+)
+.toLowerCase()
+.includes(q)
+
+||
+
+String(
+r.description || ""
+)
 .toLowerCase()
 .includes(q)
 
@@ -571,7 +789,7 @@ String(r.type||"")
 
 if(!filtered.length){
 
-list.innerHTML=`
+list.innerHTML = `
 
 <div class="empty">
 
@@ -590,45 +808,92 @@ return;
 }
 
 
-list.innerHTML=
-filtered.map(r=>`
+list.innerHTML =
+filtered.map(
+r => `
 
-<div class="resource">
+<div
+class="resource">
 
-<div class="resource-top">
+<div
+class="resource-top">
 
 <div>
 
 <h3>
-${esc(r.name)}
+
+${esc(
+r.name ||
+"Untitled Resource"
+)}
+
 </h3>
 
+
 <p>
-${esc(r.description||"No description")}
+
+${esc(
+r.description ||
+"No description"
+)}
+
 </p>
+
 
 <div class="badges">
 
 <span class="badge">
-Course: ${esc(r.courseId)}
+
+<i class="fa-solid fa-book"></i>
+
+Course:
+${esc(
+r.courseId ||
+"-"
+)}
+
 </span>
 
-<span class="badge">
-Type: ${esc(r.type||"other")}
-</span>
 
 <span class="badge">
-ID: ${esc(r.id)}
+
+<i class="fa-solid fa-file"></i>
+
+Type:
+${esc(
+r.type ||
+"other"
+)}
+
+</span>
+
+
+<span class="badge">
+
+<i class="fa-solid fa-fingerprint"></i>
+
+ID:
+${esc(
+r.id
+)}
+
 </span>
 
 </div>
 
+
 <br>
 
+
 <a
-href="${esc(r.url)}"
+class="open-link"
+href="${esc(
+r.url || "#"
+)}"
 target="_blank"
-rel="noopener">
+rel="noopener noreferrer">
+
+<i class="fa-solid fa-up-right-from-square"></i>
 
 Open Resource
 
@@ -641,15 +906,22 @@ Open Resource
 
 <button
 class="secondary"
-onclick="editResource('${r.id}')">
+data-action="edit"
+data-id="${esc(r.id)}"
+title="Edit"
+type="button">
 
 <i class="fa-solid fa-pen"></i>
 
 </button>
 
+
 <button
 class="danger"
-onclick="removeResource('${r.id}')">
+data-action="delete"
+data-id="${esc(r.id)}"
+title="Delete"
+type="button">
 
 <i class="fa-solid fa-trash"></i>
 
@@ -661,45 +933,39 @@ onclick="removeResource('${r.id}')">
 
 </div>
 
-`).join("");
+`
+).join("");
 
 }
 
 
-/* ===============================
+/* =====================================================
    ADD / UPDATE
-================================ */
+===================================================== */
 
 form.addEventListener(
 "submit",
-async e=>{
+async event => {
 
-e.preventDefault();
-
-
-if(!currentUser){
-
-showMessage(
-"Admin login required.",
-true
-);
-
-return;
-
-}
+event.preventDefault();
 
 
-const data={
+const data = {
 
-courseId:courseId.value.trim(),
+courseId:
+courseId.value.trim(),
 
-name:name.value.trim(),
+name:
+name.value.trim(),
 
-type:type.value,
+type:
+type.value,
 
-url:url.value.trim(),
+url:
+url.value.trim(),
 
-description:description.value.trim()
+description:
+description.value.trim()
 
 };
 
@@ -720,10 +986,16 @@ return;
 }
 
 
-saveBtn.disabled=true;
+saveBtn.disabled =
+true;
 
 
 try{
+
+
+/* =========================================
+   UPDATE
+========================================= */
 
 if(editId){
 
@@ -746,16 +1018,21 @@ serverTimestamp()
 
 );
 
+
 showMessage(
 "Resource updated successfully."
 );
 
-}else{
+}
 
 
-/* FIREBASE AUTOMATIC ID */
+/* =========================================
+   CREATE
+========================================= */
 
-const ref=
+else{
+
+const ref =
 await addDoc(
 
 collection(
@@ -768,9 +1045,12 @@ db,
 ...data,
 
 createdBy:
-currentUser.uid,
+"admin",
 
 createdAt:
+serverTimestamp(),
+
+updatedAt:
 serverTimestamp()
 
 }
@@ -795,98 +1075,117 @@ resetForm();
 
 await loadResources();
 
-}catch(error){
+}
+catch(error){
 
 console.error(error);
 
 showMessage(
-error.message,
+error.message ||
+"Failed to save resource.",
 true
 );
 
 }
 
 
-saveBtn.disabled=false;
+saveBtn.disabled =
+false;
 
-});
-
-
-/* ===============================
-   EDIT
-================================ */
-
-window.editResource=function(id){
-
-const r=
-resources.find(
-x=>x.id===id
+}
 );
 
-if(!r)return;
+
+/* =====================================================
+   EDIT
+===================================================== */
+
+function editResource(id){
+
+const resource =
+resources.find(
+item =>
+item.id === id
+);
 
 
-editId=id;
-
-courseId.value=
-r.courseId||"";
-
-name.value=
-r.name||"";
-
-type.value=
-r.type||"other";
-
-url.value=
-r.url||"";
-
-description.value=
-r.description||"";
+if(!resource)
+return;
 
 
-formTitle.textContent=
+editId =
+id;
+
+
+courseId.value =
+resource.courseId || "";
+
+name.value =
+resource.name || "";
+
+type.value =
+resource.type || "other";
+
+url.value =
+resource.url || "";
+
+description.value =
+resource.description || "";
+
+
+formTitle.textContent =
 "Edit Resource";
 
 
-saveBtn.innerHTML=`
+saveBtn.innerHTML = `
 
 <i class="fa-solid fa-save"></i>
+
 Update Resource
 
 `;
 
-cancelBtn.style.display=
+
+cancelBtn.style.display =
 "inline-block";
 
 
 window.scrollTo({
+
 top:0,
+
 behavior:"smooth"
+
 });
 
-};
+}
 
 
-/* ===============================
+/* =====================================================
    DELETE
-================================ */
+===================================================== */
 
-window.removeResource=
-async function(id){
+async function removeResource(id){
 
-const r=
+const resource =
 resources.find(
-x=>x.id===id
+item =>
+item.id === id
 );
 
-if(!r)return;
+
+if(!resource)
+return;
 
 
-if(
-!confirm(
-`Delete "${r.name}"?`
-)
-)return;
+const confirmed =
+confirm(
+`Delete "${resource.name || "this resource"}"?`
+);
+
+
+if(!confirmed)
+return;
 
 
 try{
@@ -901,51 +1200,108 @@ id
 
 );
 
+
 showMessage(
-"Resource deleted."
+"Resource deleted successfully."
 );
+
 
 await loadResources();
 
-}catch(error){
+}
+catch(error){
+
+console.error(error);
 
 showMessage(
-error.message,
+error.message ||
+"Failed to delete resource.",
 true
 );
 
 }
 
-};
+}
 
 
-/* ===============================
+/* =====================================================
+   EVENT DELEGATION
+===================================================== */
+
+list.addEventListener(
+"click",
+event => {
+
+const button =
+event.target.closest(
+"button[data-action]"
+);
+
+
+if(!button)
+return;
+
+
+const id =
+button.dataset.id;
+
+const action =
+button.dataset.action;
+
+
+if(action === "edit"){
+
+editResource(id);
+
+}
+
+
+if(action === "delete"){
+
+removeResource(id);
+
+}
+
+}
+);
+
+
+/* =====================================================
    RESET
-================================ */
+===================================================== */
 
 function resetForm(){
 
-editId=null;
+editId =
+null;
 
 form.reset();
 
-type.value="pdf";
+type.value =
+"pdf";
 
-formTitle.textContent=
+formTitle.textContent =
 "Add Resource";
 
-saveBtn.innerHTML=`
+
+saveBtn.innerHTML = `
 
 <i class="fa-solid fa-plus"></i>
+
 Add Resource
 
 `;
 
-cancelBtn.style.display=
+
+cancelBtn.style.display =
 "none";
 
 }
 
+
+/* =====================================================
+   CANCEL
+===================================================== */
 
 cancelBtn.addEventListener(
 "click",
@@ -953,48 +1309,21 @@ resetForm
 );
 
 
+/* =====================================================
+   SEARCH
+===================================================== */
+
 search.addEventListener(
 "input",
 render
 );
 
 
-/* ===============================
-   ADMIN AUTH
-================================ */
+/* =====================================================
+   INITIALIZE
+===================================================== */
 
-onAuthStateChanged(
-auth,
-async user=>{
-
-if(!user){
-
-currentUser=null;
-
-list.innerHTML=`
-
-<div class="empty">
-
-<i class="fa-solid fa-lock"></i>
-
-<br><br>
-
-Admin login required.
-
-</div>
-
-`;
-
-return;
-
-}
-
-
-currentUser=user;
-
-await loadResources();
-
-});
+loadResources();
 
 </script>
 
