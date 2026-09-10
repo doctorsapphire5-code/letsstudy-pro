@@ -11,6 +11,11 @@
 
 <title>Course Lessons | LetsStudy Pro</title>
 
+<meta
+  name="description"
+  content="Continue learning through your enrolled LetsStudy Pro courses and lessons."
+>
+
 <style>
 
 *{
@@ -23,6 +28,7 @@ body{
   font-family:Arial, sans-serif;
   background:#f5f7fb;
   color:#172033;
+  min-height:100vh;
 }
 
 header{
@@ -62,6 +68,10 @@ header{
   cursor:pointer;
 }
 
+.back:hover{
+  background:#dbeafe;
+}
+
 .container{
   width:min(1100px,94%);
   margin:30px auto 60px;
@@ -71,7 +81,6 @@ header{
   background:#fff;
   border-radius:20px;
   padding:30px;
-
   margin-bottom:25px;
 
   box-shadow:
@@ -90,9 +99,7 @@ header{
 
 .stats{
   display:grid;
-  grid-template-columns:
-    repeat(2,1fr);
-
+  grid-template-columns:repeat(2,1fr);
   gap:15px;
   margin-top:25px;
 }
@@ -119,7 +126,6 @@ header{
 .toolbar{
   background:#fff;
   padding:18px;
-
   border-radius:16px;
 
   display:flex;
@@ -148,8 +154,7 @@ header{
 .lessons-grid{
   display:grid;
 
-  grid-template-columns:
-    repeat(2,1fr);
+  grid-template-columns:repeat(2,1fr);
 
   gap:18px;
 }
@@ -198,6 +203,7 @@ header{
   justify-content:center;
 
   font-size:25px;
+
   flex-shrink:0;
 }
 
@@ -210,6 +216,7 @@ header{
 .lesson-title{
   font-size:19px;
   font-weight:800;
+  line-height:1.35;
 }
 
 .lesson-body{
@@ -219,15 +226,18 @@ header{
 .lesson-description{
   color:#64748b;
   line-height:1.6;
-
   margin-bottom:15px;
+
+  display:-webkit-box;
+  -webkit-line-clamp:3;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
 }
 
 .meta{
   display:flex;
   flex-wrap:wrap;
   gap:8px;
-
   margin-bottom:18px;
 }
 
@@ -312,6 +322,33 @@ header{
   font-weight:700;
 }
 
+.retry-btn{
+  margin-top:20px;
+
+  border:0;
+
+  background:#2563eb;
+  color:#fff;
+
+  padding:12px 20px;
+
+  border-radius:10px;
+
+  cursor:pointer;
+
+  font-weight:700;
+}
+
+.retry-btn:hover{
+  background:#1d4ed8;
+}
+
+.course-name{
+  color:#64748b;
+  font-size:12px;
+  margin-top:4px;
+}
+
 @media(max-width:700px){
 
   header{
@@ -359,6 +396,7 @@ header{
   <button
     class="back"
     id="backButton"
+    type="button"
   >
     ← Back
   </button>
@@ -453,6 +491,14 @@ header{
     Something went wrong.
   </p>
 
+  <button
+    class="retry-btn"
+    id="retryButton"
+    type="button"
+  >
+    Try Again
+  </button>
+
 </div>
 
 
@@ -502,7 +548,7 @@ header{
 </div>
 
 
-<!-- TOOLBAR -->
+<!-- SEARCH -->
 
 <div
   class="toolbar"
@@ -515,6 +561,7 @@ header{
     id="searchInput"
     class="search"
     placeholder="Search lessons..."
+    autocomplete="off"
   >
 
 </div>
@@ -552,22 +599,22 @@ from
 import {
   getFirestore,
   collection,
-  getDocs,
   query,
-  where
+  where,
+  getDocs
 }
 from
 "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
 /* =========================================
-   FIREBASE
+   FIREBASE CONFIG
 ========================================= */
 
 const firebaseConfig = {
 
   apiKey:
-    "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+    "AIzaSyBcOYDfAVKXbkljsyRgI_0rj0odBn678tCc",
 
   authDomain:
     "let-s-study-pro-course.firebaseapp.com",
@@ -594,10 +641,14 @@ const firebaseConfig = {
 
 
 const app =
-  initializeApp(firebaseConfig);
+  initializeApp(
+    firebaseConfig
+  );
+
 
 const auth =
   getAuth(app);
+
 
 const db =
   getFirestore(app);
@@ -615,6 +666,11 @@ const loadingBox =
 const errorBox =
   document.getElementById(
     "errorBox"
+  );
+
+const errorMessage =
+  document.getElementById(
+    "errorMessage"
   );
 
 const loginBox =
@@ -652,6 +708,11 @@ const availableLessonsCount =
     "availableLessonsCount"
   );
 
+const retryButton =
+  document.getElementById(
+    "retryButton"
+  );
+
 
 /* =========================================
    DATA
@@ -671,11 +732,26 @@ let filteredLessons = [];
 function escapeHtml(value){
 
   return String(value ?? "")
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#039;");
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
 
 }
 
@@ -684,41 +760,63 @@ function escapeHtml(value){
    LESSON ICON
 ========================================= */
 
-function lessonIcon(type){
+function lessonIcon(
+  type
+){
 
   const value =
-    String(type || "")
-      .toLowerCase();
+    String(
+      type || ""
+    )
+    .trim()
+    .toLowerCase();
+
 
   if(
     value === "video"
   ){
+
     return "▶️";
+
   }
+
 
   if(
     value === "pdf"
   ){
+
     return "📄";
+
   }
+
 
   if(
     value === "audio"
   ){
+
     return "🎧";
+
   }
 
+
   if(
+    value === "text" ||
     value === "article"
   ){
+
     return "📖";
+
   }
 
+
   if(
-    value === "document"
+    value === "live"
   ){
-    return "📝";
+
+    return "🔴";
+
   }
+
 
   return "🎓";
 
@@ -726,7 +824,33 @@ function lessonIcon(type){
 
 
 /* =========================================
-   LOAD ENROLLMENTS
+   NORMALIZE STATUS
+========================================= */
+
+function isActiveEnrollment(
+  status
+){
+
+  const value =
+    String(
+      status || ""
+    )
+    .trim()
+    .toLowerCase();
+
+
+  return (
+    value === "active" ||
+    value === "approved" ||
+    value === "enrolled" ||
+    value === "completed"
+  );
+
+}
+
+
+/* =========================================
+   LOAD USER ENROLLMENTS
 ========================================= */
 
 async function loadEnrollments(
@@ -735,12 +859,17 @@ async function loadEnrollments(
 
   enrolledCourses = [];
 
+
+  const enrollmentRef =
+    collection(
+      db,
+      "enrollments"
+    );
+
+
   const enrollmentQuery =
     query(
-      collection(
-        db,
-        "enrollments"
-      ),
+      enrollmentRef,
       where(
         "userId",
         "==",
@@ -761,106 +890,10 @@ async function loadEnrollments(
       const data =
         docSnap.data() || {};
 
-      const status =
-        String(
-          data.status || ""
-        ).toLowerCase();
-
 
       if(
-        status === "active" ||
-        status === "approved" ||
-        status === "enrolled"
-      ){
-
-        if(
-          data.courseId
-        ){
-
-          enrolledCourses.push({
-
-            enrollmentId:
-              docSnap.id,
-
-            courseId:
-              String(
-                data.courseId
-              ),
-
-            ...data
-
-          });
-
-        }
-
-      }
-
-    }
-  );
-
-}
-
-
-/* =========================================
-   LOAD LESSONS
-========================================= */
-
-async function loadLessons(){
-
-  allLessons = [];
-
-
-  const enrolledCourseIds =
-    new Set(
-      enrolledCourses.map(
-        course =>
-          String(
-            course.courseId
-          )
-      )
-    );
-
-
-  if(
-    enrolledCourseIds.size === 0
-  ){
-
-    filteredLessons = [];
-
-    return;
-
-  }
-
-
-  const snapshot =
-    await getDocs(
-      collection(
-        db,
-        "lessons"
-      )
-    );
-
-
-  snapshot.forEach(
-    docSnap => {
-
-      const data =
-        docSnap.data() || {};
-
-
-      const lessonCourseId =
-        String(
-          data.courseId || ""
-        );
-
-
-      /* =====================================
-         ONLY USER'S COURSES
-      ===================================== */
-
-      if(
-        !enrolledCourseIds.has(
-          lessonCourseId
+        !isActiveEnrollment(
+          data.status
         )
       ){
 
@@ -869,16 +902,31 @@ async function loadLessons(){
       }
 
 
-      allLessons.push({
+      const courseId =
+        String(
+          data.courseId || ""
+        ).trim();
+
+
+      if(
+        !courseId
+      ){
+
+        return;
+
+      }
+
+
+      enrolledCourses.push({
 
         id:
           docSnap.id,
 
-        lessonId:
+        enrollmentId:
           docSnap.id,
 
-        documentId:
-          docSnap.id,
+        courseId:
+          courseId,
 
         ...data
 
@@ -888,14 +936,265 @@ async function loadLessons(){
   );
 
 
-  /* =========================================
-     SORT BY LESSON ORDER
-  ========================================= */
+  /*
+   * Remove duplicate course IDs.
+   */
+
+  const unique =
+    new Map();
+
+
+  enrolledCourses.forEach(
+    enrollment => {
+
+      if(
+        !unique.has(
+          enrollment.courseId
+        )
+      ){
+
+        unique.set(
+          enrollment.courseId,
+          enrollment
+        );
+
+      }
+
+    }
+  );
+
+
+  enrolledCourses =
+    Array.from(
+      unique.values()
+    );
+
+}
+
+
+/* =========================================
+   LOAD LESSONS FOR ENROLLED COURSES
+========================================= */
+
+async function loadLessons(){
+
+  allLessons = [];
+
+
+  const courseIds =
+    [
+      ...new Set(
+        enrolledCourses
+          .map(
+            item =>
+              String(
+                item.courseId
+              ).trim()
+          )
+          .filter(Boolean)
+      )
+    ];
+
+
+  if(
+    courseIds.length === 0
+  ){
+
+    filteredLessons = [];
+
+    return;
+
+  }
+
+
+  /*
+   * Firestore "in" supports up to 30 values.
+   * Split into batches so the page continues
+   * working when the user has many courses.
+   */
+
+  const batches = [];
+
+
+  for(
+    let i = 0;
+    i < courseIds.length;
+    i += 30
+  ){
+
+    batches.push(
+      courseIds.slice(
+        i,
+        i + 30
+      )
+    );
+
+  }
+
+
+  for(
+    const batch of batches
+  ){
+
+    const lessonsQuery =
+      query(
+        collection(
+          db,
+          "lessons"
+        ),
+        where(
+          "courseId",
+          "in",
+          batch
+        )
+      );
+
+
+    const snapshot =
+      await getDocs(
+        lessonsQuery
+      );
+
+
+    snapshot.forEach(
+      docSnap => {
+
+        const data =
+          docSnap.data() || {};
+
+
+        const status =
+          String(
+            data.status || ""
+          )
+          .trim()
+          .toLowerCase();
+
+
+        /*
+         * Public learning page should not show
+         * draft/inactive lessons.
+         */
+
+        if(
+          status &&
+          status !== "published" &&
+          status !== "active"
+        ){
+
+          return;
+
+        }
+
+
+        allLessons.push({
+
+          id:
+            docSnap.id,
+
+          lessonId:
+            docSnap.id,
+
+          documentId:
+            docSnap.id,
+
+          ...data
+
+        });
+
+      }
+    );
+
+  }
+
+
+  /*
+   * Remove duplicate lessons.
+   */
+
+  const uniqueLessons =
+    new Map();
+
+
+  allLessons.forEach(
+    lesson => {
+
+      uniqueLessons.set(
+        lesson.id,
+        lesson
+      );
+
+    }
+  );
+
+
+  allLessons =
+    Array.from(
+      uniqueLessons.values()
+    );
+
+
+  /*
+   * Sort by course, module and lesson order.
+   */
 
   allLessons.sort(
-    (a,b) =>
-      Number(a.order || 0) -
-      Number(b.order || 0)
+    (a,b) => {
+
+      const courseA =
+        String(
+          a.courseId || ""
+        );
+
+      const courseB =
+        String(
+          b.courseId || ""
+        );
+
+
+      if(
+        courseA !== courseB
+      ){
+
+        return courseA.localeCompare(
+          courseB
+        );
+
+      }
+
+
+      const moduleA =
+        String(
+          a.moduleId || ""
+        );
+
+      const moduleB =
+        String(
+          b.moduleId || ""
+        );
+
+
+      if(
+        moduleA !== moduleB
+      ){
+
+        return moduleA.localeCompare(
+          moduleB
+        );
+
+      }
+
+
+      return (
+        Number(
+          a.order || 0
+        ) -
+        Number(
+          b.order || 0
+        )
+      );
+
+    }
   );
 
 
@@ -932,27 +1231,64 @@ function renderLessons(){
   emptyBox.style.display =
     "none";
 
+
   lessonsGrid.style.display =
     "grid";
 
 
   filteredLessons.forEach(
-    (lesson,index) => {
+    (
+      lesson,
+      index
+    ) => {
 
       const lessonId =
-        lesson.id;
+        String(
+          lesson.id ||
+          lesson.lessonId ||
+          lesson.documentId ||
+          ""
+        );
+
+
+      if(
+        !lessonId
+      ){
+
+        return;
+
+      }
 
 
       const type =
         String(
-          lesson.type || "lesson"
+          lesson.type ||
+          "lesson"
         );
 
 
       const status =
         String(
-          lesson.status || ""
+          lesson.status ||
+          "published"
         );
+
+
+      const order =
+        Number(
+          lesson.order
+        ) ||
+        index + 1;
+
+
+      const title =
+        lesson.title ||
+        "Untitled Lesson";
+
+
+      const description =
+        lesson.description ||
+        "Continue with this lesson.";
 
 
       const card =
@@ -970,30 +1306,17 @@ function renderLessons(){
         <div class="lesson-top">
 
           <div class="lesson-icon">
-
             ${lessonIcon(type)}
-
           </div>
 
           <div>
 
             <div class="lesson-number">
-
-              Lesson ${
-                Number(
-                  lesson.order
-                ) || index + 1
-              }
-
+              Lesson ${order}
             </div>
 
             <div class="lesson-title">
-
-              ${escapeHtml(
-                lesson.title ||
-                "Untitled Lesson"
-              )}
-
+              ${escapeHtml(title)}
             </div>
 
           </div>
@@ -1004,21 +1327,14 @@ function renderLessons(){
         <div class="lesson-body">
 
           <div class="lesson-description">
-
-            ${escapeHtml(
-              lesson.description ||
-              "Continue with this lesson."
-            )}
-
+            ${escapeHtml(description)}
           </div>
 
 
           <div class="meta">
 
             <span class="badge">
-
               ${escapeHtml(type)}
-
             </span>
 
 
@@ -1037,32 +1353,27 @@ function renderLessons(){
             }
 
 
-            ${
-              status
-              ?
-              `
-                <span class="badge status">
-                  ${escapeHtml(status)}
-                </span>
-              `
-              :
-              ""
-            }
+            <span class="badge status">
+              ${escapeHtml(status)}
+            </span>
 
           </div>
 
 
           <button
             class="play-btn"
-            data-lesson-id="${escapeHtml(
-              lessonId
-            )}"
+            type="button"
           >
 
             ${
-              type.toLowerCase() === "video"
+              String(type)
+                .toLowerCase() ===
+              "video"
+
               ? "▶ Watch Video"
+
               : "📖 Open Lesson"
+
             }
 
           </button>
@@ -1072,20 +1383,22 @@ function renderLessons(){
       `;
 
 
-      card
-        .querySelector(
+      const button =
+        card.querySelector(
           ".play-btn"
-        )
-        .addEventListener(
-          "click",
-          () => {
-
-            openLesson(
-              lesson
-            );
-
-          }
         );
+
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          openLesson(
+            lesson
+          );
+
+        }
+      );
 
 
       lessonsGrid.appendChild(
@@ -1106,15 +1419,17 @@ function openLesson(
   lesson
 ){
 
-  const lessonId =
-    lesson.id ||
-    lesson.lessonId ||
-    lesson.documentId ||
-    "";
+  const id =
+    String(
+      lesson.id ||
+      lesson.lessonId ||
+      lesson.documentId ||
+      ""
+    ).trim();
 
 
   if(
-    !lessonId
+    !id
   ){
 
     alert(
@@ -1126,63 +1441,79 @@ function openLesson(
   }
 
 
-  /*
-   * ONLY LESSON FIREBASE ID.
-   *
-   * Course ID is NOT taken from URL.
-   * lesson-watch.html will read
-   * courseId directly from Firestore.
-   */
-
   window.location.href =
     "lesson-watch.html?id=" +
     encodeURIComponent(
-      lessonId
+      id
     );
 
 }
 
 
 /* =========================================
-   SEARCH
+   SEARCH LESSONS
 ========================================= */
 
 searchInput.addEventListener(
   "input",
   () => {
 
-    const q =
+    const search =
       searchInput.value
         .trim()
         .toLowerCase();
+
+
+    if(
+      !search
+    ){
+
+      filteredLessons =
+        [...allLessons];
+
+      renderLessons();
+
+      return;
+
+    }
 
 
     filteredLessons =
       allLessons.filter(
         lesson => {
 
-          const text = `
+          const text = [
 
-            ${lesson.title || ""}
+            lesson.title,
 
-            ${lesson.description || ""}
+            lesson.description,
 
-            ${lesson.type || ""}
+            lesson.type,
 
-            ${lesson.duration || ""}
+            lesson.status,
 
-            ${lesson.status || ""}
+            lesson.duration,
 
-            ${lesson.courseId || ""}
+            lesson.courseId,
 
-            ${lesson.moduleId || ""}
+            lesson.moduleId,
 
-            ${lesson.id || ""}
+            lesson.id
 
-          `.toLowerCase();
+          ]
+          .map(
+            value =>
+              String(
+                value || ""
+              )
+              .toLowerCase()
+          )
+          .join(" ");
 
 
-          return text.includes(q);
+          return text.includes(
+            search
+          );
 
         }
       );
@@ -1195,24 +1526,55 @@ searchInput.addEventListener(
 
 
 /* =========================================
-   AUTH STATE
+   LOAD EVERYTHING
 ========================================= */
 
-onAuthStateChanged(
-  auth,
-  async user => {
+async function loadPage(
+  user
+){
 
-    loadingBox.style.display =
-      "block";
+  loadingBox.style.display =
+    "block";
 
-    loginBox.style.display =
-      "none";
+  loginBox.style.display =
+    "none";
 
-    emptyBox.style.display =
-      "none";
+  emptyBox.style.display =
+    "none";
 
-    errorBox.style.display =
-      "none";
+  errorBox.style.display =
+    "none";
+
+  toolbar.style.display =
+    "none";
+
+  lessonsGrid.style.display =
+    "none";
+
+
+  await loadEnrollments(
+    user.uid
+  );
+
+
+  enrolledCoursesCount.textContent =
+    enrolledCourses.length;
+
+
+  await loadLessons();
+
+
+  availableLessonsCount.textContent =
+    allLessons.length;
+
+
+  loadingBox.style.display =
+    "none";
+
+
+  if(
+    allLessons.length === 0
+  ){
 
     toolbar.style.display =
       "none";
@@ -1220,75 +1582,101 @@ onAuthStateChanged(
     lessonsGrid.style.display =
       "none";
 
+    emptyBox.style.display =
+      "block";
 
-    if(
-      !user
-    ){
+    return;
 
-      loadingBox.style.display =
-        "none";
-
-      loginBox.style.display =
-        "block";
-
-      return;
-
-    }
+  }
 
 
-    try{
+  toolbar.style.display =
+    "flex";
+
+
+  renderLessons();
+
+}
+
+
+/* =========================================
+   SHOW ERROR
+========================================= */
+
+function showError(
+  error
+){
+
+  console.error(
+    "Course lessons error:",
+    error
+  );
+
+
+  loadingBox.style.display =
+    "none";
+
+  loginBox.style.display =
+    "none";
+
+  emptyBox.style.display =
+    "none";
+
+  toolbar.style.display =
+    "none";
+
+    lessonsGrid.style.display =
+    "none";
+
+  errorBox.style.display =
+    "block";
+
+  errorMessage.textContent =
+    e?.message ||
+    "Unable to load lessons. Please try again.";
+
+  console.error(
+    "Course Lessons Error:",
+    e
+  );
+
+  retryBtn.style.display =
+    "inline-flex";
+}
+
+
+/* =========================================
+   RETRY
+========================================= */
+
+retryBtn.addEventListener(
+  "click",
+  async () => {
+
+    retryBtn.style.display =
+      "none";
+
+    errorBox.style.display =
+      "none";
+
+    loadingBox.style.display =
+      "block";
+
+    try {
 
       await loadEnrollments(
-        user.uid
+        currentUser.uid
       );
-
 
       await loadLessons();
 
-
-      enrolledCoursesCount.textContent =
-        enrolledCourses.length;
-
-
-      availableLessonsCount.textContent =
-        allLessons.length;
-
+      updateStats();
+      renderLessons();
 
       loadingBox.style.display =
         "none";
 
-
-      if(
-        allLessons.length === 0
-      ){
-
-        toolbar.style.display =
-          "none";
-
-        lessonsGrid.style.display =
-          "none";
-
-        emptyBox.style.display =
-          "block";
-
-        return;
-
-      }
-
-
-      toolbar.style.display =
-        "flex";
-
-
-      renderLessons();
-
-
-    }catch(error){
-
-      console.error(
-        error
-      );
-
+    } catch(e){
 
       loadingBox.style.display =
         "none";
@@ -1297,31 +1685,493 @@ onAuthStateChanged(
         "block";
 
       errorMessage.textContent =
-        "Unable to load your course lessons.";
+        e?.message ||
+        "Unable to reload lessons.";
 
+      retryBtn.style.display =
+        "inline-flex";
+
+      console.error(e);
     }
-
   }
 );
 
 
 /* =========================================
-   BACK
+   SEARCH
 ========================================= */
 
-document
-  .getElementById(
-    "backButton"
-  )
-  .addEventListener(
-    "click",
-    () => {
+searchInput.addEventListener(
+  "input",
+  () => {
 
-      window.location.href =
-        "course-learn.html";
+    const search =
+      searchInput.value
+        .trim()
+        .toLowerCase();
 
+    if(!search){
+
+      filteredLessons =
+        [...allLessons];
+
+    }else{
+
+      filteredLessons =
+        allLessons.filter(
+          lesson => {
+
+            const text = [
+
+              lesson.title,
+              lesson.description,
+              lesson.type,
+              lesson.status,
+              lesson.duration,
+              lesson.courseId,
+              lesson.moduleId
+
+            ]
+              .map(value =>
+                String(value || "")
+                  .toLowerCase()
+              )
+              .join(" ");
+
+            return text.includes(
+              search
+            );
+          }
+        );
+    }
+
+    renderLessons();
+  }
+);
+
+
+/* =========================================
+   RENDER LESSONS
+========================================= */
+
+function renderLessons(){
+
+  lessonsGrid.innerHTML = "";
+
+  if(filteredLessons.length === 0){
+
+    lessonsGrid.style.display =
+      "none";
+
+    emptyBox.style.display =
+      "block";
+
+    return;
+  }
+
+  emptyBox.style.display =
+    "none";
+
+  lessonsGrid.style.display =
+    "grid";
+
+  filteredLessons.forEach(
+    lesson => {
+
+      const card =
+        document.createElement("article");
+
+      card.className =
+        "lesson-card";
+
+      const title =
+        escapeHtml(
+          lesson.title ||
+          "Untitled Lesson"
+        );
+
+      const description =
+        escapeHtml(
+          lesson.description ||
+          "Access this lesson from your course."
+        );
+
+      const type =
+        escapeHtml(
+          lesson.type ||
+          "lesson"
+        );
+
+      const duration =
+        escapeHtml(
+          lesson.duration ||
+          "—"
+        );
+
+      const status =
+        String(
+          lesson.status ||
+          "published"
+        )
+          .toLowerCase();
+
+      const statusClass =
+        status
+          .replace(/\s+/g, "-");
+
+      card.innerHTML = `
+
+        <div class="lesson-top">
+
+          <div class="lesson-icon">
+            ${getLessonIcon(
+              lesson.type
+            )}
+          </div>
+
+          <span class="status ${statusClass}">
+            ${escapeHtml(
+              lesson.status ||
+              "Published"
+            )}
+          </span>
+
+        </div>
+
+        <h3>
+          ${title}
+        </h3>
+
+        <p>
+          ${description}
+        </p>
+
+        <div class="lesson-meta">
+
+          <span>
+            📚 Course:
+            ${escapeHtml(
+              lesson.courseId ||
+              "—"
+            )}
+          </span>
+
+          <span>
+            📖 Module:
+            ${escapeHtml(
+              lesson.moduleId ||
+              "—"
+            )}
+          </span>
+
+          <span>
+            ⏱️ ${duration}
+          </span>
+
+        </div>
+
+        <button
+          type="button"
+          class="open-lesson"
+        >
+          Open Lesson →
+        </button>
+
+      `;
+
+      const openButton =
+        card.querySelector(
+          ".open-lesson"
+        );
+
+      openButton.addEventListener(
+        "click",
+        () => {
+
+          const lessonId =
+            lesson.id ||
+            lesson.lessonId ||
+            lesson.documentId;
+
+          if(!lessonId){
+
+            showError(
+              "Lesson ID is missing."
+            );
+
+            return;
+          }
+
+          window.location.href =
+            "lesson-watch.html?id=" +
+            encodeURIComponent(
+              lessonId
+            );
+        }
+      );
+
+      lessonsGrid.appendChild(
+        card
+      );
     }
   );
+}
+
+
+/* =========================================
+   LESSON ICON
+========================================= */
+
+function getLessonIcon(type){
+
+  switch(
+    String(type || "")
+      .toLowerCase()
+  ){
+
+    case "video":
+      return "🎬";
+
+    case "pdf":
+      return "📄";
+
+    case "audio":
+      return "🎧";
+
+    case "live":
+      return "🔴";
+
+    case "text":
+      return "📝";
+
+    default:
+      return "📚";
+  }
+}
+
+
+/* =========================================
+   ESCAPE HTML
+========================================= */
+
+function escapeHtml(value){
+
+  return String(value || "")
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+}
+
+
+/* =========================================
+   ERROR DISPLAY
+========================================= */
+
+function showError(message){
+
+  loadingBox.style.display =
+    "none";
+
+  emptyBox.style.display =
+    "none";
+
+  lessonsGrid.style.display =
+    "none";
+
+  errorMessage.textContent =
+    message;
+
+  errorBox.style.display =
+    "block";
+
+  retryBtn.style.display =
+    "inline-flex";
+}
+
+
+/* =========================================
+   BACK BUTTON
+========================================= */
+
+backBtn.addEventListener(
+  "click",
+  () => {
+
+    if(
+      window.history.length > 1
+    ){
+
+      window.history.back();
+
+    }else{
+
+      window.location.href =
+        "index.html";
+    }
+  }
+);
+
+
+/* =========================================
+   FIREBASE AUTH
+========================================= */
+
+onAuthStateChanged(
+  auth,
+  async user => {
+
+    currentUser =
+      user || null;
+
+    if(!user){
+
+      loadingBox.style.display =
+        "none";
+
+      errorBox.style.display =
+        "none";
+
+      emptyBox.style.display =
+        "none";
+
+      toolbar.style.display =
+        "none";
+
+      lessonsGrid.style.display =
+        "none";
+
+      loginBox.style.display =
+        "block";
+
+      enrolledCoursesCount.textContent =
+        "0";
+
+      availableLessonsCount.textContent =
+        "0";
+
+      return;
+    }
+
+    loginBox.style.display =
+      "none";
+
+    toolbar.style.display =
+      "flex";
+
+    loadingBox.style.display =
+      "block";
+
+    errorBox.style.display =
+      "none";
+
+    emptyBox.style.display =
+      "none";
+
+    lessonsGrid.style.display =
+      "none";
+
+    try {
+
+      await loadEnrollments(
+        user.uid
+      );
+
+      await loadLessons();
+
+      updateStats();
+
+      renderLessons();
+
+      loadingBox.style.display =
+        "none";
+
+    } catch(e){
+
+      console.error(
+        "Firebase load error:",
+        e
+      );
+
+      loadingBox.style.display =
+        "none";
+
+      lessonsGrid.style.display =
+        "none";
+
+      errorBox.style.display =
+        "block";
+
+      retryBtn.style.display =
+        "inline-flex";
+
+      if(
+        e?.code ===
+        "permission-denied"
+      ){
+
+        errorMessage.textContent =
+          "You do not have permission to access your course lessons.";
+
+      }else if(
+        e?.code ===
+        "failed-precondition"
+      ){
+
+        errorMessage.textContent =
+          "A Firestore index is required for this query.";
+
+      }else{
+
+        errorMessage.textContent =
+          e?.message ||
+          "Unable to load your lessons.";
+      }
+    }
+  }
+);
+
+
+/* =========================================
+   INITIAL UI
+========================================= */
+
+loadingBox.style.display =
+  "block";
+
+loginBox.style.display =
+  "none";
+
+errorBox.style.display =
+  "none";
+
+emptyBox.style.display =
+  "none";
+
+toolbar.style.display =
+  "none";
+
+lessonsGrid.style.display =
+  "none";
+
+retryBtn.style.display =
+  "none";
 
 </script>
 
