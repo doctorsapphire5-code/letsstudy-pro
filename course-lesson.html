@@ -25,7 +25,7 @@
 }
 
 body{
-  font-family:Arial, sans-serif;
+  font-family:Arial,sans-serif;
   background:#f5f7fb;
   color:#172033;
   min-height:100vh;
@@ -343,10 +343,26 @@ header{
   background:#1d4ed8;
 }
 
-.course-name{
-  color:#64748b;
-  font-size:12px;
-  margin-top:4px;
+.user-info{
+  margin-top:18px;
+
+  padding:12px 15px;
+
+  background:#eff6ff;
+
+  border:1px solid #dbeafe;
+
+  border-radius:10px;
+
+  font-size:13px;
+
+  color:#475569;
+
+  word-break:break-all;
+}
+
+.user-info strong{
+  color:#172033;
 }
 
 @media(max-width:700px){
@@ -386,6 +402,7 @@ header{
 </head>
 
 <body>
+
 
 <header>
 
@@ -451,6 +468,21 @@ header{
       </div>
 
     </div>
+
+  </div>
+
+
+  <div
+    class="user-info"
+    id="userInfo"
+    style="display:none;"
+  >
+
+    <strong>Account:</strong>
+
+    <span id="userEmail">
+      —
+    </span>
 
   </div>
 
@@ -713,6 +745,21 @@ const retryButton =
     "retryButton"
   );
 
+const userInfo =
+  document.getElementById(
+    "userInfo"
+  );
+
+const userEmail =
+  document.getElementById(
+    "userEmail"
+  );
+
+const backButton =
+  document.getElementById(
+    "backButton"
+  );
+
 
 /* =========================================
    DATA
@@ -729,29 +776,33 @@ let filteredLessons = [];
    ESCAPE HTML
 ========================================= */
 
-function escapeHtml(value){
+function escapeHtml(
+  value
+){
 
-  return String(value ?? "")
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-    .replace(
-      /</g,
-      "&lt;"
-    )
-    .replace(
-      />/g,
-      "&gt;"
-    )
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-    .replace(
-      /'/g,
-      "&#039;"
-    );
+  return String(
+    value ?? ""
+  )
+  .replace(
+    /&/g,
+    "&amp;"
+  )
+  .replace(
+    /</g,
+    "&lt;"
+  )
+  .replace(
+    />/g,
+    "&gt;"
+  )
+  .replace(
+    /"/g,
+    "&quot;"
+  )
+  .replace(
+    /'/g,
+    "&#039;"
+  );
 
 }
 
@@ -824,7 +875,7 @@ function lessonIcon(
 
 
 /* =========================================
-   NORMALIZE STATUS
+   ACTIVE ENROLLMENT
 ========================================= */
 
 function isActiveEnrollment(
@@ -850,14 +901,45 @@ function isActiveEnrollment(
 
 
 /* =========================================
-   LOAD USER ENROLLMENTS
+   LOAD ENROLLMENTS FOR CURRENT USER
 ========================================= */
 
 async function loadEnrollments(
-  userId
+  firebaseUser
 ){
 
   enrolledCourses = [];
+
+
+  /*
+   * IMPORTANT:
+   *
+   * Firebase Authentication UID
+   * ndiyo identity halisi ya user.
+   *
+   * Hatutumii UID kutoka URL.
+   * Hatutumii UID ambayo user ameingiza.
+   */
+
+  const uid =
+    firebaseUser.uid;
+
+
+  if(
+    !uid
+  ){
+
+    throw new Error(
+      "Firebase user ID is missing."
+    );
+
+  }
+
+
+  console.log(
+    "Loading enrollments for UID:",
+    uid
+  );
 
 
   const enrollmentRef =
@@ -867,13 +949,18 @@ async function loadEnrollments(
     );
 
 
+  /*
+   * Firestore inatafuta enrollment
+   * zenye userId sawa na Firebase Auth UID.
+   */
+
   const enrollmentQuery =
     query(
       enrollmentRef,
       where(
         "userId",
         "==",
-        userId
+        uid
       )
     );
 
@@ -891,6 +978,10 @@ async function loadEnrollments(
         docSnap.data() || {};
 
 
+      /*
+       * Hakikisha enrollment ni active.
+       */
+
       if(
         !isActiveEnrollment(
           data.status
@@ -902,10 +993,16 @@ async function loadEnrollments(
       }
 
 
+      /*
+       * Course ID inatoka kwenye
+       * enrollment ya user huyu.
+       */
+
       const courseId =
         String(
           data.courseId || ""
-        ).trim();
+        )
+        .trim();
 
 
       if(
@@ -937,10 +1034,10 @@ async function loadEnrollments(
 
 
   /*
-   * Remove duplicate course IDs.
+   * Remove duplicate courses.
    */
 
-  const unique =
+  const uniqueCourses =
     new Map();
 
 
@@ -948,12 +1045,12 @@ async function loadEnrollments(
     enrollment => {
 
       if(
-        !unique.has(
+        !uniqueCourses.has(
           enrollment.courseId
         )
       ){
 
-        unique.set(
+        uniqueCourses.set(
           enrollment.courseId,
           enrollment
         );
@@ -966,8 +1063,14 @@ async function loadEnrollments(
 
   enrolledCourses =
     Array.from(
-      unique.values()
+      uniqueCourses.values()
     );
+
+
+  console.log(
+    "User enrolled courses:",
+    enrolledCourses
+  );
 
 }
 
@@ -981,15 +1084,21 @@ async function loadLessons(){
   allLessons = [];
 
 
+  /*
+   * Chukua course IDs ambazo
+   * user huyu ame-enroll tu.
+   */
+
   const courseIds =
     [
       ...new Set(
         enrolledCourses
           .map(
-            item =>
+            enrollment =>
               String(
-                item.courseId
-              ).trim()
+                enrollment.courseId || ""
+              )
+              .trim()
           )
           .filter(Boolean)
       )
@@ -1008,9 +1117,8 @@ async function loadLessons(){
 
 
   /*
-   * Firestore "in" supports up to 30 values.
-   * Split into batches so the page continues
-   * working when the user has many courses.
+   * Firestore "in" query supports
+   * maximum 30 values.
    */
 
   const batches = [];
@@ -1072,8 +1180,7 @@ async function loadLessons(){
 
 
         /*
-         * Public learning page should not show
-         * draft/inactive lessons.
+         * Only published/active lessons.
          */
 
         if(
@@ -1109,7 +1216,7 @@ async function loadLessons(){
 
 
   /*
-   * Remove duplicate lessons.
+   * Remove duplicate lesson documents.
    */
 
   const uniqueLessons =
@@ -1135,11 +1242,15 @@ async function loadLessons(){
 
 
   /*
-   * Sort by course, module and lesson order.
+   * Sort:
+   * Course → Module → Lesson order
    */
 
   allLessons.sort(
-    (a,b) => {
+    (
+      a,
+      b
+    ) => {
 
       const courseA =
         String(
@@ -1199,7 +1310,15 @@ async function loadLessons(){
 
 
   filteredLessons =
-    [...allLessons];
+    [
+      ...allLessons
+    ];
+
+
+  console.log(
+    "Lessons for enrolled courses:",
+    allLessons
+  );
 
 }
 
@@ -1210,7 +1329,8 @@ async function loadLessons(){
 
 function renderLessons(){
 
-  lessonsGrid.innerHTML = "";
+  lessonsGrid.innerHTML =
+    "";
 
 
   if(
@@ -1231,7 +1351,6 @@ function renderLessons(){
   emptyBox.style.display =
     "none";
 
-
   lessonsGrid.style.display =
     "grid";
 
@@ -1248,7 +1367,8 @@ function renderLessons(){
           lesson.lessonId ||
           lesson.documentId ||
           ""
-        );
+        )
+        .trim();
 
 
       if(
@@ -1425,7 +1545,8 @@ function openLesson(
       lesson.lessonId ||
       lesson.documentId ||
       ""
-    ).trim();
+    )
+    .trim();
 
 
   if(
@@ -1441,6 +1562,15 @@ function openLesson(
   }
 
 
+  /*
+   * Hatumtumii userId kwenye URL.
+   *
+   * Lesson ID pekee ndiyo inatumwa.
+   *
+   * lesson-watch.html itathibitisha tena
+   * Firebase Auth user + enrollment.
+   */
+
   window.location.href =
     "lesson-watch.html?id=" +
     encodeURIComponent(
@@ -1451,7 +1581,7 @@ function openLesson(
 
 
 /* =========================================
-   SEARCH LESSONS
+   SEARCH
 ========================================= */
 
 searchInput.addEventListener(
@@ -1469,7 +1599,9 @@ searchInput.addEventListener(
     ){
 
       filteredLessons =
-        [...allLessons];
+        [
+          ...allLessons
+        ];
 
       renderLessons();
 
@@ -1496,15 +1628,15 @@ searchInput.addEventListener(
 
             lesson.courseId,
 
-            lesson.moduleId,
+                        lesson.moduleId,
 
             lesson.id
 
           ]
           .map(
-            value =>
+            val =>
               String(
-                value || ""
+                val ?? ""
               )
               .toLowerCase()
           )
@@ -1526,11 +1658,11 @@ searchInput.addEventListener(
 
 
 /* =========================================
-   LOAD EVERYTHING
+   LOAD PAGE
 ========================================= */
 
 async function loadPage(
-  user
+  firebaseUser
 ){
 
   loadingBox.style.display =
@@ -1551,15 +1683,44 @@ async function loadPage(
   lessonsGrid.style.display =
     "none";
 
+  retryButton.style.display =
+    "none";
+
+
+  /*
+   * Firebase Auth UID ndiyo
+   * utambulisho wa user.
+   */
+
+  if(
+    !firebaseUser ||
+    !firebaseUser.uid
+  ){
+
+    throw new Error(
+      "User authentication is unavailable."
+    );
+
+  }
+
+
+  /*
+   * Load enrollment za user huyu tu.
+   */
 
   await loadEnrollments(
-    user.uid
+    firebaseUser
   );
 
 
   enrolledCoursesCount.textContent =
     enrolledCourses.length;
 
+
+  /*
+   * Load lessons za courses
+   * ambazo user huyu ame-enroll.
+   */
 
   await loadLessons();
 
@@ -1593,6 +1754,8 @@ async function loadPage(
   toolbar.style.display =
     "flex";
 
+  emptyBox.style.display =
+    "none";
 
   renderLessons();
 
@@ -1625,23 +1788,60 @@ function showError(
   toolbar.style.display =
     "none";
 
-    lessonsGrid.style.display =
+  lessonsGrid.style.display =
     "none";
 
   errorBox.style.display =
     "block";
 
+  retryButton.style.display =
+    "inline-block";
+
+
+  let message =
+    "Unable to load your course lessons.";
+
+
+  if(
+    error?.code ===
+    "permission-denied"
+  ){
+
+    message =
+      "You do not have permission to access your enrolled courses.";
+
+  }
+  else if(
+    error?.code ===
+    "failed-precondition"
+  ){
+
+    message =
+      "A Firestore index is required for this query.";
+
+  }
+  else if(
+    error?.code ===
+    "unavailable"
+  ){
+
+    message =
+      "Firebase is temporarily unavailable. Please try again.";
+
+  }
+  else if(
+    error?.message
+  ){
+
+    message =
+      error.message;
+
+  }
+
+
   errorMessage.textContent =
-    e?.message ||
-    "Unable to load lessons. Please try again.";
+    message;
 
-  console.error(
-    "Course Lessons Error:",
-    e
-  );
-
-  retryBtn.style.display =
-    "inline-flex";
 }
 
 
@@ -1649,368 +1849,59 @@ function showError(
    RETRY
 ========================================= */
 
-retryBtn.addEventListener(
+retryButton.addEventListener(
   "click",
   async () => {
 
-    retryBtn.style.display =
+    const user =
+      auth.currentUser;
+
+
+    if(
+      !user
+    ){
+
+      errorBox.style.display =
+        "none";
+
+      loginBox.style.display =
+        "block";
+
+      return;
+
+    }
+
+
+    retryButton.style.display =
       "none";
 
     errorBox.style.display =
       "none";
 
-    loadingBox.style.display =
-      "block";
+    try{
 
-    try {
-
-      await loadEnrollments(
-        currentUser.uid
+      await loadPage(
+        user
       );
 
-      await loadLessons();
-
-      updateStats();
-      renderLessons();
-
-      loadingBox.style.display =
-        "none";
-
-    } catch(e){
-
-      loadingBox.style.display =
-        "none";
-
-      errorBox.style.display =
-        "block";
-
-      errorMessage.textContent =
-        e?.message ||
-        "Unable to reload lessons.";
-
-      retryBtn.style.display =
-        "inline-flex";
-
-      console.error(e);
     }
+    catch(error){
+
+      showError(
+        error
+      );
+
+    }
+
   }
 );
-
-
-/* =========================================
-   SEARCH
-========================================= */
-
-searchInput.addEventListener(
-  "input",
-  () => {
-
-    const search =
-      searchInput.value
-        .trim()
-        .toLowerCase();
-
-    if(!search){
-
-      filteredLessons =
-        [...allLessons];
-
-    }else{
-
-      filteredLessons =
-        allLessons.filter(
-          lesson => {
-
-            const text = [
-
-              lesson.title,
-              lesson.description,
-              lesson.type,
-              lesson.status,
-              lesson.duration,
-              lesson.courseId,
-              lesson.moduleId
-
-            ]
-              .map(value =>
-                String(value || "")
-                  .toLowerCase()
-              )
-              .join(" ");
-
-            return text.includes(
-              search
-            );
-          }
-        );
-    }
-
-    renderLessons();
-  }
-);
-
-
-/* =========================================
-   RENDER LESSONS
-========================================= */
-
-function renderLessons(){
-
-  lessonsGrid.innerHTML = "";
-
-  if(filteredLessons.length === 0){
-
-    lessonsGrid.style.display =
-      "none";
-
-    emptyBox.style.display =
-      "block";
-
-    return;
-  }
-
-  emptyBox.style.display =
-    "none";
-
-  lessonsGrid.style.display =
-    "grid";
-
-  filteredLessons.forEach(
-    lesson => {
-
-      const card =
-        document.createElement("article");
-
-      card.className =
-        "lesson-card";
-
-      const title =
-        escapeHtml(
-          lesson.title ||
-          "Untitled Lesson"
-        );
-
-      const description =
-        escapeHtml(
-          lesson.description ||
-          "Access this lesson from your course."
-        );
-
-      const type =
-        escapeHtml(
-          lesson.type ||
-          "lesson"
-        );
-
-      const duration =
-        escapeHtml(
-          lesson.duration ||
-          "—"
-        );
-
-      const status =
-        String(
-          lesson.status ||
-          "published"
-        )
-          .toLowerCase();
-
-      const statusClass =
-        status
-          .replace(/\s+/g, "-");
-
-      card.innerHTML = `
-
-        <div class="lesson-top">
-
-          <div class="lesson-icon">
-            ${getLessonIcon(
-              lesson.type
-            )}
-          </div>
-
-          <span class="status ${statusClass}">
-            ${escapeHtml(
-              lesson.status ||
-              "Published"
-            )}
-          </span>
-
-        </div>
-
-        <h3>
-          ${title}
-        </h3>
-
-        <p>
-          ${description}
-        </p>
-
-        <div class="lesson-meta">
-
-          <span>
-            📚 Course:
-            ${escapeHtml(
-              lesson.courseId ||
-              "—"
-            )}
-          </span>
-
-          <span>
-            📖 Module:
-            ${escapeHtml(
-              lesson.moduleId ||
-              "—"
-            )}
-          </span>
-
-          <span>
-            ⏱️ ${duration}
-          </span>
-
-        </div>
-
-        <button
-          type="button"
-          class="open-lesson"
-        >
-          Open Lesson →
-        </button>
-
-      `;
-
-      const openButton =
-        card.querySelector(
-          ".open-lesson"
-        );
-
-      openButton.addEventListener(
-        "click",
-        () => {
-
-          const lessonId =
-            lesson.id ||
-            lesson.lessonId ||
-            lesson.documentId;
-
-          if(!lessonId){
-
-            showError(
-              "Lesson ID is missing."
-            );
-
-            return;
-          }
-
-          window.location.href =
-            "lesson-watch.html?id=" +
-            encodeURIComponent(
-              lessonId
-            );
-        }
-      );
-
-      lessonsGrid.appendChild(
-        card
-      );
-    }
-  );
-}
-
-
-/* =========================================
-   LESSON ICON
-========================================= */
-
-function getLessonIcon(type){
-
-  switch(
-    String(type || "")
-      .toLowerCase()
-  ){
-
-    case "video":
-      return "🎬";
-
-    case "pdf":
-      return "📄";
-
-    case "audio":
-      return "🎧";
-
-    case "live":
-      return "🔴";
-
-    case "text":
-      return "📝";
-
-    default:
-      return "📚";
-  }
-}
-
-
-/* =========================================
-   ESCAPE HTML
-========================================= */
-
-function escapeHtml(value){
-
-  return String(value || "")
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-    .replace(
-      /</g,
-      "&lt;"
-    )
-    .replace(
-      />/g,
-      "&gt;"
-    )
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-    .replace(
-      /'/g,
-      "&#039;"
-    );
-}
-
-
-/* =========================================
-   ERROR DISPLAY
-========================================= */
-
-function showError(message){
-
-  loadingBox.style.display =
-    "none";
-
-  emptyBox.style.display =
-    "none";
-
-  lessonsGrid.style.display =
-    "none";
-
-  errorMessage.textContent =
-    message;
-
-  errorBox.style.display =
-    "block";
-
-  retryBtn.style.display =
-    "inline-flex";
-}
 
 
 /* =========================================
    BACK BUTTON
 ========================================= */
 
-backBtn.addEventListener(
+backButton.addEventListener(
   "click",
   () => {
 
@@ -2020,27 +1911,33 @@ backBtn.addEventListener(
 
       window.history.back();
 
-    }else{
+    }
+    else{
 
       window.location.href =
-        "search.html";
+        "index.html";
+
     }
+
   }
 );
 
 
 /* =========================================
-   FIREBASE AUTH
+   FIREBASE AUTH STATE
 ========================================= */
 
 onAuthStateChanged(
   auth,
   async user => {
 
-    currentUser =
-      user || null;
+    /*
+     * Hakuna user aliye-login.
+     */
 
-    if(!user){
+    if(
+      !user
+    ){
 
       loadingBox.style.display =
         "none";
@@ -2060,6 +1957,9 @@ onAuthStateChanged(
       loginBox.style.display =
         "block";
 
+      userInfo.style.display =
+        "none";
+
       enrolledCoursesCount.textContent =
         "0";
 
@@ -2067,98 +1967,64 @@ onAuthStateChanged(
         "0";
 
       return;
+
     }
 
-    loginBox.style.display =
-      "none";
 
-    toolbar.style.display =
-      "flex";
+    /*
+     * User ameingia.
+     *
+     * Firebase Auth UID ndiyo
+     * itakayotumika kutafuta
+     * enrollment zake.
+     */
 
-    loadingBox.style.display =
+    console.log(
+      "Authenticated UID:",
+      user.uid
+    );
+
+
+    userInfo.style.display =
       "block";
 
-    errorBox.style.display =
-      "none";
 
-    emptyBox.style.display =
-      "none";
+    userEmail.textContent =
+      user.email ||
+      user.phoneNumber ||
+      "Signed-in account";
 
-    lessonsGrid.style.display =
-      "none";
 
-    try {
+    try{
 
-      await loadEnrollments(
-        user.uid
+      await loadPage(
+        user
       );
 
-      await loadLessons();
-
-      updateStats();
-
-      renderLessons();
-
-      loadingBox.style.display =
-        "none";
-
-    } catch(e){
-
-      console.error(
-        "Firebase load error:",
-        e
-      );
-
-      loadingBox.style.display =
-        "none";
-
-      lessonsGrid.style.display =
-        "none";
-
-      errorBox.style.display =
-        "block";
-
-      retryBtn.style.display =
-        "inline-flex";
-
-      if(
-        e?.code ===
-        "permission-denied"
-      ){
-
-        errorMessage.textContent =
-          "You do not have permission to access your course lessons.";
-
-      }else if(
-        e?.code ===
-        "failed-precondition"
-      ){
-
-        errorMessage.textContent =
-          "A Firestore index is required for this query.";
-
-      }else{
-
-        errorMessage.textContent =
-          e?.message ||
-          "Unable to load your lessons.";
-      }
     }
+    catch(error){
+
+      showError(
+        error
+      );
+
+    }
+
   }
 );
 
 
 /* =========================================
-   INITIAL UI
+   INITIAL STATE
 ========================================= */
 
 loadingBox.style.display =
   "block";
 
-loginBox.style.display =
+errorBox.style.display =
   "none";
 
-errorBox.style.display =
+loginBox.style.display =
   "none";
 
 emptyBox.style.display =
@@ -2170,7 +2036,7 @@ toolbar.style.display =
 lessonsGrid.style.display =
   "none";
 
-retryBtn.style.display =
+retryButton.style.display =
   "none";
 
 </script>
