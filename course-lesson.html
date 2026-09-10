@@ -14,7 +14,7 @@
 
 <meta
   name="description"
-  content="Access lessons from your enrolled LetsStudy Pro courses."
+  content="Access LetsStudy Pro courses and lessons."
 >
 
 <meta
@@ -38,10 +38,7 @@
 }
 
 body{
-  font-family:
-    Arial,
-    Helvetica,
-    sans-serif;
+  font-family:Arial,Helvetica,sans-serif;
   background:#f5f7fb;
   color:#172033;
   min-height:100vh;
@@ -93,9 +90,7 @@ main{
   padding:25px 20px 50px;
 }
 
-/* =====================================================
-   COURSE SELECTOR
-===================================================== */
+/* COURSE SELECTOR */
 
 .course-selector{
   background:#fff;
@@ -126,9 +121,7 @@ main{
   border-color:#6366f1;
 }
 
-/* =====================================================
-   HERO
-===================================================== */
+/* HERO */
 
 .hero{
   background:#fff;
@@ -206,9 +199,7 @@ main{
   color:#667085;
 }
 
-/* =====================================================
-   SECTION
-===================================================== */
+/* SECTION */
 
 .section-title{
   display:flex;
@@ -222,9 +213,7 @@ main{
   font-size:24px;
 }
 
-/* =====================================================
-   SEARCH
-===================================================== */
+/* SEARCH */
 
 .search-box{
   position:relative;
@@ -253,9 +242,7 @@ main{
   border-color:#6366f1;
 }
 
-/* =====================================================
-   LESSONS
-===================================================== */
+/* LESSONS */
 
 .lessons{
   display:grid;
@@ -350,9 +337,7 @@ main{
   background:#4338ca;
 }
 
-/* =====================================================
-   LOADING
-===================================================== */
+/* LOADING */
 
 .loading{
   text-align:center;
@@ -376,9 +361,7 @@ main{
   }
 }
 
-/* =====================================================
-   EMPTY
-===================================================== */
+/* EMPTY */
 
 .empty{
   background:#fff;
@@ -400,9 +383,7 @@ main{
   margin-bottom:8px;
 }
 
-/* =====================================================
-   ERROR
-===================================================== */
+/* ERROR */
 
 .error{
   background:#fff;
@@ -438,9 +419,7 @@ main{
   font-weight:700;
 }
 
-/* =====================================================
-   FOOTER
-===================================================== */
+/* FOOTER */
 
 footer{
   text-align:center;
@@ -449,9 +428,7 @@ footer{
   padding:30px 20px;
 }
 
-/* =====================================================
-   MOBILE
-===================================================== */
+/* MOBILE */
 
 @media(max-width:700px){
 
@@ -519,18 +496,12 @@ footer{
       id="backBtn"
       type="button"
     >
-
       <i class="fa-solid fa-arrow-left"></i>
-
       Back
-
     </button>
 
-
     <div class="brand">
-
       LetsStudy <span>Pro</span>
-
     </div>
 
   </div>
@@ -540,10 +511,6 @@ footer{
 
 <main>
 
-  <!-- =================================================
-       ENROLLED COURSE SELECTOR
-  ================================================== -->
-
   <div
     class="course-selector"
     id="courseSelector"
@@ -551,28 +518,17 @@ footer{
   >
 
     <label for="courseSelect">
-
-      My Enrolled Courses
-
+      Courses
     </label>
 
-
     <select id="courseSelect">
-
       <option value="">
-
-        Loading enrolled courses...
-
+        Loading courses...
       </option>
-
     </select>
 
   </div>
 
-
-  <!-- =================================================
-       MAIN CONTENT
-  ================================================== -->
 
   <div id="pageContent">
 
@@ -581,7 +537,7 @@ footer{
       <div class="spinner"></div>
 
       <p>
-        Checking your enrollment...
+        Loading courses...
       </p>
 
     </div>
@@ -603,7 +559,7 @@ footer{
 
 
 /* =====================================================
-   FIREBASE APP
+   FIREBASE
 ===================================================== */
 
 import {
@@ -620,12 +576,6 @@ import {
   query,
   where
 } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
-
-
-import {
-  getAuth,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 
 
 /* =====================================================
@@ -671,10 +621,6 @@ const db =
   getFirestore(app);
 
 
-const auth =
-  getAuth(app);
-
-
 /* =====================================================
    ELEMENTS
 ===================================================== */
@@ -707,7 +653,7 @@ const backBtn =
    STATE
 ===================================================== */
 
-let currentUser = null;
+let allCourses = [];
 
 let enrolledCourses = [];
 
@@ -717,9 +663,11 @@ let currentCourse = null;
 
 let allLessons = [];
 
+let filteredLessons = [];
+
 
 /* =====================================================
-   URL
+   URL PARAMETERS
 ===================================================== */
 
 const params =
@@ -738,7 +686,7 @@ const urlCourseId = (
 
 
 /* =====================================================
-   BACK
+   BACK BUTTON
 ===================================================== */
 
 backBtn.addEventListener(
@@ -763,50 +711,19 @@ backBtn.addEventListener(
 
 
 /* =====================================================
-   AUTH STATE
+   START
 ===================================================== */
 
-onAuthStateChanged(
-  auth,
-  async user => {
-
-    if (!user) {
-
-      currentUser = null;
-
-      showLoginRequired();
-
-      return;
-
-    }
-
-
-    currentUser = user;
-
-
-    console.log(
-      "Authenticated user:",
-      user.uid
-    );
-
-
-    await loadEnrolledCourses(
-      user.uid
-    );
-
-  }
-);
+loadCourses();
 
 
 /* =====================================================
-   LOAD ENROLLED COURSES
+   LOAD COURSES
 ===================================================== */
 
-async function loadEnrolledCourses(
-  userId
-) {
+async function loadCourses(){
 
-  try {
+  try{
 
     pageContent.innerHTML = `
 
@@ -815,7 +732,7 @@ async function loadEnrolledCourses(
         <div class="spinner"></div>
 
         <p>
-          Loading your enrolled courses...
+          Loading courses...
         </p>
 
       </div>
@@ -823,247 +740,117 @@ async function loadEnrolledCourses(
     `;
 
 
-    /*
-      IMPORTANT:
-
-      We only query enrollments
-      belonging to the current user.
-    */
-
-    const enrollmentQuery =
-      query(
+    const snapshot =
+      await getDocs(
         collection(
           db,
-          "enrollments"
-        ),
-        where(
-          "userId",
-          "==",
-          userId
+          "courses"
         )
       );
 
 
-    const enrollmentSnapshot =
-      await getDocs(
-        enrollmentQuery
+    allCourses =
+      snapshot.docs.map(
+        courseDoc => ({
+
+          id:
+            courseDoc.id,
+
+          ...courseDoc.data()
+
+        })
       );
 
 
-    if (
-      enrollmentSnapshot.empty
-    ) {
-
-      showNoEnrollment();
-
-      return;
-
-    }
-
-
-    const courseIds = [];
-
-
-    enrollmentSnapshot.forEach(
-      enrollmentDoc => {
-
-        const data =
-          enrollmentDoc.data();
-
-
-        const status =
-          String(
-            data.status ||
-            ""
-          ).toLowerCase();
-
-
-        /*
-          Accepted enrollment states.
-        */
-
-        const validStatus =
-          status === "" ||
-          status === "active" ||
-          status === "approved" ||
-          status === "enrolled" ||
-          status === "completed";
-
-
-        if (!validStatus) {
-
-          return;
-
-        }
-
-
-        const courseId =
-          data.courseId ||
-          data.courseID ||
-          data.course;
-
-
-        if (
-          courseId &&
-          !courseIds.includes(
-            String(courseId)
-          )
-        ) {
-
-          courseIds.push(
-            String(courseId)
-          );
-
-        }
-
-      }
-    );
-
-
-    if (
-      courseIds.length === 0
-    ) {
-
-      showNoEnrollment();
-
-      return;
-
-    }
-
-
     /*
-      Get only the courses that
-      appear in the user's enrollments.
+      Only hide clearly inactive courses.
+      Empty status remains visible.
     */
 
-    enrolledCourses = [];
+    allCourses =
+      allCourses.filter(
+        course => {
 
+          const status =
+            String(
+              course.status ||
+              ""
+            ).toLowerCase();
 
-    for (
-      const courseId of courseIds
-    ) {
-
-      try {
-
-        const courseRef =
-          doc(
-            db,
-            "courses",
-            courseId
+          return (
+            status === "" ||
+            status === "published" ||
+            status === "active" ||
+            status === "available"
           );
-
-
-        const courseSnapshot =
-          await getDoc(
-            courseRef
-          );
-
-
-        if (
-          courseSnapshot.exists()
-        ) {
-
-          enrolledCourses.push({
-
-            id:
-              courseSnapshot.id,
-
-            ...courseSnapshot.data()
-
-          });
 
         }
-
-      } catch(error) {
-
-        console.error(
-          "Course load error:",
-          courseId,
-          error
-        );
-
-      }
-
-    }
+      );
 
 
-    if (
-      enrolledCourses.length === 0
-    ) {
+    if(
+      allCourses.length === 0
+    ){
 
-      showNoEnrollment();
+      showNoCourses();
 
       return;
 
     }
 
 
-    console.log(
-      "Enrolled courses:",
-      enrolledCourses
-    );
-
-
     /*
-      If URL contains an ID and the user
-      is actually enrolled in that course,
-      use it.
-
-      Otherwise use first enrolled course.
+      URL course selection.
     */
 
     const requestedCourse =
-      enrolledCourses.find(
+      allCourses.find(
         course =>
           course.id ===
           urlCourseId
       );
 
 
-    if (
+    if(
       requestedCourse
-    ) {
+    ){
 
       currentCourseId =
         requestedCourse.id;
 
-    } else {
+    }else{
 
       currentCourseId =
-        enrolledCourses[0].id;
+        allCourses[0].id;
 
     }
+
+
+    /*
+      Keep the variable name for compatibility
+      with existing page logic.
+    */
+
+    enrolledCourses =
+      allCourses;
 
 
     renderCourseSelector();
 
-
     await loadSelectedCourse();
 
-  } catch(error) {
+
+  }catch(error){
 
     console.error(
-      "Enrollment error:",
+      "Courses error:",
       error
     );
 
 
-    if (
-      error?.code ===
-      "permission-denied"
-    ) {
-
-      showError(
-        "You do not have permission to access your enrollments."
-      );
-
-    } else {
-
-      showError(
-        "Unable to load your enrolled courses."
-      );
-
-    }
+    showError(
+      "Unable to load courses from Firebase."
+    );
 
   }
 
@@ -1074,11 +861,11 @@ async function loadEnrolledCourses(
    COURSE SELECTOR
 ===================================================== */
 
-function renderCourseSelector() {
+function renderCourseSelector(){
 
-  if (
-    enrolledCourses.length <= 1
-  ) {
+  if(
+    allCourses.length <= 1
+  ){
 
     courseSelector.style.display =
       "none";
@@ -1093,41 +880,35 @@ function renderCourseSelector() {
 
 
   courseSelect.innerHTML =
-    enrolledCourses
-      .map(
-        course => {
+    allCourses.map(
+      course => {
 
-          const title =
-            getCourseTitle(
-              course
-            );
+        const title =
+          getCourseTitle(
+            course
+          );
 
 
-          return `
+        return `
 
-            <option
-              value="${escapeHTML(
-                course.id
-              )}"
-              ${
-                course.id ===
-                currentCourseId
-                  ? "selected"
-                  : ""
-              }
-            >
+          <option
+            value="${escapeHTML(
+              course.id
+            )}"
+            ${
+              course.id ===
+              currentCourseId
+                ? "selected"
+                : ""
+            }
+          >
+            ${escapeHTML(title)}
+          </option>
 
-              ${escapeHTML(
-                title
-              )}
+        `;
 
-            </option>
-
-          `;
-
-        }
-      )
-      .join("");
+      }
+    ).join("");
 
 }
 
@@ -1144,35 +925,44 @@ courseSelect.addEventListener(
       event.target.value;
 
 
-    if (!id) {
-
+    if(!id){
       return;
-
     }
 
 
-    /*
-      Security/UI check:
-      Never allow selecting a course
-      that is not in enrolledCourses.
-    */
-
-    const enrolled =
-      enrolledCourses.some(
+    const exists =
+      allCourses.some(
         course =>
           course.id === id
       );
 
 
-    if (!enrolled) {
-
+    if(!exists){
       return;
-
     }
 
 
     currentCourseId =
       id;
+
+
+    const newUrl =
+      new URL(
+        window.location.href
+      );
+
+
+    newUrl.searchParams.set(
+      "courseId",
+      id
+    );
+
+
+    window.history.replaceState(
+      {},
+      "",
+      newUrl
+    );
 
 
     await loadSelectedCourse();
@@ -1185,31 +975,28 @@ courseSelect.addEventListener(
    LOAD SELECTED COURSE
 ===================================================== */
 
-async function loadSelectedCourse() {
+async function loadSelectedCourse(){
 
-  /*
-    Extra client-side protection.
-    The selected course must belong
-    to the user's enrolled courses.
-  */
-
-  const isEnrolled =
-    enrolledCourses.some(
-      course =>
-        course.id ===
+  const course =
+    allCourses.find(
+      item =>
+        item.id ===
         currentCourseId
     );
 
 
-  if (!isEnrolled) {
+  if(!course){
 
     showError(
-      "You are not enrolled in this course."
+      "Course not found."
     );
 
     return;
 
   }
+
+
+  currentCourse = course;
 
 
   pageContent.innerHTML = `
@@ -1219,7 +1006,7 @@ async function loadSelectedCourse() {
       <div class="spinner"></div>
 
       <p>
-        Loading course...
+        Loading course lessons...
       </p>
 
     </div>
@@ -1227,52 +1014,14 @@ async function loadSelectedCourse() {
   `;
 
 
-  try {
-
-    const courseSnapshot =
-      await getDoc(
-        doc(
-          db,
-          "courses",
-          currentCourseId
-        )
-      );
-
-
-    if (
-      !courseSnapshot.exists()
-    ) {
-
-      showError(
-        "This enrolled course could not be found."
-      );
-
-      return;
-
-    }
-
-
-    currentCourse = {
-
-      id:
-        courseSnapshot.id,
-
-      ...courseSnapshot.data()
-
-    };
-
-
-    /*
-      Load lessons belonging to
-      this enrolled course.
-    */
+  try{
 
     await loadLessons();
 
-
     renderCourse();
 
-  } catch(error) {
+
+  }catch(error){
 
     console.error(
       "Selected course error:",
@@ -1280,22 +1029,9 @@ async function loadSelectedCourse() {
     );
 
 
-    if (
-      error?.code ===
-      "permission-denied"
-    ) {
-
-      showError(
-        "Permission denied while loading this course."
-      );
-
-    } else {
-
-      showError(
-        "Unable to load this course."
-      );
-
-    }
+    showError(
+      "Unable to load this course."
+    );
 
   }
 
@@ -1306,12 +1042,17 @@ async function loadSelectedCourse() {
    LOAD LESSONS
 ===================================================== */
 
-async function loadLessons() {
+async function loadLessons(){
 
   allLessons = [];
 
 
-  try {
+  /*
+    Primary schema:
+    lessons.courseId
+  */
+
+  try{
 
     const lessonsQuery =
       query(
@@ -1346,20 +1087,20 @@ async function loadLessons() {
       );
 
 
-  } catch(error) {
+  }catch(error){
 
-    console.error(
-      "Lesson query error:",
+    console.warn(
+      "courseId query failed:",
       error
     );
 
 
     /*
-      Fallback for schemas using
-      courseID/course instead of courseId.
+      Fallback for:
+      courseID / course
     */
 
-    try {
+    try{
 
       const snapshot =
         await getDocs(
@@ -1385,23 +1126,24 @@ async function loadLessons() {
           .filter(
             lesson => {
 
-              const id =
+              const lessonCourse =
                 lesson.courseId ||
                 lesson.courseID ||
                 lesson.course ||
                 "";
 
 
-              return String(id) ===
-                String(currentCourseId);
+              return String(
+                lessonCourse
+              ) === String(
+                currentCourseId
+              );
 
             }
           );
 
 
-    } catch(
-      fallbackError
-    ) {
+    }catch(fallbackError){
 
       console.error(
         "Lesson fallback error:",
@@ -1409,7 +1151,7 @@ async function loadLessons() {
       );
 
 
-          allLessons = [];
+      allLessons = [];
 
     }
 
@@ -1417,8 +1159,7 @@ async function loadLessons() {
 
 
   /*
-    Only show lessons that are published
-    or active. Empty status is also allowed.
+    Public lesson states.
   */
 
   allLessons =
@@ -1427,8 +1168,10 @@ async function loadLessons() {
 
         const status =
           String(
-            lesson.status || ""
-          ).toLowerCase().trim();
+            lesson.status ||
+            ""
+          ).toLowerCase();
+
 
         return (
           status === "" ||
@@ -1441,39 +1184,35 @@ async function loadLessons() {
 
 
   /*
-    Sort lessons by module first,
-    then by lesson order.
+    Sort lessons.
   */
 
   allLessons.sort(
-    (a, b) => {
+    (a,b) => {
 
       const moduleA =
-        String(
-          a.moduleId ||
-          a.moduleID ||
-          a.module ||
-          ""
+        Number(
+          a.moduleOrder ??
+          a.modulePosition ??
+          0
         );
+
 
       const moduleB =
-        String(
-          b.moduleId ||
-          b.moduleID ||
-          b.module ||
-          ""
+        Number(
+          b.moduleOrder ??
+          b.modulePosition ??
+          0
         );
 
 
-      if (moduleA !== moduleB) {
+      if(
+        moduleA !==
+        moduleB
+      ){
 
-        return moduleA.localeCompare(
-          moduleB,
-          undefined,
-          {
-            numeric: true
-          }
-        );
+        return moduleA -
+          moduleB;
 
       }
 
@@ -1496,15 +1235,10 @@ async function loadLessons() {
         );
 
 
-      return orderA - orderB;
+      return orderA -
+        orderB;
 
     }
-  );
-
-
-  console.log(
-    "Loaded enrolled course lessons:",
-    allLessons
   );
 
 }
@@ -1514,7 +1248,7 @@ async function loadLessons() {
    RENDER COURSE
 ===================================================== */
 
-function renderCourse() {
+function renderCourse(){
 
   const title =
     getCourseTitle(
@@ -1523,24 +1257,28 @@ function renderCourse() {
 
 
   const description =
-    currentCourse.description ||
-    currentCourse.summary ||
-    currentCourse.shortDescription ||
-    "Learn through structured lessons on LetsStudy Pro.";
+    getCourseDescription(
+      currentCourse
+    );
 
 
   const image =
-    currentCourse.image ||
-    currentCourse.imageUrl ||
-    currentCourse.thumbnail ||
-    currentCourse.thumbnailUrl ||
+    getCourseImage(
+      currentCourse
+    );
+
+
+  const instructor =
+    currentCourse.instructor ||
+    currentCourse.teacher ||
+    currentCourse.author ||
     "";
 
 
   const category =
     currentCourse.category ||
-    currentCourse.courseCategory ||
-    "";
+    currentCourse.subject ||
+    "Course";
 
 
   const level =
@@ -1549,12 +1287,38 @@ function renderCourse() {
     "";
 
 
-  const instructor =
-    currentCourse.instructorName ||
-    currentCourse.instructor ||
-    currentCourse.teacher ||
-    currentCourse.createdByName ||
+  const courseType =
+    currentCourse.type ||
+    currentCourse.courseType ||
     "";
+
+
+  const videoLessons =
+    allLessons.filter(
+      lesson =>
+        String(
+          lesson.type ||
+          lesson.lessonType ||
+          ""
+        ).toLowerCase()
+        === "video"
+    ).length;
+
+
+  const moduleCount =
+    new Set(
+      allLessons
+        .map(
+          lesson =>
+            lesson.moduleId ||
+            lesson.moduleID ||
+            lesson.module ||
+            lesson.moduleOrder ||
+            ""
+        )
+        .filter(Boolean)
+        .map(String)
+    ).size;
 
 
   pageContent.innerHTML = `
@@ -1566,11 +1330,9 @@ function renderCourse() {
           ? `
             <img
               class="hero-image"
-              src="${escapeHTML(image)}"
+              src="${safeUrl(image)}"
               alt="${escapeHTML(title)}"
-              onerror="
-                this.style.display='none';
-              "
+              onerror="this.style.display='none';"
             >
           `
           : ""
@@ -1581,23 +1343,13 @@ function renderCourse() {
 
         <div class="badges">
 
-          ${
-            category
-              ? `
-                <span class="badge">
+          <span class="badge">
 
-                  <i
-                    class="fa-solid fa-layer-group"
-                  ></i>
+            <i class="fa-solid fa-book-open"></i>
 
-                  ${escapeHTML(
-                    formatText(category)
-                  )}
+            ${escapeHTML(category)}
 
-                </span>
-              `
-              : ""
-          }
+          </span>
 
 
           ${
@@ -1605,13 +1357,9 @@ function renderCourse() {
               ? `
                 <span class="badge">
 
-                  <i
-                    class="fa-solid fa-signal"
-                  ></i>
+                  <i class="fa-solid fa-layer-group"></i>
 
-                  ${escapeHTML(
-                    formatText(level)
-                  )}
+                  ${escapeHTML(level)}
 
                 </span>
               `
@@ -1619,29 +1367,14 @@ function renderCourse() {
           }
 
 
-          <span class="badge">
-
-            <i
-              class="fa-solid fa-circle-check"
-            ></i>
-
-            Enrolled
-
-          </span>
-
-
           ${
-            instructor
+            courseType
               ? `
                 <span class="badge">
 
-                  <i
-                    class="fa-solid fa-user"
-                  ></i>
+                  <i class="fa-solid fa-tag"></i>
 
-                  ${escapeHTML(
-                    String(instructor)
-                  )}
+                  ${escapeHTML(courseType)}
 
                 </span>
               `
@@ -1656,11 +1389,34 @@ function renderCourse() {
         </h1>
 
 
-        <p class="hero-description">
-          ${escapeHTML(
-            String(description)
-          )}
-        </p>
+        ${
+          description
+            ? `
+              <div class="hero-description">
+                ${formatText(description)}
+              </div>
+            `
+            : ""
+        }
+
+
+        ${
+          instructor
+            ? `
+              <div class="hero-description">
+
+                <strong>
+                  Instructor:
+                </strong>
+
+                ${escapeHTML(
+                  String(instructor)
+                )}
+
+              </div>
+            `
+            : ""
+        }
 
 
         <div class="stats">
@@ -1681,106 +1437,176 @@ function renderCourse() {
           <div class="stat">
 
             <strong>
-              ${countVideoLessons()}
-            </strong>
+  ${videoLessons}
+</strong>
 
-            <span>
-              Video Lessons
-            </span>
+<span>
+  Video Lessons
+</span>
 
-          </div>
-
-
-          <div class="stat">
-
-            <strong>
-              Enrolled
-            </strong>
-
-            <span>
-              Your Access
-            </span>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
+</div>
 
 
-    <section>
+<div class="stat">
 
-      <div class="section-title">
+  <strong>
+    ${moduleCount}
+  </strong>
 
-        <h2>
-          Course Lessons
-        </h2>
+  <span>
+    Modules
+  </span>
 
-      </div>
+</div>
 
+</div>
 
-      ${
-        allLessons.length > 0
-          ? `
+</div>
 
-            <div class="search-box">
-
-              <i
-                class="fa-solid fa-magnifying-glass"
-              ></i>
-
-              <input
-                id="lessonSearch"
-                type="search"
-                placeholder="Search lessons..."
-                autocomplete="off"
-              >
-
-            </div>
+</section>
 
 
-            <div
-              class="lessons"
-              id="lessonsContainer"
-            >
+<section>
 
-              ${renderLessons(
-                allLessons
-              )}
+  <div class="section-title">
 
-            </div>
+    <h2>
+      Course Lessons
+    </h2>
 
-          `
-          : `
+    <span id="lessonCount">
+      ${allLessons.length}
+    </span>
 
-            <div class="empty">
+  </div>
 
-              <i
-                class="fa-solid fa-book-open"
-              ></i>
 
-              <h2>
-                No Lessons Yet
-              </h2>
+  <div class="search-box">
 
-              <p>
-                This course does not have
-                any published lessons yet.
-              </p>
+    <i class="fa-solid fa-search"></i>
 
-            </div>
+    <input
+      id="lessonSearch"
+      type="search"
+      placeholder="Search lessons..."
+      autocomplete="off"
+    >
 
-          `
+  </div>
+
+
+  <div
+    class="lessons"
+    id="lessonsList"
+  ></div>
+
+</section>
+
+`;
+
+
+  filteredLessons =
+    [...allLessons];
+
+
+  renderLessons(
+    filteredLessons
+  );
+
+
+  const searchInput =
+    document.getElementById(
+      "lessonSearch"
+    );
+
+
+  if(searchInput){
+
+    searchInput.addEventListener(
+      "input",
+      event => {
+
+        const term =
+          String(
+            event.target.value || ""
+          )
+          .trim()
+          .toLowerCase();
+
+
+        if(!term){
+
+          filteredLessons =
+            [...allLessons];
+
+        }else{
+
+          filteredLessons =
+            allLessons.filter(
+              lesson => {
+
+                const searchableText = [
+
+                  lesson.title,
+
+                  lesson.name,
+
+                  lesson.lessonTitle,
+
+                  lesson.description,
+
+                  lesson.summary,
+
+                  lesson.type,
+
+                  lesson.lessonType,
+
+                  lesson.moduleId,
+
+                  lesson.moduleID,
+
+                  lesson.module,
+
+                  lesson.duration
+
+                ]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase();
+
+
+                return searchableText.includes(
+                  term
+                );
+
+              }
+            );
+
+        }
+
+
+        const count =
+          document.getElementById(
+            "lessonCount"
+          );
+
+
+        if(count){
+
+          count.textContent =
+            filteredLessons.length;
+
+        }
+
+
+        renderLessons(
+          filteredLessons
+        );
+
       }
+    );
 
-    </section>
-
-  `;
-
-
-  setupSearch();
+  }
 
 }
 
@@ -1791,21 +1617,57 @@ function renderCourse() {
 
 function renderLessons(
   lessons
-) {
+){
 
-  return lessons
-    .map(
-      (lesson, index) => {
+  const list =
+    document.getElementById(
+      "lessonsList"
+    );
+
+
+  if(!list){
+
+    return;
+
+  }
+
+
+  if(
+    lessons.length === 0
+  ){
+
+    list.innerHTML = `
+
+      <div class="empty">
+
+        <i class="fa-solid fa-book-open"></i>
+
+        <h2>
+          No Lessons Found
+        </h2>
+
+        <p>
+          No lessons match your search.
+        </p>
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  list.innerHTML =
+    lessons.map(
+      (lesson,index) => {
 
         const title =
           lesson.title ||
           lesson.name ||
+          lesson.lessonTitle ||
           `Lesson ${index + 1}`;
-
-
-        const type =
-          lesson.type ||
-          "lesson";
 
 
         const description =
@@ -1814,9 +1676,22 @@ function renderLessons(
           "";
 
 
+        const type =
+          lesson.type ||
+          lesson.lessonType ||
+          "lesson";
+
+
         const duration =
           lesson.duration ||
           lesson.length ||
+          "";
+
+
+        const module =
+          lesson.moduleId ||
+          lesson.moduleID ||
+          lesson.module ||
           "";
 
 
@@ -1827,11 +1702,10 @@ function renderLessons(
           index + 1;
 
 
-        const moduleId =
-          lesson.moduleId ||
-          lesson.moduleID ||
-          lesson.module ||
-          "";
+        const icon =
+          getLessonIcon(
+            type
+          );
 
 
         return `
@@ -1840,23 +1714,29 @@ function renderLessons(
             class="lesson-card"
           >
 
-            <div class="lesson-number">
+            <div
+              class="lesson-number"
+            >
 
               ${index + 1}
 
             </div>
 
 
-            <div class="lesson-icon">
+            <div
+              class="lesson-icon"
+            >
 
               <i
-                class="${getIcon(type)}"
+                class="${icon}"
               ></i>
 
             </div>
 
 
-            <div class="lesson-info">
+            <div
+              class="lesson-info"
+            >
 
               <h3>
 
@@ -1870,40 +1750,65 @@ function renderLessons(
               ${
                 description
                   ? `
+
                     <div
                       class="lesson-description"
                     >
 
                       ${escapeHTML(
-                        String(
-                          description
-                        )
+                        String(description)
                       )}
 
                     </div>
+
                   `
                   : ""
               }
 
 
-              <div class="lesson-meta">
+              <div
+                class="lesson-meta"
+              >
 
                 <span>
 
                   <i
-                    class="fa-solid fa-file"
+                    class="fa-solid fa-file-lines"
                   ></i>
 
                   ${escapeHTML(
-                    formatText(type)
+                    String(type)
                   )}
 
                 </span>
 
 
                 ${
+                  module
+                    ? `
+
+                      <span>
+
+                        <i
+                          class="fa-solid fa-layer-group"
+                        ></i>
+
+                        Module
+                        ${escapeHTML(
+                          String(module)
+                        )}
+
+                      </span>
+
+                    `
+                    : ""
+                }
+
+
+                ${
                   duration
                     ? `
+
                       <span>
 
                         <i
@@ -1915,26 +1820,7 @@ function renderLessons(
                         )}
 
                       </span>
-                    `
-                    : ""
-                }
 
-
-                ${
-                  moduleId
-                    ? `
-                      <span>
-
-                        <i
-                          class="fa-solid fa-layer-group"
-                        ></i>
-
-                        Module:
-                        ${escapeHTML(
-                          String(moduleId)
-                        )}
-
-                      </span>
                     `
                     : ""
                 }
@@ -1946,6 +1832,7 @@ function renderLessons(
                     class="fa-solid fa-list-ol"
                   ></i>
 
+                  Lesson
                   ${escapeHTML(
                     String(order)
                   )}
@@ -1984,331 +1871,173 @@ function renderLessons(
 
 
 /* =====================================================
-   SEARCH
-===================================================== */
-
-function setupSearch() {
-
-  const input =
-    document.getElementById(
-      "lessonSearch"
-    );
-
-
-  const container =
-    document.getElementById(
-      "lessonsContainer"
-    );
-
-
-  if (
-    !input ||
-    !container
-  ) {
-
-    return;
-
-  }
-
-
-  input.addEventListener(
-    "input",
-    () => {
-
-      const search =
-        input.value
-          .trim()
-          .toLowerCase();
-
-
-      const filtered =
-        allLessons.filter(
-          lesson => {
-
-            const title =
-              String(
-                lesson.title ||
-                lesson.name ||
-                ""
-              ).toLowerCase();
-
-
-            const description =
-              String(
-                lesson.description ||
-                lesson.summary ||
-                ""
-              ).toLowerCase();
-
-
-            const type =
-              String(
-                lesson.type ||
-                ""
-              ).toLowerCase();
-
-
-            const module =
-              String(
-                lesson.moduleId ||
-                lesson.moduleID ||
-                lesson.module ||
-                ""
-              ).toLowerCase();
-
-
-            return (
-              title.includes(search) ||
-              description.includes(search) ||
-              type.includes(search) ||
-              module.includes(search)
-            );
-
-          }
-        );
-
-
-      if (
-        filtered.length === 0
-      ) {
-
-        container.innerHTML = `
-
-          <div class="empty">
-
-            <i
-              class="fa-solid fa-magnifying-glass"
-            ></i>
-
-            <h2>
-              No Lessons Found
-            </h2>
-
-            <p>
-              Try another search term.
-            </p>
-
-          </div>
-
-        `;
-
-        return;
-
-      }
-
-
-      container.innerHTML =
-        renderLessons(
-          filtered
-        );
-
-    }
-  );
-
-}
-
-
-/* =====================================================
-   GET COURSE TITLE
+   COURSE TITLE
 ===================================================== */
 
 function getCourseTitle(
   course
-) {
+){
 
   return (
-    course?.title ||
-    course?.name ||
-    course?.courseTitle ||
+
+    course.title ||
+
+    course.name ||
+
+    course.courseTitle ||
+
+    course.courseName ||
+
     "Untitled Course"
+
   );
 
 }
 
 
 /* =====================================================
-   VIDEO COUNT
+   COURSE DESCRIPTION
 ===================================================== */
 
-function countVideoLessons() {
+function getCourseDescription(
+  course
+){
 
-  return allLessons.filter(
-    lesson =>
-      String(
-        lesson.type ||
-        ""
-      ).toLowerCase() ===
-      "video"
-  ).length;
+  return (
+
+    course.description ||
+
+    course.summary ||
+
+    course.details ||
+
+    course.about ||
+
+    ""
+
+  );
 
 }
 
 
 /* =====================================================
-   ICON
+   COURSE IMAGE
 ===================================================== */
 
-function getIcon(
+function getCourseImage(
+  course
+){
+
+  return (
+
+    course.imageUrl ||
+
+    course.thumbnail ||
+
+    course.thumbnailUrl ||
+
+    course.coverImage ||
+
+    course.coverUrl ||
+
+    course.image ||
+
+    ""
+
+  );
+
+}
+
+
+/* =====================================================
+   LESSON ICON
+===================================================== */
+
+function getLessonIcon(
   type
-) {
+){
 
   const value =
     String(
       type || ""
-    ).toLowerCase();
+    )
+    .toLowerCase();
 
 
-  switch (value) {
+  if(
+    value.includes("video")
+  ){
 
-    case "video":
-      return "fa-solid fa-circle-play";
-
-    case "audio":
-      return "fa-solid fa-headphones";
-
-    case "pdf":
-      return "fa-solid fa-file-pdf";
-
-    case "text":
-    case "article":
-      return "fa-solid fa-file-lines";
-
-    case "live":
-      return "fa-solid fa-video";
-
-    default:
-      return "fa-solid fa-file";
-
-  }
-
-}
-
-
-/* =====================================================
-   FORMAT TEXT
-===================================================== */
-
-function formatText(
-  value
-) {
-
-  if (!value) {
-
-    return "";
+    return "fa-solid fa-circle-play";
 
   }
 
 
-  return String(value)
-    .replace(
-      /[_-]+/g,
-      " "
-    )
-    .replace(
-      /\s+/g,
-      " "
-    )
-    .trim()
-    .replace(
-      /\b\w/g,
-      letter =>
-        letter.toUpperCase()
-    );
+  if(
+    value.includes("audio")
+  ){
+
+    return "fa-solid fa-headphones";
+
+  }
+
+
+  if(
+    value.includes("pdf")
+  ){
+
+    return "fa-solid fa-file-pdf";
+
+  }
+
+
+  if(
+    value.includes("text") ||
+    value.includes("article")
+  ){
+
+    return "fa-solid fa-file-lines";
+
+  }
+
+
+  if(
+    value.includes("live")
+  ){
+
+    return "fa-solid fa-tower-broadcast";
+
+  }
+
+
+  if(
+    value.includes("quiz")
+  ){
+
+    return "fa-solid fa-circle-question";
+
+  }
+
+
+  if(
+    value.includes("assignment")
+  ){
+
+    return "fa-solid fa-pen-to-square";
+
+  }
+
+
+  return "fa-solid fa-book-open";
 
 }
 
 
 /* =====================================================
-   ESCAPE HTML
+   NO COURSES
 ===================================================== */
 
-function escapeHTML(
-  value
-) {
-
-  return String(
-    value ?? ""
-  )
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-    .replace(
-      /</g,
-      "&lt;"
-    )
-    .replace(
-      />/g,
-      "&gt;"
-    )
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-    .replace(
-      /'/g,
-      "&#039;"
-    );
-
-}
-
-
-/* =====================================================
-   LOGIN REQUIRED
-===================================================== */
-
-function showLoginRequired() {
-
-  courseSelector.style.display =
-    "none";
-
-
-  pageContent.innerHTML = `
-
-    <div class="error">
-
-      <i
-        class="fa-solid fa-right-to-bracket"
-      ></i>
-
-      <h2>
-        Sign In Required
-      </h2>
-
-      <p>
-        Please sign in to view your
-        enrolled courses and lessons.
-      </p>
-
-      <button
-        class="retry-btn"
-        type="button"
-        onclick="
-          window.location.href =
-          'index-auth.html';
-        "
-      >
-
-        <i
-          class="fa-solid fa-right-to-bracket"
-        ></i>
-
-        Sign In
-
-      </button>
-
-    </div>
-
-  `;
-
-}
-
-
-/* =====================================================
-   NO ENROLLMENT
-===================================================== */
-
-function showNoEnrollment() {
+function showNoCourses(){
 
   courseSelector.style.display =
     "none";
@@ -2323,28 +2052,12 @@ function showNoEnrollment() {
       ></i>
 
       <h2>
-        No Enrolled Courses
+        No Courses Available
       </h2>
 
       <p>
-        You have not enrolled in any
-        course yet.
+        There are currently no courses available.
       </p>
-
-      <br>
-
-      <a
-        href="courses.html"
-        class="open-btn"
-      >
-
-        <i
-          class="fa-solid fa-book-open"
-        ></i>
-
-        Browse Courses
-
-      </a>
 
     </div>
 
@@ -2359,37 +2072,31 @@ function showNoEnrollment() {
 
 function showError(
   message
-) {
+){
 
   pageContent.innerHTML = `
 
     <div class="error">
 
       <i
-        class="fa-solid fa-circle-exclamation"
+        class="fa-solid fa-triangle-exclamation"
       ></i>
 
       <h2>
-        Unable to Load Course
+        Something Went Wrong
       </h2>
 
       <p>
         ${escapeHTML(
-          message
+          String(message)
         )}
       </p>
 
       <button
         class="retry-btn"
         type="button"
-        onclick="
-          window.location.reload();
-        "
+        onclick="location.reload()"
       >
-
-        <i
-          class="fa-solid fa-rotate"
-        ></i>
 
         Try Again
 
@@ -2403,17 +2110,97 @@ function showError(
 
 
 /* =====================================================
-   INITIALIZE
+   TEXT FORMAT
 ===================================================== */
 
-console.log(
-  "LetsStudy Pro Course Lessons initialized."
-);
+function formatText(
+  text
+){
 
-console.log(
-  "Requested Course ID:",
-  urlCourseId
-);
+  return escapeHTML(
+    String(text ?? "")
+  )
+  .replace(
+    /\n/g,
+    "<br>"
+  );
+
+}
+
+
+/* =====================================================
+   HTML ESCAPE
+===================================================== */
+
+function escapeHTML(
+  value
+){
+
+  return String(
+    value ?? ""
+  )
+  .replace(
+    /&/g,
+    "&amp;"
+  )
+  .replace(
+    /</g,
+    "&lt;"
+  )
+  .replace(
+    />/g,
+    "&gt;"
+  )
+  .replace(
+    /"/g,
+    "&quot;"
+  )
+  .replace(
+    /'/g,
+    "&#039;"
+  );
+
+}
+
+
+/* =====================================================
+   SAFE URL
+===================================================== */
+
+function safeUrl(
+  value
+){
+
+  try{
+
+    const url =
+      new URL(
+        String(value),
+        window.location.href
+      );
+
+
+    if(
+      url.protocol === "http:" ||
+      url.protocol === "https:"
+    ){
+
+      return escapeHTML(
+        url.href
+      );
+
+    }
+
+
+    return "";
+
+  }catch{
+
+    return "";
+
+  }
+
+}
 
 </script>
 
