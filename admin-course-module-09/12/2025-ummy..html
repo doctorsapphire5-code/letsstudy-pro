@@ -31,7 +31,6 @@ margin:auto;
 padding:18px;
 }
 
-
 /* HEADER */
 
 .header{
@@ -71,7 +70,6 @@ color:#64748b;
 font-size:13px;
 }
 
-
 /* STATS */
 
 .stats{
@@ -98,7 +96,6 @@ font-size:24px;
 font-weight:bold;
 margin-top:5px;
 }
-
 
 /* FORM */
 
@@ -162,7 +159,6 @@ select:focus{
 border-color:#2563eb;
 }
 
-
 /* BUTTONS */
 
 .actions{
@@ -201,8 +197,7 @@ opacity:.6;
 cursor:not-allowed;
 }
 
-
-/* LIST CARD */
+/* LIST */
 
 .list-card{
 background:#fff;
@@ -227,7 +222,6 @@ font-weight:bold;
 .search{
 max-width:300px;
 }
-
 
 /* MODULE */
 
@@ -286,12 +280,12 @@ background:#f1f5f9;
 color:#475569;
 }
 
-.active{
+.published{
 background:#dcfce7;
 color:#166534;
 }
 
-.published{
+.active{
 background:#dcfce7;
 color:#166534;
 }
@@ -330,7 +324,6 @@ background:#fee2e2;
 color:#dc2626;
 }
 
-
 /* EMPTY */
 
 .empty{
@@ -344,7 +337,6 @@ font-size:35px;
 margin-bottom:12px;
 }
 
-
 /* LOADING */
 
 .loading{
@@ -352,7 +344,6 @@ text-align:center;
 padding:40px;
 color:#64748b;
 }
-
 
 /* MESSAGE */
 
@@ -373,7 +364,6 @@ color:#166534;
 background:#fee2e2;
 color:#991b1b;
 }
-
 
 /* MOBILE */
 
@@ -421,9 +411,7 @@ justify-content:flex-end;
 
 <body>
 
-
 <div class="container">
-
 
 <!-- HEADER -->
 
@@ -527,8 +515,6 @@ Add Module
 <div class="form-grid">
 
 
-<!-- COURSE -->
-
 <div class="field">
 
 <label>
@@ -547,8 +533,6 @@ Select course
 </div>
 
 
-<!-- TITLE -->
-
 <div class="field">
 
 <label>
@@ -563,8 +547,6 @@ placeholder="Module title">
 </div>
 
 
-<!-- DESCRIPTION -->
-
 <div class="field full">
 
 <label>
@@ -577,8 +559,6 @@ placeholder="Module description"></textarea>
 
 </div>
 
-
-<!-- ORDER -->
 
 <div class="field">
 
@@ -594,8 +574,6 @@ value="1">
 
 </div>
 
-
-<!-- STATUS -->
 
 <div class="field">
 
@@ -626,7 +604,6 @@ Inactive
 
 </div>
 
-
 </div>
 
 
@@ -634,7 +611,8 @@ Inactive
 
 <button
 id="saveBtn"
-class="btn-primary">
+class="btn-primary"
+type="button">
 
 <i class="fa-solid fa-plus"></i>
 Add Module
@@ -645,6 +623,7 @@ Add Module
 <button
 id="cancelBtn"
 class="btn-secondary"
+type="button"
 style="display:none">
 
 Cancel
@@ -659,7 +638,6 @@ Cancel
 <!-- LIST -->
 
 <div class="list-card">
-
 
 <div class="list-header">
 
@@ -676,8 +654,7 @@ placeholder="Search modules...">
 </div>
 
 
-<div
-id="modulesList">
+<div id="modulesList">
 
 <div class="loading">
 
@@ -691,12 +668,9 @@ Loading modules...
 
 </div>
 
-
 </div>
 
-
 </div>
-
 
 
 <script type="module">
@@ -714,14 +688,6 @@ from
 
 
 import {
-getAuth,
-onAuthStateChanged
-}
-from
-"https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-
-
-import {
 getFirestore,
 collection,
 getDocs,
@@ -729,16 +695,14 @@ addDoc,
 updateDoc,
 deleteDoc,
 doc,
-serverTimestamp,
-query,
-orderBy
+serverTimestamp
 }
 from
 "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
 
 /* =====================================================
-   CONFIG
+   FIREBASE CONFIG
 ===================================================== */
 
 const firebaseConfig = {
@@ -775,9 +739,6 @@ initializeApp(
 firebaseConfig
 );
 
-const auth =
-getAuth(app);
-
 const db =
 getFirestore(app);
 
@@ -787,81 +748,51 @@ getFirestore(app);
 ===================================================== */
 
 const courseSelect =
-document.getElementById(
-"courseId"
-);
+document.getElementById("courseId");
 
 const titleInput =
-document.getElementById(
-"title"
-);
+document.getElementById("title");
 
 const descriptionInput =
-document.getElementById(
-"description"
-);
+document.getElementById("description");
 
 const orderInput =
-document.getElementById(
-"order"
-);
+document.getElementById("order");
 
 const statusSelect =
-document.getElementById(
-"status"
-);
+document.getElementById("status");
 
 const saveBtn =
-document.getElementById(
-"saveBtn"
-);
+document.getElementById("saveBtn");
 
 const cancelBtn =
-document.getElementById(
-"cancelBtn"
-);
+document.getElementById("cancelBtn");
 
 const modulesList =
-document.getElementById(
-"modulesList"
-);
+document.getElementById("modulesList");
 
 const searchInput =
-document.getElementById(
-"search"
-);
+document.getElementById("search");
 
 const message =
-document.getElementById(
-"message"
-);
+document.getElementById("message");
 
 const totalModules =
-document.getElementById(
-"totalModules"
-);
+document.getElementById("totalModules");
 
 const publishedModules =
-document.getElementById(
-"publishedModules"
-);
+document.getElementById("publishedModules");
 
 const draftModules =
-document.getElementById(
-"draftModules"
-);
+document.getElementById("draftModules");
 
 const formTitle =
-document.getElementById(
-"formTitle"
-);
+document.getElementById("formTitle");
 
 
 /* =====================================================
    STATE
 ===================================================== */
-
-let currentUser = null;
 
 let modules = [];
 
@@ -902,8 +833,7 @@ message.textContent =
 text;
 
 message.className =
-"message " +
-type;
+"message " + type;
 
 message.style.display =
 "block";
@@ -925,6 +855,8 @@ message.style.display =
 
 async function loadCourses(){
 
+try{
+
 const snapshot =
 await getDocs(
 collection(
@@ -943,6 +875,17 @@ courseDoc.id,
 ...courseDoc.data()
 
 })
+);
+
+
+/* SORT COURSES BY TITLE */
+
+courses.sort(
+(a,b)=>
+String(a.title || "")
+.localeCompare(
+String(b.title || "")
+)
 );
 
 
@@ -976,6 +919,18 @@ option
 
 });
 
+
+}catch(error){
+
+console.error(
+"Course loading error:",
+error
+);
+
+throw error;
+
+}
+
 }
 
 
@@ -999,6 +954,8 @@ Loading modules...
 
 `;
 
+
+try{
 
 const snapshot =
 await getDocs(
@@ -1025,9 +982,31 @@ moduleDoc.id,
 /* SORT */
 
 modules.sort(
-(a,b) =>
-Number(a.order || 0) -
-Number(b.order || 0)
+(a,b)=>{
+
+const courseA =
+String(a.courseId || "");
+
+const courseB =
+String(b.courseId || "");
+
+if(courseA !== courseB){
+
+return courseA.localeCompare(
+courseB
+);
+
+}
+
+return Number(
+a.order || 0
+)
+-
+Number(
+b.order || 0
+);
+
+}
 );
 
 
@@ -1036,24 +1015,32 @@ Number(b.order || 0)
 totalModules.textContent =
 modules.length;
 
+
 publishedModules.textContent =
 modules.filter(
-m =>
-String(m.status)
-.toLowerCase()
-===
-"published"
-||
-String(m.status)
-.toLowerCase()
-===
-"active"
+m => {
+
+const status =
+String(
+m.status || ""
+)
+.toLowerCase();
+
+return (
+status === "published" ||
+status === "active"
+);
+
+}
 ).length;
+
 
 draftModules.textContent =
 modules.filter(
 m =>
-String(m.status)
+String(
+m.status || ""
+)
 .toLowerCase()
 ===
 "draft"
@@ -1062,11 +1049,38 @@ String(m.status)
 
 renderModules();
 
+
+}catch(error){
+
+console.error(
+"Module loading error:",
+error
+);
+
+modulesList.innerHTML = `
+
+<div class="empty">
+
+<i class="fa-solid fa-triangle-exclamation"></i>
+
+<br><br>
+
+${escapeHTML(
+error.message ||
+"Failed to load modules."
+)}
+
+</div>
+
+`;
+
+}
+
 }
 
 
 /* =====================================================
-   RENDER
+   RENDER MODULES
 ===================================================== */
 
 function renderModules(){
@@ -1089,33 +1103,53 @@ module.courseId
 );
 
 const courseTitle =
-course?.title || "";
+String(
+course?.title || ""
+)
+.toLowerCase();
 
-return (
 
+const title =
 String(
 module.title || ""
 )
-.toLowerCase()
-.includes(search)
+.toLowerCase();
 
-||
 
+const description =
 String(
 module.description || ""
 )
-.toLowerCase()
-.includes(search)
+.toLowerCase();
+
+
+const status =
+String(
+module.status || ""
+)
+.toLowerCase();
+
+
+return (
+
+title.includes(search)
 
 ||
 
-courseTitle
-.toLowerCase()
-.includes(search)
+description.includes(search)
+
+||
+
+courseTitle.includes(search)
+
+||
+
+status.includes(search)
 
 );
 
-});
+}
+);
 
 
 if(!filtered.length){
@@ -1150,17 +1184,33 @@ c.id ===
 module.courseId
 );
 
+
 const status =
 String(
 module.status ||
-"unknown"
-).toLowerCase();
+"draft"
+)
+.toLowerCase();
+
+
+const safeStatus =
+[
+"published",
+"active",
+"draft",
+"inactive"
+].includes(status)
+?
+status
+:
+"";
 
 
 return `
 
 <div
-class="module">
+class="module"
+data-id="${escapeHTML(module.id)}">
 
 
 <div class="module-order">
@@ -1211,14 +1261,11 @@ module.courseId ||
 </span>
 
 
-<span
-class="badge ${
-status
-}">
+<span class="badge ${safeStatus}">
 
 ${escapeHTML(
 module.status ||
-"Unknown"
+"Draft"
 )}
 
 </span>
@@ -1246,7 +1293,9 @@ module.order
 <button
 class="icon-btn edit"
 title="Edit"
-onclick="editModule('${module.id}')">
+type="button"
+data-action="edit"
+data-id="${escapeHTML(module.id)}">
 
 <i class="fa-solid fa-pen"></i>
 
@@ -1256,7 +1305,9 @@ onclick="editModule('${module.id}')">
 <button
 class="icon-btn delete"
 title="Delete"
-onclick="removeModule('${module.id}')">
+type="button"
+data-action="delete"
+data-id="${escapeHTML(module.id)}">
 
 <i class="fa-solid fa-trash"></i>
 
@@ -1326,10 +1377,22 @@ return;
 }
 
 
-if(!order || order < 1){
+if(!Number.isFinite(order) || order < 1){
 
 showMessage(
 "Enter a valid module order.",
+"error"
+);
+
+return;
+
+}
+
+
+if(!status){
+
+showMessage(
+"Please select module status.",
 "error"
 );
 
@@ -1344,22 +1407,7 @@ true;
 
 try{
 
-
-/* ================================================
-   EXISTING MODULE
-================================================ */
-
-if(editingModuleId){
-
-await updateDoc(
-
-doc(
-db,
-"modules",
-editingModuleId
-),
-
-{
+const moduleData = {
 
 courseId:
 courseId,
@@ -1379,7 +1427,22 @@ status,
 updatedAt:
 serverTimestamp()
 
-}
+};
+
+
+/* UPDATE */
+
+if(editingModuleId){
+
+await updateDoc(
+
+doc(
+db,
+"modules",
+editingModuleId
+),
+
+moduleData
 
 );
 
@@ -1388,25 +1451,12 @@ showMessage(
 "Module updated successfully."
 );
 
+}
 
-}else{
 
+/* CREATE */
 
-/* ================================================
-   NEW MODULE
-
-   MODEL:
-
-   courseId
-   title
-   description
-   order
-   status
-   createdBy
-   createdAt
-   updatedAt
-================================================ */
-
+else{
 
 await addDoc(
 
@@ -1431,9 +1481,6 @@ order,
 
 status:
 status,
-
-createdBy:
-currentUser.uid,
 
 createdAt:
 serverTimestamp(),
@@ -1460,7 +1507,10 @@ await loadModules();
 
 }catch(error){
 
-console.error(error);
+console.error(
+"Save module error:",
+error
+);
 
 showMessage(
 error.message ||
@@ -1478,7 +1528,7 @@ false;
 
 
 /* =====================================================
-   EDIT
+   EDIT MODULE
 ===================================================== */
 
 window.editModule =
@@ -1514,8 +1564,27 @@ orderInput.value =
 module.order ||
 1;
 
-statusSelect.value =
+
+const moduleStatus =
+String(
 module.status ||
+"draft"
+)
+.toLowerCase();
+
+
+statusSelect.value =
+[
+"draft",
+"published",
+"active",
+"inactive"
+].includes(
+moduleStatus
+)
+?
+moduleStatus
+:
 "draft";
 
 
@@ -1531,20 +1600,24 @@ Update Module
 
 `;
 
+
 cancelBtn.style.display =
 "inline-block";
 
 
 window.scrollTo({
+
 top:0,
+
 behavior:"smooth"
+
 });
 
 };
 
 
 /* =====================================================
-   DELETE
+   DELETE MODULE
 ===================================================== */
 
 window.removeModule =
@@ -1573,11 +1646,13 @@ return;
 try{
 
 await deleteDoc(
+
 doc(
 db,
 "modules",
 id
 )
+
 );
 
 
@@ -1591,7 +1666,10 @@ await loadModules();
 
 }catch(error){
 
-console.error(error);
+console.error(
+"Delete module error:",
+error
+);
 
 showMessage(
 error.message ||
@@ -1605,6 +1683,47 @@ error.message ||
 
 
 /* =====================================================
+   LIST ACTIONS
+===================================================== */
+
+modulesList.addEventListener(
+"click",
+event => {
+
+const button =
+event.target.closest(
+"button[data-action]"
+);
+
+if(!button)
+return;
+
+
+const id =
+button.dataset.id;
+
+const action =
+button.dataset.action;
+
+
+if(action === "edit"){
+
+window.editModule(id);
+
+}
+
+
+if(action === "delete"){
+
+window.removeModule(id);
+
+}
+
+}
+);
+
+
+/* =====================================================
    CANCEL
 ===================================================== */
 
@@ -1615,7 +1734,7 @@ resetForm
 
 
 /* =====================================================
-   RESET
+   RESET FORM
 ===================================================== */
 
 function resetForm(){
@@ -1666,37 +1785,10 @@ renderModules
 
 
 /* =====================================================
-   AUTH
+   INITIAL LOAD
 ===================================================== */
 
-onAuthStateChanged(
-auth,
-async user => {
-
-if(!user){
-
-modulesList.innerHTML = `
-
-<div class="empty">
-
-<i class="fa-solid fa-lock"></i>
-
-<br><br>
-
-Please login as administrator.
-
-</div>
-
-`;
-
-return;
-
-}
-
-
-currentUser =
-user;
-
+async function initialize(){
 
 try{
 
@@ -1706,7 +1798,10 @@ await loadModules();
 
 }catch(error){
 
-console.error(error);
+console.error(
+"Initialization error:",
+error
+);
 
 modulesList.innerHTML = `
 
@@ -1717,7 +1812,8 @@ modulesList.innerHTML = `
 <br><br>
 
 ${escapeHTML(
-error.message
+error.message ||
+"Unable to load modules."
 )}
 
 </div>
@@ -1726,7 +1822,10 @@ error.message
 
 }
 
-});
+}
+
+
+initialize();
 
 </script>
 
