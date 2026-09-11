@@ -1,12 +1,16 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Admin Students | LetsStudy Pro</title><style>
+<title>Admin Students | LetsStudy Pro</title>
+
+<style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f7fb;color:#172033}
 button,input,select{font:inherit}
 button{border:0;border-radius:9px;padding:9px 12px;cursor:pointer}
+button:disabled{opacity:.6;cursor:not-allowed}
 header{height:62px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:12px;padding:0 16px;position:sticky;top:0;z-index:20}
 header h1{flex:1;font-size:18px;margin:0}
 main{max-width:1250px;margin:auto;padding:18px}
@@ -37,9 +41,10 @@ th{font-size:10px;color:#64748b}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .info{padding:12px;background:#f8fafc;border-radius:10px;margin-bottom:8px}
 .info small{display:block;color:#64748b;font-size:10px}
-.info strong{display:block;margin-top:4px}
+.info strong{display:block;margin-top:4px;word-break:break-word}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 .empty{text-align:center;padding:35px;color:#64748b}
+.loading{text-align:center;padding:35px;color:#64748b}
 .toast{position:fixed;right:20px;bottom:20px;background:#172033;color:#fff;padding:12px 15px;border-radius:9px;display:none;z-index:100;font-size:12px}
 .toast.show{display:block}
 @media(max-width:750px){
@@ -47,44 +52,60 @@ th{font-size:10px;color:#64748b}
 .grid{grid-template-columns:1fr}
 .toolbar{flex-wrap:wrap}
 }
-</style></head><body><header><button class="back"
-onclick="location.href='admin-dashboard.html'">
-←
-</button>
+</style>
+</head>
 
-<h1>👨‍🎓 Students</h1><button class="primary"
-onclick="exportStudents()">
-⬇ Export
-</button>
+<body>
 
-</header><main><section class="stats"><div class="stat">
+<header>
+<button class="back" onclick="location.href='admin-dashboard.html'">←</button>
+<h1>👨‍🎓 Students</h1>
+<button class="primary" onclick="exportStudents()">⬇ Export</button>
+</header>
+
+<main>
+
+<section class="stats">
+
+<div class="stat">
 <span>Total Students</span>
 <b id="total">0</b>
-</div><div class="stat">
+</div>
+
+<div class="stat">
 <span>Active</span>
 <b id="active">0</b>
-</div><div class="stat">
+</div>
+
+<div class="stat">
 <span>Blocked</span>
 <b id="blocked">0</b>
-</div><div class="stat">
+</div>
+
+<div class="stat">
 <span>Premium</span>
 <b id="premium">0</b>
-</div></section><section class="card"><div class="toolbar"><input
+</div>
+
+</section>
+
+<section class="card">
+
+<div class="toolbar">
+
+<input
 id="search"
 placeholder="Search name, email or UID..."
 oninput="render()">
 
-<select
-id="status"
-onchange="render()">
-
+<select id="status" onchange="render()">
 <option value="all">All Status</option>
 <option value="active">Active</option>
 <option value="blocked">Blocked</option>
-<option value="pending">Pending</option></select><select
-id="form"
-onchange="render()">
+<option value="pending">Pending</option>
+</select>
 
+<select id="form" onchange="render()">
 <option value="all">All Forms</option>
 <option>Form 1</option>
 <option>Form 2</option>
@@ -92,7 +113,17 @@ onchange="render()">
 <option>Form 4</option>
 <option>Form 5</option>
 <option>Form 6</option>
-<option>University</option></select></div><div class="table"><table><thead><tr>
+<option>University</option>
+</select>
+
+</div>
+
+<div class="table">
+
+<table>
+
+<thead>
+<tr>
 <th>Student</th>
 <th>Email</th>
 <th>Form</th>
@@ -100,78 +131,127 @@ onchange="render()">
 <th>Status</th>
 <th>Premium</th>
 <th>Actions</th>
-</tr></thead><tbody id="studentList"></tbody></table></div></section></main><!-- PROFILE MODAL --><div id="modal" class="modal"><div class="box"><div class="head"><h2>Student Profile</h2><button onclick="closeModal()">✕</button>
+</tr>
+</thead>
 
-</div><div class="grid"><div class="info">
+<tbody id="studentList">
+<tr>
+<td colspan="7">
+<div class="loading">Loading students...</div>
+</td>
+</tr>
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+</main>
+
+<!-- PROFILE MODAL -->
+
+<div id="modal" class="modal">
+
+<div class="box">
+
+<div class="head">
+<h2>Student Profile</h2>
+<button onclick="closeModal()">✕</button>
+</div>
+
+<div class="grid">
+
+<div class="info">
 <small>Name</small>
 <strong id="pName">-</strong>
-</div><div class="info">
+</div>
+
+<div class="info">
 <small>Email</small>
 <strong id="pEmail">-</strong>
-</div><div class="info">
+</div>
+
+<div class="info">
 <small>Firebase UID</small>
 <strong id="pUid">-</strong>
-</div><div class="info">
+</div>
+
+<div class="info">
 <small>Role</small>
 <strong id="pRole">-</strong>
-</div><div class="info">
+</div>
+
+<div class="info">
 <small>Form</small>
 <strong id="pForm">-</strong>
-</div><div class="info">
+</div>
+
+<div class="info">
 <small>Status</small>
 <strong id="pStatus">-</strong>
-</div><div class="info">
+</div>
+
+<div class="info">
 <small>Referral Code</small>
 <strong id="pReferral">-</strong>
-</div><div class="info">
+</div>
+
+<div class="info">
 <small>Wallet Balance</small>
 <strong id="pWallet">TZS 0</strong>
-</div><div class="info">
+</div>
+
+<div class="info">
 <small>Orders</small>
 <strong id="pOrders">0</strong>
-</div><div class="info">
+</div>
+
+<div class="info">
 <small>Premium</small>
 <strong id="pPremium">No</strong>
-</div></div><div class="actions"><button
-class="primary"
-onclick="editStudent()">
+</div>
+
+</div>
+
+<div class="actions">
+
+<button class="primary" onclick="editStudent()">
 Edit
 </button>
 
-<button
-class="success"
-onclick="setStatus('active')">
+<button class="success" onclick="setStatus('active')">
 Activate
 </button>
 
-<button
-class="danger"
-onclick="setStatus('blocked')">
+<button class="danger" onclick="setStatus('blocked')">
 Block
 </button>
 
-<button
-class="danger"
-onclick="deleteStudent()">
+<button class="danger" onclick="deleteStudent()">
 Delete
 </button>
 
-</div></div></div><div id="toast" class="toast"></div><script type="module">
+</div>
 
-import{
-initializeApp
-}
-from
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+</div>
+</div>
 
-import{
+<div id="toast" class="toast"></div>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
 getAuth,
 onAuthStateChanged
 }
-from
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
-import{
+import {
 getFirestore,
 collection,
 doc,
@@ -180,25 +260,24 @@ getDocs,
 updateDoc,
 deleteDoc
 }
-from
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 
 /* =========================================
- FIREBASE CONFIG
+ FIREBASE
 ========================================= */
 
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
-  authDomain: "let-s-study-pro-course.firebaseapp.com",
-  databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
-  projectId: "let-s-study-pro-course",
-  storageBucket: "let-s-study-pro-course.firebasestorage.app",
-  messagingSenderId: "474928293390",
-  appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
-  measurementId: "G-85B7V5H5J0"
+apiKey:"AIzaSyBcOYDfAVKXbkljsyRgI_0rj0rodBn678tCc",
+authDomain:"let-s-study-pro-course.firebaseapp.com",
+databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+projectId:"let-s-study-pro-course",
+storageBucket:"let-s-study-pro-course.firebasestorage.app",
+messagingSenderId:"474928293390",
+appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+measurementId:"G-85B7V5H5J0"
 };
+
 const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
@@ -209,17 +288,66 @@ let admin=null;
 
 
 /* =========================================
- ADMIN CHECK
+ ADMIN AUTH CHECK
 ========================================= */
 
-onAuthStateChanged(
-  auth,
-  async () => {
+onAuthStateChanged(auth,async user=>{
 
-    await loadReports();
+try{
 
-  }
+if(!user){
+
+toast("Please sign in as administrator.");
+
+setTimeout(()=>{
+location.href="admin-login.html";
+},1200);
+
+return;
+}
+
+
+/* Check admins collection */
+
+const adminRef=doc(
+db,
+"admins",
+user.uid
 );
+
+const adminSnap=await getDoc(adminRef);
+
+if(!adminSnap.exists()){
+
+toast("Access denied. Administrator account required.");
+
+setTimeout(()=>{
+location.href="admin-login.html";
+},1500);
+
+return;
+}
+
+
+admin={
+uid:user.uid,
+...adminSnap.data()
+};
+
+
+/* Load students */
+
+await loadStudents();
+
+}catch(error){
+
+console.error("Admin authentication error:",error);
+
+toast("Unable to verify administrator.");
+
+}
+
+});
 
 
 /* =========================================
@@ -227,6 +355,16 @@ onAuthStateChanged(
 ========================================= */
 
 async function loadStudents(){
+
+const list=document.getElementById("studentList");
+
+list.innerHTML=`
+<tr>
+<td colspan="7">
+<div class="loading">Loading students...</div>
+</td>
+</tr>
+`;
 
 try{
 
@@ -239,16 +377,36 @@ students=snap.docs
 id:d.id,
 ...d.data()
 }))
-.filter(
-x=>x.role==="student"
-);
+.filter(x=>{
+
+const role=String(x.role||"student").toLowerCase();
+
+return role==="student";
+
+});
+
 
 updateStats();
 render();
 
 }catch(error){
 
-console.error(error);
+console.error("Students load error:",error);
+
+students=[];
+
+updateStats();
+
+list.innerHTML=`
+<tr>
+<td colspan="7">
+<div class="empty">
+Unable to load students.
+</div>
+</td>
+</tr>
+`;
+
 toast("Unable to load students.");
 
 }
@@ -262,27 +420,23 @@ toast("Unable to load students.");
 
 function updateStats(){
 
-document.getElementById("total")
-.textContent=students.length;
+document.getElementById("total").textContent=
+students.length;
 
-document.getElementById("active")
-.textContent=
-students.filter(
-x=>x.status==="active" ||
-!x.status
+document.getElementById("active").textContent=
+students.filter(x=>
+String(x.status||"active").toLowerCase()==="active"
 ).length;
 
-document.getElementById("blocked")
-.textContent=
-students.filter(
-x=>x.status==="blocked"
+document.getElementById("blocked").textContent=
+students.filter(x=>
+String(x.status||"active").toLowerCase()==="blocked"
 ).length;
 
-document.getElementById("premium")
-.textContent=
-students.filter(
-x=>x.premium===true ||
-x.membership==="premium"
+document.getElementById("premium").textContent=
+students.filter(x=>
+x.premium===true ||
+String(x.membership||"").toLowerCase()==="premium"
 ).length;
 
 }
@@ -296,7 +450,9 @@ window.render=function(){
 
 const search=
 document.getElementById("search")
-.value.toLowerCase().trim();
+.value
+.toLowerCase()
+.trim();
 
 const status=
 document.getElementById("status").value;
@@ -307,121 +463,115 @@ document.getElementById("form").value;
 
 const data=students.filter(x=>{
 
-const text=
-`${x.name||""}
+const text=`
+${x.name||""}
 ${x.displayName||""}
 ${x.email||""}
-${x.id||""}`
+${x.id||""}
+${x.referralCode||""}
+`
 .toLowerCase();
 
 const studentStatus=
-x.status||"active";
+String(x.status||"active").toLowerCase();
 
 return(
 text.includes(search) &&
 (status==="all"||studentStatus===status) &&
-(form==="all"||x.form===form)
+(form==="all"||String(x.form||"")===form)
 );
 
 });
 
 
-const list=
-document.getElementById(
-"studentList"
-);
+const list=document.getElementById("studentList");
 
 
 if(!data.length){
 
 list.innerHTML=`
-
 <tr>
-
 <td colspan="7">
-
 <div class="empty">
 No students found.
 </div>
-
 </td>
-
 </tr>
-
 `;
 
 return;
-
 }
 
 
-list.innerHTML=data.map(x=>`
+list.innerHTML=data.map(x=>{
+
+const studentName=
+x.name||
+x.displayName||
+"Student";
+
+const studentStatus=
+String(x.status||"active").toLowerCase();
+
+const premium=
+x.premium===true||
+String(x.membership||"").toLowerCase()==="premium";
+
+
+return `
 
 <tr>
 
 <td>
 
-<strong>
-${esc(
-x.name||
-x.displayName||
-"Student"
-)}
-</strong>
+<strong>${esc(studentName)}</strong>
 
 <br>
 
-<small>
-${esc(x.id)}
-</small>
+<small>${esc(x.id)}</small>
 
 </td>
-
 
 <td>
 ${esc(x.email||"-")}
 </td>
 
-
 <td>
 ${esc(x.form||"-")}
 </td>
-
 
 <td>
 ${esc(x.role||"student")}
 </td>
 
-
 <td>
 
 <span class="badge ${
-(x.status||"active")==="blocked"
-?"blocked":
-(x.status||"active")==="pending"
-?"pending":
-"active"
+studentStatus==="blocked"
+?"blocked"
+:
+studentStatus==="pending"
+?"pending"
+:"active"
 }">
 
-${esc(x.status||"active")}
+${esc(studentStatus)}
 
 </span>
 
 </td>
 
-
 <td>
-${x.premium===true||
-x.membership==="premium"
-?"Yes":"No"}
+${premium?"Yes":"No"}
 </td>
-
 
 <td>
 
 <button
 class="back"
-onclick="viewStudent('${x.id}')">
+data-id="${esc(x.id)}"
+class="back"
+onclick="viewStudent(this.dataset.id)">
 
 View
 
@@ -431,72 +581,68 @@ View
 
 </tr>
 
-`).join("");
+`;
+
+}).join("");
 
 };
 
 
 /* =========================================
- VIEW
+ VIEW STUDENT
 ========================================= */
 
 window.viewStudent=async function(id){
 
-const student=
-students.find(x=>x.id===id);
+const student=students.find(x=>x.id===id);
 
 if(!student)return;
 
 selectedStudent=student;
 
 
-document.getElementById("pName")
-.textContent=
+document.getElementById("pName").textContent=
 student.name||
 student.displayName||
 "Student";
 
-document.getElementById("pEmail")
-.textContent=
+document.getElementById("pEmail").textContent=
 student.email||"-";
 
-document.getElementById("pUid")
-.textContent=
-student.id;
+document.getElementById("pUid").textContent=
+student.id||"-";
 
-document.getElementById("pRole")
-.textContent=
+document.getElementById("pRole").textContent=
 student.role||"student";
 
-document.getElementById("pForm")
-.textContent=
+document.getElementById("pForm").textContent=
 student.form||"-";
 
-document.getElementById("pStatus")
-.textContent=
+document.getElementById("pStatus").textContent=
 student.status||"active";
 
-document.getElementById("pReferral")
-.textContent=
+document.getElementById("pReferral").textContent=
 student.referralCode||"-";
 
-document.getElementById("pWallet")
-.textContent=
-"TZS "+
-Number(
-student.walletBalance||0
-).toLocaleString();
 
-document.getElementById("pOrders")
-.textContent=
+const wallet=
 Number(
-student.ordersCount||0
+student.walletBalance||
+student.balance||
+0
 );
 
-document.getElementById("pPremium")
-.textContent=
+document.getElementById("pWallet").textContent=
+"TZS "+wallet.toLocaleString();
+
+
+document.getElementById("pOrders").textContent=
+Number(student.ordersCount||0).toLocaleString();
+
+
+document.getElementById("pPremium").textContent=
 student.premium===true||
-student.membership==="premium"
+String(student.membership||"").toLowerCase()==="premium"
 ?"Yes":"No";
 
 
@@ -514,6 +660,14 @@ window.setStatus=async function(status){
 
 if(!selectedStudent)return;
 
+if(!admin){
+
+toast("Administrator verification required.");
+
+return;
+}
+
+
 try{
 
 await updateDoc(
@@ -523,9 +677,11 @@ db,
 selectedStudent.id
 ),
 {
-status
+status,
+updatedAt:new Date()
 }
 );
+
 
 toast(
 status==="active"
@@ -533,13 +689,20 @@ status==="active"
 :"Student blocked."
 );
 
+
 closeModal();
+
 await loadStudents();
 
 }catch(error){
 
-console.error(error);
-toast("Unable to update student.");
+console.error("Status update error:",error);
+
+toast(
+error.code==="permission-denied"
+?"Permission denied."
+:"Unable to update student."
+);
 
 }
 
@@ -547,12 +710,13 @@ toast("Unable to update student.");
 
 
 /* =========================================
- EDIT
+ EDIT STUDENT
 ========================================= */
 
 window.editStudent=function(){
 
 if(!selectedStudent)return;
+
 
 const form=prompt(
 "Enter student form:",
@@ -561,14 +725,27 @@ selectedStudent.form||""
 
 if(form===null)return;
 
+const cleanForm=form.trim();
+
+if(!cleanForm){
+
+toast("Form cannot be empty.");
+
+return;
+}
+
+
 updateStudent({
-form
+form:cleanForm,
+updatedAt:new Date()
 });
 
 };
 
 
 async function updateStudent(data){
+
+if(!selectedStudent)return;
 
 try{
 
@@ -581,15 +758,22 @@ selectedStudent.id
 data
 );
 
+
 toast("Student updated.");
 
 closeModal();
+
 await loadStudents();
 
 }catch(error){
 
-console.error(error);
-toast("Update failed.");
+console.error("Student update error:",error);
+
+toast(
+error.code==="permission-denied"
+?"Permission denied."
+:"Update failed."
+);
 
 }
 
@@ -608,6 +792,7 @@ if(!confirm(
 `Delete student ${selectedStudent.email||selectedStudent.id}?`
 ))return;
 
+
 try{
 
 await deleteDoc(
@@ -618,15 +803,22 @@ selectedStudent.id
 )
 );
 
+
 toast("Student deleted.");
 
 closeModal();
+
 await loadStudents();
 
 }catch(error){
 
-console.error(error);
-toast("Delete failed.");
+console.error("Delete error:",error);
+
+toast(
+error.code==="permission-denied"
+?"Permission denied."
+:"Delete failed."
+);
 
 }
 
@@ -634,10 +826,18 @@ toast("Delete failed.");
 
 
 /* =========================================
- EXPORT
+ EXPORT CSV
 ========================================= */
 
 window.exportStudents=function(){
+
+if(!students.length){
+
+toast("No students to export.");
+
+return;
+}
+
 
 const rows=[
 [
@@ -645,6 +845,7 @@ const rows=[
 "Name",
 "Email",
 "Form",
+"Role",
 "Status",
 "Premium",
 "Referral"
@@ -666,11 +867,12 @@ x.email||"",
 
 x.form||"",
 
-x.status||
-"active",
+x.role||"student",
+
+x.status||"active",
 
 x.premium===true||
-x.membership==="premium"
+String(x.membership||"").toLowerCase()==="premium"
 ?"Yes":"No",
 
 x.referralCode||""
@@ -681,53 +883,85 @@ x.referralCode||""
 
 
 const csv=
-rows.map(row=>
-row.map(cell=>
+rows
+.map(row=>
+row
+.map(cell=>
 `"${String(cell??"")
 .replace(/"/g,'""')}"`
-).join(",")
-).join("\n");
+)
+.join(",")
+)
+.join("\n");
 
 
-const blob=
-new Blob(
-[csv],
+const blob=new Blob(
+["\ufeff"+csv],
 {
 type:"text/csv;charset=utf-8"
 }
 );
 
-const url=
-URL.createObjectURL(blob);
 
-const a=
-document.createElement("a");
+const url=URL.createObjectURL(blob);
+
+const a=document.createElement("a");
 
 a.href=url;
+a.download="letsstudy-students.csv";
 
-a.download=
-"letsstudy-students.csv";
+document.body.appendChild(a);
 
 a.click();
 
+a.remove();
+
 URL.revokeObjectURL(url);
+
+toast("Students exported.");
 
 };
 
 
 /* =========================================
- MODAL
+ CLOSE MODAL
 ========================================= */
 
 window.closeModal=function(){
 
-document.getElementById(
-"modal"
-).classList.remove("show");
+document.getElementById("modal")
+.classList.remove("show");
 
 selectedStudent=null;
 
 };
+
+
+/* =========================================
+ MODAL BACKDROP
+========================================= */
+
+document.getElementById("modal")
+.addEventListener("click",e=>{
+
+if(e.target.id==="modal"){
+closeModal();
+}
+
+});
+
+
+/* =========================================
+ ESC KEY
+========================================= */
+
+document.addEventListener("keydown",e=>{
+
+if(e.key==="Escape"){
+closeModal();
+}
+
+});
 
 
 /* =========================================
@@ -745,27 +979,24 @@ return String(value??"")
 
 }
 
+
 function toast(text){
 
-const el=
-document.getElementById("toast");
+const el=document.getElementById("toast");
 
 el.textContent=text;
 
 el.classList.add("show");
 
-clearTimeout(
-window.toastTimer
-);
+clearTimeout(window.toastTimer);
 
-window.toastTimer=setTimeout(
-()=>{
+window.toastTimer=setTimeout(()=>{
 el.classList.remove("show");
-},
-3000
-);
+},3000);
 
 }
 
-</script></body>
+</script>
+
+</body>
 </html>
