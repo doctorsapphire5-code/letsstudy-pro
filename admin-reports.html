@@ -1,8 +1,12 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Admin Reports | LetsStudy Pro</title><style>
+<title>Admin Reports | LetsStudy Pro</title>
+<meta name="robots" content="noindex,nofollow">
+
+<style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f7fb;color:#172033}
 button,select,input{font:inherit}
@@ -28,178 +32,426 @@ th{font-size:10px;color:#64748b}
 .bar i{display:block;height:100%;background:#2563eb}
 .metric{display:flex;justify-content:space-between;margin:10px 0;font-size:12px}
 .empty{text-align:center;color:#64748b;padding:30px}
+.status{padding:10px;border-radius:8px;margin-bottom:12px;font-size:13px;background:#fef2f2;color:#991b1b}
 @media(max-width:800px){
 .stats{grid-template-columns:1fr 1fr}
 .grid{grid-template-columns:1fr}
 .filters{flex-wrap:wrap}
+.filters>*{width:auto;flex:1}
 }
-</style></head><body><header><button class="back"
+@media(max-width:450px){
+.stats{grid-template-columns:1fr 1fr}
+.filters>*{width:100%;flex:auto}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+
+<button class="back"
 onclick="location.href='admin-dashboard.html'">
 ←
 </button>
 
-<h1>📊 Admin Reports</h1><button class="primary"
-onclick="exportCSV()">
+<h1>📊 Admin Reports</h1>
+
+<button class="primary"
+id="exportButton">
 ⬇ Export CSV
 </button>
 
-</header><main><div class="filters"><select id="period" onchange="loadReports()">
+</header>
+
+<main>
+
+<div class="filters">
+
+<select id="period">
 <option value="all">All Time</option>
 <option value="7">Last 7 Days</option>
 <option value="30" selected>Last 30 Days</option>
 <option value="90">Last 90 Days</option>
-</select><button class="back"
-onclick="loadReports()">
+</select>
+
+<button class="back" id="refreshButton">
 ↻ Refresh
 </button>
 
-</div><section class="stats"><div class="card stat">
+</div>
+
+<div id="message" hidden></div>
+
+<section class="stats">
+
+<div class="card stat">
 <span>Total Revenue</span>
 <b id="revenue">TZS 0</b>
-</div><div class="card stat">
+</div>
+
+<div class="card stat">
 <span>Total Orders</span>
 <b id="orders">0</b>
-</div><div class="card stat">
+</div>
+
+<div class="card stat">
 <span>Students</span>
 <b id="students">0</b>
-</div><div class="card stat">
+</div>
+
+<div class="card stat">
 <span>Courses</span>
 <b id="courses">0</b>
-</div></section><section class="grid"><!-- SALES --><div class="card"><h2>💰 Sales Overview</h2><div class="metric">
+</div>
+
+</section>
+
+<section class="grid">
+
+<div class="card">
+
+<h2>💰 Sales Overview</h2>
+
+<div class="metric">
 <span>Successful Payments</span>
 <strong id="successful">0</strong>
-</div><div class="metric">
+</div>
+
+<div class="metric">
 <span>Pending Payments</span>
 <strong id="pending">0</strong>
-</div><div class="metric">
+</div>
+
+<div class="metric">
 <span>Failed Payments</span>
 <strong id="failed">0</strong>
-</div><div class="metric">
+</div>
+
+<div class="metric">
 <span>Refunds</span>
 <strong id="refunds">0</strong>
-</div></div><!-- REFERRALS --><div class="card"><h2>🤝 Referral Performance</h2><div class="metric">
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>🤝 Referral Performance</h2>
+
+<div class="metric">
 <span>Referrers</span>
 <strong id="referrers">0</strong>
-</div><div class="metric">
+</div>
+
+<div class="metric">
 <span>Conversions</span>
 <strong id="conversions">0</strong>
-</div><div class="metric">
+</div>
+
+<div class="metric">
 <span>Commission</span>
 <strong id="commission">TZS 0</strong>
-</div></div><!-- TOP COURSES --><div class="card"><h2>🏆 Top Courses</h2><div class="table"><table><thead>
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>🏆 Top Courses</h2>
+
+<div class="table">
+
+<table>
+
+<thead>
 <tr>
 <th>Course</th>
 <th>Students</th>
 <th>Revenue</th>
 </tr>
-</thead><tbody id="topCourses"></tbody></table></div></div><!-- USER REPORT --><div class="card"><h2>👥 User Overview</h2><div class="metric">
+</thead>
+
+<tbody id="topCourses">
+<tr>
+<td colspan="3">Loading...</td>
+</tr>
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>👥 User Overview</h2>
+
+<div class="metric">
 <span>Total Users</span>
 <strong id="totalUsers">0</strong>
-</div><div class="metric">
+</div>
+
+<div class="metric">
 <span>Admins</span>
 <strong id="admins">0</strong>
-</div><div class="metric">
+</div>
+
+<div class="metric">
 <span>Students</span>
 <strong id="studentUsers">0</strong>
-</div><div class="metric">
+</div>
+
+<div class="metric">
 <span>Instructors</span>
 <strong id="instructors">0</strong>
-</div></div><!-- PAYMENT METHODS --><div class="card"><h2>💳 Payment Methods</h2><div id="methods">
-<div class="empty">
-Loading...
 </div>
-</div></div><!-- ORDERS --><div class="card"><h2>🧾 Recent Orders</h2><div class="table"><table><thead><tr>
+
+</div>
+
+
+<div class="card">
+
+<h2>💳 Payment Methods</h2>
+
+<div id="methods">
+<div class="empty">Loading...</div>
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>🧾 Recent Orders</h2>
+
+<div class="table">
+
+<table>
+
+<thead>
+
+<tr>
 <th>Order</th>
 <th>User</th>
 <th>Amount</th>
 <th>Status</th>
-</tr></thead><tbody id="recentOrders"></tbody></table></div></div></section></main><script type="module">
+</tr>
+
+</thead>
+
+<tbody id="recentOrders">
+<tr>
+<td colspan="4">Loading...</td>
+</tr>
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</section>
+
+</main>
+
+
+<script type="module">
 
 import{
 initializeApp
-}
-from
+}from
 "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-
-import{
-getAuth,
-onAuthStateChanged
-}
-from
-"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
 import{
 getFirestore,
 collection,
-getDoc,
-doc,
 getDocs
-}
-from
+}from
 "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 
-/* ==========================================
+/* ==============================
  FIREBASE
-========================================== */
+============================== */
 
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
-  authDomain: "let-s-study-pro-course.firebaseapp.com",
-  databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
-  projectId: "let-s-study-pro-course",
-  storageBucket: "let-s-study-pro-course.firebasestorage.app",
-  messagingSenderId: "474928293390",
-  appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
-  measurementId: "G-85B7V5H5J0"
+const firebaseConfig={
+
+apiKey:
+"AIzaSyBcOYDfAVKXbkljsyRgI_0rj0rodBn678tCc",
+
+authDomain:
+"let-s-study-pro-course.firebaseapp.com",
+
+databaseURL:
+"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+projectId:
+"let-s-study-pro-course",
+
+storageBucket:
+"let-s-study-pro-course.firebasestorage.app",
+
+messagingSenderId:
+"474928293390",
+
+appId:
+"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+measurementId:
+"G-85B7V5H5J0"
+
 };
-
 
 const app=
 initializeApp(firebaseConfig);
-
-const auth=
-getAuth(app);
 
 const db=
 getFirestore(app);
 
 
-/* ==========================================
+/* ==============================
  DATA
-========================================== */
+============================== */
 
 let reportData={
+
 payments:[],
 orders:[],
 users:[],
 courses:[],
 referrals:[]
+
 };
 
-let admin=null;
+
+/* ==============================
+ HELPERS
+============================== */
+
+const $=id=>
+document.getElementById(id);
 
 
-/* ==========================================
- ADMIN CHECK
-========================================== */
+function esc(value){
 
-onAuthStateChanged(
-  auth,
-  async () => {
+return String(value??"")
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
 
-    await loadReports();
+}
 
-  }
+
+function money(value){
+
+return "TZS "+
+Number(value||0)
+.toLocaleString();
+
+}
+
+
+/* ==============================
+ DATE
+============================== */
+
+function getDate(item){
+
+const value=
+item?.createdAt||
+item?.date||
+item?.updatedAt;
+
+if(!value)return null;
+
+
+/* Firestore Timestamp */
+
+if(
+typeof value==="object" &&
+typeof value.toDate==="function"
+){
+
+return value.toDate();
+
+}
+
+
+/* Firestore timestamp object */
+
+if(
+typeof value==="object" &&
+typeof value.seconds==="number"
+){
+
+return new Date(
+value.seconds*1000
 );
 
+}
 
-/* ==========================================
+
+/* JS Date / string */
+
+const date=new Date(value);
+
+return isNaN(date.getTime())
+?null
+:date;
+
+}
+
+
+/* ==============================
+ PERIOD
+============================== */
+
+function withinPeriod(item){
+
+const period=
+$("period").value;
+
+if(period==="all")
+return true;
+
+const date=
+getDate(item);
+
+if(!date)
+return true;
+
+const cutoff=
+new Date();
+
+cutoff.setDate(
+cutoff.getDate()-
+Number(period)
+);
+
+return date>=cutoff;
+
+}
+
+
+/* ==============================
  LOAD REPORTS
-========================================== */
+============================== */
 
-window.loadReports=async function(){
+async function loadReports(){
+
+const refresh=
+$("refreshButton");
+
+refresh.disabled=true;
+refresh.textContent="Loading...";
 
 try{
 
@@ -211,15 +463,25 @@ courses,
 referrals
 ]=await Promise.all([
 
-getDocs(collection(db,"payments")),
+getDocs(
+collection(db,"payments")
+),
 
-getDocs(collection(db,"orders")),
+getDocs(
+collection(db,"orders")
+),
 
-getDocs(collection(db,"users")),
+getDocs(
+collection(db,"users")
+),
 
-getDocs(collection(db,"courses")),
+getDocs(
+collection(db,"courses")
+),
 
-getDocs(collection(db,"referrals"))
+getDocs(
+collection(db,"referrals")
+)
 
 ]);
 
@@ -252,85 +514,35 @@ d=>({id:d.id,...d.data()})
 
 renderReports();
 
+$("message").hidden=true;
+
 }catch(error){
 
-console.error(error);
-
-alert(
-"Unable to load reports."
+console.error(
+"Reports error:",
+error
 );
 
+$("message").hidden=false;
+$("message").className="status";
+
+$("message").textContent=
+"Unable to load reports: "+
+error.message;
+
+}finally{
+
+refresh.disabled=false;
+refresh.textContent="↻ Refresh";
+
 }
-
-};
-
-
-/* ==========================================
- PERIOD
-========================================== */
-
-function withinPeriod(item){
-
-const period=
-document.getElementById(
-"period"
-).value;
-
-if(period==="all")
-return true;
-
-const date=
-getDate(item);
-
-if(!date)
-return true;
-
-const cutoff=
-new Date();
-
-cutoff.setDate(
-cutoff.getDate()-
-Number(period)
-);
-
-return date>=cutoff;
 
 }
 
 
-function getDate(item){
-
-const value=
-item.createdAt ||
-item.date ||
-item.updatedAt;
-
-if(!value)return null;
-
-if(
-typeof value==="object" &&
-value.seconds
-){
-
-return new Date(
-value.seconds*1000
-);
-
-}
-
-const date=
-new Date(value);
-
-return isNaN(date)
-?null
-:date;
-
-}
-
-
-/* ==========================================
+/* ==============================
  RENDER
-========================================== */
+============================== */
 
 function renderReports(){
 
@@ -347,151 +559,160 @@ reportData.referrals
 .filter(withinPeriod);
 
 
-/* REVENUE */
+/* SALES */
 
 const successful=
-payments.filter(
-p=>
-p.status==="success" ||
-p.status==="completed" ||
-p.status==="paid"
-);
+payments.filter(p=>{
+
+const status=
+String(p.status||"")
+.toLowerCase();
+
+return[
+"success",
+"successful",
+"completed",
+"paid"
+].includes(status);
+
+});
+
 
 const revenue=
 successful.reduce(
-(a,p)=>
-a+Number(
-p.amount||p.total||0
+(sum,p)=>
+sum+
+Number(
+p.amount||
+p.total||
+p.price||
+0
 ),
 0
 );
 
 
-document.getElementById(
-"revenue"
-).textContent=
+$("revenue").textContent=
 money(revenue);
 
-document.getElementById(
-"orders"
-).textContent=
+$("orders").textContent=
 orders.length;
 
 
-/* PAYMENTS */
-
-document.getElementById(
-"successful"
-).textContent=
+$("successful").textContent=
 successful.length;
 
-document.getElementById(
-"pending"
-).textContent=
-payments.filter(
-p=>p.status==="pending"
+
+$("pending").textContent=
+payments.filter(p=>
+String(p.status||"")
+.toLowerCase()==="pending"
 ).length;
 
-document.getElementById(
-"failed"
-).textContent=
-payments.filter(
-p=>
-p.status==="failed" ||
-p.status==="cancelled"
-).length;
 
-document.getElementById(
-"refunds"
-).textContent=
-payments.filter(
-p=>p.status==="refunded"
+$("failed").textContent=
+payments.filter(p=>{
+
+const status=
+String(p.status||"")
+.toLowerCase();
+
+return[
+"failed",
+"cancelled",
+"canceled"
+].includes(status);
+
+}).length;
+
+
+$("refunds").textContent=
+payments.filter(p=>
+String(p.status||"")
+.toLowerCase()==="refunded"
 ).length;
 
 
 /* USERS */
 
-document.getElementById(
-"students"
-).textContent=
-reportData.users.filter(
-u=>u.role==="student"
+const students=
+reportData.users.filter(u=>
+String(u.role||"")
+.toLowerCase()==="student"
 ).length;
 
-document.getElementById(
-"courses"
-).textContent=
+
+$("students").textContent=
+students;
+
+$("courses").textContent=
 reportData.courses.length;
 
-document.getElementById(
-"totalUsers"
-).textContent=
+$("totalUsers").textContent=
 reportData.users.length;
 
-document.getElementById(
-"admins"
-).textContent=
-reportData.users.filter(
-u=>u.role==="admin"
+$("admins").textContent=
+reportData.users.filter(u=>
+String(u.role||"")
+.toLowerCase()==="admin"
 ).length;
 
-document.getElementById(
-"studentUsers"
-).textContent=
-reportData.users.filter(
-u=>u.role==="student"
-).length;
+$("studentUsers").textContent=
+students;
 
-document.getElementById(
-"instructors"
-).textContent=
-reportData.users.filter(
-u=>u.role==="instructor"
+$("instructors").textContent=
+reportData.users.filter(u=>
+String(u.role||"")
+.toLowerCase()==="instructor"
 ).length;
 
 
 /* REFERRALS */
 
-document.getElementById(
-"referrers"
-).textContent=
+$("referrers").textContent=
 referrals.length;
 
-document.getElementById(
-"conversions"
-).textContent=
+
+$("conversions").textContent=
 referrals.reduce(
-(a,x)=>
-a+Number(x.conversions||0),
+(sum,r)=>
+sum+
+Number(
+r.conversions||
+r.conversionCount||
+0
+),
 0
 );
 
-document.getElementById(
-"commission"
-).textContent=
+
+$("commission").textContent=
 money(
 referrals.reduce(
-(a,x)=>
-a+Number(x.commission||0),
+(sum,r)=>
+sum+
+Number(
+r.commission||
+r.commissionAmount||
+0
+),
 0
 )
 );
 
 
-/* TOP COURSES */
+/* OTHER REPORTS */
 
 renderTopCourses();
-
 renderPaymentMethods();
-
 renderRecentOrders();
 
 }
 
 
-/* ==========================================
+/* ==============================
  TOP COURSES
-========================================== */
+============================== */
 
 function renderTopCourses(){
 
@@ -499,22 +720,34 @@ const courses=
 [...reportData.courses]
 .sort(
 (a,b)=>
-Number(b.studentsCount||0)-
-Number(a.studentsCount||0)
+Number(
+b.studentsCount||
+b.students||
+b.enrollments||
+0
+)-
+Number(
+a.studentsCount||
+a.students||
+a.enrollments||
+0
+)
 )
 .slice(0,10);
 
 
 const el=
-document.getElementById(
-"topCourses"
-);
+$("topCourses");
 
 
 if(!courses.length){
 
 el.innerHTML=
-`<tr><td colspan="3">No courses.</td></tr>`;
+`<tr>
+<td colspan="3">
+No courses.
+</td>
+</tr>`;
 
 return;
 
@@ -522,36 +755,51 @@ return;
 
 
 el.innerHTML=
-courses.map(c=>`
+courses.map(c=>{
+
+const students=
+Number(
+c.studentsCount||
+c.students||
+c.enrollments||
+0
+);
+
+const revenue=
+Number(
+c.revenue||
+c.totalRevenue||
+0
+);
+
+return`
 
 <tr>
 
 <td>
-${esc(c.title||"Untitled")}
+${esc(c.title||c.name||"Untitled")}
 </td>
 
 <td>
-${Number(
-c.studentsCount||0
-).toLocaleString()}
+${students.toLocaleString()}
 </td>
 
 <td>
-${money(
-Number(c.revenue||0)
-)}
+${money(revenue)}
 </td>
 
 </tr>
 
-`).join("");
+`;
+
+}).join("");
 
 }
 
 
-/* ==========================================
+/* ==============================
  PAYMENT METHODS
-========================================== */
+============================== */
 
 function renderPaymentMethods(){
 
@@ -562,26 +810,27 @@ reportData.payments
 .forEach(p=>{
 
 const method=
-p.method ||
-p.paymentMethod ||
+p.method||
+p.paymentMethod||
+p.provider||
 "Other";
 
-if(!map[method])
-map[method]=0;
-
-map[method]++;
+map[method]=
+(map[method]||0)+1;
 
 });
 
 
 const total=
 Object.values(map)
-.reduce((a,b)=>a+b,0);
+.reduce(
+(a,b)=>a+b,
+0
+);
+
 
 const el=
-document.getElementById(
-"methods"
-);
+$("methods");
 
 
 if(!total){
@@ -598,7 +847,9 @@ return;
 
 el.innerHTML=
 Object.entries(map)
-.sort((a,b)=>b[1]-a[1])
+.sort(
+(a,b)=>b[1]-a[1]
+)
 .map(([name,count])=>{
 
 const percent=
@@ -615,8 +866,7 @@ ${esc(name)}
 </span>
 
 <strong>
-${count}
-(${percent}%)
+${count} (${percent}%)
 </strong>
 
 </div>
@@ -632,9 +882,9 @@ ${count}
 }
 
 
-/* ==========================================
+/* ==============================
  RECENT ORDERS
-========================================== */
+============================== */
 
 function renderRecentOrders(){
 
@@ -642,22 +892,24 @@ const orders=
 [...reportData.orders]
 .sort(
 (a,b)=>
-(getDate(b)||0)-
-(getDate(a)||0)
+(getDate(b)?.getTime()||0)-
+(getDate(a)?.getTime()||0)
 )
 .slice(0,10);
 
 
 const el=
-document.getElementById(
-"recentOrders"
-);
+$("recentOrders");
 
 
 if(!orders.length){
 
 el.innerHTML=
-`<tr><td colspan="4">No orders.</td></tr>`;
+`<tr>
+<td colspan="4">
+No orders.
+</td>
+</tr>`;
 
 return;
 
@@ -681,6 +933,7 @@ o.id||
 ${esc(
 o.userId||
 o.email||
+o.userEmail||
 "-"
 )}
 </td>
@@ -690,13 +943,17 @@ ${money(
 Number(
 o.amount||
 o.total||
+o.price||
 0
 )
 )}
 </td>
 
 <td>
-${esc(o.status||"pending")}
+${esc(
+o.status||
+"pending"
+)}
 </td>
 
 </tr>
@@ -706,13 +963,23 @@ ${esc(o.status||"pending")}
 }
 
 
-/* ==========================================
+/* ==============================
  EXPORT CSV
-========================================== */
+============================== */
 
-window.exportCSV=function(){
+function csvCell(value){
+
+return `"${String(
+value??""
+).replace(/"/g,'""')}"`;
+
+}
+
+
+function exportCSV(){
 
 const rows=[
+
 [
 "Order ID",
 "User ID",
@@ -720,6 +987,7 @@ const rows=[
 "Status",
 "Date"
 ]
+
 ];
 
 
@@ -727,18 +995,31 @@ reportData.orders
 .filter(withinPeriod)
 .forEach(o=>{
 
+const date=
+getDate(o);
+
 rows.push([
 
-o.orderId||o.id||"",
+o.orderId||
+o.id||
+"",
 
-o.userId||o.email||"",
+o.userId||
+o.email||
+o.userEmail||
+"",
 
-o.amount||o.total||0,
+o.amount||
+o.total||
+o.price||
+0,
 
-o.status||"",
+o.status||
+"",
 
-getDate(o)?
-getDate(o).toISOString():""
+date?
+date.toISOString():
+""
 
 ]);
 
@@ -756,13 +1037,14 @@ const blob=
 new Blob(
 [csv],
 {
-type:"text/csv;charset=utf-8;"
+type:"text/csv;charset=utf-8"
 }
 );
 
 
 const url=
 URL.createObjectURL(blob);
+
 
 const a=
 document.createElement("a");
@@ -772,44 +1054,47 @@ a.href=url;
 a.download=
 "letsstudy-reports.csv";
 
+document.body.appendChild(a);
+
 a.click();
+
+a.remove();
 
 URL.revokeObjectURL(url);
 
-};
-
-
-function csvCell(value){
-
-return `"${String(
-value??""
-).replace(/"/g,'""')}"`;
-
 }
 
 
-/* ==========================================
- HELPERS
-========================================== */
+/* ==============================
+ EVENTS
+============================== */
 
-function money(value){
+$("period")
+.addEventListener(
+"change",
+loadReports
+);
 
-return "TZS "+
-Number(value||0)
-.toLocaleString();
+$("refreshButton")
+.addEventListener(
+"click",
+loadReports
+);
 
-}
+$("exportButton")
+.addEventListener(
+"click",
+exportCSV
+);
 
-function esc(value){
 
-return String(value??"")
-.replace(/&/g,"&amp;")
-.replace(/</g,"&lt;")
-.replace(/>/g,"&gt;")
-.replace(/"/g,"&quot;")
-.replace(/'/g,"&#039;");
+/* ==============================
+ START
+============================== */
 
-}
+loadReports();
 
-</script></body>
+</script>
+
+</body>
 </html>
