@@ -1,5 +1,4 @@
-
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -124,8 +123,7 @@
 
     .payment-box {
       display: grid;
-      grid-template-columns:
-        repeat(3, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 14px;
       margin-top: 20px;
     }
@@ -292,12 +290,7 @@
 
 <body>
 
-
 <main class="page">
-
-  <!-- =========================
-       HEADER
-  ========================== -->
 
   <header class="header">
 
@@ -322,11 +315,6 @@
 
   </header>
 
-
-  <!-- =========================
-       CONTENT
-  ========================== -->
-
   <div id="orderContainer">
 
     <div class="loading">
@@ -349,13 +337,11 @@
   } from
   "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-
   import {
     getAuth,
     onAuthStateChanged
   } from
   "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
 
   import {
     getDatabase,
@@ -372,7 +358,7 @@
   const firebaseConfig = {
 
     apiKey:
-      "AIzaSyBcOYDfAVKXbkljsyRgI_0rj0odBn678tCc",
+      "AIzaSyBcOYDfAVKXbkljsyRgI_0rj0rodBn678tCc",
 
     authDomain:
       "let-s-study-pro-course.firebaseapp.com",
@@ -403,9 +389,7 @@
   ========================== */
 
   const app =
-    initializeApp(
-      firebaseConfig
-    );
+    initializeApp(firebaseConfig);
 
   const auth =
     getAuth(app);
@@ -430,43 +414,32 @@
 
   function escapeHtml(value) {
 
-    return String(
-      value ?? ""
-    )
+    return String(value ?? "")
 
-      .replaceAll(
-        "&",
-        "&amp;"
-      )
-
-      .replaceAll(
-        "<",
-        "&lt;"
-      )
-
-      .replaceAll(
-        ">",
-        "&gt;"
-      )
-
-      .replaceAll(
-        '"',
-        "&quot;"
-      )
-
-      .replaceAll(
-        "'",
-        "&#039;"
-      );
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
 
   }
 
 
   function money(value) {
 
-    return Number(
-      value || 0
-    ).toLocaleString();
+    const number =
+      Number(value || 0);
+
+    return number.toLocaleString(
+      undefined,
+      {
+        minimumFractionDigits:
+          Number.isInteger(number)
+            ? 0
+            : 2,
+        maximumFractionDigits: 2
+      }
+    );
 
   }
 
@@ -477,16 +450,63 @@
       return "-";
     }
 
-    const date =
-      new Date(value);
+
+    /*
+     * Firebase Realtime Database
+     * timestamps are commonly numbers.
+     */
+
+    let date;
+
+
+    if (
+      typeof value === "object" &&
+      value !== null &&
+      "seconds" in value
+    ) {
+
+      date =
+        new Date(
+          Number(value.seconds) * 1000
+        );
+
+    } else {
+
+      const numeric =
+        Number(value);
+
+      if (
+        !Number.isNaN(numeric) &&
+        numeric > 0
+      ) {
+
+        date =
+          new Date(
+            numeric < 100000000000
+              ? numeric * 1000
+              : numeric
+          );
+
+      } else {
+
+        date =
+          new Date(value);
+
+      }
+
+    }
+
 
     if (
       Number.isNaN(
         date.getTime()
       )
     ) {
+
       return "-";
+
     }
+
 
     return date.toLocaleString();
 
@@ -496,8 +516,7 @@
   function normalizeStatus(value) {
 
     return String(
-      value ||
-      "pending"
+      value || "pending"
     )
       .toLowerCase()
       .trim();
@@ -569,14 +588,10 @@
 
 
     const items =
-      Array.isArray(
-        order.items
-      )
+      Array.isArray(order.items)
         ? order.items
         : order.items
-        ? Object.values(
-            order.items
-          )
+        ? Object.values(order.items)
         : [];
 
 
@@ -597,6 +612,12 @@
       order.name ||
       order.userName ||
       "Customer";
+
+
+    const orderCurrency =
+      order.currency ||
+      order.paymentCurrency ||
+      "";
 
 
     container.innerHTML = `
@@ -646,8 +667,7 @@
 
             <h2>
               Order #${escapeHtml(
-                order.orderId ||
-                id
+                order.orderId || id
               )}
             </h2>
 
@@ -667,14 +687,10 @@
           <span
             class="
               status
-              status-${escapeHtml(
-                status
-              )}
+              status-${escapeHtml(status)}
             "
           >
-            ${escapeHtml(
-              status
-            )}
+            ${escapeHtml(status)}
           </span>
 
         </div>
@@ -720,8 +736,7 @@
 
             <strong>
               ${escapeHtml(
-                order.paymentMethod ||
-                "-"
+                order.paymentMethod || "-"
               )}
             </strong>
 
@@ -746,56 +761,64 @@
           ${
             items.length
               ? items.map(
-                  item => `
+                  item => {
 
-                    <div
-                      class="item"
-                    >
+                    const itemPrice =
+                      item.total ??
+                      item.price ??
+                      0;
 
-                      <div>
+                    return `
 
-                        <div
-                          class="item-name"
-                        >
-                          ${escapeHtml(
-                            item.name ||
-                            item.title ||
-                            item.productName ||
-                            "Item"
-                          )}
+                      <div class="item">
+
+                        <div>
+
+                          <div class="item-name">
+
+                            ${escapeHtml(
+                              item.name ||
+                              item.title ||
+                              item.productName ||
+                              "Item"
+                            )}
+
+                          </div>
+
+
+                          <div class="item-meta">
+
+                            Quantity:
+                            ${escapeHtml(
+                              item.quantity || 1
+                            )}
+
+                          </div>
+
                         </div>
 
 
-                        <div
-                          class="item-meta"
-                        >
+                        <div class="item-price">
 
-                          Quantity:
                           ${
-                            item.quantity ||
-                            1
+                            orderCurrency
+                              ? escapeHtml(
+                                  orderCurrency
+                                ) + " "
+                              : ""
                           }
 
+                          ${money(
+                            itemPrice
+                          )}
+
                         </div>
 
                       </div>
 
+                    `;
 
-                      <div
-                        class="item-price"
-                      >
-
-                        ${money(
-                          item.total ??
-                          item.price ??
-                          0
-                        )}
-
-                      </div>
-
-                    </div>
-
-                  `
+                  }
                 ).join("")
               : `
                 <div
@@ -817,9 +840,17 @@
           </span>
 
           <span>
-            ${money(
-              total
-            )}
+
+            ${
+              orderCurrency
+                ? escapeHtml(
+                    orderCurrency
+                  ) + " "
+                : ""
+            }
+
+            ${money(total)}
+
           </span>
 
         </div>
@@ -878,6 +909,7 @@
             </strong>
 
             <span>
+
               ${
                 paymentStatus === "paid" ||
                 paymentStatus === "approved" ||
@@ -885,6 +917,7 @@
                   ? "Payment received"
                   : "Waiting for payment"
               }
+
             </span>
 
           </div>
@@ -901,7 +934,7 @@
             "
           >
 
-            <Strong>
+            <strong>
               Order Approved
             </strong>
 
@@ -961,9 +994,30 @@
      LOAD ORDER
   ========================== */
 
-  function loadOrder(
-    user
-  ) {
+  function loadOrder(user) {
+
+    if (!user) {
+
+      container.innerHTML = `
+
+        <div class="error">
+
+          <h2>
+            Sign in required
+          </h2>
+
+          <p>
+            Please sign in to view your order.
+          </p>
+
+        </div>
+
+      `;
+
+      return;
+
+    }
+
 
     if (!orderId) {
 
@@ -998,6 +1052,7 @@
 
     onValue(
       orderRef,
+
       snapshot => {
 
         const order =
@@ -1049,6 +1104,12 @@
         }
 
 
+        /*
+         * If the order has no userId,
+         * allow it to display so older
+         * orders remain compatible.
+         */
+
         renderOrder(
           orderId,
           order
@@ -1063,17 +1124,28 @@
           error
         );
 
+
         container.innerHTML = `
 
           <div class="error">
 
-            Failed to load your order.
+            <h2>
+              Failed to load your order
+            </h2>
+
+            <p>
+              ${escapeHtml(
+                error?.message ||
+                "Please try again later."
+              )}
+            </p>
 
           </div>
 
         `;
 
       }
+
     );
 
   }
@@ -1084,13 +1156,36 @@
   ========================== */
 
   onAuthStateChanged(
-  auth,
-  async () => {
+    auth,
+    user => {
 
-    await loadReports();
+      if (!user) {
 
-  }
-);
+        container.innerHTML = `
+
+          <div class="error">
+
+            <h2>
+              Sign in required
+            </h2>
+
+            <p>
+              Please sign in to view your order.
+            </p>
+
+          </div>
+
+        `;
+
+        return;
+
+      }
+
+
+      loadOrder(user);
+
+    }
+  );
 
 </script>
 
