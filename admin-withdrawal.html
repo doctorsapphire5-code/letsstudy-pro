@@ -224,7 +224,8 @@ textarea{
  padding:5px 8px;
  border-radius:20px;
  font-size:10px;
- font-weight:800
+ font-weight:800;
+ text-transform:capitalize
 }
 
 .pending{
@@ -270,6 +271,14 @@ textarea{
 
  .hero h1{
   font-size:25px
+ }
+
+ .table{
+  min-width:600px
+ }
+
+ .history{
+  overflow-x:auto
  }
 
 }
@@ -360,6 +369,7 @@ Withdrawal Amount
 id="amount"
 type="number"
 min="1000"
+step="0.01"
 placeholder="Enter amount">
 
 
@@ -522,7 +532,8 @@ correct before submitting.
 
 <button
 id="submit"
-class="btn">
+class="btn"
+disabled>
 
 <i class="fa fa-paper-plane"></i>
 
@@ -669,7 +680,7 @@ from
 const firebaseConfig={
 
  apiKey:
- "AIzaSyBcOYDfAVKXbkljsYrgI_0rjodBn678tCc",
+ "AIzaSyBcOYDfAVKXbkljsyRgI_0rj0rodBn678tCc",
 
  authDomain:
  "let-s-study-pro-course.firebaseapp.com",
@@ -695,65 +706,87 @@ const firebaseConfig={
 };
 
 
-const app=
-initializeApp(firebaseConfig);
+const app =
+ initializeApp(firebaseConfig);
 
-const db=
-getFirestore(app);
+const db =
+ getFirestore(app);
 
-const auth=
-getAuth(app);
+const auth =
+ getAuth(app);
 
 
 /* =========================
  STATE
 ========================= */
 
-let currentUser=null;
+let currentUser = null;
 
-const COMMISSION_RATE=20;
-
-const WITHDRAWAL_FEE=0;
+const COMMISSION_RATE = 20;
+const WITHDRAWAL_FEE = 0;
 
 
 /* =========================
  DOM
 ========================= */
 
-const amount=
-document.getElementById("amount");
+const amount =
+ document.getElementById("amount");
 
-const gross=
-document.getElementById("gross");
+const currency =
+ document.getElementById("currency");
 
-const commission=
-document.getElementById("commission");
+const paymentMethod =
+ document.getElementById("paymentMethod");
 
-const fee=
-document.getElementById("fee");
+const accountNameInput =
+ document.getElementById("accountName");
 
-const net=
-document.getElementById("net");
+const accountNumberInput =
+ document.getElementById("accountNumber");
 
-const balanceEl=
-document.getElementById("balance");
+const noteInput =
+ document.getElementById("note");
 
-const submit=
-document.getElementById("submit");
+const gross =
+ document.getElementById("gross");
 
-const history=
-document.getElementById("history");
+const commission =
+ document.getElementById("commission");
+
+const fee =
+ document.getElementById("fee");
+
+const net =
+ document.getElementById("net");
+
+const balanceEl =
+ document.getElementById("balance");
+
+const submit =
+ document.getElementById("submit");
+
+const history =
+ document.getElementById("history");
 
 
 /* =========================
- FORMAT
+ FORMAT MONEY
 ========================= */
 
-function money(value,currency="TZS"){
+function money(value, currencyCode = "TZS"){
 
- return `${currency} ${
-  Number(value||0).toLocaleString()
- }`;
+ const number =
+  Number(value || 0);
+
+ return `${currencyCode} ${number.toLocaleString(
+  undefined,
+  {
+   minimumFractionDigits:
+    number % 1 !== 0 ? 2 : 0,
+   maximumFractionDigits:2
+  }
+ )}`;
 
 }
 
@@ -764,45 +797,46 @@ function money(value,currency="TZS"){
 
 function calculate(){
 
- const value=
-  Number(amount.value||0);
+ const value =
+  Number(amount.value || 0);
 
- const commissionValue=
-  value*COMMISSION_RATE/100;
+ const commissionValue =
+  value * COMMISSION_RATE / 100;
 
- const netValue=
+ const netValue =
   Math.max(
    0,
-   value-
-   commissionValue-
+   value -
+   commissionValue -
    WITHDRAWAL_FEE
   );
 
- const currency=
-  document.getElementById(
-   "currency"
-  ).value;
+ const selectedCurrency =
+  currency.value || "TZS";
 
 
- gross.textContent=
-  money(value,currency);
+ gross.textContent =
+  money(
+   value,
+   selectedCurrency
+  );
 
- commission.textContent=
+ commission.textContent =
   money(
    commissionValue,
-   currency
+   selectedCurrency
   );
 
- fee.textContent=
+ fee.textContent =
   money(
    WITHDRAWAL_FEE,
-   currency
+   selectedCurrency
   );
 
- net.textContent=
+ net.textContent =
   money(
    netValue,
-   currency
+   selectedCurrency
   );
 
 }
@@ -813,9 +847,7 @@ amount.addEventListener(
  calculate
 );
 
-document
-.getElementById("currency")
-.addEventListener(
+currency.addEventListener(
  "change",
  calculate
 );
@@ -827,23 +859,28 @@ document
 
 onAuthStateChanged(
  auth,
- async user=>{
+ async user => {
 
   if(!user){
 
-   alert(
-    "Please login before requesting a withdrawal."
-   );
+   currentUser = null;
 
-   submit.disabled=true;
+   submit.disabled = true;
+
+   history.innerHTML = `
+    <div class="empty">
+     Please login to view your withdrawal history.
+    </div>
+   `;
 
    return;
 
   }
 
-  currentUser=user;
 
-  submit.disabled=false;
+  currentUser = user;
+
+  submit.disabled = false;
 
   await loadHistory();
 
@@ -857,7 +894,7 @@ onAuthStateChanged(
 
 submit.addEventListener(
  "click",
- async()=>{
+ async () => {
 
   if(!currentUser){
 
@@ -870,11 +907,11 @@ submit.addEventListener(
   }
 
 
-  const value=
-   Number(amount.value||0);
+  const value =
+   Number(amount.value || 0);
 
 
-  if(value<1000){
+  if(!Number.isFinite(value) || value < 1000){
 
    alert(
     "Minimum withdrawal amount is TZS 1,000."
@@ -885,28 +922,26 @@ submit.addEventListener(
   }
 
 
-  const paymentMethod=
-   document.getElementById(
-    "paymentMethod"
-   ).value;
+  const selectedPaymentMethod =
+   paymentMethod.value;
 
 
-  const accountName=
-   document.getElementById(
-    "accountName"
-   ).value.trim();
+  const selectedAccountName =
+   accountNameInput.value.trim();
 
 
-  const accountNumber=
-   document.getElementById(
-    "accountNumber"
-   ).value.trim();
+  const selectedAccountNumber =
+   accountNumberInput.value.trim();
+
+
+  const withdrawalNote =
+   noteInput.value.trim();
 
 
   if(
-   !paymentMethod ||
-   !accountName ||
-   !accountNumber
+   !selectedPaymentMethod ||
+   !selectedAccountName ||
+   !selectedAccountNumber
   ){
 
    alert(
@@ -918,29 +953,30 @@ submit.addEventListener(
   }
 
 
-  const currency=
-   document.getElementById(
-    "currency"
-   ).value;
+  const selectedCurrency =
+   currency.value || "TZS";
 
 
-  const commissionAmount=
-   value*
-   COMMISSION_RATE/
+  const commissionAmount =
+   value *
+   COMMISSION_RATE /
    100;
 
 
-  const netAmount=
-   value-
-   commissionAmount-
-   WITHDRAWAL_FEE;
+  const netAmount =
+   Math.max(
+    0,
+    value -
+    commissionAmount -
+    WITHDRAWAL_FEE
+  );
 
 
   try{
 
-   submit.disabled=true;
+   submit.disabled = true;
 
-   submit.innerHTML=
+   submit.innerHTML =
     '<i class="fa fa-spinner fa-spin"></i> Processing...';
 
 
@@ -955,6 +991,9 @@ submit.addEventListener(
 
      userId:
       currentUser.uid,
+
+     userEmail:
+      currentUser.email || "",
 
      grossAmount:
       value,
@@ -972,16 +1011,19 @@ submit.addEventListener(
       netAmount,
 
      currency:
-      currency,
+      selectedCurrency,
 
      paymentMethod:
-      paymentMethod,
+      selectedPaymentMethod,
 
      accountName:
-      accountName,
+      selectedAccountName,
 
      accountNumber:
-      accountNumber,
+      selectedAccountNumber,
+
+     note:
+      withdrawalNote,
 
      status:
       "pending",
@@ -1017,9 +1059,15 @@ submit.addEventListener(
    );
 
 
-   amount.value="";
-   accountName.value="";
-   accountNumber.value="";
+   amount.value = "";
+
+   accountNameInput.value = "";
+
+   accountNumberInput.value = "";
+
+   noteInput.value = "";
+
+   paymentMethod.value = "";
 
 
    calculate();
@@ -1029,19 +1077,27 @@ submit.addEventListener(
 
   }catch(error){
 
-   console.error(error);
-
-   alert(
-    "Unable to submit withdrawal request."
+   console.error(
+    "Withdrawal error:",
+    error
    );
 
+   alert(
+    "Unable to submit withdrawal request.\n\n" +
+    (
+     error?.message ||
+     "Please try again."
+    )
+   );
+
+  }finally{
+
+   submit.disabled = !currentUser;
+
+   submit.innerHTML =
+    '<i class="fa fa-paper-plane"></i> Request Withdrawal';
+
   }
-
-
-  submit.disabled=false;
-
-  submit.innerHTML=
-   '<i class="fa fa-paper-plane"></i> Request Withdrawal';
 
  }
 );
@@ -1053,12 +1109,23 @@ submit.addEventListener(
 
 async function loadHistory(){
 
- if(!currentUser)return;
+ if(!currentUser){
+
+  return;
+
+ }
+
+
+ history.innerHTML = `
+  <div class="loading">
+   Loading withdrawal history...
+  </div>
+ `;
 
 
  try{
 
-  const q=
+  const q =
    query(
 
     collection(
@@ -1080,13 +1147,13 @@ async function loadHistory(){
    );
 
 
-  const snap=
+  const snap =
    await getDocs(q);
 
 
   if(snap.empty){
 
-   history.innerHTML=`
+   history.innerHTML = `
 
     <div class="empty">
 
@@ -1101,7 +1168,9 @@ async function loadHistory(){
   }
 
 
-  let html=`
+  let html = `
+
+   <div style="overflow-x:auto">
 
    <table class="table">
 
@@ -1126,51 +1195,63 @@ async function loadHistory(){
   `;
 
 
-  snap.forEach(docSnap=>{
+  snap.forEach(docSnap => {
 
-   const d=
+   const data =
     docSnap.data();
 
 
-   const status=
+   const status =
     String(
-     d.status||
+     data.status ||
      "pending"
     ).toLowerCase();
 
 
-   html+=`
+   const safeStatus =
+    [
+     "pending",
+     "approved",
+     "rejected"
+    ].includes(status)
+     ? status
+     : "pending";
+
+
+   html += `
 
     <tr>
 
      <td>
       ${money(
-       d.grossAmount,
-       d.currency
+       data.grossAmount,
+       data.currency || "TZS"
       )}
      </td>
 
      <td>
       ${money(
-       d.commissionAmount,
-       d.currency
+       data.commissionAmount,
+       data.currency || "TZS"
       )}
      </td>
 
      <td>
+
       <strong>
        ${money(
-        d.netAmount,
-        d.currency
+        data.netAmount,
+        data.currency || "TZS"
        )}
       </strong>
+
      </td>
 
      <td>
 
-      <span class="status ${status}">
+      <span class="status ${safeStatus}">
 
-       ${status}
+       ${safeStatus}
 
       </span>
 
@@ -1183,27 +1264,45 @@ async function loadHistory(){
   });
 
 
-  html+=`
+  html += `
 
     </tbody>
 
    </table>
 
+   </div>
+
   `;
 
 
-  history.innerHTML=html;
+  history.innerHTML =
+   html;
 
 
  }catch(error){
 
-  console.error(error);
+  console.error(
+   "History error:",
+   error
+  );
 
-  history.innerHTML=`
+
+  history.innerHTML = `
 
    <div class="empty">
 
     Unable to load withdrawal history.
+
+    <br><br>
+
+    <small>
+     ${
+      error?.code ===
+      "failed-precondition"
+       ? "A Firestore index may be required for withdrawal history."
+       : ""
+     }
+    </small>
 
    </div>
 
@@ -1212,6 +1311,13 @@ async function loadHistory(){
  }
 
 }
+
+
+/* =========================
+ INITIAL CALCULATION
+========================= */
+
+calculate();
 
 </script>
 
