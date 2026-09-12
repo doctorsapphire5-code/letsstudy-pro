@@ -1436,3 +1436,881 @@ function normalizeItem(
   String(
     item.status || ""
   ).toLowerCase() ===
+    "published";
+
+
+const rating =
+  Number(
+    item.rating || 0
+  );
+
+
+const views =
+  Number(
+    item.views || 0
+  );
+
+
+const createdAt =
+  item.createdAt ||
+  item.date ||
+  item.updatedAt ||
+  item.publishedAt ||
+  null;
+
+
+const access =
+  clean(
+    item.access ||
+    item.visibility ||
+    ""
+  );
+
+
+return {
+
+  ...item,
+
+  /* ======================================
+     REAL FIRESTORE DOCUMENT ID
+  ====================================== */
+
+  id:
+    String(
+      documentId || ""
+    ),
+
+  documentId:
+    String(
+      documentId || ""
+    ),
+
+  title:
+    title ||
+    "Untitled",
+
+  description:
+    description ||
+    "Explore this content on LetsStudy Pro.",
+
+  category:
+    clean(
+      item.category ||
+      defaultCategory ||
+      ""
+    ),
+
+  collection:
+    collectionName,
+
+  url:
+    clean(
+      item.url || ""
+    ),
+
+  featured,
+
+  published,
+
+  rating,
+
+  views,
+
+  createdAt,
+
+  access
+
+};
+
+}
+
+
+/* ==================================================
+   LOAD FIRESTORE COLLECTION
+================================================== */
+
+async function loadCollection(config){
+
+  try{
+
+    const snapshot =
+      await getDocs(
+        collection(
+          db,
+          config.name
+        )
+      );
+
+    const items = [];
+
+    snapshot.forEach(
+      docSnap => {
+
+        /*
+         * IMPORTANT:
+         * Firestore document ID
+         */
+        const documentId =
+          docSnap.id;
+
+        const data =
+          docSnap.data() || {};
+
+        const item =
+          normalizeItem(
+            data,
+            config.name,
+            config.category,
+            documentId
+          );
+
+        if(!item){
+          return;
+        }
+
+        items.push({
+
+          ...item,
+
+          id:
+            documentId,
+
+          documentId:
+            documentId,
+
+          collection:
+            config.name
+
+        });
+
+      }
+    );
+
+    console.log(
+      "Loaded:",
+      config.name,
+      items.length
+    );
+
+    return items;
+
+  }catch(error){
+
+    console.error(
+      "Failed loading collection:",
+      config.name,
+      error
+    );
+
+    return [];
+
+  }
+
+}
+
+
+/* ==================================================
+   LOAD ALL COLLECTIONS
+================================================== */
+
+async function loadAll(){
+
+  try{
+
+    setLoading(true);
+
+    const results =
+      await Promise.all(
+        COLLECTIONS.map(
+          config =>
+            loadCollection(
+              config
+            )
+        )
+      );
+
+    allItems =
+      results.flat();
+
+    allItems =
+      allItems.map(
+        (item,index) => {
+
+          return {
+
+            ...item,
+
+            /*
+             * Stable internal search ID.
+             * Does NOT replace Firestore ID.
+             */
+            searchId:
+              `${slug(
+                item.collection ||
+                item.category ||
+                "item"
+              )}-${slug(
+                item.documentId ||
+                item.id ||
+                item.title ||
+                "result"
+              )}-${index}`
+
+          };
+
+        }
+      );
+
+    console.log(
+      "================================"
+    );
+
+    console.log(
+      "TOTAL DOCUMENTS:",
+      allItems.length
+    );
+
+    console.log(
+      allItems
+    );
+
+    console.log(
+      "================================"
+    );
+
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
+
+    const query =
+      clean(
+        params.get("q") ||
+        params.get("search") ||
+        ""
+      );
+
+    if(query){
+
+      searchInput.value =
+        query;
+
+      currentQuery =
+        query;
+
+    }
+
+    await performSearch(
+      query,
+      Boolean(query)
+    );
+
+  }catch(error){
+
+    console.error(
+      "Search engine failed:",
+      error
+    );
+
+    showError(
+      "Unable to load search engine."
+    );
+
+  }finally{
+
+    setLoading(false);
+
+  }
+
+}
+
+
+/* ==================================================
+   SCORE ITEM
+================================================== */
+
+function scoreItem(
+  item,
+  query
+){
+
+  const q =
+    clean(query)
+      .toLowerCase();
+
+  if(!q){
+
+    return (
+
+      (item.featured
+        ? 100
+        : 0) +
+
+      (item.published
+        ? 30
+        : 0) +
+
+      Math.min(
+        Number(
+          item.rating || 0
+        ) * 10,
+        50
+      ) +
+
+      Math.min(
+        Number(
+          item.views || 0
+        ) / 1000,
+        20
+      )
+
+    );
+
+  }
+
+  const title =
+    clean(
+      item.title
+    ).toLowerCase();
+
+  const description =
+    clean(
+      item.description
+    ).toLowerCase();
+
+  const category =
+    clean(
+      item.category
+    ).toLowerCase();
+
+  const collectionName =
+    clean(
+      item.collection
+    ).toLowerCase();
+
+  let score = 0;
+
+
+  /* Exact title */
+
+  if(
+    title === q
+  ){
+
+    score += 1000;
+
+  }
+
+
+  /* Title match */
+
+  if(
+    title.includes(q)
+  ){
+
+    score += 650;
+
+  }
+
+
+  /* Description */
+
+  if(
+    description.includes(q)
+  ){
+
+    score += 300;
+
+  }
+
+
+  /* Category */
+
+  if(
+    category.includes(q)
+  ){
+
+    score += 200;
+
+  }
+
+
+  /* Collection */
+
+  if(
+    collectionName.includes(q)
+  ){
+
+    score += 150;
+
+  }
+
+
+  /* Individual words */
+
+  const words =
+    q
+      .split(/\s+/)
+      .filter(Boolean);
+
+
+  words.forEach(
+    word => {
+
+      if(
+        title.includes(word)
+      ){
+
+        score += 100;
+
+      }
+
+      if(
+        description.includes(word)
+      ){
+
+        score += 40;
+
+      }
+
+      if(
+        category.includes(word)
+      ){
+
+        score += 30;
+
+      }
+
+    }
+  );
+
+
+  if(item.featured){
+
+    score += 35;
+
+  }
+
+
+  if(item.published){
+
+    score += 15;
+
+  }
+
+
+  score += Math.min(
+    Number(
+      item.rating || 0
+    ) * 5,
+    25
+  );
+
+
+  score += Math.min(
+    Number(
+      item.views || 0
+    ) / 10000,
+    10
+  );
+
+
+  return score;
+
+}
+
+
+/* ==================================================
+   LOCAL SEARCH
+================================================== */
+
+function localSearch(query){
+
+  const q =
+    clean(query);
+
+  let items =
+    [...allItems];
+
+
+  if(
+    activeCategory !==
+    "All"
+  ){
+
+    items =
+      items.filter(
+        item =>
+          clean(
+            item.category
+          ).toLowerCase() ===
+          activeCategory.toLowerCase()
+      );
+
+  }
+
+
+  items =
+    items.map(
+      item => ({
+
+        ...item,
+
+        localScore:
+          scoreItem(
+            item,
+            q
+          )
+
+      })
+    );
+
+
+  if(q){
+
+    items =
+      items.filter(
+        item =>
+          item.localScore > 0
+      );
+
+  }
+
+
+  items.sort(
+    (a,b) =>
+      b.localScore -
+      a.localScore
+  );
+
+
+  return items;
+
+}
+
+
+/* ==================================================
+   SORT
+================================================== */
+
+function sortItems(items){
+
+  const mode =
+    sortSelect.value;
+
+  const list =
+    [...items];
+
+
+  if(
+    mode === "rating"
+  ){
+
+    list.sort(
+      (a,b) =>
+        Number(
+          b.rating || 0
+        ) -
+        Number(
+          a.rating || 0
+        )
+    );
+
+  }
+
+
+  else if(
+    mode === "views"
+  ){
+
+    list.sort(
+      (a,b) =>
+        Number(
+          b.views || 0
+        ) -
+        Number(
+          a.views || 0
+        )
+    );
+
+  }
+
+
+  else if(
+    mode === "featured"
+  ){
+
+    list.sort(
+      (a,b) =>
+        Number(
+          b.featured
+        ) -
+        Number(
+          a.featured
+        )
+    );
+
+  }
+
+
+  else if(
+    mode === "newest"
+  ){
+
+    list.sort(
+      (a,b) => {
+
+        const aTime =
+          new Date(
+            a.createdAt || 0
+          ).getTime();
+
+        const bTime =
+          new Date(
+            b.createdAt || 0
+          ).getTime();
+
+        return (
+          bTime -
+          aTime
+        );
+
+      }
+    );
+
+  }
+
+
+  else{
+
+    list.sort(
+      (a,b) =>
+        Number(
+          b.localScore || 0
+        ) -
+        Number(
+          a.localScore || 0
+        )
+    );
+
+  }
+
+
+  return list;
+
+}
+
+
+/* ==================================================
+   RESULT URL
+================================================== */
+
+function getResultURL(item){
+
+  const collectionName =
+    clean(
+      item.collection
+    ).toLowerCase();
+
+  /*
+   * ALWAYS USE REAL FIRESTORE ID
+   */
+  const documentId =
+    clean(
+      item.documentId ||
+      item.id
+    );
+
+  const page =
+    PAGE_MAP[
+      collectionName
+    ];
+
+
+  if(
+    page &&
+    documentId
+  ){
+
+    return (
+      page +
+      "?id=" +
+      encodeURIComponent(
+        documentId
+      )
+    );
+
+  }
+
+
+  if(item.url){
+
+    const url =
+      clean(
+        item.url
+      );
+
+    if(
+      url.startsWith(
+        "http://"
+      ) ||
+      url.startsWith(
+        "https://"
+      ) ||
+      url.startsWith("/")
+    ){
+
+      return url;
+
+    }
+
+  }
+
+
+  return "#";
+
+}
+
+
+/* ==================================================
+   SHARE URL
+================================================== */
+
+function getShareURL(item){
+
+  const url =
+    getResultURL(
+      item
+    );
+
+
+  if(
+    url === "#"
+  ){
+
+    return (
+      window.location.href
+    );
+
+  }
+
+
+  if(
+    url.startsWith(
+      "http://"
+    ) ||
+    url.startsWith(
+      "https://"
+    )
+  ){
+
+    return url;
+
+  }
+
+
+  return (
+    window.location.origin +
+    "/" +
+    url.replace(
+      /^\/+/,
+      ""
+    )
+  );
+
+}
+
+
+/* ==================================================
+   SHARE RESULT
+================================================== */
+
+async function shareResult(item){
+
+  const url =
+    getShareURL(
+      item
+    );
+
+  const title =
+    clean(
+      item.title ||
+      "LetsStudy Pro"
+    );
+
+  const text =
+    clean(
+      item.description ||
+      title
+    );
+
+
+  try{
+
+    if(
+      navigator.share
+    ){
+
+      await navigator.share({
+
+        title:
+          title +
+          " | LetsStudy Pro",
+
+        text,
+
+        url
+
+      });
+
+      return;
+
+    }
+
+
+    await navigator.clipboard
+      .writeText(
+        url
+      );
+
+    showToast(
+      "Link copied successfully"
+    );
+
+
+  }catch(error){
+
+    if(
+      error &&
+      error.name ===
+      "AbortError"
+    ){
+
+      return;
+
+    }
+
+
+    try{
+
+      await navigator.clipboard
+        .writeText(
+          url
+        );
+
+      showToast(
+        "Link copied successfully"
+      );
+
+    }catch(copyError){
+
+      console.error(
+        "Share failed:",
+        copyError
+      );
+
+    }
+
+  }
+
+}
