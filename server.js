@@ -6,7 +6,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const crypto = require("crypto");
-const { GoogleGenAI } = require("@google/genai");
+const Groq = require("groq-sdk");
 
 const app = express();
 
@@ -14,16 +14,22 @@ const app = express();
    CONFIGURATION
 ========================================================= */
 
-const PORT = process.env.PORT || 3000;
+const GROQ_API_KEY =
+  process.env.GROQ_API_KEY;
 
-const FRONTEND_URL =
-  process.env.FRONTEND_URL || "https://letsstudy.pro";
+const GROQ_MODEL =
+  process.env.GROQ_MODEL ||
+  "openai/gpt-oss-20b";
 
-const GEMINI_API_KEY =
-  process.env.GEMINI_API_KEY;
+if (!GROQ_API_KEY) {
+  console.error("ERROR: GROQ_API_KEY is missing.");
+  process.exit(1);
+}
 
-const GEMINI_MODEL =
-  process.env.GEMINI_MODEL || "gemini-3.7-flash";
+const groq =
+  new Groq({
+    apiKey: GROQ_API_KEY
+  });
 
 
 /* =========================================================
