@@ -2314,3 +2314,1077 @@ async function shareResult(item){
   }
 
 }
+
+/* ==================================================
+   MEDIA HELPERS
+================================================== */
+
+function getImageURL(item){
+
+  return clean(
+
+    item.image ||
+
+    item.imageUrl ||
+
+    item.thumbnail ||
+
+    item.thumbnailUrl ||
+
+    item.cover ||
+
+    item.coverImage ||
+
+    item.photo ||
+
+    ""
+
+  );
+
+}
+
+
+function getVideoURL(item){
+
+  return clean(
+
+    item.video ||
+
+    item.videoUrl ||
+
+    item.youtubeUrl ||
+
+    item.youtube ||
+
+    ""
+
+  );
+
+}
+
+
+/* ==================================================
+   RENDER MEDIA
+================================================== */
+
+function renderMedia(item){
+
+  const image =
+    getImageURL(
+      item
+    );
+
+  const video =
+    getVideoURL(
+      item
+    );
+
+  const initial =
+    escapeHTML(
+      clean(
+        item.title
+      )
+      .charAt(0)
+      .toUpperCase() ||
+      "L"
+    );
+
+
+  if(image){
+
+    return `
+
+      <div class="result-media">
+
+        <img
+          src="${escapeHTML(image)}"
+          alt="${escapeHTML(item.title)}"
+          loading="lazy"
+          decoding="async"
+          width="245"
+          height="190"
+          onerror="
+            this.style.display='none';
+            this.nextElementSibling.style.display='flex'
+          "
+        >
+
+        <div
+          class="visual-placeholder"
+          style="display:none"
+        >
+          ${initial}
+        </div>
+
+        ${
+          video
+            ? `
+              <div class="video-badge">
+                ▶ Video
+              </div>
+            `
+            : ""
+        }
+
+      </div>
+
+    `;
+
+  }
+
+
+  return `
+
+    <div class="result-media">
+
+      <div class="visual-placeholder">
+        ${initial}
+      </div>
+
+      ${
+        video
+          ? `
+            <div class="video-badge">
+              ▶ Video
+            </div>
+          `
+          : ""
+      }
+
+    </div>
+
+  `;
+
+}
+
+
+/* ==================================================
+   RENDER RESULTS
+================================================== */
+
+function renderResults(items){
+
+  visibleItems =
+    sortItems(
+      items
+    );
+
+
+  if(
+    !visibleItems.length
+  ){
+
+    results.innerHTML = `
+
+      <div class="state">
+
+        <div
+          style="
+            font-size:42px;
+            margin-bottom:10px;
+          "
+        >
+          🔎
+        </div>
+
+        <strong>
+          No results found
+        </strong>
+
+        <div
+          style="
+            margin-top:8px;
+          "
+        >
+          Try another search term
+          or category.
+        </div>
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  results.innerHTML =
+    visibleItems
+      .map(
+        renderResultCard
+      )
+      .join("");
+
+}
+
+
+/* ==================================================
+   RESULT CARD
+================================================== */
+
+function renderResultCard(item){
+
+  const resultURL =
+    getResultURL(
+      item
+    );
+
+
+  const originalDescription =
+    escapeHTML(
+      limitDescription(
+        item.description,
+        150
+      )
+    );
+
+
+  const aiDescription =
+    escapeHTML(
+      limitDescription(
+        aiDescriptions[
+          String(
+            item.searchId
+          )
+        ] || "",
+        1000
+      )
+    );
+
+
+  const meta = [];
+
+
+  if(item.published){
+
+    meta.push(
+      "✓ Published"
+    );
+
+  }
+
+
+  if(item.rating){
+
+    meta.push(
+      "★ " +
+      Number(
+        item.rating
+      ).toFixed(1)
+    );
+
+  }
+
+
+  if(item.views){
+
+    meta.push(
+      "👁 " +
+      formatNumber(
+        item.views
+      )
+    );
+
+  }
+
+
+  if(item.access){
+
+    meta.push(
+      escapeHTML(
+        item.access
+      )
+    );
+
+  }
+
+
+  return `
+
+    <article
+      class="result-card"
+      data-search-id="${escapeHTML(
+        item.searchId
+      )}"
+    >
+
+      ${renderMedia(item)}
+
+      <div class="result-content">
+
+        <div class="result-top">
+
+          <a
+            class="result-title"
+            href="${escapeHTML(
+              resultURL
+            )}"
+          >
+            ${escapeHTML(
+              item.title
+            )}
+          </a>
+
+          ${
+            item.featured
+              ? `
+                <span class="featured">
+                  FEATURED
+                </span>
+              `
+              : ""
+          }
+
+        </div>
+
+
+        <div class="category">
+          ${escapeHTML(
+            item.category ||
+            item.collection
+          )}
+        </div>
+
+
+        <div class="description">
+          ${originalDescription}
+        </div>
+
+
+        ${
+          aiDescription
+            ? `
+              <div class="ai-box">
+
+                <div class="ai-label">
+                  AI Explanation
+                </div>
+
+                <div class="ai-text">
+                  ${aiDescription}
+                </div>
+
+              </div>
+            `
+            : ""
+        }
+
+
+        ${
+          meta.length
+            ? `
+              <div class="meta">
+
+                ${meta
+                  .map(
+                    value =>
+                      `<span>${value}</span>`
+                  )
+                  .join("")}
+
+              </div>
+            `
+            : ""
+        }
+
+
+        <div class="actions">
+
+          <a
+            class="view-btn"
+            href="${escapeHTML(
+              resultURL
+            )}"
+          >
+            View Details →
+          </a>
+
+          <button
+            class="share-btn"
+            type="button"
+            data-share-id="${escapeHTML(
+              item.searchId
+            )}"
+          >
+            ↗ Share
+          </button>
+
+        </div>
+
+      </div>
+
+    </article>
+
+  `;
+
+}
+
+
+/* ==================================================
+   AI SEARCH
+================================================== */
+
+async function runAISearch(
+  query,
+  candidates
+){
+
+  const payload =
+    candidates
+      .slice(0,100)
+      .map(
+        item => ({
+
+          id:
+            String(
+              item.searchId
+            ),
+
+          title:
+            String(
+              item.title || ""
+            ),
+
+          description:
+            String(
+              item.description || ""
+            ),
+
+          collection:
+            String(
+              item.collection || ""
+            ),
+
+          type:
+            String(
+              item.type ||
+              item.category ||
+              ""
+            ),
+
+          access:
+            String(
+              item.access || ""
+            )
+
+        })
+      );
+
+
+  if(!payload.length){
+
+    return;
+
+  }
+
+
+  try{
+
+    const response =
+      await fetch(
+        "/api/search?_" +
+        Date.now(),
+        {
+
+          method:"POST",
+
+          cache:"no-store",
+
+          headers:{
+            "Content-Type":
+              "application/json"
+          },
+
+          body:
+            JSON.stringify({
+
+              query:
+                String(
+                  query
+                ),
+
+              results:
+                payload
+
+            })
+
+        }
+      );
+
+
+    if(!response.ok){
+
+      throw new Error(
+        "AI HTTP " +
+        response.status
+      );
+
+    }
+
+
+    const data =
+      await response.json();
+
+
+    const returnedDescriptions =
+      data &&
+      data.aiDescriptions &&
+      typeof data.aiDescriptions ===
+        "object"
+        ? data.aiDescriptions
+        : {};
+
+
+    Object.keys(
+      returnedDescriptions
+    ).forEach(
+      key => {
+
+        const text =
+          clean(
+            returnedDescriptions[
+              key
+            ]
+          );
+
+        if(text){
+
+          aiDescriptions[
+            String(key)
+          ] = text;
+
+        }
+
+      }
+    );
+
+
+    if(
+      data &&
+      Array.isArray(
+        data.results
+      ) &&
+      data.results.length
+    ){
+
+      const rank =
+        new Map();
+
+
+      data.results.forEach(
+        (item,index) => {
+
+          rank.set(
+            String(
+              item.id
+            ),
+            index
+          );
+
+        }
+      );
+
+
+      candidates.sort(
+        (a,b) => {
+
+          const ar =
+            rank.has(
+              String(
+                a.searchId
+              )
+            )
+              ? rank.get(
+                  String(
+                    a.searchId
+                  )
+                )
+              : 999999;
+
+
+          const br =
+            rank.has(
+              String(
+                b.searchId
+              )
+            )
+              ? rank.get(
+                  String(
+                    b.searchId
+                  )
+                )
+              : 999999;
+
+
+          return ar - br;
+
+        }
+      );
+
+    }
+
+
+    renderResults(
+      candidates
+    );
+
+
+  }catch(error){
+
+    console.warn(
+      "AI search unavailable:",
+      error
+    );
+
+    /*
+     * Local Firestore search
+     * remains fully functional.
+     */
+
+    renderResults(
+      candidates
+    );
+
+  }
+
+}
+
+
+/* ==================================================
+   PERFORM SEARCH
+================================================== */
+
+async function performSearch(
+  query,
+  useAI = true
+){
+
+  currentQuery =
+    clean(query);
+
+
+  const localResults =
+    localSearch(
+      currentQuery
+    );
+
+
+  /*
+   * SHOW FIRESTORE RESULTS
+   * IMMEDIATELY.
+   */
+
+  renderResults(
+    localResults
+  );
+
+
+  /*
+   * AI runs afterwards.
+   */
+
+  if(
+    useAI &&
+    currentQuery &&
+    localResults.length
+  ){
+
+    runAISearch(
+      currentQuery,
+      localResults
+    );
+
+  }
+
+}
+
+
+/* ========================
+   SEARCH FORM
+======================== */
+
+searchForm.addEventListener(
+  "submit",
+  event => {
+
+    event.preventDefault();
+
+    const query =
+      clean(
+        searchInput.value
+      );
+
+    const url =
+      new URL(
+        window.location.href
+      );
+
+    if(query){
+
+      url.searchParams.set(
+        "q",
+        query
+      );
+
+    }else{
+
+      url.searchParams.delete(
+        "q"
+      );
+
+    }
+
+    window.history.replaceState(
+      {},
+      "",
+      url
+    );
+
+    performSearch(
+      query,
+      true
+    );
+
+  }
+);
+
+
+/* ========================
+   LIVE SEARCH
+======================== */
+
+let liveTimer = null;
+
+searchInput.addEventListener(
+  "input",
+  () => {
+
+    clearTimeout(
+      liveTimer
+    );
+
+    liveTimer =
+      setTimeout(
+        () => {
+
+          const query =
+            clean(
+              searchInput.value
+            );
+
+          if(!query){
+
+            performSearch(
+              "",
+              false
+            );
+
+          }
+
+        },
+        350
+      );
+
+  }
+);
+
+
+/* ========================
+   CATEGORY FILTERS
+======================== */
+
+document
+  .querySelectorAll(
+    ".category-btn"
+  )
+  .forEach(
+    button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          document
+            .querySelectorAll(
+              ".category-btn"
+            )
+            .forEach(
+              btn => {
+
+                btn.classList.remove(
+                  "active"
+                );
+
+              }
+            );
+
+          button.classList.add(
+            "active"
+          );
+
+          activeCategory =
+            clean(
+              button.dataset.category ||
+              "All"
+            );
+
+          performSearch(
+            currentQuery,
+            true
+          );
+
+        }
+      );
+
+    }
+  );
+
+
+/* ========================
+   SORT
+======================== */
+
+sortSelect.addEventListener(
+  "change",
+  () => {
+
+    renderResults(
+      visibleItems
+    );
+
+  }
+);
+
+
+/* ========================
+   SHARE RESULTS
+======================== */
+
+results.addEventListener(
+  "click",
+  event => {
+
+    const shareButton =
+      event.target.closest(
+        "[data-share-id]"
+      );
+
+    if(!shareButton){
+      return;
+    }
+
+    const searchId =
+      shareButton.dataset.shareId;
+
+    const item =
+      allItems.find(
+        result =>
+          String(
+            result.searchId
+          ) ===
+          String(
+            searchId
+          )
+      );
+
+    if(item){
+
+      shareResult(
+        item
+      );
+
+    }
+
+  }
+);
+
+
+/* ========================
+   SIDEBAR
+======================== */
+
+function openSidebar(){
+
+  sidebar.classList.add(
+    "open"
+  );
+
+  overlay.classList.add(
+    "show"
+  );
+
+  document.body.style.overflow =
+    "hidden";
+
+}
+
+
+function closeSidebar(){
+
+  sidebar.classList.remove(
+    "open"
+  );
+
+  overlay.classList.remove(
+    "show"
+  );
+
+  document.body.style.overflow =
+    "";
+
+}
+
+
+menuBtn.addEventListener(
+  "click",
+  openSidebar
+);
+
+
+if(closeSidebarBtn){
+
+  closeSidebarBtn.addEventListener(
+    "click",
+    closeSidebar
+  );
+
+}
+
+
+overlay.addEventListener(
+  "click",
+  closeSidebar
+);
+
+
+/* ========================
+   CLOSE SIDEBAR ON LINK
+======================== */
+
+document
+  .querySelectorAll(
+    ".sidebar a"
+  )
+  .forEach(
+    link => {
+
+      link.addEventListener(
+        "click",
+        closeSidebar
+      );
+
+    }
+  );
+
+
+/* ========================
+   ESC KEY
+======================== */
+
+document.addEventListener(
+  "keydown",
+  event => {
+
+    if(
+      event.key ===
+      "Escape"
+    ){
+
+      closeSidebar();
+
+    }
+
+  }
+);
+
+
+/* ========================
+   INITIAL URL SEARCH
+======================== */
+
+const initialParams =
+  new URLSearchParams(
+    window.location.search
+  );
+
+
+const initialQuery =
+  clean(
+    initialParams.get("q") ||
+    initialParams.get("search") ||
+    ""
+  );
+
+
+if(initialQuery){
+
+  searchInput.value =
+    initialQuery;
+
+  currentQuery =
+    initialQuery;
+
+}
+
+
+/* ========================
+   INITIAL LOAD
+======================== */
+
+(async function initSearch(){
+
+  try{
+
+    await loadAll();
+
+  }catch(error){
+
+    console.error(
+      "Search initialization failed:",
+      error
+    );
+
+    showError(
+      "Search engine failed to initialize."
+    );
+
+  }
+
+})();
+
+
+/* ========================
+   GLOBAL ERROR SAFETY
+======================== */
+
+window.addEventListener(
+  "error",
+  event => {
+
+    console.error(
+      "Global JavaScript error:",
+      event.error ||
+      event.message
+    );
+
+  }
+);
+
+
+window.addEventListener(
+  "unhandledrejection",
+  event => {
+
+    console.error(
+      "Unhandled Promise rejection:",
+      event.reason
+    );
+
+  }
+);
+
+</script>
+
+</body>
+</html>
