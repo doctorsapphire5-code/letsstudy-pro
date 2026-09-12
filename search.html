@@ -2980,7 +2980,238 @@
     loadSearchData();
 
   </script>
+<script>
+/* =========================================================
+   LETSSTUDY PRO AI SEARCH
+========================================================= */
 
+const searchInput = document.getElementById("searchInput");
+const searchButton = document.getElementById("searchButton");
+const searchResults = document.getElementById("searchResults");
+
+async function aiSearch() {
+
+  const query = searchInput?.value?.trim();
+
+  if (!query) {
+    return;
+  }
+
+  searchResults.innerHTML = `
+    <div class="ai-loading">
+      <div>🤖 LetsStudy Pro AI is thinking...</div>
+    </div>
+  `;
+
+  try {
+
+    const response = await fetch("/api/search", {
+
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify({
+        query: query
+      })
+
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+
+      throw new Error(
+        data.error ||
+        "AI search failed."
+      );
+
+    }
+
+    searchResults.innerHTML = `
+
+      <div class="ai-result">
+
+        <div class="ai-result-header">
+          <span>🤖</span>
+          <strong>LetsStudy Pro AI</strong>
+        </div>
+
+        <div class="ai-question">
+          ${escapeHTML(data.query)}
+        </div>
+
+        <div class="ai-answer">
+          ${formatAIAnswer(data.answer)}
+        </div>
+
+      </div>
+
+    `;
+
+  } catch (error) {
+
+    console.error(
+      "AI SEARCH ERROR:",
+      error
+    );
+
+    searchResults.innerHTML = `
+
+      <div class="search-error">
+
+        <strong>Unable to search with AI.</strong>
+
+        <p>
+          ${escapeHTML(
+            error.message ||
+            "Please try again."
+          )}
+        </p>
+
+      </div>
+
+    `;
+
+  }
+
+}
+
+
+/* =========================================================
+   FORMAT AI ANSWER
+========================================================= */
+
+function formatAIAnswer(text) {
+
+  if (!text) {
+    return "";
+  }
+
+  let html =
+    escapeHTML(text);
+
+  html =
+    html.replace(
+      /\*\*(.*?)\*\*/g,
+      "<strong>$1</strong>"
+    );
+
+  html =
+    html.replace(
+      /^### (.*)$/gm,
+      "<h3>$1</h3>"
+    );
+
+  html =
+    html.replace(
+      /^## (.*)$/gm,
+      "<h2>$1</h2>"
+    );
+
+  html =
+    html.replace(
+      /^# (.*)$/gm,
+      "<h2>$1</h2>"
+    );
+
+  html =
+    html.replace(
+      /^\- (.*)$/gm,
+      "<li>$1</li>"
+    );
+
+  html =
+    html.replace(
+      /\n\n/g,
+      "</p><p>"
+    );
+
+  html =
+    "<p>" + html + "</p>";
+
+  html =
+    html.replace(
+      /(<li>.*?<\/li>)+/gs,
+      "<ul>$&</ul>"
+    );
+
+  return html;
+}
+
+
+/* =========================================================
+   SECURITY
+========================================================= */
+
+function escapeHTML(value) {
+
+  return String(value)
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+
+}
+
+
+/* =========================================================
+   SEARCH BUTTON
+========================================================= */
+
+if (searchButton) {
+
+  searchButton.addEventListener(
+    "click",
+    aiSearch
+  );
+
+}
+
+
+/* =========================================================
+   ENTER KEY
+========================================================= */
+
+if (searchInput) {
+
+  searchInput.addEventListener(
+    "keydown",
+    function(event) {
+
+      if (
+        event.key === "Enter"
+      ) {
+
+        event.preventDefault();
+
+        aiSearch();
+
+      }
+
+    }
+  );
+
+}
+</script>
 </body>
 
 </html>
