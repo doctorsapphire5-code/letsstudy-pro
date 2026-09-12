@@ -1,7 +1,83 @@
 "use strict";
 
 require("dotenv").config();
+require("dotenv").config();
 
+const express = require("express");
+const cors = require("cors");
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(express.json());
+
+const Groq = require("groq-sdk");
+
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY
+});
+
+app.post("/api/search", async (req, res) => {
+  try {
+    const query = String(req.body?.query || "").trim();
+
+    if (!query) {
+      return res.status(400).json({
+        success: false,
+        error: "Query is required"
+      });
+    }
+
+    const response = await groq.chat.completions.create({
+      model: process.env.GROQ_MODEL || "openai/gpt-oss-20b",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are LetsStudy Pro AI. Answer clearly, accurately and helpfully."
+        },
+        {
+          role: "user",
+          content: query
+        }
+      ],
+      temperature: 0.4,
+      max_completion_tokens: 1200
+    });
+
+    const answer =
+      response.choices?.[0]?.message?.content || "";
+
+    res.json({
+      success: true,
+      query,
+      answer,
+      results: true,
+      ai: true
+    });
+
+  } catch (error) {
+    console.error("GROQ ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      error: error.message || "AI search failed"
+    });
+  }
+});
+
+app.get("/api/health", (req, res) => {
+  res.json({
+    success: true,
+    service: "LetsStudy Pro AI",
+    provider: "Groq"
+  });
+});
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`LetsStudy AI running on port ${PORT}`);
+});
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
