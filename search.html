@@ -693,7 +693,7 @@ a{
       🛒 Premium 
     </a>
 
-    <a href="subscriptions.html">
+    <a href="subscription.html">
       👨‍💻 Subscriptions 
     </a>
 
@@ -705,7 +705,7 @@ a{
       href="auth.html"
       class="active"
     >
-      Auth
+      🫆 Auth
     </a>
 
   </nav>
@@ -3353,6 +3353,207 @@ if(initialQuery){
   }
 
 })();
+
+/* =========================
+   AI TITLE EXPLANATION
+========================= */
+
+let aiTitleTimer = null;
+let aiTitleRequest = null;
+
+async function explainSearchTitle(title){
+
+  title = clean(title);
+
+  if(!title){
+    return;
+  }
+
+  clearTimeout(aiTitleTimer);
+
+  aiTitleTimer = setTimeout(
+    async () => {
+
+      try{
+
+        if(aiTitleRequest){
+          aiTitleRequest.abort();
+        }
+
+        aiTitleRequest =
+          new AbortController();
+
+        const response =
+          await fetch(
+            "/api/search?_" +
+            Date.now(),
+            {
+              method: "POST",
+              cache: "no-store",
+              signal:
+                aiTitleRequest.signal,
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+              body:
+                JSON.stringify({
+                  query: title,
+                  results: [
+                    {
+                      id: "typed-query",
+                      title: title,
+                      description:
+                        "Search title typed by the user.",
+                      collection:
+                        "search",
+                      type:
+                        "search query",
+                      access:
+                        "public"
+                    }
+                  ]
+                })
+            }
+          );
+
+        if(!response.ok){
+          throw new Error(
+            "AI HTTP " +
+            response.status
+          );
+        }
+
+        const data =
+          await response.json();
+
+        const explanation =
+          clean(
+            data?.aiDescriptions?.[
+              "typed-query"
+            ] || ""
+          );
+
+        if(explanation){
+
+          showSearchAIExplanation(
+            explanation
+          );
+
+        }
+
+      }catch(error){
+
+        if(
+          error?.name ===
+          "AbortError"
+        ){
+          return;
+        }
+
+        console.warn(
+          "AI title explanation unavailable:",
+          error
+        );
+
+      }
+
+    },
+    500
+  );
+}
+
+
+/* =========================
+   AI EXPLANATION UI
+========================= */
+
+function showSearchAIExplanation(
+  text
+){
+
+  let box =
+    document.getElementById(
+      "searchAIExplanation"
+    );
+
+  if(!box){
+
+    box =
+      document.createElement(
+        "div"
+      );
+
+    box.id =
+      "searchAIExplanation";
+
+    box.style.cssText = `
+      margin:16px 0;
+      padding:16px;
+      border-radius:14px;
+      background:#f5f7fb;
+      border:1px solid #e5e7eb;
+      line-height:1.6;
+      font-size:15px;
+    `;
+
+    const form =
+      document.getElementById(
+        "searchForm"
+      );
+
+    if(form){
+      form.after(box);
+    }
+
+  }
+
+  box.innerHTML = `
+    <strong>
+      Search Explanation
+    </strong>
+    <div style="margin-top:8px;">
+      ${escapeHTML(
+        limitAI(text,1000)
+      )}
+    </div>
+  `;
+
+}
+
+
+/* =========================
+   LISTEN TO TYPED TITLE
+========================= */
+
+if(searchInput){
+
+  searchInput.addEventListener(
+    "input",
+    event => {
+
+      const title =
+        clean(
+          event.target.value
+        );
+
+      /*
+       * Local search continues normally.
+       * AI runs separately in background.
+       */
+
+      if(title.length >= 2){
+
+        explainSearchTitle(
+          title
+        );
+
+      }
+
+    }
+  );
+
+}
 
 
 /* ========================
