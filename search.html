@@ -2591,13 +2591,19 @@ async function runAISearch(
   const payload =
     candidates
       .slice(0,100)
-      .map(
-        item => ({
+      .map(item => {
 
-          id:
-            String(
-              item.searchId
-            ),
+        const id =
+          String(
+            item.searchId ||
+            item.documentId ||
+            item.id ||
+            ""
+          );
+
+        return {
+
+          id,
 
           title:
             String(
@@ -2607,6 +2613,11 @@ async function runAISearch(
           description:
             String(
               item.description || ""
+            ),
+
+          category:
+            String(
+              item.category || ""
             ),
 
           collection:
@@ -2626,7 +2637,11 @@ async function runAISearch(
               item.access || ""
             )
 
-        })
+        };
+
+      })
+      .filter(
+        item => item.id
       );
 
 
@@ -2642,7 +2657,6 @@ async function runAISearch(
         "/api/search?_" +
         Date.now(),
         {
-
           method:"POST",
 
           cache:"no-store",
@@ -2654,15 +2668,12 @@ async function runAISearch(
 
           body:
             JSON.stringify({
-
               query:
-                String(query),
+                String(query || ""),
 
               results:
                 payload
-
             })
-
         }
       );
 
@@ -2681,32 +2692,32 @@ async function runAISearch(
       await response.json();
 
 
+    /*
+      =========================
+      AI DESCRIPTIONS
+      =========================
+    */
+
     const returnedDescriptions =
-      data &&
-      data.aiDescriptions &&
-      typeof data.aiDescriptions ===
-        "object"
-        ? data.aiDescriptions
-        : {};
+      data?.aiDescriptions || {};
 
 
-    Object.keys(
+    Object.entries(
       returnedDescriptions
     ).forEach(
-      key => {
+      ([id,text]) => {
 
-        const text =
+        const value =
           limitAI(
-            returnedDescriptions[key],
+            String(text || ""),
             1000
           );
 
-
-        if(text){
+        if(value){
 
           aiDescriptions[
-            String(key)
-          ] = text;
+            String(id)
+          ] = value;
 
         }
 
@@ -2714,11 +2725,15 @@ async function runAISearch(
     );
 
 
+    /*
+      =========================
+      AI RANKING
+      =========================
+    */
+
     if(
-      data &&
-      Array.isArray(
-        data.results
-      )
+      Array.isArray(data?.results) &&
+      data.results.length
     ){
 
       const rank =
@@ -2728,10 +2743,22 @@ async function runAISearch(
       data.results.forEach(
         (item,index) => {
 
-          rank.set(
-            String(item.id),
-            index
-          );
+          const id =
+            String(
+              item.id ||
+              item.searchId ||
+              item.documentId ||
+              ""
+            );
+
+          if(id){
+
+            rank.set(
+              id,
+              index
+            );
+
+          }
 
         }
       );
@@ -2740,31 +2767,32 @@ async function runAISearch(
       candidates.sort(
         (a,b) => {
 
+          const aId =
+            String(
+              a.searchId ||
+              a.documentId ||
+              a.id ||
+              ""
+            );
+
+          const bId =
+            String(
+              b.searchId ||
+              b.documentId ||
+              b.id ||
+              ""
+            );
+
+
           const ar =
-            rank.has(
-              String(
-                a.searchId
-              )
-            )
-              ? rank.get(
-                  String(
-                    a.searchId
-                  )
-                )
+            rank.has(aId)
+              ? rank.get(aId)
               : 999999;
 
 
           const br =
-            rank.has(
-              String(
-                b.searchId
-              )
-            )
-              ? rank.get(
-                  String(
-                    b.searchId
-                  )
-                )
+            rank.has(bId)
+              ? rank.get(bId)
               : 999999;
 
 
@@ -2776,9 +2804,16 @@ async function runAISearch(
     }
 
 
+    /*
+      =========================
+      DISPLAY AI
+      =========================
+    */
+
     renderResults(
       candidates
     );
+
 
   }catch(error){
 
@@ -2794,7 +2829,6 @@ async function runAISearch(
   }
 
 }
-
 
 /* ==================================================
    PERFORM SEARCH
