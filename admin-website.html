@@ -1,3834 +1,985 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
 <meta charset="UTF-8">
-<meta
-  name="viewport"
-  content="width=device-width,initial-scale=1"
->
-
-<title>Web Index Approval Management | LetsStudy Pro</title>
-
-<link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Web Index Management | LetsStudy Pro</title>
 
 <style>
-
-*{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+header{background:#111827;color:white;padding:18px}
+header h2{margin:0 0 5px}
+main{max-width:1200px;margin:auto;padding:20px}
+button{border:0;border-radius:8px;padding:10px 14px;cursor:pointer}
+.primary{background:#2563eb;color:white}
+.danger{background:#dc2626;color:white}
+.success{background:#16a34a;color:white}
+.warning{background:#f59e0b;color:white}
+.card{background:white;border-radius:12px;padding:18px;margin-bottom:18px;box-shadow:0 2px 10px #0000000d}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.stat strong{display:block;font-size:25px;margin-top:5px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap}
+input,select,textarea{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:8px;font:inherit}
+textarea{min-height:100px;resize:vertical}
+.toolbar input{max-width:400px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:12px;border-bottom:1px solid #eee;text-align:left}
+.badge{padding:5px 9px;border-radius:20px;font-size:12px}
+.pending{background:#fef3c7;color:#92400e}
+.approved{background:#dcfce7;color:#166534}
+.rejected{background:#fee2e2;color:#991b1b}
+.indexed{color:#15803d;font-weight:bold}
+.unindexed{color:#6b7280}
+.actions{display:flex;gap:5px;flex-wrap:wrap}
+.modal{display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;padding:15px;z-index:10}
+.modal.show{display:flex}
+.modal-box{background:white;width:760px;max-width:100%;max-height:92vh;overflow:auto;border-radius:14px}
+.modal-head,.modal-foot{padding:16px;border-bottom:1px solid #eee}
+.modal-foot{border:0;display:flex;justify-content:flex-end;gap:8px}
+.modal-body{padding:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.full{grid-column:1/-1}
+.seo{padding:12px;background:#f0f6ff;border-radius:10px}
+.toast{position:fixed;right:20px;bottom:20px;background:#111827;color:white;padding:13px 18px;border-radius:9px;display:none;z-index:30}
+.toast.show{display:block}
+.empty{text-align:center;padding:35px;color:#6b7280}
+@media(max-width:700px){
+.stats{grid-template-columns:repeat(2,1fr)}
+.grid{grid-template-columns:1fr}
+.full{grid-column:auto}
+table{font-size:13px}
 }
-
-body{
-  font-family:Inter,Arial,sans-serif;
-  background:#f5f7fb;
-  color:#172033;
-}
-
-button,
-input,
-select,
-textarea{
-  font:inherit;
-}
-
-button{
-  cursor:pointer;
-}
-
-.app{
-  min-height:100vh;
-  display:flex;
-}
-
-/* =========================
-   SIDEBAR
-========================= */
-
-.sidebar{
-  width:250px;
-  background:#111827;
-  color:#fff;
-  position:fixed;
-  left:0;
-  top:0;
-  bottom:0;
-  z-index:1000;
-  overflow-y:auto;
-}
-
-.logo{
-  padding:24px 20px;
-  border-bottom:1px solid rgba(255,255,255,.08);
-}
-
-.logo h2{
-  font-size:21px;
-}
-
-.logo span{
-  display:block;
-  margin-top:5px;
-  color:#9ca3af;
-  font-size:11px;
-}
-
-.nav{
-  padding:16px 10px;
-}
-
-.nav a{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:13px 14px;
-  margin-bottom:5px;
-  color:#cbd5e1;
-  text-decoration:none;
-  border-radius:9px;
-  font-size:14px;
-}
-
-.nav a:hover,
-.nav a.active{
-  background:#2563eb;
-  color:#fff;
-}
-
-.nav i{
-  width:20px;
-  text-align:center;
-}
-
-/* =========================
-   MAIN
-========================= */
-
-.main{
-  margin-left:250px;
-  width:calc(100% - 250px);
-  min-height:100vh;
-}
-
-.topbar{
-  height:70px;
-  background:#fff;
-  border-bottom:1px solid #e5e7eb;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 28px;
-}
-
-.menu-toggle{
-  display:none;
-  border:0;
-  background:none;
-  font-size:22px;
-}
-
-.admin-box{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-.admin-avatar{
-  width:38px;
-  height:38px;
-  border-radius:50%;
-  background:#2563eb;
-  color:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.admin-info strong{
-  display:block;
-  font-size:13px;
-}
-
-.admin-info small{
-  color:#6b7280;
-}
-
-.content{
-  padding:28px;
-}
-
-/* =========================
-   HEADER
-========================= */
-
-.page-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:20px;
-  margin-bottom:25px;
-}
-
-.page-header h1{
-  font-size:27px;
-}
-
-.page-header p{
-  color:#6b7280;
-  margin-top:7px;
-  font-size:14px;
-}
-
-.primary-btn{
-  background:#2563eb;
-  color:#fff;
-  border:0;
-  border-radius:8px;
-  padding:11px 17px;
-  font-weight:600;
-}
-
-.primary-btn:hover{
-  background:#1d4ed8;
-}
-
-/* =========================
-   STATS
-========================= */
-
-.stats{
-  display:grid;
-  grid-template-columns:repeat(6,1fr);
-  gap:15px;
-  margin-bottom:24px;
-}
-
-.stat{
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:12px;
-  padding:18px;
-}
-
-.stat-icon{
-  width:38px;
-  height:38px;
-  border-radius:9px;
-  background:#eff6ff;
-  color:#2563eb;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  margin-bottom:12px;
-}
-
-.stat strong{
-  display:block;
-  font-size:25px;
-}
-
-.stat span{
-  display:block;
-  color:#6b7280;
-  font-size:12px;
-  margin-top:3px;
-}
-
-/* =========================
-   TOOLBAR
-========================= */
-
-.toolbar{
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:12px;
-  padding:15px;
-  display:grid;
-  grid-template-columns:2fr 1fr 1fr 1fr;
-  gap:10px;
-  margin-bottom:18px;
-}
-
-.field{
-  position:relative;
-}
-
-.field i{
-  position:absolute;
-  left:12px;
-  top:50%;
-  transform:translateY(-50%);
-  color:#9ca3af;
-}
-
-.field input{
-  padding-left:36px;
-}
-
-input,
-select,
-textarea{
-  width:100%;
-  border:1px solid #d1d5db;
-  border-radius:8px;
-  padding:11px 12px;
-  outline:none;
-  background:#fff;
-  color:#111827;
-}
-
-input:focus,
-select:focus,
-textarea:focus{
-  border-color:#2563eb;
-  box-shadow:0 0 0 3px rgba(37,99,235,.08);
-}
-
-/* =========================
-   TABLE
-========================= */
-
-.table-card{
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:12px;
-  overflow:hidden;
-}
-
-.table-wrap{
-  overflow-x:auto;
-}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  min-width:1000px;
-}
-
-thead{
-  background:#f8fafc;
-}
-
-th,
-td{
-  padding:14px 15px;
-  border-bottom:1px solid #eef0f4;
-  text-align:left;
-  font-size:13px;
-}
-
-th{
-  color:#64748b;
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.04em;
-}
-
-.website-cell strong{
-  display:block;
-  max-width:260px;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-.website-cell small{
-  color:#6b7280;
-}
-
-.badge{
-  display:inline-flex;
-  align-items:center;
-  padding:5px 9px;
-  border-radius:999px;
-  font-size:11px;
-  font-weight:700;
-}
-
-.badge.pending{
-  background:#fff7ed;
-  color:#c2410c;
-}
-
-.badge.approved{
-  background:#ecfdf5;
-  color:#047857;
-}
-
-.badge.rejected{
-  background:#fef2f2;
-  color:#b91c1c;
-}
-
-.badge.indexed{
-  background:#eff6ff;
-  color:#1d4ed8;
-}
-
-.badge.unindexed{
-  background:#f3f4f6;
-  color:#4b5563;
-}
-
-.seo{
-  font-weight:700;
-}
-
-.seo.good{
-  color:#059669;
-}
-
-.seo.medium{
-  color:#d97706;
-}
-
-.seo.bad{
-  color:#dc2626;
-}
-
-.actions{
-  display:flex;
-  gap:6px;
-}
-
-.action{
-  width:32px;
-  height:32px;
-  border:1px solid #e5e7eb;
-  background:#fff;
-  border-radius:7px;
-  color:#475569;
-}
-
-.action:hover{
-  background:#f1f5f9;
-}
-
-.action.approve{
-  color:#059669;
-}
-
-.action.reject{
-  color:#dc2626;
-}
-
-.action.delete{
-  color:#dc2626;
-}
-
-.empty{
-  text-align:center;
-  padding:50px 20px;
-  color:#64748b;
-}
-
-.empty i{
-  font-size:38px;
-  margin-bottom:12px;
-  color:#cbd5e1;
-}
-
-/* =========================
-   MODAL
-========================= */
-
-.modal{
-  position:fixed;
-  inset:0;
-  background:rgba(15,23,42,.58);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-  z-index:2000;
-}
-
-.modal.show{
-  display:flex;
-}
-
-.modal-box{
-  width:min(900px,100%);
-  max-height:92vh;
-  overflow-y:auto;
-  background:#fff;
-  border-radius:14px;
-  box-shadow:0 20px 60px rgba(0,0,0,.2);
-}
-
-.modal-header{
-  padding:20px 22px;
-  border-bottom:1px solid #e5e7eb;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.modal-header h2{
-  font-size:19px;
-}
-
-.close{
-  width:34px;
-  height:34px;
-  border:0;
-  background:#f1f5f9;
-  border-radius:7px;
-  font-size:18px;
-}
-
-.modal-body{
-  padding:22px;
-}
-
-.form-grid{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:16px;
-}
-
-.form-group{
-  margin-bottom:2px;
-}
-
-.form-group.full{
-  grid-column:1/-1;
-}
-
-.form-group label{
-  display:block;
-  margin-bottom:7px;
-  font-size:12px;
-  font-weight:700;
-  color:#374151;
-}
-
-textarea{
-  min-height:110px;
-  resize:vertical;
-}
-
-/* =========================
-   SEO
-========================= */
-
-.seo-panel{
-  grid-column:1/-1;
-  background:#f8fafc;
-  border:1px solid #e5e7eb;
-  border-radius:10px;
-  padding:16px;
-}
-
-.seo-panel h3{
-  font-size:14px;
-  margin-bottom:13px;
-}
-
-.seo-grid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-}
-
-.seo-box{
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:8px;
-  padding:12px;
-}
-
-.seo-box span{
-  display:block;
-  font-size:11px;
-  color:#64748b;
-}
-
-.seo-box strong{
-  display:block;
-  margin-top:5px;
-  font-size:18px;
-}
-
-.seo-preview{
-  margin-top:12px;
-  padding:13px;
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:8px;
-}
-
-.preview-title{
-  color:#1a0dab;
-  font-size:17px;
-}
-
-.preview-url{
-  color:#188038;
-  font-size:12px;
-  margin:3px 0;
-}
-
-.preview-description{
-  color:#4b5563;
-  font-size:12px;
-  line-height:1.5;
-}
-
-.modal-footer{
-  padding:16px 22px;
-  border-top:1px solid #e5e7eb;
-  display:flex;
-  justify-content:flex-end;
-  gap:10px;
-}
-
-.secondary-btn{
-  background:#f1f5f9;
-  color:#334155;
-  border:0;
-  border-radius:8px;
-  padding:11px 17px;
-  font-weight:600;
-}
-
-/* =========================
-   VIEW
-========================= */
-
-.view-grid{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:12px;
-}
-
-.view-item{
-  background:#f8fafc;
-  border:1px solid #e5e7eb;
-  border-radius:9px;
-  padding:13px;
-}
-
-.view-item.full{
-  grid-column:1/-1;
-}
-
-.view-item span{
-  display:block;
-  color:#64748b;
-  font-size:11px;
-  margin-bottom:5px;
-}
-
-.view-item strong{
-  display:block;
-  font-size:13px;
-  word-break:break-word;
-}
-
-.social-links{
-  display:flex;
-  flex-wrap:wrap;
-  gap:7px;
-}
-
-.social-links a{
-  color:#2563eb;
-  text-decoration:none;
-  background:#eff6ff;
-  padding:6px 9px;
-  border-radius:6px;
-  font-size:11px;
-}
-
-/* =========================
-   TOAST
-========================= */
-
-.toast{
-  position:fixed;
-  right:20px;
-  bottom:20px;
-  background:#111827;
-  color:#fff;
-  padding:13px 17px;
-  border-radius:9px;
-  font-size:13px;
-  display:none;
-  z-index:5000;
-  box-shadow:0 10px 30px rgba(0,0,0,.2);
-}
-
-.toast.show{
-  display:block;
-}
-
-.toast.success{
-  background:#047857;
-}
-
-.toast.error{
-  background:#b91c1c;
-}
-
-/* =========================
-   RESPONSIVE
-========================= */
-
-@media(max-width:1200px){
-
-  .stats{
-    grid-template-columns:repeat(3,1fr);
-  }
-
-}
-
-@media(max-width:900px){
-
-  .sidebar{
-    transform:translateX(-100%);
-    transition:.25s;
-  }
-
-  .sidebar.open{
-    transform:translateX(0);
-  }
-
-  .main{
-    margin-left:0;
-    width:100%;
-  }
-
-  .menu-toggle{
-    display:block;
-  }
-
-  .toolbar{
-    grid-template-columns:1fr 1fr;
-  }
-
-}
-
-@media(max-width:650px){
-
-  .content{
-    padding:16px;
-  }
-
-  .page-header{
-    flex-direction:column;
-  }
-
-  .stats{
-    grid-template-columns:repeat(2,1fr);
-  }
-
-  .toolbar{
-    grid-template-columns:1fr;
-  }
-
-  .form-grid,
-  .view-grid,
-  .seo-grid{
-    grid-template-columns:1fr;
-  }
-
-  .form-group.full,
-  .view-item.full,
-  .seo-panel{
-    grid-column:auto;
-  }
-
-}
-
 </style>
 </head>
 
 <body>
 
-<div class="app">
+<header>
+  <h2>LetsStudy Pro</h2>
+  <div>Web Index Management</div>
+</header>
 
-<!-- =========================
-     SIDEBAR
-========================= -->
+<main>
 
-<aside
-  class="sidebar"
-  id="sidebar"
->
+<div class="card">
+  <button class="primary" onclick="openForm()">
+    + Add Website
+  </button>
+</div>
 
-  <div class="logo">
+<div class="stats">
+  <div class="card stat">Total<strong id="total">0</strong></div>
+  <div class="card stat">Pending<strong id="pending">0</strong></div>
+  <div class="card stat">Approved<strong id="approved">0</strong></div>
+  <div class="card stat">Rejected<strong id="rejected">0</strong></div>
+  <div class="card stat">Indexed<strong id="indexed">0</strong></div>
+</div>
 
-    <h2>LetsStudy Pro</h2>
+<div class="card">
 
-    <span>
-      THE DIGITAL ECOSYSTEM
-    </span>
+  <div class="toolbar">
+    <input
+      id="search"
+      placeholder="Search websites..."
+      oninput="render()"
+    >
 
+    <select id="filterStatus" onchange="render()">
+      <option value="">All Status</option>
+      <option value="pending">Pending</option>
+      <option value="approved">Approved</option>
+      <option value="rejected">Rejected</option>
+    </select>
+
+    <select id="filterIndex" onchange="render()">
+      <option value="">All Index</option>
+      <option value="true">Indexed</option>
+      <option value="false">Unindexed</option>
+    </select>
   </div>
 
-  <nav class="nav">
-
-    <a href="admin-dashboard.html">
-      <i class="fa-solid fa-chart-line"></i>
-      Dashboard
-    </a>
-
-    <a
-      href="admin-website-index.html"
-      class="active"
-    >
-      <i class="fa-solid fa-globe"></i>
-      Web Index
-    </a>
-
-    <a href="admin-courses.html">
-      <i class="fa-solid fa-graduation-cap"></i>
-      Courses
-    </a>
-
-    <a href="admin-careers.html">
-      <i class="fa-solid fa-briefcase"></i>
-      Careers
-    </a>
-
-    <a href="admin-resources.html">
-      <i class="fa-solid fa-folder-open"></i>
-      Resources
-    </a>
-
-    <a href="admin-marketplace.html">
-      <i class="fa-solid fa-store"></i>
-      Marketplace
-    </a>
-
-    <a href="admin-sponsors.html">
-      <i class="fa-solid fa-handshake"></i>
-      Sponsors
-    </a>
-
-    <a href="admin-ads.html">
-      <i class="fa-solid fa-rectangle-ad"></i>
-      Ads
-    </a>
-
-  </nav>
-
-</aside>
-
-
-<!-- =========================
-     MAIN
-========================= -->
-
-<main class="main">
-
-  <header class="topbar">
-
-    <button
-      class="menu-toggle"
-      id="menuToggle"
-    >
-      <i class="fa-solid fa-bars"></i>
-    </button>
-
-    <div></div>
-
-    <div class="admin-box">
-
-      <div class="admin-avatar">
-        <i class="fa-solid fa-user"></i>
-      </div>
-
-      <div class="admin-info">
-
-        <strong>Admin</strong>
-
-        <small>
-          Web Index Management
-        </small>
-
-      </div>
-
-    </div>
-
-  </header>
-
-
-  <section class="content">
-
-    <!-- HEADER -->
-
-    <div class="page-header">
-
-      <div>
-
-        <h1>
-          Web Index Approval Management
-        </h1>
-
-        <p>
-          Review, approve, reject and manage websites indexed on LetsStudy Pro Search.
-        </p>
-
-      </div>
-
-      <button
-        class="primary-btn"
-        id="addBtn"
-      >
-        <i class="fa-solid fa-plus"></i>
-        Add Website
-      </button>
-
-    </div>
-
-
-    <!-- STATS -->
-
-    <div class="stats">
-
-      <div class="stat">
-
-        <div class="stat-icon">
-          <i class="fa-solid fa-globe"></i>
-        </div>
-
-        <strong id="totalCount">
-          0
-        </strong>
-
-        <span>
-          Total Submissions
-        </span>
-
-      </div>
-
-
-      <div class="stat">
-
-        <div class="stat-icon">
-          <i class="fa-solid fa-clock"></i>
-        </div>
-
-        <strong id="pendingCount">
-          0
-        </strong>
-
-        <span>
-          Pending
-        </span>
-
-      </div>
-
-
-      <div class="stat">
-
-        <div class="stat-icon">
-          <i class="fa-solid fa-circle-check"></i>
-        </div>
-
-        <strong id="approvedCount">
-          0
-        </strong>
-
-        <span>
-          Approved
-        </span>
-
-      </div>
-
-
-      <div class="stat">
-
-        <div class="stat-icon">
-          <i class="fa-solid fa-circle-xmark"></i>
-        </div>
-
-        <strong id="rejectedCount">
-          0
-        </strong>
-
-        <span>
-          Rejected
-        </span>
-
-      </div>
-
-
-      <div class="stat">
-
-        <div class="stat-icon">
-          <i class="fa-solid fa-magnifying-glass"></i>
-        </div>
-
-        <strong id="indexedCount">
-          0
-        </strong>
-
-        <span>
-          Indexed
-        </span>
-
-      </div>
-
-
-      <div class="stat">
-
-        <div class="stat-icon">
-          <i class="fa-solid fa-chart-simple"></i>
-        </div>
-
-        <strong id="seoReadyCount">
-          0
-        </strong>
-
-        <span>
-          SEO Ready
-        </span>
-
-      </div>
-
-    </div>
-
-
-    <!-- FILTERS -->
-
-    <div class="toolbar">
-
-      <div class="field">
-
-        <i class="fa-solid fa-search"></i>
-
-        <input
-          type="search"
-          id="searchInput"
-          placeholder="Search websites..."
-        >
-
-      </div>
-
-
-      <select id="statusFilter">
-
-        <option value="">
-          All Status
-        </option>
-
-        <option value="pending">
-          Pending
-        </option>
-
-        <option value="approved">
-          Approved
-        </option>
-
-        <option value="rejected">
-          Rejected
-        </option>
-
-      </select>
-
-
-      <select id="categoryFilter">
-
-        <option value="">
-          All Categories
-        </option>
-
-      </select>
-
-
-      <select id="indexFilter">
-
-        <option value="">
-          All Index Status
-        </option>
-
-        <option value="indexed">
-          Indexed
-        </option>
-
-        <option value="unindexed">
-          Unindexed
-        </option>
-
-      </select>
-
-    </div>
-
-
-    <!-- TABLE -->
-
-    <div class="table-card">
-
-      <div class="table-wrap">
-
-        <table>
-
-          <thead>
-
-            <tr>
-
-              <th>
-                Website
-              </th>
-
-              <th>
-                Category
-              </th>
-
-              <th>
-                Status
-              </th>
-
-              <th>
-                SEO
-              </th>
-
-              <th>
-                Indexed
-              </th>
-
-              <th>
-                Owner
-              </th>
-
-              <th>
-                Actions
-              </th>
-
-            </tr>
-
-          </thead>
-
-          <tbody id="websiteTable">
-
-          </tbody>
-
-        </table>
-
-      </div>
-
-    </div>
-
-  </section>
+</div>
+
+<div class="card">
+
+<table>
+<thead>
+<tr>
+<th>Website</th>
+<th>Status</th>
+<th>SEO</th>
+<th>Index</th>
+<th>Actions</th>
+</tr>
+</thead>
+
+<tbody id="rows"></tbody>
+</table>
+
+</div>
 
 </main>
 
+
+<!-- FORM MODAL -->
+<div class="modal" id="formModal">
+
+<div class="modal-box">
+
+<div class="modal-head">
+  <h3 id="formTitle">Add Website</h3>
 </div>
 
+<form id="form">
 
-<!-- =========================
-     ADD / EDIT MODAL
-========================= -->
+<div class="modal-body">
 
-<div
-  class="modal"
-  id="websiteModal"
->
+<div class="grid">
 
-  <div class="modal-box">
-
-    <div class="modal-header">
-
-      <h2 id="modalTitle">
-        Add Website
-      </h2>
-
-      <button
-        class="close"
-        id="closeModal"
-      >
-        ×
-      </button>
-
-    </div>
-
-
-    <form id="websiteForm">
-
-  <div class="modal-body">
-
-    <div class="form-grid">
-
-      <!-- Website URL -->
-      <div class="form-group">
-        <label for="url">Website URL *</label>
-
-        <input
-          type="url"
-          id="url"
-          required
-          placeholder="https://example.com"
-        >
-      </div>
-
-
-      <!-- Domain -->
-      <div class="form-group">
-        <label for="domain">Domain</label>
-
-        <input
-          type="text"
-          id="domain"
-          placeholder="example.com"
-        >
-      </div>
-
-
-      <!-- SEO Title -->
-      <div class="form-group full">
-        <label for="title">
-          SEO Title *
-          <span id="titleCount">0/60</span>
-        </label>
-
-        <input
-          type="text"
-          id="title"
-          maxlength="60"
-          required
-          placeholder="Website title"
-        >
-      </div>
-
-
-      <!-- Meta Description -->
-      <div class="form-group full">
-        <label for="description">
-          Meta Description *
-          <span id="descriptionCount">0/160</span>
-        </label>
-
-        <textarea
-          id="description"
-          maxlength="160"
-          required
-          placeholder="Write a clear description between 120 and 160 characters."
-        ></textarea>
-      </div>
-
-
-      <!-- Keywords -->
-      <div class="form-group full">
-        <label for="keywords">
-          Keywords
-        </label>
-
-        <input
-          type="text"
-          id="keywords"
-          placeholder="education, courses, learning"
-        >
-      </div>
-
-
-      <!-- Category -->
-      <div class="form-group">
-        <label for="category">
-          Category
-        </label>
-
-        <input
-          type="text"
-          id="category"
-          value="Websites"
-          placeholder="Websites"
-        >
-      </div>
-
-
-      <!-- Status -->
-      <div class="form-group">
-        <label for="status">
-          Status
-        </label>
-
-        <select id="status">
-
-          <option value="pending">
-            Pending
-          </option>
-
-          <option value="approved">
-            Approved
-          </option>
-
-          <option value="rejected">
-            Rejected
-          </option>
-
-        </select>
-      </div>
-
-
-      <!-- Image -->
-      <div class="form-group full">
-        <label for="image">
-          Image URL
-        </label>
-
-        <input
-          type="url"
-          id="image"
-          placeholder="https://example.com/image.jpg"
-        >
-      </div>
-
-
-      <!-- Facebook -->
-      <div class="form-group">
-        <label for="facebook">
-          Facebook
-        </label>
-
-        <input
-          type="url"
-          id="facebook"
-          placeholder="https://facebook.com/..."
-        >
-      </div>
-
-
-      <!-- Instagram -->
-      <div class="form-group">
-        <label for="instagram">
-          Instagram
-        </label>
-
-        <input
-          type="url"
-          id="instagram"
-          placeholder="https://instagram.com/..."
-        >
-      </div>
-
-
-      <!-- YouTube -->
-      <div class="form-group">
-        <label for="youtube">
-          YouTube
-        </label>
-
-        <input
-          type="url"
-          id="youtube"
-          placeholder="https://youtube.com/..."
-        >
-      </div>
-
-
-      <!-- TikTok -->
-      <div class="form-group">
-        <label for="tiktok">
-          TikTok
-        </label>
-
-        <input
-          type="url"
-          id="tiktok"
-          placeholder="https://tiktok.com/@..."
-        >
-      </div>
-
-
-      <!-- LinkedIn -->
-      <div class="form-group">
-        <label for="linkedin">
-          LinkedIn
-        </label>
-
-        <input
-          type="url"
-          id="linkedin"
-          placeholder="https://linkedin.com/..."
-        >
-      </div>
-
-
-      <!-- X -->
-      <div class="form-group">
-        <label for="x">
-          X
-        </label>
-
-        <input
-          type="url"
-          id="x"
-          placeholder="https://x.com/..."
-        >
-      </div>
-
-
-      <!-- Pinterest -->
-      <div class="form-group">
-        <label for="pinterest">
-          Pinterest
-        </label>
-
-        <input
-          type="url"
-          id="pinterest"
-          placeholder="https://pinterest.com/..."
-        >
-      </div>
-
-
-      <!-- Telegram -->
-      <div class="form-group">
-        <label for="telegram">
-          Telegram
-        </label>
-
-        <input
-          type="url"
-          id="telegram"
-          placeholder="https://t.me/..."
-        >
-      </div>
-
-
-      <!-- WhatsApp -->
-      <div class="form-group">
-        <label for="whatsapp">
-          WhatsApp
-        </label>
-
-        <input
-          type="url"
-          id="whatsapp"
-          placeholder="https://wa.me/..."
-        >
-      </div>
-
-
-      <!-- Owner ID -->
-      <div class="form-group">
-        <label for="ownerId">
-          Owner ID
-        </label>
-
-        <input
-          type="text"
-          id="ownerId"
-          placeholder="Owner ID"
-        >
-      </div>
-
-
-      <!-- SEO ANALYSIS -->
-      <div class="form-group full">
-
-        <div class="seo-analysis">
-
-          <div class="seo-header">
-            <div>
-              <h3>SEO Analysis</h3>
-              <p>
-                Optimize your website for search visibility.
-              </p>
-            </div>
-
-            <div class="seo-score-box">
-              <strong id="seoScore">
-                0/100
-              </strong>
-
-              <span>
-                SEO Score
-              </span>
-            </div>
-          </div>
-
-
-          <div class="seo-grid">
-
-            <div class="seo-card">
-
-              <span>
-                Title Strength
-              </span>
-
-              <strong id="titleStrength">
-                Missing
-              </strong>
-
-              <small>
-                Recommended: 30–60 characters
-              </small>
-
-            </div>
-
-
-            <div class="seo-card">
-
-              <span>
-                Description Strength
-              </span>
-
-              <strong id="descriptionStrength">
-                Missing
-              </strong>
-
-              <small>
-                Recommended: 120–160 characters
-              </small>
-
-            </div>
-
-          </div>
-
-
-          <div class="search-preview">
-
-            <div class="preview-label">
-              Search Preview
-            </div>
-
-            <div class="preview-title" id="previewTitle">
-              Website Title
-            </div>
-
-            <div class="preview-url">
-              example.com
-            </div>
-
-            <div
-              class="preview-description"
-              id="previewDescription"
-            >
-              Your website meta description will appear here.
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- MODAL FOOTER -->
-  <div class="modal-footer">
-
-    <button
-      type="button"
-      class="btn btn-secondary"
-      id="cancelModalBtn"
-    >
-      Cancel
-    </button>
-
-    <button
-      type="submit"
-      class="btn btn-primary"
-      id="saveWebsiteBtn"
-    >
-      <i class="fa-solid fa-floppy-disk"></i>
-      Save Website
-    </button>
-
-  </div>
-
-</form>
-
-
-<!-- =========================
-     SEO ANALYSIS
-========================= -->
-
-<div class="seo-panel">
-
-  <h3>
-    <i class="fa-solid fa-chart-line"></i>
-    SEO Analysis
-  </h3>
-
-  <div class="seo-grid">
-
-    <div class="seo-box">
-
-      <span>
-        Title Strength
-      </span>
-
-      <strong id="titleStrength">
-        0/60
-      </strong>
-
-    </div>
-
-
-    <div class="seo-box">
-
-      <span>
-        Description Strength
-      </span>
-
-      <strong id="descriptionStrength">
-        0/160
-      </strong>
-
-    </div>
-
-
-    <div class="seo-box">
-
-      <span>
-        SEO Score
-      </span>
-
-      <strong id="seoScore">
-        0/100
-      </strong>
-
-    </div>
-
-  </div>
-
-
-  <div class="seo-preview">
-
-    <div
-      class="preview-title"
-      id="previewTitle"
-    >
-      Website title
-    </div>
-
-    <div
-      class="preview-url"
-      id="previewUrl"
-    >
-      example.com
-    </div>
-
-    <div
-      class="preview-description"
-      id="previewDescription"
-    >
-      Website meta description preview.
-    </div>
-
-  </div>
-
+<div>
+<label>Website URL *</label>
+<input id="url" type="url" required>
 </div>
 
+<div>
+<label>Domain</label>
+<input id="domain">
+</div>
+
+<div class="full">
+<label>SEO Title *</label>
+<input id="title" maxlength="60" required>
+<small id="titleCount">0/60</small>
+</div>
+
+<div class="full">
+<label>Meta Description *</label>
+<textarea id="description" maxlength="160" required></textarea>
+<small id="descriptionCount">0/160</small>
+</div>
+
+<div>
+<label>Keywords</label>
+<input id="keywords">
+</div>
+
+<div>
+<label>Category</label>
+<input id="category" value="Websites">
+</div>
+
+<div>
+<label>Status</label>
+<select id="status">
+<option value="pending">Pending</option>
+<option value="approved">Approved</option>
+<option value="rejected">Rejected</option>
+</select>
+</div>
+
+<div>
+<label>Owner ID</label>
+<input id="ownerId">
+</div>
+
+<div class="full">
+<label>Image URL</label>
+<input id="image" type="url">
+</div>
+
+<div>
+<label>Facebook</label>
+<input id="facebook" type="url">
+</div>
+
+<div>
+<label>Instagram</label>
+<input id="instagram" type="url">
+</div>
+
+<div>
+<label>YouTube</label>
+<input id="youtube" type="url">
+</div>
+
+<div>
+<label>TikTok</label>
+<input id="tiktok" type="url">
+</div>
+
+<div>
+<label>LinkedIn</label>
+<input id="linkedin" type="url">
+</div>
+
+<div>
+<label>X</label>
+<input id="x" type="url">
+</div>
+
+<div>
+<label>Telegram</label>
+<input id="telegram" type="url">
+</div>
+
+<div>
+<label>WhatsApp</label>
+<input id="whatsapp" type="url">
+</div>
+
+<div class="full seo">
+<b>SEO Score: <span id="seoScore">0</span>/100</b>
+<p id="seoMessage">Enter title and description.</p>
+</div>
 
 </div>
 
 </div>
 
-
-<!-- =========================
-     MODAL FOOTER
-========================= -->
-
-<div class="modal-footer">
-
-  <button
-    type="button"
-    class="secondary-btn"
-    id="cancelBtn"
-  >
-    Cancel
-  </button>
-
-  <button
-    type="submit"
-    class="primary-btn"
-    id="saveBtn"
-  >
-    Submit Website
-  </button>
-
+<div class="modal-foot">
+<button type="button" onclick="closeForm()">Cancel</button>
+<button class="primary" type="submit">Save Website</button>
 </div>
 
 </form>
 
 </div>
-
 </div>
 
 
-<!-- =========================
-     VIEW WEBSITE MODAL
-========================= -->
+<!-- VIEW MODAL -->
+<div class="modal" id="viewModal">
 
-<div
-  class="modal"
-  id="viewModal"
->
+<div class="modal-box">
 
-  <div class="modal-box">
+<div class="modal-head">
+<h3>Website Details</h3>
+</div>
 
-    <div class="modal-header">
+<div class="modal-body" id="view"></div>
 
-      <h2>
-        Website Details
-      </h2>
+<div class="modal-foot">
+<button onclick="closeView()">Close</button>
+</div>
 
-      <button
-        class="close"
-        id="closeView"
-      >
-        ×
-      </button>
-
-    </div>
-
-
-    <div
-      class="modal-body"
-      id="viewContent"
-    >
-    </div>
-
-  </div>
-
+</div>
 </div>
 
 
-<!-- =========================
-     TOAST
-========================= -->
-
-<div
-  class="toast"
-  id="toast"
-></div>
+<div class="toast" id="toast"></div>
 
 
 <script type="module">
 
 import {
   initializeApp
-}
-from
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
   getFirestore,
   collection,
   getDocs,
-  doc,
   addDoc,
+  doc,
   updateDoc,
   deleteDoc,
   serverTimestamp
-}
-from
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-
-/* =========================
-   FIREBASE
-========================= */
 
 const firebaseConfig = {
-
-  apiKey:
-    "AIzaSyBcOYDfAVKXbkljsyRgI_0rj0rodBn678tCc",
-
-  authDomain:
-    "let-s-study-pro-course.firebaseapp.com",
-
-  databaseURL:
-    "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
-
-  projectId:
-    "let-s-study-pro-course",
-
-  storageBucket:
-    "let-s-study-pro-course.firebasestorage.app",
-
-  messagingSenderId:
-    "474928293390",
-
-  appId:
-    "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
-
-  measurementId:
-    "G-85B7V5H5J0"
-
+  apiKey:"AIzaSyBcOYDfAVKXbkljsyRgI_0rj0rodBn678tCc",
+  authDomain:"let-s-study-pro-course.firebaseapp.com",
+  databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId:"let-s-study-pro-course",
+  storageBucket:"let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId:"474928293390",
+  appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId:"G-85B7V5H5J0"
 };
 
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+const ref=collection(db,"indexedWebsites");
 
-const app =
-  initializeApp(
-    firebaseConfig
-  );
-
-
-const db =
-  getFirestore(app);
+let data=[];
+let editing=null;
 
 
-/* =========================
-   STATE
-========================= */
-
-let websites = [];
-
-let editingId = null;
+const $=id=>document.getElementById(id);
 
 
-/* =========================
-   ELEMENTS
-========================= */
-
-const websiteForm =
-  document.getElementById(
-    "websiteForm"
-  );
-
-const websiteModal =
-  document.getElementById(
-    "websiteModal"
-  );
-
-const viewModal =
-  document.getElementById(
-    "viewModal"
-  );
-
-const websiteTable =
-  document.getElementById(
-    "websiteTable"
-  );
-
-const searchInput =
-  document.getElementById(
-    "searchInput"
-  );
-
-const statusFilter =
-  document.getElementById(
-    "statusFilter"
-  );
-
-const categoryFilter =
-  document.getElementById(
-    "categoryFilter"
-  );
-
-const indexFilter =
-  document.getElementById(
-    "indexFilter"
-  );
-
-const toast =
-  document.getElementById(
-    "toast"
-  );
-
-
-/* =========================
-   FORM ELEMENTS
-========================= */
-
-const urlInput =
-  document.getElementById("url");
-
-const titleInput =
-  document.getElementById("title");
-
-const domainInput =
-  document.getElementById("domain");
-
-const descriptionInput =
-  document.getElementById("description");
-
-const keywordsInput =
-  document.getElementById("keywords");
-
-const categoryInput =
-  document.getElementById("category");
-
-const imageInput =
-  document.getElementById("image");
-
-const facebookInput =
-  document.getElementById("facebook");
-
-const instagramInput =
-  document.getElementById("instagram");
-
-const youtubeInput =
-  document.getElementById("youtube");
-
-const tiktokInput =
-  document.getElementById("tiktok");
-
-const linkedinInput =
-  document.getElementById("linkedin");
-
-const xInput =
-  document.getElementById("x");
-
-const pinterestInput =
-  document.getElementById("pinterest");
-
-const telegramInput =
-  document.getElementById("telegram");
-
-const whatsappInput =
-  document.getElementById("whatsapp");
-
-const ownerInput =
-  document.getElementById("ownerId");
-
-const statusInput =
-  document.getElementById("status");
-
-
-/* =========================
-   UTILITY
-========================= */
-
-function escapeHTML(value){
-
-  return String(
-    value ?? ""
-  )
-  .replace(
-    /&/g,
-    "&amp;"
-  )
-  .replace(
-    /</g,
-    "&lt;"
-  )
-  .replace(
-    />/g,
-    "&gt;"
-  )
-  .replace(
-    /"/g,
-    "&quot;"
-  )
-  .replace(
-    /'/g,
-    "&#039;"
-  );
-
+function esc(v){
+  return String(v??"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;");
 }
 
 
-function escapeAttribute(value){
-
-  return escapeHTML(value);
-
-}
-
-
-function extractDomain(url){
-
+function domain(url){
   try{
-
-    return new URL(
-      url
-    ).hostname
-      .replace(
-        /^www\./,
-        ""
-      );
-
+    return new URL(url).hostname;
   }catch{
-
     return "";
-
   }
-
 }
 
 
-/* =========================
-   TOAST
-========================= */
+function seo(title,description){
 
-function showToast(
-  message,
-  type = "success"
-){
+  const t=(title||"").trim().length;
+  const d=(description||"").trim().length;
 
-  toast.textContent =
-    message;
+  let ts=0;
+  let ds=0;
 
-  toast.className =
-    `toast show ${type}`;
+  if(t>=30 && t<=60) ts=50;
+  else if(t>=20) ts=35;
+  else if(t>0) ts=20;
 
-  clearTimeout(
-    window.toastTimer
-  );
-
-  window.toastTimer =
-    setTimeout(
-      () => {
-
-        toast.className =
-          "toast";
-
-      },
-      3000
-    );
-
-}
-
-
-/* =========================
-   SEO
-========================= */
-
-function analyzeSEO(
-  title,
-  description
-){
-
-  const titleLength =
-    String(
-      title || ""
-    ).length;
-
-  const descriptionLength =
-    String(
-      description || ""
-    ).length;
-
-
-  let titleScore = 0;
-
-  let descriptionScore = 0;
-
-
-  if(
-    titleLength >= 30 &&
-    titleLength <= 60
-  ){
-
-    titleScore = 50;
-
-  }else if(
-    titleLength >= 20
-  ){
-
-    titleScore = 35;
-
-  }else if(
-    titleLength > 0
-  ){
-
-    titleScore = 20;
-
-  }
-
-
-  if(
-    descriptionLength >= 120 &&
-    descriptionLength <= 160
-  ){
-
-    descriptionScore = 50;
-
-  }else if(
-    descriptionLength >= 80
-  ){
-
-    descriptionScore = 35;
-
-  }else if(
-    descriptionLength > 0
-  ){
-
-    descriptionScore = 20;
-
-  }
-
-
-  if(
-    titleLength > 60
-  ){
-
-    titleScore = 15;
-
-  }
-
-
-  if(
-    descriptionLength > 160
-  ){
-
-    descriptionScore = 15;
-
-  }
-
+  if(d>=120 && d<=160) ds=50;
+  else if(d>=80) ds=35;
+  else if(d>0) ds=20;
 
   return {
-
-    titleLength,
-
-    descriptionLength,
-
-    score:
-      titleScore +
-      descriptionScore
-
+    t,
+    d,
+    score:ts+ds
   };
-
 }
 
 
-function updateSEO(){
+function toast(message){
 
-  const seo =
-    analyzeSEO(
-      titleInput.value,
-      descriptionInput.value
-    );
+  $("toast").textContent=message;
+  $("toast").classList.add("show");
 
-
-  document.getElementById(
-    "titleStrength"
-  ).textContent =
-    `${seo.titleLength}/60`;
-
-
-  document.getElementById(
-    "descriptionStrength"
-  ).textContent =
-    `${seo.descriptionLength}/160`;
-
-
-  document.getElementById(
-    "seoScore"
-  ).textContent =
-    `${seo.score}/100`;
-
-
-  document.getElementById(
-    "previewTitle"
-  ).textContent =
-    titleInput.value ||
-    "Website title";
-
-
-  document.getElementById(
-    "previewUrl"
-  ).textContent =
-    urlInput.value ||
-    "example.com";
-
-
-  document.getElementById(
-    "previewDescription"
-  ).textContent =
-    descriptionInput.value ||
-    "Website meta description preview.";
-
+  setTimeout(
+    ()=>$("toast").classList.remove("show"),
+    3000
+  );
 }
 
 
-/* =========================
-   LOAD
-========================= */
-
-async function loadWebsites(){
+async function load(){
 
   try{
 
-    const snapshot =
-      await getDocs(
-        collection(
-          db,
-          "indexedWebsites"
-        )
-      );
+    const snap=await getDocs(ref);
 
+    data=[];
 
-    websites = [];
+    snap.forEach(d=>{
 
+      const x=d.data();
 
-    snapshot.forEach(
-      item => {
+      data.push({
+        ...x,
+        id:d.id,
+        documentId:d.id,
+        searchId:d.id,
+        type:"website",
+        collection:"indexedWebsites"
+      });
 
-        const data =
-          item.data() || {};
+    });
 
-        websites.push({
+    render();
 
-          ...data,
+  }catch(e){
 
-          id:
-            item.id,
-
-          documentId:
-            item.id,
-
-          searchId:
-            item.id,
-
-          type:
-            "website",
-
-          collection:
-            "indexedWebsites",
-
-          category:
-            data.category ||
-            "Websites"
-
-        });
-
-      }
-    );
-
-
-    updateCategories();
-
-    updateStats();
-
-    renderTable();
-
-
-  }catch(error){
-
-    console.error(
-      error
-    );
-
-    showToast(
-      error.message ||
-      "Unable to load websites.",
-      "error"
-    );
+    console.error(e);
+    toast(e.message);
 
   }
-
 }
 
 
-/* =========================
-   CATEGORIES
-========================= */
+function render(){
 
-function updateCategories(){
+  const q=$("search").value.toLowerCase();
+  const sf=$("filterStatus").value;
+  const ix=$("filterIndex").value;
 
-  const categories =
-    [
-      ...new Set(
-        websites.map(
-          item =>
-            item.category ||
-            "Websites"
-        )
-      )
-    ]
-    .sort();
+  const list=data.filter(x=>{
 
-
-  categoryFilter.innerHTML = `
-    <option value="">
-      All Categories
-    </option>
-  `;
-
-
-  categories.forEach(
-    category => {
-
-      categoryFilter.insertAdjacentHTML(
-        "beforeend",
-        `
-          <option value="${escapeAttribute(category)}">
-            ${escapeHTML(category)}
-          </option>
-        `
-      );
-
-    }
-  );
-
-}
-
-
-/* =========================
-   STATS
-========================= */
-
-function updateStats(){
-
-  document.getElementById(
-    "totalCount"
-  ).textContent =
-    websites.length;
-
-
-  document.getElementById(
-    "pendingCount"
-  ).textContent =
-    websites.filter(
-      item =>
-        item.status ===
-        "pending"
-    ).length;
-
-
-  document.getElementById(
-    "approvedCount"
-  ).textContent =
-    websites.filter(
-      item =>
-        item.status ===
-        "approved"
-    ).length;
-
-
-  document.getElementById(
-    "rejectedCount"
-  ).textContent =
-    websites.filter(
-      item =>
-        item.status ===
-        "rejected"
-    ).length;
-
-
-  document.getElementById(
-    "indexedCount"
-  ).textContent =
-    websites.filter(
-      item =>
-        item.indexed === true
-    ).length;
-
-
-  document.getElementById(
-    "seoReadyCount"
-  ).textContent =
-    websites.filter(
-      item => {
-
-        const seo =
-          analyzeSEO(
-            item.title,
-            item.description
-          );
-
-        return seo.score >= 70;
-
-      }
-    ).length;
-
-}
-
-
-/* =========================
-   STATUS BADGE
-========================= */
-
-function statusBadge(
-  status
-){
-
-  const safe =
-    status || "pending";
-
-  return `
-    <span class="badge ${escapeAttribute(safe)}">
-      ${escapeHTML(
-        safe
-          .charAt(0)
-          .toUpperCase() +
-        safe.slice(1)
-      )}
-    </span>
-  `;
-
-}
-
-
-/* =========================
-   RENDER
-========================= */
-
-function renderTable(){
-
-  const search =
-    searchInput.value
-      .trim()
+    const text=
+      `${x.title||""} ${x.url||""} ${x.domain||""} ${x.keywords||""}`
       .toLowerCase();
 
-  const status =
-    statusFilter.value;
-
-  const category =
-    categoryFilter.value;
-
-  const index =
-    indexFilter.value;
-
-
-  const filtered =
-    websites.filter(
-      item => {
-
-        const text = [
-          item.title,
-          item.url,
-          item.domain,
-          item.description,
-          item.keywords,
-          item.category,
-          item.ownerId
-        ]
-        .join(" ")
-        .toLowerCase();
-
-
-        if(
-          search &&
-          !text.includes(search)
-        ){
-
-          return false;
-
-        }
-
-
-        if(
-          status &&
-          item.status !== status
-        ){
-
-          return false;
-
-        }
-
-
-        if(
-          category &&
-          item.category !== category
-        ){
-
-          return false;
-
-        }
-
-
-        if(
-          index === "indexed" &&
-          item.indexed !== true
-        ){
-
-          return false;
-
-        }
-
-
-        if(
-          index === "unindexed" &&
-          item.indexed === true
-        ){
-
-          return false;
-
-        }
-
-
-        return true;
-
-      }
+    return (
+      (!q || text.includes(q)) &&
+      (!sf || x.status===sf) &&
+      (!ix || String(!!x.indexed)===ix)
     );
 
+  });
 
-  if(
-    filtered.length === 0
-  ){
+  $("total").textContent=data.length;
 
-    websiteTable.innerHTML = `
+  $("pending").textContent=
+    data.filter(x=>x.status==="pending").length;
+
+  $("approved").textContent=
+    data.filter(x=>x.status==="approved").length;
+
+  $("rejected").textContent=
+    data.filter(x=>x.status==="rejected").length;
+
+  $("indexed").textContent=
+    data.filter(x=>x.indexed===true).length;
+
+
+  $("rows").innerHTML=list.length
+    ? list.map(x=>{
+
+      const s=seo(
+        x.title,
+        x.description
+      );
+
+      return `
       <tr>
-        <td colspan="7">
+
+        <td>
+          <b>${esc(x.title||"Untitled")}</b><br>
+          <small>${esc(x.domain||domain(x.url))}</small>
+        </td>
+
+        <td>
+          <span class="badge ${esc(x.status||"pending")}">
+            ${esc(x.status||"pending")}
+          </span>
+        </td>
+
+        <td>
+          <b>${s.score}/100</b>
+        </td>
+
+        <td>
+          <span class="${x.indexed?"indexed":"unindexed"}">
+            ${x.indexed?"Indexed":"Unindexed"}
+          </span>
+        </td>
+
+        <td>
+          <div class="actions">
+
+            <button onclick="viewSite('${x.id}')">
+              View
+            </button>
+
+            <button onclick="editSite('${x.id}')">
+              Edit
+            </button>
+
+            ${
+              x.status!=="approved"
+              ? `<button class="success"
+                   onclick="approve('${x.id}')">
+                   Approve
+                 </button>`
+              : ""
+            }
+
+            ${
+              x.status!=="rejected"
+              ? `<button class="warning"
+                   onclick="reject('${x.id}')">
+                   Reject
+                 </button>`
+              : ""
+            }
+
+            <button onclick="toggleIndex('${x.id}')">
+              ${x.indexed?"Unindex":"Index"}
+            </button>
+
+            <button class="danger"
+              onclick="removeSite('${x.id}')">
+              Delete
+            </button>
+
+          </div>
+        </td>
+
+      </tr>`;
+
+    }).join("")
+    : `
+      <tr>
+        <td colspan="5">
           <div class="empty">
-            <i class="fa-solid fa-globe"></i>
-            <div>No websites found.</div>
+            No websites found.
           </div>
         </td>
       </tr>
     `;
+}
 
-    return;
+
+function openForm(id=null){
+
+  editing=id;
+
+  $("formTitle").textContent=
+    id?"Edit Website":"Add Website";
+
+  $("form").reset();
+
+  $("category").value="Websites";
+  $("status").value="pending";
+
+  if(id){
+
+    const x=data.find(v=>v.id===id);
+
+    if(!x)return;
+
+    [
+      "url",
+      "domain",
+      "title",
+      "description",
+      "keywords",
+      "category",
+      "status",
+      "ownerId",
+      "image",
+      "facebook",
+      "instagram",
+      "youtube",
+      "tiktok",
+      "linkedin",
+      "x",
+      "telegram",
+      "whatsapp"
+    ].forEach(k=>{
+      if($(k))
+        $(k).value=x[k]||"";
+    });
 
   }
 
+  updateSEO();
 
-  websiteTable.innerHTML =
-    filtered.map(
-      website => {
-
-        const seo =
-          analyzeSEO(
-            website.title,
-            website.description
-          );
+  $("formModal").classList.add("show");
+}
 
 
-        return `
+function closeForm(){
 
-          <tr>
-
-            <td>
-
-              <div class="website-cell">
-
-                <strong>
-                  ${escapeHTML(
-                    website.title ||
-                    website.url ||
-                    "Untitled"
-                  )}
-                </strong>
-
-                <small>
-                  ${escapeHTML(
-                    website.url ||
-                    "-"
-                  )}
-                </small>
-
-              </div>
-
-            </td>
-
-
-            <td>
-              ${escapeHTML(
-                website.category ||
-                "Websites"
-              )}
-            </td>
-
-
-            <td>
-              ${statusBadge(
-                website.status
-              )}
-            </td>
-
-
-            <td>
-
-              <span class="seo ${
-                seo.score >= 90
-                  ? "good"
-                  : seo.score >= 70
-                    ? "medium"
-                    : "bad"
-              }">
-
-                ${seo.score}/100
-
-              </span>
-
-            </td>
-
-
-            <td>
-
-              ${
-                website.indexed
-                  ? `
-                    <span class="badge indexed">
-                      Indexed
-                    </span>
-                  `
-                  : `
-                    <span class="badge unindexed">
-                      Unindexed
-                    </span>
-                  `
-              }
-
-            </td>
-
-
-            <td>
-
-              <small>
-                ${escapeHTML(
-                  website.ownerId ||
-                  "-"
-                )}
-              </small>
-
-            </td>
-
-
-            <td>
-
-              <div class="actions">
-
-                <button
-                  class="action"
-                  title="View"
-                  onclick="viewWebsite('${website.id}')"
-                >
-                  <i class="fa-solid fa-eye"></i>
-                </button>
-
-
-                <button
-                  class="action"
-                  title="Edit"
-                  onclick="editWebsite('${website.id}')"
-                >
-                  <i class="fa-solid fa-pen"></i>
-                </button>
-
-
-                ${
-                  website.status !==
-                  "approved"
-                    ? `
-                      <button
-                        class="action approve"
-                        title="Approve"
-                        onclick="approveWebsite('${website.id}')"
-                      >
-                        <i class="fa-solid fa-check"></i>
-                      </button>
-                    `
-                    : `
-                      <button
-                        class="action"
-                        title="Toggle Index"
-                        onclick="toggleIndex('${website.id}')"
-                      >
-                        <i class="fa-solid ${
-                          website.indexed
-                            ? "fa-eye-slash"
-                            : "fa-magnifying-glass"
-                        }"></i>
-                      </button>
-                    `
-                }
-
-
-                ${
-                  website.status !==
-                  "rejected"
-                    ? `
-                      <button
-                        class="action reject"
-                        title="Reject"
-                        onclick="rejectWebsite('${website.id}')"
-                      >
-                        <i class="fa-solid fa-xmark"></i>
-                      </button>
-                    `
-                    : ""
-                }
-
-
-                <button
-                  class="action delete"
-                  title="Delete"
-                  onclick="deleteWebsite('${website.id}')"
-                >
-                  <i class="fa-solid fa-trash"></i>
-                </button>
-
-              </div>
-
-            </td>
-
-          </tr>
-
-        `;
-
-      }
-    ).join("");
+  $("formModal").classList.remove("show");
+  editing=null;
 
 }
 
 
-/* =========================
-   SAVE
-========================= */
-
-async function saveWebsite(
-  event
-){
-
-  event.preventDefault();
+window.openForm=openForm;
+window.closeForm=closeForm;
 
 
-  const title =
-    titleInput.value.trim();
+$("form").addEventListener(
+  "submit",
+  async e=>{
 
-  const description =
-    descriptionInput.value.trim();
+    e.preventDefault();
 
-  const url =
-    urlInput.value.trim();
-
-
-  if(!url){
-
-    showToast(
-      "Website URL is required.",
-      "error"
+    const s=seo(
+      $("title").value,
+      $("description").value
     );
 
-    return;
+    if(s.t>60){
+      toast("SEO Title cannot exceed 60 characters.");
+      return;
+    }
+
+    if(s.d>160){
+      toast("Meta Description cannot exceed 160 characters.");
+      return;
+    }
+
+    const website={
+
+      url:$("url").value.trim(),
+
+      domain:
+        $("domain").value.trim() ||
+        domain($("url").value),
+
+      title:$("title").value.trim(),
+
+      description:
+        $("description").value.trim(),
+
+      keywords:$("keywords").value.trim(),
+
+      category:
+        $("category").value.trim() ||
+        "Websites",
+
+      status:$("status").value,
+
+      indexed:
+        $("status").value==="approved",
+
+      ownerId:
+        $("ownerId").value.trim(),
+
+      image:$("image").value.trim(),
+
+      facebook:$("facebook").value.trim(),
+
+      instagram:$("instagram").value.trim(),
+
+      youtube:$("youtube").value.trim(),
+
+      tiktok:$("tiktok").value.trim(),
+
+      linkedin:$("linkedin").value.trim(),
+
+      x:$("x").value.trim(),
+
+      telegram:$("telegram").value.trim(),
+
+      whatsapp:$("whatsapp").value.trim(),
+
+      type:"website",
+
+      collection:"indexedWebsites",
+
+      updatedAt:serverTimestamp()
+
+    };
+
+
+    try{
+
+      if(editing){
+
+        await updateDoc(
+          doc(
+            db,
+            "indexedWebsites",
+            editing
+          ),
+          website
+        );
+
+        toast("Website updated.");
+
+      }else{
+
+        website.createdAt=
+          serverTimestamp();
+
+        const d=
+          await addDoc(
+            ref,
+            website
+          );
+
+        await updateDoc(
+          doc(
+            db,
+            "indexedWebsites",
+            d.id
+          ),
+          {
+            searchId:d.id,
+            documentId:d.id
+          }
+        );
+
+        toast("Website added.");
+
+      }
+
+      closeForm();
+      await load();
+
+    }catch(e){
+
+      console.error(e);
+      toast(e.message);
+
+    }
 
   }
+);
 
 
-  if(!title){
+window.editSite=id=>openForm(id);
 
-    showToast(
-      "SEO title is required.",
-      "error"
+
+window.approve=async id=>{
+
+  try{
+
+    const x=data.find(v=>v.id===id);
+
+    const s=seo(
+      x.title,
+      x.description
     );
 
-    return;
+    if(s.t>60 || s.d>160){
 
-  }
+      toast("Fix SEO length before approval.");
+      return;
 
+    }
 
-  if(!description){
-
-    showToast(
-      "Meta description is required.",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  if(title.length > 60){
-
-    showToast(
-      "Title must be 60 characters or less.",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  if(
-    description.length > 160
-  ){
-
-    showToast(
-      "Meta description must be 160 characters or less.",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  const data = {
-
-    url,
-
-    title,
-
-    domain:
-      domainInput.value.trim() ||
-      extractDomain(url),
-
-    description,
-
-    keywords:
-      keywordsInput.value.trim(),
-
-    category:
-      categoryInput.value.trim() ||
-      "Websites",
-
-    image:
-      imageInput.value.trim(),
-
-    facebook:
-      facebookInput.value.trim(),
-
-    instagram:
-      instagramInput.value.trim(),
-
-    youtube:
-      youtubeInput.value.trim(),
-
-    tiktok:
-      tiktokInput.value.trim(),
-
-    linkedin:
-      linkedinInput.value.trim(),
-
-    x:
-      xInput.value.trim(),
-
-    pinterest:
-      pinterestInput.value.trim(),
-
-    telegram:
-      telegramInput.value.trim(),
-
-    whatsapp:
-      whatsappInput.value.trim(),
-
-    ownerId:
-      ownerInput.value.trim(),
-
-    status:
-    statusInput.value ||
-    "pending",
-
-  type:
-    "website",
-
-  collection:
-    "indexedWebsites",
-
-  indexed:
-    statusInput.value === "approved"
-};
-
-try {
-  if (!data.url) {
-    throw new Error("Website URL is required.");
-  }
-
-  if (!data.title) {
-    throw new Error("Website title is required.");
-  }
-
-  if (data.title.length > 60) {
-    throw new Error("SEO title must not exceed 60 characters.");
-  }
-
-  if (data.description.length > 160) {
-    throw new Error(
-      "Meta description must not exceed 160 characters."
-    );
-  }
-
-  if (editingId) {
     await updateDoc(
-      doc(db, "indexedWebsites", editingId),
+      doc(db,"indexedWebsites",id),
       {
-        ...data,
-        searchId: editingId,
-        documentId: editingId,
-        updatedAt: serverTimestamp()
+        status:"approved",
+        indexed:true,
+        indexedAt:serverTimestamp(),
+        approvedAt:serverTimestamp(),
+        updatedAt:serverTimestamp()
       }
     );
 
-  } else {
+    toast("Website approved and indexed.");
+    load();
 
-    data.createdAt =
-      serverTimestamp();
+  }catch(e){
 
-    data.updatedAt =
-      serverTimestamp();
+    toast(e.message);
 
-    const newDoc =
-      await addDoc(
-        collection(
-          db,
-          "indexedWebsites"
-        ),
-        data
-      );
+  }
+
+};
+
+
+window.reject=async id=>{
+
+  try{
 
     await updateDoc(
+      doc(db,"indexedWebsites",id),
+      {
+        status:"rejected",
+        indexed:false,
+        indexedAt:null,
+        rejectedAt:serverTimestamp(),
+        updatedAt:serverTimestamp()
+      }
+    );
+
+    toast("Website rejected.");
+    load();
+
+  }catch(e){
+
+    toast(e.message);
+
+  }
+
+};
+
+
+window.toggleIndex=async id=>{
+
+  const x=data.find(v=>v.id===id);
+
+  if(!x)return;
+
+  if(!x.indexed &&
+     x.status!=="approved"){
+
+    toast("Only approved websites can be indexed.");
+    return;
+
+  }
+
+  try{
+
+    await updateDoc(
+      doc(db,"indexedWebsites",id),
+      {
+        indexed:!x.indexed,
+        indexedAt:
+          !x.indexed
+          ?serverTimestamp()
+          :null,
+        updatedAt:serverTimestamp()
+      }
+    );
+
+    toast(
+      x.indexed
+      ?"Website unindexed."
+      :"Website indexed."
+    );
+
+    load();
+
+  }catch(e){
+
+    toast(e.message);
+
+  }
+
+};
+
+
+window.removeSite=async id=>{
+
+  if(!confirm("Delete this website?"))
+    return;
+
+  try{
+
+    await deleteDoc(
       doc(
         db,
         "indexedWebsites",
-        newDoc.id
-      ),
-      {
-        searchId:
-          newDoc.id,
-
-        documentId:
-          newDoc.id
-      }
-    );
-  }
-
-  showToast(
-    editingId
-      ? "Website updated successfully."
-      : "Website submitted successfully.",
-    "success"
-  );
-
-  closeModal();
-
-  await loadWebsites();
-
-} catch (error) {
-
-  console.error(
-    "Save error:",
-    error
-  );
-
-  showToast(
-    error.message ||
-      "Failed to save website.",
-    "error"
-  );
-}
-
-}
-
-async function approveWebsite(id) {
-
-const website =
-  websites.find(
-    item => item.id === id
-  );
-
-if (!website) {
-  showToast(
-    "Website not found.",
-    "error"
-  );
-  return;
-}
-
-const seo =
-  analyzeSEO(
-    website.title || "",
-    website.description || ""
-  );
-
-if (
-  !website.title ||
-  !website.description
-) {
-  showToast(
-    "Title and meta description are required before approval.",
-    "error"
-  );
-  return;
-}
-
-if (
-  seo.titleLength > 60
-) {
-  showToast(
-    "Title is too long. Maximum is 60 characters.",
-    "error"
-  );
-  return;
-}
-
-if (
-  seo.descriptionLength > 160
-) {
-  showToast(
-    "Meta description is too long. Maximum is 160 characters.",
-    "error"
-  );
-  return;
-}
-
-const confirmed =
-  confirm(
-    "Approve this website and make it available in LetsStudy Pro Search?"
-  );
-
-if (!confirmed) {
-  return;
-}
-
-try {
-
-  await updateDoc(
-    doc(
-      db,
-      "indexedWebsites",
-      id
-    ),
-    {
-      status:
-        "approved",
-
-      indexed:
-        true,
-
-      indexedAt:
-        serverTimestamp(),
-
-      approvedAt:
-        serverTimestamp(),
-
-      updatedAt:
-        serverTimestamp(),
-
-      searchId:
-        id,
-
-      documentId:
-        id,
-
-      type:
-        "website",
-
-      collection:
-        "indexedWebsites"
-    }
-  );
-
-  showToast(
-    "Website approved and indexed.",
-    "success"
-  );
-
-  await loadWebsites();
-
-} catch (error) {
-
-  console.error(
-    "Approval error:",
-    error
-  );
-
-  showToast(
-    error.message ||
-      "Failed to approve website.",
-    "error"
-  );
-}
-
-}
-
-async function rejectWebsite(id) {
-
-const confirmed =
-  confirm(
-    "Reject this website submission?"
-  );
-
-if (!confirmed) {
-  return;
-}
-
-try {
-
-  await updateDoc(
-    doc(
-      db,
-      "indexedWebsites",
-      id
-    ),
-    {
-      status:
-        "rejected",
-
-      indexed:
-        false,
-
-      rejectedAt:
-        serverTimestamp(),
-
-      indexedAt:
-        null,
-
-      updatedAt:
-        serverTimestamp(),
-
-      searchId:
-        id,
-
-      documentId:
-        id,
-
-      type:
-        "website",
-
-      collection:
-        "indexedWebsites"
-    }
-  );
-
-  showToast(
-    "Website rejected.",
-    "success"
-  );
-
-  await loadWebsites();
-
-} catch (error) {
-
-  console.error(
-    "Reject error:",
-    error
-  );
-
-  showToast(
-    error.message ||
-      "Failed to reject website.",
-    "error"
-  );
-}
-
-}
-
-async function toggleIndex(id) {
-
-const website =
-  websites.find(
-    item => item.id === id
-  );
-
-if (!website) {
-  return;
-}
-
-const nextIndexed =
-  !Boolean(website.indexed);
-
-if (
-  nextIndexed &&
-  website.status !== "approved"
-) {
-  showToast(
-    "Only approved websites can be indexed.",
-    "error"
-  );
-  return;
-}
-
-try {
-
-  await updateDoc(
-    doc(
-      db,
-      "indexedWebsites",
-      id
-    ),
-    {
-      indexed:
-        nextIndexed,
-
-      indexedAt:
-        nextIndexed
-          ? serverTimestamp()
-          : null,
-
-      updatedAt:
-        serverTimestamp(),
-
-      searchId:
-        id,
-
-      documentId:
-        id,
-
-      type:
-        "website",
-
-      collection:
-        "indexedWebsites"
-    }
-  );
-
-  showToast(
-    nextIndexed
-      ? "Website added to search index."
-      : "Website removed from search index.",
-    "success"
-  );
-
-  await loadWebsites();
-
-} catch (error) {
-
-  console.error(
-    "Index update error:",
-    error
-  );
-
-  showToast(
-    error.message ||
-      "Failed to update index.",
-    "error"
-  );
-}
-
-}
-
-function editWebsite(id) {
-
-const website =
-  websites.find(
-    item => item.id === id
-  );
-
-if (!website) {
-  showToast(
-    "Website not found.",
-    "error"
-  );
-  return;
-}
-
-editingId = id;
-
-modalTitle.textContent =
-  "Edit Website";
-
-urlInput.value =
-  website.url || "";
-
-titleInput.value =
-  website.title || "";
-
-domainInput.value =
-  website.domain || "";
-
-descriptionInput.value =
-  website.description || "";
-
-keywordsInput.value =
-  website.keywords || "";
-
-categoryInput.value =
-  website.category || "Websites";
-
-imageInput.value =
-  website.image || "";
-
-facebookInput.value =
-  website.facebook || "";
-
-instagramInput.value =
-  website.instagram || "";
-
-youtubeInput.value =
-  website.youtube || "";
-
-tiktokInput.value =
-  website.tiktok || "";
-
-linkedinInput.value =
-  website.linkedin || "";
-
-xInput.value =
-  website.x || "";
-
-pinterestInput.value =
-  website.pinterest || "";
-
-telegramInput.value =
-  website.telegram || "";
-
-whatsappInput.value =
-  website.whatsapp || "";
-
-ownerInput.value =
-  website.ownerId || "";
-
-statusInput.value =
-  website.status || "pending";
-
-updateSEO();
-
-websiteModal.classList.add(
-  "show"
-);
-
-}
-
-function viewWebsite(id) {
-
-const website =
-  websites.find(
-    item => item.id === id
-  );
-
-if (!website) {
-  return;
-}
-
-const seo =
-  analyzeSEO(
-    website.title || "",
-    website.description || ""
-  );
-
-viewContent.innerHTML = `
-  <div class="view-header">
-    <div class="view-icon">
-      <i class="fa-solid fa-globe"></i>
-    </div>
-
-    <div>
-      <h3>
-        ${escapeHTML(
-          website.title ||
-          "Untitled Website"
-        )}
-      </h3>
-
-      <a
-        href="${escapeHTML(
-          website.url || "#"
-        )}"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        ${escapeHTML(
-          website.url || ""
-        )}
-      </a>
-    </div>
-  </div>
-
-  <div class="view-grid">
-
-    <div class="view-item">
-      <span>Status</span>
-      <strong>
-        ${escapeHTML(
-          website.status ||
-          "pending"
-        )}
-      </strong>
-    </div>
-
-    <div class="view-item">
-      <span>Category</span>
-      <strong>
-        ${escapeHTML(
-          website.category ||
-          "Websites"
-        )}
-      </strong>
-    </div>
-
-    <div class="view-item">
-      <span>Domain</span>
-      <strong>
-        ${escapeHTML(
-          website.domain ||
-          getDomain(
-            website.url
-          )
-        )}
-      </strong>
-    </div>
-
-    <div class="view-item">
-      <span>Indexed</span>
-      <strong>
-        ${website.indexed
-          ? "Yes"
-          : "No"}
-      </strong>
-    </div>
-
-    <div class="view-item">
-      <span>SEO Score</span>
-      <strong>
-        ${seo.score}/100
-      </strong>
-    </div>
-
-    <div class="view-item">
-      <span>Owner ID</span>
-      <strong>
-        ${escapeHTML(
-          website.ownerId ||
-          "Public"
-        )}
-      </strong>
-    </div>
-
-  </div>
-
-  <div class="view-section">
-    <h4>Meta Description</h4>
-    <p>
-      ${escapeHTML(
-        website.description ||
-        "No description provided."
-      )}
-    </p>
-  </div>
-
-  <div class="view-section">
-    <h4>Keywords</h4>
-    <p>
-      ${escapeHTML(
-        website.keywords ||
-        "No keywords provided."
-      )}
-    </p>
-  </div>
-
-  <div class="view-section">
-    <h4>Social Links</h4>
-
-    <div class="social-links">
-
-      ${
-        website.facebook
-          ? `<a href="${escapeHTML(website.facebook)}" target="_blank">Facebook</a>`
-          : ""
-      }
-
-      ${
-        website.instagram
-          ? `<a href="${escapeHTML(website.instagram)}" target="_blank">Instagram</a>`
-          : ""
-      }
-
-      ${
-        website.youtube
-          ? `<a href="${escapeHTML(website.youtube)}" target="_blank">YouTube</a>`
-          : ""
-      }
-
-      ${
-        website.tiktok
-          ? `<a href="${escapeHTML(website.tiktok)}" target="_blank">TikTok</a>`
-          : ""
-      }
-
-      ${
-        website.linkedin
-          ? `<a href="${escapeHTML(website.linkedin)}" target="_blank">LinkedIn</a>`
-          : ""
-      }
-
-      ${
-        website.x
-          ? `<a href="${escapeHTML(website.x)}" target="_blank">X</a>`
-          : ""
-      }
-
-      ${
-        website.pinterest
-          ? `<a href="${escapeHTML(website.pinterest)}" target="_blank">Pinterest</a>`
-          : ""
-      }
-
-      ${
-        website.telegram
-          ? `<a href="${escapeHTML(website.telegram)}" target="_blank">Telegram</a>`
-          : ""
-      }
-
-      ${
-        website.whatsapp
-          ? `<a href="${escapeHTML(website.whatsapp)}" target="_blank">WhatsApp</a>`
-          : ""
-      }
-
-    </div>
-  </div>
-`;
-
-viewModal.classList.add(
-  "show"
-);
-
-}
-
-async function deleteWebsite(id) {
-
-const confirmed =
-  confirm(
-    "Delete this website permanently?"
-  );
-
-if (!confirmed) {
-  return;
-}
-
-try {
-
-  await deleteDoc(
-    doc(
-      db,
-      "indexedWebsites",
-      id
-    )
-  );
-
-  showToast(
-    "Website deleted successfully.",
-    "success"
-  );
-
-  await loadWebsites();
-
-} catch (error) {
-
-  console.error(
-    "Delete error:",
-    error
-  );
-
-  showToast(
-    error.message ||
-      "Failed to delete website.",
-    "error"
-  );
-}
-
-}
-
-function openAddModal() {
-
-editingId = null;
-
-modalTitle.textContent =
-  "Add Website";
-
-websiteForm.reset();
-
-categoryInput.value =
-  "Websites";
-
-statusInput.value =
-  "pending";
-
-updateSEO();
-
-websiteModal.classList.add(
-  "show"
-);
-
-}
-
-function closeModal() {
-
-websiteModal.classList.remove(
-  "show"
-);
-
-editingId = null;
-
-websiteForm.reset();
-
-categoryInput.value =
-  "Websites";
-
-statusInput.value =
-  "pending";
-
-updateSEO();
-
-}
-
-function closeViewModal() {
-
-viewModal.classList.remove(
-  "show"
-);
-
-}
-
-function escapeHTML(value) {
-
-return String(
-  value ?? ""
-)
-  .replace(
-    /&/g,
-    "&amp;"
-  )
-  .replace(
-    /</g,
-    "&lt;"
-  )
-  .replace(
-    />/g,
-    "&gt;"
-  )
-  .replace(
-    /"/g,
-    "&quot;"
-  )
-  .replace(
-    /'/g,
-    "&#039;"
-  );
-
-}
-
-function showToast(
-message,
-type = "success"
-) {
-
-toast.textContent =
-  message;
-
-toast.className =
-  `toast ${type}`;
-
-toast.classList.add(
-  "show"
-);
-
-clearTimeout(
-  toastTimer
-);
-
-toastTimer =
-  setTimeout(
-    () => {
-      toast.classList.remove(
-        "show"
-      );
-    },
-    3500
-  );
-
-}
-
-function getDomain(url) {
-
-try {
-
-  return new URL(
-    url
-  ).hostname;
-
-} catch {
-
-  return "";
-}
-
-}
-
-function analyzeSEO(
-title,
-description
-) {
-
-const titleLength =
-  String(title || "")
-    .trim()
-    .length;
-
-const descriptionLength =
-  String(description || "")
-    .trim()
-    .length;
-
-let titleScore = 0;
-let descriptionScore = 0;
-
-if (
-  titleLength >= 30 &&
-  titleLength <= 60
-) {
-  titleScore = 50;
-
-} else if (
-  titleLength >= 20 &&
-  titleLength <= 29
-) {
-  titleScore = 35;
-
-} else if (
-  titleLength > 60
-) {
-  titleScore = 15;
-
-} else if (
-  titleLength > 0
-) {
-  titleScore = 20;
-}
-
-if (
-  descriptionLength >= 120 &&
-  descriptionLength <= 160
-) {
-  descriptionScore = 50;
-
-} else if (
-  descriptionLength >= 80 &&
-  descriptionLength <= 119
-) {
-  descriptionScore = 35;
-
-} else if (
-  descriptionLength > 160
-) {
-  descriptionScore = 15;
-
-} else if (
-  descriptionLength > 0
-) {
-  descriptionScore = 20;
-}
-
-return {
-  titleLength,
-  descriptionLength,
-  score:
-    titleScore +
-    descriptionScore
-};
-
-}
-
-function updateSEO() {
-
-const seo =
-  analyzeSEO(
-    titleInput.value,
-    descriptionInput.value
-  );
-
-if (titleCount) {
-  titleCount.textContent =
-    `${seo.titleLength}/60`;
-}
-
-if (descriptionCount) {
-  descriptionCount.textContent =
-    `${seo.descriptionLength}/160`;
-}
-
-if (seoScore) {
-  seoScore.textContent =
-    `${seo.score}/100`;
-}
-
-if (titleStrength) {
-
-  titleStrength.textContent =
-    seo.titleLength === 0
-      ? "Missing"
-      : seo.titleLength > 60
-        ? "Too Long"
-        : seo.titleLength >= 30
-          ? "Excellent"
-          : seo.titleLength >= 20
-            ? "Good"
-            : "Needs Work";
-}
-
-if (descriptionStrength) {
-
-  descriptionStrength.textContent =
-    seo.descriptionLength === 0
-      ? "Missing"
-      : seo.descriptionLength > 160
-        ? "Too Long"
-        : seo.descriptionLength >= 120
-          ? "Excellent"
-          : seo.descriptionLength >= 80
-            ? "Good"
-            : "Needs Work";
-}
-
-if (previewTitle) {
-
-  previewTitle.textContent =
-    titleInput.value ||
-    "Website Title";
-}
-
-if (previewDescription) {
-
-  previewDescription.textContent =
-    descriptionInput.value ||
-    "Your website meta description will appear here.";
-}
-
-}
-
-async function loadWebsites() {
-
-try {
-
-  const snapshot =
-    await getDocs(
-      collection(
-        db,
-        "indexedWebsites"
+        id
       )
     );
 
-  websites = [];
+    toast("Website deleted.");
+    load();
 
-  snapshot.forEach(
-    item => {
+  }catch(e){
 
-      const data =
-        item.data() || {};
+    toast(e.message);
 
-      websites.push({
-        ...data,
+  }
 
-        id:
-          item.id,
+};
 
-        documentId:
-          item.id,
 
-        searchId:
-          item.id,
+window.viewSite=id=>{
 
-        type:
-          "website",
+  const x=data.find(v=>v.id===id);
 
-        collection:
-          "indexedWebsites",
+  if(!x)return;
 
-        category:
-          data.category ||
-          "Websites"
-      });
-    }
+  const s=seo(
+    x.title,
+    x.description
   );
 
-  renderWebsites();
+  $("view").innerHTML=`
 
-} catch (error) {
+    <h3>${esc(x.title)}</h3>
 
-  console.error(
-    "Load websites error:",
-    error
+    <p>
+      <a href="${esc(x.url)}"
+         target="_blank">
+        ${esc(x.url)}
+      </a>
+    </p>
+
+    <p>
+      <b>Status:</b>
+      ${esc(x.status)}
+    </p>
+
+    <p>
+      <b>Category:</b>
+      ${esc(x.category)}
+    </p>
+
+    <p>
+      <b>SEO:</b>
+      ${s.score}/100
+    </p>
+
+    <p>
+      <b>Indexed:</b>
+      ${x.indexed?"Yes":"No"}
+    </p>
+
+    <hr>
+
+    <b>Description</b>
+
+    <p>
+      ${esc(x.description)}
+    </p>
+
+    <b>Keywords</b>
+
+    <p>
+      ${esc(x.keywords)}
+    </p>
+
+  `;
+
+  $("viewModal").classList.add("show");
+
+};
+
+
+window.closeView=()=>{
+  $("viewModal").classList.remove("show");
+};
+
+
+function updateSEO(){
+
+  const s=seo(
+    $("title").value,
+    $("description").value
   );
 
-  showToast(
-    error.message ||
-      "Unable to load websites.",
-    "error"
-  );
+  $("titleCount").textContent=
+    `${s.t}/60`;
+
+  $("descriptionCount").textContent=
+    `${s.d}/160`;
+
+  $("seoScore").textContent=
+    s.score;
+
+  $("seoMessage").textContent=
+    s.score>=90
+      ?"Excellent SEO"
+      :s.score>=70
+        ?"Good SEO"
+        :"SEO needs improvement";
+
 }
 
-}
 
-initializePage();
+$("title").addEventListener(
+  "input",
+  updateSEO
+);
+
+$("description").addEventListener(
+  "input",
+  updateSEO
+);
+
+
+$("formModal").addEventListener(
+  "click",
+  e=>{
+    if(e.target===$("formModal"))
+      closeForm();
+  }
+);
+
+
+$("viewModal").addEventListener(
+  "click",
+  e=>{
+    if(e.target===$("viewModal"))
+      closeView();
+  }
+);
+
+
+load();
 
 </script>
 
