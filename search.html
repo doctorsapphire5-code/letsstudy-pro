@@ -1935,66 +1935,124 @@ function scoreItem(
 
 function localSearch(query){
 
-  const q =
-    clean(query);
+  syncCategory();
 
-  let items =
+  const q =
+    clean(query).toLowerCase();
+
+  let results =
     [...allItems];
 
-
   if(
-    activeCategory !==
-    "All"
+    currentCategory &&
+    currentCategory !== "All"
   ){
 
-    items =
-      items.filter(
-        item =>
+    const selected =
+      clean(
+        currentCategory
+      ).toLowerCase();
+
+    results =
+      results.filter(item => {
+
+        const collectionName =
+          clean(
+            item.collection
+          ).toLowerCase();
+
+        const category =
           clean(
             item.category
-          ).toLowerCase() ===
-          activeCategory.toLowerCase()
+          ).toLowerCase();
+
+        return (
+          collectionName === selected ||
+          category === selected
+        );
+
+      });
+
+  }
+
+  if(!q){
+
+    return results
+      .map(item => ({
+        ...item,
+        localScore:
+          scoreItem(item,"")
+      }))
+      .sort(
+        (a,b) =>
+          b.localScore -
+          a.localScore
       );
 
   }
 
+  results =
+    results
+      .map(item => {
 
-  items =
-    items.map(
-      item => ({
+        const title =
+          clean(
+            item.title
+          ).toLowerCase();
 
-        ...item,
+        const description =
+          clean(
+            item.description
+          ).toLowerCase();
 
-        localScore:
+        const category =
+          clean(
+            item.category
+          ).toLowerCase();
+
+        const collection =
+          clean(
+            item.collection
+          ).toLowerCase();
+
+        let score =
           scoreItem(
             item,
             q
-          )
+          );
+
+        if(title.includes(q)){
+          score += 500;
+        }
+
+        if(description.includes(q)){
+          score += 200;
+        }
+
+        if(category.includes(q)){
+          score += 150;
+        }
+
+        if(collection.includes(q)){
+          score += 100;
+        }
+
+        return {
+          ...item,
+          localScore: score
+        };
 
       })
-    );
-
-
-  if(q){
-
-    items =
-      items.filter(
-        item =>
-          item.localScore > 0
+      .filter(item =>
+        item.localScore > 0
+      )
+      .sort(
+        (a,b) =>
+          b.localScore -
+          a.localScore
       );
 
-  }
-
-
-  items.sort(
-    (a,b) =>
-      b.localScore -
-      a.localScore
-  );
-
-
-  return items;
-
+  return results;
 }
 
 
@@ -2972,36 +3030,22 @@ async function performSearch(
   currentQuery =
     clean(query);
 
-
-  const localResults =
+  const results =
     localSearch(
       currentQuery
     );
 
-
-  /*
-   * SHOW FIRESTORE RESULTS
-   * IMMEDIATELY.
-   */
-
-  renderResults(
-    localResults
-  );
-
-
-  /*
-   * AI runs afterwards.
-   */
+  renderResults(results);
 
   if(
     useAI &&
     currentQuery &&
-    localResults.length
+    results.length
   ){
 
     runAISearch(
       currentQuery,
-      localResults
+      results
     );
 
   }
@@ -3366,109 +3410,52 @@ if(initialQuery){
    AI TITLE EXPLANATION
 ========================= */
 
-let aiTitleTimer = null;
-let aiTitleRequest = null;
+let aiTypingTimer = null;
 
-async function explainSearchTitle(title){
+if(searchInput){
 
-  title = clean(title);
+  searchInput.addEventListener(
+    "input",
+    event => {
 
-  if(!title){
-    return;
-  }
-
-  clearTimeout(aiTitleTimer);
-
-  aiTitleTimer = setTimeout(
-    async () => {
-
-      try{
-
-        if(aiTitleRequest){
-          aiTitleRequest.abort();
-        }
-
-        aiTitleRequest =
-          new AbortController();
-
-        const response =
-          await fetch(
-            "/api/search?_" +
-            Date.now(),
-            {
-              method: "POST",
-              cache: "no-store",
-              signal:
-                aiTitleRequest.signal,
-              headers: {
-                "Content-Type":
-                  "application/json"
-              },
-              body:
-                JSON.stringify({
-                  query: title,
-                  results: [
-                    {
-                      id: "typed-query",
-                      title: title,
-                      description:
-                        "Search title typed by the user.",
-                      collection:
-                        "search",
-                      type:
-                        "search query",
-                      access:
-                        "public"
-                    }
-                  ]
-                })
-            }
-          );
-
-        if(!response.ok){
-          throw new Error(
-            "AI HTTP " +
-            response.status
-          );
-        }
-
-        const data =
-          await response.json();
-
-        const explanation =
-          clean(
-            data?.aiDescriptions?.[
-              "typed-query"
-            ] || ""
-          );
-
-        if(explanation){
-
-          showSearchAIExplanation(
-            explanation
-          );
-
-        }
-
-      }catch(error){
-
-        if(
-          error?.name ===
-          "AbortError"
-        ){
-          return;
-        }
-
-        console.warn(
-          "AI title explanation unavailable:",
-          error
+      const query =
+        clean(
+          event.target.value
         );
+
+      clearTimeout(
+        aiTypingTimer
+      );
+
+      /* SEARCH INAENDELEA MARA MOJA */
+
+      performSearch(
+        query,
+        false
+      );
+
+      /* AI INAENDA BACKGROUND */
+
+      if(query.length >= 2){
+
+        aiTypingTimer =
+          setTimeout(
+            () => {
+
+              runAISearch(
+                query,
+                localSearch(query)
+              );
+
+            },
+            500
+          );
 
       }
 
-    },
-    500
+    }
   );
+
 }
 
 
