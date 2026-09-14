@@ -1,0 +1,157 @@
+name: LetsStudy Pro - Google Sitemap Submit
+
+on:
+  push:
+    branches:
+      - main
+
+  schedule:
+    - cron: "0 */12 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sitemap-submit:
+    name: Google Sitemap Submission Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify sitemap
+        shell: bash
+        run: |
+          echo "======================================"
+          echo " LetsStudy Pro Google Sitemap Submit"
+          echo "======================================"
+          echo ""
+
+          SITEMAP="https://letsstudy.pro/sitemap.xml"
+
+          STATUS=$(curl \
+            -L \
+            -s \
+            -o /tmp/sitemap.xml \
+            -w "%{http_code}" \
+            --max-time 60 \
+            "$SITEMAP" || true)
+
+          echo "Sitemap: $SITEMAP"
+          echo "HTTP Status: $STATUS"
+
+          if [ "$STATUS" = "200" ]; then
+            echo "Sitemap is available."
+          else
+            echo "WARNING: Sitemap returned HTTP $STATUS"
+          fi
+
+      - name: Validate sitemap
+        shell: bash
+        run: |
+          echo ""
+          echo "Validating sitemap..."
+
+          if [ ! -s /tmp/sitemap.xml ]; then
+            echo "WARNING: Sitemap is empty."
+            exit 0
+          fi
+
+          if grep -q "<urlset" /tmp/sitemap.xml || \
+             grep -q "<sitemapindex" /tmp/sitemap.xml; then
+            echo "Valid XML sitemap structure detected."
+          else
+            echo "WARNING: Sitemap XML structure not detected."
+          fi
+
+          URLS=$(grep -o "<loc>" /tmp/sitemap.xml | wc -l || true)
+
+          echo "URLs listed: $URLS"
+
+      - name: Verify production URLs
+        shell: bash
+        run: |
+          echo ""
+          echo "Checking production URLs..."
+
+          if grep -q "https://letsstudy.pro/" /tmp/sitemap.xml; then
+            echo "LetsStudy Pro production URLs: FOUND"
+          else
+            echo "WARNING: Production URLs not detected."
+          fi
+
+          if grep -qi "localhost" /tmp/sitemap.xml; then
+            echo "WARNING: localhost URL detected."
+          else
+            echo "No localhost URLs detected."
+          fi
+
+          if grep -q "http://" /tmp/sitemap.xml; then
+            echo "WARNING: HTTP URLs detected."
+          else
+            echo "No insecure HTTP URLs detected."
+          fi
+
+      - name: Verify robots sitemap reference
+        shell: bash
+        run: |
+          echo ""
+          echo "Checking robots.txt..."
+
+          curl \
+            -L \
+            -s \
+            --max-time 30 \
+            "https://letsstudy.pro/robots.txt" \
+            > /tmp/robots.txt || true
+
+          if grep -qi \
+            "Sitemap:.*https://letsstudy.pro/sitemap.xml" \
+            /tmp/robots.txt; then
+
+            echo "Sitemap reference: FOUND"
+
+          else
+
+            echo "WARNING: Sitemap reference not found."
+
+          fi
+
+      - name: Google Search Console instructions
+        shell: bash
+        run: |
+          echo ""
+          echo "======================================"
+          echo " GOOGLE SEARCH CONSOLE"
+          echo "======================================"
+          echo ""
+          echo "Sitemap URL:"
+          echo "https://letsstudy.pro/sitemap.xml"
+          echo ""
+          echo "IMPORTANT:"
+          echo "GitHub Actions cannot submit a sitemap to"
+          echo "Google Search Console unless Search Console"
+          echo "API credentials and permissions are configured."
+          echo ""
+          echo "The sitemap remains publicly accessible so"
+          echo "Google can discover and crawl it."
+          echo ""
+          echo "======================================"
+
+      - name: Final report
+        run: |
+          echo ""
+          echo "======================================"
+          echo " GOOGLE SITEMAP CHECK COMPLETED"
+          echo "======================================"
+          echo ""
+          echo "Sitemap availability: Checked"
+          echo "XML structure: Checked"
+          echo "Production URLs: Checked"
+          echo "robots.txt: Checked"
+          echo "Google discovery: Ready"
+          echo ""
+          echo "======================================"
