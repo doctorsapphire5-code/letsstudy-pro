@@ -24,66 +24,139 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install Firebase CLI
+      - name: Verify Firebase Files
+        shell: bash
         run: |
-          npm install -g firebase-tools
+          set -e
 
-      - name: Check Firebase Configuration
-        run: |
-          echo "Checking Firebase configuration..."
+          echo "======================================"
+          echo " FIREBASE DEPLOY CHECK"
+          echo "======================================"
 
           test -f firebase.json
           test -f .firebaserc
 
-          echo "Firebase configuration found."
+          echo "firebase.json: FOUND"
+          echo ".firebaserc: FOUND"
 
-      - name: Deploy to Firebase Hosting
+          echo ""
+          echo "Firebase configuration:"
+          cat .firebaserc
+
+      - name: Install Firebase CLI
+        shell: bash
+        run: |
+          set -e
+
+          npm install -g firebase-tools
+
+          echo ""
+          firebase --version
+
+      - name: Check Firebase Authentication
+        shell: bash
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         run: |
+          set +e
+
           echo "======================================"
-          echo " LETSSTUDY PRO FIREBASE DEPLOY"
+          echo " FIREBASE AUTH CHECK"
           echo "======================================"
+
+          if [ -z "$FIREBASE_TOKEN" ]; then
+            echo "ERROR: FIREBASE_TOKEN secret is missing."
+            exit 1
+          fi
+
+          echo "FIREBASE_TOKEN: FOUND"
+
+          firebase projects:list \
+            --token "$FIREBASE_TOKEN"
+
+          STATUS=$?
+
           echo ""
+          echo "Firebase authentication exit code: $STATUS"
+
+          if [ "$STATUS" -ne 0 ]; then
+            echo ""
+            echo "ERROR: Firebase authentication failed."
+            exit "$STATUS"
+          fi
+
+      - name: Deploy Firebase Hosting
+        shell: bash
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          set +e
+
+          echo "======================================"
+          echo " FIREBASE HOSTING DEPLOY"
+          echo "======================================"
 
           firebase deploy \
             --only hosting \
             --project let-s-study-pro-course \
-            --token "$FIREBASE_TOKEN"
+            --token "$FIREBASE_TOKEN" \
+            --non-interactive
 
-      - name: Verify Deployment
-        shell: bash
-        run: |
+          STATUS=$?
+
           echo ""
-          echo "Checking deployed website..."
+          echo "Firebase deploy exit code: $STATUS"
 
-          STATUS=$(curl -L -s -o /dev/null \
-            -w "%{http_code}" \
-            --max-time 60 \
-            "https://letsstudy.pro/" || true)
-
-          echo "Website: https://letsstudy.pro/"
-          echo "HTTP Status: $STATUS"
-
-          if [ "$STATUS" = "200" ]; then
+          if [ "$STATUS" -ne 0 ]; then
             echo ""
-            echo "DEPLOYMENT VERIFIED"
-          else
+            echo "======================================"
+            echo " FIREBASE DEPLOY FAILED"
+            echo "======================================"
             echo ""
-            echo "WARNING: Website returned HTTP $STATUS"
+            echo "The exact Firebase CLI error is shown above."
+            exit "$STATUS"
           fi
 
-      - name: Final Report
+          echo ""
+          echo "======================================"
+          echo " FIREBASE DEPLOY SUCCESS"
+          echo "======================================"
+
+      - name: Verify Production Website
+        shell: bash
         run: |
-          echo ""
+          set +e
+
           echo "======================================"
-          echo " FIREBASE DEPLOY COMPLETED"
+          echo " PRODUCTION VERIFICATION"
           echo "======================================"
+
+          STATUS=$(curl \
+            -L \
+            -s \
+            -o /dev/null \
+            -w "%{http_code}" \
+            --max-time 30 \
+            "https://letsstudy.pro/")
+
+          echo "https://letsstudy.pro/"
+          echo "HTTP status: $STATUS"
+
+          if [ "$STATUS" = "200" ] || \
+             [ "$STATUS" = "301" ] || \
+             [ "$STATUS" = "302" ]; then
+
+            echo ""
+            echo "Production website is reachable."
+
+          else
+
+            echo ""
+            echo "WARNING: Unexpected production HTTP status."
+
+          fi
+
           echo ""
-          echo "Project: let-s-study-pro-course"
-          echo "Hosting: Firebase"
-          echo "Domain: https://letsstudy.pro"
-          echo "Branch: main"
-          echo ""
-          echo "LetsStudy Pro is deployed."
-          echo "======================================"
+          echo "Deployment verification completed."
+
+          exit 0
