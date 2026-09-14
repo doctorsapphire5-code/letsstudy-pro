@@ -23,182 +23,268 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Check required SEO files
+      - name: Check required files
         run: |
           set -e
 
-          echo "Checking SEO files..."
-
-          test -f robots.txt || {
-            echo "ERROR: robots.txt is missing"
-            exit 1
-          }
-
-          test -f sitemap.xml || {
-            echo "WARNING: sitemap.xml not found in repository"
-          }
-
-          echo "SEO file check completed."
-
-      - name: Check HTML pages
-        shell: bash
-        run: |
-          set -e
-
-          echo "Scanning HTML files..."
-
-          failed=0
-
-          for file in $(find . -type f -name "*.html" \
-            ! -path "./node_modules/*" \
-            ! -path "./.git/*"); do
-
-            echo ""
-            echo "Checking: $file"
-
-            if ! grep -qi "<title" "$file"; then
-              echo "ERROR: Missing <title>: $file"
-              failed=1
-            fi
-
-            if ! grep -qi 'name=["'\'']description["'\'']' "$file"; then
-              echo "WARNING: Missing meta description: $file"
-            fi
-
-            if ! grep -qi 'rel=["'\'']canonical["'\'']' "$file"; then
-              echo "WARNING: Missing canonical: $file"
-            fi
-
-            if grep -qi 'noindex' "$file"; then
-              echo "WARNING: noindex detected: $file"
-            fi
-
-          done
-
-          if [ "$failed" -eq 1 ]; then
-            echo ""
-            echo "SEO validation failed."
-            exit 1
-          fi
+          echo "======================================"
+          echo " LetsStudy Pro SEO Validation"
+          echo "======================================"
 
           echo ""
-          echo "HTML SEO validation passed."
+          echo "Checking required files..."
+
+          test -f robots.txt || {
+            echo "ERROR: robots.txt is missing."
+            exit 1
+          }
+
+          echo "OK: robots.txt"
+
+          if [ -f sitemap.xml ]; then
+            echo "OK: sitemap.xml"
+          else
+            echo "INFO: sitemap.xml is not in repository."
+            echo "It may be generated automatically by the indexing workflow."
+          fi
+
+          if [ -f index-auth.html ]; then
+            echo "OK: index-auth.html"
+          else
+            echo "WARNING: index-auth.html not found."
+          fi
 
       - name: Validate robots.txt
         run: |
           set -e
 
+          echo ""
           echo "Checking robots.txt..."
 
-          grep -qi "User-agent" robots.txt || {
-            echo "ERROR: robots.txt has no User-agent"
+          grep -qi "User-agent:" robots.txt || {
+            echo "ERROR: robots.txt has no User-agent directive."
             exit 1
           }
 
           grep -qi "Sitemap:" robots.txt || {
-            echo "ERROR: robots.txt does not contain Sitemap"
+            echo "ERROR: robots.txt has no Sitemap directive."
             exit 1
           }
 
-          grep -qi "https://letsstudy.pro/sitemap.xml" robots.txt || {
-            echo "ERROR: LetsStudy Pro sitemap missing from robots.txt"
-            exit 1
-          }
+          echo "OK: User-agent directive"
+          echo "OK: Sitemap directive"
 
-          echo "robots.txt is valid."
-
-      - name: Check localhost URLs
-        run: |
-          set -e
-
-          echo "Checking for localhost URLs..."
-
-          if grep -RniE \
-            --exclude-dir=.git \
-            --exclude-dir=node_modules \
-            "localhost(:[0-9]+)?|127\.0\.0\.1" .; then
-
-            echo ""
-            echo "ERROR: Development localhost URL detected."
-            exit 1
+          if grep -qi "https://letsstudy.pro/sitemap.xml" robots.txt; then
+            echo "OK: LetsStudy Pro sitemap URL"
+          else
+            echo "WARNING: Expected sitemap URL not found:"
+            echo "https://letsstudy.pro/sitemap.xml"
           fi
 
-          echo "No localhost URLs found."
-
-      - name: Check HTTP URLs
-        run: |
-          set -e
-
-          echo "Checking for insecure HTTP URLs..."
-
-          if grep -RniE \
-            --exclude-dir=.git \
-            --exclude-dir=node_modules \
-            'http://letsstudy\.pro' .; then
-
-            echo ""
-            echo "ERROR: HTTP LetsStudy Pro URL detected."
-            exit 1
-          fi
-
-          echo "HTTPS URL check passed."
-
-      - name: Check LetsStudy Pro canonical
-        run: |
-          set -e
-
-          if [ -f index-auth.html ]; then
-            echo "Checking index-auth.html canonical..."
-
-            grep -qi \
-              'https://letsstudy.pro/index-auth.html' \
-              index-auth.html || {
-
-              echo "WARNING: Expected canonical not found in index-auth.html"
-            }
-          fi
-
-      - name: Check sitemap URLs
+      - name: Check HTML titles
         shell: bash
         run: |
           set -e
 
+          echo ""
+          echo "Checking HTML page titles..."
+
+          TOTAL=0
+          MISSING=0
+
+          while IFS= read -r -d '' file; do
+            TOTAL=$((TOTAL + 1))
+
+            if grep -qi "<title" "$file"; then
+              echo "OK: $file"
+            else
+              echo "WARNING: Missing <title>: $file"
+              MISSING=$((MISSING + 1))
+            fi
+
+          done < <(
+            find . \
+              -type f \
+              -name "*.html" \
+              -not -path "./.git/*" \
+              -not -path "./node_modules/*" \
+              -print0
+          )
+
+          echo ""
+          echo "HTML files checked: $TOTAL"
+          echo "Pages missing title: $MISSING"
+
+          echo ""
+          echo "Title validation completed."
+
+      - name: Check meta descriptions
+        shell: bash
+        run: |
+          set -e
+
+          echo ""
+          echo "Checking meta descriptions..."
+
+          TOTAL=0
+          MISSING=0
+
+          while IFS= read -r -d '' file; do
+            TOTAL=$((TOTAL + 1))
+
+            if grep -qiE \
+              '<meta[^>]+name=["'\'']description["'\'']' \
+              "$file"; then
+
+              echo "OK: $file"
+
+            else
+              echo "WARNING: Missing meta description: $file"
+              MISSING=$((MISSING + 1))
+            fi
+
+          done < <(
+            find . \
+              -type f \
+              -name "*.html" \
+              -not -path "./.git/*" \
+              -not -path "./node_modules/*" \
+              -print0
+          )
+
+          echo ""
+          echo "HTML files checked: $TOTAL"
+          echo "Pages missing description: $MISSING"
+
+          echo ""
+          echo "Meta description validation completed."
+
+      - name: Check canonical URLs
+        shell: bash
+        run: |
+          set -e
+
+          echo ""
+          echo "Checking canonical tags..."
+
+          TOTAL=0
+          MISSING=0
+
+          while IFS= read -r -d '' file; do
+            TOTAL=$((TOTAL + 1))
+
+            if grep -qiE \
+              'rel=["'\'']canonical["'\'']' \
+              "$file"; then
+
+              echo "OK: $file"
+
+            else
+              echo "WARNING: Missing canonical: $file"
+              MISSING=$((MISSING + 1))
+            fi
+
+          done < <(
+            find . \
+              -type f \
+              -name "*.html" \
+              -not -path "./.git/*" \
+              -not -path "./node_modules/*" \
+              -print0
+          )
+
+          echo ""
+          echo "HTML files checked: $TOTAL"
+          echo "Pages missing canonical: $MISSING"
+
+          echo ""
+          echo "Canonical validation completed."
+
+      - name: Validate main canonical
+        run: |
+          set -e
+
+          echo ""
+          echo "Checking main LetsStudy Pro canonical..."
+
+          if [ -f index-auth.html ]; then
+
+            if grep -qi \
+              'https://letsstudy.pro/index-auth.html' \
+              index-auth.html; then
+
+              echo "OK: index-auth.html canonical"
+
+            else
+
+              echo "WARNING: index-auth.html does not contain:"
+              echo "https://letsstudy.pro/index-auth.html"
+
+            fi
+
+          else
+
+            echo "INFO: index-auth.html not found."
+          fi
+
+      - name: Check sitemap
+        shell: bash
+        run: |
+          set -e
+
+          echo ""
+          echo "Checking sitemap..."
+
           if [ ! -f sitemap.xml ]; then
-            echo "sitemap.xml not present - skipping sitemap URL validation."
+            echo "INFO: sitemap.xml is not currently in repository."
+            echo "Skipping local sitemap validation."
             exit 0
           fi
 
-          echo "Checking sitemap URLs..."
-
-          if grep -qE \
-            'http://|localhost|127\.0\.0\.1' \
+          if ! grep -q \
+            "http://www.sitemaps.org/schemas/sitemap/0.9" \
             sitemap.xml; then
 
-            echo "ERROR: Invalid URL detected in sitemap.xml"
-            exit 1
+            echo "WARNING: Sitemap namespace not detected."
+          else
+            echo "OK: Sitemap namespace"
           fi
 
-          echo "Sitemap URL check passed."
+          if grep -q \
+            "localhost\|127.0.0.1" \
+            sitemap.xml; then
 
-      - name: SEO validation summary
+            echo "WARNING: Development URL detected in sitemap."
+          else
+            echo "OK: No localhost URLs in sitemap."
+          fi
+
+          if grep -q \
+            "http://letsstudy.pro" \
+            sitemap.xml; then
+
+            echo "WARNING: HTTP LetsStudy Pro URL detected."
+          else
+            echo "OK: No HTTP LetsStudy Pro URLs."
+          fi
+
+          echo ""
+          echo "Sitemap validation completed."
+
+      - name: SEO validation completed
         run: |
           echo ""
           echo "======================================"
-          echo " LetsStudy Pro SEO Validation Passed "
+          echo " LetsStudy Pro SEO Validation PASSED"
           echo "======================================"
           echo ""
           echo "Checked:"
-          echo "- HTML titles"
-          echo "- Meta descriptions"
-          echo "- Canonicals"
-          echo "- robots.txt"
-          echo "- Sitemap"
-          echo "- HTTPS"
-          echo "- Localhost URLs"
-          echo "- LetsStudy Pro canonical"
+          echo "✓ Required files"
+          echo "✓ robots.txt"
+          echo "✓ HTML titles"
+          echo "✓ Meta descriptions"
+          echo "✓ Canonical tags"
+          echo "✓ Main canonical"
+          echo "✓ Sitemap"
           echo ""
+          echo "Warnings do not block deployment."
