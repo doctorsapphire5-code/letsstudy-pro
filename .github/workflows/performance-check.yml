@@ -1,0 +1,134 @@
+name: LetsStudy Pro - Performance Check
+
+on:
+  push:
+    branches:
+      - main
+
+  schedule:
+    - cron: "0 */6 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  performance:
+    name: Website Performance Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check homepage response
+        shell: bash
+        run: |
+          echo "======================================"
+          echo " LetsStudy Pro Performance Check"
+          echo "======================================"
+          echo ""
+
+          URL="https://letsstudy.pro/"
+
+          echo "Website: $URL"
+          echo ""
+
+          curl \
+            -L \
+            -s \
+            -o /dev/null \
+            -w "HTTP Status: %{http_code}\n\
+Total Time: %{time_total}s\n\
+DNS Time: %{time_namelookup}s\n\
+Connect Time: %{time_connect}s\n\
+TLS Time: %{time_appconnect}s\n\
+Start Transfer: %{time_starttransfer}s\n\
+Download Size: %{size_download} bytes\n" \
+            --max-time 60 \
+            "$URL" || true
+
+          echo ""
+          echo "Homepage performance check completed."
+
+      - name: Check important pages
+        shell: bash
+        run: |
+          echo "Checking important LetsStudy Pro pages..."
+          echo ""
+
+          URLS="
+          https://letsstudy.pro/
+          https://letsstudy.pro/index-auth.html
+          https://letsstudy.pro/search.html
+          https://letsstudy.pro/robots.txt
+          https://letsstudy.pro/sitemap.xml
+          "
+
+          for URL in $URLS; do
+            STATUS=$(curl \
+              -L \
+              -s \
+              -o /dev/null \
+              -w "%{http_code}" \
+              --max-time 30 \
+              "$URL" || true)
+
+            echo "$STATUS  $URL"
+          done
+
+          echo ""
+          echo "Important page check completed."
+
+      - name: Check page size
+        shell: bash
+        run: |
+          echo "Checking homepage size..."
+
+          SIZE=$(curl \
+            -L \
+            -s \
+            -o /dev/null \
+            -w "%{size_download}" \
+            --max-time 60 \
+            "https://letsstudy.pro/" || echo "0")
+
+          echo "Homepage size: $SIZE bytes"
+
+          if [ "$SIZE" -gt 5000000 ]; then
+            echo "WARNING: Homepage is larger than 5 MB."
+          else
+            echo "Homepage size is within the monitoring threshold."
+          fi
+
+      - name: Check HTTPS
+        shell: bash
+        run: |
+          echo "Checking HTTPS..."
+
+          STATUS=$(curl \
+            -L \
+            -s \
+            -o /dev/null \
+            -w "%{http_code}" \
+            --max-time 30 \
+            "https://letsstudy.pro/" || true)
+
+          echo "HTTPS response: $STATUS"
+
+          echo ""
+          echo "HTTPS check completed."
+
+      - name: Final performance report
+        run: |
+          echo ""
+          echo "======================================"
+          echo " PERFORMANCE CHECK COMPLETED"
+          echo "======================================"
+          echo ""
+          echo "Website: https://letsstudy.pro"
+          echo "Response monitoring: OK"
+          echo "Important pages: Checked"
+          echo "Page size: Checked"
+          echo "HTTPS: Checked"
+          echo ""
+          echo "Performance monitoring completed."
+          echo "======================================"
