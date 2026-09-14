@@ -1,0 +1,360 @@
+name: LetsStudy Pro - Dependency Audit
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  schedule:
+    - cron: "0 6 * * 1"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-audit:
+    name: Dependency Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Check package.json
+        shell: bash
+        run: |
+          echo "======================================"
+          echo " DEPENDENCY AUDIT"
+          echo "======================================"
+          echo ""
+
+          if [ -f "package.json" ]; then
+            echo "package.json found."
+          else
+            echo "No package.json found."
+            echo "Dependency audit skipped."
+            exit 0
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Dependencies
+        shell: bash
+        run: |
+          set +e
+
+          echo "Installing dependencies..."
+
+          if [ -f "package-lock.json" ]; then
+            npm ci --ignore-scripts
+            INSTALL_STATUS=$?
+          else
+            npm install --ignore-scripts
+            INSTALL_STATUS=$?
+          fi
+
+          echo ""
+
+          if [ "$INSTALL_STATUS" -ne 0 ]; then
+            echo "WARNING: Dependency installation returned exit code $INSTALL_STATUS."
+            echo "Audit will continue where possible."
+          else
+            echo "Dependencies installed successfully."
+          fi
+
+          exit 0
+
+      - name: Run npm audit
+        shell: bash
+        run: |
+          set +e
+
+          echo ""
+          echo "======================================"
+          echo " NPM SECURITY AUDIT"
+          echo "======================================"
+          echo ""
+
+          npm audit --json > dependency-audit.json
+          AUDIT_STATUS=$?
+
+          echo "npm audit exit code: $AUDIT_STATUS"
+
+          if [ -s "dependency-audit.json" ]; then
+            echo "Audit report generated."
+          else
+            echo "WARNING: npm audit did not generate a report."
+            echo '{}' > dependency-audit.json
+          fi
+
+          echo ""
+          echo "Security audit completed."
+          echo "This workflow is informational."
+          echo "Deployment will NOT be blocked."
+
+          exit 0
+
+      - name: Generate Dependency Report
+        shell: bash
+        run: |
+          set +e
+
+          python3 <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+
+          report_file = "dependency-audit.json"
+
+          try:
+              with open(
+                  report_file,
+                  "r",
+                  encoding="utf-8",
+                  errors="ignore"
+              ) as f:
+                  data = json.load(f)
+          except Exception:
+              data = {}
+
+          metadata = data.get("metadata", {})
+          vulnerabilities = metadata.get(
+              "vulnerabilities",
+              {}
+          )
+
+          info = vulnerabilities.get("info", 0)
+          low = vulnerabilities.get("low", 0)
+          moderate = vulnerabilities.get("moderate", 0)
+          high = vulnerabilities.get("high", 0)
+          critical = vulnerabilities.get("critical", 0)
+          total = vulnerabilities.get("total", 0)
+
+          dependencies = metadata.get(
+              "dependencies",
+              {}
+          )
+
+          runtime = dependencies.get(
+              "runtime",
+              0
+          )
+
+          dev = dependencies.get(
+              "dev",
+              0
+          )
+
+          optional = dependencies.get(
+              "optional",
+              0
+          )
+
+          peer = dependencies.get(
+              "peer",
+              0
+          )
+
+          if critical > 0 or high > 0:
+              status = "REVIEW REQUIRED"
+          elif moderate > 0:
+              status = "REVIEW RECOMMENDED"
+          elif low > 0:
+              status = "LOW RISK FINDINGS"
+          else:
+              status = "NO VULNERABILITIES DETECTED"
+
+          report = {
+              "website": "https://letsstudy.pro",
+              "project": "LetsStudy Pro",
+              "generated_at": datetime.now(
+                  timezone.utc
+              ).isoformat(),
+              "status": status,
+              "vulnerabilities": {
+                  "total": total,
+                  "info": info,
+                  "low": low,
+                  "moderate": moderate,
+                  "high": high,
+                  "critical": critical
+              },
+              "dependencies": {
+                  "runtime": runtime,
+                  "dev": dev,
+                  "optional": optional,
+                  "peer": peer
+              },
+              "deployment_blocked": False
+          }
+
+          with open(
+              "dependency-audit-summary.json",
+              "w",
+              encoding="utf-8"
+          ) as f:
+              json.dump(
+                  report,
+                  f,
+                  indent=2,
+                  ensure_ascii=False
+              )
+
+          with open(
+              "dependency-audit-report.md",
+              "w",
+              encoding="utf-8"
+          ) as f:
+
+              f.write(
+                  "# LetsStudy Pro - Dependency Audit Report\n\n"
+              )
+
+              f.write(
+                  f"**Status:** {status}\n\n"
+              )
+
+              f.write(
+                  "## Vulnerability Summary\n\n"
+              )
+
+              f.write(
+                  "| Severity | Count |\n"
+              )
+              f.write(
+                  "|---|---:|\n"
+              )
+              f.write(
+                  f"| Info | {info} |\n"
+              )
+              f.write(
+                  f"| Low | {low} |\n"
+              )
+              f.write(
+                  f"| Moderate | {moderate} |\n"
+              )
+              f.write(
+                  f"| High | {high} |\n"
+              )
+              f.write(
+                  f"| Critical | {critical} |\n"
+              )
+              f.write(
+                  f"| **Total** | **{total}** |\n\n"
+              )
+
+              f.write(
+                  "## Dependency Summary\n\n"
+              )
+
+              f.write(
+                  f"- Runtime dependencies: **{runtime}**\n"
+              )
+              f.write(
+                  f"- Dev dependencies: **{dev}**\n"
+              )
+              f.write(
+                  f"- Optional dependencies: **{optional}**\n"
+              )
+              f.write(
+                  f"- Peer dependencies: **{peer}**\n\n"
+              )
+
+              f.write(
+                  "## Recommended Actions\n\n"
+              )
+
+              if critical > 0:
+                  f.write(
+                      "- **Critical vulnerabilities detected. "
+                      "Review and update affected packages "
+                      "as soon as possible.**\n"
+                  )
+
+              if high > 0:
+                  f.write(
+                      "- **High-severity vulnerabilities detected. "
+                      "Review affected dependencies.**\n"
+                  )
+
+              if moderate > 0:
+                  f.write(
+                      "- Review moderate-severity vulnerabilities "
+                      "and update packages where practical.\n"
+                  )
+
+              if low > 0:
+                  f.write(
+                      "- Review low-severity findings during "
+                      "routine dependency maintenance.\n"
+                  )
+
+              if total == 0:
+                  f.write(
+                      "- No npm vulnerabilities were detected "
+                      "by this audit.\n"
+                  )
+
+              f.write(
+                  "- Keep package-lock.json synchronized with "
+                  "package.json.\n"
+              )
+
+              f.write(
+                  "- Prefer supported and actively maintained "
+                  "package versions.\n"
+              )
+
+              f.write(
+                  "- Review dependency changes before merging "
+                  "them into main.\n\n"
+              )
+
+              f.write(
+                  "## Deployment Policy\n\n"
+              )
+
+              f.write(
+                  "This dependency audit is informational. "
+                  "It does not block deployment, even when "
+                  "vulnerabilities are detected.\n"
+              )
+
+          print("")
+          print("======================================")
+          print(" DEPENDENCY AUDIT SUMMARY")
+          print("======================================")
+          print(f"Status: {status}")
+          print(f"Total vulnerabilities: {total}")
+          print(f"Info: {info}")
+          print(f"Low: {low}")
+          print(f"Moderate: {moderate}")
+          print(f"High: {high}")
+          print(f"Critical: {critical}")
+          print("")
+          print("Deployment blocking: NO")
+          print("======================================")
+
+          PY
+
+          exit 0
+
+      - name: Upload Dependency Audit Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: letsstudy-pro-dependency-audit
+          path: |
+            dependency-audit.json
+            dependency-audit-summary.json
+            dependency-audit-report.md
+          if-no-files-found: warn
