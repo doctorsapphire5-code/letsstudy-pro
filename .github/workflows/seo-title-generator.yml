@@ -1,0 +1,296 @@
+name: LetsStudy Pro - SEO Title Generator
+
+on:
+  push:
+    branches:
+      - main
+
+  schedule:
+    - cron: "0 2 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  seo-title-generator:
+    name: Generate SEO Titles
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Generate SEO Titles
+        shell: bash
+        run: |
+          python3 <<'PY'
+          import os
+          import re
+          import html
+          import json
+          from pathlib import Path
+          from datetime import datetime, timezone
+
+          BRAND = "LetsStudy Pro"
+          DOMAIN = "https://letsstudy.pro"
+
+          output = []
+          seen = {}
+
+          html_files = sorted(Path(".").glob("*.html"))
+
+          for file in html_files:
+              try:
+                  content = file.read_text(
+                      encoding="utf-8",
+                      errors="ignore"
+                  )
+              except Exception:
+                  continue
+
+              match = re.search(
+                  r"<title\b[^>]*>(.*?)</title>",
+                  content,
+                  re.I | re.S
+              )
+
+              if match:
+                  current = re.sub(
+                      r"\s+",
+                      " ",
+                      html.unescape(match.group(1))
+                  ).strip()
+              else:
+                  current = ""
+
+              # Remove common duplicate brand suffixes
+              base = re.sub(
+                  r"\s*[\|\-–—:]\s*LetsStudy\s*Pro\s*$",
+                  "",
+                  current,
+                  flags=re.I
+              ).strip()
+
+              # Remove generic empty titles
+              generic = {
+                  "",
+                  "home",
+                  "index",
+                  "index page",
+                  "untitled",
+                  "document"
+              }
+
+              if base.lower() in generic:
+                  base = ""
+
+              # Generate a useful fallback from filename
+              if not base:
+                  name = file.stem
+
+                  name = re.sub(
+                      r"[-_]+",
+                      " ",
+                      name
+                  )
+
+                  name = re.sub(
+                      r"\b(html|page)\b",
+                      "",
+                      name,
+                      flags=re.I
+                  )
+
+                  base = re.sub(
+                      r"\s+",
+                      " ",
+                      name
+                  ).strip().title()
+
+              if not base:
+                  base = BRAND
+
+              # Page-specific improvements
+              page = file.name.lower()
+
+              if page in {"index.html", "index-auth.html"}:
+                  if base.lower() in {"index", "index auth"}:
+                      base = "Online Learning, Courses & Digital Growth"
+
+              elif "course" in page:
+                  if "course" not in base.lower():
+                      base = f"{base} Courses"
+
+              elif "scholarship" in page:
+                  if "scholarship" not in base.lower():
+                      base = f"{base} Scholarships"
+
+              elif "career" in page:
+                  if "career" not in base.lower():
+                      base = f"{base} Careers"
+
+              elif "resource" in page:
+                  if "resource" not in base.lower():
+                      base = f"{base} Resources"
+
+              elif "freelancer" in page:
+                  if "freelancer" not in base.lower():
+                      base = f"{base} Freelancers"
+
+              elif "service" in page:
+                  if "service" not in base.lower():
+                      base = f"{base} Services"
+
+              elif "business" in page:
+                  if "business" not in base.lower():
+                      base = f"{base} Businesses"
+
+              # Clean title
+              base = re.sub(
+                  r"\s+",
+                  " ",
+                  base
+              ).strip(" |-–—:")
+
+              # Keep titles concise
+              max_base_length = 55
+
+              if len(base) > max_base_length:
+                  base = base[:max_base_length].rsplit(
+                      " ",
+                      1
+                  )[0].strip()
+
+              # Add brand
+              generated = f"{base} | {BRAND}"
+
+              # Avoid excessive title length
+              if len(generated) > 65:
+                  generated = f"{base} | {BRAND}"
+
+                  if len(generated) > 70:
+                      allowed = 70 - len(f" | {BRAND}")
+                      base = base[:allowed].rsplit(
+                          " ",
+                          1
+                      )[0].strip()
+
+                      generated = f"{base} | {BRAND}"
+
+              # Track duplicate generated titles
+              key = generated.lower()
+
+              if key in seen:
+                  seen[key] += 1
+                  generated = (
+                      f"{base} {seen[key]} | {BRAND}"
+                  )
+              else:
+                  seen[key] = 1
+
+              output.append({
+                  "page": str(file),
+                  "current_title": current,
+                  "generated_title": generated,
+                  "current_length": len(current),
+                  "generated_length": len(generated),
+                  "status": (
+                      "OPTIMIZED"
+                      if current == generated
+                      else "RECOMMENDED"
+                  )
+              })
+
+          Path("seo-title-report.json").write_text(
+              json.dumps(
+                  {
+                      "generated_at": datetime.now(
+                          timezone.utc
+                      ).isoformat(),
+                      "brand": BRAND,
+                      "domain": DOMAIN,
+                      "pages_checked": len(output),
+                      "titles": output
+                  },
+                  indent=2,
+                  ensure_ascii=False
+              ),
+              encoding="utf-8"
+          )
+
+          lines = [
+              "# LetsStudy Pro SEO Title Report",
+              "",
+              f"Generated: {datetime.now(timezone.utc).isoformat()}",
+              "",
+              f"Pages checked: {len(output)}",
+              "",
+              "| Page | Current Title | Generated SEO Title |",
+              "|---|---|---|"
+          ]
+
+          for item in output:
+              page = item["page"].replace("|", "\\|")
+              current = (
+                  item["current_title"]
+                  .replace("|", "\\|")
+                  .replace("\n", " ")
+              )
+              generated = (
+                  item["generated_title"]
+                  .replace("|", "\\|")
+                  .replace("\n", " ")
+              )
+
+              lines.append(
+                  f"| `{page}` | {current} | **{generated}** |"
+              )
+
+          Path("seo-title-report.md").write_text(
+              "\n".join(lines) + "\n",
+              encoding="utf-8"
+          )
+
+          print("======================================")
+          print(" LETSSTUDY PRO SEO TITLE GENERATOR")
+          print("======================================")
+          print(f"Pages checked: {len(output)}")
+          print("")
+          
+          for item in output:
+              print(f"PAGE: {item['page']}")
+              print(f"CURRENT: {item['current_title']}")
+              print(f"SEO:     {item['generated_title']}")
+              print("")
+
+          print("Reports generated:")
+          print("- seo-title-report.json")
+          print("- seo-title-report.md")
+          print("")
+          print("No HTML files were modified.")
+          PY
+
+      - name: Upload SEO Title Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-title-report
+          path: |
+            seo-title-report.json
+            seo-title-report.md
+          if-no-files-found: warn
+
+      - name: Final Report
+        run: |
+          echo "======================================"
+          echo " SEO TITLE GENERATOR COMPLETED"
+          echo "======================================"
+          echo ""
+          echo "LetsStudy Pro pages were analyzed."
+          echo "SEO title recommendations were generated."
+          echo ""
+          echo "HTML files were NOT modified."
+          echo ""
+          echo "Reports are available as GitHub Actions artifacts."
+          echo "======================================"
