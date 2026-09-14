@@ -1,0 +1,146 @@
+name: LetsStudy Pro - Uptime Monitor
+
+on:
+  push:
+    branches:
+      - main
+
+  schedule:
+    - cron: "*/15 * * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  uptime-monitor:
+    name: Uptime Monitor
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Website Uptime
+        shell: bash
+        run: |
+          set +e
+
+          echo "======================================"
+          echo " LetsStudy Pro - Uptime Monitor"
+          echo "======================================"
+          echo ""
+
+          WEBSITE="https://letsstudy.pro"
+
+          URLS=(
+            "https://letsstudy.pro/"
+            "https://letsstudy.pro/index-auth.html"
+            "https://letsstudy.pro/search.html"
+            "https://letsstudy.pro/robots.txt"
+            "https://letsstudy.pro/sitemap.xml"
+          )
+
+          TOTAL=0
+          HEALTHY=0
+          FAILED=0
+
+          REPORT="uptime-report.md"
+
+          echo "# LetsStudy Pro - Uptime Report" > "$REPORT"
+          echo "" >> "$REPORT"
+          echo "Generated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> "$REPORT"
+          echo "" >> "$REPORT"
+
+          echo "| URL | HTTP | Time | Status |" >> "$REPORT"
+          echo "|---|---:|---:|---|" >> "$REPORT"
+
+          for URL in "${URLS[@]}"; do
+
+            TOTAL=$((TOTAL + 1))
+
+            RESULT=$(curl \
+              -L \
+              -s \
+              -o /dev/null \
+              -w "%{http_code}|%{time_total}|%{url_effective}" \
+              --connect-timeout 15 \
+              --max-time 30 \
+              "$URL" 2>/dev/null)
+
+            HTTP_STATUS=$(echo "$RESULT" | cut -d'|' -f1)
+            RESPONSE_TIME=$(echo "$RESULT" | cut -d'|' -f2)
+            FINAL_URL=$(echo "$RESULT" | cut -d'|' -f3)
+
+            if [[ "$HTTP_STATUS" =~ ^2[0-9][0-9]$ ]]; then
+              STATUS="HEALTHY"
+              HEALTHY=$((HEALTHY + 1))
+            elif [[ "$HTTP_STATUS" =~ ^3[0-9][0-9]$ ]]; then
+              STATUS="REDIRECT"
+              HEALTHY=$((HEALTHY + 1))
+            else
+              STATUS="FAILED"
+              FAILED=$((FAILED + 1))
+            fi
+
+            echo "$URL"
+            echo "HTTP: $HTTP_STATUS"
+            echo "Response time: ${RESPONSE_TIME}s"
+            echo "Final URL: $FINAL_URL"
+            echo "Status: $STATUS"
+            echo ""
+
+            echo "| $URL | $HTTP_STATUS | ${RESPONSE_TIME}s | $STATUS |" >> "$REPORT"
+
+          done
+
+          if [ "$TOTAL" -gt 0 ]; then
+            HEALTH_RATE=$(
+              awk "BEGIN {
+                printf \"%.1f\", ($HEALTHY / $TOTAL) * 100
+              }"
+            )
+          else
+            HEALTH_RATE="0.0"
+          fi
+
+          echo "" >> "$REPORT"
+          echo "## Summary" >> "$REPORT"
+          echo "" >> "$REPORT"
+          echo "- URLs checked: **$TOTAL**" >> "$REPORT"
+          echo "- Healthy: **$HEALTHY**" >> "$REPORT"
+          echo "- Failed: **$FAILED**" >> "$REPORT"
+          echo "- Health rate: **$HEALTH_RATE%**" >> "$REPORT"
+          echo "" >> "$REPORT"
+
+          if [ "$FAILED" -eq 0 ]; then
+            echo "Overall status: HEALTHY" >> "$REPORT"
+          else
+            echo "Overall status: ATTENTION REQUIRED" >> "$REPORT"
+          fi
+
+          echo ""
+          echo "======================================"
+          echo " UPTIME SUMMARY"
+          echo "======================================"
+          echo "URLs checked: $TOTAL"
+          echo "Healthy: $HEALTHY"
+          echo "Failed: $FAILED"
+          echo "Health rate: $HEALTH_RATE%"
+          echo ""
+
+          if [ "$FAILED" -eq 0 ]; then
+            echo "LetsStudy Pro is responding normally."
+          else
+            echo "Some URLs require attention."
+          fi
+
+          echo ""
+          echo "Informational monitor - deployment will not be blocked."
+
+          exit 0
+
+      - name: Upload Uptime Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: letsstudy-pro-uptime-report
+          path: uptime-report.md
+          if-no-files-found: warn
