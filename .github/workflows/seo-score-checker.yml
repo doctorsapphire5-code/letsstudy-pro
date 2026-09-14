@@ -1,0 +1,429 @@
+name: LetsStudy Pro - SEO Score Checker
+
+on:
+  push:
+    branches:
+      - main
+
+  schedule:
+    - cron: "0 4 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  seo-score:
+    name: SEO Score Checker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Calculate SEO Scores
+        shell: bash
+        run: |
+          python3 <<'PY'
+          import re
+          import html
+          import json
+          from pathlib import Path
+          from datetime import datetime, timezone
+
+          results = []
+
+          def clean(value):
+              value = html.unescape(value or "")
+              value = re.sub(r"<[^>]+>", " ", value)
+              value = re.sub(r"\s+", " ", value)
+              return value.strip()
+
+          def exists(pattern, content):
+              return bool(re.search(pattern, content, re.I | re.S))
+
+          for file in sorted(Path(".").glob("*.html")):
+
+              content = file.read_text(
+                  encoding="utf-8",
+                  errors="ignore"
+              )
+
+              checks = {}
+
+              # 1. Title
+              match = re.search(
+                  r"<title\b[^>]*>(.*?)</title>",
+                  content,
+                  re.I | re.S
+              )
+
+              title = clean(match.group(1)) if match else ""
+
+              checks["title"] = {
+                  "passed": bool(title),
+                  "score": 10,
+                  "max": 10,
+                  "details": (
+                      f"Title: {title}"
+                      if title else
+                      "Missing title"
+                  )
+              }
+
+              # 2. Title length
+              title_length = len(title)
+
+              good_title_length = (
+                  30 <= title_length <= 65
+              )
+
+              checks["title_length"] = {
+                  "passed": good_title_length,
+                  "score": 5,
+                  "max": 5,
+                  "details": f"{title_length} characters"
+              }
+
+              # 3. Meta description
+              meta_match = re.search(
+                  r'<meta\b[^>]*'
+                  r'name\s*=\s*["\']description["\']'
+                  r'[^>]*content\s*=\s*["\'](.*?)["\']',
+                  content,
+                  re.I | re.S
+              )
+
+              description = (
+                  clean(meta_match.group(1))
+                  if meta_match else ""
+              )
+
+              checks["meta_description"] = {
+                  "passed": bool(description),
+                  "score": 10,
+                  "max": 10,
+                  "details": (
+                      f"{len(description)} characters"
+                      if description
+                      else "Missing meta description"
+                  )
+              }
+
+              # 4. Description length
+              desc_length_good = (
+                  80 <= len(description) <= 160
+              )
+
+              checks["description_length"] = {
+                  "passed": desc_length_good,
+                  "score": 5,
+                  "max": 5,
+                  "details": f"{len(description)} characters"
+              }
+
+              # 5. Canonical
+              canonical = exists(
+                  r'rel\s*=\s*["\']canonical["\']',
+                  content
+              )
+
+              checks["canonical"] = {
+                  "passed": canonical,
+                  "score": 10,
+                  "max": 10,
+                  "details": (
+                      "Canonical found"
+                      if canonical
+                      else
+                      "Canonical missing"
+                  )
+              }
+
+              # 6. Viewport
+              viewport = exists(
+                  r'name\s*=\s*["\']viewport["\']',
+                  content
+              )
+
+              checks["viewport"] = {
+                  "passed": viewport,
+                  "score": 5,
+                  "max": 5,
+                  "details": (
+                      "Viewport found"
+                      if viewport
+                      else
+                      "Viewport missing"
+                  )
+              }
+
+              # 7. HTML language
+              lang = exists(
+                  r"<html\b[^>]*\blang\s*=",
+                  content
+              )
+
+              checks["language"] = {
+                  "passed": lang,
+                  "score": 5,
+                  "max": 5,
+                  "details": (
+                      "HTML lang found"
+                      if lang
+                      else
+                      "HTML lang missing"
+                  )
+              }
+
+              # 8. H1
+              h1_count = len(
+                  re.findall(
+                      r"<h1\b",
+                      content,
+                      re.I
+                  )
+              )
+
+              h1_good = h1_count == 1
+
+              checks["h1"] = {
+                  "passed": h1_good,
+                  "score": 10,
+                  "max": 10,
+                  "details": f"H1 count: {h1_count}"
+              }
+
+              # 9. Open Graph
+              og = exists(
+                  r'property\s*=\s*["\']og:title["\']',
+                  content
+              )
+
+              checks["open_graph"] = {
+                  "passed": og,
+                  "score": 5,
+                  "max": 5,
+                  "details": (
+                      "og:title found"
+                      if og
+                      else
+                      "og:title missing"
+                  )
+              }
+
+              # 10. Twitter/X
+              twitter = exists(
+                  r'name\s*=\s*["\']twitter:card["\']',
+                  content
+              )
+
+              checks["twitter"] = {
+                  "passed": twitter,
+                  "score": 5,
+                  "max": 5,
+                  "details": (
+                      "Twitter/X card found"
+                      if twitter
+                      else
+                      "Twitter/X card missing"
+                  )
+              }
+
+              # 11. Images / ALT
+              images = re.findall(
+                  r"<img\b[^>]*>",
+                  content,
+                  re.I
+              )
+
+              missing_alt = [
+                  img for img in images
+                  if not re.search(
+                      r"\balt\s*=",
+                      img,
+                      re.I
+                  )
+              ]
+
+              images_good = (
+                  len(images) == 0
+                  or len(missing_alt) == 0
+              )
+
+              checks["image_alt"] = {
+                  "passed": images_good,
+                  "score": 5,
+                  "max": 5,
+                  "details": (
+                      f"{len(images)} images, "
+                      f"{len(missing_alt)} missing alt"
+                  )
+              }
+
+              # 12. Robots / noindex
+              noindex = exists(
+                  r'name\s*=\s*["\']robots["\'][^>]*'
+                  r'content\s*=\s*["\'][^"\']*noindex',
+                  content
+              )
+
+              checks["indexability"] = {
+                  "passed": not noindex,
+                  "score": 10,
+                  "max": 10,
+                  "details": (
+                      "No noindex detected"
+                      if not noindex
+                      else
+                      "NOINDEX detected"
+                  )
+              }
+
+              total = sum(
+                  item["score"]
+                  for item in checks.values()
+                  if item["passed"]
+              )
+
+              maximum = sum(
+                  item["max"]
+                  for item in checks.values()
+              )
+
+              percentage = round(
+                  (total / maximum) * 100
+                  if maximum else 0
+              )
+
+              if percentage >= 90:
+                  grade = "EXCELLENT"
+              elif percentage >= 80:
+                  grade = "GOOD"
+              elif percentage >= 70:
+                  grade = "NEEDS IMPROVEMENT"
+              else:
+                  grade = "POOR"
+
+              results.append({
+                  "page": str(file),
+                  "score": percentage,
+                  "grade": grade,
+                  "checks": checks
+              })
+
+          report = {
+              "generated_at": datetime.now(
+                  timezone.utc
+              ).isoformat(),
+              "pages_checked": len(results),
+              "pages": results
+          }
+
+          Path(
+              "seo-score-report.json"
+          ).write_text(
+              json.dumps(
+                  report,
+                  indent=2,
+                  ensure_ascii=False
+              ),
+              encoding="utf-8"
+          )
+
+          markdown = [
+              "# LetsStudy Pro SEO Score Report",
+              "",
+              f"Generated: {report['generated_at']}",
+              "",
+              f"Pages checked: {len(results)}",
+              "",
+              "| Page | Score | Grade |",
+              "|---|---:|---|"
+          ]
+
+          for item in results:
+              markdown.append(
+                  f"| `{item['page']}` | "
+                  f"**{item['score']}/100** | "
+                  f"{item['grade']} |"
+              )
+
+          markdown += [
+              "",
+              "## Detailed Checks",
+              ""
+          ]
+
+          for item in results:
+
+              markdown.append(
+                  f"### {item['page']} — "
+                  f"{item['score']}/100"
+              )
+
+              for name, check in item["checks"].items():
+
+                  status = (
+                      "PASS"
+                      if check["passed"]
+                      else "WARNING"
+                  )
+
+                  markdown.append(
+                      f"- **{status}** `{name}` — "
+                      f"{check['details']}"
+                  )
+
+              markdown.append("")
+
+          Path(
+              "seo-score-report.md"
+          ).write_text(
+              "\n".join(markdown),
+              encoding="utf-8"
+          )
+
+          print("======================================")
+          print(" LETSSTUDY PRO SEO SCORE")
+          print("======================================")
+          print("")
+
+          for item in results:
+              print(
+                  f"{item['score']:>3}/100  "
+                  f"{item['grade']:<20} "
+                  f"{item['page']}"
+              )
+
+          print("")
+          print("Reports:")
+          print("- seo-score-report.json")
+          print("- seo-score-report.md")
+          print("")
+          print("No HTML files were modified.")
+          PY
+
+      - name: Upload SEO Score Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-score-report
+          path: |
+            seo-score-report.json
+            seo-score-report.md
+          if-no-files-found: warn
+
+      - name: Final Report
+        run: |
+          echo "======================================"
+          echo " SEO SCORE CHECKER COMPLETED"
+          echo "======================================"
+          echo ""
+          echo "Every HTML page was analyzed."
+          echo "SEO scores were calculated."
+          echo ""
+          echo "Reports are available in GitHub Actions artifacts."
+          echo ""
+          echo "No HTML files were modified."
+          echo "======================================"
