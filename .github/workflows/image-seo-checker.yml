@@ -1,0 +1,330 @@
+name: LetsStudy Pro - Image SEO Checker
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  schedule:
+    - cron: "30 4 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  image-seo:
+    name: Image SEO Checker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Analyze Images
+        shell: bash
+        run: |
+          set +e
+
+          echo "======================================"
+          echo " LetsStudy Pro - Image SEO Checker"
+          echo "======================================"
+          echo ""
+
+          REPORT_JSON="image-seo-report.json"
+          REPORT_MD="image-seo-report.md"
+
+          TOTAL_PAGES=0
+          TOTAL_IMAGES=0
+          GOOD_IMAGES=0
+          MISSING_ALT=0
+          EMPTY_ALT=0
+          MISSING_DIMENSIONS=0
+          BAD_FILENAME=0
+          NON_HTTPS=0
+          NO_LAZY=0
+
+          echo "[" > "$REPORT_JSON"
+
+          cat > "$REPORT_MD" <<'EOF'
+          # LetsStudy Pro - Image SEO Report
+
+          Automatically generated image SEO analysis.
+
+          EOF
+
+          echo "| Page | Image | Alt | Dimensions | Filename | HTTPS | Lazy Loading | Status |" >> "$REPORT_MD"
+          echo "|---|---|---|---|---|---|---|---|" >> "$REPORT_MD"
+
+          FIRST=true
+
+          for file in *.html; do
+
+            [ -f "$file" ] || continue
+
+            TOTAL_PAGES=$((TOTAL_PAGES + 1))
+
+            echo ""
+            echo "Checking page: $file"
+
+            images=$(grep -oiE '<img[^>]*>' "$file" 2>/dev/null)
+
+            if [ -z "$images" ]; then
+              echo "   No images found."
+              continue
+            fi
+
+            while IFS= read -r img; do
+
+              [ -z "$img" ] && continue
+
+              TOTAL_IMAGES=$((TOTAL_IMAGES + 1))
+
+              src=$(printf '%s\n' "$img" |
+                sed -n 's/.*src=["'"'"']\([^"'"'"']*\)["'"'"'].*/\1/p' |
+                head -1)
+
+              alt_found=$(printf '%s\n' "$img" |
+                grep -oiE 'alt=["'"'"'][^"'"'"']*["'"'"']' 2>/dev/null |
+                head -1)
+
+              alt=$(printf '%s\n' "$alt_found" |
+                sed -n 's/.*alt=["'"'"']\([^"'"'"']*\)["'"'"'].*/\1/p')
+
+              width=$(printf '%s\n' "$img" |
+                sed -n 's/.*width=["'"'"']\([^"'"'"']*\)["'"'"'].*/\1/p' |
+                head -1)
+
+              height=$(printf '%s\n' "$img" |
+                sed -n 's/.*height=["'"'"']\([^"'"'"']*\)["'"'"'].*/\1/p' |
+                head -1)
+
+              loading=$(printf '%s\n' "$img" |
+                grep -oiE 'loading=["'"'"'][^"'"'"']*["'"'"']' 2>/dev/null |
+                sed -n 's/.*loading=["'"'"']\([^"'"'"']*\)["'"'"'].*/\1/p' |
+                head -1)
+
+              if [ -z "$src" ]; then
+                src="UNKNOWN"
+              fi
+
+              image_name=$(basename "${src%%\?*}")
+
+              if [ -z "$image_name" ] || [ "$image_name" = "/" ]; then
+                image_name="UNKNOWN"
+              fi
+
+              status="GOOD"
+
+              if [ -z "$alt_found" ]; then
+                MISSING_ALT=$((MISSING_ALT + 1))
+                status="CHECK"
+                alt_status="Missing"
+              elif [ -z "$alt" ]; then
+                EMPTY_ALT=$((EMPTY_ALT + 1))
+                status="CHECK"
+                alt_status="Empty"
+              else
+                alt_status="OK"
+              fi
+
+              if [ -z "$width" ] || [ -z "$height" ]; then
+                MISSING_DIMENSIONS=$((MISSING_DIMENSIONS + 1))
+                status="CHECK"
+                dimensions_status="Missing"
+              else
+                dimensions_status="${width}x${height}"
+              fi
+
+              filename_base="${image_name%.*}"
+
+              if [ "$image_name" = "UNKNOWN" ]; then
+                BAD_FILENAME=$((BAD_FILENAME + 1))
+                status="CHECK"
+                filename_status="Unknown"
+              elif printf '%s' "$filename_base" |
+                   grep -qE '^[a-z0-9]+(-[a-z0-9]+)*$'; then
+                filename_status="OK"
+              else
+                BAD_FILENAME=$((BAD_FILENAME + 1))
+                status="CHECK"
+                filename_status="Needs improvement"
+              fi
+
+              case "$src" in
+                http://*)
+                  NON_HTTPS=$((NON_HTTPS + 1))
+                  status="CHECK"
+                  https_status="HTTP"
+                  ;;
+                https://*)
+                  https_status="HTTPS"
+                  ;;
+                //*)
+                  NON_HTTPS=$((NON_HTTPS + 1))
+                  status="CHECK"
+                  https_status="Protocol-relative"
+                  ;;
+                *)
+                  https_status="Local/relative"
+                  ;;
+              esac
+
+              if [ -z "$loading" ]; then
+                NO_LAZY=$((NO_LAZY + 1))
+                lazy_status="Not specified"
+              elif [ "$loading" = "lazy" ]; then
+                lazy_status="lazy"
+              else
+                lazy_status="$loading"
+              fi
+
+              if [ "$status" = "GOOD" ]; then
+                GOOD_IMAGES=$((GOOD_IMAGES + 1))
+              fi
+
+              safe_page=$(printf '%s' "$file" | sed 's/"/\\"/g')
+              safe_src=$(printf '%s' "$src" | sed 's/"/\\"/g')
+              safe_alt=$(printf '%s' "$alt" | sed 's/"/\\"/g')
+              safe_image=$(printf '%s' "$image_name" | sed 's/"/\\"/g')
+              safe_dimensions=$(printf '%s' "$dimensions_status" | sed 's/"/\\"/g')
+              safe_https=$(printf '%s' "$https_status" | sed 's/"/\\"/g')
+              safe_lazy=$(printf '%s' "$lazy_status" | sed 's/"/\\"/g')
+              safe_status=$(printf '%s' "$status" | sed 's/"/\\"/g')
+
+              if [ "$FIRST" = false ]; then
+                echo "," >> "$REPORT_JSON"
+              fi
+
+              FIRST=false
+
+              cat >> "$REPORT_JSON" <<EOF
+          {
+            "page": "$safe_page",
+            "src": "$safe_src",
+            "image": "$safe_image",
+            "alt": "$safe_alt",
+            "dimensions": "$safe_dimensions",
+            "filenameStatus": "$filename_status",
+            "https": "$safe_https",
+            "lazyLoading": "$safe_lazy",
+            "status": "$safe_status"
+          }
+          EOF
+
+              echo "| \`$file\` | \`$image_name\` | $alt_status | $dimensions_status | $filename_status | $https_status | $lazy_status | $status |" >> "$REPORT_MD"
+
+              echo "   Image: $image_name"
+              echo "   Alt: ${alt:-MISSING}"
+              echo "   Dimensions: ${dimensions_status}"
+              echo "   Filename: ${filename_status}"
+              echo "   HTTPS: ${https_status}"
+              echo "   Lazy: ${lazy_status}"
+              echo "   Status: ${status}"
+
+            done <<< "$images"
+
+          done
+
+          echo "]" >> "$REPORT_JSON"
+
+          cat >> "$REPORT_MD" <<EOF
+
+          ## Summary
+
+          - HTML pages scanned: $TOTAL_PAGES
+          - Images scanned: $TOTAL_IMAGES
+          - Images passing all checks: $GOOD_IMAGES
+          - Missing alt attributes: $MISSING_ALT
+          - Empty alt attributes: $EMPTY_ALT
+          - Missing width/height: $MISSING_DIMENSIONS
+          - Non-SEO-friendly filenames: $BAD_FILENAME
+          - Non-HTTPS image URLs: $NON_HTTPS
+          - Images without explicit lazy loading: $NO_LAZY
+
+          ## Recommended Image Pattern
+
+          \`\`\`html
+          <img
+            src="https://letsstudy.pro/images/letsstudy-pro-course.jpg"
+            alt="LetsStudy Pro online learning course"
+            width="1200"
+            height="630"
+            loading="lazy">
+          \`\`\`
+
+          ## Filename Recommendation
+
+          Prefer:
+
+          \`letsstudy-pro-online-course.jpg\`
+
+          Instead of:
+
+          \`IMG_1234.jpg\`
+
+          ## Important
+
+          This workflow generates a report only.
+          It does not automatically modify production HTML files.
+          EOF
+
+          echo ""
+          echo "======================================"
+          echo " Image SEO Summary"
+          echo "======================================"
+          echo "HTML pages scanned:       $TOTAL_PAGES"
+          echo "Images scanned:           $TOTAL_IMAGES"
+          echo "Good images:              $GOOD_IMAGES"
+          echo "Missing alt:              $MISSING_ALT"
+          echo "Empty alt:                $EMPTY_ALT"
+          echo "Missing dimensions:       $MISSING_DIMENSIONS"
+          echo "Bad filenames:            $BAD_FILENAME"
+          echo "Non-HTTPS images:         $NON_HTTPS"
+          echo "No explicit lazy loading: $NO_LAZY"
+          echo ""
+          echo "Reports:"
+          echo " - $REPORT_JSON"
+          echo " - $REPORT_MD"
+          echo ""
+
+      - name: Validate JSON Report
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+
+          with open("image-seo-report.json", "r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          print("Image SEO JSON report is valid.")
+          print("Images:", len(data))
+          PY
+
+      - name: Upload Image SEO Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-seo-report
+          path: |
+            image-seo-report.json
+            image-seo-report.md
+          if-no-files-found: error
+
+      - name: Final Summary
+        shell: bash
+        run: |
+          echo "======================================"
+          echo " LetsStudy Pro - Image SEO Complete"
+          echo "======================================"
+          echo ""
+          echo "Image SEO analysis completed successfully."
+          echo ""
+          echo "The workflow is informational."
+          echo "It will not block deployment."
+          echo ""
+          exit 0
