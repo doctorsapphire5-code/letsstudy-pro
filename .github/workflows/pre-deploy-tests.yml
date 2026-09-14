@@ -1,0 +1,316 @@
+name: LetsStudy Pro - Pre-Deploy Tests
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pre-deploy-tests:
+    name: Pre-Deploy Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Check Critical Files
+        shell: bash
+        run: |
+          echo "======================================"
+          echo " LETSSTUDY PRO PRE-DEPLOY TESTS"
+          echo "======================================"
+          echo ""
+
+          FAILED=0
+
+          FILES=(
+            "firebase.json"
+            ".firebaserc"
+            "index-auth.html"
+            "search.html"
+            "robots.txt"
+            "sitemap.xml"
+          )
+
+          for FILE in "${FILES[@]}"; do
+            if [ -f "$FILE" ]; then
+              SIZE=$(wc -c < "$FILE")
+              if [ "$SIZE" -gt 0 ]; then
+                echo "PASS: $FILE"
+              else
+                echo "FAIL: $FILE is empty"
+                FAILED=1
+              fi
+            else
+              echo "FAIL: $FILE is missing"
+              FAILED=1
+            fi
+          done
+
+          echo ""
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo "Critical file check FAILED."
+            exit 1
+          fi
+
+          echo "All critical files are present."
+
+      - name: Validate Firebase Configuration
+        shell: bash
+        run: |
+          echo ""
+          echo "Checking Firebase configuration..."
+
+          if node -e "JSON.parse(require('fs').readFileSync('firebase.json'))"; then
+            echo "PASS: firebase.json is valid JSON"
+          else
+            echo "FAIL: firebase.json is invalid"
+            exit 1
+          fi
+
+          if node -e "JSON.parse(require('fs').readFileSync('.firebaserc'))"; then
+            echo "PASS: .firebaserc is valid JSON"
+          else
+            echo "FAIL: .firebaserc is invalid"
+            exit 1
+          fi
+
+      - name: Check HTML Structure
+        shell: bash
+        run: |
+          echo ""
+          echo "Checking HTML structure..."
+
+          FAILED=0
+
+          for FILE in index-auth.html search.html; do
+            echo ""
+            echo "Checking $FILE"
+
+            if grep -qi "<html" "$FILE"; then
+              echo "PASS: HTML tag"
+            else
+              echo "FAIL: Missing <html>"
+              FAILED=1
+            fi
+
+            if grep -qi "<head" "$FILE"; then
+              echo "PASS: HEAD tag"
+            else
+              echo "FAIL: Missing <head>"
+              FAILED=1
+            fi
+
+            if grep -qi "<title" "$FILE"; then
+              echo "PASS: TITLE tag"
+            else
+              echo "WARNING: Missing <title>"
+            fi
+
+            if grep -qi "<meta" "$FILE"; then
+              echo "PASS: META tags found"
+            else
+              echo "WARNING: No META tags found"
+            fi
+          done
+
+          if [ "$FAILED" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Check SEO Files
+        shell: bash
+        run: |
+          echo ""
+          echo "Checking SEO files..."
+
+          if grep -qi "sitemap" robots.txt; then
+            echo "PASS: robots.txt references sitemap"
+          else
+            echo "WARNING: robots.txt does not reference sitemap"
+          fi
+
+          if grep -qi "<urlset" sitemap.xml; then
+            echo "PASS: sitemap.xml contains urlset"
+          else
+            echo "FAIL: sitemap.xml does not contain urlset"
+            exit 1
+          fi
+
+          if grep -q "https://letsstudy.pro" sitemap.xml; then
+            echo "PASS: sitemap contains LetsStudy Pro URLs"
+          else
+            echo "WARNING: sitemap does not contain expected domain"
+          fi
+
+      - name: Check Localhost URLs
+        shell: bash
+        run: |
+          echo ""
+          echo "Scanning for localhost references..."
+
+          if grep -RniE \
+            --exclude-dir=.git \
+            --exclude-dir=node_modules \
+            "localhost|127\.0\.0\.1" \
+            . 2>/dev/null; then
+
+            echo ""
+            echo "WARNING: Local development URLs were found."
+            echo "Review them before production deployment."
+          else
+            echo "PASS: No localhost references found."
+          fi
+
+      - name: Check Insecure HTTP References
+        shell: bash
+        run: |
+          echo ""
+          echo "Scanning for insecure HTTP resources..."
+
+          if grep -RniE \
+            --include="*.html" \
+            --include="*.js" \
+            --include="*.css" \
+            "http://" \
+            . 2>/dev/null; then
+
+            echo ""
+            echo "WARNING: HTTP references found."
+            echo "Review them to ensure production security."
+          else
+            echo "PASS: No HTTP references found."
+          fi
+
+      - name: Check Package Scripts
+        shell: bash
+        run: |
+          echo ""
+          echo "Checking package.json..."
+
+          if [ ! -f "package.json" ]; then
+            echo "No package.json found."
+            echo "Static-site project detected."
+            exit 0
+          fi
+
+          node <<'NODE'
+          const fs = require("fs");
+
+          const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+          const scripts = pkg.scripts || {};
+
+          console.log("package.json found.");
+          console.log("Available scripts:");
+
+          for (const name of Object.keys(scripts)) {
+            console.log(" - " + name);
+          }
+
+          if (scripts.test) {
+            console.log("TEST SCRIPT: AVAILABLE");
+          } else {
+            console.log("TEST SCRIPT: NOT DEFINED");
+          }
+
+          if (scripts.build) {
+            console.log("BUILD SCRIPT: AVAILABLE");
+          } else {
+            console.log("BUILD SCRIPT: NOT DEFINED");
+          }
+          NODE
+
+      - name: Run Tests If Available
+        shell: bash
+        run: |
+          if [ ! -f "package.json" ]; then
+            echo "No package.json. Skipping npm tests."
+            exit 0
+          fi
+
+          HAS_TEST=$(node -e "
+            const p=require('./package.json');
+            process.stdout.write(p.scripts && p.scripts.test ? 'yes' : 'no');
+          ")
+
+          if [ "$HAS_TEST" = "yes" ]; then
+            echo "Installing dependencies..."
+
+            if [ -f "package-lock.json" ]; then
+              npm ci
+            else
+              npm install
+            fi
+
+            echo ""
+            echo "Running npm test..."
+            npm test
+          else
+            echo "No npm test script defined."
+            echo "Skipping."
+          fi
+
+      - name: Run Build If Available
+        shell: bash
+        run: |
+          if [ ! -f "package.json" ]; then
+            echo "No package.json. Skipping build."
+            exit 0
+          fi
+
+          HAS_BUILD=$(node -e "
+            const p=require('./package.json');
+            process.stdout.write(p.scripts && p.scripts.build ? 'yes' : 'no');
+          ")
+
+          if [ "$HAS_BUILD" = "yes" ]; then
+            echo "Build script detected."
+
+            if [ ! -d "node_modules" ]; then
+              if [ -f "package-lock.json" ]; then
+                npm ci
+              else
+                npm install
+              fi
+            fi
+
+            echo "Running production build..."
+            npm run build
+          else
+            echo "No build script defined."
+            echo "Skipping."
+          fi
+
+      - name: Final Report
+        shell: bash
+        run: |
+          echo ""
+          echo "======================================"
+          echo " PRE-DEPLOY TESTS COMPLETED"
+          echo "======================================"
+          echo ""
+          echo "Project: LetsStudy Pro"
+          echo "Repository: GitHub"
+          echo "Branch: main"
+          echo ""
+          echo "Critical files: CHECKED"
+          echo "Firebase configuration: CHECKED"
+          echo "HTML structure: CHECKED"
+          echo "SEO files: CHECKED"
+          echo "Production URLs: SCANNED"
+          echo "Tests: CHECKED"
+          echo "Build: CHECKED"
+          echo ""
+          echo "READY FOR DEPLOYMENT"
+          echo "======================================"
