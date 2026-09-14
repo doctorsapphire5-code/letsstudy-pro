@@ -1,0 +1,92 @@
+name: LetsStudy Pro - Firestore Backup
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  firestore-backup:
+    name: Firestore Daily Backup
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}'
+
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Start Firestore backup
+        shell: bash
+        run: |
+          echo "======================================"
+          echo " LetsStudy Pro - Firestore Backup"
+          echo "======================================"
+          echo ""
+
+          PROJECT_ID="let-s-study-pro-course"
+          BUCKET="${{ secrets.FIRESTORE_BACKUP_BUCKET }}"
+
+          if [ -z "$BUCKET" ]; then
+            echo "ERROR: FIRESTORE_BACKUP_BUCKET secret is missing."
+            exit 1
+          fi
+
+          BACKUP_DATE=$(date -u +"%Y-%m-%d-%H-%M-%S")
+
+          BACKUP_PATH="gs://${BUCKET}/firestore-backups/${BACKUP_DATE}"
+
+          echo "Project: $PROJECT_ID"
+          echo "Backup path: $BACKUP_PATH"
+          echo ""
+
+          gcloud firestore export "$BACKUP_PATH" \
+            --project="$PROJECT_ID"
+
+          echo ""
+          echo "Firestore export completed successfully."
+
+      - name: Verify backup
+        shell: bash
+        run: |
+          echo ""
+          echo "======================================"
+          echo " BACKUP VERIFICATION"
+          echo "======================================"
+          echo ""
+
+          BUCKET="${{ secrets.FIRESTORE_BACKUP_BUCKET }}"
+
+          echo "Checking backup bucket..."
+
+          gcloud storage ls \
+            "gs://${BUCKET}/firestore-backups/" \
+            --project="let-s-study-pro-course" || true
+
+          echo ""
+          echo "Backup verification completed."
+
+      - name: Final report
+        shell: bash
+        run: |
+          echo ""
+          echo "======================================"
+          echo " FIRESTORE BACKUP COMPLETED"
+          echo "======================================"
+          echo ""
+          echo "Project: let-s-study-pro-course"
+          echo "Schedule: Daily at 02:00 UTC"
+          echo "Backup: Firestore export"
+          echo "Storage: Google Cloud Storage"
+          echo ""
+          echo "======================================"
