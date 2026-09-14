@@ -1,0 +1,181 @@
+name: LetsStudy Pro - Security Audit
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  schedule:
+    - cron: "30 2 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check exposed secrets
+        shell: bash
+        run: |
+          echo "======================================"
+          echo " LetsStudy Pro Security Audit"
+          echo "======================================"
+          echo ""
+
+          FOUND=0
+
+          echo "Scanning repository for possible secrets..."
+
+          if grep -RniE \
+            --exclude-dir=.git \
+            --exclude-dir=node_modules \
+            --exclude-dir=.github \
+            --exclude='*.min.js' \
+            --exclude='*.map' \
+            '(AIza[0-9A-Za-z_-]{20,}|-----BEGIN .*PRIVATE KEY-----|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9_]{30,}|github_pat_[A-Za-z0-9_]{20,})' \
+            .; then
+
+            echo ""
+            echo "WARNING: Possible exposed credential detected."
+            FOUND=1
+          else
+            echo "No obvious credentials detected."
+          fi
+
+          echo ""
+
+          if [ "$FOUND" -eq 1 ]; then
+            echo "WARNING: Review the detected files."
+            echo "Never publish real credentials in the repository."
+          else
+            echo "Secret scan completed successfully."
+          fi
+
+          exit 0
+
+      - name: Check sensitive files
+        shell: bash
+        run: |
+          echo "Checking for sensitive files..."
+
+          FOUND=0
+
+          SENSITIVE_FILES="
+          .env
+          .env.local
+          .env.production
+          .env.development
+          serviceAccountKey.json
+          firebase-adminsdk.json
+          "
+
+          for FILE in $SENSITIVE_FILES; do
+            if [ -f "$FILE" ]; then
+              echo "WARNING: Sensitive file found: $FILE"
+              FOUND=1
+            fi
+          done
+
+          if [ "$FOUND" -eq 0 ]; then
+            echo "No common sensitive files found."
+          else
+            echo "Review the sensitive files above."
+          fi
+
+          exit 0
+
+      - name: Check Firebase configuration
+        shell: bash
+        run: |
+          echo "Checking Firebase configuration..."
+
+          if [ -f "firebase.json" ]; then
+            echo "firebase.json: FOUND"
+          else
+            echo "WARNING: firebase.json not found."
+          fi
+
+          if [ -f ".firebaserc" ]; then
+            echo ".firebaserc: FOUND"
+          else
+            echo "WARNING: .firebaserc not found."
+          fi
+
+          exit 0
+
+      - name: Check GitHub Actions workflows
+        shell: bash
+        run: |
+          echo "Checking GitHub Actions workflows..."
+
+          if [ -d ".github/workflows" ]; then
+            echo ""
+            echo "Available workflows:"
+
+            find .github/workflows \
+              -type f \
+              \( -name "*.yml" -o -name "*.yaml" \) \
+              -print | sort
+          else
+            echo "No workflows directory found."
+          fi
+
+          echo ""
+          echo "Workflow check completed."
+
+          exit 0
+
+      - name: Check dangerous URLs
+        shell: bash
+        run: |
+          echo "Checking for localhost and development URLs..."
+
+          FOUND=0
+
+          if grep -RniE \
+            --exclude-dir=.git \
+            --exclude-dir=node_modules \
+            --exclude-dir=.github \
+            'http://localhost|http://127\.0\.0\.1|http://0\.0\.0\.0' \
+            .; then
+
+            echo ""
+            echo "WARNING: Development URL detected."
+            FOUND=1
+          else
+            echo "No obvious development URLs detected."
+          fi
+
+          if [ "$FOUND" -eq 1 ]; then
+            echo "Review the URLs before production deployment."
+          fi
+
+          exit 0
+
+      - name: Final security report
+        run: |
+          echo ""
+          echo "======================================"
+          echo " LetsStudy Pro Security Audit"
+          echo "======================================"
+          echo ""
+          echo "Secret scan: COMPLETED"
+          echo "Sensitive files: COMPLETED"
+          echo "Firebase configuration: COMPLETED"
+          echo "Workflow scan: COMPLETED"
+          echo "Development URL scan: COMPLETED"
+          echo ""
+          echo "Security audit completed."
+          echo "======================================"
