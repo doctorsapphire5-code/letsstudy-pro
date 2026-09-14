@@ -1,0 +1,1179 @@
+name: LetsStudy Pro - AI SEO Optimizer
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  schedule:
+    - cron: "0 9 * * 1"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ai-seo-optimizer:
+    name: AI SEO Optimizer
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Analyze SEO With AI Optimization Engine
+        shell: bash
+        run: |
+          set +e
+
+          echo "======================================"
+          echo " LETSSTUDY PRO - AI SEO OPTIMIZER"
+          echo "======================================"
+          echo ""
+
+          python3 <<'PY'
+          import os
+          import re
+          import json
+          import hashlib
+          from html.parser import HTMLParser
+          from urllib.parse import urlparse
+
+          WEBSITE = "https://letsstudy.pro"
+          BRAND = "LetsStudy Pro"
+
+          class SEOParser(HTMLParser):
+
+              def __init__(self):
+                  super().__init__()
+
+                  self.title = ""
+                  self.description = ""
+                  self.canonical = ""
+                  self.h1 = ""
+                  self.h2 = []
+                  self.h3 = []
+
+                  self.og_title = ""
+                  self.og_description = ""
+                  self.og_image = ""
+                  self.og_url = ""
+                  self.og_type = ""
+
+                  self.twitter_card = ""
+                  self.twitter_title = ""
+                  self.twitter_description = ""
+                  self.twitter_image = ""
+
+                  self.images = []
+                  self.links = []
+
+                  self.body_text = ""
+
+                  self.in_title = False
+                  self.in_h1 = False
+                  self.in_h2 = False
+                  self.in_h3 = False
+
+              def handle_starttag(self, tag, attrs):
+
+                  tag = tag.lower()
+                  attrs_dict = dict(attrs)
+
+                  if tag == "title":
+                      self.in_title = True
+
+                  elif tag == "h1":
+                      self.in_h1 = True
+
+                  elif tag == "h2":
+                      self.in_h2 = True
+
+                  elif tag == "h3":
+                      self.in_h3 = True
+
+                  elif tag == "meta":
+
+                      name = (
+                          attrs_dict.get("name")
+                          or ""
+                      ).lower()
+
+                      prop = (
+                          attrs_dict.get("property")
+                          or ""
+                      ).lower()
+
+                      content = (
+                          attrs_dict.get("content")
+                          or ""
+                      ).strip()
+
+                      if name == "description":
+                          self.description = content
+
+                      elif prop == "og:title":
+                          self.og_title = content
+
+                      elif prop == "og:description":
+                          self.og_description = content
+
+                      elif prop == "og:image":
+                          self.og_image = content
+
+                      elif prop == "og:url":
+                          self.og_url = content
+
+                      elif prop == "og:type":
+                          self.og_type = content
+
+                      elif name == "twitter:card":
+                          self.twitter_card = content
+
+                      elif name == "twitter:title":
+                          self.twitter_title = content
+
+                      elif name == "twitter:description":
+                          self.twitter_description = content
+
+                      elif name == "twitter:image":
+                          self.twitter_image = content
+
+                  elif tag == "link":
+
+                      rel = (
+                          attrs_dict.get("rel")
+                          or ""
+                      ).lower()
+
+                      if "canonical" in rel:
+                          self.canonical = (
+                              attrs_dict.get("href")
+                              or ""
+                          ).strip()
+
+                  elif tag == "img":
+
+                      self.images.append({
+                          "src":
+                              attrs_dict.get("src", ""),
+                          "alt":
+                              attrs_dict.get("alt", ""),
+                          "width":
+                              attrs_dict.get("width", ""),
+                          "height":
+                              attrs_dict.get("height", ""),
+                          "loading":
+                              attrs_dict.get("loading", "")
+                      })
+
+                  elif tag == "a":
+
+                      href = (
+                          attrs_dict.get("href")
+                          or ""
+                      ).strip()
+
+                      if href:
+                          self.links.append(href)
+
+              def handle_endtag(self, tag):
+
+                  tag = tag.lower()
+
+                  if tag == "title":
+                      self.in_title = False
+
+                  elif tag == "h1":
+                      self.in_h1 = False
+
+                  elif tag == "h2":
+                      self.in_h2 = False
+
+                  elif tag == "h3":
+                      self.in_h3 = False
+
+              def handle_data(self, data):
+
+                  text = " ".join(data.split())
+
+                  if not text:
+                      return
+
+                  self.body_text += " " + text
+
+                  if self.in_title:
+                      self.title += " " + text
+
+                  if self.in_h1:
+                      self.h1 += " " + text
+
+                  if self.in_h2:
+                      self.h2.append(text)
+
+                  if self.in_h3:
+                      self.h3.append(text)
+
+
+          def normalize(text):
+              return re.sub(
+                  r"\s+",
+                  " ",
+                  text.strip().lower()
+              )
+
+
+          def words(text):
+              return re.findall(
+                  r"[A-Za-zÀ-ÿ0-9']+",
+                  text.lower()
+              )
+
+
+          def filename_title(filename):
+
+              name = os.path.splitext(
+                  os.path.basename(filename)
+              )[0]
+
+              name = re.sub(
+                  r"[-_]+",
+                  " ",
+                  name
+              )
+
+              name = re.sub(
+                  r"\b(index|page)\b",
+                  "",
+                  name,
+                  flags=re.I
+              )
+
+              return " ".join(
+                  name.split()
+              ).title()
+
+
+          def detect_type(filename, text):
+
+              name = filename.lower()
+              content = text.lower()
+
+              if "course" in name:
+                  return "Course"
+
+              if "scholarship" in name:
+                  return "Scholarship"
+
+              if "career" in name or "job" in name:
+                  return "Career"
+
+              if "resource" in name:
+                  return "Resource"
+
+              if "freelancer" in name:
+                  return "Freelancer"
+
+              if "service" in name:
+                  return "Service"
+
+              if "business" in name:
+                  return "Business"
+
+              if "marketplace" in name:
+                  return "Marketplace"
+
+              if "search" in name:
+                  return "Search"
+
+              if "contact" in name:
+                  return "Contact"
+
+              if "about" in name:
+                  return "About"
+
+              if "privacy" in name:
+                  return "Privacy"
+
+              if "terms" in name:
+                  return "Terms"
+
+              if "blog" in name or "article" in name:
+                  return "Article"
+
+              if "course" in content[:3000]:
+                  return "Course"
+
+              return "Web Page"
+
+
+          STOPWORDS = {
+              "the", "and", "for", "with", "this",
+              "that", "from", "your", "you", "are",
+              "was", "were", "have", "has", "had",
+              "will", "can", "our", "their", "they",
+              "about", "into", "more", "than", "then",
+              "when", "where", "which", "what", "how",
+              "why", "who", "all", "not", "but",
+              "kwa", "na", "ya", "wa", "ni", "za",
+              "zaa", "katika", "kwa", "hii", "hilo",
+              "hizi", "hizo", "au", "pia", "kama",
+              "muhimu", "ku", "niyo"
+          }
+
+
+          CATEGORY_KEYWORDS = {
+              "Course": [
+                  "online courses",
+                  "online learning",
+                  "professional courses",
+                  "learn online"
+              ],
+
+              "Scholarship": [
+                  "scholarships",
+                  "study abroad",
+                  "fully funded scholarships",
+                  "international scholarships"
+              ],
+
+              "Career": [
+                  "jobs",
+                  "careers",
+                  "career opportunities",
+                  "job opportunities"
+              ],
+
+              "Resource": [
+                  "learning resources",
+                  "study resources",
+                  "educational resources",
+                  "free learning materials"
+              ],
+
+              "Freelancer": [
+                  "freelancers",
+                  "freelance services",
+                  "online freelancers",
+                  "professional freelancers"
+              ],
+
+              "Service": [
+                  "digital services",
+                  "professional services",
+                  "online services",
+                  "business services"
+              ],
+
+              "Business": [
+                  "business directory",
+                  "business services",
+                  "business opportunities",
+                  "digital businesses"
+              ],
+
+              "Marketplace": [
+                  "online marketplace",
+                  "digital marketplace",
+                  "services marketplace"
+              ],
+
+              "Article": [
+                  "education",
+                  "learning",
+                  "career development",
+                  "digital growth"
+              ],
+
+              "Search": [
+                  "search",
+                  "learning resources",
+                  "courses",
+                  "scholarships",
+                  "careers"
+              ]
+          }
+
+
+          def generate_keywords(
+              filename,
+              title,
+              description,
+              h1,
+              body,
+              page_type
+          ):
+
+              source = " ".join([
+                  title,
+                  description,
+                  h1,
+                  body[:8000]
+              ])
+
+              tokens = words(source)
+
+              frequency = {}
+
+              for token in tokens:
+
+                  if len(token) < 4:
+                      continue
+
+                  if token in STOPWORDS:
+                      continue
+
+                  if token.isdigit():
+                      continue
+
+                  frequency[token] = (
+                      frequency.get(token, 0) + 1
+                  )
+
+              top_words = sorted(
+                  frequency,
+                  key=frequency.get,
+                  reverse=True
+              )[:10]
+
+              category = CATEGORY_KEYWORDS.get(
+                  page_type,
+                  [
+                      "LetsStudy Pro",
+                      "digital learning",
+                      "online education"
+                  ]
+              )
+
+              keywords = []
+
+              keywords.extend(category)
+
+              for word in top_words:
+
+                  if word not in [
+                      normalize(x)
+                      for x in keywords
+                  ]:
+                      keywords.append(word)
+
+              return keywords[:15]
+
+
+          def optimize_title(
+              filename,
+              current_title,
+              page_type,
+              keywords
+          ):
+
+              title = " ".join(
+                  current_title.split()
+              ).strip()
+
+              if not title:
+                  title = filename_title(
+                      filename
+                  )
+
+              title = re.sub(
+                  r"\s*\|\s*LetsStudy Pro\s*$",
+                  "",
+                  title,
+                  flags=re.I
+              )
+
+              title = re.sub(
+                  r"\s*-\s*LetsStudy Pro\s*$",
+                  "",
+                  title,
+                  flags=re.I
+              )
+
+              if page_type == "Course":
+                  if "course" not in title.lower():
+                      title += " Online Course"
+
+              elif page_type == "Scholarship":
+                  if "scholarship" not in title.lower():
+                      title += " Scholarships"
+
+              elif page_type == "Career":
+                  if "career" not in title.lower() and \
+                     "job" not in title.lower():
+                      title += " Careers"
+
+              elif page_type == "Resource":
+                  if "resource" not in title.lower():
+                      title += " Learning Resources"
+
+              elif page_type == "Freelancer":
+                  if "freelancer" not in title.lower():
+                      title += " Freelancers"
+
+              elif page_type == "Service":
+                  if "service" not in title.lower():
+                      title += " Services"
+
+              if "letsstudy pro" not in title.lower():
+                  title += " | LetsStudy Pro"
+
+              if len(title) > 65:
+                  title = title[:65].rstrip(
+                      " -|,"
+                  )
+
+              return title
+
+
+          def optimize_description(
+              current_description,
+              title,
+              page_type,
+              keywords,
+              body
+          ):
+
+              description = (
+                  current_description.strip()
+              )
+
+              if not description:
+
+                  keyword = (
+                      keywords[0]
+                      if keywords
+                      else "digital learning"
+                  )
+
+                  description = (
+                      f"Explore {keyword} with "
+                      f"LetsStudy Pro — learn, build, "
+                      f"work and grow through digital "
+                      f"learning and professional resources."
+                  )
+
+              description = re.sub(
+                  r"\s+",
+                  " ",
+                  description
+              )
+
+              if len(description) < 100:
+
+                  additions = {
+                      "Course":
+                          " Learn online with practical "
+                          "courses and educational resources.",
+
+                      "Scholarship":
+                          " Discover opportunities for "
+                          "students and learners worldwide.",
+
+                      "Career":
+                          " Find career opportunities, "
+                          "jobs and professional growth resources.",
+
+                      "Resource":
+                          " Access useful learning materials "
+                          "and educational resources.",
+
+                      "Freelancer":
+                          " Discover professional freelancers "
+                          "and digital services.",
+
+                      "Service":
+                          " Find professional digital services "
+                          "for your projects and business.",
+
+                      "Business":
+                          " Discover businesses, services "
+                          "and digital growth opportunities."
+                  }
+
+                  description += additions.get(
+                      page_type,
+                      " Discover learning, career and "
+                      "digital growth opportunities."
+                  )
+
+              if len(description) > 160:
+                  description = (
+                      description[:157].rstrip()
+                      + "..."
+                  )
+
+              return description
+
+
+          html_files = sorted([
+              f for f in os.listdir(".")
+              if f.endswith(".html")
+              and os.path.isfile(f)
+          ])
+
+
+          results = []
+
+          for filename in html_files:
+
+              try:
+
+                  with open(
+                      filename,
+                      "r",
+                      encoding="utf-8",
+                      errors="ignore"
+                  ) as f:
+                      html = f.read()
+
+              except Exception as error:
+
+                  print(
+                      f"WARNING: Could not read "
+                      f"{filename}: {error}"
+                  )
+
+                  continue
+
+              parser = SEOParser()
+
+              try:
+                  parser.feed(html)
+              except Exception as error:
+                  print(
+                      f"WARNING: HTML parser issue "
+                      f"in {filename}: {error}"
+                  )
+
+              title = " ".join(
+                  parser.title.split()
+              )
+
+              description = " ".join(
+                  parser.description.split()
+              )
+
+              h1 = " ".join(
+                  parser.h1.split()
+              )
+
+              body = " ".join(
+                  parser.body_text.split()
+              )
+
+              page_type = detect_type(
+                  filename,
+                  body
+              )
+
+              keyword_list = generate_keywords(
+                  filename,
+                  title,
+                  description,
+                  h1,
+                  body,
+                  page_type
+              )
+
+              suggested_title = optimize_title(
+                  filename,
+                  title,
+                  page_type,
+                  keyword_list
+              )
+
+              suggested_description = (
+                  optimize_description(
+                      description,
+                      suggested_title,
+                      page_type,
+                      keyword_list,
+                      body
+                  )
+              )
+
+              score = 0
+              recommendations = []
+
+              if title:
+                  score += 15
+              else:
+                  recommendations.append(
+                      "Add a unique SEO title."
+                  )
+
+              if 30 <= len(title) <= 65:
+                  score += 10
+              elif title:
+                  recommendations.append(
+                      "Adjust title length toward "
+                      "30–65 characters."
+                  )
+
+              if description:
+                  score += 15
+              else:
+                  recommendations.append(
+                      "Add a unique meta description."
+                  )
+
+              if 70 <= len(description) <= 160:
+                  score += 10
+              elif description:
+                  recommendations.append(
+                      "Adjust meta description length "
+                      "toward 70–160 characters."
+                  )
+
+              if parser.canonical:
+                  score += 10
+              else:
+                  recommendations.append(
+                      "Add a canonical URL."
+                  )
+
+                            if h1:
+                  score += 10
+              else:
+                  recommendations.append(
+                      "Add one meaningful H1 heading."
+                  )
+
+              if parser.og_title:
+                  score += 5
+              else:
+                  recommendations.append(
+                      "Add Open Graph title."
+                  )
+
+              if parser.og_description:
+                  score += 5
+              else:
+                  recommendations.append(
+                      "Add Open Graph description."
+                  )
+
+              if parser.og_image:
+                  score += 5
+              else:
+                  recommendations.append(
+                      "Add an Open Graph image."
+                  )
+
+              if parser.twitter_card:
+                  score += 5
+              else:
+                  recommendations.append(
+                      "Add Twitter/X card metadata."
+                  )
+
+              word_count = len(
+                  words(body)
+              )
+
+              if word_count >= 100:
+                  score += 5
+              else:
+                  recommendations.append(
+                      "Increase useful page content "
+                      "to at least 100 words where appropriate."
+                  )
+
+              missing_alt = sum(
+                  1
+                  for image in parser.images
+                  if not image["alt"].strip()
+              )
+
+              if parser.images and missing_alt == 0:
+                  score += 5
+              elif parser.images:
+                  recommendations.append(
+                      f"Add descriptive alt text to "
+                      f"{missing_alt} image(s)."
+                  )
+              else:
+                  score += 5
+
+              internal_links = []
+
+              for href in parser.links:
+
+                  href = href.strip()
+
+                  if (
+                      href.startswith("/")
+                      or (
+                          href
+                          and not href.startswith(
+                              (
+                                  "http://",
+                                  "https://",
+                                  "mailto:",
+                                  "tel:",
+                                  "#",
+                                  "javascript:"
+                              )
+                          )
+                      )
+                  ):
+                      internal_links.append(href)
+
+              if internal_links:
+                  score += 5
+              else:
+                  recommendations.append(
+                      "Add relevant internal links "
+                      "to related LetsStudy Pro pages."
+                  )
+
+              score = min(
+                  score,
+                  100
+              )
+
+              if score >= 90:
+                  grade = "EXCELLENT"
+              elif score >= 80:
+                  grade = "GOOD"
+              elif score >= 70:
+                  grade = "NEEDS IMPROVEMENT"
+              else:
+                  grade = "POOR"
+
+              results.append({
+                  "file": filename,
+                  "page_type": page_type,
+                  "seo_score": score,
+                  "grade": grade,
+                  "current": {
+                      "title": title,
+                      "description": description,
+                      "canonical": parser.canonical,
+                      "h1": h1
+                  },
+                  "ai_suggestions": {
+                      "title": suggested_title,
+                      "description": suggested_description,
+                      "keywords": keyword_list
+                  },
+                  "statistics": {
+                      "word_count": word_count,
+                      "images": len(parser.images),
+                      "missing_alt": missing_alt,
+                      "internal_links": len(internal_links)
+                  },
+                  "recommendations": recommendations
+              })
+
+
+          total_pages = len(results)
+
+          if results:
+              average_score = round(
+                  sum(
+                      item["seo_score"]
+                      for item in results
+                  ) / total_pages,
+                  2
+              )
+          else:
+              average_score = 0
+
+
+          report = {
+              "website": WEBSITE,
+              "project": BRAND,
+              "pages_checked": total_pages,
+              "average_seo_score": average_score,
+              "engine": "Local AI-style SEO optimization engine",
+              "api_required": False,
+              "deployment_blocked": False,
+              "results": results
+          }
+
+
+          with open(
+              "ai-seo-optimizer-report.json",
+              "w",
+              encoding="utf-8"
+          ) as f:
+
+              json.dump(
+                  report,
+                  f,
+                  indent=2,
+                  ensure_ascii=False
+              )
+
+
+          with open(
+              "ai-seo-optimizer-report.md",
+              "w",
+              encoding="utf-8"
+          ) as f:
+
+              f.write(
+                  "# LetsStudy Pro - AI SEO Optimizer Report\n\n"
+              )
+
+              f.write(
+                  f"- Website: **{WEBSITE}**\n"
+              )
+
+              f.write(
+                  f"- Pages checked: **{total_pages}**\n"
+              )
+
+              f.write(
+                  f"- Average SEO score: **{average_score}/100**\n"
+              )
+
+              f.write(
+                  "- API required: **No**\n"
+              )
+
+              f.write(
+                  "- HTML modified: **No**\n"
+              )
+
+              f.write(
+                  "- Deployment blocking: **No**\n\n"
+              )
+
+              f.write(
+                  "## Page Overview\n\n"
+              )
+
+              f.write(
+                  "| Page | Type | Score | Grade |\n"
+              )
+
+              f.write(
+                  "|---|---|---:|---|\n"
+              )
+
+              for item in results:
+
+                  f.write(
+                      f"| `{item['file']}` | "
+                      f"{item['page_type']} | "
+                      f"{item['seo_score']}/100 | "
+                      f"{item['grade']} |\n"
+                  )
+
+              f.write("\n")
+
+              f.write(
+                  "## AI SEO Recommendations\n\n"
+              )
+
+              for item in results:
+
+                  f.write(
+                      f"### `{item['file']}`\n\n"
+                  )
+
+                  f.write(
+                      f"**Page type:** "
+                      f"{item['page_type']}\n\n"
+                  )
+
+                  f.write(
+                      f"**SEO score:** "
+                      f"{item['seo_score']}/100 — "
+                      f"{item['grade']}\n\n"
+                  )
+
+                  f.write(
+                      "#### Current SEO Title\n\n"
+                  )
+
+                  f.write(
+                      f"`{item['current']['title'] or '-'}"
+                      "`\n\n"
+                  )
+
+                  f.write(
+                      "#### Suggested SEO Title\n\n"
+                  )
+
+                  f.write(
+                      f"`{item['ai_suggestions']['title']}`\n\n"
+                  )
+
+                  f.write(
+                      "#### Current Meta Description\n\n"
+                  )
+
+                  f.write(
+                      f"{item['current']['description'] or '-'}\n\n"
+                  )
+
+                  f.write(
+                      "#### Suggested Meta Description\n\n"
+                  )
+
+                  f.write(
+                      f"{item['ai_suggestions']['description']}\n\n"
+                  )
+
+                  f.write(
+                      "#### Suggested Keywords\n\n"
+                  )
+
+                  for keyword in item[
+                      "ai_suggestions"
+                  ]["keywords"]:
+
+                      f.write(
+                          f"- {keyword}\n"
+                      )
+
+                  f.write("\n")
+
+                  f.write(
+                      "#### Recommendations\n\n"
+                  )
+
+                  if item["recommendations"]:
+
+                      for recommendation in item[
+                          "recommendations"
+                      ]:
+
+                          f.write(
+                              f"- {recommendation}\n"
+                          )
+
+                  else:
+
+                      f.write(
+                          "No major SEO recommendations.\n"
+                      )
+
+                  f.write("\n")
+
+                  f.write(
+                      "#### Page Statistics\n\n"
+                  )
+
+                  stats = item["statistics"]
+
+                  f.write(
+                      f"- Word count: **{stats['word_count']}**\n"
+                  )
+
+                  f.write(
+                      f"- Images: **{stats['images']}**\n"
+                  )
+
+                  f.write(
+                      f"- Missing ALT: **{stats['missing_alt']}**\n"
+                  )
+
+                  f.write(
+                      f"- Internal links: "
+                      f"**{stats['internal_links']}**\n"
+                  )
+
+                  f.write("\n")
+
+              f.write(
+                  "## Optimization Policy\n\n"
+              )
+
+              f.write(
+                  "This workflow only analyzes the repository "
+                  "and generates SEO recommendations. "
+                  "It does not automatically rewrite, "
+                  "delete, or publish HTML content.\n\n"
+              )
+
+              f.write(
+                  "## Deployment Policy\n\n"
+              )
+
+              f.write(
+                  "This workflow is informational. "
+                  "SEO findings do not block deployment.\n"
+              )
+
+
+          print("")
+          print("======================================")
+          print(" AI SEO OPTIMIZER SUMMARY")
+          print("======================================")
+          print(
+              f"Pages checked: {total_pages}"
+          )
+          print(
+              f"Average SEO score: "
+              f"{average_score}/100"
+          )
+
+          excellent = sum(
+              1
+              for item in results
+              if item["grade"] == "EXCELLENT"
+          )
+
+          good = sum(
+              1
+              for item in results
+              if item["grade"] == "GOOD"
+          )
+
+          needs_improvement = sum(
+              1
+              for item in results
+              if item["grade"] == "NEEDS IMPROVEMENT"
+          )
+
+          poor = sum(
+              1
+              for item in results
+              if item["grade"] == "POOR"
+          )
+
+          print(
+              f"Excellent: {excellent}"
+          )
+
+          print(
+              f"Good: {good}"
+          )
+
+          print(
+              f"Needs improvement: "
+              f"{needs_improvement}"
+          )
+
+          print(
+              f"Poor: {poor}"
+          )
+
+          print("")
+          print("API required: NO")
+          print("HTML modified: NO")
+          print("Deployment blocking: NO")
+          print("======================================")
+
+          PY
+
+          exit 0
+
+      - name: Upload AI SEO Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: letsstudy-pro-ai-seo-optimizer
+          path: |
+            ai-seo-optimizer-report.json
+            ai-seo-optimizer-report.md
+          if-no-files-found: warn
