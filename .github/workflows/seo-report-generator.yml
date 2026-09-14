@@ -1,0 +1,1039 @@
+name: LetsStudy Pro - SEO Report Generator
+
+on:
+  push:
+    branches:
+      - main
+
+  schedule:
+    - cron: "0 6 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  seo-report:
+    name: Automatic SEO Report
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Generate SEO Report
+        shell: bash
+        run: |
+          set +e
+
+          python3 <<'PY'
+          import os
+          import re
+          import json
+          import hashlib
+          from html.parser import HTMLParser
+          from collections import Counter, defaultdict
+          from urllib.parse import urlparse
+
+          ROOT = "."
+          DOMAIN = "https://letsstudy.pro"
+
+          html_files = sorted([
+              f for f in os.listdir(ROOT)
+              if f.endswith(".html")
+              and os.path.isfile(os.path.join(ROOT, f))
+          ])
+
+          class SEOParser(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+
+                  self.title = ""
+                  self.description = ""
+                  self.canonical = ""
+                  self.h1 = []
+                  self.h2 = []
+                  self.images = []
+                  self.links = []
+                  self.body_text = []
+
+                  self.in_title = False
+                  self.in_h1 = False
+                  self.in_h2 = False
+                  self.in_h3 = False
+                  self.in_body = False
+
+              def handle_starttag(self, tag, attrs):
+                  attrs = dict(attrs)
+
+                  if tag == "title":
+                      self.in_title = True
+
+                  if tag == "h1":
+                      self.in_h1 = True
+
+                  if tag == "h2":
+                      self.in_h2 = True
+
+                  if tag == "h3":
+                      self.in_h3 = True
+
+                  if tag == "body":
+                      self.in_body = True
+
+                  if tag == "meta":
+                      name = (
+                          attrs.get("name")
+                          or attrs.get("property")
+                          or ""
+                      ).lower()
+
+                      content = (
+                          attrs.get("content")
+                          or ""
+                      ).strip()
+
+                      if name == "description":
+                          self.description = content
+
+                  if tag == "link":
+                      rel = (
+                          attrs.get("rel")
+                          or ""
+                      ).lower()
+
+                      if "canonical" in rel:
+                          self.canonical = (
+                              attrs.get("href")
+                              or ""
+                          ).strip()
+
+                  if tag == "img":
+                      self.images.append({
+                          "src": attrs.get("src", ""),
+                          "alt": attrs.get("alt"),
+                          "width": attrs.get("width"),
+                          "height": attrs.get("height")
+                      })
+
+                  if tag == "a":
+                      self.links.append(
+                          attrs.get("href", "")
+                      )
+
+              def handle_endtag(self, tag):
+                  if tag == "title":
+                      self.in_title = False
+
+                  if tag == "h1":
+                      self.in_h1 = False
+
+                  if tag == "h2":
+                      self.in_h2 = False
+
+                  if tag == "h3":
+                      self.in_h3 = False
+
+                  if tag == "body":
+                      self.in_body = False
+
+              def handle_data(self, data):
+                  text = " ".join(
+                      data.split()
+                  )
+
+                  if not text:
+                      return
+
+                  if self.in_title:
+                      self.title += " " + text
+
+                  if self.in_h1:
+                      self.h1.append(text)
+
+                  if self.in_h2 or self.in_h3:
+                      self.h2.append(text)
+
+                  if self.in_body:
+                      self.body_text.append(text)
+
+          def clean(text):
+              return " ".join(
+                  (text or "").split()
+              ).strip()
+
+          def count_words(text):
+              return len(
+                  re.findall(
+                      r"\b[\w'-]+\b",
+                      text or ""
+                  )
+              )
+
+          def score_page(data):
+              score = 0
+              checks = {}
+
+              title = data["title"]
+              description = data["description"]
+              canonical = data["canonical"]
+              h1 = data["h1"]
+              body = data["body"]
+
+              checks["title"] = bool(title)
+              checks["title_length"] = (
+                  30 <= len(title) <= 65
+              )
+              checks["meta_description"] = bool(
+                  description
+              )
+              checks["description_length"] = (
+                  70 <= len(description) <= 165
+              )
+              checks["canonical"] = bool(
+                  canonical
+              )
+              checks["h1"] = len(h1) >= 1
+              checks["content"] = (
+                  count_words(body) >= 100
+              )
+              checks["images_alt"] = all(
+                  image["alt"] is not None
+                  for image in data["images"]
+              ) if data["images"] else True
+              checks["internal_links"] = (
+                  data["internal_links"] > 0
+              )
+              checks["https_canonical"] = (
+                  canonical.startswith("https://")
+                  if canonical
+                  else False
+              )
+
+              weights = {
+                  "title": 10,
+                  "title_length": 10,
+                  "meta_description": 10,
+                  "description_length": 10,
+                  "canonical": 10,
+                  "h1": 10,
+                  "content": 15,
+                  "images_alt": 5,
+                  "internal_links": 10,
+                  "https_canonical": 10
+              }
+
+              for key, weight in weights.items():
+                  if checks.get(key):
+                      score += weight
+
+              if score >= 90:
+                  grade = "EXCELLENT"
+              elif score >= 80:
+                  grade = "GOOD"
+              elif score >= 70:
+                  grade = "NEEDS IMPROVEMENT"
+              else:
+                  grade = "POOR"
+
+              return score, grade, checks
+
+          pages = []
+
+          all_titles = defaultdict(list)
+          all_descriptions = defaultdict(list)
+          all_canonicals = defaultdict(list)
+          all_h1 = defaultdict(list)
+
+          total_words = 0
+          total_images = 0
+          total_links = 0
+          internal_links = 0
+          external_links = 0
+
+          for filename in html_files:
+              path = os.path.join(
+                  ROOT,
+                  filename
+              )
+
+              try:
+                  with open(
+                      path,
+                      "r",
+                      encoding="utf-8",
+                      errors="ignore"
+                  ) as f:
+                      html = f.read()
+              except Exception:
+                  html = ""
+
+              parser = SEOParser()
+
+              try:
+                  parser.feed(html)
+              except Exception:
+                  pass
+
+              title = clean(parser.title)
+              description = clean(
+                  parser.description
+              )
+              canonical = clean(
+                  parser.canonical
+              )
+              h1 = clean(
+                  " ".join(parser.h1)
+              )
+              body = clean(
+                  " ".join(parser.body_text)
+              )
+
+              word_count = count_words(body)
+
+              page_url = (
+                  DOMAIN + "/"
+                  + filename
+              )
+
+              page_internal = 0
+              page_external = 0
+
+              for href in parser.links:
+                  href = clean(href)
+
+                  if not href:
+                      continue
+
+                  if (
+                      href.startswith("#")
+                      or href.startswith("mailto:")
+                      or href.startswith("tel:")
+                      or href.startswith("javascript:")
+                      or href.startswith("data:")
+                  ):
+                      continue
+
+                  if href.startswith("http://") or href.startswith("https://"):
+                      parsed = urlparse(href)
+
+                      if parsed.netloc == "letsstudy.pro":
+                          page_internal += 1
+                          internal_links += 1
+                      else:
+                          page_external += 1
+                          external_links += 1
+
+                  elif href.startswith("/"):
+                      page_internal += 1
+                      internal_links += 1
+
+                  else:
+                      page_internal += 1
+                      internal_links += 1
+
+              data = {
+                  "file": filename,
+                  "url": page_url,
+                  "title": title,
+                  "description": description,
+                  "canonical": canonical,
+                  "h1": h1,
+                  "body": body,
+                  "word_count": word_count,
+                  "images": parser.images,
+                  "links": parser.links,
+                  "internal_links": page_internal,
+                  "external_links": page_external
+              }
+
+              score, grade, checks = score_page(
+                  data
+              )
+
+              data["score"] = score
+              data["grade"] = grade
+              data["checks"] = checks
+
+              pages.append(data)
+
+              total_words += word_count
+              total_images += len(
+                  parser.images
+              )
+              total_links += len(
+                  parser.links
+              )
+
+              if title:
+                  all_titles[
+                      title.lower()
+                  ].append(filename)
+
+              if description:
+                  all_descriptions[
+                      description.lower()
+                  ].append(filename)
+
+              if canonical:
+                  all_canonicals[
+                      canonical.lower()
+                  ].append(filename)
+
+              if h1:
+                  all_h1[
+                      h1.lower()
+                  ].append(filename)
+
+          # --------------------------------
+          # Site-wide statistics
+          # --------------------------------
+
+          page_count = len(pages)
+
+          average_score = (
+              round(
+                  sum(
+                      p["score"]
+                      for p in pages
+                  ) / page_count,
+                  1
+              )
+              if page_count
+              else 0
+          )
+
+          excellent = sum(
+              p["grade"] == "EXCELLENT"
+              for p in pages
+          )
+
+          good = sum(
+              p["grade"] == "GOOD"
+              for p in pages
+          )
+
+          needs_improvement = sum(
+              p["grade"] == "NEEDS IMPROVEMENT"
+              for p in pages
+          )
+
+          poor = sum(
+              p["grade"] == "POOR"
+              for p in pages
+          )
+
+          missing_title = [
+              p["file"]
+              for p in pages
+              if not p["title"]
+          ]
+
+          missing_description = [
+              p["file"]
+              for p in pages
+              if not p["description"]
+          ]
+
+          missing_canonical = [
+              p["file"]
+              for p in pages
+              if not p["canonical"]
+          ]
+
+          missing_h1 = [
+              p["file"]
+              for p in pages
+              if not p["h1"]
+          ]
+
+          thin_content = [
+              p["file"]
+              for p in pages
+              if p["word_count"] < 100
+          ]
+
+          pages_without_internal_links = [
+              p["file"]
+              for p in pages
+              if p["internal_links"] == 0
+          ]
+
+          duplicate_titles = {
+              k: v
+              for k, v in all_titles.items()
+              if len(v) > 1
+          }
+
+          duplicate_descriptions = {
+              k: v
+              for k, v in all_descriptions.items()
+              if len(v) > 1
+          }
+
+          duplicate_canonicals = {
+              k: v
+              for k, v in all_canonicals.items()
+              if len(v) > 1
+          }
+
+          duplicate_h1 = {
+              k: v
+              for k, v in all_h1.items()
+              if len(v) > 1
+          }
+
+          recommendations = []
+
+          if missing_title:
+              recommendations.append(
+                  "Add unique SEO titles to pages without titles."
+              )
+
+          if missing_description:
+              recommendations.append(
+                  "Add unique meta descriptions to pages without descriptions."
+              )
+
+          if missing_canonical:
+              recommendations.append(
+                  "Add canonical URLs to pages without canonicals."
+              )
+
+          if missing_h1:
+              recommendations.append(
+                  "Add one clear H1 heading to pages without H1."
+              )
+
+          if thin_content:
+              recommendations.append(
+                  "Review pages with fewer than 100 words."
+              )
+
+          if duplicate_titles:
+              recommendations.append(
+                  "Resolve duplicate SEO titles."
+              )
+
+          if duplicate_descriptions:
+              recommendations.append(
+                  "Resolve duplicate meta descriptions."
+              )
+
+          if duplicate_canonicals:
+              recommendations.append(
+                  "Review duplicate canonical URLs."
+              )
+
+          if duplicate_h1:
+              recommendations.append(
+                  "Review duplicate H1 headings."
+              )
+
+          if pages_without_internal_links:
+              recommendations.append(
+                  "Improve internal linking on pages without internal links."
+              )
+
+          if not recommendations:
+              recommendations.append(
+                  "No major SEO issues detected by this automated report."
+              )
+
+          # --------------------------------
+          # JSON report
+          # --------------------------------
+
+          report = {
+              "website": DOMAIN,
+              "generated_at": __import__(
+                  "datetime"
+              ).datetime.utcnow().isoformat()
+              + "Z",
+
+              "summary": {
+                  "html_pages": page_count,
+                  "average_seo_score":
+                      average_score,
+                  "excellent":
+                      excellent,
+                  "good":
+                      good,
+                  "needs_improvement":
+                      needs_improvement,
+                  "poor":
+                      poor,
+                  "total_words":
+                      total_words,
+                  "total_images":
+                      total_images,
+                  "total_links":
+                      total_links,
+                  "internal_links":
+                      internal_links,
+                  "external_links":
+                      external_links
+              },
+
+              "issues": {
+                  "missing_title":
+                      missing_title,
+                  "missing_description":
+                      missing_description,
+                  "missing_canonical":
+                      missing_canonical,
+                  "missing_h1":
+                      missing_h1,
+                  "thin_content":
+                      thin_content,
+                  "pages_without_internal_links":
+                      pages_without_internal_links,
+                  "duplicate_titles":
+                      duplicate_titles,
+                  "duplicate_descriptions":
+                      duplicate_descriptions,
+                  "duplicate_canonicals":
+                      duplicate_canonicals,
+                  "duplicate_h1":
+                      duplicate_h1
+              },
+
+              "recommendations":
+                  recommendations,
+
+              "pages": pages
+          }
+
+          with open(
+              "seo-report.json",
+              "w",
+              encoding="utf-8"
+          ) as f:
+              json.dump(
+                  report,
+                  f,
+                  indent=2,
+                  ensure_ascii=False
+              )
+
+          # --------------------------------
+          # Markdown report
+          # --------------------------------
+
+          with open(
+              "seo-report.md",
+              "w",
+              encoding="utf-8"
+          ) as f:
+
+              f.write(
+                  "# LetsStudy Pro - Automatic SEO Report\n\n"
+              )
+
+              f.write(
+                  f"Website: {DOMAIN}\n\n"
+              )
+
+              f.write(
+                  "## Overall Summary\n\n"
+              )
+
+              f.write(
+                  f"- HTML pages: **{page_count}**\n"
+              )
+
+              f.write(
+                  f"- Average SEO score: **{average_score}/100**\n"
+              )
+
+              f.write(
+                  f"- Excellent: **{excellent}**\n"
+              )
+
+              f.write(
+                  f"- Good: **{good}**\n"
+              )
+
+              f.write(
+                  f"- Needs improvement: **{needs_improvement}**\n"
+              )
+
+              f.write(
+                  f"- Poor: **{poor}**\n"
+              )
+
+              f.write(
+                  f"- Total words: **{total_words}**\n"
+              )
+
+              f.write(
+                  f"- Images: **{total_images}**\n"
+              )
+
+              f.write(
+                  f"- Internal links: **{internal_links}**\n"
+              )
+
+              f.write(
+                  f"- External links: **{external_links}**\n\n"
+              )
+
+              f.write(
+                  "## SEO Issues\n\n"
+              )
+
+              f.write(
+                  f"- Missing titles: **{len(missing_title)}**\n"
+              )
+
+              f.write(
+                  f"- Missing descriptions: **{len(missing_description)}**\n"
+              )
+
+              f.write(
+                  f"- Missing canonicals: **{len(missing_canonical)}**\n"
+              )
+
+              f.write(
+                  f"- Missing H1: **{len(missing_h1)}**\n"
+              )
+
+              f.write(
+                  f"- Thin-content pages: **{len(thin_content)}**\n"
+              )
+
+              f.write(
+                  f"- Pages without internal links: "
+                  f"**{len(pages_without_internal_links)}**\n"
+              )
+
+              f.write(
+                  f"- Duplicate titles: "
+                  f"**{len(duplicate_titles)}**\n"
+              )
+
+              f.write(
+                  f"- Duplicate descriptions: "
+                  f"**{len(duplicate_descriptions)}**\n"
+              )
+
+              f.write(
+                  f"- Duplicate canonicals: "
+                  f"**{len(duplicate_canonicals)}**\n"
+              )
+
+              f.write(
+                  f"- Duplicate H1: "
+                  f"**{len(duplicate_h1)}**\n\n"
+              )
+
+                            for recommendation in recommendations:
+                  f.write(
+                      f"- {recommendation}\n"
+                  )
+
+              f.write("\n")
+
+              # --------------------------------
+              # Page Scores
+              # --------------------------------
+
+              f.write(
+                  "## Page Scores\n\n"
+              )
+
+              f.write(
+                  "| Page | Score | Grade | Words | "
+                  "Title | Description | Canonical | H1 |\n"
+              )
+
+              f.write(
+                  "|---|---:|---|---:|---|---|---|---|\n"
+              )
+
+              for page in pages:
+                  f.write(
+                      f"| `{page['file']}` | "
+                      f"{page['score']}/100 | "
+                      f"{page['grade']} | "
+                      f"{page['word_count']} | "
+                      f"{'Yes' if page['title'] else 'No'} | "
+                      f"{'Yes' if page['description'] else 'No'} | "
+                      f"{'Yes' if page['canonical'] else 'No'} | "
+                      f"{'Yes' if page['h1'] else 'No'} |\n"
+                  )
+
+              f.write("\n")
+
+              # --------------------------------
+              # Missing Titles
+              # --------------------------------
+
+              if missing_title:
+                  f.write(
+                      "## Pages Missing Titles\n\n"
+                  )
+
+                  for item in missing_title:
+                      f.write(
+                          f"- `{item}`\n"
+                      )
+
+                  f.write("\n")
+
+              # --------------------------------
+              # Missing Descriptions
+              # --------------------------------
+
+              if missing_description:
+                  f.write(
+                      "## Pages Missing Meta Descriptions\n\n"
+                  )
+
+                  for item in missing_description:
+                      f.write(
+                          f"- `{item}`\n"
+                      )
+
+                  f.write("\n")
+
+              # --------------------------------
+              # Missing Canonicals
+              # --------------------------------
+
+              if missing_canonical:
+                  f.write(
+                      "## Pages Missing Canonical URLs\n\n"
+                  )
+
+                  for item in missing_canonical:
+                      f.write(
+                          f"- `{item}`\n"
+                      )
+
+                  f.write("\n")
+
+              # --------------------------------
+              # Missing H1
+              # --------------------------------
+
+              if missing_h1:
+                  f.write(
+                      "## Pages Missing H1\n\n"
+                  )
+
+                  for item in missing_h1:
+                      f.write(
+                          f"- `{item}`\n"
+                      )
+
+                  f.write("\n")
+
+              # --------------------------------
+              # Thin Content
+              # --------------------------------
+
+              if thin_content:
+                  f.write(
+                      "## Thin Content Pages\n\n"
+                  )
+
+                  for item in thin_content:
+                      f.write(
+                          f"- `{item}`\n"
+                      )
+
+                  f.write("\n")
+
+              # --------------------------------
+              # Duplicate Titles
+              # --------------------------------
+
+              if duplicate_titles:
+                  f.write(
+                      "## Duplicate Titles\n\n"
+                  )
+
+                  for title, files in duplicate_titles.items():
+                      f.write(
+                          f"### `{title}`\n\n"
+                      )
+
+                      for item in files:
+                          f.write(
+                              f"- `{item}`\n"
+                          )
+
+                      f.write("\n")
+
+              # --------------------------------
+              # Duplicate Descriptions
+              # --------------------------------
+
+              if duplicate_descriptions:
+                  f.write(
+                      "## Duplicate Meta Descriptions\n\n"
+                  )
+
+                  for description, files in duplicate_descriptions.items():
+                      f.write(
+                          f"### `{description}`\n\n"
+                      )
+
+                      for item in files:
+                          f.write(
+                              f"- `{item}`\n"
+                          )
+
+                      f.write("\n")
+
+              # --------------------------------
+              # Duplicate Canonicals
+              # --------------------------------
+
+              if duplicate_canonicals:
+                  f.write(
+                      "## Duplicate Canonical URLs\n\n"
+                  )
+
+                  for canonical, files in duplicate_canonicals.items():
+                      f.write(
+                          f"### `{canonical}`\n\n"
+                      )
+
+                      for item in files:
+                          f.write(
+                              f"- `{item}`\n"
+                          )
+
+                      f.write("\n")
+
+              # --------------------------------
+              # Duplicate H1
+              # --------------------------------
+
+              if duplicate_h1:
+                  f.write(
+                      "## Duplicate H1 Headings\n\n"
+                  )
+
+                  for heading, files in duplicate_h1.items():
+                      f.write(
+                          f"### `{heading}`\n\n"
+                      )
+
+                      for item in files:
+                          f.write(
+                              f"- `{item}`\n"
+                          )
+
+                      f.write("\n")
+
+              # --------------------------------
+              # Pages Without Internal Links
+              # --------------------------------
+
+              if pages_without_internal_links:
+                  f.write(
+                      "## Pages Without Internal Links\n\n"
+                  )
+
+                  for item in pages_without_internal_links:
+                      f.write(
+                          f"- `{item}`\n"
+                      )
+
+                  f.write("\n")
+
+              # --------------------------------
+              # Automation Note
+              # --------------------------------
+
+              f.write(
+                  "## Automation Note\n\n"
+              )
+
+              f.write(
+                  "This report is informational. "
+                  "It does not modify production files "
+                  "and does not block deployment.\n"
+              )
+
+          print("")
+          print("======================================")
+          print(" SEO REPORT GENERATED")
+          print("======================================")
+          print(
+              f"Website: {DOMAIN}"
+          )
+          print(
+              f"Pages: {page_count}"
+          )
+          print(
+              f"Average SEO Score: "
+              f"{average_score}/100"
+          )
+          print(
+              f"Excellent: {excellent}"
+          )
+          print(
+              f"Good: {good}"
+          )
+          print(
+              f"Needs Improvement: "
+              f"{needs_improvement}"
+          )
+          print(
+              f"Poor: {poor}"
+          )
+          print(
+              f"Missing Titles: "
+              f"{len(missing_title)}"
+          )
+          print(
+              f"Missing Descriptions: "
+              f"{len(missing_description)}"
+          )
+          print(
+              f"Missing Canonicals: "
+              f"{len(missing_canonical)}"
+          )
+          print(
+              f"Missing H1: "
+              f"{len(missing_h1)}"
+          )
+          print(
+              f"Thin Content: "
+              f"{len(thin_content)}"
+          )
+          print(
+              f"Duplicate Titles: "
+              f"{len(duplicate_titles)}"
+          )
+          print(
+              f"Duplicate Descriptions: "
+              f"{len(duplicate_descriptions)}"
+          )
+          print(
+              f"Duplicate Canonicals: "
+              f"{len(duplicate_canonicals)}"
+          )
+          print(
+              f"Duplicate H1: "
+              f"{len(duplicate_h1)}"
+          )
+          print("")
+
+          PY
+
+          exit 0
+
+      - name: Upload SEO Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: letsstudy-pro-seo-report
+          path: |
+            seo-report.json
+            seo-report.md
+          if-no-files-found: warn
