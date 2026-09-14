@@ -1,0 +1,497 @@
+name: LetsStudy Pro - SEO Keyword Generator
+
+on:
+  push:
+    branches:
+      - main
+
+  schedule:
+    - cron: "0 3 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  seo-keyword-generator:
+    name: Generate SEO Keywords
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Generate SEO Keywords
+        shell: bash
+        run: |
+          python3 <<'PY'
+          import re
+          import html
+          import json
+          from pathlib import Path
+          from collections import Counter
+          from datetime import datetime, timezone
+
+          BRAND = "LetsStudy Pro"
+
+          STOPWORDS = {
+              "about", "after", "again", "against", "also", "and",
+              "are", "because", "been", "before", "being", "between",
+              "both", "but", "can", "could", "did", "does", "doing",
+              "down", "each", "for", "from", "further", "had", "has",
+              "have", "having", "her", "here", "hers", "him", "his",
+              "how", "into", "its", "itself", "just", "more", "most",
+              "myself", "nor", "not", "now", "only", "other", "our",
+              "ours", "out", "over", "same", "she", "should", "some",
+              "such", "than", "that", "the", "their", "theirs", "them",
+              "then", "there", "these", "they", "this", "those", "through",
+              "too", "under", "until", "very", "was", "were", "what",
+              "when", "where", "which", "while", "who", "whom", "why",
+              "will", "with", "would", "you", "your", "yours",
+
+              "the", "and", "for", "with", "from", "this", "that",
+              "are", "was", "were", "have", "has", "had", "not",
+              "kwa", "na", "ya", "wa", "za", "ni", "katika", "hii",
+              "hiyo", "hao", "hizi", "pia", "kama", "au", "bila",
+              "kutoka", "kwao", "yake", "yetu", "zao", "mimi", "wewe",
+              "sisi", "wao", "ina", "una", "ana", "wana"
+          }
+
+          COMMON_LOW_VALUE = {
+              "home", "page", "website", "click", "learn", "online",
+              "welcome", "more", "information", "content", "new"
+          }
+
+          CATEGORY_KEYWORDS = {
+              "course": [
+                  "online courses",
+                  "online learning",
+                  "professional courses",
+                  "digital learning",
+                  "study courses"
+              ],
+              "scholarship": [
+                  "scholarships",
+                  "study opportunities",
+                  "scholarship opportunities",
+                  "international scholarships",
+                  "student funding"
+              ],
+              "career": [
+                  "career opportunities",
+                  "jobs",
+                  "career development",
+                  "professional growth",
+                  "employment opportunities"
+              ],
+              "resource": [
+                  "learning resources",
+                  "study materials",
+                  "educational resources",
+                  "study guides",
+                  "learning materials"
+              ],
+              "freelancer": [
+                  "freelancers",
+                  "freelance services",
+                  "digital freelancers",
+                  "professional freelancers",
+                  "freelance work"
+              ],
+              "service": [
+                  "professional services",
+                  "digital services",
+                  "online services",
+                  "business services",
+                  "digital solutions"
+              ],
+              "business": [
+                  "business services",
+                  "business opportunities",
+                  "digital business",
+                  "business growth",
+                  "online business"
+              ],
+              "marketplace": [
+                  "online marketplace",
+                  "digital marketplace",
+                  "services marketplace",
+                  "digital products",
+                  "online services"
+              ],
+              "search": [
+                  "online learning",
+                  "courses",
+                  "scholarships",
+                  "careers",
+                  "learning resources"
+              ]
+          }
+
+          def clean_text(value):
+              value = html.unescape(value or "")
+
+              value = re.sub(
+                  r"<script\b[^>]*>.*?</script>",
+                  " ",
+                  value,
+                  flags=re.I | re.S
+              )
+
+              value = re.sub(
+                  r"<style\b[^>]*>.*?</style>",
+                  " ",
+                  value,
+                  flags=re.I | re.S
+              )
+
+              value = re.sub(
+                  r"<[^>]+>",
+                  " ",
+                  value
+              )
+
+              value = re.sub(
+                  r"https?://\S+",
+                  " ",
+                  value
+              )
+
+              value = re.sub(
+                  r"\s+",
+                  " ",
+                  value
+              )
+
+              return value.strip()
+
+          def extract_tag(content, tag):
+              pattern = (
+                  rf"<{tag}\b[^>]*>"
+                  rf"(.*?)"
+                  rf"</{tag}>"
+              )
+
+              return [
+                  clean_text(x)
+                  for x in re.findall(
+                      pattern,
+                      content,
+                      flags=re.I | re.S
+                  )
+                  if clean_text(x)
+              ]
+
+          def tokenize(text):
+              words = re.findall(
+                  r"[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ0-9'-]{2,}",
+                  text.lower()
+              )
+
+              return [
+                  word.strip("-'")
+                  for word in words
+                  if word not in STOPWORDS
+                  and word not in COMMON_LOW_VALUE
+                  and len(word) >= 3
+              ]
+
+          def get_category_keywords(page):
+              page = page.lower()
+
+              keywords = []
+
+              for category, values in CATEGORY_KEYWORDS.items():
+                  if category in page:
+                      keywords.extend(values)
+
+              return keywords
+
+          def make_phrases(words):
+              phrases = []
+
+              for i in range(len(words) - 1):
+                  a = words[i]
+                  b = words[i + 1]
+
+                  if (
+                      a not in STOPWORDS
+                      and b not in STOPWORDS
+                      and len(a) >= 3
+                      and len(b) >= 3
+                  ):
+                      phrases.append(f"{a} {b}")
+
+              for i in range(len(words) - 2):
+                  a = words[i]
+                  b = words[i + 1]
+                  c = words[i + 2]
+
+                  if (
+                      a not in STOPWORDS
+                      and b not in STOPWORDS
+                      and c not in STOPWORDS
+                  ):
+                      phrases.append(f"{a} {b} {c}")
+
+              return phrases
+
+          results = []
+
+          html_files = sorted(Path(".").glob("*.html"))
+
+          for file in html_files:
+
+              try:
+                  content = file.read_text(
+                      encoding="utf-8",
+                      errors="ignore"
+                  )
+              except Exception:
+                  continue
+
+              title = " ".join(
+                  extract_tag(content, "title")
+              )
+
+              h1 = " ".join(
+                  extract_tag(content, "h1")
+              )
+
+              headings = " ".join(
+                  extract_tag(content, "h2")
+                  + extract_tag(content, "h3")
+              )
+
+              body = clean_text(content)
+
+              # Give title and headings more weight
+              weighted_text = (
+                  f"{title} {title} "
+                  f"{h1} {h1} "
+                  f"{headings} {headings} "
+                  f"{body}"
+              )
+
+              words = tokenize(weighted_text)
+
+              frequency = Counter(words)
+
+              phrase_words = tokenize(
+                  f"{title} {h1} {headings}"
+              )
+
+              phrases = make_phrases(
+                  phrase_words
+              )
+
+              phrase_frequency = Counter(phrases)
+
+              # Keyword candidates
+              single_keywords = [
+                  word
+                  for word, count in frequency.most_common()
+                  if count >= 1
+              ]
+
+              phrase_keywords = [
+                  phrase
+                  for phrase, count in phrase_frequency.most_common()
+                  if count >= 1
+              ]
+
+              category_keywords = get_category_keywords(
+                  file.name
+              )
+
+              # Prioritize page-specific phrases
+              combined = []
+
+              for keyword in category_keywords:
+                  if keyword.lower() not in [
+                      x.lower() for x in combined
+                  ]:
+                      combined.append(keyword)
+
+              for keyword in phrase_keywords:
+                  if keyword.lower() not in [
+                      x.lower() for x in combined
+                  ]:
+                      combined.append(keyword)
+
+              for keyword in single_keywords:
+                  if keyword.lower() not in [
+                      x.lower() for x in combined
+                  ]:
+                      combined.append(keyword)
+
+              # Remove weak/technical terms
+              combined = [
+                  x for x in combined
+                  if len(x) >= 3
+                  and not x.lower().startswith("javascript")
+                  and not x.lower().startswith("function")
+              ]
+
+              # Maximum useful keyword list
+              primary = combined[:10]
+              secondary = combined[10:25]
+
+              # Long-tail candidates
+              long_tail = []
+
+              for phrase in phrase_keywords:
+                  if len(phrase.split()) >= 3:
+                      if phrase.lower() not in [
+                          x.lower() for x in long_tail
+                      ]:
+                          long_tail.append(phrase)
+
+              long_tail = long_tail[:10]
+
+              results.append({
+                  "page": str(file),
+                  "title": title,
+                  "primary_keywords": primary,
+                  "secondary_keywords": secondary,
+                  "long_tail_keywords": long_tail,
+                  "keyword_count": len(
+                      primary + secondary + long_tail
+                  )
+              })
+
+          report = {
+              "generated_at": datetime.now(
+                  timezone.utc
+              ).isoformat(),
+              "brand": BRAND,
+              "pages_checked": len(results),
+              "pages": results
+          }
+
+          Path(
+              "seo-keyword-report.json"
+          ).write_text(
+              json.dumps(
+                  report,
+                  indent=2,
+                  ensure_ascii=False
+              ),
+              encoding="utf-8"
+          )
+
+          markdown = [
+              "# LetsStudy Pro SEO Keyword Report",
+              "",
+              f"Generated: {report['generated_at']}",
+              "",
+              f"Pages checked: {len(results)}",
+              ""
+          ]
+
+          for item in results:
+
+              markdown.append(
+                  f"## {item['page']}"
+              )
+
+              if item["title"]:
+                  markdown.append(
+                      f"**Title:** {item['title']}"
+                  )
+
+              markdown.append("")
+              markdown.append(
+                  "**Primary Keywords:**"
+              )
+
+              for keyword in item["primary_keywords"]:
+                  markdown.append(
+                      f"- {keyword}"
+                  )
+
+              markdown.append("")
+              markdown.append(
+                  "**Secondary Keywords:**"
+              )
+
+              for keyword in item["secondary_keywords"]:
+                  markdown.append(
+                      f"- {keyword}"
+                  )
+
+              markdown.append("")
+              markdown.append(
+                  "**Long-Tail Keywords:**"
+              )
+
+              for keyword in item["long_tail_keywords"]:
+                  markdown.append(
+                      f"- {keyword}"
+                  )
+
+              markdown.append("")
+              markdown.append("---")
+              markdown.append("")
+
+          Path(
+              "seo-keyword-report.md"
+          ).write_text(
+              "\n".join(markdown),
+              encoding="utf-8"
+          )
+
+          print("======================================")
+          print(" LETSSTUDY PRO SEO KEYWORD GENERATOR")
+          print("======================================")
+          print(f"Pages checked: {len(results)}")
+          print("")
+
+          for item in results:
+              print(f"PAGE: {item['page']}")
+              print(
+                  "PRIMARY: "
+                  + ", ".join(item["primary_keywords"])
+              )
+              print(
+                  "SECONDARY: "
+                  + ", ".join(item["secondary_keywords"])
+              )
+              print(
+                  "LONG-TAIL: "
+                  + ", ".join(item["long_tail_keywords"])
+              )
+              print("")
+
+          print("Reports:")
+          print("- seo-keyword-report.json")
+          print("- seo-keyword-report.md")
+          print("")
+          print("No HTML files were modified.")
+          PY
+
+      - name: Upload SEO Keyword Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-keyword-report
+          path: |
+            seo-keyword-report.json
+            seo-keyword-report.md
+          if-no-files-found: warn
+
+      - name: Final Report
+        run: |
+          echo "======================================"
+          echo " SEO KEYWORD GENERATOR COMPLETED"
+          echo "======================================"
+          echo ""
+          echo "LetsStudy Pro pages analyzed."
+          echo "Primary keywords generated."
+          echo "Secondary keywords generated."
+          echo "Long-tail keywords generated."
+          echo ""
+          echo "HTML files were NOT modified."
+          echo ""
+          echo "Reports are available as GitHub Actions artifacts."
+          echo "======================================"
