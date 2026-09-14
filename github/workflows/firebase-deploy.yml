@@ -1,0 +1,138 @@
+name: LetsStudy Pro - Firebase Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate Before Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check Firebase configuration
+        run: |
+          set -e
+
+          test -f firebase.json || {
+            echo "ERROR: firebase.json not found."
+            exit 1
+          }
+
+          echo "firebase.json found."
+
+      - name: Check required website files
+        run: |
+          set -e
+
+          test -f index-auth.html || {
+            echo "ERROR: index-auth.html not found."
+            exit 1
+          }
+
+          test -f robots.txt || {
+            echo "ERROR: robots.txt not found."
+            exit 1
+          }
+
+          echo "Required website files found."
+
+  deploy:
+    name: Deploy to Firebase Hosting
+    needs: validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Show Firebase CLI version
+        run: firebase --version
+
+      - name: Deploy Firebase Hosting
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          set -e
+
+          firebase deploy \
+            --only hosting \
+            --project let-s-study-pro-course \
+            --token "$FIREBASE_TOKEN"
+
+      - name: Verify production website
+        run: |
+          set -e
+
+          echo "Checking production website..."
+
+          STATUS=$(curl \
+            -L \
+            -o /dev/null \
+            -s \
+            -w "%{http_code}" \
+            --max-time 30 \
+            "https://letsstudy.pro/")
+
+          echo "Website status: $STATUS"
+
+          if [ "$STATUS" != "200" ]; then
+            echo "ERROR: Production website did not return HTTP 200."
+            exit 1
+          fi
+
+          echo "Production website is online."
+
+      - name: Verify sitemap
+        run: |
+          set -e
+
+          STATUS=$(curl \
+            -L \
+            -o /dev/null \
+            -s \
+            -w "%{http_code}" \
+            --max-time 30 \
+            "https://letsstudy.pro/sitemap.xml")
+
+          echo "Sitemap status: $STATUS"
+
+          if [ "$STATUS" != "200" ]; then
+            echo "WARNING: sitemap.xml returned HTTP $STATUS"
+          else
+            echo "Sitemap is available."
+          fi
+
+      - name: Deployment summary
+        run: |
+          echo ""
+          echo "======================================"
+          echo " LetsStudy Pro Deployment Successful"
+          echo "======================================"
+          echo ""
+          echo "Firebase Project:"
+          echo "let-s-study-pro-course"
+          echo ""
+          echo "Production:"
+          echo "https://letsstudy.pro"
+          echo ""
+          echo "Firebase Hosting:"
+          echo "https://let-s-study-pro-course.web.app"
+          echo ""
