@@ -1,0 +1,197 @@
+name: LetsStudy Pro - Google Indexing Monitor
+
+on:
+  push:
+    branches:
+      - main
+
+  schedule:
+    - cron: "0 */12 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  indexing-monitor:
+    name: Google Indexing Health Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check sitemap availability
+        shell: bash
+        run: |
+          echo "======================================"
+          echo " LetsStudy Pro Google Indexing Monitor"
+          echo "======================================"
+          echo ""
+
+          SITEMAP="https://letsstudy.pro/sitemap.xml"
+
+          STATUS=$(curl \
+            -L \
+            -s \
+            -o /tmp/sitemap.xml \
+            -w "%{http_code}" \
+            --max-time 60 \
+            "$SITEMAP" || true)
+
+          echo "Sitemap: $SITEMAP"
+          echo "HTTP Status: $STATUS"
+
+          if [ "$STATUS" = "200" ]; then
+            echo "Sitemap: ONLINE"
+          else
+            echo "WARNING: Sitemap returned HTTP $STATUS"
+          fi
+
+      - name: Count sitemap URLs
+        shell: bash
+        run: |
+          echo ""
+          echo "Counting URLs..."
+
+          if [ -s /tmp/sitemap.xml ]; then
+
+            COUNT=$(grep -o "<loc>" /tmp/sitemap.xml | wc -l || true)
+
+            echo "URLs discovered in sitemap: $COUNT"
+
+            if [ "$COUNT" -gt 0 ]; then
+              echo "URL discovery signal: OK"
+            else
+              echo "WARNING: No URLs found."
+            fi
+
+          else
+
+            echo "WARNING: Sitemap is empty or unavailable."
+
+          fi
+
+      - name: Check Googlebot access
+        shell: bash
+        run: |
+          echo ""
+          echo "Checking Googlebot access..."
+
+          STATUS=$(curl \
+            -A "Googlebot" \
+            -L \
+            -s \
+            -o /dev/null \
+            -w "%{http_code}" \
+            --max-time 60 \
+            "https://letsstudy.pro/" || true)
+
+          echo "Googlebot-style request status: $STATUS"
+
+          if [ "$STATUS" = "200" ]; then
+            echo "Googlebot access signal: OK"
+          else
+            echo "WARNING: Googlebot-style request returned $STATUS"
+          fi
+
+      - name: Check robots.txt
+        shell: bash
+        run: |
+          echo ""
+          echo "Checking robots.txt..."
+
+          curl \
+            -A "Googlebot" \
+            -L \
+            -s \
+            --max-time 30 \
+            "https://letsstudy.pro/robots.txt" \
+            > /tmp/robots.txt || true
+
+          if [ -s /tmp/robots.txt ]; then
+            echo "robots.txt: AVAILABLE"
+          else
+            echo "WARNING: robots.txt unavailable."
+          fi
+
+          if grep -qi \
+            "Sitemap:.*letsstudy.pro/sitemap.xml" \
+            /tmp/robots.txt; then
+
+            echo "Sitemap declaration: FOUND"
+
+          else
+
+            echo "WARNING: Sitemap declaration not found."
+
+          fi
+
+      - name: Check noindex signals
+        shell: bash
+        run: |
+          echo ""
+          echo "Checking homepage indexing directives..."
+
+          curl \
+            -A "Googlebot" \
+            -L \
+            -s \
+            --max-time 60 \
+            "https://letsstudy.pro/" \
+            > /tmp/home.html || true
+
+          if grep -qiE \
+            'noindex|googlebot[^>]*noindex' \
+            /tmp/home.html; then
+
+            echo "WARNING: Possible noindex directive detected."
+
+          else
+
+            echo "No obvious noindex directive detected."
+
+          fi
+
+      - name: Check canonical
+        shell: bash
+        run: |
+          echo ""
+          echo "Checking canonical..."
+
+          if grep -qi \
+            'rel="canonical"' \
+            /tmp/home.html; then
+
+            echo "Canonical tag: FOUND"
+
+          else
+
+            echo "WARNING: Canonical tag not detected."
+
+          fi
+
+      - name: Final report
+        shell: bash
+        run: |
+          echo ""
+          echo "======================================"
+          echo " GOOGLE INDEXING MONITOR COMPLETED"
+          echo "======================================"
+          echo ""
+          echo "Domain: https://letsstudy.pro"
+          echo "Sitemap: Checked"
+          echo "URL discovery: Checked"
+          echo "Googlebot access: Checked"
+          echo "robots.txt: Checked"
+          echo "Noindex signals: Checked"
+          echo "Canonical: Checked"
+          echo ""
+          echo "IMPORTANT:"
+          echo "This workflow does NOT force Google to index URLs."
+          echo "Google decides crawling and indexing."
+          echo ""
+          echo "======================================"
+
+          exit 0
