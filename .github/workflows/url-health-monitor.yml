@@ -1,0 +1,148 @@
+name: LetsStudy Pro - URL Health Monitor
+
+on:
+  push:
+    branches:
+      - main
+
+  schedule:
+    - cron: "0 */6 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  url-health:
+    name: URL Health Monitor
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Monitor important URLs
+        shell: bash
+        run: |
+          echo "======================================"
+          echo " LetsStudy Pro URL Health Monitor"
+          echo "======================================"
+          echo ""
+
+          URLS="
+          https://letsstudy.pro/
+          https://letsstudy.pro/index-auth.html
+          https://letsstudy.pro/search.html
+          https://letsstudy.pro/robots.txt
+          https://letsstudy.pro/sitemap.xml
+          "
+
+          TOTAL=0
+          ONLINE=0
+          FAILED=0
+
+          while IFS= read -r URL; do
+
+            [ -z "$URL" ] && continue
+
+            TOTAL=$((TOTAL + 1))
+
+            STATUS=$(curl \
+              -L \
+              -s \
+              -o /dev/null \
+              -w "%{http_code}" \
+              --max-time 30 \
+              "$URL" || true)
+
+            echo "$STATUS  $URL"
+
+            case "$STATUS" in
+              200|204|301|302|307|308)
+                ONLINE=$((ONLINE + 1))
+                ;;
+              *)
+                FAILED=$((FAILED + 1))
+                ;;
+            esac
+
+          done <<EOF
+          $URLS
+          EOF
+
+          echo ""
+          echo "======================================"
+          echo " URL HEALTH SUMMARY"
+          echo "======================================"
+          echo ""
+          echo "URLs checked: $TOTAL"
+          echo "Healthy: $ONLINE"
+          echo "Failed: $FAILED"
+          echo ""
+
+          if [ "$FAILED" -gt 0 ]; then
+            echo "WARNING: Some URLs are unavailable."
+          else
+            echo "All monitored URLs are healthy."
+          fi
+
+          echo ""
+          echo "This monitor is informational."
+          echo "It will not block deployment."
+
+          exit 0
+
+      - name: Check HTTPS certificate connection
+        shell: bash
+        run: |
+          echo "Checking HTTPS connection..."
+
+          if curl \
+            -I \
+            -L \
+            -s \
+            --max-time 30 \
+            "https://letsstudy.pro/" > /dev/null; then
+
+            echo "HTTPS connection: OK"
+
+          else
+
+            echo "WARNING: HTTPS connection check failed."
+
+          fi
+
+          exit 0
+
+      - name: Check response time
+        shell: bash
+        run: |
+          echo "Checking website response time..."
+
+          curl \
+            -L \
+            -s \
+            -o /dev/null \
+            -w "HTTP: %{http_code}\nResponse time: %{time_total}s\n" \
+            --max-time 60 \
+            "https://letsstudy.pro/" || true
+
+          echo ""
+          echo "Response-time check completed."
+
+          exit 0
+
+      - name: Final report
+        run: |
+          echo ""
+          echo "======================================"
+          echo " URL HEALTH MONITOR COMPLETED"
+          echo "======================================"
+          echo ""
+          echo "LetsStudy Pro"
+          echo "https://letsstudy.pro"
+          echo ""
+          echo "Important URLs: Checked"
+          echo "HTTPS: Checked"
+          echo "Response time: Checked"
+          echo ""
+          echo "Monitoring remains active."
+          echo "======================================"
