@@ -1,0 +1,368 @@
+name: LetsStudy Pro - Internal Links Checker
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  internal-links:
+    name: Internal Links Checker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Check Internal Links
+        shell: bash
+        run: |
+          set +e
+
+          python3 <<'PY'
+          import os
+          import re
+          import json
+          from html.parser import HTMLParser
+          from urllib.parse import urlparse, unquote
+
+          ROOT = os.getcwd()
+          DOMAIN = "letsstudy.pro"
+
+          class LinkParser(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.links = []
+
+              def handle_starttag(self, tag, attrs):
+                  if tag.lower() != "a":
+                      return
+
+                  attrs = dict(attrs)
+
+                  if "href" in attrs:
+                      self.links.append(attrs["href"])
+
+          html_files = []
+
+          for name in os.listdir(ROOT):
+              if name.endswith(".html") and os.path.isfile(
+                  os.path.join(ROOT, name)
+              ):
+                  html_files.append(name)
+
+          html_files.sort()
+
+          results = []
+          total_internal = 0
+          total_external = 0
+          broken_internal = 0
+          valid_internal = 0
+          skipped_dynamic = 0
+
+          page_link_counts = {}
+
+          def normalize_target(source_file, href):
+              href = href.strip()
+
+              if not href:
+                  return None, "empty"
+
+              lower = href.lower()
+
+              if lower.startswith("#"):
+                  return source_file, "fragment"
+
+              if lower.startswith((
+                  "mailto:",
+                  "tel:",
+                  "javascript:",
+                  "data:",
+                  "sms:"
+              )):
+                  return None, "ignored"
+
+              parsed = urlparse(href)
+
+              # External URL
+              if parsed.scheme in ("http", "https"):
+                  host = (parsed.netloc or "").lower()
+
+                  if host and not (
+                      host == DOMAIN or
+                      host.endswith("." + DOMAIN)
+                  ):
+                      return None, "external"
+
+                  path = unquote(parsed.path or "/")
+
+              else:
+                  path = unquote(parsed.path)
+
+                  if path.startswith("/"):
+                      pass
+                  else:
+                      source_dir = os.path.dirname(source_file)
+                      path = os.path.normpath(
+                          os.path.join(source_dir, path)
+                      )
+
+              if path in ("", "."):
+                  return None, "root"
+
+              if path == "/":
+                  return None, "root"
+
+              path = path.lstrip("/")
+
+              # Dynamic Firebase routes
+              if path.startswith("share/"):
+                  return None, "dynamic"
+
+              if path.endswith("/"):
+                  path = path + "index.html"
+
+              return path, "internal"
+
+          for filename in html_files:
+              full_path = os.path.join(ROOT, filename)
+
+              try:
+                  with open(
+                      full_path,
+                      "r",
+                      encoding="utf-8",
+                      errors="ignore"
+                  ) as f:
+                      content = f.read()
+
+                  parser = LinkParser()
+                  parser.feed(content)
+
+              except Exception as e:
+                  results.append({
+                      "page": filename,
+                      "href": "",
+                      "status": "error",
+                      "target": "",
+                      "message": str(e)
+                  })
+                  continue
+
+              page_internal = 0
+              page_broken = 0
+
+              for href in parser.links:
+                  target, kind = normalize_target(filename, href)
+
+                  if kind == "external":
+                      total_external += 1
+                      continue
+
+                  if kind in ("ignored", "empty", "fragment"):
+                      continue
+
+                  if kind == "root":
+                      total_internal += 1
+                      valid_internal += 1
+                      page_internal += 1
+                      continue
+
+                  if kind == "dynamic":
+                      skipped_dynamic += 1
+                      continue
+
+                  total_internal += 1
+                  page_internal += 1
+
+                  if target and os.path.isfile(
+                      os.path.join(ROOT, target)
+                  ):
+                      valid_internal += 1
+
+                      results.append({
+                          "page": filename,
+                          "href": href,
+                          "status": "valid",
+                          "target": target
+                      })
+
+                  else:
+                      broken_internal += 1
+                      page_broken += 1
+
+                      results.append({
+                          "page": filename,
+                          "href": href,
+                          "status": "broken",
+                          "target": target or "",
+                          "message": "Target file not found"
+                      })
+
+              page_link_counts[filename] = {
+                  "internal_links": page_internal,
+                  "broken_links": page_broken
+              }
+
+          # Pages with no internal links
+          pages_without_internal_links = [
+              page
+              for page, data in page_link_counts.items()
+              if data["internal_links"] == 0
+          ]
+
+          summary = {
+              "website": "https://letsstudy.pro",
+              "html_pages_checked": len(html_files),
+              "internal_links": total_internal,
+              "valid_internal_links": valid_internal,
+              "broken_internal_links": broken_internal,
+              "external_links": total_external,
+              "dynamic_routes_skipped": skipped_dynamic,
+              "pages_without_internal_links": len(
+                  pages_without_internal_links
+              ),
+              "broken_links": [
+                  r for r in results
+                  if r.get("status") == "broken"
+              ],
+              "page_link_counts": page_link_counts,
+              "pages_without_internal_links_list":
+                  pages_without_internal_links
+          }
+
+          with open(
+              "internal-links-report.json",
+              "w",
+              encoding="utf-8"
+          ) as f:
+              json.dump(
+                  summary,
+                  f,
+                  indent=2,
+                  ensure_ascii=False
+              )
+
+          with open(
+              "internal-links-report.md",
+              "w",
+              encoding="utf-8"
+          ) as f:
+
+              f.write("# LetsStudy Pro - Internal Links Report\n\n")
+
+              f.write("## Summary\n\n")
+              f.write(
+                  f"- HTML pages checked: {len(html_files)}\n"
+              )
+              f.write(
+                  f"- Internal links: {total_internal}\n"
+              )
+              f.write(
+                  f"- Valid internal links: {valid_internal}\n"
+              )
+              f.write(
+                  f"- Broken internal links: {broken_internal}\n"
+              )
+              f.write(
+                  f"- External links: {total_external}\n"
+              )
+              f.write(
+                  f"- Dynamic routes skipped: {skipped_dynamic}\n"
+              )
+              f.write(
+                  f"- Pages without internal links: "
+                  f"{len(pages_without_internal_links)}\n\n"
+              )
+
+              f.write("## Broken Internal Links\n\n")
+
+              broken = [
+                  r for r in results
+                  if r.get("status") == "broken"
+              ]
+
+              if broken:
+                  for item in broken:
+                      f.write(
+                          f"- **{item['page']}** → "
+                          f"`{item['href']}`"
+                      )
+
+                      if item.get("target"):
+                          f.write(
+                              f" → `{item['target']}`"
+                          )
+
+                      f.write("\n")
+              else:
+                  f.write(
+                      "No broken internal links detected. ✅\n"
+                  )
+
+              f.write("\n## Pages Without Internal Links\n\n")
+
+              if pages_without_internal_links:
+                  for page in pages_without_internal_links:
+                      f.write(f"- `{page}`\n")
+              else:
+                  f.write(
+                      "All checked pages contain internal links. ✅\n"
+                  )
+
+              f.write("\n## Page Link Counts\n\n")
+              f.write(
+                  "| Page | Internal Links | Broken |\n"
+              )
+              f.write(
+                  "|---|---:|---:|\n"
+              )
+
+              for page, data in sorted(
+                  page_link_counts.items()
+              ):
+                  f.write(
+                      f"| `{page}` | "
+                      f"{data['internal_links']} | "
+                      f"{data['broken_links']} |\n"
+                  )
+
+          print("")
+          print("======================================")
+          print(" Internal Links Check Completed")
+          print("======================================")
+          print(f"HTML pages: {len(html_files)}")
+          print(f"Internal links: {total_internal}")
+          print(f"Valid internal links: {valid_internal}")
+          print(f"Broken internal links: {broken_internal}")
+          print(f"External links: {total_external}")
+          print("")
+
+          if broken_internal > 0:
+              print("WARNING: Broken internal links detected.")
+          else:
+              print("SUCCESS: No broken internal links detected.")
+
+          print("")
+          print("This check is informational and will not fail.")
+          PY
+
+          exit 0
+
+      - name: Upload Internal Links Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: internal-links-report
+          path: |
+            internal-links-report.json
+            internal-links-report.md
+          if-no-files-found: warn
