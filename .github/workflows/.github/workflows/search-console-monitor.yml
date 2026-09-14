@@ -1,0 +1,612 @@
+name: LetsStudy Pro - Search Console Monitor
+
+on:
+  push:
+    branches:
+      - main
+
+  schedule:
+    - cron: "30 5 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  search-console-monitor:
+    name: Search Console Monitor
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install Google API Libraries
+        run: |
+          python -m pip install --upgrade pip
+          pip install google-auth google-auth-httplib2 google-api-python-client
+
+      - name: Check Search Console
+        env:
+          GSC_CREDENTIALS: ${{ secrets.GSC_SERVICE_ACCOUNT_JSON }}
+          GSC_SITE_URL: "https://letsstudy.pro/"
+        shell: bash
+        run: |
+          set +e
+
+          if [ -z "$GSC_CREDENTIALS" ]; then
+            echo "======================================"
+            echo " Search Console Monitor"
+            echo "======================================"
+            echo ""
+            echo "GSC_SERVICE_ACCOUNT_JSON secret is not configured."
+            echo ""
+            echo "Skipping API monitoring safely."
+            echo ""
+            echo "Add this GitHub Actions secret when ready:"
+            echo "GSC_SERVICE_ACCOUNT_JSON"
+            echo ""
+            echo "The workflow will not fail."
+            exit 0
+          fi
+
+          printf '%s' "$GSC_CREDENTIALS" > gsc-credentials.json
+
+          python <<'PY'
+          import json
+          import os
+          from datetime import datetime, timedelta, timezone
+
+          from google.oauth2 import service_account
+          from googleapiclient.discovery import build
+
+          SITE_URL = os.environ.get(
+              "GSC_SITE_URL",
+              "https://letsstudy.pro/"
+          )
+
+          CREDENTIALS_FILE = "gsc-credentials.json"
+
+          SCOPES = [
+              "https://www.googleapis.com/auth/webmasters.readonly"
+          ]
+
+          report = {
+              "website": SITE_URL,
+              "generated_at": datetime.now(
+                  timezone.utc
+              ).isoformat(),
+              "status": "UNKNOWN",
+              "message": "",
+              "performance": {},
+              "top_queries": [],
+              "top_pages": [],
+              "sitemaps": [],
+              "errors": []
+          }
+
+          try:
+              credentials = (
+                  service_account.Credentials
+                  .from_service_account_file(
+                      CREDENTIALS_FILE,
+                      scopes=SCOPES
+                  )
+              )
+
+              service = build(
+                  "searchconsole",
+                  "v1",
+                  credentials=credentials,
+                  cache_discovery=False
+              )
+
+              # --------------------------------
+              # Date range
+              # --------------------------------
+
+              end_date = (
+                  datetime.now(timezone.utc).date()
+                  - timedelta(days=3)
+              )
+
+              start_date = (
+                  end_date
+                  - timedelta(days=28)
+              )
+
+              request = {
+                  "startDate":
+                      start_date.isoformat(),
+
+                  "endDate":
+                      end_date.isoformat(),
+
+                  "dimensions": [],
+
+                  "rowLimit": 1
+              }
+
+              # --------------------------------
+              # Overall performance
+              # --------------------------------
+
+              response = (
+                  service.searchanalytics()
+                  .query(
+                      siteUrl=SITE_URL,
+                      body=request
+                  )
+                  .execute()
+              )
+
+              rows = response.get(
+                  "rows",
+                  []
+              )
+
+              if rows:
+                  row = rows[0]
+
+                  report["performance"] = {
+                      "clicks":
+                          row.get(
+                              "clicks",
+                              0
+                          ),
+
+                      "impressions":
+                          row.get(
+                              "impressions",
+                              0
+                          ),
+
+                      "ctr":
+                          row.get(
+                              "ctr",
+                              0
+                          ),
+
+                      "position":
+                          row.get(
+                              "position",
+                              0
+                          )
+                  }
+
+              # --------------------------------
+              # Top queries
+              # --------------------------------
+
+              query_request = {
+                  "startDate":
+                      start_date.isoformat(),
+
+                  "endDate":
+                      end_date.isoformat(),
+
+                  "dimensions": [
+                      "query"
+                  ],
+
+                  "rowLimit": 25,
+
+                  "orderBy": [
+                      {
+                          "fieldName": "clicks",
+                          "descending": True
+                      }
+                  ]
+              }
+
+              query_response = (
+                  service.searchanalytics()
+                  .query(
+                      siteUrl=SITE_URL,
+                      body=query_request
+                  )
+                  .execute()
+              )
+
+              for row in query_response.get(
+                  "rows",
+                  []
+              ):
+                  keys = row.get(
+                      "keys",
+                      []
+                  )
+
+                  if not keys:
+                      continue
+
+                  report["top_queries"].append({
+                      "query": keys[0],
+                      "clicks":
+                          row.get(
+                              "clicks",
+                              0
+                          ),
+                      "impressions":
+                          row.get(
+                              "impressions",
+                              0
+                          ),
+                      "ctr":
+                          row.get(
+                              "ctr",
+                              0
+                          ),
+                      "position":
+                          row.get(
+                              "position",
+                              0
+                          )
+                  })
+
+              # --------------------------------
+              # Top pages
+              # --------------------------------
+
+              page_request = {
+                  "startDate":
+                      start_date.isoformat(),
+
+                  "endDate":
+                      end_date.isoformat(),
+
+                  "dimensions": [
+                      "page"
+                  ],
+
+                  "rowLimit": 25,
+
+                  "orderBy": [
+                      {
+                          "fieldName": "clicks",
+                          "descending": True
+                      }
+                  ]
+              }
+
+              page_response = (
+                  service.searchanalytics()
+                  .query(
+                      siteUrl=SITE_URL,
+                      body=page_request
+                  )
+                  .execute()
+              )
+
+              for row in page_response.get(
+                  "rows",
+                  []
+              ):
+                  keys = row.get(
+                      "keys",
+                      []
+                  )
+
+                  if not keys:
+                      continue
+
+                  report["top_pages"].append({
+                      "page": keys[0],
+                      "clicks":
+                          row.get(
+                              "clicks",
+                              0
+                          ),
+                      "impressions":
+                          row.get(
+                              "impressions",
+                              0
+                          ),
+                      "ctr":
+                          row.get(
+                              "ctr",
+                              0
+                          ),
+                      "position":
+                          row.get(
+                              "position",
+                              0
+                          )
+                  })
+
+              # --------------------------------
+              # Sitemaps
+              # --------------------------------
+
+              sitemap_response = (
+                  service.sitemaps()
+                  .list(
+                      siteUrl=SITE_URL
+                  )
+                  .execute()
+              )
+
+              for item in sitemap_response.get(
+                  "sitemap",
+                  []
+              ):
+                  report["sitemaps"].append({
+                      "path":
+                          item.get(
+                              "path",
+                              ""
+                          ),
+                      "last_submitted":
+                          item.get(
+                              "lastSubmitted",
+                              ""
+                          ),
+                      "last_downloaded":
+                          item.get(
+                              "lastDownloaded",
+                              ""
+                          ),
+                      "is_pending":
+                          item.get(
+                              "isPending",
+                              False
+                          ),
+                      "is_sitemaps_index":
+                          item.get(
+                              "isSitemapsIndex",
+                              False
+                          ),
+                      "errors":
+                          item.get(
+                              "errors",
+                              0
+                          ),
+                      "warnings":
+                          item.get(
+                              "warnings",
+                              0
+                          )
+                  })
+
+              report["status"] = "SUCCESS"
+
+              report["message"] = (
+                  "Search Console monitoring completed."
+              )
+
+          except Exception as error:
+              report["status"] = "ERROR"
+
+              report["message"] = str(
+                  error
+              )
+
+              report["errors"].append(
+                  str(error)
+              )
+
+          # --------------------------------
+          # JSON report
+          # --------------------------------
+
+          with open(
+              "search-console-report.json",
+              "w",
+              encoding="utf-8"
+          ) as file:
+              json.dump(
+                  report,
+                  file,
+                  indent=2,
+                  ensure_ascii=False
+              )
+
+          # --------------------------------
+          # Markdown report
+          # --------------------------------
+
+          with open(
+              "search-console-report.md",
+              "w",
+              encoding="utf-8"
+          ) as file:
+
+              file.write(
+                  "# LetsStudy Pro - Search Console Monitor\n\n"
+              )
+
+              file.write(
+                  f"Website: `{SITE_URL}`\n\n"
+              )
+
+              file.write(
+                  f"Status: **{report['status']}**\n\n"
+              )
+
+              file.write(
+                  f"{report['message']}\n\n"
+              )
+
+              performance = report.get(
+                  "performance",
+                  {}
+              )
+
+              file.write(
+                  "## Performance — Last 28 Days\n\n"
+              )
+
+              file.write(
+                  f"- Clicks: "
+                  f"{performance.get('clicks', 0)}\n"
+              )
+
+              file.write(
+                  f"- Impressions: "
+                  f"{performance.get('impressions', 0)}\n"
+              )
+
+              file.write(
+                  f"- CTR: "
+                  f"{performance.get('ctr', 0):.2%}\n"
+              )
+
+              file.write(
+                  f"- Average position: "
+                  f"{performance.get('position', 0):.2f}\n\n"
+              )
+
+              # -----------------------------
+              # Queries
+              # -----------------------------
+
+              file.write(
+                  "## Top Search Queries\n\n"
+              )
+
+              file.write(
+                  "| Query | Clicks | Impressions | CTR | Position |\n"
+              )
+
+              file.write(
+                  "|---|---:|---:|---:|---:|\n"
+              )
+
+              for item in report[
+                  "top_queries"
+              ]:
+                  file.write(
+                      f"| {item['query']} | "
+                      f"{item['clicks']} | "
+                      f"{item['impressions']} | "
+                      f"{item['ctr']:.2%} | "
+                      f"{item['position']:.2f} |\n"
+                  )
+
+              file.write("\n")
+
+              # -----------------------------
+              # Pages
+              # -----------------------------
+
+              file.write(
+                  "## Top Pages\n\n"
+              )
+
+              file.write(
+                  "| Page | Clicks | Impressions | CTR | Position |\n"
+              )
+
+              file.write(
+                  "|---|---:|---:|---:|---:|\n"
+              )
+
+              for item in report[
+                  "top_pages"
+              ]:
+                  file.write(
+                      f"| {item['page']} | "
+                      f"{item['clicks']} | "
+                      f"{item['impressions']} | "
+                      f"{item['ctr']:.2%} | "
+                      f"{item['position']:.2f} |\n"
+                  )
+
+              file.write("\n")
+
+              # -----------------------------
+              # Sitemaps
+              # -----------------------------
+
+              file.write(
+                  "## Search Console Sitemaps\n\n"
+              )
+
+              if report["sitemaps"]:
+                  file.write(
+                      "| Sitemap | Submitted | Downloaded | Errors | Warnings |\n"
+                  )
+
+                  file.write(
+                      "|---|---|---|---:|---:|\n"
+                  )
+
+                  for item in report[
+                      "sitemaps"
+                  ]:
+                      file.write(
+                          f"| {item['path']} | "
+                          f"{item['last_submitted']} | "
+                          f"{item['last_downloaded']} | "
+                          f"{item['errors']} | "
+                          f"{item['warnings']} |\n"
+                      )
+              else:
+                  file.write(
+                      "No sitemap data returned.\n"
+                  )
+
+              file.write("\n")
+
+              file.write(
+                  "## Notes\n\n"
+              )
+
+              file.write(
+                  "- Search Console data can have reporting delay.\n"
+              )
+
+              file.write(
+                  "- This workflow monitors Search Console data; "
+                  "it does not force Google to index URLs.\n"
+              )
+
+          print("")
+          print("======================================")
+          print(" Search Console Monitor")
+          print("======================================")
+          print(
+              f"Status: {report['status']}"
+          )
+          print(
+              f"Clicks: "
+              f"{performance.get('clicks', 0)}"
+          )
+          print(
+              f"Impressions: "
+              f"{performance.get('impressions', 0)}"
+          )
+          print(
+              f"Queries: "
+              f"{len(report['top_queries'])}"
+          )
+          print(
+              f"Pages: "
+              f"{len(report['top_pages'])}"
+          )
+          print(
+              f"Sitemaps: "
+              f"{len(report['sitemaps'])}"
+          )
+          print("")
+
+          PY
+
+          rm -f gsc-credentials.json
+
+          exit 0
+
+      - name: Upload Search Console Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: search-console-monitor-report
+          path: |
+            search-console-report.json
+            search-console-report.md
+          if-no-files-found: warn
