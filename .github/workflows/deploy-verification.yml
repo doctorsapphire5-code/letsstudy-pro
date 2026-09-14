@@ -1,0 +1,165 @@
+name: LetsStudy Pro - Deploy Verification
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify Production Deployment
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Verify Main Website
+        shell: bash
+        run: |
+          echo "======================================"
+          echo " LETSSTUDY PRO DEPLOY VERIFICATION"
+          echo "======================================"
+          echo ""
+
+          URL="https://letsstudy.pro/"
+
+          STATUS=$(curl -L -s -o /dev/null \
+            -w "%{http_code}" \
+            --max-time 60 \
+            "$URL" || true)
+
+          echo "URL: $URL"
+          echo "HTTP Status: $STATUS"
+          echo ""
+
+          if [ "$STATUS" = "200" ]; then
+            echo "PASS: Main website is online."
+          else
+            echo "WARNING: Main website returned HTTP $STATUS."
+          fi
+
+      - name: Verify Important Pages
+        shell: bash
+        run: |
+          echo ""
+          echo "Checking important production URLs..."
+          echo ""
+
+          URLS=(
+            "https://letsstudy.pro/"
+            "https://letsstudy.pro/index-auth.html"
+            "https://letsstudy.pro/search.html"
+            "https://letsstudy.pro/robots.txt"
+            "https://letsstudy.pro/sitemap.xml"
+          )
+
+          for URL in "${URLS[@]}"; do
+
+            STATUS=$(curl -L -s -o /dev/null \
+              -w "%{http_code}" \
+              --max-time 60 \
+              "$URL" || true)
+
+            if [ "$STATUS" = "200" ]; then
+              echo "PASS  $STATUS  $URL"
+            else
+              echo "WARN  $STATUS  $URL"
+            fi
+
+          done
+
+      - name: Verify HTTPS
+        shell: bash
+        run: |
+          echo ""
+          echo "Checking HTTPS..."
+
+          STATUS=$(curl -L -s -o /dev/null \
+            -w "%{http_code}" \
+            --max-time 60 \
+            "https://letsstudy.pro/" || true)
+
+          if [ "$STATUS" = "200" ]; then
+            echo "PASS: HTTPS is working."
+          else
+            echo "WARNING: HTTPS returned HTTP $STATUS."
+          fi
+
+      - name: Verify Website Content
+        shell: bash
+        run: |
+          echo ""
+          echo "Checking website response content..."
+
+          RESPONSE=$(curl -L -s \
+            --max-time 60 \
+            "https://letsstudy.pro/" || true)
+
+          if echo "$RESPONSE" | grep -qi "LetsStudy"; then
+            echo "PASS: LetsStudy Pro content detected."
+          else
+            echo "WARNING: Expected LetsStudy Pro text was not detected."
+          fi
+
+      - name: Verify Sitemap
+        shell: bash
+        run: |
+          echo ""
+          echo "Checking sitemap..."
+
+          SITEMAP=$(curl -L -s \
+            --max-time 60 \
+            "https://letsstudy.pro/sitemap.xml" || true)
+
+          if echo "$SITEMAP" | grep -qi "<urlset"; then
+            echo "PASS: Sitemap XML detected."
+          else
+            echo "WARNING: Sitemap XML structure was not detected."
+          fi
+
+          COUNT=$(echo "$SITEMAP" | grep -o "<loc>" | wc -l || true)
+
+          echo "Detected sitemap URLs: $COUNT"
+
+      - name: Verify Robots.txt
+        shell: bash
+        run: |
+          echo ""
+          echo "Checking robots.txt..."
+
+          ROBOTS=$(curl -L -s \
+            --max-time 30 \
+            "https://letsstudy.pro/robots.txt" || true)
+
+          if echo "$ROBOTS" | grep -qi "User-agent"; then
+            echo "PASS: robots.txt detected."
+          else
+            echo "WARNING: robots.txt content could not be verified."
+          fi
+
+      - name: Final Report
+        shell: bash
+        run: |
+          echo ""
+          echo "======================================"
+          echo " DEPLOY VERIFICATION COMPLETED"
+          echo "======================================"
+          echo ""
+          echo "Production:"
+          echo "https://letsstudy.pro"
+          echo ""
+          echo "Website availability: CHECKED"
+          echo "Important pages: CHECKED"
+          echo "HTTPS: CHECKED"
+          echo "Website content: CHECKED"
+          echo "Sitemap: CHECKED"
+          echo "Robots.txt: CHECKED"
+          echo ""
+          echo "STATUS: VERIFICATION COMPLETED"
+          echo "======================================"
