@@ -1,0 +1,196 @@
+name: LetsStudy Pro - Content Quality Check
+
+on:
+  push:
+    branches:
+      - main
+
+  schedule:
+    - cron: "30 4 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  content-quality:
+    name: Content Quality Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Analyze HTML content
+        shell: bash
+        run: |
+          echo "======================================"
+          echo " LetsStudy Pro Content Quality Check"
+          echo "======================================"
+          echo ""
+
+          TOTAL=0
+          WARNINGS=0
+
+          while IFS= read -r FILE; do
+
+            TOTAL=$((TOTAL + 1))
+
+            echo "Checking: $FILE"
+            echo "--------------------------------------"
+
+            if grep -qi '<title>' "$FILE"; then
+              echo "Title: OK"
+            else
+              echo "WARNING: Missing title"
+              WARNINGS=$((WARNINGS + 1))
+            fi
+
+            if grep -qi 'name=["'"'"']description["'"'"']' "$FILE"; then
+              echo "Meta description: OK"
+            else
+              echo "WARNING: Missing meta description"
+              WARNINGS=$((WARNINGS + 1))
+            fi
+
+            if grep -qi '<h1' "$FILE"; then
+              echo "H1: OK"
+            else
+              echo "WARNING: H1 not found"
+              WARNINGS=$((WARNINGS + 1))
+            fi
+
+            if grep -qi 'name=["'"'"']viewport["'"'"']' "$FILE"; then
+              echo "Viewport: OK"
+            else
+              echo "WARNING: Viewport not found"
+              WARNINGS=$((WARNINGS + 1))
+            fi
+
+            if grep -qi 'rel=["'"'"']canonical["'"'"']' "$FILE"; then
+              echo "Canonical: OK"
+            else
+              echo "WARNING: Canonical not found"
+              WARNINGS=$((WARNINGS + 1))
+            fi
+
+            SIZE=$(wc -c < "$FILE")
+
+            echo "File size: $SIZE bytes"
+
+            if [ "$SIZE" -lt 1000 ]; then
+              echo "WARNING: Very small HTML file"
+              WARNINGS=$((WARNINGS + 1))
+            fi
+
+            echo ""
+
+          done < <(
+            find . \
+              -type f \
+              -name "*.html" \
+              -not -path "./.git/*" \
+              -not -path "./node_modules/*" \
+              | sort
+          )
+
+          echo "======================================"
+          echo "CONTENT QUALITY SUMMARY"
+          echo "======================================"
+          echo ""
+          echo "HTML files checked: $TOTAL"
+          echo "Warnings detected: $WARNINGS"
+          echo ""
+
+          if [ "$WARNINGS" -gt 0 ]; then
+            echo "Some content quality warnings were detected."
+            echo "Review them when improving individual pages."
+          else
+            echo "No basic content quality warnings detected."
+          fi
+
+          echo ""
+          echo "This workflow is informational."
+          echo "It will not block deployment."
+
+          exit 0
+
+      - name: Check duplicate titles
+        shell: bash
+        run: |
+          echo "Checking duplicate page titles..."
+          echo ""
+
+          find . \
+            -type f \
+            -name "*.html" \
+            -not -path "./.git/*" \
+            -not -path "./node_modules/*" \
+            -print0 |
+          while IFS= read -r -d '' FILE; do
+
+            TITLE=$(grep -oi '<title>[^<]*</title>' "$FILE" | head -1 || true)
+
+            if [ -n "$TITLE" ]; then
+              echo "$TITLE -> $FILE"
+            fi
+
+          done
+
+          echo ""
+          echo "Duplicate-title review completed."
+          exit 0
+
+      - name: Check production homepage content
+        shell: bash
+        run: |
+          echo "Checking production homepage..."
+
+          RESPONSE=$(curl \
+            -L \
+            -s \
+            --max-time 60 \
+            "https://letsstudy.pro/" || true)
+
+          if echo "$RESPONSE" | grep -qi '<title>'; then
+            echo "Production title: FOUND"
+          else
+            echo "WARNING: Production title not detected."
+          fi
+
+          if echo "$RESPONSE" | grep -qi 'name=["'"'"']description["'"'"']'; then
+            echo "Production description: FOUND"
+          else
+            echo "WARNING: Production description not detected."
+          fi
+
+          if echo "$RESPONSE" | grep -qi '<h1'; then
+            echo "Production H1: FOUND"
+          else
+            echo "WARNING: Production H1 not detected."
+          fi
+
+          echo ""
+          echo "Production content check completed."
+          exit 0
+
+      - name: Final report
+        run: |
+          echo ""
+          echo "======================================"
+          echo " CONTENT QUALITY CHECK COMPLETED"
+          echo "======================================"
+          echo ""
+          echo "Titles: Checked"
+          echo "Meta descriptions: Checked"
+          echo "H1 headings: Checked"
+          echo "Viewport: Checked"
+          echo "Canonical: Checked"
+          echo "Page size: Checked"
+          echo "Production homepage: Checked"
+          echo ""
+          echo "Content quality monitoring is active."
+          echo "======================================"
+
+          exit 0
