@@ -1,0 +1,480 @@
+name: LetsStudy Pro - SEO Duplicate Checker
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: "45 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  seo-duplicate-checker:
+    name: SEO Duplicate Checker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Check Duplicate SEO Data
+        shell: bash
+        run: |
+          set +e
+
+          python3 <<'PY'
+          import os
+          import re
+          import json
+          import hashlib
+          from html.parser import HTMLParser
+          from collections import defaultdict
+
+          ROOT = os.getcwd()
+
+          class SEOParser(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.title = ""
+                  self.description = ""
+                  self.canonical = ""
+                  self.h1 = ""
+                  self.body_parts = []
+                  self.in_title = False
+                  self.in_h1 = False
+                  self.in_script = False
+                  self.in_style = False
+
+              def handle_starttag(self, tag, attrs):
+                  attrs = dict(attrs)
+                  tag = tag.lower()
+
+                  if tag == "title":
+                      self.in_title = True
+
+                  elif tag == "h1":
+                      self.in_h1 = True
+
+                  elif tag == "meta":
+                      name = (attrs.get("name") or "").lower()
+                      prop = (attrs.get("property") or "").lower()
+
+                      if name == "description":
+                          self.description = attrs.get("content", "").strip()
+
+                  elif tag == "link":
+                      rel = (attrs.get("rel") or "").lower()
+
+                      if rel == "canonical":
+                          self.canonical = attrs.get("href", "").strip()
+
+                  elif tag == "script":
+                      self.in_script = True
+
+                  elif tag == "style":
+                      self.in_style = True
+
+              def handle_endtag(self, tag):
+                  tag = tag.lower()
+
+                  if tag == "title":
+                      self.in_title = False
+
+                  elif tag == "h1":
+                      self.in_h1 = False
+
+                  elif tag == "script":
+                      self.in_script = False
+
+                  elif tag == "style":
+                      self.in_style = False
+
+              def handle_data(self, data):
+                  if self.in_title:
+                      self.title += " " + data
+
+                  if self.in_h1:
+                      self.h1 += " " + data
+
+                  if not self.in_script and not self.in_style:
+                      self.body_parts.append(data)
+
+          def clean_text(text):
+              text = re.sub(r"\s+", " ", text or "")
+              text = re.sub(r"[^a-zA-Z0-9À-ÿ ]+", " ", text)
+              return text.strip().lower()
+
+          def content_hash(text):
+              cleaned = clean_text(text)
+
+              # Ignore very small content blocks
+              if len(cleaned) < 100:
+                  return ""
+
+              return hashlib.sha256(
+                  cleaned.encode("utf-8")
+              ).hexdigest()
+
+          html_files = []
+
+          for filename in os.listdir(ROOT):
+              if (
+                  filename.endswith(".html")
+                  and os.path.isfile(os.path.join(ROOT, filename))
+              ):
+                  html_files.append(filename)
+
+          html_files.sort()
+
+          pages = {}
+
+          for filename in html_files:
+              path = os.path.join(ROOT, filename)
+
+              try:
+                  with open(
+                      path,
+                      "r",
+                      encoding="utf-8",
+                      errors="ignore"
+                  ) as f:
+                      source = f.read()
+
+                  parser = SEOParser()
+                  parser.feed(source)
+
+                  body = " ".join(parser.body_parts)
+
+                  pages[filename] = {
+                      "title": re.sub(
+                          r"\s+",
+                          " ",
+                          parser.title
+                      ).strip(),
+
+                      "description": re.sub(
+                          r"\s+",
+                          " ",
+                          parser.description
+                      ).strip(),
+
+                      "canonical": parser.canonical,
+
+                      "h1": re.sub(
+                          r"\s+",
+                          " ",
+                          parser.h1
+                      ).strip(),
+
+                      "content_hash": content_hash(body),
+
+                      "content_length": len(
+                          clean_text(body)
+                      )
+                  }
+
+              except Exception as e:
+                  pages[filename] = {
+                      "title": "",
+                      "description": "",
+                      "canonical": "",
+                      "h1": "",
+                      "content_hash": "",
+                      "content_length": 0,
+                      "error": str(e)
+                  }
+
+          def find_duplicates(field):
+              groups = defaultdict(list)
+
+              for page, data in pages.items():
+                  value = data.get(field, "")
+
+                  if value:
+                      key = clean_text(value)
+
+                      if key:
+                          groups[key].append(page)
+
+              return {
+                  value: files
+                  for value, files in groups.items()
+                  if len(files) > 1
+              }
+
+          duplicate_titles = find_duplicates("title")
+          duplicate_descriptions = find_duplicates("description")
+          duplicate_canonicals = find_duplicates("canonical")
+          duplicate_h1s = find_duplicates("h1")
+          duplicate_content = find_duplicates("content_hash")
+
+          missing_title = [
+              page for page, data in pages.items()
+              if not data.get("title")
+          ]
+
+          missing_description = [
+              page for page, data in pages.items()
+              if not data.get("description")
+          ]
+
+          missing_canonical = [
+              page for page, data in pages.items()
+              if not data.get("canonical")
+          ]
+
+          report = {
+              "website": "https://letsstudy.pro",
+              "pages_checked": len(pages),
+
+              "duplicate_titles": duplicate_titles,
+              "duplicate_descriptions": duplicate_descriptions,
+              "duplicate_canonicals": duplicate_canonicals,
+              "duplicate_h1s": duplicate_h1s,
+              "duplicate_content": duplicate_content,
+
+              "missing_title": missing_title,
+              "missing_description": missing_description,
+              "missing_canonical": missing_canonical,
+
+              "summary": {
+                  "duplicate_title_groups": len(
+                      duplicate_titles
+                  ),
+                  "duplicate_description_groups": len(
+                      duplicate_descriptions
+                  ),
+                  "duplicate_canonical_groups": len(
+                      duplicate_canonicals
+                  ),
+                  "duplicate_h1_groups": len(
+                      duplicate_h1s
+                  ),
+                  "duplicate_content_groups": len(
+                      duplicate_content
+                  ),
+                  "pages_missing_title": len(
+                      missing_title
+                  ),
+                  "pages_missing_description": len(
+                      missing_description
+                  ),
+                  "pages_missing_canonical": len(
+                      missing_canonical
+                  )
+              }
+          }
+
+          with open(
+              "seo-duplicate-report.json",
+              "w",
+              encoding="utf-8"
+          ) as f:
+              json.dump(
+                  report,
+                  f,
+                  indent=2,
+                  ensure_ascii=False
+              )
+
+          with open(
+              "seo-duplicate-report.md",
+              "w",
+              encoding="utf-8"
+          ) as f:
+
+              f.write(
+                  "# LetsStudy Pro - SEO Duplicate Report\n\n"
+              )
+
+              f.write("## Summary\n\n")
+              f.write(
+                  f"- Pages checked: {len(pages)}\n"
+              )
+              f.write(
+                  f"- Duplicate title groups: "
+                  f"{len(duplicate_titles)}\n"
+              )
+              f.write(
+                  f"- Duplicate description groups: "
+                  f"{len(duplicate_descriptions)}\n"
+              )
+              f.write(
+                  f"- Duplicate canonical groups: "
+                  f"{len(duplicate_canonicals)}\n"
+              )
+              f.write(
+                  f"- Duplicate H1 groups: "
+                  f"{len(duplicate_h1s)}\n"
+              )
+              f.write(
+                  f"- Duplicate content groups: "
+                  f"{len(duplicate_content)}\n"
+              )
+              f.write(
+                  f"- Pages missing title: "
+                  f"{len(missing_title)}\n"
+              )
+              f.write(
+                  f"- Pages missing description: "
+                  f"{len(missing_description)}\n"
+              )
+              f.write(
+                  f"- Pages missing canonical: "
+                  f"{len(missing_canonical)}\n\n"
+              )
+
+              def write_duplicate_section(
+                  heading,
+                  groups
+              ):
+                  f.write(f"## {heading}\n\n")
+
+                  if not groups:
+                      f.write(
+                          "No duplicates detected. ✅\n\n"
+                      )
+                      return
+
+                  for value, files in groups.items():
+                      display = value
+
+                      if len(display) > 180:
+                          display = display[:180] + "..."
+
+                      f.write(
+                          f"**Duplicate value:** `{display}`\n\n"
+                      )
+
+                      for page in files:
+                          f.write(
+                              f"- `{page}`\n"
+                          )
+
+                      f.write("\n")
+
+              write_duplicate_section(
+                  "Duplicate SEO Titles",
+                  duplicate_titles
+              )
+
+              write_duplicate_section(
+                  "Duplicate Meta Descriptions",
+                  duplicate_descriptions
+              )
+
+              write_duplicate_section(
+                  "Duplicate Canonical URLs",
+                  duplicate_canonicals
+              )
+
+              write_duplicate_section(
+                  "Duplicate H1 Headings",
+                  duplicate_h1s
+              )
+
+              write_duplicate_section(
+                  "Duplicate Content",
+                  duplicate_content
+              )
+
+              f.write("## Missing SEO Elements\n\n")
+
+              if missing_title:
+                  f.write("### Missing Titles\n\n")
+                  for page in missing_title:
+                      f.write(f"- `{page}`\n")
+                  f.write("\n")
+
+              if missing_description:
+                  f.write(
+                      "### Missing Meta Descriptions\n\n"
+                  )
+                  for page in missing_description:
+                      f.write(f"- `{page}`\n")
+                  f.write("\n")
+
+              if missing_canonical:
+                  f.write(
+                      "### Missing Canonical URLs\n\n"
+                  )
+                  for page in missing_canonical:
+                      f.write(f"- `{page}`\n")
+                  f.write("\n")
+
+              f.write("## Page SEO Data\n\n")
+              f.write(
+                  "| Page | Title | Description | Canonical | Content |\n"
+              )
+              f.write(
+                  "|---|---|---|---|---:|\n"
+              )
+
+              for page, data in pages.items():
+                  title = data.get("title", "").replace(
+                      "|", "\\|"
+                  )
+                  description = data.get(
+                      "description", ""
+                  ).replace("|", "\\|")
+                  canonical = data.get(
+                      "canonical", ""
+                  ).replace("|", "\\|")
+
+                  if len(title) > 60:
+                      title = title[:60] + "..."
+
+                  if len(description) > 80:
+                      description = description[:80] + "..."
+
+                  f.write(
+                      f"| `{page}` | {title} | "
+                      f"{description} | {canonical} | "
+                      f"{data.get('content_length', 0)} |\n"
+                  )
+
+          print("")
+          print("======================================")
+          print(" SEO Duplicate Checker Completed")
+          print("======================================")
+          print(f"Pages checked: {len(pages)}")
+          print(
+              f"Duplicate titles: {len(duplicate_titles)}"
+          )
+          print(
+              f"Duplicate descriptions: "
+              f"{len(duplicate_descriptions)}"
+          )
+          print(
+              f"Duplicate canonicals: "
+              f"{len(duplicate_canonicals)}"
+          )
+          print(
+              f"Duplicate H1s: {len(duplicate_h1s)}"
+          )
+          print(
+              f"Duplicate content: "
+              f"{len(duplicate_content)}"
+          )
+          print("")
+          print(
+              "This check is informational and will not fail."
+          )
+          PY
+
+          exit 0
+
+      - name: Upload SEO Duplicate Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-duplicate-report
+          path: |
+            seo-duplicate-report.json
+            seo-duplicate-report.md
+          if-no-files-found: warn
