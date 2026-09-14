@@ -1,0 +1,157 @@
+name: LetsStudy Pro - Mobile SEO Check
+
+on:
+  push:
+    branches:
+      - main
+
+  schedule:
+    - cron: "0 3 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mobile-seo:
+    name: Mobile SEO Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check mobile SEO files
+        shell: bash
+        run: |
+          echo "======================================"
+          echo " LetsStudy Pro Mobile SEO Check"
+          echo "======================================"
+          echo ""
+
+          FOUND=0
+
+          for FILE in index-auth.html search.html; do
+
+            if [ ! -f "$FILE" ]; then
+              echo "WARNING: $FILE not found."
+              continue
+            fi
+
+            echo "Checking: $FILE"
+            echo "--------------------------------------"
+
+            if grep -qi '<meta[^>]*name=["'"'"']viewport["'"'"']' "$FILE"; then
+              echo "Viewport: OK"
+            else
+              echo "WARNING: Viewport meta tag not found."
+              FOUND=1
+            fi
+
+            if grep -qi '<title>' "$FILE"; then
+              echo "Title: OK"
+            else
+              echo "WARNING: Title not found."
+              FOUND=1
+            fi
+
+            if grep -qi 'name=["'"'"']description["'"'"']' "$FILE"; then
+              echo "Meta description: OK"
+            else
+              echo "WARNING: Meta description not found."
+              FOUND=1
+            fi
+
+            if grep -qi 'rel=["'"'"']canonical["'"'"']' "$FILE"; then
+              echo "Canonical: OK"
+            else
+              echo "WARNING: Canonical not found."
+            fi
+
+            echo ""
+
+          done
+
+          echo "======================================"
+
+          if [ "$FOUND" -eq 1 ]; then
+            echo "Some mobile SEO warnings were detected."
+          else
+            echo "Mobile SEO checks passed."
+          fi
+
+          echo ""
+          echo "This workflow is informational."
+          echo "It will not block deployment."
+
+          exit 0
+
+      - name: Check responsive CSS indicators
+        shell: bash
+        run: |
+          echo "Checking responsive design indicators..."
+          echo ""
+
+          FOUND=0
+
+          for FILE in *.html; do
+
+            [ -f "$FILE" ] || continue
+
+            if grep -qi '@media' "$FILE"; then
+              echo "$FILE: responsive CSS detected"
+            fi
+
+          done
+
+          echo ""
+          echo "Responsive CSS check completed."
+          exit 0
+
+      - name: Check production mobile pages
+        shell: bash
+        run: |
+          echo "Checking production pages..."
+          echo ""
+
+          for URL in \
+            "https://letsstudy.pro/" \
+            "https://letsstudy.pro/index-auth.html" \
+            "https://letsstudy.pro/search.html"
+          do
+
+            STATUS=$(curl \
+              -L \
+              -s \
+              -o /dev/null \
+              -w "%{http_code}" \
+              --max-time 30 \
+              "$URL" || true)
+
+            echo "$STATUS  $URL"
+
+          done
+
+          echo ""
+          echo "Production mobile page availability check completed."
+          exit 0
+
+      - name: Final report
+        run: |
+          echo ""
+          echo "======================================"
+          echo " MOBILE SEO CHECK COMPLETED"
+          echo "======================================"
+          echo ""
+          echo "Viewport: Checked"
+          echo "Titles: Checked"
+          echo "Meta descriptions: Checked"
+          echo "Canonical tags: Checked"
+          echo "Responsive CSS: Checked"
+          echo "Production pages: Checked"
+          echo ""
+          echo "LetsStudy Pro Mobile SEO monitoring is active."
+          echo "======================================"
+
+          exit 0
