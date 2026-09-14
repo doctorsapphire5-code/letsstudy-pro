@@ -1,0 +1,198 @@
+name: LetsStudy Pro - Canonical URL Checker
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  schedule:
+    - cron: "30 2 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  canonical-check:
+    name: Canonical URL Checker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Check Canonical URLs
+        shell: bash
+        run: |
+          echo "======================================"
+          echo " LetsStudy Pro - Canonical URL Check"
+          echo "======================================"
+          echo ""
+
+          TOTAL=0
+          WITH_CANONICAL=0
+          MISSING=0
+          INVALID=0
+          WRONG_DOMAIN=0
+
+          REPORT="canonical-url-report.md"
+
+          cat > "$REPORT" <<'EOF'
+          # LetsStudy Pro - Canonical URL Report
+
+          Generated automatically by GitHub Actions.
+
+          EOF
+
+          echo "| Page | Canonical | Status |" >> "$REPORT"
+          echo "|---|---|---|" >> "$REPORT"
+
+          for file in *.html; do
+
+            [ -f "$file" ] || continue
+
+            TOTAL=$((TOTAL + 1))
+
+            canonical=$(grep -oiE \
+              '<link[^>]+rel=["'\'']canonical["'\''][^>]*>' \
+              "$file" 2>/dev/null \
+              | sed -n 's/.*href=["'\'']\([^"'\'']*\)["'\''].*/\1/p' \
+              | head -1)
+
+            if [ -z "$canonical" ]; then
+              MISSING=$((MISSING + 1))
+
+              echo "| \`$file\` | Missing | ⚠️ Missing |" >> "$REPORT"
+
+              echo "⚠️ $file"
+              echo "   Canonical: MISSING"
+              echo ""
+
+              continue
+            fi
+
+            WITH_CANONICAL=$((WITH_CANONICAL + 1))
+
+            status="OK"
+
+            case "$canonical" in
+              http://*)
+                INVALID=$((INVALID + 1))
+                status="❌ HTTP"
+                ;;
+
+              https://*)
+                if [[ "$canonical" != https://letsstudy.pro/* ]] &&
+                   [[ "$canonical" != https://letsstudy.pro ]]; then
+                  WRONG_DOMAIN=$((WRONG_DOMAIN + 1))
+                  status="⚠️ Wrong domain"
+                fi
+                ;;
+
+              /*)
+                INVALID=$((INVALID + 1))
+                status="⚠️ Relative URL"
+                ;;
+
+              *)
+                INVALID=$((INVALID + 1))
+                status="❌ Invalid URL"
+                ;;
+            esac
+
+            echo "| \`$file\` | \`$canonical\` | $status |" >> "$REPORT"
+
+            echo "📄 $file"
+            echo "   Canonical: $canonical"
+            echo "   Status: $status"
+            echo ""
+
+          done
+
+          {
+            echo ""
+            echo "## Summary"
+            echo ""
+            echo "- Total HTML pages: $TOTAL"
+            echo "- Pages with canonical: $WITH_CANONICAL"
+            echo "- Missing canonical: $MISSING"
+            echo "- Invalid canonical: $INVALID"
+            echo "- Wrong domain: $WRONG_DOMAIN"
+          } >> "$REPORT"
+
+          echo ""
+          echo "======================================"
+          echo " Summary"
+          echo "======================================"
+          echo "Total HTML pages:     $TOTAL"
+          echo "With canonical:       $WITH_CANONICAL"
+          echo "Missing canonical:    $MISSING"
+          echo "Invalid canonical:    $INVALID"
+          echo "Wrong domain:         $WRONG_DOMAIN"
+          echo ""
+
+          echo "Canonical URL check completed."
+          echo "This workflow is informational and will not fail deployment."
+
+      - name: Check Production Canonical Pages
+        shell: bash
+        run: |
+          echo "Checking production canonical pages..."
+
+          for url in \
+            "https://letsstudy.pro/" \
+            "https://letsstudy.pro/index-auth.html" \
+            "https://letsstudy.pro/search.html"
+          do
+
+            echo ""
+            echo "Checking: $url"
+
+            status=$(curl -L -s -o /tmp/page.html -w "%{http_code}" \
+              --max-time 30 \
+              "$url" || true)
+
+            echo "HTTP status: $status"
+
+            if [ "$status" = "200" ]; then
+              canonical=$(grep -oiE \
+                '<link[^>]+rel=["'\'']canonical["'\''][^>]*>' \
+                /tmp/page.html 2>/dev/null \
+                | sed -n 's/.*href=["'\'']\([^"'\'']*\)["'\''].*/\1/p' \
+                | head -1)
+
+              echo "Canonical: ${canonical:-MISSING}"
+            else
+              echo "⚠️ Page did not return HTTP 200."
+            fi
+
+          done
+
+      - name: Upload Canonical Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: canonical-url-report
+          path: canonical-url-report.md
+          if-no-files-found: warn
+
+      - name: Final Summary
+        run: |
+          echo "======================================"
+          echo " Canonical URL Checker Completed"
+          echo "======================================"
+          echo ""
+          echo "Repository: LetsStudy Pro"
+          echo "Domain: https://letsstudy.pro"
+          echo ""
+          echo "The report has been uploaded as a GitHub Actions artifact."
+          echo ""
+          echo "Note:"
+          echo "This checker reports canonical issues."
+          echo "It does not automatically modify your HTML files."
+          echo ""
+          exit 0
