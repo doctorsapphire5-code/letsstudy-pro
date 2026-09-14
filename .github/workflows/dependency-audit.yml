@@ -46,7 +46,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - name: Install Dependencies
         shell: bash
@@ -54,21 +53,35 @@ jobs:
           set +e
 
           echo "Installing dependencies..."
+          echo ""
 
           if [ -f "package-lock.json" ]; then
             npm ci --ignore-scripts
             INSTALL_STATUS=$?
+
+          elif [ -f "npm-shrinkwrap.json" ]; then
+            npm ci --ignore-scripts
+            INSTALL_STATUS=$?
+
           else
+            echo "No npm lock file found."
+            echo "Using npm install instead."
+            echo ""
+
             npm install --ignore-scripts
             INSTALL_STATUS=$?
           fi
 
           echo ""
+          echo "Install exit code: $INSTALL_STATUS"
 
           if [ "$INSTALL_STATUS" -ne 0 ]; then
-            echo "WARNING: Dependency installation returned exit code $INSTALL_STATUS."
+            echo ""
+            echo "WARNING: Dependency installation returned"
+            echo "exit code $INSTALL_STATUS."
             echo "Audit will continue where possible."
           else
+            echo ""
             echo "Dependencies installed successfully."
           fi
 
@@ -86,6 +99,7 @@ jobs:
           echo ""
 
           npm audit --json > dependency-audit.json
+
           AUDIT_STATUS=$?
 
           echo "npm audit exit code: $AUDIT_STATUS"
@@ -111,7 +125,6 @@ jobs:
 
           python3 <<'PY'
           import json
-          import os
           from datetime import datetime, timezone
 
           report_file = "dependency-audit.json"
@@ -124,21 +137,49 @@ jobs:
                   errors="ignore"
               ) as f:
                   data = json.load(f)
+
           except Exception:
               data = {}
 
-          metadata = data.get("metadata", {})
+          metadata = data.get(
+              "metadata",
+              {}
+          )
+
           vulnerabilities = metadata.get(
               "vulnerabilities",
               {}
           )
 
-          info = vulnerabilities.get("info", 0)
-          low = vulnerabilities.get("low", 0)
-          moderate = vulnerabilities.get("moderate", 0)
-          high = vulnerabilities.get("high", 0)
-          critical = vulnerabilities.get("critical", 0)
-          total = vulnerabilities.get("total", 0)
+          info = vulnerabilities.get(
+              "info",
+              0
+          )
+
+          low = vulnerabilities.get(
+              "low",
+              0
+          )
+
+          moderate = vulnerabilities.get(
+              "moderate",
+              0
+          )
+
+          high = vulnerabilities.get(
+              "high",
+              0
+          )
+
+          critical = vulnerabilities.get(
+              "critical",
+              0
+          )
+
+          total = vulnerabilities.get(
+              "total",
+              0
+          )
 
           dependencies = metadata.get(
               "dependencies",
@@ -165,22 +206,31 @@ jobs:
               0
           )
 
-          if critical > 0 or high > 0:
-              status = "REVIEW REQUIRED"
+          if critical > 0:
+              status = "CRITICAL REVIEW REQUIRED"
+
+          elif high > 0:
+              status = "HIGH RISK - REVIEW REQUIRED"
+
           elif moderate > 0:
               status = "REVIEW RECOMMENDED"
+
           elif low > 0:
               status = "LOW RISK FINDINGS"
+
           else:
               status = "NO VULNERABILITIES DETECTED"
 
           report = {
               "website": "https://letsstudy.pro",
               "project": "LetsStudy Pro",
-              "generated_at": datetime.now(
-                  timezone.utc
-              ).isoformat(),
+              "generated_at":
+                  datetime.now(
+                      timezone.utc
+                  ).isoformat(),
+
               "status": status,
+
               "vulnerabilities": {
                   "total": total,
                   "info": info,
@@ -189,12 +239,28 @@ jobs:
                   "high": high,
                   "critical": critical
               },
+
               "dependencies": {
                   "runtime": runtime,
                   "dev": dev,
                   "optional": optional,
                   "peer": peer
               },
+
+              "lock_file_found": (
+                  __import__("os").path.exists(
+                      "package-lock.json"
+                  )
+                  or
+                  __import__("os").path.exists(
+                      "npm-shrinkwrap.json"
+                  )
+                  or
+                  __import__("os").path.exists(
+                      "yarn.lock"
+                  )
+              ),
+
               "deployment_blocked": False
           }
 
@@ -203,6 +269,7 @@ jobs:
               "w",
               encoding="utf-8"
           ) as f:
+
               json.dump(
                   report,
                   f,
@@ -230,25 +297,29 @@ jobs:
 
               f.write(
                   "| Severity | Count |\n"
-              )
-              f.write(
                   "|---|---:|\n"
               )
+
               f.write(
                   f"| Info | {info} |\n"
               )
+
               f.write(
                   f"| Low | {low} |\n"
               )
+
               f.write(
                   f"| Moderate | {moderate} |\n"
               )
+
               f.write(
                   f"| High | {high} |\n"
               )
+
               f.write(
                   f"| Critical | {critical} |\n"
               )
+
               f.write(
                   f"| **Total** | **{total}** |\n\n"
               )
@@ -260,12 +331,15 @@ jobs:
               f.write(
                   f"- Runtime dependencies: **{runtime}**\n"
               )
+
               f.write(
                   f"- Dev dependencies: **{dev}**\n"
               )
+
               f.write(
                   f"- Optional dependencies: **{optional}**\n"
               )
+
               f.write(
                   f"- Peer dependencies: **{peer}**\n\n"
               )
@@ -277,8 +351,7 @@ jobs:
               if critical > 0:
                   f.write(
                       "- **Critical vulnerabilities detected. "
-                      "Review and update affected packages "
-                      "as soon as possible.**\n"
+                      "Review affected packages immediately.**\n"
                   )
 
               if high > 0:
@@ -306,8 +379,7 @@ jobs:
                   )
 
               f.write(
-                  "- Keep package-lock.json synchronized with "
-                  "package.json.\n"
+                  "- Keep package.json dependencies maintained.\n"
               )
 
               f.write(
