@@ -1,0 +1,298 @@
+name: LetsStudy Pro - Open Graph Generator
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  schedule:
+    - cron: "30 3 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  open-graph:
+    name: Open Graph Generator
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Generate Open Graph Report
+        shell: bash
+        run: |
+          set +e
+
+          echo "======================================"
+          echo " LetsStudy Pro - Open Graph Generator"
+          echo "======================================"
+          echo ""
+
+          REPORT_JSON="open-graph-report.json"
+          REPORT_MD="open-graph-report.md"
+
+          TOTAL=0
+          COMPLETE=0
+          MISSING_TITLE=0
+          MISSING_DESCRIPTION=0
+          MISSING_IMAGE=0
+          MISSING_URL=0
+
+          echo "[" > "$REPORT_JSON"
+
+          cat > "$REPORT_MD" <<'EOF'
+          # LetsStudy Pro - Open Graph Report
+
+          Automatically generated Open Graph metadata report.
+
+          ## Recommended Default Image
+
+          `https://letsstudy.pro/og-image.png`
+
+          EOF
+
+          echo "| Page | OG Title | OG Description | OG Image | OG URL | Status |" >> "$REPORT_MD"
+          echo "|---|---|---|---|---|---|" >> "$REPORT_MD"
+
+          FIRST=true
+
+          for file in *.html; do
+
+            [ -f "$file" ] || continue
+
+            TOTAL=$((TOTAL + 1))
+
+            filename=$(basename "$file")
+            page="${filename%.html}"
+
+            og_title=""
+            og_description=""
+            og_image=""
+            og_url=""
+            og_type=""
+
+            og_title=$(
+              grep -oiE \
+                '<meta[^>]+property=["'"'"']og:title["'"'"'][^>]*>' \
+                "$file" 2>/dev/null |
+              sed -n 's/.*content=["'"'"']\([^"'"'"']*\)["'"'"'].*/\1/p' |
+              head -1
+            )
+
+            og_description=$(
+              grep -oiE \
+                '<meta[^>]+property=["'"'"']og:description["'"'"'][^>]*>' \
+                "$file" 2>/dev/null |
+              sed -n 's/.*content=["'"'"']\([^"'"'"']*\)["'"'"'].*/\1/p' |
+              head -1
+            )
+
+            og_image=$(
+              grep -oiE \
+                '<meta[^>]+property=["'"'"']og:image["'"'"'][^>]*>' \
+                "$file" 2>/dev/null |
+              sed -n 's/.*content=["'"'"']\([^"'"'"']*\)["'"'"'].*/\1/p' |
+              head -1
+            )
+
+            og_url=$(
+              grep -oiE \
+                '<meta[^>]+property=["'"'"']og:url["'"'"'][^>]*>' \
+                "$file" 2>/dev/null |
+              sed -n 's/.*content=["'"'"']\([^"'"'"']*\)["'"'"'].*/\1/p' |
+              head -1
+            )
+
+            og_type=$(
+              grep -oiE \
+                '<meta[^>]+property=["'"'"']og:type["'"'"'][^>]*>' \
+                "$file" 2>/dev/null |
+              sed -n 's/.*content=["'"'"']\([^"'"'"']*\)["'"'"'].*/\1/p' |
+              head -1
+            )
+
+            title=$(
+              grep -oiE \
+                '<title[^>]*>[^<]+' \
+                "$file" 2>/dev/null |
+              sed -E 's/<title[^>]*>//I' |
+              head -1
+            )
+
+            description=$(
+              grep -oiE \
+                '<meta[^>]+name=["'"'"']description["'"'"'][^>]*>' \
+                "$file" 2>/dev/null |
+              sed -n 's/.*content=["'"'"']\([^"'"'"']*\)["'"'"'].*/\1/p' |
+              head -1
+            )
+
+            if [ -z "$title" ]; then
+              title="$page | LetsStudy Pro"
+            fi
+
+            if [ -z "$description" ]; then
+              description="Learn, build, work and grow with LetsStudy Pro."
+            fi
+
+            if [ -z "$og_title" ]; then
+              MISSING_TITLE=$((MISSING_TITLE + 1))
+              og_title="$title"
+            fi
+
+            if [ -z "$og_description" ]; then
+              MISSING_DESCRIPTION=$((MISSING_DESCRIPTION + 1))
+              og_description="$description"
+            fi
+
+            if [ -z "$og_image" ]; then
+              MISSING_IMAGE=$((MISSING_IMAGE + 1))
+              og_image="https://letsstudy.pro/og-image.png"
+            fi
+
+            if [ -z "$og_url" ]; then
+              MISSING_URL=$((MISSING_URL + 1))
+              og_url="https://letsstudy.pro/$filename"
+            fi
+
+            if [ -z "$og_type" ]; then
+              og_type="website"
+            fi
+
+            status="COMPLETE"
+
+            if [ "$MISSING_TITLE" -gt 0 ] ||
+               [ "$MISSING_DESCRIPTION" -gt 0 ] ||
+               [ "$MISSING_IMAGE" -gt 0 ] ||
+               [ "$MISSING_URL" -gt 0 ]; then
+              status="CHECK"
+            fi
+
+            if [ -n "$og_title" ] &&
+               [ -n "$og_description" ] &&
+               [ -n "$og_image" ] &&
+               [ -n "$og_url" ]; then
+              COMPLETE=$((COMPLETE + 1))
+            fi
+
+            safe_file=$(printf '%s' "$filename" | sed 's/"/\\"/g')
+            safe_title=$(printf '%s' "$og_title" | sed 's/"/\\"/g')
+            safe_description=$(printf '%s' "$og_description" | sed 's/"/\\"/g')
+            safe_image=$(printf '%s' "$og_image" | sed 's/"/\\"/g')
+            safe_url=$(printf '%s' "$og_url" | sed 's/"/\\"/g')
+            safe_type=$(printf '%s' "$og_type" | sed 's/"/\\"/g')
+
+            if [ "$FIRST" = false ]; then
+              echo "," >> "$REPORT_JSON"
+            fi
+
+            FIRST=false
+
+            cat >> "$REPORT_JSON" <<EOF
+          {
+            "page": "$safe_file",
+            "ogTitle": "$safe_title",
+            "ogDescription": "$safe_description",
+            "ogImage": "$safe_image",
+            "ogUrl": "$safe_url",
+            "ogType": "$safe_type",
+            "status": "$status"
+          }
+          EOF
+
+            echo "| \`$filename\` | Present/Fallback | Present/Fallback | Present/Fallback | Present/Fallback | $status |" >> "$REPORT_MD"
+
+            echo "📄 $filename"
+            echo "   OG Title: ${og_title:-MISSING}"
+            echo "   OG Description: ${og_description:-MISSING}"
+            echo "   OG Image: ${og_image:-MISSING}"
+            echo "   OG URL: ${og_url:-MISSING}"
+            echo "   OG Type: ${og_type:-website}"
+            echo "   Status: $status"
+            echo ""
+
+          done
+
+          echo "]" >> "$REPORT_JSON"
+
+          cat >> "$REPORT_MD" <<EOF
+
+          ## Summary
+
+          - HTML pages scanned: $TOTAL
+          - Pages with complete/fallback OG data: $COMPLETE
+          - Missing OG title: $MISSING_TITLE
+          - Missing OG description: $MISSING_DESCRIPTION
+          - Missing OG image: $MISSING_IMAGE
+          - Missing OG URL: $MISSING_URL
+
+          ## Recommended OG Image
+
+          \`https://letsstudy.pro/og-image.png\`
+
+          ## Important
+
+          This workflow generates a report only.
+          It does not automatically modify production HTML files.
+          EOF
+
+          echo ""
+          echo "======================================"
+          echo " Open Graph Summary"
+          echo "======================================"
+          echo "HTML pages scanned:       $TOTAL"
+          echo "Complete/fallback pages:  $COMPLETE"
+          echo "Missing OG title:         $MISSING_TITLE"
+          echo "Missing OG description:   $MISSING_DESCRIPTION"
+          echo "Missing OG image:         $MISSING_IMAGE"
+          echo "Missing OG URL:           $MISSING_URL"
+          echo ""
+          echo "Reports generated:"
+          echo " - $REPORT_JSON"
+          echo " - $REPORT_MD"
+          echo ""
+
+      - name: Validate JSON Report
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+
+          with open("open-graph-report.json", "r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          print("Open Graph JSON report is valid.")
+          print("Pages:", len(data))
+          PY
+
+      - name: Upload Open Graph Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: open-graph-report
+          path: |
+            open-graph-report.json
+            open-graph-report.md
+          if-no-files-found: error
+
+      - name: Final Summary
+        shell: bash
+        run: |
+          echo "======================================"
+          echo " LetsStudy Pro - Open Graph Complete"
+          echo "======================================"
+          echo ""
+          echo "OG title, description, image and URL"
+          echo "analysis completed successfully."
+          echo ""
+          echo "The workflow is informational."
+          echo "It will not block deployment."
+          echo ""
+          exit 0
