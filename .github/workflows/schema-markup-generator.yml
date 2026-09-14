@@ -1,0 +1,356 @@
+name: LetsStudy Pro - Schema Markup Generator
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  schedule:
+    - cron: "0 3 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  schema-generator:
+    name: Schema Markup Generator
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Generate JSON-LD Schema Report
+        shell: bash
+        run: |
+          echo "======================================"
+          echo " LetsStudy Pro - Schema Generator"
+          echo "======================================"
+          echo ""
+
+          mkdir -p schema-output
+
+          JSON_REPORT="schema-markup-report.json"
+          MD_REPORT="schema-markup-report.md"
+
+          echo "[" > "$JSON_REPORT"
+
+          cat > "$MD_REPORT" <<'EOF'
+          # LetsStudy Pro - Schema Markup Report
+
+          Automatically generated JSON-LD structured data recommendations.
+
+          EOF
+
+          echo "| Page | Schema Type | Status |" >> "$MD_REPORT"
+          echo "|---|---|---|" >> "$MD_REPORT"
+
+          FIRST=true
+          TOTAL=0
+
+          for file in *.html; do
+
+            [ -f "$file" ] || continue
+
+            TOTAL=$((TOTAL + 1))
+
+            filename=$(basename "$file")
+            page="${filename%.html}"
+
+            title=$(grep -oiE '<title[^>]*>[^<]+' "$file" 2>/dev/null \
+              | sed -E 's/<title[^>]*>//I' \
+              | head -1)
+
+            h1=$(grep -oiE '<h1[^>]*>[^<]+' "$file" 2>/dev/null \
+              | sed -E 's/<h1[^>]*>//I' \
+              | head -1)
+
+            description=$(grep -oiE \
+              '<meta[^>]+name=["'\'']description["'\''][^>]*>' \
+              "$file" 2>/dev/null \
+              | sed -n 's/.*content=["'\'']\([^"'\'']*\)["'\''].*/\1/p' \
+              | head -1)
+
+            if [ -z "$title" ]; then
+              title="$page | LetsStudy Pro"
+            fi
+
+            if [ -z "$h1" ]; then
+              h1="$title"
+            fi
+
+            if [ -z "$description" ]; then
+              description="Learn, build, work and grow with LetsStudy Pro."
+            fi
+
+            clean_title=$(printf '%s' "$title" | sed 's/"/\\"/g')
+            clean_h1=$(printf '%s' "$h1" | sed 's/"/\\"/g')
+            clean_description=$(printf '%s' "$description" | sed 's/"/\\"/g')
+
+            case "$filename" in
+
+              *course*.html|*courses*.html)
+                schema_type="Course"
+
+                schema=$(cat <<EOF
+          {
+            "@context": "https://schema.org",
+            "@type": "Course",
+            "name": "$clean_title",
+            "description": "$clean_description",
+            "provider": {
+              "@type": "Organization",
+              "name": "LetsStudy Pro",
+              "url": "https://letsstudy.pro"
+            },
+            "url": "https://letsstudy.pro/$filename"
+          }
+          EOF
+                )
+                ;;
+
+              *scholarship*.html|*scholarships*.html)
+                schema_type="EducationalOccupationalProgram"
+
+                schema=$(cat <<EOF
+          {
+            "@context": "https://schema.org",
+            "@type": "EducationalOccupationalProgram",
+            "name": "$clean_title",
+            "description": "$clean_description",
+            "provider": {
+              "@type": "Organization",
+              "name": "LetsStudy Pro",
+              "url": "https://letsstudy.pro"
+            },
+            "url": "https://letsstudy.pro/$filename"
+          }
+          EOF
+                )
+                ;;
+
+              *career*.html|*careers*.html)
+                schema_type="JobPosting"
+
+                schema=$(cat <<EOF
+          {
+            "@context": "https://schema.org",
+            "@type": "JobPosting",
+            "title": "$clean_h1",
+            "description": "$clean_description",
+            "url": "https://letsstudy.pro/$filename",
+            "hiringOrganization": {
+              "@type": "Organization",
+              "name": "LetsStudy Pro",
+              "sameAs": "https://letsstudy.pro"
+            }
+          }
+          EOF
+                )
+                ;;
+
+              *service*.html|*services*.html)
+                schema_type="Service"
+
+                schema=$(cat <<EOF
+          {
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "name": "$clean_title",
+            "description": "$clean_description",
+            "provider": {
+              "@type": "Organization",
+              "name": "LetsStudy Pro",
+              "url": "https://letsstudy.pro"
+            },
+            "url": "https://letsstudy.pro/$filename"
+          }
+          EOF
+                )
+                ;;
+
+              *freelancer*.html|*freelancers*.html)
+                schema_type="ProfilePage"
+
+                schema=$(cat <<EOF
+          {
+            "@context": "https://schema.org",
+            "@type": "ProfilePage",
+            "name": "$clean_title",
+            "description": "$clean_description",
+            "url": "https://letsstudy.pro/$filename",
+            "isPartOf": {
+              "@type": "WebSite",
+              "name": "LetsStudy Pro",
+              "url": "https://letsstudy.pro"
+            }
+          }
+          EOF
+                )
+                ;;
+
+              *business*.html|*businesses*.html)
+                schema_type="LocalBusiness"
+
+                schema=$(cat <<EOF
+          {
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            "name": "$clean_title",
+            "description": "$clean_description",
+            "url": "https://letsstudy.pro/$filename"
+          }
+          EOF
+                )
+                ;;
+
+              *resource*.html|*resources*.html)
+                schema_type="Article"
+
+                schema=$(cat <<EOF
+          {
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "headline": "$clean_title",
+            "description": "$clean_description",
+            "url": "https://letsstudy.pro/$filename",
+            "publisher": {
+              "@type": "Organization",
+              "name": "LetsStudy Pro",
+              "url": "https://letsstudy.pro"
+            }
+          }
+          EOF
+                )
+                ;;
+
+              *search*.html)
+                schema_type="SearchAction"
+
+                schema=$(cat <<EOF
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "LetsStudy Pro",
+            "url": "https://letsstudy.pro",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://letsstudy.pro/search.html?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          }
+          EOF
+                )
+                ;;
+
+              *)
+                schema_type="WebPage"
+
+                schema=$(cat <<EOF
+          {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": "$clean_title",
+            "description": "$clean_description",
+            "url": "https://letsstudy.pro/$filename",
+            "isPartOf": {
+              "@type": "WebSite",
+              "name": "LetsStudy Pro",
+              "url": "https://letsstudy.pro"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "LetsStudy Pro",
+              "url": "https://letsstudy.pro"
+            }
+          }
+          EOF
+                )
+                ;;
+
+            esac
+
+            if [ "$FIRST" = false ]; then
+              echo "," >> "$JSON_REPORT"
+            fi
+
+            FIRST=false
+
+            printf '%s\n' "$schema" >> "$JSON_REPORT"
+
+            printf '| `%s` | `%s` | Generated |\n' \
+              "$filename" \
+              "$schema_type" >> "$MD_REPORT"
+
+            echo "✓ $filename"
+            echo "  Schema: $schema_type"
+            echo ""
+
+          done
+
+          echo "]" >> "$JSON_REPORT"
+
+          {
+            echo ""
+            echo "## Summary"
+            echo ""
+            echo "- HTML pages scanned: $TOTAL"
+            echo "- JSON-LD schemas generated: $TOTAL"
+            echo "- Domain: https://letsstudy.pro"
+            echo ""
+            echo "## Important"
+            echo ""
+            echo "This workflow generates a schema report."
+            echo "It does not automatically modify production HTML files."
+          } >> "$MD_REPORT"
+
+          echo ""
+          echo "======================================"
+          echo " Schema Generation Completed"
+          echo "======================================"
+          echo "Pages scanned: $TOTAL"
+          echo "Reports created:"
+          echo " - $JSON_REPORT"
+          echo " - $MD_REPORT"
+          echo ""
+
+      - name: Validate JSON Report
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+
+          with open("schema-markup-report.json", "r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          print("Valid JSON-LD schema report.")
+          print("Schemas:", len(data))
+          PY
+
+      - name: Upload Schema Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: schema-markup-report
+          path: |
+            schema-markup-report.json
+            schema-markup-report.md
+          if-no-files-found: error
+
+      - name: Final Summary
+        run: |
+          echo "======================================"
+          echo " LetsStudy Pro Schema Action Complete"
+          echo "======================================"
+          echo ""
+          echo "JSON-LD structured data reports are ready."
+          echo ""
+          echo "The workflow is informational."
+          echo "It does not change your HTML automatically."
+          echo ""
+          exit 0
