@@ -19,7 +19,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout Repository
         uses: actions/checkout@v4
 
@@ -27,7 +26,7 @@ jobs:
         shell: bash
         run: |
           echo "======================================"
-          echo " LetsStudy Pro - Sitemap Check"
+          echo " LetsStudy Pro - Global Indexing"
           echo "======================================"
 
           SITEMAP="https://letsstudy.pro/sitemap.xml"
@@ -46,7 +45,7 @@ jobs:
             if grep -qi "<urlset\|<sitemapindex" /tmp/sitemap.xml; then
               echo "Valid sitemap structure detected."
             else
-              echo "WARNING: Sitemap structure was not detected."
+              echo "WARNING: Sitemap structure not detected."
             fi
           else
             echo "WARNING: Sitemap returned HTTP $STATUS"
@@ -55,24 +54,22 @@ jobs:
       - name: Count Sitemap URLs
         shell: bash
         run: |
-          echo ""
           echo "======================================"
           echo " Sitemap URL Count"
           echo "======================================"
 
           if [ -f /tmp/sitemap.xml ]; then
             COUNT=$(grep -o "<loc>" /tmp/sitemap.xml | wc -l || true)
-            echo "URLs discovered in sitemap: $COUNT"
+            echo "URLs discovered: $COUNT"
           else
-            echo "Sitemap could not be downloaded."
+            echo "Sitemap unavailable."
           fi
 
-      - name: Notify Google Sitemap
+      - name: Notify Google
         shell: bash
         run: |
-          echo ""
           echo "======================================"
-          echo " Google Sitemap Notification"
+          echo " Google Sitemap Discovery"
           echo "======================================"
 
           RESPONSE=$(curl -L -s -o /dev/null \
@@ -80,19 +77,14 @@ jobs:
             --max-time 30 \
             "https://www.google.com/ping?sitemap=https://letsstudy.pro/sitemap.xml" || true)
 
-          echo "Google sitemap endpoint response: $RESPONSE"
-
-          echo ""
-          echo "Note:"
+          echo "Google response: $RESPONSE"
           echo "Google controls crawling and indexing."
-          echo "This notification does NOT guarantee indexing."
 
       - name: Notify Bing
         shell: bash
         run: |
-          echo ""
           echo "======================================"
-          echo " Bing Sitemap Notification"
+          echo " Bing Sitemap Discovery"
           echo "======================================"
 
           RESPONSE=$(curl -L -s -o /dev/null \
@@ -105,13 +97,12 @@ jobs:
       - name: IndexNow
         shell: bash
         run: |
-          echo ""
           echo "======================================"
           echo " IndexNow"
           echo "======================================"
 
-          if [ -z "${{ secrets.INDEXNOW_KEY }}" ]; then
-            echo "INDEXNOW_KEY is not configured."
+          if [ -z "$INDEXNOW_KEY" ]; then
+            echo "INDEXNOW_KEY not configured."
             echo "Skipping IndexNow."
             exit 0
           fi
@@ -126,9 +117,16 @@ jobs:
           import json
           import os
 
-          sitemap = open("/tmp/sitemap.xml", "r", encoding="utf-8").read()
+          sitemap = open(
+              "/tmp/sitemap.xml",
+              "r",
+              encoding="utf-8"
+          ).read()
 
-          urls = re.findall(r"<loc>\s*(.*?)\s*</loc>", sitemap)
+          urls = re.findall(
+              r"<loc>\s*(.*?)\s*</loc>",
+              sitemap
+          )
 
           urls = [
               u.strip()
@@ -144,10 +142,14 @@ jobs:
               "urlList": urls
           }
 
-          with open("/tmp/indexnow.json", "w", encoding="utf-8") as f:
+          with open(
+              "/tmp/indexnow.json",
+              "w",
+              encoding="utf-8"
+          ) as f:
               json.dump(payload, f)
 
-          print(f"Prepared {len(urls)} URLs for IndexNow.")
+          print(f"Prepared {len(urls)} URLs.")
           PY
 
           RESPONSE=$(curl -L -s \
@@ -162,18 +164,16 @@ jobs:
           echo "IndexNow response: $RESPONSE"
 
           if [ -s /tmp/indexnow-response.txt ]; then
-            echo "IndexNow response:"
             cat /tmp/indexnow-response.txt
           fi
         env:
           INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
 
-      - name: Check Robots.txt
+      - name: Check Robots
         shell: bash
         run: |
-          echo ""
           echo "======================================"
-          echo " Robots.txt"
+          echo " robots.txt"
           echo "======================================"
 
           STATUS=$(curl -L -s -o /tmp/robots.txt \
@@ -184,14 +184,11 @@ jobs:
           echo "HTTP Status: $STATUS"
 
           if [ "$STATUS" = "200" ]; then
-            echo "robots.txt is ONLINE."
             grep -i "sitemap:" /tmp/robots.txt || \
               echo "WARNING: Sitemap directive not found."
-          else
-            echo "WARNING: robots.txt returned HTTP $STATUS"
           fi
 
-      - name: Global Indexing Report
+      - name: Final Report
         shell: bash
         run: |
           echo ""
@@ -201,16 +198,11 @@ jobs:
           echo ""
           echo "Website: https://letsstudy.pro"
           echo "Sitemap: https://letsstudy.pro/sitemap.xml"
-          echo "Robots:  https://letsstudy.pro/robots.txt"
           echo ""
           echo "Sitemap discovery: ACTIVE"
           echo "Google discovery: ACTIVE"
           echo "Bing discovery: ACTIVE"
-          echo "IndexNow: CONFIGURED WHEN KEY EXISTS"
+          echo "IndexNow: ACTIVE when key is configured"
           echo ""
-          echo "IMPORTANT:"
-          echo "Search engines decide when URLs are crawled"
-          echo "and whether they are indexed."
-          echo ""
-          echo "Global Indexing workflow completed."
+          echo "Google decides crawling and indexing."
           echo "======================================"
