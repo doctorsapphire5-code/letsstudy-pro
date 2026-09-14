@@ -4,8 +4,10 @@ on:
   push:
     branches:
       - main
+
   schedule:
     - cron: "0 */6 * * *"
+
   workflow_dispatch:
 
 permissions:
@@ -17,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Crawl URLs From Sitemap
+      - name: Crawl Sitemap URLs
         shell: bash
         run: |
           set +e
@@ -30,21 +32,21 @@ jobs:
           import time
           import re
 
-          SITEMAP = "https://letsstudy.pro/sitemap.xml"
-          ROBOTS = "https://letsstudy.pro/robots.txt"
+          SITEMAP_URL = "https://letsstudy.pro/sitemap.xml"
+          ROBOTS_URL = "https://letsstudy.pro/robots.txt"
 
           USER_AGENT = (
-              "LetsStudyPro-URL-Monitor/1.0 "
-              "(SEO health monitoring)"
+              "LetsStudyPro-URL-Health-Monitor/1.0"
           )
 
           def fetch(url, timeout=30):
-              start = time.time()
+              started = time.time()
 
               request = urllib.request.Request(
                   url,
                   headers={
-                      "User-Agent": USER_AGENT
+                      "User-Agent": USER_AGENT,
+                      "Accept": "text/html,application/xml,text/plain,*/*"
                   }
               )
 
@@ -54,10 +56,9 @@ jobs:
                       timeout=timeout
                   ) as response:
 
-                      body = response.read(4096)
+                      data = response.read()
 
                       return {
-                          "url": url,
                           "status": response.status,
                           "final_url": response.geturl(),
                           "content_type":
@@ -65,30 +66,18 @@ jobs:
                                   "Content-Type",
                                   ""
                               ),
-                          "content_length":
-                              response.headers.get(
-                                  "Content-Length",
-                                  ""
-                              ),
                           "response_time_ms":
                               round(
-                                  (
-                                      time.time()
-                                      - start
-                                  ) * 1000,
+                                  (time.time() - started)
+                                  * 1000,
                                   2
                               ),
-                          "error": "",
-                          "sample":
-                              body.decode(
-                                  "utf-8",
-                                  errors="ignore"
-                              )
+                          "data": data,
+                          "error": ""
                       }
 
               except urllib.error.HTTPError as e:
                   return {
-                      "url": url,
                       "status": e.code,
                       "final_url": (
                           e.geturl()
@@ -96,200 +85,201 @@ jobs:
                           else url
                       ),
                       "content_type": "",
-                      "content_length": "",
                       "response_time_ms":
                           round(
-                              (
-                                  time.time()
-                                  - start
-                              ) * 1000,
+                              (time.time() - started)
+                              * 1000,
                               2
                           ),
-                      "error": str(e),
-                      "sample": ""
+                      "data": b"",
+                      "error": str(e)
                   }
 
               except Exception as e:
                   return {
-                      "url": url,
                       "status": 0,
                       "final_url": url,
                       "content_type": "",
-                      "content_length": "",
                       "response_time_ms":
                           round(
-                              (
-                                  time.time()
-                                  - start
-                              ) * 1000,
+                              (time.time() - started)
+                              * 1000,
                               2
                           ),
-                      "error": str(e),
-                      "sample": ""
+                      "data": b"",
+                      "error": str(e)
                   }
 
-          # -------------------------
-          # Fetch sitemap
-          # -------------------------
+          def classify(status):
+              if status == 200:
+                  return "HEALTHY"
 
-          sitemap_result = fetch(
-              SITEMAP,
-              timeout=30
+              if 300 <= status < 400:
+                  return "REDIRECT"
+
+              if status in (401, 403):
+                  return "BLOCKED"
+
+              if status == 404:
+                  return "NOT_FOUND"
+
+              if 500 <= status <= 599:
+                  return "SERVER_ERROR"
+
+              if status == 0:
+                  return "CONNECTION_ERROR"
+
+              return "HTTP_ERROR"
+
+          # --------------------------------
+          # 1. Check sitemap
+          # --------------------------------
+
+          sitemap_response = fetch(
+              SITEMAP_URL
           )
 
           sitemap_urls = []
+          sitemap_error = ""
 
-          if sitemap_result["status"] == 200:
+          if sitemap_response["status"] == 200:
               try:
                   root = ET.fromstring(
-                      sitemap_result["sample"]
-                  )
-
-                  # The first 4096 bytes may not contain
-                  # the complete sitemap, so fetch it again.
-                  request = urllib.request.Request(
-                      SITEMAP,
-                      headers={
-                          "User-Agent": USER_AGENT
-                      }
-                  )
-
-                  with urllib.request.urlopen(
-                      request,
-                      timeout=30
-                  ) as response:
-                      sitemap_data = response.read()
-
-                  root = ET.fromstring(
-                      sitemap_data
+                      sitemap_response["data"]
                   )
 
                   for element in root.iter():
                       if element.tag.endswith("loc"):
                           if element.text:
-                              sitemap_urls.append(
-                                  element.text.strip()
-                              )
+                              url = element.text.strip()
+
+                              if url:
+                                  sitemap_urls.append(url)
 
               except Exception as e:
-                  print(
-                      "Could not parse sitemap:",
-                      e
-                  )
+                  sitemap_error = str(e)
 
+          else:
+              sitemap_error = (
+                  sitemap_response.get(
+                      "error",
+                      "Unable to fetch sitemap"
+                  )
+              )
+
+          # Remove duplicates
           sitemap_urls = list(
               dict.fromkeys(sitemap_urls)
           )
 
-          # Limit each scheduled run to avoid
-          # excessive crawling.
-          MAX_URLS = 200
+          # Safety limit per run
+          MAX_URLS = 250
 
-          urls_to_check = sitemap_urls[:MAX_URLS]
+          urls_checked = sitemap_urls[:MAX_URLS]
 
-          # -------------------------
-          # Robots.txt
-          # -------------------------
+          # --------------------------------
+          # 2. Check robots.txt
+          # --------------------------------
 
-          robots_result = fetch(
-              ROBOTS,
-              timeout=30
+          robots_response = fetch(
+              ROBOTS_URL
           )
 
-          robots_text = robots_result.get(
-              "sample",
-              ""
+          robots_text = (
+              robots_response["data"]
+              .decode(
+                  "utf-8",
+                  errors="ignore"
+              )
           )
 
-          googlebot_section = re.search(
+          googlebot_match = re.search(
               r"User-agent:\s*Googlebot(.*?)(?=User-agent:|$)",
               robots_text,
               flags=re.I | re.S
           )
 
-          googlebot_rules = (
-              googlebot_section.group(1)
-              if googlebot_section
-              else ""
-          )
-
-          robots_status = {
-              "http_status":
-                  robots_result.get("status"),
-              "googlebot_section_found":
-                  bool(googlebot_section),
-              "disallow_rules": re.findall(
-                  r"Disallow:\s*(.*)",
-                  googlebot_rules,
-                  flags=re.I
-              ),
-              "allow_rules": re.findall(
-                  r"Allow:\s*(.*)",
-                  googlebot_rules,
-                  flags=re.I
-              )
+          robots_info = {
+              "status":
+                  robots_response["status"],
+              "googlebot_section":
+                  bool(googlebot_match),
+              "sitemap_declared":
+                  "sitemap:" in robots_text.lower(),
+              "disallow_rules":
+                  re.findall(
+                      r"^\s*Disallow:\s*(.*)$",
+                      robots_text,
+                      flags=re.I | re.M
+                  ),
+              "allow_rules":
+                  re.findall(
+                      r"^\s*Allow:\s*(.*)$",
+                      robots_text,
+                      flags=re.I | re.M
+                  )
           }
 
-          # -------------------------
-          # Crawl sitemap URLs
-          # -------------------------
+          # --------------------------------
+          # 3. Crawl URLs
+          # --------------------------------
 
           results = []
 
-          for index, url in enumerate(
-              urls_to_check,
+          for number, url in enumerate(
+              urls_checked,
               start=1
           ):
+
               print(
-                  f"[{index}/{len(urls_to_check)}] "
-                  f"{url}"
+                  f"[{number}/{len(urls_checked)}] {url}"
               )
 
-              result = fetch(
+              response = fetch(
                   url,
                   timeout=30
               )
 
-              final_url = result.get(
+              status = response["status"]
+
+              health = classify(status)
+
+              final_url = response.get(
                   "final_url",
                   url
               )
 
-              status = result.get(
-                  "status",
-                  0
-              )
-
               content_type = (
-                  result.get(
+                  response.get(
                       "content_type",
                       ""
                   ) or ""
               ).lower()
 
-              if status == 200:
-                  health = "HEALTHY"
-              elif 300 <= status < 400:
-                  health = "REDIRECT"
-              elif status in (401, 403):
-                  health = "BLOCKED"
-              elif status == 404:
-                  health = "NOT_FOUND"
-              elif status >= 500:
-                  health = "SERVER_ERROR"
-              else:
-                  health = "ERROR"
-
-              https_ok = (
+              is_https = (
                   url.lower().startswith(
                       "https://"
                   )
               )
 
-              redirects_to_http = (
+              final_https = (
                   final_url.lower().startswith(
-                      "http://"
+                      "https://"
                   )
+              )
+
+              slow = (
+                  response.get(
+                      "response_time_ms",
+                      0
+                  ) > 3000
+              )
+
+              html_expected = (
+                  status == 200
+                  and "text/html"
+                  not in content_type
+                  and content_type != ""
               )
 
               results.append({
@@ -297,291 +287,345 @@ jobs:
                   "status": status,
                   "health": health,
                   "final_url": final_url,
-                  "https": https_ok,
-                  "redirects_to_http":
-                      redirects_to_http,
-                  "content_type":
-                      content_type,
+                  "content_type": content_type,
+                  "https": is_https,
+                  "final_https": final_https,
+                  "slow_over_3_seconds": slow,
+                  "unexpected_content_type":
+                      html_expected,
                   "response_time_ms":
-                      result.get(
-                          "response_time_ms"
+                      response.get(
+                          "response_time_ms",
+                          0
                       ),
                   "error":
-                      result.get(
+                      response.get(
                           "error",
                           ""
                       )
               })
 
+          # --------------------------------
+          # 4. Statistics
+          # --------------------------------
+
           healthy = [
-              r for r in results
-              if r["health"] == "HEALTHY"
+              x for x in results
+              if x["health"] == "HEALTHY"
           ]
 
           redirects = [
-              r for r in results
-              if r["health"] == "REDIRECT"
-          ]
-
-          blocked = [
-              r for r in results
-              if r["health"] == "BLOCKED"
+              x for x in results
+              if x["health"] == "REDIRECT"
           ]
 
           not_found = [
-              r for r in results
-              if r["health"] == "NOT_FOUND"
+              x for x in results
+              if x["health"] == "NOT_FOUND"
+          ]
+
+          blocked = [
+              x for x in results
+              if x["health"] == "BLOCKED"
           ]
 
           server_errors = [
-              r for r in results
-              if r["health"] == "SERVER_ERROR"
+              x for x in results
+              if x["health"] == "SERVER_ERROR"
           ]
 
-          errors = [
-              r for r in results
-              if r["health"] == "ERROR"
+          connection_errors = [
+              x for x in results
+              if x["health"] == "CONNECTION_ERROR"
+          ]
+
+          http_errors = [
+              x for x in results
+              if x["health"] == "HTTP_ERROR"
           ]
 
           slow_urls = [
-              r for r in results
-              if (
-                  r.get(
-                      "response_time_ms",
-                      0
-                  ) > 3000
-              )
+              x for x in results
+              if x["slow_over_3_seconds"]
           ]
 
-          http_urls = [
-              r for r in results
-              if not r.get("https")
+          non_https = [
+              x for x in results
+              if not x["https"]
           ]
 
           content_type_issues = [
-              r for r in results
-              if (
-                  r.get("status") == 200
-                  and r.get("content_type")
-                  and "text/html"
-                  not in r["content_type"]
-              )
+              x for x in results
+              if x["unexpected_content_type"]
           ]
+
+          health_percentage = (
+              round(
+                  (
+                      len(healthy)
+                      / len(results)
+                  ) * 100,
+                  1
+              )
+              if results
+              else 0
+          )
+
+          # --------------------------------
+          # 5. JSON report
+          # --------------------------------
 
           report = {
               "website":
                   "https://letsstudy.pro",
+
               "sitemap":
-                  SITEMAP,
+                  SITEMAP_URL,
+
               "robots":
-                  ROBOTS,
-              "sitemap_http_status":
-                  sitemap_result.get(
-                      "status"
-                  ),
+                  ROBOTS_URL,
+
+              "sitemap_status":
+                  sitemap_response["status"],
+
               "sitemap_url_count":
                   len(sitemap_urls),
+
               "urls_checked":
                   len(results),
+
               "max_urls_per_run":
                   MAX_URLS,
-              "robots_status":
-                  robots_status,
+
+              "health_percentage":
+                  health_percentage,
+
+              "robots":
+                  robots_info,
+
               "summary": {
                   "healthy":
                       len(healthy),
+
                   "redirects":
                       len(redirects),
-                  "blocked":
-                      len(blocked),
+
                   "not_found":
                       len(not_found),
+
+                  "blocked":
+                      len(blocked),
+
                   "server_errors":
                       len(server_errors),
-                  "errors":
-                      len(errors),
-                  "slow_over_3_seconds":
+
+                  "connection_errors":
+                      len(connection_errors),
+
+                  "http_errors":
+                      len(http_errors),
+
+                  "slow_urls":
                       len(slow_urls),
-                  "http_urls":
-                      len(http_urls),
+
+                  "non_https":
+                      len(non_https),
+
                   "content_type_issues":
                       len(content_type_issues)
               },
+
+              "sitemap_error":
+                  sitemap_error,
+
               "urls":
-                  results
+                  results,
+
+              "note":
+                  (
+                      "This workflow monitors URL health. "
+                      "It does not prove that Googlebot "
+                      "has crawled or indexed a URL."
+                  )
           }
 
           with open(
               "google-url-crawler-report.json",
               "w",
               encoding="utf-8"
-          ) as f:
+          ) as file:
               json.dump(
                   report,
-                  f,
+                  file,
                   indent=2,
                   ensure_ascii=False
               )
+
+          # --------------------------------
+          # 6. Markdown report
+          # --------------------------------
 
           with open(
               "google-url-crawler-report.md",
               "w",
               encoding="utf-8"
-          ) as f:
+          ) as file:
 
-              f.write(
-                  "# LetsStudy Pro - Google URL Crawler Report\n\n"
+              file.write(
+                  "# LetsStudy Pro - Google URL Crawler\n\n"
               )
 
-              f.write(
-                  "> This workflow monitors URL accessibility "
-                  "and crawl health. It does not prove that "
-                  "Google has crawled or indexed a URL.\n\n"
+              file.write(
+                  "> URL health and crawl monitoring. "
+                  "This does not prove Google crawling "
+                  "or indexing.\n\n"
               )
 
-              f.write("## Summary\n\n")
+              file.write(
+                  "## Summary\n\n"
+              )
 
-              f.write(
-                  f"- Sitemap URLs found: "
+              file.write(
+                  f"- Sitemap URLs: "
                   f"{len(sitemap_urls)}\n"
               )
 
-              f.write(
+              file.write(
                   f"- URLs checked: "
                   f"{len(results)}\n"
               )
 
-              f.write(
+              file.write(
                   f"- Healthy: "
                   f"{len(healthy)}\n"
               )
 
-              f.write(
+              file.write(
+                  f"- Health rate: "
+                  f"{health_percentage}%\n"
+              )
+
+              file.write(
                   f"- Redirects: "
                   f"{len(redirects)}\n"
               )
 
-              f.write(
-                  f"- Blocked: "
-                  f"{len(blocked)}\n"
-              )
-
-              f.write(
+              file.write(
                   f"- 404 Not Found: "
                   f"{len(not_found)}\n"
               )
 
-              f.write(
+              file.write(
+                  f"- Blocked: "
+                  f"{len(blocked)}\n"
+              )
+
+              file.write(
                   f"- Server errors: "
                   f"{len(server_errors)}\n"
               )
 
-              f.write(
-                  f"- Other errors: "
-                  f"{len(errors)}\n"
+              file.write(
+                  f"- Connection errors: "
+                  f"{len(connection_errors)}\n"
               )
 
-              f.write(
+              file.write(
                   f"- Slow URLs (>3s): "
                   f"{len(slow_urls)}\n"
               )
 
-              f.write(
+              file.write(
                   f"- Non-HTTPS URLs: "
-                  f"{len(http_urls)}\n"
+                  f"{len(non_https)}\n\n"
               )
 
-              f.write(
-                  f"- Content-type issues: "
-                  f"{len(content_type_issues)}\n\n"
-              )
-
-              f.write(
+              file.write(
                   "## Robots.txt\n\n"
               )
 
-              f.write(
+              file.write(
                   f"- HTTP status: "
-                  f"{robots_status['http_status']}\n"
+                  f"{robots_info['status']}\n"
               )
 
-              f.write(
-                  f"- Googlebot section found: "
-                  f"{robots_status['googlebot_section_found']}\n\n"
+              file.write(
+                  f"- Googlebot section: "
+                  f"{robots_info['googlebot_section']}\n"
               )
 
-              f.write(
+              file.write(
+                  f"- Sitemap declared: "
+                  f"{robots_info['sitemap_declared']}\n\n"
+              )
+
+              file.write(
                   "## Problems\n\n"
               )
 
               problems = (
                   not_found
-                  + server_errors
                   + blocked
-                  + errors
+                  + server_errors
+                  + connection_errors
+                  + http_errors
                   + slow_urls
-                  + http_urls
+                  + non_https
+                  + content_type_issues
               )
 
+              unique = set()
+
               if problems:
-                  seen = set()
-
                   for item in problems:
-                      url = item.get(
-                          "url",
-                          ""
-                      )
+                      url = item["url"]
 
-                      if url in seen:
+                      if url in unique:
                           continue
 
-                      seen.add(url)
+                      unique.add(url)
 
-                      f.write(
-                          f"- **{item.get('health')}** "
+                      file.write(
+                          f"- **{item['health']}** "
                           f"`{url}`"
                       )
 
-                      if item.get("status"):
-                          f.write(
-                              f" — HTTP "
-                              f"{item['status']}"
-                          )
+                      file.write(
+                          f" — HTTP "
+                          f"{item['status']}"
+                      )
 
-                      if item.get(
-                          "response_time_ms"
-                      ):
-                          f.write(
-                              f" — "
-                              f"{item['response_time_ms']} ms"
-                          )
+                      file.write(
+                          f" — "
+                          f"{item['response_time_ms']} ms"
+                      )
 
-                      f.write("\n")
+                      file.write("\n")
               else:
-                  f.write(
+                  file.write(
                       "No major URL health problems detected. ✅\n"
                   )
 
-              f.write(
+              file.write(
                   "\n## URL Results\n\n"
               )
 
-              f.write(
-                  "| URL | Status | Health | "
-                  "Time | Final URL |\n"
+              file.write(
+                  "| URL | HTTP | Health | "
+                  "Response | Final URL |\n"
               )
 
-              f.write(
+              file.write(
                   "|---|---:|---|---:|---|\n"
               )
 
               for item in results:
-                  f.write(
+                  file.write(
                       f"| `{item['url']}` | "
-                      f"{item['status']}` | "
+                      f"{item['status']} | "
                       f"{item['health']} | "
-                      f"{item.get('response_time_ms', 0)} ms | "
-                      f"`{item.get('final_url', '')}` |\n"
+                      f"{item['response_time_ms']} ms | "
+                      f"`{item['final_url']}` |\n"
                   )
 
           print("")
@@ -598,7 +642,7 @@ jobs:
               f"Healthy: {len(healthy)}"
           )
           print(
-              f"Redirects: {len(redirects)}"
+              f"Health rate: {health_percentage}%"
           )
           print(
               f"404: {len(not_found)}"
@@ -611,17 +655,14 @@ jobs:
           )
           print("")
           print(
-              "This is URL health monitoring, "
-              "not proof of Google crawling/indexing."
+              "Informational check only."
           )
-          print(
-              "This check is informational and will not fail."
-          )
+
           PY
 
           exit 0
 
-      - name: Upload Google URL Crawler Report
+      - name: Upload URL Crawler Report
         uses: actions/upload-artifact@v4
         with:
           name: google-url-crawler-report
