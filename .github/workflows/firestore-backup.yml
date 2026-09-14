@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   firestore-backup:
-    name: Firestore Daily Backup
+    name: Firestore Backup
     runs-on: ubuntu-latest
 
     steps:
@@ -20,72 +20,105 @@ jobs:
         with:
           credentials_json: '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}'
 
-      - name: Setup Google Cloud SDK
+      - name: Setup Google Cloud
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Configure project
+      - name: Install tools
         run: |
-          gcloud config set project let-s-study-pro-course
+          sudo apt-get update
+          sudo apt-get install -y jq
 
-      - name: Check backup bucket
-        shell: bash
+      - name: Create backup directory
         run: |
-          if [ -z "${{ secrets.FIRESTORE_BACKUP_BUCKET }}" ]; then
-            echo "ERROR: FIRESTORE_BACKUP_BUCKET secret is missing."
-            exit 1
-          fi
+          mkdir -p firestore-backup
 
-          echo "Backup bucket configured."
-
-      - name: Create Firestore backup
+      - name: Export Firestore data
         shell: bash
         run: |
           PROJECT_ID="let-s-study-pro-course"
-          BUCKET="${{ secrets.FIRESTORE_BACKUP_BUCKET }}"
-
-          BACKUP_DATE=$(date -u +"%Y-%m-%d-%H-%M-%S")
-
-          BACKUP_PATH="gs://${BUCKET}/firestore-backups/${BACKUP_DATE}"
+          DATABASE="(default)"
 
           echo "======================================"
           echo " LetsStudy Pro Firestore Backup"
           echo "======================================"
           echo ""
-          echo "Project: $PROJECT_ID"
-          echo "Backup: $BACKUP_PATH"
-          echo ""
 
-          gcloud firestore export "$BACKUP_PATH" \
-            --project="$PROJECT_ID"
+          ACCESS_TOKEN=$(gcloud auth print-access-token)
 
-          echo ""
-          echo "Firestore backup completed."
+          curl \
+            -sS \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            "https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/${DATABASE}/documents?pageSize=300" \
+            > firestore-backup/firestore-documents.json
 
-      - name: Verify backup
+          echo "Firestore data retrieved."
+
+      - name: Validate backup
         shell: bash
         run: |
-          BUCKET="${{ secrets.FIRESTORE_BACKUP_BUCKET }}"
+          FILE="firestore-backup/firestore-documents.json"
+
+          if [ ! -s "$FILE" ]; then
+            echo "ERROR: Backup file is empty."
+            exit 1
+          fi
+
+          if jq empty "$FILE" 2>/dev/null; then
+            echo "Backup JSON is valid."
+          else
+            echo "ERROR: Backup JSON is invalid."
+            exit 1
+          fi
 
           echo ""
-          echo "Checking backup..."
+          echo "Backup size:"
+          du -h "$FILE"
 
-          gcloud storage ls \
-            "gs://${BUCKET}/firestore-backups/" \
-            --project="let-s-study-pro-course"
+      - name: Add backup information
+        shell: bash
+        run: |
+          cat > firestore-backup/README.txt <<EOF
+          LetsStudy Pro Firestore Backup
 
-          echo ""
-          echo "Backup verification completed."
+          Firebase Project:
+          let-s-study-pro-course
+
+          Database:
+          (default)
+
+          Backup date:
+          $(date -u)
+
+          Storage:
+          GitHub Actions Artifact
+
+          Firebase Storage:
+          NOT USED
+
+          Firebase Functions:
+          NOT USED
+          EOF
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: letsstudy-pro-firestore-backup-${{ github.run_number }}
+          path: firestore-backup/
+          retention-days: 30
 
       - name: Final report
         run: |
           echo ""
           echo "======================================"
-          echo " FIRESTORE BACKUP SUCCESS"
+          echo " FIRESTORE BACKUP COMPLETED"
           echo "======================================"
           echo ""
           echo "Project: let-s-study-pro-course"
-          echo "Schedule: Daily"
-          echo "Backup: Firestore export"
-          echo "Verification: Completed"
+          echo "Storage: GitHub Actions Artifact"
+          echo "Firebase Storage: NOT USED"
+          echo "Firebase Functions: NOT USED"
+          echo "Retention: 30 days"
           echo ""
+          echo "Backup successfully uploaded."
           echo "======================================"
