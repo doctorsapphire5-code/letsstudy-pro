@@ -1,0 +1,197 @@
+name: LetsStudy Pro - Search Console Monitor
+
+on:
+  push:
+    branches:
+      - main
+
+  schedule:
+    - cron: "0 */12 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  search-console:
+    name: Search Console Health Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check production website
+        shell: bash
+        run: |
+          echo "======================================"
+          echo " LetsStudy Pro Search Console Monitor"
+          echo "======================================"
+          echo ""
+
+          URL="https://letsstudy.pro/"
+
+          STATUS=$(curl \
+            -L \
+            -s \
+            -o /dev/null \
+            -w "%{http_code}" \
+            --max-time 60 \
+            "$URL" || true)
+
+          echo "Website: $URL"
+          echo "HTTP Status: $STATUS"
+
+          if [ "$STATUS" = "200" ]; then
+            echo "Website: ONLINE"
+          else
+            echo "WARNING: Website returned HTTP $STATUS"
+          fi
+
+      - name: Check Google discovery files
+        shell: bash
+        run: |
+          echo ""
+          echo "Checking Google discovery files..."
+          echo ""
+
+          for URL in \
+            "https://letsstudy.pro/robots.txt" \
+            "https://letsstudy.pro/sitemap.xml"
+          do
+
+            STATUS=$(curl \
+              -L \
+              -s \
+              -o /dev/null \
+              -w "%{http_code}" \
+              --max-time 30 \
+              "$URL" || true)
+
+            echo "$STATUS  $URL"
+
+          done
+
+      - name: Check sitemap URL count
+        shell: bash
+        run: |
+          echo ""
+          echo "Downloading sitemap..."
+
+          curl \
+            -L \
+            -s \
+            --max-time 60 \
+            "https://letsstudy.pro/sitemap.xml" \
+            > /tmp/sitemap.xml || true
+
+          if [ -s /tmp/sitemap.xml ]; then
+
+            COUNT=$(grep -o "<loc>" /tmp/sitemap.xml | wc -l || true)
+
+            echo "Indexed URLs listed in sitemap: $COUNT"
+
+            if [ "$COUNT" -gt 0 ]; then
+              echo "Sitemap contains URLs."
+            else
+              echo "WARNING: Sitemap contains no URLs."
+            fi
+
+          else
+
+            echo "WARNING: Could not download sitemap."
+
+          fi
+
+      - name: Check robots directives
+        shell: bash
+        run: |
+          echo ""
+          echo "Checking robots.txt..."
+
+          curl \
+            -L \
+            -s \
+            --max-time 30 \
+            "https://letsstudy.pro/robots.txt" \
+            > /tmp/robots.txt || true
+
+          if grep -qiE \
+            'Disallow:[[:space:]]*/' \
+            /tmp/robots.txt; then
+
+            echo "Robots.txt contains Disallow directives."
+
+          else
+
+            echo "No broad Disallow directive detected."
+
+          fi
+
+          if grep -qi \
+            "Sitemap:.*letsstudy.pro/sitemap.xml" \
+            /tmp/robots.txt; then
+
+            echo "Google sitemap discovery reference: FOUND"
+
+          else
+
+            echo "WARNING: Sitemap reference not detected."
+
+          fi
+
+      - name: Check canonical domain
+        shell: bash
+        run: |
+          echo ""
+          echo "Checking canonical domain..."
+
+          curl \
+            -L \
+            -s \
+            --max-time 60 \
+            "https://letsstudy.pro/" \
+            > /tmp/home.html || true
+
+          if grep -qi \
+            'canonical.*letsstudy.pro' \
+            /tmp/home.html; then
+
+            echo "Canonical domain signal: FOUND"
+
+          else
+
+            echo "WARNING: Canonical signal not detected."
+
+          fi
+
+      - name: Search Console connection note
+        shell: bash
+        run: |
+          echo ""
+          echo "======================================"
+          echo " SEARCH CONSOLE STATUS"
+          echo "======================================"
+          echo ""
+          echo "Website health: Checked"
+          echo "robots.txt: Checked"
+          echo "sitemap.xml: Checked"
+          echo "Canonical: Checked"
+          echo ""
+          echo "IMPORTANT:"
+          echo "This workflow does not claim Google indexing status."
+          echo "Google Search Console remains the authoritative"
+          echo "place for actual indexing, coverage and performance data."
+          echo ""
+
+      - name: Final report
+        run: |
+          echo "======================================"
+          echo " SEARCH CONSOLE MONITOR COMPLETED"
+          echo "======================================"
+          echo ""
+          echo "Automatic monitoring: ACTIVE"
+          echo "Schedule: EVERY 12 HOURS"
+          echo "Domain: https://letsstudy.pro"
+          echo ""
+          echo "======================================"
+
+          exit 0
