@@ -1,14 +1,14 @@
-name: LetsStudy Pro Global Automatic Indexing
+name: LetsStudy Pro - Global Indexing
 
 on:
-  push:
-    branches:
-      - main
-
   workflow_dispatch:
 
   schedule:
     - cron: "*/30 * * * *"
+
+  push:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -20,42 +20,92 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
       - name: Install dependencies
         run: npm install
 
       - name: Generate static sitemap
-        run: npm run sitemap:static
-
-      - name: Read Firestore public content
-        run: npm run firestore:index
-
-      - name: Generate merged sitemap
-        run: npm run sitemap:index
-
-      - name: Submit URLs to IndexNow
-        if: ${{ secrets.INDEXNOW_KEY != '' }}
-        env:
-          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
-        run: npm run indexnow
-
-      - name: Commit sitemap changes
         run: |
-          git config user.name "LetsStudy Pro Indexing Bot"
-          git config user.email "actions@github.com"
+          if npm run | grep -q "sitemap:static"; then
+            npm run sitemap:static
+          else
+            echo "sitemap:static script not found - skipping"
+          fi
 
-          git add sitemap.xml
-          git add sitemap-pages-*.xml
-          git add sitemap-firestore-*.xml
+      - name: Generate Firestore sitemap
+        run: |
+          if npm run | grep -q "sitemap:index"; then
+            npm run sitemap:index
+          else
+            echo "sitemap:index script not found - skipping"
+          fi
+
+      - name: Run indexing preparation
+        run: |
+          if npm run | grep -q "firestore:index"; then
+            npm run firestore:index
+          else
+            echo "firestore:index script not found - skipping"
+          fi
+
+      - name: Run IndexNow
+        run: |
+          if npm run | grep -q "indexnow"; then
+            npm run indexnow
+          else
+            echo "indexnow script not found - skipping"
+          fi
+
+      - name: Verify sitemap
+        run: |
+          if [ -f sitemap.xml ]; then
+            echo "Sitemap found:"
+            wc -l sitemap.xml
+            head -20 sitemap.xml
+          else
+            echo "ERROR: sitemap.xml was not generated."
+            exit 1
+          fi
+
+      - name: Submit sitemap to Google
+        run: |
+          curl -L -s \
+            "https://www.google.com/ping?sitemap=https://letsstudy.pro/sitemap.xml" \
+            -o /tmp/google-response.txt
+
+          echo "Google sitemap notification sent."
+
+      - name: Submit sitemap to Bing
+        run: |
+          curl -L -s \
+            "https://www.bing.com/ping?sitemap=https://letsstudy.pro/sitemap.xml" \
+            -o /tmp/bing-response.txt
+
+          echo "Bing sitemap notification sent."
+
+      - name: Check sitemap URL
+        run: |
+          curl -I -L --fail \
+            "https://letsstudy.pro/sitemap.xml"
+
+      - name: Commit updated sitemap
+        run: |
+          git config user.name "LetsStudy Pro"
+          git config user.email "support@letsstudy.pro"
+
+          git add sitemap.xml sitemap*.xml 2>/dev/null || true
 
           if git diff --cached --quiet; then
             echo "No sitemap changes."
           else
-            git commit -m "chore: update global sitemaps [skip ci]"
-            git push
+            git commit -m "chore: update sitemap"
+            git push origin main
           fi
