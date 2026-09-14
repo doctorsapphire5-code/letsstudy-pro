@@ -1,0 +1,195 @@
+name: LetsStudy Pro - Sitemap Validation
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sitemap-validation:
+    name: Validate Sitemap
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check sitemap exists
+        run: |
+          set -e
+
+          if [ ! -f sitemap.xml ]; then
+            echo "ERROR: sitemap.xml not found."
+            exit 1
+          fi
+
+          echo "sitemap.xml found."
+
+      - name: Validate XML structure
+        run: |
+          set -e
+
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+
+          file = "sitemap.xml"
+
+          try:
+              ET.parse(file)
+              print("XML structure is valid.")
+          except Exception as e:
+              print("ERROR: Invalid XML")
+              print(e)
+              raise SystemExit(1)
+          PY
+
+      - name: Check sitemap namespace
+        run: |
+          set -e
+
+          grep -q \
+            'http://www.sitemaps.org/schemas/sitemap/0.9' \
+            sitemap.xml || {
+
+            echo "ERROR: Sitemap namespace is missing."
+            exit 1
+          }
+
+          echo "Sitemap namespace is valid."
+
+      - name: Check URL entries
+        run: |
+          set -e
+
+          URL_COUNT=$(grep -o "<loc>" sitemap.xml | wc -l)
+
+          echo "URLs found: $URL_COUNT"
+
+          if [ "$URL_COUNT" -eq 0 ]; then
+            echo "ERROR: Sitemap contains no URLs."
+            exit 1
+          fi
+
+      - name: Check production domain
+        run: |
+          set -e
+
+          echo "Checking sitemap domains..."
+
+          if grep -qE \
+            '<loc>[^<]*(localhost|127\.0\.0\.1)' \
+            sitemap.xml; then
+
+            echo "ERROR: Localhost URL found."
+            exit 1
+          fi
+
+          if grep -q \
+            '<loc>http://letsstudy.pro' \
+            sitemap.xml; then
+
+            echo "ERROR: HTTP LetsStudy Pro URL found."
+            exit 1
+          fi
+
+          echo "Production domain check passed."
+
+      - name: Check HTTPS
+        run: |
+          set -e
+
+          if grep -qE '<loc>http://' sitemap.xml; then
+            echo "ERROR: HTTP URL found in sitemap."
+            exit 1
+          fi
+
+          echo "All sitemap URLs use HTTPS."
+
+      - name: Check LetsStudy Pro URLs
+        run: |
+          set -e
+
+          INVALID=$(grep -o '<loc>[^<]*</loc>' sitemap.xml \
+            | grep -v 'https://letsstudy.pro/' || true)
+
+          if [ -n "$INVALID" ]; then
+            echo "ERROR: External or invalid domain detected:"
+            echo "$INVALID"
+            exit 1
+          fi
+
+          echo "All sitemap URLs belong to letsstudy.pro."
+
+      - name: Check duplicate URLs
+        run: |
+          set -e
+
+          URLS=$(grep -o '<loc>[^<]*</loc>' sitemap.xml \
+            | sed 's/<\/\?loc>//g' \
+            | sort)
+
+          DUPLICATES=$(printf "%s\n" "$URLS" \
+            | uniq -d)
+
+          if [ -n "$DUPLICATES" ]; then
+            echo "ERROR: Duplicate URLs found:"
+            echo "$DUPLICATES"
+            exit 1
+          fi
+
+          echo "No duplicate URLs found."
+
+      - name: Check empty URLs
+        run: |
+          set -e
+
+          if grep -q '<loc></loc>' sitemap.xml; then
+            echo "ERROR: Empty URL found."
+            exit 1
+          fi
+
+          echo "No empty URLs found."
+
+      - name: Check invalid characters
+        run: |
+          set -e
+
+          if grep -qE \
+            '<loc>[^<]*( |")' \
+            sitemap.xml; then
+
+            echo "ERROR: Invalid characters found inside sitemap URLs."
+            exit 1
+          fi
+
+          echo "URL character check passed."
+
+      - name: Show sitemap summary
+        run: |
+          echo ""
+          echo "======================================"
+          echo " LetsStudy Pro Sitemap Validation"
+          echo "======================================"
+          echo ""
+
+          URL_COUNT=$(grep -o "<loc>" sitemap.xml | wc -l)
+
+          echo "Sitemap: sitemap.xml"
+          echo "Domain: https://letsstudy.pro"
+          echo "URL count: $URL_COUNT"
+          echo ""
+
+          echo "First URLs:"
+          grep -o '<loc>[^<]*</loc>' sitemap.xml | head -10
+
+          echo ""
+          echo "Sitemap validation PASSED."
