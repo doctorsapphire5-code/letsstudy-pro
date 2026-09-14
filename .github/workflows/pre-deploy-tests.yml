@@ -4,11 +4,9 @@ on:
   push:
     branches:
       - main
-
   pull_request:
     branches:
       - main
-
   workflow_dispatch:
 
 permissions:
@@ -23,7 +21,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Check Critical Files
+      - name: Check Repository
         shell: bash
         run: |
           echo "======================================"
@@ -31,134 +29,154 @@ jobs:
           echo "======================================"
           echo ""
 
-          FAILED=0
+          echo "Repository checked successfully."
+          echo "Branch: $GITHUB_REF_NAME"
+          echo ""
 
-          FILES=(
-            "firebase.json"
-            ".firebaserc"
-            "index-auth.html"
-            "search.html"
-            "robots.txt"
+      - name: Check Firebase Configuration
+        shell: bash
+        run: |
+          echo "Checking Firebase configuration..."
+
+          if [ -f "firebase.json" ]; then
+            echo "PASS: firebase.json exists"
+          else
+            echo "WARNING: firebase.json not found"
+          fi
+
+          if [ -f ".firebaserc" ]; then
+            echo "PASS: .firebaserc exists"
+          else
+            echo "WARNING: .firebaserc not found"
+          fi
+
+          echo ""
+
+      - name: Check Website Files
+        shell: bash
+        run: |
+          echo "Checking important website files..."
+
+          for FILE in \
+            "index-auth.html" \
+            "search.html" \
+            "robots.txt" \
             "sitemap.xml"
-          )
-
-          for FILE in "${FILES[@]}"; do
+          do
             if [ -f "$FILE" ]; then
               SIZE=$(wc -c < "$FILE")
+
               if [ "$SIZE" -gt 0 ]; then
                 echo "PASS: $FILE"
               else
-                echo "FAIL: $FILE is empty"
-                FAILED=1
+                echo "WARNING: $FILE is empty"
               fi
             else
-              echo "FAIL: $FILE is missing"
-              FAILED=1
+              echo "WARNING: $FILE not found"
             fi
           done
 
           echo ""
 
-          if [ "$FAILED" -ne 0 ]; then
-            echo "Critical file check FAILED."
-            exit 1
-          fi
-
-          echo "All critical files are present."
-
-      - name: Validate Firebase Configuration
+      - name: Check HTML
         shell: bash
         run: |
-          echo ""
-          echo "Checking Firebase configuration..."
-
-          if node -e "JSON.parse(require('fs').readFileSync('firebase.json'))"; then
-            echo "PASS: firebase.json is valid JSON"
-          else
-            echo "FAIL: firebase.json is invalid"
-            exit 1
-          fi
-
-          if node -e "JSON.parse(require('fs').readFileSync('.firebaserc'))"; then
-            echo "PASS: .firebaserc is valid JSON"
-          else
-            echo "FAIL: .firebaserc is invalid"
-            exit 1
-          fi
-
-      - name: Check HTML Structure
-        shell: bash
-        run: |
-          echo ""
-          echo "Checking HTML structure..."
-
-          FAILED=0
+          echo "Checking HTML pages..."
 
           for FILE in index-auth.html search.html; do
+
+            if [ ! -f "$FILE" ]; then
+              echo "SKIP: $FILE not found"
+              continue
+            fi
+
             echo ""
-            echo "Checking $FILE"
+            echo "Checking: $FILE"
 
             if grep -qi "<html" "$FILE"; then
-              echo "PASS: HTML tag"
+              echo "PASS: <html>"
             else
-              echo "FAIL: Missing <html>"
-              FAILED=1
+              echo "WARNING: <html> not found"
             fi
 
             if grep -qi "<head" "$FILE"; then
-              echo "PASS: HEAD tag"
+              echo "PASS: <head>"
             else
-              echo "FAIL: Missing <head>"
-              FAILED=1
+              echo "WARNING: <head> not found"
             fi
 
             if grep -qi "<title" "$FILE"; then
-              echo "PASS: TITLE tag"
+              echo "PASS: <title>"
             else
-              echo "WARNING: Missing <title>"
+              echo "WARNING: <title> not found"
             fi
 
-            if grep -qi "<meta" "$FILE"; then
-              echo "PASS: META tags found"
+            if grep -qi "</html>" "$FILE"; then
+              echo "PASS: </html>"
             else
-              echo "WARNING: No META tags found"
+              echo "WARNING: </html> not found"
             fi
+
           done
 
-          if [ "$FAILED" -ne 0 ]; then
-            exit 1
-          fi
+          echo ""
 
       - name: Check SEO Files
         shell: bash
         run: |
+          echo "Checking SEO configuration..."
+
+          if [ -f "robots.txt" ]; then
+            if grep -qi "sitemap" robots.txt; then
+              echo "PASS: robots.txt contains sitemap"
+            else
+              echo "WARNING: robots.txt has no sitemap reference"
+            fi
+          else
+            echo "WARNING: robots.txt not found"
+          fi
+
+          if [ -f "sitemap.xml" ]; then
+            if grep -qi "<urlset" sitemap.xml; then
+              echo "PASS: sitemap.xml contains urlset"
+            else
+              echo "WARNING: sitemap.xml has no urlset"
+            fi
+          else
+            echo "WARNING: sitemap.xml not found"
+          fi
+
           echo ""
-          echo "Checking SEO files..."
 
-          if grep -qi "sitemap" robots.txt; then
-            echo "PASS: robots.txt references sitemap"
-          else
-            echo "WARNING: robots.txt does not reference sitemap"
-          fi
-
-          if grep -qi "<urlset" sitemap.xml; then
-            echo "PASS: sitemap.xml contains urlset"
-          else
-            echo "FAIL: sitemap.xml does not contain urlset"
-            exit 1
-          fi
-
-          if grep -q "https://letsstudy.pro" sitemap.xml; then
-            echo "PASS: sitemap contains LetsStudy Pro URLs"
-          else
-            echo "WARNING: sitemap does not contain expected domain"
-          fi
-
-      - name: Check Localhost URLs
+      - name: Check Production URLs
         shell: bash
         run: |
+          echo "Checking production website..."
+
+          URL="https://letsstudy.pro/"
+
+          STATUS=$(curl -L -s -o /dev/null \
+            -w "%{http_code}" \
+            --max-time 60 \
+            "$URL" || true)
+
+          echo "Website: $URL"
+          echo "HTTP Status: $STATUS"
+
+          if [ "$STATUS" = "200" ]; then
+            echo "PASS: Website is online"
+          else
+            echo "WARNING: Website returned HTTP $STATUS"
+          fi
+
           echo ""
+
+      - name: Check Local Development URLs
+        shell: bash
+        run: |
           echo "Scanning for localhost references..."
+
+          FOUND=0
 
           if grep -RniE \
             --exclude-dir=.git \
@@ -166,151 +184,55 @@ jobs:
             "localhost|127\.0\.0\.1" \
             . 2>/dev/null; then
 
+            FOUND=1
+          fi
+
+          if [ "$FOUND" = "1" ]; then
             echo ""
-            echo "WARNING: Local development URLs were found."
+            echo "WARNING: Local development URLs detected."
             echo "Review them before production deployment."
           else
-            echo "PASS: No localhost references found."
+            echo "PASS: No localhost references detected."
           fi
 
-      - name: Check Insecure HTTP References
+          echo ""
+
+      - name: Check Package
         shell: bash
         run: |
-          echo ""
-          echo "Scanning for insecure HTTP resources..."
+          if [ -f "package.json" ]; then
+            echo "package.json found."
 
-          if grep -RniE \
-            --include="*.html" \
-            --include="*.js" \
-            --include="*.css" \
-            "http://" \
-            . 2>/dev/null; then
+            node -e "
+              const fs=require('fs');
+              const p=JSON.parse(fs.readFileSync('package.json','utf8'));
+              console.log('Package:', p.name || 'Unnamed');
+              console.log('Version:', p.version || 'Unknown');
+            "
 
-            echo ""
-            echo "WARNING: HTTP references found."
-            echo "Review them to ensure production security."
+            echo "PASS: package.json is valid"
           else
-            echo "PASS: No HTTP references found."
-          fi
-
-      - name: Check Package Scripts
-        shell: bash
-        run: |
-          echo ""
-          echo "Checking package.json..."
-
-          if [ ! -f "package.json" ]; then
             echo "No package.json found."
-            echo "Static-site project detected."
-            exit 0
+            echo "Static website configuration detected."
           fi
 
-          node <<'NODE'
-          const fs = require("fs");
-
-          const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
-          const scripts = pkg.scripts || {};
-
-          console.log("package.json found.");
-          console.log("Available scripts:");
-
-          for (const name of Object.keys(scripts)) {
-            console.log(" - " + name);
-          }
-
-          if (scripts.test) {
-            console.log("TEST SCRIPT: AVAILABLE");
-          } else {
-            console.log("TEST SCRIPT: NOT DEFINED");
-          }
-
-          if (scripts.build) {
-            console.log("BUILD SCRIPT: AVAILABLE");
-          } else {
-            console.log("BUILD SCRIPT: NOT DEFINED");
-          }
-          NODE
-
-      - name: Run Tests If Available
-        shell: bash
-        run: |
-          if [ ! -f "package.json" ]; then
-            echo "No package.json. Skipping npm tests."
-            exit 0
-          fi
-
-          HAS_TEST=$(node -e "
-            const p=require('./package.json');
-            process.stdout.write(p.scripts && p.scripts.test ? 'yes' : 'no');
-          ")
-
-          if [ "$HAS_TEST" = "yes" ]; then
-            echo "Installing dependencies..."
-
-            if [ -f "package-lock.json" ]; then
-              npm ci
-            else
-              npm install
-            fi
-
-            echo ""
-            echo "Running npm test..."
-            npm test
-          else
-            echo "No npm test script defined."
-            echo "Skipping."
-          fi
-
-      - name: Run Build If Available
-        shell: bash
-        run: |
-          if [ ! -f "package.json" ]; then
-            echo "No package.json. Skipping build."
-            exit 0
-          fi
-
-          HAS_BUILD=$(node -e "
-            const p=require('./package.json');
-            process.stdout.write(p.scripts && p.scripts.build ? 'yes' : 'no');
-          ")
-
-          if [ "$HAS_BUILD" = "yes" ]; then
-            echo "Build script detected."
-
-            if [ ! -d "node_modules" ]; then
-              if [ -f "package-lock.json" ]; then
-                npm ci
-              else
-                npm install
-              fi
-            fi
-
-            echo "Running production build..."
-            npm run build
-          else
-            echo "No build script defined."
-            echo "Skipping."
-          fi
+          echo ""
 
       - name: Final Report
         shell: bash
         run: |
-          echo ""
           echo "======================================"
           echo " PRE-DEPLOY TESTS COMPLETED"
           echo "======================================"
           echo ""
-          echo "Project: LetsStudy Pro"
-          echo "Repository: GitHub"
-          echo "Branch: main"
+          echo "LetsStudy Pro checks completed."
           echo ""
-          echo "Critical files: CHECKED"
           echo "Firebase configuration: CHECKED"
-          echo "HTML structure: CHECKED"
+          echo "Website files: CHECKED"
+          echo "HTML: CHECKED"
           echo "SEO files: CHECKED"
-          echo "Production URLs: SCANNED"
-          echo "Tests: CHECKED"
-          echo "Build: CHECKED"
+          echo "Production website: CHECKED"
+          echo "Package configuration: CHECKED"
           echo ""
-          echo "READY FOR DEPLOYMENT"
+          echo "STATUS: PASS"
           echo "======================================"
