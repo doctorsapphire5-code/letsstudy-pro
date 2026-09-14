@@ -1,0 +1,148 @@
+name: LetsStudy Pro - Sitemap Auto Update
+
+on:
+  push:
+    branches:
+      - main
+
+  schedule:
+    - cron: "*/30 * * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sitemap-update:
+    name: Sitemap Auto Update
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          if [ -f package.json ]; then
+            echo "package.json found."
+
+            if [ -f package-lock.json ]; then
+              npm ci
+            else
+              npm install
+            fi
+          else
+            echo "No package.json found."
+            echo "Continuing with existing sitemap."
+          fi
+
+      - name: Update sitemap
+        shell: bash
+        run: |
+          echo "======================================"
+          echo " LetsStudy Pro Sitemap Auto Update"
+          echo "======================================"
+          echo ""
+
+          UPDATED=0
+
+          if [ -f package.json ]; then
+
+            if npm run | grep -q "sitemap:static"; then
+              echo "Running sitemap:static..."
+              npm run sitemap:static
+              UPDATED=1
+
+            elif npm run | grep -q "sitemap:index"; then
+              echo "Running sitemap:index..."
+              npm run sitemap:index
+              UPDATED=1
+
+            else
+              echo "No sitemap generation script found."
+              echo "Using existing sitemap.xml."
+            fi
+
+          fi
+
+          if [ -f sitemap.xml ]; then
+            echo ""
+            echo "sitemap.xml found."
+
+            URL_COUNT=$(grep -o "<loc>" sitemap.xml | wc -l || true)
+
+            echo "URLs in sitemap: $URL_COUNT"
+          else
+            echo ""
+            echo "WARNING: sitemap.xml does not exist."
+          fi
+
+          echo ""
+          echo "Sitemap update step completed."
+
+      - name: Check sitemap
+        shell: bash
+        run: |
+          echo "Checking sitemap..."
+
+          if [ ! -f sitemap.xml ]; then
+            echo "WARNING: sitemap.xml not found."
+            exit 0
+          fi
+
+          if grep -q "https://letsstudy.pro" sitemap.xml; then
+            echo "Production URLs detected."
+          else
+            echo "WARNING: letsstudy.pro URLs not detected."
+          fi
+
+          if grep -qi "localhost" sitemap.xml; then
+            echo "WARNING: localhost detected in sitemap."
+          fi
+
+          if grep -q "http://" sitemap.xml; then
+            echo "WARNING: insecure HTTP URL detected."
+          fi
+
+          echo ""
+          echo "Sitemap validation completed."
+
+      - name: Commit sitemap changes
+        shell: bash
+        run: |
+          git config user.name "LetsStudy Pro Bot"
+          git config user.email "actions@github.com"
+
+          git add sitemap.xml
+
+          if git diff --cached --quiet; then
+            echo "No sitemap changes detected."
+          else
+            echo "Sitemap changes detected."
+            git commit -m "chore: auto-update sitemap"
+            git push
+            echo "Sitemap updated and pushed to main."
+          fi
+
+      - name: Final report
+        run: |
+          echo ""
+          echo "======================================"
+          echo " SITEMAP AUTO-UPDATE COMPLETED"
+          echo "======================================"
+          echo ""
+          echo "Sitemap monitoring: ACTIVE"
+          echo "Automatic schedule: EVERY 30 MINUTES"
+          echo "Repository: letsstudy-pro"
+          echo "Domain: https://letsstudy.pro"
+          echo ""
+          echo "======================================"
