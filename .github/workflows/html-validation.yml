@@ -1,0 +1,182 @@
+name: LetsStudy Pro - HTML Validation
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  schedule:
+    - cron: "30 3 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  html-validation:
+    name: HTML Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Find HTML files
+        shell: bash
+        run: |
+          echo "======================================"
+          echo " LetsStudy Pro HTML Validation"
+          echo "======================================"
+          echo ""
+
+          COUNT=$(find . \
+            -type f \
+            -name "*.html" \
+            -not -path "./.git/*" \
+            -not -path "./node_modules/*" \
+            | wc -l)
+
+          echo "HTML files found: $COUNT"
+          echo ""
+
+          if [ "$COUNT" -eq 0 ]; then
+            echo "WARNING: No HTML files found."
+          else
+            echo "HTML files detected."
+          fi
+
+          exit 0
+
+      - name: Check basic HTML structure
+        shell: bash
+        run: |
+          echo "Checking basic HTML structure..."
+          echo ""
+
+          WARNINGS=0
+
+          while IFS= read -r FILE; do
+
+            echo "Checking: $FILE"
+
+            if grep -qi '<!DOCTYPE html' "$FILE"; then
+              echo "  DOCTYPE: OK"
+            else
+              echo "  WARNING: DOCTYPE missing"
+              WARNINGS=$((WARNINGS + 1))
+            fi
+
+            if grep -qi '<html' "$FILE"; then
+              echo "  HTML tag: OK"
+            else
+              echo "  WARNING: <html> missing"
+              WARNINGS=$((WARNINGS + 1))
+            fi
+
+            if grep -qi '<head' "$FILE"; then
+              echo "  HEAD tag: OK"
+            else
+              echo "  WARNING: <head> missing"
+              WARNINGS=$((WARNINGS + 1))
+            fi
+
+            if grep -qi '<body' "$FILE"; then
+              echo "  BODY tag: OK"
+            else
+              echo "  WARNING: <body> missing"
+              WARNINGS=$((WARNINGS + 1))
+            fi
+
+            echo ""
+
+          done < <(
+            find . \
+              -type f \
+              -name "*.html" \
+              -not -path "./.git/*" \
+              -not -path "./node_modules/*"
+          )
+
+          echo "======================================"
+          echo "Basic HTML warnings: $WARNINGS"
+          echo "======================================"
+
+          exit 0
+
+      - name: Check common HTML problems
+        shell: bash
+        run: |
+          echo "Checking common HTML problems..."
+          echo ""
+
+          WARNINGS=0
+
+          while IFS= read -r FILE; do
+
+            if grep -qiE 'href=["'"'"']javascript:' "$FILE"; then
+              echo "WARNING: javascript: URL found in $FILE"
+              WARNINGS=$((WARNINGS + 1))
+            fi
+
+            if grep -qiE 'src=["'"'"']http://' "$FILE"; then
+              echo "WARNING: HTTP resource found in $FILE"
+              WARNINGS=$((WARNINGS + 1))
+            fi
+
+          done < <(
+            find . \
+              -type f \
+              -name "*.html" \
+              -not -path "./.git/*" \
+              -not -path "./node_modules/*"
+          )
+
+          echo ""
+          echo "Common problem warnings: $WARNINGS"
+
+          exit 0
+
+      - name: Check production homepage
+        shell: bash
+        run: |
+          echo "Checking production homepage..."
+
+          STATUS=$(curl \
+            -L \
+            -s \
+            -o /dev/null \
+            -w "%{http_code}" \
+            --max-time 30 \
+            "https://letsstudy.pro/" || true)
+
+          echo "Homepage HTTP status: $STATUS"
+
+          if [ "$STATUS" = "200" ]; then
+            echo "Production homepage: OK"
+          else
+            echo "WARNING: Homepage returned HTTP $STATUS"
+          fi
+
+          exit 0
+
+      - name: Final report
+        run: |
+          echo ""
+          echo "======================================"
+          echo " HTML VALIDATION COMPLETED"
+          echo "======================================"
+          echo ""
+          echo "HTML structure: Checked"
+          echo "Common HTML problems: Checked"
+          echo "HTTPS resources: Checked"
+          echo "Production homepage: Checked"
+          echo ""
+          echo "Warnings do not block deployment."
+          echo "======================================"
+
+          exit 0
