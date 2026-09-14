@@ -4,10 +4,11 @@ on:
   push:
     branches:
       - main
-
+  pull_request:
+    branches:
+      - main
   schedule:
-    - cron: "30 4 * * *"
-
+    - cron: "15 3 * * *"
   workflow_dispatch:
 
 permissions:
@@ -19,178 +20,648 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Analyze HTML content
+      - name: Analyze Content Quality
         shell: bash
         run: |
-          echo "======================================"
-          echo " LetsStudy Pro Content Quality Check"
-          echo "======================================"
-          echo ""
+          set +e
 
-          TOTAL=0
-          WARNINGS=0
+          python3 <<'PY'
+          import os
+          import re
+          import json
+          import math
+          from html.parser import HTMLParser
 
-          while IFS= read -r FILE; do
+          ROOT = os.getcwd()
 
-            TOTAL=$((TOTAL + 1))
+          class ContentParser(HTMLParser):
+              def __init__(self):
+                  super().__init__()
 
-            echo "Checking: $FILE"
-            echo "--------------------------------------"
+                  self.title = ""
+                  self.description = ""
+                  self.h1 = []
+                  self.h2 = []
+                  self.h3 = []
+                  self.paragraphs = []
+                  self.links = []
+                  self.images = []
+                  self.body_text = []
 
-            if grep -qi '<title>' "$FILE"; then
-              echo "Title: OK"
-            else
-              echo "WARNING: Missing title"
-              WARNINGS=$((WARNINGS + 1))
-            fi
+                  self.in_title = False
+                  self.in_p = False
+                  self.in_h1 = False
+                  self.in_h2 = False
+                  self.in_h3 = False
+                  self.in_script = False
+                  self.in_style = False
 
-            if grep -qi 'name=["'"'"']description["'"'"']' "$FILE"; then
-              echo "Meta description: OK"
-            else
-              echo "WARNING: Missing meta description"
-              WARNINGS=$((WARNINGS + 1))
-            fi
+                  self.current_text = ""
 
-            if grep -qi '<h1' "$FILE"; then
-              echo "H1: OK"
-            else
-              echo "WARNING: H1 not found"
-              WARNINGS=$((WARNINGS + 1))
-            fi
+              def handle_starttag(self, tag, attrs):
+                  tag = tag.lower()
+                  attrs_dict = dict(attrs)
 
-            if grep -qi 'name=["'"'"']viewport["'"'"']' "$FILE"; then
-              echo "Viewport: OK"
-            else
-              echo "WARNING: Viewport not found"
-              WARNINGS=$((WARNINGS + 1))
-            fi
+                  if tag == "title":
+                      self.in_title = True
 
-            if grep -qi 'rel=["'"'"']canonical["'"'"']' "$FILE"; then
-              echo "Canonical: OK"
-            else
-              echo "WARNING: Canonical not found"
-              WARNINGS=$((WARNINGS + 1))
-            fi
+                  elif tag == "p":
+                      self.in_p = True
+                      self.current_text = ""
 
-            SIZE=$(wc -c < "$FILE")
+                  elif tag == "h1":
+                      self.in_h1 = True
+                      self.current_text = ""
 
-            echo "File size: $SIZE bytes"
+                  elif tag == "h2":
+                      self.in_h2 = True
+                      self.current_text = ""
 
-            if [ "$SIZE" -lt 1000 ]; then
-              echo "WARNING: Very small HTML file"
-              WARNINGS=$((WARNINGS + 1))
-            fi
+                  elif tag == "h3":
+                      self.in_h3 = True
+                      self.current_text = ""
 
-            echo ""
+                  elif tag == "a":
+                      href = attrs_dict.get("href", "")
+                      if href:
+                          self.links.append(href)
 
-          done < <(
-            find . \
-              -type f \
-              -name "*.html" \
-              -not -path "./.git/*" \
-              -not -path "./node_modules/*" \
-              | sort
+                  elif tag == "img":
+                      self.images.append({
+                          "src": attrs_dict.get("src", ""),
+                          "alt": attrs_dict.get("alt", "")
+                      })
+
+                  elif tag == "meta":
+                      name = (
+                          attrs_dict.get("name", "")
+                          .lower()
+                      )
+
+                      if name == "description":
+                          self.description = (
+                              attrs_dict.get("content", "")
+                              .strip()
+                          )
+
+                  elif tag == "script":
+                      self.in_script = True
+
+                  elif tag == "style":
+                      self.in_style = True
+
+              def handle_endtag(self, tag):
+                  tag = tag.lower()
+
+                  if tag == "title":
+                      self.in_title = False
+
+                  elif tag == "p":
+                      self.in_p = False
+
+                      text = clean_text(
+                          self.current_text
+                      )
+
+                      if text:
+                          self.paragraphs.append(text)
+
+                      self.current_text = ""
+
+                  elif tag == "h1":
+                      self.in_h1 = False
+
+                      text = clean_text(
+                          self.current_text
+                      )
+
+                      if text:
+                          self.h1.append(text)
+
+                      self.current_text = ""
+
+                  elif tag == "h2":
+                      self.in_h2 = False
+
+                      text = clean_text(
+                          self.current_text
+                      )
+
+                      if text:
+                          self.h2.append(text)
+
+                      self.current_text = ""
+
+                  elif tag == "h3":
+                      self.in_h3 = False
+
+                      text = clean_text(
+                          self.current_text
+                      )
+
+                      if text:
+                          self.h3.append(text)
+
+                      self.current_text = ""
+
+                  elif tag == "script":
+                      self.in_script = False
+
+                  elif tag == "style":
+                      self.in_style = False
+
+              def handle_data(self, data):
+                  if self.in_title:
+                      self.title += " " + data
+
+                  if self.in_p or self.in_h1 or self.in_h2 or self.in_h3:
+                      self.current_text += " " + data
+
+                  if not self.in_script and not self.in_style:
+                      self.body_text.append(data)
+
+          def clean_text(text):
+              text = re.sub(r"\s+", " ", text or "")
+              return text.strip()
+
+          def words(text):
+              return re.findall(
+                  r"\b[\wÀ-ÿ'-]+\b",
+                  text,
+                  flags=re.UNICODE
+              )
+
+          def sentence_count(text):
+              sentences = re.split(
+                  r"[.!?]+",
+                  text
+              )
+
+              return max(
+                  1,
+                  len([
+                      s for s in sentences
+                      if s.strip()
+                  ])
+              )
+
+          def readability_score(text):
+              ws = words(text)
+
+              if len(ws) < 20:
+                  return None
+
+              sentences = sentence_count(text)
+
+              syllables = 0
+
+              for word in ws:
+                  word = re.sub(
+                      r"[^a-zA-Z]",
+                      "",
+                      word.lower()
+                  )
+
+                  if not word:
+                      continue
+
+                  groups = re.findall(
+                      r"[aeiouy]+",
+                      word
+                  )
+
+                  count = len(groups)
+
+                  if (
+                      word.endswith("e")
+                      and count > 1
+                  ):
+                      count -= 1
+
+                  syllables += max(
+                      1,
+                      count
+                  )
+
+              avg_words = len(ws) / sentences
+              avg_syllables = (
+                  syllables / len(ws)
+              )
+
+              # Approximate Flesch Reading Ease
+              score = (
+                  206.835
+                  - (1.015 * avg_words)
+                  - (84.6 * avg_syllables)
+              )
+
+              return round(
+                  max(0, min(100, score)),
+                  1
+              )
+
+          def quality_grade(score):
+              if score >= 90:
+                  return "EXCELLENT"
+
+              if score >= 75:
+                  return "GOOD"
+
+              if score >= 60:
+                  return "NEEDS IMPROVEMENT"
+
+              return "POOR"
+
+          html_files = []
+
+          for filename in os.listdir(ROOT):
+              if (
+                  filename.endswith(".html")
+                  and os.path.isfile(
+                      os.path.join(ROOT, filename)
+                  )
+              ):
+                  html_files.append(filename)
+
+          html_files.sort()
+
+          pages = []
+
+          for filename in html_files:
+              path = os.path.join(
+                  ROOT,
+                  filename
+              )
+
+              try:
+                  with open(
+                      path,
+                      "r",
+                      encoding="utf-8",
+                      errors="ignore"
+                  ) as f:
+                      source = f.read()
+
+                  parser = ContentParser()
+                  parser.feed(source)
+
+                  title = clean_text(
+                      parser.title
+                  )
+
+                  description = clean_text(
+                      parser.description
+                  )
+
+                  body = clean_text(
+                      " ".join(
+                          parser.body_text
+                      )
+                  )
+
+                  word_list = words(body)
+                  word_count = len(word_list)
+
+                  sentences = sentence_count(
+                      body
+                  )
+
+                  paragraphs = len(
+                      parser.paragraphs
+                  )
+
+                  avg_sentence_length = (
+                      round(
+                          word_count / sentences,
+                          1
+                      )
+                      if sentences
+                      else 0
+                  )
+
+                  readability = (
+                      readability_score(body)
+                  )
+
+                  checks = {
+                      "title": bool(title),
+                      "meta_description": bool(
+                          description
+                      ),
+                      "h1": len(parser.h1) >= 1,
+                      "h2_or_h3": (
+                          len(parser.h2) +
+                          len(parser.h3)
+                      ) >= 1,
+                      "content": word_count >= 100,
+                      "paragraphs": paragraphs >= 2,
+                      "internal_or_external_links": (
+                          len(parser.links) >= 1
+                      ),
+                      "images_have_alt": all(
+                          img["alt"].strip()
+                          for img in parser.images
+                      )
+                      if parser.images
+                      else True
+                  }
+
+                  passed = sum(
+                      1 for value in checks.values()
+                      if value
+                  )
+
+                  total_checks = len(checks)
+
+                  completeness = round(
+                      (
+                          passed /
+                          total_checks
+                      ) * 100,
+                      1
+                  )
+
+                  if readability is None:
+                      readability_label = (
+                          "Not enough text"
+                      )
+                  elif readability >= 70:
+                      readability_label = "Easy"
+                  elif readability >= 50:
+                      readability_label = "Moderate"
+                  elif readability >= 30:
+                      readability_label = "Difficult"
+                  else:
+                      readability_label = (
+                          "Very Difficult"
+                      )
+
+                  recommendations = []
+
+                  if not title:
+                      recommendations.append(
+                          "Add a unique page title."
+                      )
+
+                  if not description:
+                      recommendations.append(
+                          "Add a meta description."
+                      )
+
+                  if len(parser.h1) == 0:
+                      recommendations.append(
+                          "Add one clear H1 heading."
+                      )
+
+                  if len(parser.h1) > 1:
+                      recommendations.append(
+                          "Consider using one primary H1."
+                      )
+
+                  if (
+                      len(parser.h2) +
+                      len(parser.h3)
+                  ) == 0:
+                      recommendations.append(
+                          "Add H2/H3 headings to organize content."
+                      )
+
+                  if word_count < 100:
+                      recommendations.append(
+                          "Content is very short."
+                      )
+
+                  if paragraphs < 2:
+                      recommendations.append(
+                          "Use more paragraphs for readability."
+                      )
+
+                  if avg_sentence_length > 25:
+                      recommendations.append(
+                          "Consider shortening long sentences."
+                      )
+
+                  missing_alt = sum(
+                      1
+                      for img in parser.images
+                      if not img["alt"].strip()
+                  )
+
+                  if missing_alt:
+                      recommendations.append(
+                          f"{missing_alt} image(s) missing alt text."
+                      )
+
+                  if not parser.links:
+                      recommendations.append(
+                          "Consider adding relevant internal links."
+                      )
+
+                  pages.append({
+                      "page": filename,
+                      "title": title,
+                      "description": description,
+                      "h1_count": len(parser.h1),
+                      "h2_count": len(parser.h2),
+                      "h3_count": len(parser.h3),
+                      "word_count": word_count,
+                      "sentence_count": sentences,
+                      "paragraph_count": paragraphs,
+                      "link_count": len(parser.links),
+                      "image_count": len(parser.images),
+                      "images_missing_alt": missing_alt,
+                      "average_sentence_length":
+                          avg_sentence_length,
+                      "readability_score":
+                          readability,
+                      "readability":
+                          readability_label,
+                      "completeness_score":
+                          completeness,
+                      "checks": checks,
+                      "recommendations":
+                          recommendations
+                  })
+
+              except Exception as e:
+                  pages.append({
+                      "page": filename,
+                      "error": str(e),
+                      "completeness_score": 0,
+                      "recommendations": [
+                          "Unable to analyze this page."
+                      ]
+                  })
+
+          average_completeness = (
+              round(
+                  sum(
+                      p.get(
+                          "completeness_score",
+                          0
+                      )
+                      for p in pages
+                  ) / len(pages),
+                  1
+              )
+              if pages
+              else 0
           )
 
-          echo "======================================"
-          echo "CONTENT QUALITY SUMMARY"
-          echo "======================================"
-          echo ""
-          echo "HTML files checked: $TOTAL"
-          echo "Warnings detected: $WARNINGS"
-          echo ""
+          readable_pages = [
+              p for p in pages
+              if p.get("readability_score") is not None
+          ]
 
-          if [ "$WARNINGS" -gt 0 ]; then
-            echo "Some content quality warnings were detected."
-            echo "Review them when improving individual pages."
-          else
-            echo "No basic content quality warnings detected."
-          fi
+          average_readability = (
+              round(
+                  sum(
+                      p["readability_score"]
+                      for p in readable_pages
+                  ) / len(readable_pages),
+                  1
+              )
+              if readable_pages
+              else None
+          )
 
-          echo ""
-          echo "This workflow is informational."
-          echo "It will not block deployment."
+          report = {
+              "website": "https://letsstudy.pro",
+              "pages_checked": len(pages),
+              "average_completeness_score":
+                  average_completeness,
+              "average_readability_score":
+                  average_readability,
+              "pages": pages
+          }
+
+          with open(
+              "content-quality-report.json",
+              "w",
+              encoding="utf-8"
+          ) as f:
+              json.dump(
+                  report,
+                  f,
+                  indent=2,
+                  ensure_ascii=False
+              )
+
+          with open(
+              "content-quality-report.md",
+              "w",
+              encoding="utf-8"
+          ) as f:
+
+              f.write(
+                  "# LetsStudy Pro - Content Quality Report\n\n"
+              )
+
+              f.write("## Overall Summary\n\n")
+
+              f.write(
+                  f"- Pages checked: {len(pages)}\n"
+              )
+
+              f.write(
+                  f"- Average completeness: "
+                  f"{average_completeness}%\n"
+              )
+
+              if average_readability is not None:
+                  f.write(
+                      f"- Average readability: "
+                      f"{average_readability}/100\n"
+                  )
+
+              f.write("\n")
+
+              f.write("## Page Results\n\n")
+
+              f.write(
+                  "| Page | Words | H1 | H2 | H3 | "
+                  "Links | Images | Completeness | "
+                  "Readability |\n"
+              )
+
+              f.write(
+                  "|---|---:|---:|---:|---:|---:|---:|---:|---:|\n"
+              )
+
+              for page in pages:
+                  f.write(
+                      f"| `{page['page']}` | "
+                      f"{page.get('word_count', 0)} | "
+                      f"{page.get('h1_count', 0)} | "
+                      f"{page.get('h2_count', 0)} | "
+                      f"{page.get('h3_count', 0)} | "
+                      f"{page.get('link_count', 0)} | "
+                      f"{page.get('image_count', 0)} | "
+                      f"{page.get('completeness_score', 0)}% | "
+                      f"{page.get('readability', 'N/A')} |\n"
+                  )
+
+              f.write("\n## Recommendations\n\n")
+
+              found_recommendations = False
+
+              for page in pages:
+                  recommendations = page.get(
+                      "recommendations",
+                      []
+                  )
+
+                  if recommendations:
+                      found_recommendations = True
+
+                      f.write(
+                          f"### `{page['page']}`\n\n"
+                      )
+
+                      for recommendation in recommendations:
+                          f.write(
+                              f"- {recommendation}\n"
+                          )
+
+                      f.write("\n")
+
+              if not found_recommendations:
+                  f.write(
+                      "No major content-quality issues detected. ✅\n"
+                  )
+
+          print("")
+          print("======================================")
+          print(" Content Quality Check Completed")
+          print("======================================")
+          print(f"Pages checked: {len(pages)}")
+          print(
+              f"Average completeness: "
+              f"{average_completeness}%"
+          )
+
+          if average_readability is not None:
+              print(
+                  f"Average readability: "
+                  f"{average_readability}/100"
+              )
+
+          print("")
+          print(
+              "This check is informational and will not fail."
+          )
+          PY
 
           exit 0
 
-      - name: Check duplicate titles
-        shell: bash
-        run: |
-          echo "Checking duplicate page titles..."
-          echo ""
-
-          find . \
-            -type f \
-            -name "*.html" \
-            -not -path "./.git/*" \
-            -not -path "./node_modules/*" \
-            -print0 |
-          while IFS= read -r -d '' FILE; do
-
-            TITLE=$(grep -oi '<title>[^<]*</title>' "$FILE" | head -1 || true)
-
-            if [ -n "$TITLE" ]; then
-              echo "$TITLE -> $FILE"
-            fi
-
-          done
-
-          echo ""
-          echo "Duplicate-title review completed."
-          exit 0
-
-      - name: Check production homepage content
-        shell: bash
-        run: |
-          echo "Checking production homepage..."
-
-          RESPONSE=$(curl \
-            -L \
-            -s \
-            --max-time 60 \
-            "https://letsstudy.pro/" || true)
-
-          if echo "$RESPONSE" | grep -qi '<title>'; then
-            echo "Production title: FOUND"
-          else
-            echo "WARNING: Production title not detected."
-          fi
-
-          if echo "$RESPONSE" | grep -qi 'name=["'"'"']description["'"'"']'; then
-            echo "Production description: FOUND"
-          else
-            echo "WARNING: Production description not detected."
-          fi
-
-          if echo "$RESPONSE" | grep -qi '<h1'; then
-            echo "Production H1: FOUND"
-          else
-            echo "WARNING: Production H1 not detected."
-          fi
-
-          echo ""
-          echo "Production content check completed."
-          exit 0
-
-      - name: Final report
-        run: |
-          echo ""
-          echo "======================================"
-          echo " CONTENT QUALITY CHECK COMPLETED"
-          echo "======================================"
-          echo ""
-          echo "Titles: Checked"
-          echo "Meta descriptions: Checked"
-          echo "H1 headings: Checked"
-          echo "Viewport: Checked"
-          echo "Canonical: Checked"
-          echo "Page size: Checked"
-          echo "Production homepage: Checked"
-          echo ""
-          echo "Content quality monitoring is active."
-          echo "======================================"
-
-          exit 0
+      - name: Upload Content Quality Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: content-quality-report
+          path: |
+            content-quality-report.json
+            content-quality-report.md
+          if-no-files-found: warn
