@@ -1,0 +1,631 @@
+name: LetsStudy Pro - Google URL Crawler
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  google-url-crawler:
+    name: Google URL Crawler
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Crawl URLs From Sitemap
+        shell: bash
+        run: |
+          set +e
+
+          python3 <<'PY'
+          import urllib.request
+          import urllib.error
+          import xml.etree.ElementTree as ET
+          import json
+          import time
+          import re
+
+          SITEMAP = "https://letsstudy.pro/sitemap.xml"
+          ROBOTS = "https://letsstudy.pro/robots.txt"
+
+          USER_AGENT = (
+              "LetsStudyPro-URL-Monitor/1.0 "
+              "(SEO health monitoring)"
+          )
+
+          def fetch(url, timeout=30):
+              start = time.time()
+
+              request = urllib.request.Request(
+                  url,
+                  headers={
+                      "User-Agent": USER_AGENT
+                  }
+              )
+
+              try:
+                  with urllib.request.urlopen(
+                      request,
+                      timeout=timeout
+                  ) as response:
+
+                      body = response.read(4096)
+
+                      return {
+                          "url": url,
+                          "status": response.status,
+                          "final_url": response.geturl(),
+                          "content_type":
+                              response.headers.get(
+                                  "Content-Type",
+                                  ""
+                              ),
+                          "content_length":
+                              response.headers.get(
+                                  "Content-Length",
+                                  ""
+                              ),
+                          "response_time_ms":
+                              round(
+                                  (
+                                      time.time()
+                                      - start
+                                  ) * 1000,
+                                  2
+                              ),
+                          "error": "",
+                          "sample":
+                              body.decode(
+                                  "utf-8",
+                                  errors="ignore"
+                              )
+                      }
+
+              except urllib.error.HTTPError as e:
+                  return {
+                      "url": url,
+                      "status": e.code,
+                      "final_url": (
+                          e.geturl()
+                          if hasattr(e, "geturl")
+                          else url
+                      ),
+                      "content_type": "",
+                      "content_length": "",
+                      "response_time_ms":
+                          round(
+                              (
+                                  time.time()
+                                  - start
+                              ) * 1000,
+                              2
+                          ),
+                      "error": str(e),
+                      "sample": ""
+                  }
+
+              except Exception as e:
+                  return {
+                      "url": url,
+                      "status": 0,
+                      "final_url": url,
+                      "content_type": "",
+                      "content_length": "",
+                      "response_time_ms":
+                          round(
+                              (
+                                  time.time()
+                                  - start
+                              ) * 1000,
+                              2
+                          ),
+                      "error": str(e),
+                      "sample": ""
+                  }
+
+          # -------------------------
+          # Fetch sitemap
+          # -------------------------
+
+          sitemap_result = fetch(
+              SITEMAP,
+              timeout=30
+          )
+
+          sitemap_urls = []
+
+          if sitemap_result["status"] == 200:
+              try:
+                  root = ET.fromstring(
+                      sitemap_result["sample"]
+                  )
+
+                  # The first 4096 bytes may not contain
+                  # the complete sitemap, so fetch it again.
+                  request = urllib.request.Request(
+                      SITEMAP,
+                      headers={
+                          "User-Agent": USER_AGENT
+                      }
+                  )
+
+                  with urllib.request.urlopen(
+                      request,
+                      timeout=30
+                  ) as response:
+                      sitemap_data = response.read()
+
+                  root = ET.fromstring(
+                      sitemap_data
+                  )
+
+                  for element in root.iter():
+                      if element.tag.endswith("loc"):
+                          if element.text:
+                              sitemap_urls.append(
+                                  element.text.strip()
+                              )
+
+              except Exception as e:
+                  print(
+                      "Could not parse sitemap:",
+                      e
+                  )
+
+          sitemap_urls = list(
+              dict.fromkeys(sitemap_urls)
+          )
+
+          # Limit each scheduled run to avoid
+          # excessive crawling.
+          MAX_URLS = 200
+
+          urls_to_check = sitemap_urls[:MAX_URLS]
+
+          # -------------------------
+          # Robots.txt
+          # -------------------------
+
+          robots_result = fetch(
+              ROBOTS,
+              timeout=30
+          )
+
+          robots_text = robots_result.get(
+              "sample",
+              ""
+          )
+
+          googlebot_section = re.search(
+              r"User-agent:\s*Googlebot(.*?)(?=User-agent:|$)",
+              robots_text,
+              flags=re.I | re.S
+          )
+
+          googlebot_rules = (
+              googlebot_section.group(1)
+              if googlebot_section
+              else ""
+          )
+
+          robots_status = {
+              "http_status":
+                  robots_result.get("status"),
+              "googlebot_section_found":
+                  bool(googlebot_section),
+              "disallow_rules": re.findall(
+                  r"Disallow:\s*(.*)",
+                  googlebot_rules,
+                  flags=re.I
+              ),
+              "allow_rules": re.findall(
+                  r"Allow:\s*(.*)",
+                  googlebot_rules,
+                  flags=re.I
+              )
+          }
+
+          # -------------------------
+          # Crawl sitemap URLs
+          # -------------------------
+
+          results = []
+
+          for index, url in enumerate(
+              urls_to_check,
+              start=1
+          ):
+              print(
+                  f"[{index}/{len(urls_to_check)}] "
+                  f"{url}"
+              )
+
+              result = fetch(
+                  url,
+                  timeout=30
+              )
+
+              final_url = result.get(
+                  "final_url",
+                  url
+              )
+
+              status = result.get(
+                  "status",
+                  0
+              )
+
+              content_type = (
+                  result.get(
+                      "content_type",
+                      ""
+                  ) or ""
+              ).lower()
+
+              if status == 200:
+                  health = "HEALTHY"
+              elif 300 <= status < 400:
+                  health = "REDIRECT"
+              elif status in (401, 403):
+                  health = "BLOCKED"
+              elif status == 404:
+                  health = "NOT_FOUND"
+              elif status >= 500:
+                  health = "SERVER_ERROR"
+              else:
+                  health = "ERROR"
+
+              https_ok = (
+                  url.lower().startswith(
+                      "https://"
+                  )
+              )
+
+              redirects_to_http = (
+                  final_url.lower().startswith(
+                      "http://"
+                  )
+              )
+
+              results.append({
+                  "url": url,
+                  "status": status,
+                  "health": health,
+                  "final_url": final_url,
+                  "https": https_ok,
+                  "redirects_to_http":
+                      redirects_to_http,
+                  "content_type":
+                      content_type,
+                  "response_time_ms":
+                      result.get(
+                          "response_time_ms"
+                      ),
+                  "error":
+                      result.get(
+                          "error",
+                          ""
+                      )
+              })
+
+          healthy = [
+              r for r in results
+              if r["health"] == "HEALTHY"
+          ]
+
+          redirects = [
+              r for r in results
+              if r["health"] == "REDIRECT"
+          ]
+
+          blocked = [
+              r for r in results
+              if r["health"] == "BLOCKED"
+          ]
+
+          not_found = [
+              r for r in results
+              if r["health"] == "NOT_FOUND"
+          ]
+
+          server_errors = [
+              r for r in results
+              if r["health"] == "SERVER_ERROR"
+          ]
+
+          errors = [
+              r for r in results
+              if r["health"] == "ERROR"
+          ]
+
+          slow_urls = [
+              r for r in results
+              if (
+                  r.get(
+                      "response_time_ms",
+                      0
+                  ) > 3000
+              )
+          ]
+
+          http_urls = [
+              r for r in results
+              if not r.get("https")
+          ]
+
+          content_type_issues = [
+              r for r in results
+              if (
+                  r.get("status") == 200
+                  and r.get("content_type")
+                  and "text/html"
+                  not in r["content_type"]
+              )
+          ]
+
+          report = {
+              "website":
+                  "https://letsstudy.pro",
+              "sitemap":
+                  SITEMAP,
+              "robots":
+                  ROBOTS,
+              "sitemap_http_status":
+                  sitemap_result.get(
+                      "status"
+                  ),
+              "sitemap_url_count":
+                  len(sitemap_urls),
+              "urls_checked":
+                  len(results),
+              "max_urls_per_run":
+                  MAX_URLS,
+              "robots_status":
+                  robots_status,
+              "summary": {
+                  "healthy":
+                      len(healthy),
+                  "redirects":
+                      len(redirects),
+                  "blocked":
+                      len(blocked),
+                  "not_found":
+                      len(not_found),
+                  "server_errors":
+                      len(server_errors),
+                  "errors":
+                      len(errors),
+                  "slow_over_3_seconds":
+                      len(slow_urls),
+                  "http_urls":
+                      len(http_urls),
+                  "content_type_issues":
+                      len(content_type_issues)
+              },
+              "urls":
+                  results
+          }
+
+          with open(
+              "google-url-crawler-report.json",
+              "w",
+              encoding="utf-8"
+          ) as f:
+              json.dump(
+                  report,
+                  f,
+                  indent=2,
+                  ensure_ascii=False
+              )
+
+          with open(
+              "google-url-crawler-report.md",
+              "w",
+              encoding="utf-8"
+          ) as f:
+
+              f.write(
+                  "# LetsStudy Pro - Google URL Crawler Report\n\n"
+              )
+
+              f.write(
+                  "> This workflow monitors URL accessibility "
+                  "and crawl health. It does not prove that "
+                  "Google has crawled or indexed a URL.\n\n"
+              )
+
+              f.write("## Summary\n\n")
+
+              f.write(
+                  f"- Sitemap URLs found: "
+                  f"{len(sitemap_urls)}\n"
+              )
+
+              f.write(
+                  f"- URLs checked: "
+                  f"{len(results)}\n"
+              )
+
+              f.write(
+                  f"- Healthy: "
+                  f"{len(healthy)}\n"
+              )
+
+              f.write(
+                  f"- Redirects: "
+                  f"{len(redirects)}\n"
+              )
+
+              f.write(
+                  f"- Blocked: "
+                  f"{len(blocked)}\n"
+              )
+
+              f.write(
+                  f"- 404 Not Found: "
+                  f"{len(not_found)}\n"
+              )
+
+              f.write(
+                  f"- Server errors: "
+                  f"{len(server_errors)}\n"
+              )
+
+              f.write(
+                  f"- Other errors: "
+                  f"{len(errors)}\n"
+              )
+
+              f.write(
+                  f"- Slow URLs (>3s): "
+                  f"{len(slow_urls)}\n"
+              )
+
+              f.write(
+                  f"- Non-HTTPS URLs: "
+                  f"{len(http_urls)}\n"
+              )
+
+              f.write(
+                  f"- Content-type issues: "
+                  f"{len(content_type_issues)}\n\n"
+              )
+
+              f.write(
+                  "## Robots.txt\n\n"
+              )
+
+              f.write(
+                  f"- HTTP status: "
+                  f"{robots_status['http_status']}\n"
+              )
+
+              f.write(
+                  f"- Googlebot section found: "
+                  f"{robots_status['googlebot_section_found']}\n\n"
+              )
+
+              f.write(
+                  "## Problems\n\n"
+              )
+
+              problems = (
+                  not_found
+                  + server_errors
+                  + blocked
+                  + errors
+                  + slow_urls
+                  + http_urls
+              )
+
+              if problems:
+                  seen = set()
+
+                  for item in problems:
+                      url = item.get(
+                          "url",
+                          ""
+                      )
+
+                      if url in seen:
+                          continue
+
+                      seen.add(url)
+
+                      f.write(
+                          f"- **{item.get('health')}** "
+                          f"`{url}`"
+                      )
+
+                      if item.get("status"):
+                          f.write(
+                              f" — HTTP "
+                              f"{item['status']}"
+                          )
+
+                      if item.get(
+                          "response_time_ms"
+                      ):
+                          f.write(
+                              f" — "
+                              f"{item['response_time_ms']} ms"
+                          )
+
+                      f.write("\n")
+              else:
+                  f.write(
+                      "No major URL health problems detected. ✅\n"
+                  )
+
+              f.write(
+                  "\n## URL Results\n\n"
+              )
+
+              f.write(
+                  "| URL | Status | Health | "
+                  "Time | Final URL |\n"
+              )
+
+              f.write(
+                  "|---|---:|---|---:|---|\n"
+              )
+
+              for item in results:
+                  f.write(
+                      f"| `{item['url']}` | "
+                      f"{item['status']}` | "
+                      f"{item['health']} | "
+                      f"{item.get('response_time_ms', 0)} ms | "
+                      f"`{item.get('final_url', '')}` |\n"
+                  )
+
+          print("")
+          print("======================================")
+          print(" Google URL Crawler Completed")
+          print("======================================")
+          print(
+              f"Sitemap URLs: {len(sitemap_urls)}"
+          )
+          print(
+              f"URLs checked: {len(results)}"
+          )
+          print(
+              f"Healthy: {len(healthy)}"
+          )
+          print(
+              f"Redirects: {len(redirects)}"
+          )
+          print(
+              f"404: {len(not_found)}"
+          )
+          print(
+              f"Server errors: {len(server_errors)}"
+          )
+          print(
+              f"Slow >3s: {len(slow_urls)}"
+          )
+          print("")
+          print(
+              "This is URL health monitoring, "
+              "not proof of Google crawling/indexing."
+          )
+          print(
+              "This check is informational and will not fail."
+          )
+          PY
+
+          exit 0
+
+      - name: Upload Google URL Crawler Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: google-url-crawler-report
+          path: |
+            google-url-crawler-report.json
+            google-url-crawler-report.md
+          if-no-files-found: warn
