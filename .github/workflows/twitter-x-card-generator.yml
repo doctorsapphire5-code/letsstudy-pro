@@ -1,0 +1,340 @@
+name: LetsStudy Pro - Twitter X Card Generator
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  schedule:
+    - cron: "0 4 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  twitter-x-card:
+    name: Twitter X Card Generator
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Generate Twitter X Card Report
+        shell: bash
+        run: |
+          set +e
+
+          echo "======================================"
+          echo " LetsStudy Pro - Twitter/X Card"
+          echo "======================================"
+          echo ""
+
+          REPORT_JSON="twitter-x-card-report.json"
+          REPORT_MD="twitter-x-card-report.md"
+
+          TOTAL=0
+          COMPLETE=0
+          MISSING_CARD=0
+          MISSING_TITLE=0
+          MISSING_DESCRIPTION=0
+          MISSING_IMAGE=0
+          MISSING_URL=0
+
+          echo "[" > "$REPORT_JSON"
+
+          cat > "$REPORT_MD" <<'EOF'
+          # LetsStudy Pro - Twitter/X Card Report
+
+          Automatically generated Twitter/X social metadata report.
+
+          ## Recommended Card
+
+          `summary_large_image`
+
+          ## Recommended Image
+
+          `https://letsstudy.pro/og-image.png`
+
+          EOF
+
+          echo "| Page | Card | Title | Description | Image | URL | Status |" >> "$REPORT_MD"
+          echo "|---|---|---|---|---|---|---|" >> "$REPORT_MD"
+
+          FIRST=true
+
+          for file in *.html; do
+
+            [ -f "$file" ] || continue
+
+            TOTAL=$((TOTAL + 1))
+
+            filename=$(basename "$file")
+            page="${filename%.html}"
+
+            twitter_card=""
+            twitter_title=""
+            twitter_description=""
+            twitter_image=""
+            twitter_url=""
+
+            twitter_card=$(
+              grep -oiE \
+                '<meta[^>]+name=["'"'"']twitter:card["'"'"'][^>]*>' \
+                "$file" 2>/dev/null |
+              sed -n 's/.*content=["'"'"']\([^"'"'"']*\)["'"'"'].*/\1/p' |
+              head -1
+            )
+
+            twitter_title=$(
+              grep -oiE \
+                '<meta[^>]+name=["'"'"']twitter:title["'"'"'][^>]*>' \
+                "$file" 2>/dev/null |
+              sed -n 's/.*content=["'"'"']\([^"'"'"']*\)["'"'"'].*/\1/p' |
+              head -1
+            )
+
+            twitter_description=$(
+              grep -oiE \
+                '<meta[^>]+name=["'"'"']twitter:description["'"'"'][^>]*>' \
+                "$file" 2>/dev/null |
+              sed -n 's/.*content=["'"'"']\([^"'"'"']*\)["'"'"'].*/\1/p' |
+              head -1
+            )
+
+            twitter_image=$(
+              grep -oiE \
+                '<meta[^>]+name=["'"'"']twitter:image["'"'"'][^>]*>' \
+                "$file" 2>/dev/null |
+              sed -n 's/.*content=["'"'"']\([^"'"'"']*\)["'"'"'].*/\1/p' |
+              head -1
+            )
+
+            twitter_url=$(
+              grep -oiE \
+                '<meta[^>]+name=["'"'"']twitter:url["'"'"'][^>]*>' \
+                "$file" 2>/dev/null |
+              sed -n 's/.*content=["'"'"']\([^"'"'"']*\)["'"'"'].*/\1/p' |
+              head -1
+            )
+
+            title=$(
+              grep -oiE \
+                '<title[^>]*>[^<]+' \
+                "$file" 2>/dev/null |
+              sed -E 's/<title[^>]*>//I' |
+              head -1
+            )
+
+            description=$(
+              grep -oiE \
+                '<meta[^>]+name=["'"'"']description["'"'"'][^>]*>' \
+                "$file" 2>/dev/null |
+              sed -n 's/.*content=["'"'"']\([^"'"'"']*\)["'"'"'].*/\1/p' |
+              head -1
+            )
+
+            og_image=$(
+              grep -oiE \
+                '<meta[^>]+property=["'"'"']og:image["'"'"'][^>]*>' \
+                "$file" 2>/dev/null |
+              sed -n 's/.*content=["'"'"']\([^"'"'"']*\)["'"'"'].*/\1/p' |
+              head -1
+            )
+
+            og_url=$(
+              grep -oiE \
+                '<meta[^>]+property=["'"'"']og:url["'"'"'][^>]*>' \
+                "$file" 2>/dev/null |
+              sed -n 's/.*content=["'"'"']\([^"'"'"']*\)["'"'"'].*/\1/p' |
+              head -1
+            )
+
+            if [ -z "$title" ]; then
+              title="$page | LetsStudy Pro"
+            fi
+
+            if [ -z "$description" ]; then
+              description="Learn, build, work and grow with LetsStudy Pro."
+            fi
+
+            if [ -z "$twitter_card" ]; then
+              MISSING_CARD=$((MISSING_CARD + 1))
+              twitter_card="summary_large_image"
+            fi
+
+            if [ -z "$twitter_title" ]; then
+              MISSING_TITLE=$((MISSING_TITLE + 1))
+              twitter_title="$title"
+            fi
+
+            if [ -z "$twitter_description" ]; then
+              MISSING_DESCRIPTION=$((MISSING_DESCRIPTION + 1))
+              twitter_description="$description"
+            fi
+
+            if [ -z "$twitter_image" ]; then
+              MISSING_IMAGE=$((MISSING_IMAGE + 1))
+
+              if [ -n "$og_image" ]; then
+                twitter_image="$og_image"
+              else
+                twitter_image="https://letsstudy.pro/og-image.png"
+              fi
+            fi
+
+            if [ -z "$twitter_url" ]; then
+              MISSING_URL=$((MISSING_URL + 1))
+
+              if [ -n "$og_url" ]; then
+                twitter_url="$og_url"
+              else
+                twitter_url="https://letsstudy.pro/$filename"
+              fi
+            fi
+
+            status="COMPLETE"
+
+            if [ -z "$twitter_card" ] ||
+               [ -z "$twitter_title" ] ||
+               [ -z "$twitter_description" ] ||
+               [ -z "$twitter_image" ] ||
+               [ -z "$twitter_url" ]; then
+
+              status="CHECK"
+
+            else
+
+              COMPLETE=$((COMPLETE + 1))
+
+            fi
+
+            safe_file=$(printf '%s' "$filename" | sed 's/"/\\"/g')
+            safe_card=$(printf '%s' "$twitter_card" | sed 's/"/\\"/g')
+            safe_title=$(printf '%s' "$twitter_title" | sed 's/"/\\"/g')
+            safe_description=$(printf '%s' "$twitter_description" | sed 's/"/\\"/g')
+            safe_image=$(printf '%s' "$twitter_image" | sed 's/"/\\"/g')
+            safe_url=$(printf '%s' "$twitter_url" | sed 's/"/\\"/g')
+
+            if [ "$FIRST" = false ]; then
+              echo "," >> "$REPORT_JSON"
+            fi
+
+            FIRST=false
+
+            cat >> "$REPORT_JSON" <<EOF
+          {
+            "page": "$safe_file",
+            "twitterCard": "$safe_card",
+            "twitterTitle": "$safe_title",
+            "twitterDescription": "$safe_description",
+            "twitterImage": "$safe_image",
+            "twitterUrl": "$safe_url",
+            "status": "$status"
+          }
+          EOF
+
+            echo "| \`$filename\` | $twitter_card | Present/Fallback | Present/Fallback | Present/Fallback | Present/Fallback | $status |" >> "$REPORT_MD"
+
+            echo "📄 $filename"
+            echo "   Card: $twitter_card"
+            echo "   Title: $twitter_title"
+            echo "   Description: $twitter_description"
+            echo "   Image: $twitter_image"
+            echo "   URL: $twitter_url"
+            echo "   Status: $status"
+            echo ""
+
+          done
+
+          echo "]" >> "$REPORT_JSON"
+
+          cat >> "$REPORT_MD" <<EOF
+
+          ## Summary
+
+          - HTML pages scanned: $TOTAL
+          - Complete/fallback pages: $COMPLETE
+          - Missing Twitter card: $MISSING_CARD
+          - Missing Twitter title: $MISSING_TITLE
+          - Missing Twitter description: $MISSING_DESCRIPTION
+          - Missing Twitter image: $MISSING_IMAGE
+          - Missing Twitter URL: $MISSING_URL
+
+          ## Recommended Metadata
+
+          \`\`\`html
+          <meta name="twitter:card" content="summary_large_image">
+          <meta name="twitter:title" content="Page Title | LetsStudy Pro">
+          <meta name="twitter:description" content="Page description">
+          <meta name="twitter:image" content="https://letsstudy.pro/og-image.png">
+          <meta name="twitter:url" content="https://letsstudy.pro/page.html">
+          \`\`\`
+
+          ## Important
+
+          This workflow generates a report only.
+          It does not automatically modify production HTML files.
+          EOF
+
+          echo ""
+          echo "======================================"
+          echo " Twitter/X Card Summary"
+          echo "======================================"
+          echo "HTML pages scanned:       $TOTAL"
+          echo "Complete/fallback pages:  $COMPLETE"
+          echo "Missing card:             $MISSING_CARD"
+          echo "Missing title:            $MISSING_TITLE"
+          echo "Missing description:      $MISSING_DESCRIPTION"
+          echo "Missing image:             $MISSING_IMAGE"
+          echo "Missing URL:               $MISSING_URL"
+          echo ""
+          echo "Reports generated:"
+          echo " - $REPORT_JSON"
+          echo " - $REPORT_MD"
+          echo ""
+
+      - name: Validate JSON Report
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+
+          with open("twitter-x-card-report.json", "r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          print("Twitter/X Card JSON report is valid.")
+          print("Pages:", len(data))
+          PY
+
+      - name: Upload Twitter/X Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: twitter-x-card-report
+          path: |
+            twitter-x-card-report.json
+            twitter-x-card-report.md
+          if-no-files-found: error
+
+      - name: Final Summary
+        shell: bash
+        run: |
+          echo "======================================"
+          echo " LetsStudy Pro - Twitter/X Complete"
+          echo "======================================"
+          echo ""
+          echo "Twitter/X Card analysis completed successfully."
+          echo ""
+          echo "Recommended card:"
+          echo "summary_large_image"
+          echo ""
+          echo "The workflow is informational."
+          echo "It will not block deployment."
+          echo ""
+          exit 0
