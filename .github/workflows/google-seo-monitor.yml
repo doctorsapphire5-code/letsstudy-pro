@@ -1,0 +1,186 @@
+name: LetsStudy Pro - Google SEO Monitor
+
+on:
+  push:
+    branches:
+      - main
+
+  schedule:
+    - cron: "0 */6 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  google-seo:
+    name: Google SEO Health Monitor
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check robots.txt
+        shell: bash
+        run: |
+          echo "Checking robots.txt..."
+
+          STATUS=$(curl \
+            -L \
+            -s \
+            -o /tmp/robots.txt \
+            -w "%{http_code}" \
+            --max-time 30 \
+            "https://letsstudy.pro/robots.txt" || true)
+
+          echo "HTTP Status: $STATUS"
+
+          if [ "$STATUS" = "200" ]; then
+            echo "robots.txt: AVAILABLE"
+          else
+            echo "WARNING: robots.txt returned $STATUS"
+          fi
+
+          echo ""
+          echo "robots.txt content:"
+          cat /tmp/robots.txt 2>/dev/null || true
+
+      - name: Check sitemap
+        shell: bash
+        run: |
+          echo "Checking sitemap.xml..."
+
+          STATUS=$(curl \
+            -L \
+            -s \
+            -o /tmp/sitemap.xml \
+            -w "%{http_code}" \
+            --max-time 60 \
+            "https://letsstudy.pro/sitemap.xml" || true)
+
+          echo "HTTP Status: $STATUS"
+
+          if [ "$STATUS" = "200" ]; then
+            echo "sitemap.xml: AVAILABLE"
+          else
+            echo "WARNING: sitemap.xml returned $STATUS"
+          fi
+
+          URL_COUNT=$(grep -o "<loc>" /tmp/sitemap.xml 2>/dev/null | wc -l || true)
+
+          echo "URLs detected: $URL_COUNT"
+
+      - name: Check homepage SEO
+        shell: bash
+        run: |
+          echo "Checking homepage SEO..."
+
+          curl \
+            -L \
+            -s \
+            --max-time 60 \
+            "https://letsstudy.pro/" \
+            > /tmp/home.html || true
+
+          echo ""
+
+          if grep -qi "<title>" /tmp/home.html; then
+            echo "Title: FOUND"
+          else
+            echo "WARNING: Title missing"
+          fi
+
+          if grep -qi 'name="description"' /tmp/home.html; then
+            echo "Meta description: FOUND"
+          else
+            echo "WARNING: Meta description missing"
+          fi
+
+          if grep -qi 'rel="canonical"' /tmp/home.html; then
+            echo "Canonical: FOUND"
+          else
+            echo "WARNING: Canonical missing"
+          fi
+
+          if grep -qi 'name="viewport"' /tmp/home.html; then
+            echo "Viewport: FOUND"
+          else
+            echo "WARNING: Viewport missing"
+          fi
+
+      - name: Check important pages
+        shell: bash
+        run: |
+          echo "Checking important SEO pages..."
+          echo ""
+
+          for URL in \
+            "https://letsstudy.pro/" \
+            "https://letsstudy.pro/index-auth.html" \
+            "https://letsstudy.pro/search.html" \
+            "https://letsstudy.pro/robots.txt" \
+            "https://letsstudy.pro/sitemap.xml"
+          do
+
+            STATUS=$(curl \
+              -L \
+              -s \
+              -o /dev/null \
+              -w "%{http_code}" \
+              --max-time 30 \
+              "$URL" || true)
+
+            echo "$STATUS  $URL"
+
+          done
+
+      - name: Check indexing signals
+        shell: bash
+        run: |
+          echo "Checking common indexing signals..."
+
+          if grep -qiE \
+            'noindex|nofollow' \
+            /tmp/home.html; then
+
+            echo "WARNING: noindex/nofollow signal detected on homepage."
+
+          else
+
+            echo "No obvious noindex/nofollow signal detected."
+
+          fi
+
+          echo ""
+
+          if grep -qi "https://letsstudy.pro/sitemap.xml" \
+            /tmp/robots.txt; then
+
+            echo "Sitemap reference: FOUND in robots.txt"
+
+          else
+
+            echo "WARNING: Sitemap reference not found in robots.txt"
+
+          fi
+
+      - name: Final report
+        run: |
+          echo ""
+          echo "======================================"
+          echo " GOOGLE SEO MONITOR COMPLETED"
+          echo "======================================"
+          echo ""
+          echo "Domain: https://letsstudy.pro"
+          echo "robots.txt: Checked"
+          echo "sitemap.xml: Checked"
+          echo "Homepage SEO: Checked"
+          echo "Important pages: Checked"
+          echo "Indexing signals: Checked"
+          echo ""
+          echo "Google SEO monitoring is ACTIVE."
+          echo "======================================"
+
+          exit 0
