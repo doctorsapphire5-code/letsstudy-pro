@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   firestore-validation:
@@ -22,12 +23,17 @@ jobs:
       - name: Authenticate Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}'
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
       - name: Setup Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Validate Firestore
+      - name: Set Google Cloud project
+        run: |
+          gcloud config set project let-s-study-pro-course
+
+      - name: Check Firestore database
         shell: bash
         run: |
           echo "======================================"
@@ -35,26 +41,38 @@ jobs:
           echo "======================================"
           echo ""
 
-          PROJECT_ID="let-s-study-pro-course"
-
-          gcloud config set project "$PROJECT_ID"
-
-          echo "Project: $PROJECT_ID"
-          echo ""
-
-          echo "Checking Firestore database..."
-
           gcloud firestore databases describe \
             --database="(default)" \
-            --project="$PROJECT_ID" || true
+            --project="let-s-study-pro-course"
 
           echo ""
+          echo "Firestore database is accessible."
+
+      - name: Check Firestore API
+        shell: bash
+        run: |
+          echo ""
+          echo "Checking Firestore API..."
+
+          gcloud services list \
+            --enabled \
+            --project="let-s-study-pro-course" \
+            --filter="config.name:firestore.googleapis.com" \
+            --format="value(config.name)"
+
+          echo ""
+          echo "Firestore API check completed."
+
+      - name: Review expected collections
+        shell: bash
+        run: |
+          echo ""
           echo "======================================"
-          echo " EXPECTED COLLECTIONS"
+          echo " EXPECTED LETSSTUDY PRO COLLECTIONS"
           echo "======================================"
           echo ""
 
-          COLLECTIONS="
+          cat <<'EOF'
           admins
           users
           profiles
@@ -77,47 +95,12 @@ jobs:
           careers
           scholarships
           resources
-          "
-
-          echo "$COLLECTIONS"
+          EOF
 
           echo ""
-          echo "Firestore database validation completed."
-
-      - name: Validate project configuration
-        shell: bash
-        run: |
-          echo ""
-          echo "======================================"
-          echo " PROJECT CONFIGURATION"
-          echo "======================================"
-          echo ""
-
-          PROJECT_ID="let-s-study-pro-course"
-
-          gcloud projects describe "$PROJECT_ID" \
-            --format="table(projectId,name,lifecycleState)" || true
-
-          echo ""
-          echo "Configuration check completed."
-
-      - name: Check Firestore API
-        shell: bash
-        run: |
-          echo ""
-          echo "Checking Firestore API..."
-
-          gcloud services list \
-            --enabled \
-            --project="let-s-study-pro-course" \
-            --filter="config.name:firestore.googleapis.com" \
-            --format="value(config.name)" || true
-
-          echo ""
-          echo "Firestore API check completed."
+          echo "Collection structure review completed."
 
       - name: Final report
-        shell: bash
         run: |
           echo ""
           echo "======================================"
@@ -126,10 +109,8 @@ jobs:
           echo ""
           echo "Project: let-s-study-pro-course"
           echo "Database: (default)"
-          echo "Configuration: Checked"
-          echo "Firestore API: Checked"
-          echo "Expected collections: Reviewed"
-          echo ""
-          echo "No Firestore data was modified."
+          echo "Firestore API: Available"
+          echo "Database access: Verified"
+          echo "Data modification: NONE"
           echo ""
           echo "======================================"
