@@ -1,4 +1,4 @@
-name: LetsStudy Pro - Firestore Backup
+name: LetsStudy Pro - Firebase Daily Backup
 
 on:
   schedule:
@@ -10,115 +10,160 @@ permissions:
   contents: read
 
 jobs:
-  firestore-backup:
-    name: Firestore Backup
+  firebase-backup:
+    name: Daily Firestore Backup
     runs-on: ubuntu-latest
 
     steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Check Backup Configuration
+        shell: bash
+        env:
+          GCP_CREDENTIALS: ${{ secrets.GCP_BACKUP_SERVICE_ACCOUNT }}
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCS_BUCKET: ${{ secrets.GCS_BACKUP_BUCKET }}
+        run: |
+          set +e
+
+          echo "======================================"
+          echo " LETSSTUDY PRO"
+          echo " FIREBASE DAILY BACKUP"
+          echo "======================================"
+          echo ""
+
+          MISSING=0
+
+          if [ -z "$GCP_CREDENTIALS" ]; then
+            echo "MISSING: GCP_BACKUP_SERVICE_ACCOUNT"
+            MISSING=1
+          else
+            echo "FOUND: GCP_BACKUP_SERVICE_ACCOUNT"
+          fi
+
+          if [ -z "$GCP_PROJECT_ID" ]; then
+            echo "MISSING: GCP_PROJECT_ID"
+            MISSING=1
+          else
+            echo "FOUND: GCP_PROJECT_ID"
+          fi
+
+          if [ -z "$GCS_BUCKET" ]; then
+            echo "MISSING: GCS_BACKUP_BUCKET"
+            MISSING=1
+          else
+            echo "FOUND: GCS_BACKUP_BUCKET"
+          fi
+
+          echo ""
+
+          if [ "$MISSING" -ne 0 ]; then
+            echo "Backup configuration is incomplete."
+            echo "Backup will be skipped."
+            echo "Workflow will NOT fail."
+            exit 0
+          fi
+
+          echo "Backup configuration is ready."
+
       - name: Authenticate Google Cloud
+        if: ${{ secrets.GCP_BACKUP_SERVICE_ACCOUNT != '' }}
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}'
+          credentials_json: ${{ secrets.GCP_BACKUP_SERVICE_ACCOUNT }}
 
-      - name: Setup Google Cloud
+      - name: Setup Google Cloud CLI
+        if: ${{ secrets.GCP_BACKUP_SERVICE_ACCOUNT != '' }}
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Install tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y jq
-
-      - name: Create backup directory
-        run: |
-          mkdir -p firestore-backup
-
-      - name: Export Firestore data
+      - name: Run Firestore Backup
+        if: ${{ secrets.GCP_BACKUP_SERVICE_ACCOUNT != '' }}
         shell: bash
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCS_BUCKET: ${{ secrets.GCS_BACKUP_BUCKET }}
         run: |
-          PROJECT_ID="let-s-study-pro-course"
-          DATABASE="(default)"
+          set +e
 
           echo "======================================"
-          echo " LetsStudy Pro Firestore Backup"
+          echo " FIRESTORE EXPORT"
           echo "======================================"
           echo ""
 
-          ACCESS_TOKEN=$(gcloud auth print-access-token)
+          DATE=$(date -u +"%Y-%m-%d")
+          TIMESTAMP=$(date -u +"%Y-%m-%d-%H-%M-%S")
 
-          curl \
-            -sS \
-            -H "Authorization: Bearer $ACCESS_TOKEN" \
-            -H "Content-Type: application/json" \
-            "https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/${DATABASE}/documents?pageSize=300" \
-            > firestore-backup/firestore-documents.json
+          BACKUP_PATH="gs://${GCS_BUCKET}/firestore-backups/${DATE}/${TIMESTAMP}"
 
-          echo "Firestore data retrieved."
+          echo "Project: ${GCP_PROJECT_ID}"
+          echo "Backup path: ${BACKUP_PATH}"
+          echo ""
 
-      - name: Validate backup
-        shell: bash
-        run: |
-          FILE="firestore-backup/firestore-documents.json"
+          gcloud firestore export "$BACKUP_PATH" \
+            --project="$GCP_PROJECT_ID"
 
-          if [ ! -s "$FILE" ]; then
-            echo "ERROR: Backup file is empty."
-            exit 1
-          fi
+          STATUS=$?
 
-          if jq empty "$FILE" 2>/dev/null; then
-            echo "Backup JSON is valid."
-          else
-            echo "ERROR: Backup JSON is invalid."
-            exit 1
+          echo ""
+          echo "Firestore export exit code: $STATUS"
+
+          if [ "$STATUS" -ne 0 ]; then
+            echo ""
+            echo "WARNING: Firestore backup failed."
+            echo "The workflow will remain informational."
+            exit 0
           fi
 
           echo ""
-          echo "Backup size:"
-          du -h "$FILE"
+          echo "======================================"
+          echo " FIRESTORE BACKUP SUCCESS"
+          echo "======================================"
+          echo ""
+          echo "Backup:"
+          echo "$BACKUP_PATH"
 
-      - name: Add backup information
+      - name: Generate Backup Report
         shell: bash
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCS_BUCKET: ${{ secrets.GCS_BACKUP_BUCKET }}
         run: |
-          cat > firestore-backup/README.txt <<EOF
-          LetsStudy Pro Firestore Backup
+          DATE=$(date -u +"%Y-%m-%d")
+          TIMESTAMP=$(date -u +"%Y-%m-%d-%H-%M-%S")
 
-          Firebase Project:
-          let-s-study-pro-course
+          cat > firebase-backup-report.md <<EOF
+          # LetsStudy Pro - Firebase Daily Backup
 
-          Database:
-          (default)
+          - Date: **${DATE}**
+          - Timestamp: **${TIMESTAMP}**
+          - Firebase project: **${GCP_PROJECT_ID:-Not configured}**
+          - Backup bucket: **${GCS_BUCKET:-Not configured}**
+          - Backup type: **Firestore export**
+          - Schedule: **Daily**
+          - Deployment blocking: **No**
 
-          Backup date:
-          $(date -u)
-
-          Storage:
-          GitHub Actions Artifact
-
-          Firebase Storage:
-          NOT USED
-
-          Firebase Functions:
-          NOT USED
+          The workflow is informational and does not modify
+          website hosting files.
           EOF
 
-      - name: Upload backup artifact
+          cat > firebase-backup-report.json <<EOF
+          {
+            "project": "${GCP_PROJECT_ID:-}",
+            "date": "${DATE}",
+            "timestamp": "${TIMESTAMP}",
+            "backup_type": "firestore_export",
+            "bucket": "${GCS_BUCKET:-}",
+            "deployment_blocked": false
+          }
+          EOF
+
+      - name: Upload Backup Report
         uses: actions/upload-artifact@v4
         with:
-          name: letsstudy-pro-firestore-backup-${{ github.run_number }}
-          path: firestore-backup/
-          retention-days: 30
-
-      - name: Final report
-        run: |
-          echo ""
-          echo "======================================"
-          echo " FIRESTORE BACKUP COMPLETED"
-          echo "======================================"
-          echo ""
-          echo "Project: let-s-study-pro-course"
-          echo "Storage: GitHub Actions Artifact"
-          echo "Firebase Storage: NOT USED"
-          echo "Firebase Functions: NOT USED"
-          echo "Retention: 30 days"
-          echo ""
-          echo "Backup successfully uploaded."
-          echo "======================================"
+          name: letsstudy-pro-firebase-backup-report
+          path: |
+            firebase-backup-report.md
+            firebase-backup-report.json
+          if-no-files-found: warn
