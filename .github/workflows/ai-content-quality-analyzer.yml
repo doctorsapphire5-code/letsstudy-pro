@@ -1,0 +1,927 @@
+name: LetsStudy Pro - AI Content Quality Analyzer
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  schedule:
+    - cron: "0 10 * * 1"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ai-content-quality:
+    name: AI Content Quality Analyzer
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Analyze Website Content
+        shell: bash
+        run: |
+          set +e
+
+          python3 <<'PY'
+          import os
+          import re
+          import json
+          from html.parser import HTMLParser
+          from collections import Counter
+
+          WEBSITE = "https://letsstudy.pro"
+          BRAND = "LetsStudy Pro"
+
+          STOPWORDS = {
+              "the","and","for","with","this","that","from",
+              "your","you","are","was","were","have","has",
+              "had","will","can","our","their","they","about",
+              "into","more","than","then","when","where",
+              "which","what","how","why","who","all","not",
+              "but","a","an","of","to","in","on","is","it",
+              "as","at","by","or","be","we","do","does",
+              "kwa","na","ya","wa","ni","za","katika","hii",
+              "hizo","hizi","kama","pia","au","cha","vya"
+          }
+
+          class ContentParser(HTMLParser):
+
+              def __init__(self):
+                  super().__init__()
+
+                  self.title = ""
+                  self.description = ""
+                  self.h1 = []
+                  self.h2 = []
+                  self.h3 = []
+
+                  self.paragraphs = []
+                  self.images = []
+                  self.links = []
+
+                  self.text_parts = []
+
+                  self.in_title = False
+                  self.in_h1 = False
+                  self.in_h2 = False
+                  self.in_h3 = False
+                  self.in_p = False
+
+                  self.current_paragraph = ""
+
+              def handle_starttag(self, tag, attrs):
+                  tag = tag.lower()
+                  attrs = dict(attrs)
+
+                  if tag == "title":
+                      self.in_title = True
+
+                  elif tag == "h1":
+                      self.in_h1 = True
+
+                  elif tag == "h2":
+                      self.in_h2 = True
+
+                  elif tag == "h3":
+                      self.in_h3 = True
+
+                  elif tag == "p":
+                      self.in_p = True
+                      self.current_paragraph = ""
+
+                  elif tag == "img":
+                      self.images.append({
+                          "src": attrs.get("src", ""),
+                          "alt": attrs.get("alt", "")
+                      })
+
+                  elif tag == "a":
+                      href = attrs.get("href", "")
+                      if href:
+                          self.links.append(href)
+
+                  elif tag == "meta":
+                      name = (
+                          attrs.get("name") or ""
+                      ).lower()
+
+                      if name == "description":
+                          self.description = (
+                              attrs.get("content") or ""
+                          ).strip()
+
+              def handle_endtag(self, tag):
+                  tag = tag.lower()
+
+                  if tag == "title":
+                      self.in_title = False
+
+                  elif tag == "h1":
+                      self.in_h1 = False
+
+                  elif tag == "h2":
+                      self.in_h2 = False
+
+                  elif tag == "h3":
+                      self.in_h3 = False
+
+                  elif tag == "p":
+                      self.in_p = False
+
+                      paragraph = clean_text(
+                          self.current_paragraph
+                      )
+
+                      if paragraph:
+                          self.paragraphs.append(
+                              paragraph
+                          )
+
+                      self.current_paragraph = ""
+
+              def handle_data(self, data):
+                  text = " ".join(data.split())
+
+                  if not text:
+                      return
+
+                  self.text_parts.append(text)
+
+                  if self.in_title:
+                      self.title += " " + text
+
+                  if self.in_h1:
+                      self.h1.append(text)
+
+                  if self.in_h2:
+                      self.h2.append(text)
+
+                  if self.in_h3:
+                      self.h3.append(text)
+
+                  if self.in_p:
+                      self.current_paragraph += (
+                          " " + text
+                      )
+
+          def clean_text(text):
+              return re.sub(
+                  r"\s+",
+                  " ",
+                  text.strip()
+              )
+
+          def tokenize(text):
+              return re.findall(
+                  r"[A-Za-zÀ-ÿ0-9']+",
+                  text.lower()
+              )
+
+          def sentences(text):
+              return [
+                  s.strip()
+                  for s in re.split(
+                      r"[.!?]+",
+                      text
+                  )
+                  if s.strip()
+              ]
+
+          def syllables(word):
+              word = re.sub(
+                  r"[^a-z]",
+                  "",
+                  word.lower()
+              )
+
+              if not word:
+                  return 0
+
+              groups = re.findall(
+                  r"[aeiouy]+",
+                  word
+              )
+
+              count = len(groups)
+
+              if word.endswith("e") and count > 1:
+                  count -= 1
+
+              return max(
+                  count,
+                  1
+              )
+
+          def readability(text):
+
+              ws = tokenize(text)
+              ss = sentences(text)
+
+              if not ws or not ss:
+                  return 0
+
+              word_count = len(ws)
+              sentence_count = len(ss)
+
+              syllable_count = sum(
+                  syllables(word)
+                  for word in ws
+              )
+
+              score = (
+                  206.835
+                  - 1.015 * (
+                      word_count /
+                      sentence_count
+                  )
+                  - 84.6 * (
+                      syllable_count /
+                      word_count
+                  )
+              )
+
+              return round(
+                  max(
+                      0,
+                      min(
+                          100,
+                          score
+                      )
+                  ),
+                  2
+              )
+
+          def top_keywords(text, limit=10):
+
+              tokens = tokenize(text)
+
+              counts = Counter(
+                  word
+                  for word in tokens
+                  if len(word) >= 4
+                  and word not in STOPWORDS
+                  and not word.isdigit()
+              )
+
+              return [
+                  {
+                      "keyword": word,
+                      "count": count
+                  }
+                  for word, count
+                  in counts.most_common(limit)
+              ]
+
+          def score_content(
+              title,
+              description,
+              h1,
+              h2,
+              h3,
+              body,
+              paragraphs,
+              images,
+              links
+          ):
+
+              score = 0
+              recommendations = []
+
+              word_count = len(
+                  tokenize(body)
+              )
+
+              sentence_count = len(
+                  sentences(body)
+              )
+
+              paragraph_count = len(
+                  paragraphs
+              )
+
+              if title:
+                  score += 10
+              else:
+                  recommendations.append(
+                      "Add a clear and descriptive page title."
+                  )
+
+              if description:
+                  score += 5
+              else:
+                  recommendations.append(
+                      "Add a useful meta description."
+                  )
+
+              if len(h1) == 1:
+                  score += 10
+              elif len(h1) == 0:
+                  recommendations.append(
+                      "Add one clear primary H1 heading."
+                  )
+              else:
+                  score += 5
+                  recommendations.append(
+                      "Consider keeping one primary H1."
+                  )
+
+              if h2:
+                  score += 5
+              else:
+                  recommendations.append(
+                      "Use H2 headings to organize longer content."
+                  )
+
+              if word_count >= 100:
+                  score += 15
+              elif word_count >= 50:
+                  score += 8
+                  recommendations.append(
+                      "Consider expanding thin content."
+                  )
+              else:
+                  recommendations.append(
+                      "Content is very short; add useful information."
+                  )
+
+              if paragraph_count >= 3:
+                  score += 10
+              elif paragraph_count >= 1:
+                  score += 5
+                  recommendations.append(
+                      "Improve paragraph structure."
+                  )
+              else:
+                  recommendations.append(
+                      "Break content into readable paragraphs."
+                  )
+
+              if sentence_count >= 3:
+                  score += 5
+
+              if images:
+                  missing_alt = sum(
+                      1
+                      for image in images
+                      if not image["alt"].strip()
+                  )
+
+                  if missing_alt == 0:
+                      score += 10
+                  else:
+                      score += 5
+                      recommendations.append(
+                          f"Add descriptive ALT text to "
+                          f"{missing_alt} image(s)."
+                      )
+              else:
+                  score += 5
+
+              if links:
+                  score += 10
+              else:
+                  recommendations.append(
+                      "Add relevant internal or supporting links."
+                  )
+
+              readability_score = readability(
+                  body
+              )
+
+              if readability_score >= 60:
+                  score += 10
+              elif readability_score >= 40:
+                  score += 5
+                  recommendations.append(
+                      "Simplify some sentences for easier reading."
+                  )
+              else:
+                  recommendations.append(
+                      "Content may be difficult to read. "
+                      "Use shorter sentences and clearer wording."
+                  )
+
+              avg_sentence_length = 0
+
+              if sentence_count:
+                  avg_sentence_length = round(
+                      word_count /
+                      sentence_count,
+                      2
+                  )
+
+              if avg_sentence_length > 30:
+                  recommendations.append(
+                      "Some sentences may be too long. "
+                      "Consider splitting them."
+                  )
+
+              score = min(
+                  score,
+                  100
+              )
+
+              if score >= 90:
+                  grade = "EXCELLENT"
+              elif score >= 80:
+                  grade = "GOOD"
+              elif score >= 70:
+                  grade = "NEEDS IMPROVEMENT"
+              else:
+                  grade = "POOR"
+
+              return {
+                  "score": score,
+                  "grade": grade,
+                  "word_count": word_count,
+                  "sentence_count": sentence_count,
+                  "paragraph_count": paragraph_count,
+                  "average_sentence_length":
+                      avg_sentence_length,
+                  "readability_score":
+                      readability_score,
+                  "recommendations":
+                      recommendations
+              }
+
+          html_files = sorted([
+              f
+              for f in os.listdir(".")
+              if f.endswith(".html")
+              and os.path.isfile(f)
+          ])
+
+          results = []
+
+          for filename in html_files:
+
+              try:
+                  with open(
+                      filename,
+                      "r",
+                      encoding="utf-8",
+                      errors="ignore"
+                  ) as f:
+                      html = f.read()
+
+              except Exception as error:
+                  print(
+                      f"WARNING: Cannot read "
+                      f"{filename}: {error}"
+                  )
+                  continue
+
+              parser = ContentParser()
+
+              try:
+                  parser.feed(html)
+              except Exception as error:
+                  print(
+                      f"WARNING: Parser issue in "
+                      f"{filename}: {error}"
+                  )
+
+              title = clean_text(
+                  parser.title
+              )
+
+              description = clean_text(
+                  parser.description
+              )
+
+              h1 = [
+                  clean_text(x)
+                  for x in parser.h1
+                  if clean_text(x)
+              ]
+
+              h2 = [
+                  clean_text(x)
+                  for x in parser.h2
+                  if clean_text(x)
+              ]
+
+              h3 = [
+                  clean_text(x)
+                  for x in parser.h3
+                  if clean_text(x)
+              ]
+
+              body = clean_text(
+                  " ".join(
+                      parser.text_parts
+                  )
+              )
+
+              analysis = score_content(
+                  title,
+                  description,
+                  h1,
+                  h2,
+                  h3,
+                  body,
+                  parser.paragraphs,
+                  parser.images,
+                  parser.links
+              )
+
+              keywords = top_keywords(
+                  body,
+                  12
+              )
+
+              internal_links = [
+                  href
+                  for href in parser.links
+                  if href.startswith("/")
+                  or (
+                      href
+                      and not href.startswith(
+                          (
+                              "http://",
+                              "https://",
+                              "mailto:",
+                              "tel:",
+                              "#",
+                              "javascript:"
+                          )
+                      )
+                  )
+              ]
+
+              external_links = [
+                  href
+                  for href in parser.links
+                  if href.startswith(
+                      (
+                          "http://",
+                          "https://"
+                      )
+                  )
+              ]
+
+              missing_alt = sum(
+                  1
+                  for image in parser.images
+                  if not image["alt"].strip()
+              )
+
+              results.append({
+                  "file": filename,
+                  "title": title,
+                  "description": description,
+                  "headings": {
+                      "h1": h1,
+                      "h2": h2,
+                      "h3": h3
+                  },
+                  "analysis": analysis,
+                  "keywords": keywords,
+                  "links": {
+                      "total": len(parser.links),
+                      "internal": len(internal_links),
+                      "external": len(external_links)
+                  },
+                  "images": {
+                      "total": len(parser.images),
+                      "missing_alt": missing_alt
+                  }
+              })
+
+          total_pages = len(results)
+
+          if results:
+              average_score = round(
+                  sum(
+                      x["analysis"]["score"]
+                      for x in results
+                  ) / total_pages,
+                  2
+              )
+          else:
+              average_score = 0
+
+          excellent = sum(
+              1
+              for x in results
+              if x["analysis"]["grade"]
+              == "EXCELLENT"
+          )
+
+          good = sum(
+              1
+              for x in results
+              if x["analysis"]["grade"]
+              == "GOOD"
+          )
+
+          needs_improvement = sum(
+              1
+              for x in results
+              if x["analysis"]["grade"]
+              == "NEEDS IMPROVEMENT"
+          )
+
+          poor = sum(
+              1
+              for x in results
+              if x["analysis"]["grade"]
+              == "POOR"
+          )
+
+          report = {
+              "website": WEBSITE,
+              "project": BRAND,
+              "pages_checked": total_pages,
+              "average_content_quality_score":
+                  average_score,
+              "grades": {
+                  "excellent": excellent,
+                  "good": good,
+                  "needs_improvement":
+                      needs_improvement,
+                  "poor": poor
+              },
+              "deployment_blocked": False,
+              "html_modified": False,
+              "results": results
+          }
+
+          with open(
+              "ai-content-quality-report.json",
+              "w",
+              encoding="utf-8"
+          ) as f:
+              json.dump(
+                  report,
+                  f,
+                  indent=2,
+                  ensure_ascii=False
+              )
+
+          with open(
+              "ai-content-quality-report.md",
+              "w",
+              encoding="utf-8"
+          ) as f:
+
+              f.write(
+                  "# LetsStudy Pro - AI Content Quality Report\n\n"
+              )
+
+              f.write(
+                  f"- Website: **{WEBSITE}**\n"
+              )
+
+              f.write(
+                  f"- Pages checked: **{total_pages}**\n"
+              )
+
+              f.write(
+                  f"- Average content quality score: "
+                  f"**{average_score}/100**\n"
+              )
+
+              f.write(
+                  "- HTML modified: **No**\n"
+              )
+
+              f.write(
+                  "- Deployment blocking: **No**\n\n"
+              )
+
+              f.write(
+                  "## Grade Summary\n\n"
+              )
+
+              f.write(
+                  "| Grade | Pages |\n"
+              )
+
+              f.write(
+                  "|---|---:|\n"
+              )
+
+              f.write(
+                  f"| Excellent | {excellent} |\n"
+              )
+
+              f.write(
+                  f"| Good | {good} |\n"
+              )
+
+              f.write(
+                  f"| Needs Improvement | "
+                  f"{needs_improvement} |\n"
+              )
+
+              f.write(
+                  f"| Poor | {poor} |\n\n"
+              )
+
+              f.write(
+                  "## Page Analysis\n\n"
+              )
+
+              f.write(
+                  "| Page | Score | Grade | Words | "
+                  "Readability |\n"
+              )
+
+              f.write(
+                  "|---|---:|---|---:|---:|\n"
+              )
+
+              for item in results:
+
+                  analysis = item["analysis"]
+
+                  f.write(
+                      f"| `{item['file']}` | "
+                                            f"{analysis['score']}/100 | "
+                      f"{analysis['grade']} | "
+                      f"{analysis['word_count']} | "
+                      f"{analysis['readability_score']} |\n"
+                  )
+
+              f.write("\n")
+
+              f.write(
+                  "## Detailed Recommendations\n\n"
+              )
+
+              for item in results:
+
+                  analysis = item["analysis"]
+
+                  f.write(
+                      f"### `{item['file']}`\n\n"
+                  )
+
+                  f.write(
+                      f"**Score:** "
+                      f"{analysis['score']}/100 — "
+                      f"{analysis['grade']}\n\n"
+                  )
+
+                  f.write(
+                      "#### Content Statistics\n\n"
+                  )
+
+                  f.write(
+                      f"- Words: "
+                      f"**{analysis['word_count']}**\n"
+                  )
+
+                  f.write(
+                      f"- Sentences: "
+                      f"**{analysis['sentence_count']}**\n"
+                  )
+
+                  f.write(
+                      f"- Paragraphs: "
+                      f"**{analysis['paragraph_count']}**\n"
+                  )
+
+                  f.write(
+                      f"- Average sentence length: "
+                      f"**{analysis['average_sentence_length']} "
+                      f"words**\n"
+                  )
+
+                  f.write(
+                      f"- Readability score: "
+                      f"**{analysis['readability_score']}**\n"
+                  )
+
+                  f.write(
+                      f"- Internal links: "
+                      f"**{item['links']['internal']}**\n"
+                  )
+
+                  f.write(
+                      f"- External links: "
+                      f"**{item['links']['external']}**\n"
+                  )
+
+                  f.write(
+                      f"- Images: "
+                      f"**{item['images']['total']}**\n"
+                  )
+
+                  f.write(
+                      f"- Missing ALT: "
+                      f"**{item['images']['missing_alt']}**\n\n"
+                  )
+
+                  f.write(
+                      "#### Main Keywords\n\n"
+                  )
+
+                  if item["keywords"]:
+
+                      for keyword in item["keywords"]:
+
+                          f.write(
+                              f"- {keyword['keyword']} "
+                              f"({keyword['count']})\n"
+                          )
+
+                  else:
+
+                      f.write(
+                          "No significant keywords detected.\n"
+                      )
+
+                  f.write("\n")
+
+                  f.write(
+                      "#### Recommendations\n\n"
+                  )
+
+                  if analysis["recommendations"]:
+
+                      for recommendation in analysis[
+                          "recommendations"
+                      ]:
+
+                          f.write(
+                              f"- {recommendation}\n"
+                          )
+
+                  else:
+
+                      f.write(
+                          "No major content quality "
+                          "issues detected.\n"
+                      )
+
+                  f.write("\n")
+
+              f.write(
+                  "## Analysis Policy\n\n"
+              )
+
+              f.write(
+                  "This is an automated content-quality "
+                  "analysis. It is not a guarantee of "
+                  "human editorial quality or search-engine "
+                  "ranking.\n\n"
+              )
+
+              f.write(
+                  "The workflow does not modify website "
+                  "content and does not block deployment.\n"
+              )
+
+
+          print("")
+          print("======================================")
+          print(" AI CONTENT QUALITY ANALYZER")
+          print("======================================")
+          print(
+              f"Pages checked: {total_pages}"
+          )
+          print(
+              f"Average score: "
+              f"{average_score}/100"
+          )
+          print(
+              f"Excellent: {excellent}"
+          )
+          print(
+              f"Good: {good}"
+          )
+          print(
+              f"Needs improvement: "
+              f"{needs_improvement}"
+          )
+          print(
+              f"Poor: {poor}"
+          )
+          print("")
+          print("HTML modified: NO")
+          print("Deployment blocking: NO")
+          print("======================================")
+
+          PY
+
+          exit 0
+
+      - name: Upload AI Content Quality Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: letsstudy-pro-ai-content-quality
+          path: |
+            ai-content-quality-report.json
+            ai-content-quality-report.md
+          if-no-files-found: warn
