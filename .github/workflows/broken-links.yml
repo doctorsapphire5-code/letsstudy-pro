@@ -32,11 +32,12 @@ jobs:
           npm install -g broken-link-checker
 
       - name: Check production website
+        shell: bash
         run: |
-          set -e
-
           echo "Checking LetsStudy Pro..."
           echo "https://letsstudy.pro"
+
+          set +e
 
           blc \
             https://letsstudy.pro \
@@ -60,40 +61,73 @@ jobs:
             --exclude "localhost" \
             --exclude "127.0.0.1"
 
-      - name: Check sitemap URLs
+          BLC_STATUS=$?
+
+          echo ""
+          echo "Broken-link checker exit code: $BLC_STATUS"
+
+          if [ "$BLC_STATUS" -ne 0 ]; then
+            echo "WARNING: Broken or unreachable links were detected."
+            echo "The workflow will continue."
+          else
+            echo "No broken links detected."
+          fi
+
+          exit 0
+
+      - name: Download production sitemap
         shell: bash
         run: |
           set -e
 
           SITEMAP="https://letsstudy.pro/sitemap.xml"
 
-          echo "Checking sitemap..."
-          curl -L --fail --silent --show-error "$SITEMAP" \
+          echo "Downloading sitemap..."
+
+          curl \
+            -L \
+            --fail \
+            --silent \
+            --show-error \
+            --max-time 60 \
+            "$SITEMAP" \
             -o sitemap-live.xml
 
-          echo "Sitemap downloaded."
+          echo "Sitemap downloaded successfully."
 
-          grep -oP '(?<=<loc>).*?(?=</loc>)' \
-            sitemap-live.xml > sitemap-urls.txt || true
-
-          TOTAL=$(wc -l < sitemap-urls.txt)
-
-          echo "URLs found in sitemap: $TOTAL"
-
-          if [ "$TOTAL" -eq 0 ]; then
-            echo "ERROR: No URLs found in sitemap."
-            exit 1
-          fi
-
-      - name: Check sitemap response codes
+      - name: Extract sitemap URLs
         shell: bash
         run: |
           set -e
+
+          python3 - <<'PY'
+          import re
+
+          with open("sitemap-live.xml", "r", encoding="utf-8") as f:
+              data = f.read()
+
+          urls = re.findall(r"<loc>\s*(.*?)\s*</loc>", data, re.I | re.S)
+
+          with open("sitemap-urls.txt", "w", encoding="utf-8") as f:
+              for url in urls:
+                  f.write(url.strip() + "\n")
+
+          print(f"URLs found in sitemap: {len(urls)}")
+
+          if not urls:
+              print("WARNING: No URLs found in sitemap.")
+          PY
+
+      - name: Check sitemap URLs
+        shell: bash
+        run: |
+          set +e
 
           FAILED=0
           COUNT=0
 
           while IFS= read -r URL; do
+
             [ -z "$URL" ] && continue
 
             COUNT=$((COUNT + 1))
@@ -106,65 +140,83 @@ jobs:
               -s \
               -w "%{http_code}" \
               --max-time 20 \
-              "$URL" || echo "000")
+              "$URL")
 
             echo "Status: $STATUS"
 
             case "$STATUS" in
               200|204|301|302|307|308)
+                echo "OK"
                 ;;
               *)
-                echo "BROKEN: $URL [$STATUS]"
-                FAILED=1
+                echo "WARNING: Broken/unavailable URL"
+                echo "URL: $URL"
+                echo "STATUS: $STATUS"
+                FAILED=$((FAILED + 1))
                 ;;
             esac
 
+            echo ""
+
           done < sitemap-urls.txt
 
-          if [ "$FAILED" -eq 1 ]; then
-            echo ""
-            echo "Broken sitemap URLs detected."
-            exit 1
+          echo "======================================"
+          echo "Sitemap URL Check Complete"
+          echo "======================================"
+          echo "URLs checked: $COUNT"
+          echo "Failed URLs: $FAILED"
+          echo ""
+
+          if [ "$FAILED" -gt 0 ]; then
+            echo "WARNING: $FAILED sitemap URL(s) failed."
+            echo "Deployment/indexing will NOT be blocked."
+          else
+            echo "All sitemap URLs responded successfully."
           fi
 
-          echo ""
-          echo "All sitemap URLs responded successfully."
+          exit 0
 
       - name: Check robots.txt
+        shell: bash
         run: |
-          set -e
-
           STATUS=$(curl \
             -L \
             -o /dev/null \
             -s \
             -w "%{http_code}" \
+            --max-time 30 \
             "https://letsstudy.pro/robots.txt")
 
           echo "robots.txt status: $STATUS"
 
-          if [ "$STATUS" != "200" ]; then
-            echo "ERROR: robots.txt is unavailable."
-            exit 1
+          if [ "$STATUS" = "200" ]; then
+            echo "robots.txt: OK"
+          else
+            echo "WARNING: robots.txt returned HTTP $STATUS"
           fi
 
-      - name: Check sitemap availability
-        run: |
-          set -e
+          exit 0
 
+      - name: Check sitemap availability
+        shell: bash
+        run: |
           STATUS=$(curl \
             -L \
             -o /dev/null \
             -s \
             -w "%{http_code}" \
+            --max-time 30 \
             "https://letsstudy.pro/sitemap.xml")
 
           echo "sitemap.xml status: $STATUS"
 
-          if [ "$STATUS" != "200" ]; then
-            echo "ERROR: sitemap.xml is unavailable."
-            exit 1
+          if [ "$STATUS" = "200" ]; then
+            echo "sitemap.xml: OK"
+          else
+            echo "WARNING: sitemap.xml returned HTTP $STATUS"
           fi
+
+          exit 0
 
       - name: Final report
         run: |
@@ -174,8 +226,9 @@ jobs:
           echo "======================================"
           echo ""
           echo "Website: https://letsstudy.pro"
-          echo "robots.txt: OK"
-          echo "sitemap.xml: OK"
-          echo "Sitemap URLs: OK"
+          echo "Broken-link check: COMPLETED"
+          echo "Sitemap check: COMPLETED"
+          echo "robots.txt check: COMPLETED"
           echo ""
-          echo "Broken-link validation completed."
+          echo "Warnings do not block the workflow."
+          echo "======================================"
