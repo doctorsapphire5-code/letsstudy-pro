@@ -1,0 +1,443 @@
+name: LetsStudy Pro - Firebase Rules Validation
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  schedule:
+    - cron: "0 8 * * 1"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  firebase-rules-validation:
+    name: Firebase Rules Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Check Firebase Configuration
+        shell: bash
+        run: |
+          set +e
+
+          echo "======================================"
+          echo " FIREBASE RULES VALIDATION"
+          echo "======================================"
+          echo ""
+
+          if [ -f "firebase.json" ]; then
+            echo "firebase.json: FOUND"
+          else
+            echo "WARNING: firebase.json not found."
+          fi
+
+          if [ -f ".firebaserc" ]; then
+            echo ".firebaserc: FOUND"
+          else
+            echo "WARNING: .firebaserc not found."
+          fi
+
+          if [ -f "firestore.rules" ]; then
+            echo "firestore.rules: FOUND"
+          else
+            echo "WARNING: firestore.rules not found."
+          fi
+
+          echo ""
+
+      - name: Install Firebase CLI
+        shell: bash
+        run: |
+          set +e
+
+          npm install -g firebase-tools
+
+          if command -v firebase >/dev/null 2>&1; then
+            echo "Firebase CLI installed."
+            firebase --version
+          else
+            echo "WARNING: Firebase CLI installation failed."
+          fi
+
+          exit 0
+
+      - name: Validate Firestore Rules Syntax
+        shell: bash
+        run: |
+          set +e
+
+          echo ""
+          echo "======================================"
+          echo " FIRESTORE RULES SYNTAX"
+          echo "======================================"
+          echo ""
+
+          if [ ! -f "firestore.rules" ]; then
+            echo "WARNING: firestore.rules not found."
+            echo "Skipping syntax validation."
+            exit 0
+          fi
+
+          firebase firestore:rules:release \
+            --project let-s-study-pro-course \
+            --dry-run \
+            > firebase-rules-cli-output.txt 2>&1
+
+          STATUS=$?
+
+          cat firebase-rules-cli-output.txt
+
+          echo ""
+          echo "Firebase CLI exit code: $STATUS"
+
+          if [ "$STATUS" -eq 0 ]; then
+            echo "Rules validation completed successfully."
+          else
+            echo "WARNING: Firebase Rules validation reported an issue."
+            echo "Review the CLI output above."
+          fi
+
+          exit 0
+
+      - name: Analyze Rules Structure
+        shell: bash
+        run: |
+          set +e
+
+          python3 <<'PY'
+          import re
+          import json
+          import os
+
+          filename = "firestore.rules"
+
+          report = {
+              "project": "let-s-study-pro-course",
+              "website": "https://letsstudy.pro",
+              "file": filename,
+              "exists": False,
+              "checks": {},
+              "warnings": []
+          }
+
+          if not os.path.isfile(filename):
+              report["warnings"].append(
+                  "firestore.rules file was not found."
+              )
+
+              with open(
+                  "firebase-rules-report.json",
+                  "w",
+                  encoding="utf-8"
+              ) as f:
+                  json.dump(
+                      report,
+                      f,
+                      indent=2,
+                      ensure_ascii=False
+                  )
+
+              with open(
+                  "firebase-rules-report.md",
+                  "w",
+                  encoding="utf-8"
+              ) as f:
+                  f.write(
+                      "# LetsStudy Pro - Firebase Rules Report\n\n"
+                  )
+                  f.write(
+                      "WARNING: `firestore.rules` was not found.\n"
+                  )
+
+              raise SystemExit(0)
+
+          report["exists"] = True
+
+          with open(
+              filename,
+              "r",
+              encoding="utf-8",
+              errors="ignore"
+          ) as f:
+              rules = f.read()
+
+          checks = {}
+
+          checks["rules_version"] = bool(
+              re.search(
+                  r"rules_version\s*=\s*['\"]2['\"]",
+                  rules
+              )
+          )
+
+          checks["firestore_service"] = bool(
+              re.search(
+                  r"service\s+cloud\.firestore",
+                  rules
+              )
+          )
+
+          checks["database_match"] = bool(
+              re.search(
+                  r"match\s+/databases/\$\(",
+                  rules
+              )
+          )
+
+          checks["document_match"] = bool(
+              re.search(
+                  r"match\s+/documents",
+                  rules
+              )
+          )
+
+          checks["allow_statements"] = len(
+              re.findall(
+                  r"\ballow\s+",
+                  rules
+              )
+          )
+
+          checks["function_definitions"] = len(
+              re.findall(
+                  r"\bfunction\s+[A-Za-z_][A-Za-z0-9_]*\s*\(",
+                  rules
+              )
+          )
+
+          checks["authenticated_checks"] = len(
+              re.findall(
+                  r"request\.auth",
+                  rules
+              )
+          )
+
+          checks["admin_collection_reference"] = bool(
+              re.search(
+                  r"/admins/",
+                  rules
+              )
+          )
+
+          checks["admin_role_reference"] = bool(
+              re.search(
+                  r"role\s*.*admin|adminType",
+                  rules,
+                  re.IGNORECASE
+              )
+          )
+
+          checks["public_read_rules"] = len(
+              re.findall(
+                  r"allow\s+read\s*:\s*if\s+true",
+                  rules
+              )
+          )
+
+          checks["public_write_rules"] = len(
+              re.findall(
+                  r"allow\s+(write|create|update|delete)\s*:\s*if\s+true",
+                  rules
+              )
+          )
+
+          checks["deny_all_pattern"] = bool(
+              re.search(
+                  r"allow\s+(read|write)\s*:\s*if\s+false",
+                  rules
+              )
+          )
+
+          checks["wildcard_database_rule"] = bool(
+              re.search(
+                  r"match\s+/\{document=\*\*\}",
+                  rules
+              )
+          )
+
+          report["checks"] = checks
+
+          if not checks["rules_version"]:
+              report["warnings"].append(
+                  "rules_version = '2' was not detected."
+              )
+
+          if not checks["firestore_service"]:
+              report["warnings"].append(
+                  "Firestore service declaration was not detected."
+              )
+
+          if not checks["database_match"]:
+              report["warnings"].append(
+                  "Database match block was not detected."
+              )
+
+          if not checks["document_match"]:
+              report["warnings"].append(
+                  "Documents match block was not detected."
+              )
+
+          if checks["public_write_rules"] > 0:
+              report["warnings"].append(
+                  "One or more public write rules may allow "
+                  "unauthenticated writes. Review carefully."
+              )
+
+          if checks["wildcard_database_rule"]:
+              report["warnings"].append(
+                  "A wildcard document rule was detected. "
+                  "Review its permissions carefully."
+              )
+
+          with open(
+              "firebase-rules-report.json",
+              "w",
+              encoding="utf-8"
+          ) as f:
+              json.dump(
+                  report,
+                  f,
+                  indent=2,
+                  ensure_ascii=False
+              )
+
+          with open(
+              "firebase-rules-report.md",
+              "w",
+              encoding="utf-8"
+          ) as f:
+
+              f.write(
+                  "# LetsStudy Pro - Firebase Rules Validation Report\n\n"
+              )
+
+              f.write(
+                  "## Configuration\n\n"
+              )
+
+              f.write(
+                  "- Firebase project: "
+                  "`let-s-study-pro-course`\n"
+              )
+
+              f.write(
+                  "- Rules file: `firestore.rules`\n"
+              )
+
+              f.write(
+                  "- Website: `https://letsstudy.pro`\n\n"
+              )
+
+              f.write(
+                  "## Checks\n\n"
+              )
+
+              f.write(
+                  "| Check | Result |\n"
+              )
+              f.write(
+                  "|---|---|\n"
+              )
+
+              for key, value in checks.items():
+
+                  if isinstance(value, bool):
+                      result = (
+                          "PASS"
+                          if value
+                          else "REVIEW"
+                      )
+                  else:
+                      result = str(value)
+
+                  f.write(
+                      f"| {key} | {result} |\n"
+                  )
+
+              f.write("\n")
+
+              f.write(
+                  "## Warnings\n\n"
+              )
+
+              if report["warnings"]:
+                  for warning in report["warnings"]:
+                      f.write(
+                          f"- {warning}\n"
+                      )
+              else:
+                  f.write(
+                      "No structural warnings detected.\n"
+                  )
+
+              f.write("\n")
+
+              f.write(
+                  "## Important\n\n"
+              )
+
+              f.write(
+                  "This workflow performs validation and "
+                  "structural analysis only. It does not "
+                  "modify `firestore.rules` and does not "
+                  "block deployment.\n"
+              )
+
+          print("")
+          print("======================================")
+          print(" FIREBASE RULES SUMMARY")
+          print("======================================")
+          print(
+              f"Rules file found: "
+              f"{report['exists']}"
+          )
+          print(
+              f"Allow statements: "
+              f"{checks.get('allow_statements', 0)}"
+          )
+          print(
+              f"Functions: "
+              f"{checks.get('function_definitions', 0)}"
+          )
+          print(
+              f"Auth checks: "
+              f"{checks.get('authenticated_checks', 0)}"
+          )
+          print(
+              f"Admin references: "
+              f"{checks.get('admin_collection_reference', False)}"
+          )
+          print(
+              f"Warnings: "
+              f"{len(report['warnings'])}"
+          )
+          print("")
+          print(
+              "Deployment blocking: NO"
+          )
+          print("======================================")
+
+          PY
+
+          exit 0
+
+      - name: Upload Firebase Rules Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: letsstudy-pro-firebase-rules-report
+          path: |
+            firebase-rules-report.json
+            firebase-rules-report.md
+            firebase-rules-cli-output.txt
+          if-no-files-found: warn
