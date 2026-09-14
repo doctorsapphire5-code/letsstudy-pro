@@ -1,0 +1,406 @@
+name: LetsStudy Pro - Meta Description Generator
+
+on:
+  push:
+    branches:
+      - main
+
+  schedule:
+    - cron: "30 2 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  meta-description-generator:
+    name: Generate Meta Descriptions
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Generate Meta Descriptions
+        shell: bash
+        run: |
+          python3 <<'PY'
+          import re
+          import html
+          import json
+          from pathlib import Path
+          from datetime import datetime, timezone
+
+          BRAND = "LetsStudy Pro"
+
+          GENERIC = {
+              "",
+              "home",
+              "index",
+              "index page",
+              "untitled",
+              "document"
+          }
+
+          def clean_text(value):
+              value = html.unescape(value or "")
+              value = re.sub(r"<script\b[^>]*>.*?</script>", " ", value,
+                             flags=re.I | re.S)
+              value = re.sub(r"<style\b[^>]*>.*?</style>", " ", value,
+                             flags=re.I | re.S)
+              value = re.sub(r"<[^>]+>", " ", value)
+              value = re.sub(r"\s+", " ", value)
+              return value.strip()
+
+          def get_meta(content, name):
+              pattern = (
+                  r'<meta\b[^>]*'
+                  r'(?:name|property)\s*=\s*["\']'
+                  + re.escape(name)
+                  + r'["\'][^>]*'
+                  r'content\s*=\s*["\'](.*?)["\']'
+                  r'[^>]*>'
+              )
+
+              match = re.search(
+                  pattern,
+                  content,
+                  re.I | re.S
+              )
+
+              if match:
+                  return clean_text(match.group(1))
+
+              return ""
+
+          def get_title(content):
+              match = re.search(
+                  r"<title\b[^>]*>(.*?)</title>",
+                  content,
+                  re.I | re.S
+              )
+
+              if match:
+                  return clean_text(match.group(1))
+
+              return ""
+
+          def get_h1(content):
+              match = re.search(
+                  r"<h1\b[^>]*>(.*?)</h1>",
+                  content,
+                  re.I | re.S
+              )
+
+              if match:
+                  return clean_text(match.group(1))
+
+              return ""
+
+          def get_main_content(content):
+              # Remove non-content areas
+              text = re.sub(
+                  r"<script\b[^>]*>.*?</script>",
+                  " ",
+                  content,
+                  flags=re.I | re.S
+              )
+
+              text = re.sub(
+                  r"<style\b[^>]*>.*?</style>",
+                  " ",
+                  text,
+                  flags=re.I | re.S
+              )
+
+              text = re.sub(
+                  r"<nav\b[^>]*>.*?</nav>",
+                  " ",
+                  text,
+                  flags=re.I | re.S
+              )
+
+              text = re.sub(
+                  r"<footer\b[^>]*>.*?</footer>",
+                  " ",
+                  text,
+                  flags=re.I | re.S
+              )
+
+              text = clean_text(text)
+
+              # Remove common technical text
+              text = re.sub(
+                  r"\b(privacy policy|terms of service|copyright)\b",
+                  " ",
+                  text,
+                  flags=re.I
+              )
+
+              text = re.sub(r"\s+", " ", text).strip()
+
+              return text
+
+          def page_context(file, title, h1):
+              page = file.name.lower()
+
+              if "course" in page:
+                  return "courses, online learning and educational opportunities"
+
+              if "scholarship" in page:
+                  return "scholarships, funding opportunities and study opportunities"
+
+              if "career" in page:
+                  return "career opportunities, jobs and professional growth"
+
+              if "resource" in page:
+                  return "learning resources, study materials and useful guides"
+
+              if "freelancer" in page:
+                  return "freelancers, digital skills and professional services"
+
+              if "service" in page:
+                  return "digital services, professional solutions and business growth"
+
+              if "business" in page:
+                  return "business opportunities, digital solutions and growth"
+
+              if "marketplace" in page:
+                  return "digital products, services and marketplace opportunities"
+
+              if "search" in page:
+                  return "learning resources, courses, careers, scholarships and digital opportunities"
+
+              if title and title.lower() not in GENERIC:
+                  return title
+
+              if h1:
+                  return h1
+
+              return "learning, digital skills, opportunities and growth"
+
+          def shorten(text, maximum=155):
+              text = re.sub(r"\s+", " ", text).strip()
+
+              if len(text) <= maximum:
+                  return text
+
+              shortened = text[:maximum - 3]
+
+              if " " in shortened:
+                  shortened = shortened.rsplit(" ", 1)[0]
+
+              return shortened.rstrip(".,;:-") + "..."
+
+          results = []
+
+          html_files = sorted(Path(".").glob("*.html"))
+
+          for file in html_files:
+
+              try:
+                  content = file.read_text(
+                      encoding="utf-8",
+                      errors="ignore"
+                  )
+              except Exception:
+                  continue
+
+              title = get_title(content)
+              h1 = get_h1(content)
+
+              current_description = get_meta(
+                  content,
+                  "description"
+              )
+
+              # Prefer meaningful visible content
+              body_text = get_main_content(content)
+
+              context = page_context(
+                  file,
+                  title,
+                  h1
+              )
+
+              if body_text:
+                  # Remove title duplication where possible
+                  source = body_text
+
+                  if title:
+                      source = re.sub(
+                          re.escape(title),
+                          " ",
+                          source,
+                          count=1,
+                          flags=re.I
+                      )
+
+                  source = re.sub(
+                      r"\s+",
+                      " ",
+                      source
+                  ).strip()
+
+                  if source:
+                      generated = source
+                  else:
+                      generated = (
+                          f"Explore {context} with {BRAND}."
+                      )
+              else:
+                  generated = (
+                      f"Explore {context} with {BRAND}."
+                  )
+
+              # Make the beginning more SEO-friendly
+              if len(generated) < 80:
+                  generated = (
+                      f"Explore {context} with {BRAND}. "
+                      f"Learn, build, work and grow online."
+                  )
+
+              generated = shorten(generated, 155)
+
+              # Ensure brand appears where possible
+              if BRAND.lower() not in generated.lower():
+                  candidate = (
+                      generated.rstrip(".")
+                      + f" | {BRAND}"
+                  )
+
+                  if len(candidate) <= 160:
+                      generated = candidate
+                  else:
+                      available = 160 - len(f" | {BRAND}")
+                      base = generated[:available]
+
+                      if " " in base:
+                          base = base.rsplit(" ", 1)[0]
+
+                      generated = (
+                          base.rstrip(".,;:-")
+                          + f" | {BRAND}"
+                      )
+
+              results.append({
+                  "page": str(file),
+                  "current_description": current_description,
+                  "generated_description": generated,
+                  "current_length": len(current_description),
+                  "generated_length": len(generated),
+                  "status": (
+                      "OPTIMIZED"
+                      if current_description == generated
+                      else "RECOMMENDED"
+                  )
+              })
+
+          report = {
+              "generated_at": datetime.now(
+                  timezone.utc
+              ).isoformat(),
+              "brand": BRAND,
+              "pages_checked": len(results),
+              "descriptions": results
+          }
+
+          Path(
+              "meta-description-report.json"
+          ).write_text(
+              json.dumps(
+                  report,
+                  indent=2,
+                  ensure_ascii=False
+              ),
+              encoding="utf-8"
+          )
+
+          lines = [
+              "# LetsStudy Pro Meta Description Report",
+              "",
+              f"Generated: {report['generated_at']}",
+              "",
+              f"Pages checked: {len(results)}",
+              "",
+              "| Page | Current Description | Generated Description |",
+              "|---|---|---|"
+          ]
+
+          for item in results:
+
+              page = item["page"].replace("|", "\\|")
+
+              current = (
+                  item["current_description"]
+                  .replace("|", "\\|")
+                  .replace("\n", " ")
+              )
+
+              generated = (
+                  item["generated_description"]
+                  .replace("|", "\\|")
+                  .replace("\n", " ")
+              )
+
+              lines.append(
+                  f"| `{page}` | {current} | **{generated}** |"
+              )
+
+          Path(
+              "meta-description-report.md"
+          ).write_text(
+              "\n".join(lines) + "\n",
+              encoding="utf-8"
+          )
+
+          print("======================================")
+          print(" META DESCRIPTION GENERATOR")
+          print("======================================")
+          print(f"Pages checked: {len(results)}")
+          print("")
+
+          for item in results:
+              print(f"PAGE: {item['page']}")
+              print(
+                  f"CURRENT: {item['current_description']}"
+              )
+              print(
+                  f"SEO:     {item['generated_description']}"
+              )
+              print(
+                  f"LENGTH:  {item['generated_length']} characters"
+              )
+              print("")
+
+          print("Reports generated:")
+          print("- meta-description-report.json")
+          print("- meta-description-report.md")
+          print("")
+          print("No HTML files were modified.")
+
+          PY
+
+      - name: Upload Meta Description Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: meta-description-report
+          path: |
+            meta-description-report.json
+            meta-description-report.md
+          if-no-files-found: warn
+
+      - name: Final Report
+        run: |
+          echo "======================================"
+          echo " META DESCRIPTION GENERATOR COMPLETED"
+          echo "======================================"
+          echo ""
+          echo "LetsStudy Pro pages were analyzed."
+          echo "Meta description recommendations generated."
+          echo ""
+          echo "HTML files were NOT modified."
+          echo ""
+          echo "Reports are available in GitHub Actions artifacts."
+          echo "======================================"
