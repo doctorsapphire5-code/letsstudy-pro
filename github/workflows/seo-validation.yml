@@ -1,0 +1,204 @@
+name: LetsStudy Pro - SEO Validation
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  seo-validation:
+    name: Validate SEO
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check required SEO files
+        run: |
+          set -e
+
+          echo "Checking SEO files..."
+
+          test -f robots.txt || {
+            echo "ERROR: robots.txt is missing"
+            exit 1
+          }
+
+          test -f sitemap.xml || {
+            echo "WARNING: sitemap.xml not found in repository"
+          }
+
+          echo "SEO file check completed."
+
+      - name: Check HTML pages
+        shell: bash
+        run: |
+          set -e
+
+          echo "Scanning HTML files..."
+
+          failed=0
+
+          for file in $(find . -type f -name "*.html" \
+            ! -path "./node_modules/*" \
+            ! -path "./.git/*"); do
+
+            echo ""
+            echo "Checking: $file"
+
+            if ! grep -qi "<title" "$file"; then
+              echo "ERROR: Missing <title>: $file"
+              failed=1
+            fi
+
+            if ! grep -qi 'name=["'\'']description["'\'']' "$file"; then
+              echo "WARNING: Missing meta description: $file"
+            fi
+
+            if ! grep -qi 'rel=["'\'']canonical["'\'']' "$file"; then
+              echo "WARNING: Missing canonical: $file"
+            fi
+
+            if grep -qi 'noindex' "$file"; then
+              echo "WARNING: noindex detected: $file"
+            fi
+
+          done
+
+          if [ "$failed" -eq 1 ]; then
+            echo ""
+            echo "SEO validation failed."
+            exit 1
+          fi
+
+          echo ""
+          echo "HTML SEO validation passed."
+
+      - name: Validate robots.txt
+        run: |
+          set -e
+
+          echo "Checking robots.txt..."
+
+          grep -qi "User-agent" robots.txt || {
+            echo "ERROR: robots.txt has no User-agent"
+            exit 1
+          }
+
+          grep -qi "Sitemap:" robots.txt || {
+            echo "ERROR: robots.txt does not contain Sitemap"
+            exit 1
+          }
+
+          grep -qi "https://letsstudy.pro/sitemap.xml" robots.txt || {
+            echo "ERROR: LetsStudy Pro sitemap missing from robots.txt"
+            exit 1
+          }
+
+          echo "robots.txt is valid."
+
+      - name: Check localhost URLs
+        run: |
+          set -e
+
+          echo "Checking for localhost URLs..."
+
+          if grep -RniE \
+            --exclude-dir=.git \
+            --exclude-dir=node_modules \
+            "localhost(:[0-9]+)?|127\.0\.0\.1" .; then
+
+            echo ""
+            echo "ERROR: Development localhost URL detected."
+            exit 1
+          fi
+
+          echo "No localhost URLs found."
+
+      - name: Check HTTP URLs
+        run: |
+          set -e
+
+          echo "Checking for insecure HTTP URLs..."
+
+          if grep -RniE \
+            --exclude-dir=.git \
+            --exclude-dir=node_modules \
+            'http://letsstudy\.pro' .; then
+
+            echo ""
+            echo "ERROR: HTTP LetsStudy Pro URL detected."
+            exit 1
+          fi
+
+          echo "HTTPS URL check passed."
+
+      - name: Check LetsStudy Pro canonical
+        run: |
+          set -e
+
+          if [ -f index-auth.html ]; then
+            echo "Checking index-auth.html canonical..."
+
+            grep -qi \
+              'https://letsstudy.pro/index-auth.html' \
+              index-auth.html || {
+
+              echo "WARNING: Expected canonical not found in index-auth.html"
+            }
+          fi
+
+      - name: Check sitemap URLs
+        shell: bash
+        run: |
+          set -e
+
+          if [ ! -f sitemap.xml ]; then
+            echo "sitemap.xml not present - skipping sitemap URL validation."
+            exit 0
+          fi
+
+          echo "Checking sitemap URLs..."
+
+          if grep -qE \
+            'http://|localhost|127\.0\.0\.1' \
+            sitemap.xml; then
+
+            echo "ERROR: Invalid URL detected in sitemap.xml"
+            exit 1
+          fi
+
+          echo "Sitemap URL check passed."
+
+      - name: SEO validation summary
+        run: |
+          echo ""
+          echo "======================================"
+          echo " LetsStudy Pro SEO Validation Passed "
+          echo "======================================"
+          echo ""
+          echo "Checked:"
+          echo "- HTML titles"
+          echo "- Meta descriptions"
+          echo "- Canonicals"
+          echo "- robots.txt"
+          echo "- Sitemap"
+          echo "- HTTPS"
+          echo "- Localhost URLs"
+          echo "- LetsStudy Pro canonical"
+          echo ""
