@@ -1,0 +1,546 @@
+name: LetsStudy Pro - New Content Detection
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  new-content:
+    name: New Content Detection
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect New Content
+        shell: bash
+        run: |
+          set +e
+
+          python3 <<'PY'
+          import os
+          import re
+          import json
+          import subprocess
+          import hashlib
+          from html.parser import HTMLParser
+
+          ROOT = os.getcwd()
+
+          class PageParser(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+
+                  self.title = ""
+                  self.description = ""
+                  self.h1 = []
+                  self.body = []
+
+                  self.in_title = False
+                  self.in_h1 = False
+                  self.in_script = False
+                  self.in_style = False
+
+              def handle_starttag(self, tag, attrs):
+                  tag = tag.lower()
+                  attrs = dict(attrs)
+
+                  if tag == "title":
+                      self.in_title = True
+
+                  elif tag == "h1":
+                      self.in_h1 = True
+
+                  elif tag == "script":
+                      self.in_script = True
+
+                  elif tag == "style":
+                      self.in_style = True
+
+                  elif tag == "meta":
+                      name = (
+                          attrs.get("name", "")
+                          .strip()
+                          .lower()
+                      )
+
+                      if name == "description":
+                          self.description = (
+                              attrs.get(
+                                  "content",
+                                  ""
+                              ).strip()
+                          )
+
+              def handle_endtag(self, tag):
+                  tag = tag.lower()
+
+                  if tag == "title":
+                      self.in_title = False
+
+                  elif tag == "h1":
+                      self.in_h1 = False
+
+                  elif tag == "script":
+                      self.in_script = False
+
+                  elif tag == "style":
+                      self.in_style = False
+
+              def handle_data(self, data):
+                  if self.in_title:
+                      self.title += " " + data
+
+                  if self.in_h1:
+                      self.h1.append(data)
+
+                  if (
+                      not self.in_script
+                      and not self.in_style
+                  ):
+                      self.body.append(data)
+
+          def clean_text(text):
+              return re.sub(
+                  r"\s+",
+                  " ",
+                  text or ""
+              ).strip()
+
+          def get_page_data(filename):
+              path = os.path.join(
+                  ROOT,
+                  filename
+              )
+
+              try:
+                  with open(
+                      path,
+                      "r",
+                      encoding="utf-8",
+                      errors="ignore"
+                  ) as f:
+                      source = f.read()
+
+                  parser = PageParser()
+                  parser.feed(source)
+
+                  title = clean_text(
+                      parser.title
+                  )
+
+                  description = clean_text(
+                      parser.description
+                  )
+
+                  h1 = clean_text(
+                      " ".join(parser.h1)
+                  )
+
+                  body = clean_text(
+                      " ".join(parser.body)
+                  )
+
+                  words = re.findall(
+                      r"\b[\wÀ-ÿ'-]+\b",
+                      body,
+                      flags=re.UNICODE
+                  )
+
+                  return {
+                      "file": filename,
+                      "title": title,
+                      "description": description,
+                      "h1": h1,
+                      "word_count": len(words),
+                      "content_hash": hashlib.sha256(
+                          body.lower().encode(
+                              "utf-8"
+                          )
+                      ).hexdigest()
+                  }
+
+              except Exception as e:
+                  return {
+                      "file": filename,
+                      "error": str(e)
+                  }
+
+          current_files = sorted([
+              f for f in os.listdir(ROOT)
+              if (
+                  f.endswith(".html")
+                  and os.path.isfile(
+                      os.path.join(ROOT, f)
+                  )
+              )
+          ])
+
+          # Previous commit files
+          try:
+              previous_output = subprocess.run(
+                  [
+                      "git",
+                      "ls-tree",
+                      "-r",
+                      "--name-only",
+                      "HEAD^"
+                  ],
+                  capture_output=True,
+                  text=True
+              )
+
+              previous_files = sorted([
+                  f for f in previous_output.stdout.splitlines()
+                  if f.endswith(".html")
+              ])
+
+          except Exception:
+              previous_files = []
+
+          current_set = set(current_files)
+          previous_set = set(previous_files)
+
+          new_files = sorted(
+              current_set - previous_set
+          )
+
+          removed_files = sorted(
+              previous_set - current_set
+          )
+
+          common_files = sorted(
+              current_set & previous_set
+          )
+
+          changed_files = []
+
+          # Compare current and previous Git versions
+          for filename in common_files:
+
+              try:
+                  current_data = get_page_data(
+                      filename
+                  )
+
+                  old_output = subprocess.run(
+                      [
+                          "git",
+                          "show",
+                          f"HEAD^:{filename}"
+                      ],
+                      capture_output=True,
+                      text=True
+                  )
+
+                  if old_output.returncode != 0:
+                      continue
+
+                  old_source = old_output.stdout
+
+                  old_parser = PageParser()
+                  old_parser.feed(old_source)
+
+                  old_title = clean_text(
+                      old_parser.title
+                  )
+
+                  old_description = clean_text(
+                      old_parser.description
+                  )
+
+                  old_h1 = clean_text(
+                      " ".join(
+                          old_parser.h1
+                      )
+                  )
+
+                  old_body = clean_text(
+                      " ".join(
+                          old_parser.body
+                      )
+                  )
+
+                  old_hash = hashlib.sha256(
+                      old_body.lower().encode(
+                          "utf-8"
+                      )
+                  ).hexdigest()
+
+                  if (
+                      current_data.get(
+                          "content_hash"
+                      ) != old_hash
+                      or
+                      current_data.get(
+                          "title"
+                      ) != old_title
+                      or
+                      current_data.get(
+                          "description"
+                      ) != old_description
+                      or
+                      current_data.get(
+                          "h1"
+                      ) != old_h1
+                  ):
+                      changed_files.append({
+                          "file": filename,
+                          "title": current_data.get(
+                              "title",
+                              ""
+                          ),
+                          "description": current_data.get(
+                              "description",
+                              ""
+                          ),
+                          "h1": current_data.get(
+                              "h1",
+                              ""
+                          ),
+                          "word_count": current_data.get(
+                              "word_count",
+                              0
+                          )
+                      })
+
+              except Exception:
+                  continue
+
+          new_pages = [
+              get_page_data(filename)
+              for filename in new_files
+          ]
+
+          # Git commit information
+          try:
+              commit_sha = subprocess.run(
+                  [
+                      "git",
+                      "rev-parse",
+                      "HEAD"
+                  ],
+                  capture_output=True,
+                  text=True
+              ).stdout.strip()
+
+              commit_message = subprocess.run(
+                  [
+                      "git",
+                      "log",
+                      "-1",
+                      "--pretty=%s"
+                  ],
+                  capture_output=True,
+                  text=True
+              ).stdout.strip()
+
+          except Exception:
+              commit_sha = ""
+              commit_message = ""
+
+          report = {
+              "website": "https://letsstudy.pro",
+              "commit": commit_sha,
+              "commit_message": commit_message,
+              "pages_checked": len(
+                  current_files
+              ),
+              "new_pages": new_pages,
+              "changed_pages": changed_files,
+              "removed_pages": removed_files,
+              "summary": {
+                  "new_pages": len(
+                      new_pages
+                  ),
+                  "changed_pages": len(
+                      changed_files
+                  ),
+                  "removed_pages": len(
+                      removed_files
+                  )
+              }
+          }
+
+          with open(
+              "new-content-report.json",
+              "w",
+              encoding="utf-8"
+          ) as f:
+              json.dump(
+                  report,
+                  f,
+                  indent=2,
+                  ensure_ascii=False
+              )
+
+          with open(
+              "new-content-report.md",
+              "w",
+              encoding="utf-8"
+          ) as f:
+
+              f.write(
+                  "# LetsStudy Pro - New Content Detection\n\n"
+              )
+
+              f.write(
+                  "## Summary\n\n"
+              )
+
+              f.write(
+                  f"- HTML pages currently available: "
+                  f"{len(current_files)}\n"
+              )
+
+              f.write(
+                  f"- New pages: "
+                  f"{len(new_pages)}\n"
+              )
+
+              f.write(
+                  f"- Changed pages: "
+                  f"{len(changed_files)}\n"
+              )
+
+              f.write(
+                  f"- Removed pages: "
+                  f"{len(removed_files)}\n\n"
+              )
+
+              f.write(
+                  "## New Pages\n\n"
+              )
+
+              if new_pages:
+                  for page in new_pages:
+                      f.write(
+                          f"### `{page['file']}`\n\n"
+                      )
+
+                      f.write(
+                          f"- Title: "
+                          f"{page.get('title', '')}\n"
+                      )
+
+                      f.write(
+                          f"- H1: "
+                          f"{page.get('h1', '')}\n"
+                      )
+
+                      f.write(
+                          f"- Words: "
+                          f"{page.get('word_count', 0)}\n"
+                      )
+
+                      f.write("\n")
+              else:
+                  f.write(
+                      "No new HTML pages detected. ✅\n\n"
+                  )
+
+              f.write(
+                  "## Changed Pages\n\n"
+              )
+
+              if changed_files:
+                  for page in changed_files:
+                      f.write(
+                          f"- `{page['file']}` — "
+                          f"{page.get('word_count', 0)} words\n"
+                      )
+              else:
+                  f.write(
+                      "No changed content detected. ✅\n"
+                  )
+
+              f.write(
+                  "\n## Removed Pages\n\n"
+              )
+
+              if removed_files:
+                  for page in removed_files:
+                      f.write(
+                          f"- `{page}`\n"
+                      )
+              else:
+                  f.write(
+                      "No HTML pages removed. ✅\n"
+                  )
+
+              f.write(
+                  "\n## Next SEO Actions\n\n"
+              )
+
+              if new_pages or changed_files:
+                  f.write(
+                      "- Review new/changed pages for SEO.\n"
+                  )
+                  f.write(
+                      "- Confirm title and meta description.\n"
+                  )
+                  f.write(
+                      "- Confirm canonical URL.\n"
+                  )
+                  f.write(
+                      "- Add relevant internal links.\n"
+                  )
+                  f.write(
+                      "- Confirm sitemap inclusion.\n"
+                  )
+                  f.write(
+                      "- Allow search engines to discover the content.\n"
+                  )
+              else:
+                  f.write(
+                      "No new SEO content actions required.\n"
+                  )
+
+          print("")
+          print("======================================")
+          print(" New Content Detection Completed")
+          print("======================================")
+          print(
+              f"Current HTML pages: "
+              f"{len(current_files)}"
+          )
+          print(
+              f"New pages: {len(new_pages)}"
+          )
+          print(
+              f"Changed pages: "
+              f"{len(changed_files)}"
+          )
+          print(
+              f"Removed pages: "
+              f"{len(removed_files)}"
+          )
+          print("")
+          print(
+              "This check is informational and will not fail."
+          )
+          PY
+
+          exit 0
+
+      - name: Upload New Content Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: new-content-report
+          path: |
+            new-content-report.json
+            new-content-report.md
+          if-no-files-found: warn
