@@ -1,0 +1,408 @@
+name: LetsStudy Pro - Workflow Cache Checker
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  schedule:
+    - cron: "0 7 * * 1"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  workflow-cache-check:
+    name: Check GitHub Actions Dependency Cache
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Scan Workflow Cache Configuration
+        shell: bash
+        run: |
+          set +e
+
+          python3 <<'PY'
+          import os
+          import re
+          import json
+
+          WORKFLOW_DIR = ".github/workflows"
+
+          LOCK_FILES = [
+              "package-lock.json",
+              "npm-shrinkwrap.json",
+              "yarn.lock"
+          ]
+
+          results = []
+
+          lock_files_found = [
+              file
+              for file in LOCK_FILES
+              if os.path.isfile(file)
+          ]
+
+          if not os.path.isdir(WORKFLOW_DIR):
+              print("No .github/workflows directory found.")
+              print("Workflow cache check skipped.")
+              exit(0)
+
+          workflow_files = sorted([
+              file
+              for file in os.listdir(WORKFLOW_DIR)
+              if file.endswith(".yml")
+              or file.endswith(".yaml")
+          ])
+
+          for filename in workflow_files:
+
+              path = os.path.join(
+                  WORKFLOW_DIR,
+                  filename
+              )
+
+              try:
+                  with open(
+                      path,
+                      "r",
+                      encoding="utf-8",
+                      errors="ignore"
+                  ) as f:
+                      content = f.read()
+
+              except Exception as error:
+                  results.append({
+                      "workflow": filename,
+                      "status": "READ_ERROR",
+                      "cache_npm": False,
+                      "message": str(error)
+                  })
+                  continue
+
+              has_setup_node = bool(
+                  re.search(
+                      r"actions/setup-node@",
+                      content,
+                      re.IGNORECASE
+                  )
+              )
+
+              cache_npm = bool(
+                  re.search(
+                      r"cache\s*:\s*npm\b",
+                      content,
+                      re.IGNORECASE
+                  )
+              )
+
+              cache_yarn = bool(
+                  re.search(
+                      r"cache\s*:\s*yarn\b",
+                      content,
+                      re.IGNORECASE
+                  )
+              )
+
+              cache_dependency = (
+                  cache_npm
+                  or cache_yarn
+              )
+
+              if cache_npm:
+
+                  if lock_files_found:
+
+                      status = "OK"
+
+                      message = (
+                          "cache: npm found and "
+                          "supported lock file exists."
+                      )
+
+                  else:
+
+                      status = "ERROR"
+
+                      message = (
+                          "cache: npm found but no "
+                          "package-lock.json, "
+                          "npm-shrinkwrap.json, "
+                          "or yarn.lock exists."
+                      )
+
+              elif cache_yarn:
+
+                  if "yarn.lock" in lock_files_found:
+
+                      status = "OK"
+
+                      message = (
+                          "cache: yarn found and "
+                          "yarn.lock exists."
+                      )
+
+                  else:
+
+                      status = "ERROR"
+
+                      message = (
+                          "cache: yarn found but "
+                          "yarn.lock is missing."
+                      )
+
+              elif has_setup_node:
+
+                  status = "OK"
+
+                  message = (
+                      "setup-node found without "
+                      "unsupported dependency cache."
+                  )
+
+              else:
+
+                  status = "NOT_APPLICABLE"
+
+                  message = (
+                      "No setup-node dependency cache detected."
+                  )
+
+              results.append({
+                  "workflow": filename,
+                  "setup_node": has_setup_node,
+                  "cache_npm": cache_npm,
+                  "cache_yarn": cache_yarn,
+                  "dependency_cache": cache_dependency,
+                  "status": status,
+                  "message": message
+              })
+
+          errors = [
+              item
+              for item in results
+              if item["status"] == "ERROR"
+          ]
+
+          setup_node_workflows = [
+              item
+              for item in results
+              if item.get("setup_node")
+          ]
+
+          report = {
+              "project": "LetsStudy Pro",
+              "workflow_directory": WORKFLOW_DIR,
+              "lock_files_found": lock_files_found,
+              "workflow_files_checked": len(results),
+              "setup_node_workflows":
+                  len(setups := setup_node_workflows),
+              "configuration_errors": len(errors),
+              "deployment_blocked": False,
+              "results": results
+          }
+
+          with open(
+              "workflow-cache-check-report.json",
+              "w",
+              encoding="utf-8"
+          ) as f:
+
+              json.dump(
+                  report,
+                  f,
+                  indent=2,
+                  ensure_ascii=False
+              )
+
+          with open(
+              "workflow-cache-check-report.md",
+              "w",
+              encoding="utf-8"
+          ) as f:
+
+              f.write(
+                  "# LetsStudy Pro - Workflow Cache Check\n\n"
+              )
+
+              f.write(
+                  f"- Workflow files checked: "
+                  f"**{len(results)}**\n"
+              )
+
+              f.write(
+                  f"- setup-node workflows: "
+                  f"**{len(setup_node_workflows)}**\n"
+              )
+
+              f.write(
+                  f"- Lock files found: "
+                  f"**{len(lock_files_found)}**\n"
+              )
+
+              f.write(
+                  f"- Configuration errors: "
+                  f"**{len(errors)}**\n\n"
+              )
+
+              f.write(
+                  "## Lock Files\n\n"
+              )
+
+              if lock_files_found:
+
+                  for lock_file in lock_files_found:
+
+                      f.write(
+                          f"- `{lock_file}`\n"
+                      )
+
+              else:
+
+                  f.write(
+                      "No supported dependency lock file "
+                      "was found.\n"
+                  )
+
+              f.write("\n")
+
+              f.write(
+                  "## Workflow Results\n\n"
+              )
+
+              f.write(
+                  "| Workflow | setup-node | npm cache | "
+                  "yarn cache | Status |\n"
+              )
+
+              f.write(
+                  "|---|---|---|---|---|\n"
+              )
+
+              for item in results:
+
+                  f.write(
+                      f"| `{item['workflow']}` | "
+                      f"{item.get('setup_node', False)} | "
+                      f"{item.get('cache_npm', False)} | "
+                      f"{item.get('cache_yarn', False)} | "
+                      f"{item['status']} |\n"
+                  )
+
+              f.write("\n")
+
+              if errors:
+
+                  f.write(
+                      "## Configuration Errors\n\n"
+                  )
+
+                  for item in errors:
+
+                      f.write(
+                          f"### `{item['workflow']}`\n\n"
+                      )
+
+                      f.write(
+                          f"{item['message']}\n\n"
+                      )
+
+                      f.write(
+                          "Recommended fix:\n\n"
+                      )
+
+                      f.write(
+                          "Remove `cache: npm` from "
+                          "`actions/setup-node` or add a "
+                          "supported npm lock file.\n\n"
+                      )
+
+              else:
+
+                  f.write(
+                      "## Result\n\n"
+                  )
+
+                  f.write(
+                      "No dependency-cache configuration "
+                      "errors were detected.\n\n"
+                  )
+
+              f.write(
+                  "## Policy\n\n"
+              )
+
+              f.write(
+                  "This workflow is informational and does "
+                  "not modify workflow files or block "
+                  "deployment.\n"
+              )
+
+          print("")
+          print("======================================")
+          print(" WORKFLOW CACHE CHECK")
+          print("======================================")
+          print(
+              f"Workflow files checked: {len(results)}"
+          )
+          print(
+              f"setup-node workflows: "
+              f"{len(setup_node_workflows)}"
+          )
+          print(
+              f"Lock files found: "
+              f"{len(lock_files_found)}"
+          )
+          print(
+              f"Configuration errors: "
+              f"{len(errors)}"
+          )
+          print("")
+
+          if errors:
+
+              print(
+                  "Workflows with dependency cache errors:"
+              )
+
+              for item in errors:
+
+                  print(
+                      f"- {item['workflow']}"
+                  )
+
+                  print(
+                      f"  {item['message']}"
+                  )
+
+          else:
+
+              print(
+                  "No dependency-cache errors detected."
+              )
+
+          print("")
+          print("Deployment blocking: NO")
+          print("======================================")
+
+          PY
+
+          exit 0
+
+      - name: Upload Workflow Cache Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: letsstudy-pro-workflow-cache-check
+          path: |
+            workflow-cache-check-report.json
+            workflow-cache-check-report.md
+          if-no-files-found: warn
