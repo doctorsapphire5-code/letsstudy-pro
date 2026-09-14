@@ -1,0 +1,181 @@
+name: LetsStudy Pro - Broken Links Check
+
+on:
+  push:
+    branches:
+      - main
+
+  schedule:
+    - cron: "0 */6 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  broken-links:
+    name: Check Website Links
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install link checker
+        run: |
+          npm install -g broken-link-checker
+
+      - name: Check production website
+        run: |
+          set -e
+
+          echo "Checking LetsStudy Pro..."
+          echo "https://letsstudy.pro"
+
+          blc \
+            https://letsstudy.pro \
+            --recursive \
+            --ordered \
+            --filter-level 3 \
+            --exclude "mailto:" \
+            --exclude "tel:" \
+            --exclude "javascript:" \
+            --exclude "whatsapp:" \
+            --exclude "facebook.com" \
+            --exclude "instagram.com" \
+            --exclude "youtube.com" \
+            --exclude "tiktok.com" \
+            --exclude "linkedin.com" \
+            --exclude "x.com" \
+            --exclude "twitter.com" \
+            --exclude "pinterest.com" \
+            --exclude "telegram.me" \
+            --exclude "t.me" \
+            --exclude "localhost" \
+            --exclude "127.0.0.1"
+
+      - name: Check sitemap URLs
+        shell: bash
+        run: |
+          set -e
+
+          SITEMAP="https://letsstudy.pro/sitemap.xml"
+
+          echo "Checking sitemap..."
+          curl -L --fail --silent --show-error "$SITEMAP" \
+            -o sitemap-live.xml
+
+          echo "Sitemap downloaded."
+
+          grep -oP '(?<=<loc>).*?(?=</loc>)' \
+            sitemap-live.xml > sitemap-urls.txt || true
+
+          TOTAL=$(wc -l < sitemap-urls.txt)
+
+          echo "URLs found in sitemap: $TOTAL"
+
+          if [ "$TOTAL" -eq 0 ]; then
+            echo "ERROR: No URLs found in sitemap."
+            exit 1
+          fi
+
+      - name: Check sitemap response codes
+        shell: bash
+        run: |
+          set -e
+
+          FAILED=0
+          COUNT=0
+
+          while IFS= read -r URL; do
+            [ -z "$URL" ] && continue
+
+            COUNT=$((COUNT + 1))
+
+            echo "[$COUNT] Checking: $URL"
+
+            STATUS=$(curl \
+              -L \
+              -o /dev/null \
+              -s \
+              -w "%{http_code}" \
+              --max-time 20 \
+              "$URL" || echo "000")
+
+            echo "Status: $STATUS"
+
+            case "$STATUS" in
+              200|204|301|302|307|308)
+                ;;
+              *)
+                echo "BROKEN: $URL [$STATUS]"
+                FAILED=1
+                ;;
+            esac
+
+          done < sitemap-urls.txt
+
+          if [ "$FAILED" -eq 1 ]; then
+            echo ""
+            echo "Broken sitemap URLs detected."
+            exit 1
+          fi
+
+          echo ""
+          echo "All sitemap URLs responded successfully."
+
+      - name: Check robots.txt
+        run: |
+          set -e
+
+          STATUS=$(curl \
+            -L \
+            -o /dev/null \
+            -s \
+            -w "%{http_code}" \
+            "https://letsstudy.pro/robots.txt")
+
+          echo "robots.txt status: $STATUS"
+
+          if [ "$STATUS" != "200" ]; then
+            echo "ERROR: robots.txt is unavailable."
+            exit 1
+          fi
+
+      - name: Check sitemap availability
+        run: |
+          set -e
+
+          STATUS=$(curl \
+            -L \
+            -o /dev/null \
+            -s \
+            -w "%{http_code}" \
+            "https://letsstudy.pro/sitemap.xml")
+
+          echo "sitemap.xml status: $STATUS"
+
+          if [ "$STATUS" != "200" ]; then
+            echo "ERROR: sitemap.xml is unavailable."
+            exit 1
+          fi
+
+      - name: Final report
+        run: |
+          echo ""
+          echo "======================================"
+          echo " LetsStudy Pro Broken Link Check"
+          echo "======================================"
+          echo ""
+          echo "Website: https://letsstudy.pro"
+          echo "robots.txt: OK"
+          echo "sitemap.xml: OK"
+          echo "Sitemap URLs: OK"
+          echo ""
+          echo "Broken-link validation completed."
