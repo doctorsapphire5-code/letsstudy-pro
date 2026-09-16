@@ -12,9 +12,7 @@
 <link rel="icon" href="favicon.ico">
 
 <style>
-*{
-  box-sizing:border-box;
-}
+*{box-sizing:border-box}
 
 body{
   margin:0;
@@ -115,6 +113,7 @@ h1{
 
 .course-info{
   flex:1;
+  min-width:0;
 }
 
 .course-title{
@@ -151,6 +150,7 @@ select{
   border-radius:10px;
   font-size:15px;
   outline:none;
+  background:#fff;
 }
 
 input:focus,
@@ -240,6 +240,7 @@ select:focus{
 }
 
 @media(max-width:800px){
+
   .layout{
     grid-template-columns:1fr;
   }
@@ -251,6 +252,19 @@ select:focus{
   .header-inner{
     padding:0;
   }
+
+  .course{
+    flex-wrap:wrap;
+  }
+
+  .course img{
+    width:80px;
+    height:60px;
+  }
+
+  .price{
+    width:100%;
+  }
 }
 </style>
 </head>
@@ -259,6 +273,7 @@ select:focus{
 
 <header>
   <div class="header-inner">
+
     <a class="logo" href="index.html">
       LetsStudy <span>Pro</span>
     </a>
@@ -266,17 +281,20 @@ select:focus{
     <a class="back" href="course-cart.html">
       ← Back to Cart
     </a>
+
   </div>
 </header>
 
 <main class="container">
 
   <h1>Course Checkout</h1>
+
   <div class="subtitle">
     Review your courses and complete your order.
   </div>
 
   <div id="errorBox" class="status error"></div>
+
   <div id="successBox" class="status success"></div>
 
   <div id="loading" class="loading">
@@ -284,84 +302,162 @@ select:focus{
   </div>
 
   <div id="empty" class="empty card hidden">
+
     <h2>Your cart is empty</h2>
-    <p>Add a course before continuing to checkout.</p>
-    <a href="courses.html" class="back">Browse Courses</a>
+
+    <p>
+      Add a course before continuing to checkout.
+    </p>
+
+    <a href="courses.html" class="back">
+      Browse Courses
+    </a>
+
   </div>
 
   <div id="checkoutArea" class="layout hidden">
 
-    <!-- CUSTOMER INFORMATION -->
     <section class="card">
 
       <h2>Customer Information</h2>
 
       <div class="field">
-        <label for="fullName">Full Name</label>
+
+        <label for="fullName">
+          Full Name
+        </label>
+
         <input
           id="fullName"
           type="text"
           placeholder="Enter your full name"
-          autocomplete="name">
+          autocomplete="name"
+          required>
+
       </div>
 
       <div class="field">
-        <label for="email">Email Address</label>
+
+        <label for="email">
+          Email Address
+        </label>
+
         <input
           id="email"
           type="email"
           placeholder="Enter your email address"
-          autocomplete="email">
+          autocomplete="email"
+          required>
+
       </div>
 
-      <h2>Payment Method</h2>
+      <h2>
+        Payment Method
+      </h2>
 
       <div class="field">
-        <label for="paymentMethod">Select payment method</label>
 
-        <select id="paymentMethod">
-          <option value="">Choose payment method</option>
-          <option value="mobile">Mobile Money</option>
-          <option value="card">Credit / Debit Card</option>
-          <option value="other">Other</option>
+        <label for="paymentMethod">
+          Select payment method
+        </label>
+
+        <select
+          id="paymentMethod"
+          required>
+
+          <option value="">
+            Choose payment method
+          </option>
+
+          <option value="mobile">
+            Mobile Money
+          </option>
+
+          <option value="card">
+            Credit / Debit Card
+          </option>
+
+          <option value="other">
+            Other
+          </option>
+
         </select>
+
       </div>
 
       <button
         id="checkoutBtn"
         class="btn primary"
         type="button">
+
         Continue to Payment
+
       </button>
 
       <div class="note">
+
         Your payment is not considered successful until it is
         verified by the payment system. Do not close the page
         while the payment process is starting.
+
       </div>
 
     </section>
 
-    <!-- ORDER SUMMARY -->
     <aside class="card">
 
-      <h2>Order Summary</h2>
+      <h2>
+        Order Summary
+      </h2>
 
       <div id="coursesList"></div>
 
       <div class="summary-row">
-        <span>Subtotal</span>
-        <strong id="subtotal">0</strong>
+
+        <span>
+          Courses
+        </span>
+
+        <strong id="courseCount">
+          0
+        </strong>
+
       </div>
 
       <div class="summary-row">
-        <span>Discount</span>
-        <strong>0</strong>
+
+        <span>
+          Subtotal
+        </span>
+
+        <strong id="subtotal">
+          0
+        </strong>
+
+      </div>
+
+      <div class="summary-row">
+
+        <span>
+          Discount
+        </span>
+
+        <strong>
+          0
+        </strong>
+
       </div>
 
       <div class="summary-row total">
-        <span>Total</span>
-        <span id="total">0</span>
+
+        <span>
+          Total
+        </span>
+
+        <span id="total">
+          0
+        </span>
+
       </div>
 
     </aside>
@@ -372,7 +468,9 @@ select:focus{
 
 <script type="module">
 
-import { initializeApp }
+import {
+  initializeApp
+}
 from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 
 import {
@@ -388,36 +486,72 @@ from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 ===================================================== */
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBcOYDfAVK5XbkljsyRgI_0rj0odBn678tCc",
-  authDomain: "let-s-study-pro-course.firebaseapp.com",
-  databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
-  projectId: "let-s-study-pro-course",
-  storageBucket: "let-s-study-pro-course.firebasestorage.app",
-  messagingSenderId: "474928293390",
-  appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
-  measurementId: "G-85B7V5H5J0"
+
+  apiKey:
+    "AIzaSyBcOYDfAVK5XbkljsyRgI_0rj0odBn678tCc",
+
+  authDomain:
+    "let-s-study-pro-course.firebaseapp.com",
+
+  databaseURL:
+    "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+  projectId:
+    "let-s-study-pro-course",
+
+  storageBucket:
+    "let-s-study-pro-course.firebasestorage.app",
+
+  messagingSenderId:
+    "474928293390",
+
+  appId:
+    "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+  measurementId:
+    "G-85B7V5H5J0"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app =
+  initializeApp(firebaseConfig);
+
+const db =
+  getFirestore(app);
 
 
 /* =====================================================
    ELEMENTS
 ===================================================== */
 
-const loading = document.getElementById("loading");
-const empty = document.getElementById("empty");
-const checkoutArea = document.getElementById("checkoutArea");
+const loading =
+  document.getElementById("loading");
 
-const coursesList = document.getElementById("coursesList");
-const subtotalEl = document.getElementById("subtotal");
-const totalEl = document.getElementById("total");
+const empty =
+  document.getElementById("empty");
 
-const errorBox = document.getElementById("errorBox");
-const successBox = document.getElementById("successBox");
+const checkoutArea =
+  document.getElementById("checkoutArea");
 
-const checkoutBtn = document.getElementById("checkoutBtn");
+const coursesList =
+  document.getElementById("coursesList");
+
+const subtotalEl =
+  document.getElementById("subtotal");
+
+const totalEl =
+  document.getElementById("total");
+
+const courseCountEl =
+  document.getElementById("courseCount");
+
+const errorBox =
+  document.getElementById("errorBox");
+
+const successBox =
+  document.getElementById("successBox");
+
+const checkoutBtn =
+  document.getElementById("checkoutBtn");
 
 
 /* =====================================================
@@ -425,54 +559,102 @@ const checkoutBtn = document.getElementById("checkoutBtn");
 ===================================================== */
 
 function showError(message){
-  errorBox.textContent = message;
-  errorBox.style.display = "block";
-  successBox.style.display = "none";
+
+  errorBox.textContent =
+    message;
+
+  errorBox.style.display =
+    "block";
+
+  successBox.style.display =
+    "none";
+
 }
+
 
 function showSuccess(message){
-  successBox.textContent = message;
-  successBox.style.display = "block";
-  errorBox.style.display = "none";
+
+  successBox.textContent =
+    message;
+
+  successBox.style.display =
+    "block";
+
+  errorBox.style.display =
+    "none";
+
 }
+
 
 function hideMessages(){
-  errorBox.style.display = "none";
-  successBox.style.display = "none";
+
+  errorBox.style.display =
+    "none";
+
+  successBox.style.display =
+    "none";
+
 }
 
-function first(obj, fields, fallback=""){
+
+function first(
+  obj,
+  fields,
+  fallback = ""
+){
+
   for(const field of fields){
+
     if(
       obj &&
       obj[field] !== undefined &&
       obj[field] !== null &&
       String(obj[field]).trim() !== ""
     ){
+
       return obj[field];
+
     }
+
   }
 
   return fallback;
+
 }
+
 
 function getTitle(course){
+
   return first(
     course,
-    ["title","name","courseTitle"],
+    [
+      "title",
+      "name",
+      "courseTitle"
+    ],
     "Untitled Course"
   );
+
 }
+
 
 function getDescription(course){
+
   return first(
     course,
-    ["description","shortDescription","summary"],
+    [
+      "description",
+      "shortDescription",
+      "summary"
+    ],
     ""
   );
+
 }
 
+
 function getImage(course){
+
   return first(
     course,
     [
@@ -485,54 +667,74 @@ function getImage(course){
     ],
     "assets/default-course.jpg"
   );
+
 }
+
 
 function getPrice(course){
 
-  const value = first(
-    course,
-    [
-      "price",
-      "amount",
-      "coursePrice",
-      "planPrice",
-      "sellingPrice"
-    ],
-    0
-  );
+  const value =
+    first(
+      course,
+      [
+        "price",
+        "amount",
+        "coursePrice",
+        "planPrice",
+        "sellingPrice"
+      ],
+      0
+    );
 
-  const number = Number(value);
+  const number =
+    Number(
+      String(value)
+        .replace(/[^0-9.-]/g,"")
+    );
 
-  return Number.isFinite(number) ? number : 0;
+  return Number.isFinite(number)
+    ? number
+    : 0;
+
 }
+
 
 function getAccess(course){
 
-  const value = first(
-    course,
-    [
-      "access",
-      "accessType",
-      "membership",
-      "plan",
-      "pricing"
-    ],
-    ""
-  );
+  const value =
+    first(
+      course,
+      [
+        "access",
+        "accessType",
+        "membership",
+        "plan",
+        "pricing"
+      ],
+      ""
+    );
 
-  return String(value).toLowerCase();
+  return String(value)
+    .toLowerCase()
+    .trim();
+
 }
+
 
 function isPaidCourse(course){
 
-  const access = getAccess(course);
+  const access =
+    getAccess(course);
 
   if(
     access.includes("plan") ||
     access.includes("premium") ||
-    access.includes("paid")
+    access.includes("paid") ||
+    access.includes("pro")
   ){
+
     return true;
+
   }
 
   if(
@@ -540,235 +742,28 @@ function isPaidCourse(course){
     course?.isPremium === true ||
     course?.paid === true
   ){
+
     return true;
+
   }
 
-  const price = getPrice(course);
+  return getPrice(course) > 0;
 
-  return price > 0;
 }
+
 
 function formatPrice(amount){
 
   return new Intl.NumberFormat(
     undefined,
     {
+      minimumFractionDigits:0,
       maximumFractionDigits:2
     }
   ).format(amount);
-}
-
-
-/* =====================================================
-   READ COURSE IDS FROM CART
-===================================================== */
-
-function getCartIds(){
-
-  let cart = [];
-
-  try{
-    cart = JSON.parse(
-      localStorage.getItem("courseCart") || "[]"
-    );
-  }catch(error){
-    cart = [];
-  }
-
-  if(!Array.isArray(cart)){
-    return [];
-  }
-
-  /*
-    Supports:
-
-    ["abc123","xyz789"]
-
-    and older:
-
-    [
-      {id:"abc123"},
-      {id:"xyz789"}
-    ]
-  */
-
-  return cart
-    .map(item => {
-
-      if(typeof item === "string"){
-        return item;
-      }
-
-      if(item && item.id){
-        return String(item.id);
-      }
-
-      return "";
-    })
-    .filter(Boolean);
 
 }
 
-
-/* =====================================================
-   LOAD COURSES FROM FIRESTORE
-===================================================== */
-
-let cartCourses = [];
-let subtotal = 0;
-
-async function loadCheckout(){
-
-  hideMessages();
-
-  const ids = getCartIds();
-
-  if(ids.length === 0){
-
-    loading.classList.add("hidden");
-    empty.classList.remove("hidden");
-
-    return;
-  }
-
-  try{
-
-    const loaded = [];
-
-    for(const courseId of ids){
-
-      /*
-        IMPORTANT:
-
-        Firebase document ID is used here.
-
-        courses/{COURSE_ID}
-      */
-
-      const courseRef = doc(
-        db,
-        "courses",
-        courseId
-      );
-
-      const snapshot = await getDoc(courseRef);
-
-      if(!snapshot.exists()){
-        continue;
-      }
-
-      const data = snapshot.data();
-
-      /*
-        Only paid/Plan courses belong
-        in this checkout.
-      */
-
-      if(!isPaidCourse(data)){
-        continue;
-      }
-
-      loaded.push({
-        id: courseId,
-        ...data
-      });
-
-    }
-
-    cartCourses = loaded;
-
-    if(cartCourses.length === 0){
-
-      loading.classList.add("hidden");
-      empty.classList.remove("hidden");
-
-      showError(
-        "No valid Plan courses were found in your cart."
-      );
-
-      return;
-    }
-
-    renderCourses();
-
-    loading.classList.add("hidden");
-    checkoutArea.classList.remove("hidden");
-
-  }catch(error){
-
-    console.error(error);
-
-    loading.classList.add("hidden");
-
-    showError(
-      "Unable to load your courses. Please try again."
-    );
-  }
-
-}
-
-
-/* =====================================================
-   RENDER COURSES
-===================================================== */
-
-function renderCourses(){
-
-  coursesList.innerHTML = "";
-
-  subtotal = 0;
-
-  cartCourses.forEach(course => {
-
-    const title = getTitle(course);
-    const description = getDescription(course);
-    const image = getImage(course);
-    const price = getPrice(course);
-
-    subtotal += price;
-
-    const item = document.createElement("div");
-
-    item.className = "course";
-
-    item.innerHTML = `
-      <img
-        src="${image}"
-        alt=""
-        onerror="this.style.visibility='hidden'">
-
-      <div class="course-info">
-
-        <div class="course-title">
-          ${escapeHTML(title)}
-        </div>
-
-        <div class="course-description">
-          ${escapeHTML(
-            description.slice(0,120)
-          )}
-        </div>
-
-      </div>
-
-      <div class="price">
-        ${formatPrice(price)}
-      </div>
-    `;
-
-    coursesList.appendChild(item);
-
-  });
-
-  subtotalEl.textContent = formatPrice(subtotal);
-  totalEl.textContent = formatPrice(subtotal);
-
-}
-
-
-/* =====================================================
-   HTML ESCAPE
-===================================================== */
 
 function escapeHTML(value){
 
@@ -778,11 +773,393 @@ function escapeHTML(value){
     .replace(/>/g,"&gt;")
     .replace(/"/g,"&quot;")
     .replace(/'/g,"&#039;");
+
 }
 
 
 /* =====================================================
-   CREATE PENDING ORDER
+   CART
+===================================================== */
+
+function getCartIds(){
+
+  let cart = [];
+
+  try{
+
+    cart =
+      JSON.parse(
+        localStorage.getItem(
+          "courseCart"
+        ) || "[]"
+      );
+
+  }catch(error){
+
+    console.error(
+      "Cart parsing error:",
+      error
+    );
+
+    cart = [];
+
+  }
+
+  if(!Array.isArray(cart)){
+    return [];
+  }
+
+  return [
+    ...new Set(
+      cart
+        .map(item => {
+
+          if(
+            typeof item === "string"
+          ){
+
+            return item;
+
+          }
+
+          if(
+            item &&
+            typeof item === "object"
+          ){
+
+            return (
+              item.id ||
+              item.courseId ||
+              ""
+            );
+
+          }
+
+          return "";
+
+        })
+        .filter(Boolean)
+    )
+  ];
+
+}
+
+
+/* =====================================================
+   LOAD COURSES
+===================================================== */
+
+let cartCourses = [];
+
+let subtotal = 0;
+
+
+async function loadCheckout(){
+
+  hideMessages();
+
+  const ids =
+    getCartIds();
+
+  if(!ids.length){
+
+    loading.classList.add(
+      "hidden"
+    );
+
+    empty.classList.remove(
+      "hidden"
+    );
+
+    return;
+
+  }
+
+  try{
+
+    const loaded = [];
+
+    for(const courseId of ids){
+
+      const courseRef =
+        doc(
+          db,
+          "courses",
+          courseId
+        );
+
+      const snapshot =
+        await getDoc(
+          courseRef
+        );
+
+      if(!snapshot.exists()){
+        continue;
+      }
+
+      const data =
+        snapshot.data();
+
+      if(!isPaidCourse(data)){
+        continue;
+      }
+
+      loaded.push({
+
+        id:
+          snapshot.id,
+
+        ...data
+
+      });
+
+    }
+
+    cartCourses =
+      loaded;
+
+    if(!cartCourses.length){
+
+      loading.classList.add(
+        "hidden"
+      );
+
+      empty.classList.remove(
+        "hidden"
+      );
+
+      showError(
+        "No valid paid courses were found in your cart."
+      );
+
+      return;
+
+    }
+
+    renderCourses();
+
+    loading.classList.add(
+      "hidden"
+    );
+
+    checkoutArea.classList.remove(
+      "hidden"
+    );
+
+  }catch(error){
+
+    console.error(
+      "Checkout loading error:",
+      error
+    );
+
+    loading.classList.add(
+      "hidden"
+    );
+
+    showError(
+      "Unable to load your courses. Please try again."
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   RENDER
+===================================================== */
+
+function renderCourses(){
+
+  coursesList.innerHTML =
+    "";
+
+  subtotal =
+    0;
+
+  cartCourses.forEach(
+    course => {
+
+      const title =
+        getTitle(course);
+
+      const description =
+        getDescription(course);
+
+      const image =
+        getImage(course);
+
+      const price =
+        getPrice(course);
+
+      subtotal +=
+        price;
+
+      const item =
+        document.createElement(
+          "div"
+        );
+
+      item.className =
+        "course";
+
+      item.innerHTML = `
+
+        <img
+          src="${escapeHTML(image)}"
+          alt="${escapeHTML(title)}"
+          onerror="
+            this.style.visibility='hidden'
+          "
+        >
+
+        <div class="course-info">
+
+          <div class="course-title">
+            ${escapeHTML(title)}
+          </div>
+
+          <div class="course-description">
+            ${escapeHTML(
+              String(description)
+                .slice(0,120)
+            )}
+          </div>
+
+        </div>
+
+        <div class="price">
+          ${formatPrice(price)}
+        </div>
+
+      `;
+
+      coursesList.appendChild(
+        item
+      );
+
+    }
+  );
+
+  courseCountEl.textContent =
+    cartCourses.length;
+
+  subtotalEl.textContent =
+    formatPrice(subtotal);
+
+  totalEl.textContent =
+    formatPrice(subtotal);
+
+}
+
+
+/* =====================================================
+   CREATE PAYMENT
+===================================================== */
+
+async function createPaymentOrder(
+  order
+){
+
+  const PAYMENT_API =
+    "https://api.letsstudy.pro";
+
+  const response =
+    await fetch(
+      `${PAYMENT_API}/api/pesapal/create-order`,
+      {
+
+        method:
+          "POST",
+
+        headers:{
+          "Content-Type":
+            "application/json"
+        },
+
+        body:
+          JSON.stringify({
+
+            orderId:
+              order.orderId,
+
+            amount:
+              order.total,
+
+            currency:
+              "TZS",
+
+            description:
+              `LetsStudy Pro Course Order ${order.orderId}`,
+
+            customerName:
+              order.customer.name,
+
+            customerEmail:
+              order.customer.email,
+
+            paymentMethod:
+              order.paymentMethod,
+
+            items:
+              order.courses
+
+          })
+
+      }
+    );
+
+  let data = null;
+
+  try{
+
+    data =
+      await response.json();
+
+  }catch(error){
+
+    data = null;
+
+  }
+
+  if(!response.ok){
+
+    throw new Error(
+      data?.message ||
+      data?.error ||
+      "Unable to create payment."
+    );
+
+  }
+
+  const redirectUrl =
+    data?.redirectUrl ||
+    data?.redirect_url ||
+    data?.paymentUrl ||
+    data?.payment_url;
+
+  if(!redirectUrl){
+
+    throw new Error(
+      "Payment provider did not return a payment URL."
+    );
+
+  }
+
+  return {
+
+    ...data,
+
+    redirectUrl
+
+  };
+
+}
+
+
+/* =====================================================
+   CHECKOUT
 ===================================================== */
 
 checkoutBtn.addEventListener(
@@ -792,15 +1169,21 @@ checkoutBtn.addEventListener(
     hideMessages();
 
     const fullName =
-      document.getElementById("fullName")
-        .value.trim();
+      document
+        .getElementById("fullName")
+        .value
+        .trim();
 
     const email =
-      document.getElementById("email")
-        .value.trim();
+      document
+        .getElementById("email")
+        .value
+        .trim()
+        .toLowerCase();
 
     const paymentMethod =
-      document.getElementById("paymentMethod")
+      document
+        .getElementById("paymentMethod")
         .value;
 
     if(!fullName){
@@ -810,6 +1193,7 @@ checkoutBtn.addEventListener(
       );
 
       return;
+
     }
 
     if(!email){
@@ -819,6 +1203,7 @@ checkoutBtn.addEventListener(
       );
 
       return;
+
     }
 
     if(!paymentMethod){
@@ -828,6 +1213,7 @@ checkoutBtn.addEventListener(
       );
 
       return;
+
     }
 
     if(!cartCourses.length){
@@ -837,11 +1223,27 @@ checkoutBtn.addEventListener(
       );
 
       return;
+
     }
 
-    checkoutBtn.disabled = true;
+    if(
+      !Number.isFinite(subtotal) ||
+      subtotal <= 0
+    ){
+
+      showError(
+        "Invalid course order total."
+      );
+
+      return;
+
+    }
+
+    checkoutBtn.disabled =
+      true;
+
     checkoutBtn.textContent =
-      "Preparing Payment...";
+      "Creating Payment...";
 
     try{
 
@@ -851,80 +1253,174 @@ checkoutBtn.addEventListener(
         "-" +
         Math.random()
           .toString(36)
-          .substring(2,8)
+          .slice(2,8)
           .toUpperCase();
 
-      /*
-        Store Firebase IDs only.
-
-        The IDs remain internal and are
-        never displayed to the customer.
-      */
-
       const orderCourses =
-        cartCourses.map(course => ({
-          courseId: course.id,
-          title: getTitle(course),
-          price: getPrice(course)
-        }));
+        cartCourses.map(
+          course => ({
+
+            courseId:
+              course.id,
+
+            title:
+              getTitle(course),
+
+            price:
+              getPrice(course)
+
+          })
+        );
 
       const pendingOrder = {
 
         orderId,
 
+        productType:
+          "course",
+
         customer:{
-          name:fullName,
-          email:email
+
+          name:
+            fullName,
+
+          email:
+            email
+
         },
 
-        courses:orderCourses,
+        courses:
+          orderCourses,
 
-        total:subtotal,
+        total:
+          subtotal,
+
+        currency:
+          "TZS",
 
         paymentMethod,
 
-        status:"pending",
+        status:
+          "pending",
 
         createdAt:
-          new Date().toISOString()
+          new Date()
+            .toISOString()
 
       };
 
+      /*
+        Create Pesapal order
+        through Node.js backend.
+      */
+
+      const payment =
+        await createPaymentOrder(
+          pendingOrder
+        );
+
+      const redirectUrl =
+        payment.redirectUrl;
+
+      const trackingId =
+        payment.orderTrackingId ||
+        payment.OrderTrackingId ||
+        payment.trackingId ||
+        "";
+
+      const merchantReference =
+        payment.merchantReference ||
+        payment.merchant_reference ||
+        orderId;
+
+      /*
+        Save complete pending
+        payment information.
+      */
+
       localStorage.setItem(
         "pendingCourseOrder",
-        JSON.stringify(pendingOrder)
+        JSON.stringify({
+
+          ...pendingOrder,
+
+          orderTrackingId:
+            trackingId,
+
+          merchantReference,
+
+          redirectUrl
+
+        })
       );
 
       /*
-        Payment gateway page.
-
-        IMPORTANT:
-        course-payment.html must verify payment
-        with the real backend/provider.
+        Send order information
+        to course-payment.html.
       */
 
-      showSuccess(
-        "Order prepared. Redirecting to payment..."
+      const params =
+        new URLSearchParams();
+
+      params.set(
+        "orderId",
+        orderId
       );
 
-      setTimeout(() => {
+      params.set(
+        "redirectUrl",
+        redirectUrl
+      );
 
-        window.location.href =
-          "course-payment.html";
+      if(trackingId){
 
-      },700);
+        params.set(
+          "orderTrackingId",
+          trackingId
+        );
+
+      }
+
+      if(merchantReference){
+
+        params.set(
+          "merchantReference",
+          merchantReference
+        );
+
+      }
+
+      showSuccess(
+        "Payment created. Opening secure payment..."
+      );
+
+      setTimeout(
+        () => {
+
+          window.location.href =
+            `course-payment.html?${params.toString()}`;
+
+                },
+
+        500
+      );
 
     }catch(error){
 
-      console.error(error);
+      console.error(
+        "Payment creation error:",
+        error
+      );
 
-      checkoutBtn.disabled = false;
+      checkoutBtn.disabled =
+        false;
 
       checkoutBtn.textContent =
         "Continue to Payment";
 
       showError(
-        "Unable to prepare your order."
+        error?.message ||
+        "Unable to create payment. Please try again."
       );
 
     }
@@ -937,9 +1433,27 @@ checkoutBtn.addEventListener(
    START
 ===================================================== */
 
-loadCheckout();
+loadCheckout().catch(
+  error => {
+
+    console.error(
+      "Checkout error:",
+      error
+    );
+
+    loading.classList.add(
+      "hidden"
+    );
+
+    showError(
+      "Unable to load your course checkout."
+    );
+
+  }
+);
 
 </script>
 
 </body>
 </html>
+    
