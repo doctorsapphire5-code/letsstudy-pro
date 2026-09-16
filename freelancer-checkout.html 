@@ -1,8 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1"
+>
 
 <title>Freelance Checkout | LetsStudy Pro</title>
 
@@ -12,6 +17,7 @@
 >
 
 <style>
+
 *{
   box-sizing:border-box;
   margin:0;
@@ -104,6 +110,7 @@ h2{
   justify-content:center;
   font-weight:800;
   overflow:hidden;
+  flex-shrink:0;
 }
 
 .avatar img{
@@ -144,6 +151,12 @@ h2{
   font:inherit;
 }
 
+.field input:focus,
+.field textarea:focus,
+.field select:focus{
+  border-color:#2563eb;
+}
+
 .field textarea{
   min-height:110px;
   resize:vertical;
@@ -152,8 +165,14 @@ h2{
 .summary{
   display:flex;
   justify-content:space-between;
+  gap:15px;
   padding:10px 0;
   border-bottom:1px solid #edf0f4;
+}
+
+.summary strong{
+  text-align:right;
+  word-break:break-word;
 }
 
 .total{
@@ -187,6 +206,7 @@ h2{
   padding:12px;
   border-radius:8px;
   margin-bottom:15px;
+  line-height:1.5;
 }
 
 .message.show{
@@ -209,17 +229,33 @@ h2{
   color:#64748b;
 }
 
+.quote{
+  color:#64748b;
+  font-weight:600;
+}
+
 @media(max-width:700px){
 
   .checkout{
     grid-template-columns:1fr;
   }
 
+  .container{
+    margin:20px auto;
+  }
+
+  .card{
+    padding:18px;
+  }
+
 }
+
 </style>
+
 </head>
 
 <body>
+
 
 <header>
 
@@ -229,6 +265,7 @@ h2{
 
   <button
     class="back"
+    type="button"
     onclick="history.back()"
   >
     Back
@@ -253,7 +290,9 @@ h2{
     style="display:none;"
   >
 
-    <!-- SERVICE -->
+    <!-- =========================================
+         SERVICE
+    ========================================== -->
 
     <section class="card">
 
@@ -262,7 +301,8 @@ h2{
       </h1>
 
       <p class="muted">
-        Send your project request to this freelancer.
+        Send your project request and continue
+        securely to payment.
       </p>
 
 
@@ -280,9 +320,10 @@ h2{
 
       <form id="checkoutForm">
 
+
         <div class="field">
 
-          <label>
+          <label for="customerName">
             Your Name
           </label>
 
@@ -291,6 +332,7 @@ h2{
             type="text"
             required
             maxlength="100"
+            autocomplete="name"
             placeholder="Enter your name"
           >
 
@@ -299,7 +341,7 @@ h2{
 
         <div class="field">
 
-          <label>
+          <label for="customerEmail">
             Email
           </label>
 
@@ -308,6 +350,7 @@ h2{
             type="email"
             required
             maxlength="150"
+            autocomplete="email"
             placeholder="you@example.com"
           >
 
@@ -316,7 +359,7 @@ h2{
 
         <div class="field">
 
-          <label>
+          <label for="service">
             Service
           </label>
 
@@ -333,7 +376,7 @@ h2{
 
         <div class="field">
 
-          <label>
+          <label for="details">
             Project Details
           </label>
 
@@ -349,7 +392,7 @@ h2{
 
         <div class="field">
 
-          <label>
+          <label for="paymentMethod">
             Payment Method
           </label>
 
@@ -362,8 +405,8 @@ h2{
               Select payment method
             </option>
 
-            <option value="pending">
-              Pay after request
+            <option value="pesapal">
+              Pay securely with Pesapal
             </option>
 
           </select>
@@ -376,7 +419,7 @@ h2{
           class="submit"
           type="submit"
         >
-          Send Request
+          Continue to Payment
         </button>
 
       </form>
@@ -384,7 +427,9 @@ h2{
     </section>
 
 
-    <!-- SUMMARY -->
+    <!-- =========================================
+         SUMMARY
+    ========================================== -->
 
     <aside class="card">
 
@@ -449,9 +494,9 @@ h2{
         class="muted"
         style="margin-top:18px;font-size:13px;"
       >
-        Your request will be submitted securely.
-        Payment processing can be connected to
-        your preferred payment provider.
+        Payment is processed securely through
+        Pesapal. Your freelance order will be
+        created before payment.
       </p>
 
     </aside>
@@ -463,53 +508,37 @@ h2{
 
 <script>
 
-/*
-==================================================
-FREELANCE-CHECKOUT.HTML
+"use strict";
 
-PUBLIC CHECKOUT
 
-LOAD:
-GET /api/data?collection=freelancers&id=ID
+/* =====================================================
+   CONFIGURATION
+===================================================== */
 
-ORDER:
-POST /api/freelance-orders
+const PAYMENT_API =
+  "https://api.letsstudy.pro";
 
-Expected order payload:
 
-{
-  freelancerId,
-  freelancerName,
-  customerName,
-  customerEmail,
-  service,
-  details,
-  paymentMethod,
-  amount,
-  currency
-}
-
-IMPORTANT:
-The API must validate the amount server-side.
-Never trust the browser price.
-
-ADMIN:
-NOT USED
-==================================================
-*/
-
+/* =====================================================
+   URL PARAMETERS
+===================================================== */
 
 const params =
   new URLSearchParams(
-    location.search
+    window.location.search
   );
 
 
 const freelancerId =
   params.get("id") ||
   params.get("freelancerId") ||
-  params.get("documentId");
+  params.get("documentId") ||
+  "";
 
+
+/* =====================================================
+   ELEMENTS
+===================================================== */
 
 const loading =
   document.getElementById(
@@ -545,9 +574,9 @@ const submitButton =
 let freelancerData = null;
 
 
-/* =========================
+/* =====================================================
    VALIDATE
-========================= */
+===================================================== */
 
 if(!freelancerId){
 
@@ -562,9 +591,9 @@ if(!freelancerId){
 }
 
 
-/* =========================
+/* =====================================================
    LOAD FREELANCER
-========================= */
+===================================================== */
 
 async function loadFreelancer(){
 
@@ -620,8 +649,14 @@ async function loadFreelancer(){
 
   }catch(error){
 
+    console.error(
+      "LOAD FREELANCER:",
+      error
+    );
+
     showError(
-      error.message
+      error.message ||
+      "Unable to load freelancer."
     );
 
   }
@@ -629,40 +664,188 @@ async function loadFreelancer(){
 }
 
 
-/* =========================
-   RENDER
-========================= */
+/* =====================================================
+   GET FREELANCER NAME
+===================================================== */
+
+function getFreelancerName(){
+
+  return (
+    freelancerData?.name ||
+    freelancerData?.displayName ||
+    freelancerData?.username ||
+    "Freelancer"
+  );
+
+}
+
+
+/* =====================================================
+   GET SERVICE NAME
+===================================================== */
+
+function getServiceName(){
+
+  return (
+    freelancerData?.service ||
+    freelancerData?.title ||
+    freelancerData?.serviceName ||
+    freelancerData?.category ||
+    "Freelance Service"
+  );
+
+}
+
+
+/* =====================================================
+   GET PRICE
+===================================================== */
+
+function getPrice(){
+
+  const possiblePrices = [
+
+    freelancerData?.price,
+
+    freelancerData?.amount,
+
+    freelancerData?.rate,
+
+    freelancerData?.hourlyRate,
+
+    freelancerData?.startingPrice,
+
+    freelancerData?.startingRate,
+
+    freelancerData?.packagePrice
+
+  ];
+
+
+  for(
+    const value of possiblePrices
+  ){
+
+    if(
+      value !== null &&
+      value !== undefined &&
+      value !== "" &&
+      !Number.isNaN(
+        Number(value)
+      )
+    ){
+
+      const number =
+        Number(value);
+
+
+      if(number >= 0){
+
+        return number;
+
+      }
+
+    }
+
+  }
+
+
+  return null;
+
+}
+
+
+/* =====================================================
+   GET CURRENCY
+===================================================== */
+
+function getCurrency(){
+
+  return (
+    freelancerData?.currency ||
+    "TZS"
+  );
+
+}
+
+
+/* =====================================================
+   FORMAT MONEY
+===================================================== */
+
+function formatMoney(
+  amount,
+  currency
+){
+
+  if(
+    amount === null ||
+    amount === undefined ||
+    amount === ""
+  ){
+
+    return "Quote";
+
+  }
+
+
+  try{
+
+    return new Intl.NumberFormat(
+      "en-TZ",
+      {
+        style:"currency",
+        currency:currency || "TZS",
+        maximumFractionDigits:2
+      }
+    ).format(
+      Number(amount)
+    );
+
+  }catch(error){
+
+    return (
+      Number(amount).toLocaleString() +
+      " " +
+      (currency || "TZS")
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   RENDER FREELANCER
+===================================================== */
 
 function renderFreelancer(
   data
 ){
 
   const name =
-    data.name ||
-    data.displayName ||
-    data.username ||
-    "Freelancer";
+    getFreelancerName();
 
 
   const title =
-    data.title ||
-    data.service ||
-    data.category ||
-    "Freelance Service";
+    getServiceName();
 
 
   const rate =
-    data.price ||
-    data.rate ||
-    data.hourlyRate ||
-    "";
+    getPrice();
+
+
+  const currency =
+    getCurrency();
 
 
   const photo =
     safeImage(
       data.photoURL ||
       data.photo ||
-      data.avatar
+      data.avatar ||
+      data.profileImage ||
+      data.image
     );
 
 
@@ -680,15 +863,16 @@ function renderFreelancer(
 
       ${
         photo
-        ? `
+        ?
 
-          <img
-            src="${photo}"
-            alt="${escapeAttr(name)}"
-          >
+        `<img
+          src="${photo}"
+          alt="${escapeAttr(name)}"
+        >`
 
-        `
-        : escapeHTML(initial)
+        :
+
+        escapeHTML(initial)
       }
 
     </div>
@@ -734,7 +918,10 @@ function renderFreelancer(
       "summaryRate"
     )
     .textContent =
-      rate || "Quote";
+      formatMoney(
+        rate,
+        currency
+      );
 
 
   document
@@ -742,7 +929,10 @@ function renderFreelancer(
       "total"
     )
     .textContent =
-      rate || "Quote";
+      formatMoney(
+        rate,
+        currency
+      );
 
 
   document
@@ -755,9 +945,9 @@ function renderFreelancer(
 }
 
 
-/* =========================
-   SUBMIT
-========================= */
+/* =====================================================
+   SUBMIT CHECKOUT
+===================================================== */
 
 form.addEventListener(
   "submit",
@@ -773,17 +963,30 @@ form.addEventListener(
     }
 
 
-    submitButton.disabled =
-      true;
-
-    submitButton.textContent =
-      "Sending...";
-
-
-    hideMessage();
+    const paymentMethod =
+      document
+        .getElementById(
+          "paymentMethod"
+        )
+        .value;
 
 
-    const name =
+    if(
+      paymentMethod !==
+      "pesapal"
+    ){
+
+      showMessage(
+        "Please select Pesapal as the payment method.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    const customerName =
       document
         .getElementById(
           "customerName"
@@ -792,7 +995,7 @@ form.addEventListener(
         .trim();
 
 
-    const email =
+    const customerEmail =
       document
         .getElementById(
           "customerEmail"
@@ -819,32 +1022,81 @@ form.addEventListener(
         .trim();
 
 
-    const paymentMethod =
-      document
-        .getElementById(
-          "paymentMethod"
-        )
-        .value;
+    if(
+      !customerName ||
+      !customerEmail ||
+      !service ||
+      !details
+    ){
+
+      showMessage(
+        "Please complete all required fields.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    submitButton.disabled =
+      true;
+
+    submitButton.textContent =
+      "Creating Order...";
+
+
+    hideMessage();
 
 
     const freelancerName =
-      freelancerData.name ||
-      freelancerData.displayName ||
-      freelancerData.username ||
-      "Freelancer";
+      getFreelancerName();
 
 
     const amount =
-      freelancerData.price ||
-      freelancerData.rate ||
-      freelancerData.hourlyRate ||
-      null;
+      getPrice();
+
+
+    const currency =
+      getCurrency();
+
+
+    /*
+     * If this freelancer has no fixed price,
+     * the backend can reject it or handle
+     * quote-based orders separately.
+     */
+
+    if(
+      amount === null ||
+      amount <= 0
+    ){
+
+      showMessage(
+        "This service does not have a payable price yet. Please contact the freelancer for a quote.",
+        "error"
+      );
+
+      submitButton.disabled =
+        false;
+
+      submitButton.textContent =
+        "Continue to Payment";
+
+      return;
+
+    }
 
 
     try{
 
-      const response =
+      /* =========================================
+         CREATE FREELANCE ORDER
+      ========================================== */
+
+      const orderResponse =
         await fetch(
+          PAYMENT_API +
           "/api/freelance-orders",
           {
             method:"POST",
@@ -860,9 +1112,9 @@ form.addEventListener(
 
               freelancerName,
 
-              customerName:name,
+              customerName,
 
-              customerEmail:email,
+              customerEmail,
 
               service,
 
@@ -872,9 +1124,7 @@ form.addEventListener(
 
               amount,
 
-              currency:
-                freelancerData.currency ||
-                "TZS"
+              currency
 
             })
 
@@ -882,39 +1132,195 @@ form.addEventListener(
         );
 
 
-      const result =
-        await response.json();
+      const orderResult =
+        await orderResponse.json();
 
 
-      if(!response.ok){
+      if(!orderResponse.ok){
 
         throw new Error(
-          result.error ||
-          "Unable to submit request."
+          orderResult.error ||
+          "Unable to create freelance order."
         );
 
       }
 
 
-      showMessage(
-        "Your freelance request was submitted successfully.",
-        "success"
-      );
+      /*
+       * Backend may return:
+       *
+       * orderId
+       * merchantReference
+       * redirectUrl
+       * paymentUrl
+       * orderTrackingId
+       */
+
+      const orderId =
+        orderResult.orderId ||
+        orderResult.orderID ||
+        orderResult.id ||
+        orderResult.order?.orderId ||
+        "";
 
 
-      form.reset();
+      const merchantReference =
+        orderResult.merchantReference ||
+        orderResult.merchant_reference ||
+        orderResult.order?.merchantReference ||
+        "";
 
 
-      document
-        .getElementById(
-          "service"
-        )
-        .value =
-          service;
+      const orderTrackingId =
+        orderResult.orderTrackingId ||
+        orderResult.OrderTrackingId ||
+        orderResult.order?.orderTrackingId ||
+        "";
 
 
-      submitButton.textContent =
-        "Request Sent";
+      const redirectUrl =
+        orderResult.redirectUrl ||
+        orderResult.redirect_url ||
+        orderResult.paymentUrl ||
+        orderResult.payment_url ||
+        orderResult.order?.redirectUrl ||
+        "";
+
+
+      /*
+       * We need either a Pesapal URL
+       * or a tracking ID that the payment
+       * page can resolve.
+       */
+
+      if(
+        !redirectUrl &&
+        !orderTrackingId
+      ){
+
+        throw new Error(
+          "Payment URL was not returned by the payment server."
+        );
+
+      }
+
+
+      /* =========================================
+         SAVE PENDING ORDER
+      ========================================== */
+
+      const pendingOrder = {
+
+        orderId,
+
+        freelancerId,
+
+        freelancerName,
+
+        customerName,
+
+        customerEmail,
+
+        service,
+
+        details,
+
+        amount,
+
+        currency,
+
+        paymentMethod,
+
+        merchantReference,
+
+        orderTrackingId,
+
+        redirectUrl,
+
+        createdAt:
+          new Date().toISOString()
+
+      };
+
+
+      try{
+
+        localStorage.setItem(
+          "pendingFreelanceOrder",
+          JSON.stringify(
+            pendingOrder
+          )
+        );
+
+      }catch(error){
+
+        console.warn(
+          "Unable to save pending order:",
+          error
+        );
+
+      }
+
+
+      /* =========================================
+         GO TO PAYMENT
+      ========================================== */
+
+      const paymentParams =
+        new URLSearchParams();
+
+
+      if(orderId){
+
+        paymentParams.set(
+          "orderId",
+          orderId
+        );
+
+      }
+
+
+      if(orderTrackingId){
+
+        paymentParams.set(
+          "orderTrackingId",
+          orderTrackingId
+        );
+
+      }
+
+
+      if(merchantReference){
+
+        paymentParams.set(
+          "merchantReference",
+          merchantReference
+        );
+
+      }
+
+
+      if(redirectUrl){
+
+        paymentParams.set(
+          "redirectUrl",
+          redirectUrl
+        );
+
+      }
+
+
+      /*
+       * Use the universal payment page.
+       *
+       * If your actual file is:
+       * payment.html
+       *
+       * keep this exactly.
+       */
+
+      window.location.href =
+        `payment.html?${paymentParams.toString()}`;
 
 
     }catch(error){
@@ -927,7 +1333,7 @@ form.addEventListener(
 
       showMessage(
         error.message ||
-        "Unable to submit request.",
+        "Unable to create your payment.",
         "error"
       );
 
@@ -936,7 +1342,7 @@ form.addEventListener(
         false;
 
       submitButton.textContent =
-        "Send Request";
+        "Continue to Payment";
 
     }
 
@@ -944,9 +1350,9 @@ form.addEventListener(
 );
 
 
-/* =========================
+/* =====================================================
    MESSAGE
-========================= */
+===================================================== */
 
 function showMessage(
   text,
@@ -974,9 +1380,9 @@ function hideMessage(){
 }
 
 
-/* =========================
+/* =====================================================
    ERROR
-========================= */
+===================================================== */
 
 function showError(
   text
@@ -991,7 +1397,7 @@ function showError(
       Checkout unavailable
     </h2>
 
-    <p style="margin-top:8px;">
+    <p       style="margin-top:8px;">
       ${escapeHTML(text)}
     </p>
 
@@ -1000,14 +1406,13 @@ function showError(
 }
 
 
-/* =========================
-   SECURITY
-========================= */
+/* ===============================
+   SAFE IMAGE
+=============================== */
 
 function safeImage(url){
 
   if(!url) return "";
-
 
   try{
 
@@ -1016,7 +1421,6 @@ function safeImage(url){
         String(url),
         location.origin
       );
-
 
     if(
       parsed.protocol === "https:" ||
@@ -1029,32 +1433,72 @@ function safeImage(url){
 
     }
 
-  }catch(error){}
+  }catch(error){
 
+    console.warn(
+      "Invalid image URL:",
+      error
+    );
+
+  }
 
   return "";
 
 }
 
 
+/* ===============================
+   ESCAPE HTML
+=============================== */
+
 function escapeHTML(value){
 
-  return String(value ?? "")
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#039;");
+  return String(
+    value ?? ""
+  )
+  .replace(
+    /&/g,
+    "&amp;"
+  )
+  .replace(
+    /</g,
+    "&lt;"
+  )
+  .replace(
+    />/g,
+    "&gt;"
+  )
+  .replace(
+    /"/g,
+    "&quot;"
+  )
+  .replace(
+    /'/g,
+    "&#039;"
+  );
 
 }
 
+
+/* ===============================
+   ESCAPE ATTRIBUTE
+=============================== */
 
 function escapeAttr(value){
 
-  return escapeHTML(value)
-    .replace(/`/g,"&#096;");
+  return escapeHTML(
+    value
+  ).replace(
+    /`/g,
+    "&#096;"
+  );
 
 }
+
+
+/* ===============================
+   END
+=============================== */
 
 </script>
 
