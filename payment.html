@@ -6,7 +6,15 @@
 
 <title>Payment | LetsStudy Pro</title>
 
-<meta name="description" content="Secure payment for your LetsStudy Pro order.">
+<meta
+  name="description"
+  content="Secure payment for your LetsStudy Pro order."
+>
+
+<meta
+  name="robots"
+  content="noindex,nofollow"
+>
 
 <style>
 *{
@@ -21,7 +29,8 @@ body{
   color:#111827;
 }
 
-button,input{
+button,
+input{
   font:inherit;
 }
 
@@ -162,14 +171,6 @@ iframe{
   font-weight:800;
 }
 
-.footer-note{
-  padding:18px 28px 25px;
-  text-align:center;
-  color:#6b7280;
-  font-size:12px;
-  line-height:1.6;
-}
-
 .error{
   display:none;
   padding:30px;
@@ -197,6 +198,14 @@ iframe{
   border-radius:10px;
   font-size:13px;
   font-weight:800;
+}
+
+.footer-note{
+  padding:18px 28px 25px;
+  text-align:center;
+  color:#6b7280;
+  font-size:12px;
+  line-height:1.6;
 }
 
 footer{
@@ -246,9 +255,13 @@ footer{
 <body>
 
 <header class="header">
+
   <nav class="nav">
 
-    <a class="logo" href="index.html">
+    <a
+      class="logo"
+      href="index-auth.html"
+    >
       LetsStudy <span>Pro</span>
     </a>
 
@@ -257,6 +270,7 @@ footer{
     </div>
 
   </nav>
+
 </header>
 
 
@@ -359,8 +373,8 @@ footer{
           Please try again.
         </p>
 
-        <a href="checkout.html">
-          Back to Checkout
+        <a href="index-auth.html">
+          Back to LetsStudy Pro
         </a>
 
       </div>
@@ -372,7 +386,7 @@ footer{
 
       Payments are processed securely by Pesapal.
       Do not refresh or close this page while completing
-      your payment unless you have finished the transaction.
+      your payment.
 
     </div>
 
@@ -392,15 +406,12 @@ footer{
    CONFIG
 ========================================= */
 
-/*
-  Node.js API.
-
-  Change this URL if your Node server uses
-  another public domain.
-*/
-
 const PAYMENT_API =
   "https://api.letsstudy.pro";
+
+
+const SUCCESS_PAGE =
+  "success.html";
 
 
 /* =========================================
@@ -408,28 +419,44 @@ const PAYMENT_API =
 ========================================= */
 
 const orderIdElement =
-  document.getElementById("orderId");
+  document.getElementById(
+    "orderId"
+  );
 
 const amountElement =
-  document.getElementById("amount");
+  document.getElementById(
+    "amount"
+  );
 
 const statusElement =
-  document.getElementById("status");
+  document.getElementById(
+    "status"
+  );
 
 const frame =
-  document.getElementById("paymentFrame");
+  document.getElementById(
+    "paymentFrame"
+  );
 
 const loading =
-  document.getElementById("loading");
+  document.getElementById(
+    "loading"
+  );
 
 const frameWrap =
-  document.getElementById("frameWrap");
+  document.getElementById(
+    "frameWrap"
+  );
 
 const errorBox =
-  document.getElementById("error");
+  document.getElementById(
+    "error"
+  );
 
 const errorMessage =
-  document.getElementById("errorMessage");
+  document.getElementById(
+    "errorMessage"
+  );
 
 
 /* =========================================
@@ -441,42 +468,112 @@ const params =
     window.location.search
   );
 
+
 const trackingId =
-  params.get("orderTrackingId") ||
-  params.get("OrderTrackingId") ||
+  params.get(
+    "orderTrackingId"
+  ) ||
+  params.get(
+    "OrderTrackingId"
+  ) ||
   "";
+
 
 const redirectUrl =
-  params.get("redirectUrl") ||
+  params.get(
+    "redirectUrl"
+  ) ||
   "";
 
+
 const orderId =
-  params.get("orderId") ||
-  params.get("merchantReference") ||
+  params.get(
+    "orderId"
+  ) ||
+  params.get(
+    "merchantReference"
+  ) ||
   "";
+
+
+const merchantReference =
+  params.get(
+    "merchantReference"
+  ) ||
+  "";
+
+
+const productType =
+  params.get(
+    "productType"
+  ) ||
+  params.get(
+    "type"
+  ) ||
+  params.get(
+    "product"
+  ) ||
+  "";
+
+
+const amount =
+  params.get(
+    "amount"
+  ) ||
+  "";
+
+
+const currency =
+  params.get(
+    "currency"
+  ) ||
+  "TZS";
 
 
 /* =========================================
-   MONEY
+   MONEY FORMAT
 ========================================= */
 
-function formatMoney(value){
+function formatMoney(
+  value,
+  currencyCode = "TZS"
+){
 
   const number =
     Number(
-      String(value ?? "")
-        .replace(/,/g,"")
-        .replace(/[^\d.-]/g,"")
+      String(
+        value ?? ""
+      )
+      .replace(
+        /,/g,
+        ""
+      )
+      .replace(
+        /[^\d.-]/g,
+        ""
+      )
     );
 
-  if(!Number.isFinite(number)){
+
+  if(
+    !Number.isFinite(
+      number
+    )
+  ){
+
     return "—";
+
   }
 
+
   return (
-    number.toLocaleString("en-TZ") +
-    " TZS"
+    number.toLocaleString(
+      "en-TZ"
+    ) +
+    " " +
+    currencyCode
   );
+
 }
 
 
@@ -484,29 +581,335 @@ function formatMoney(value){
    ERROR
 ========================================= */
 
-function showError(message){
+function showError(
+  message
+){
 
   frameWrap.style.display =
     "none";
 
+
   loading.style.display =
     "none";
 
+
   errorBox.style.display =
     "block";
+
 
   errorMessage.textContent =
     message ||
     "Unable to load the payment.";
 
+
   statusElement.textContent =
     "Payment unavailable";
+
 
   statusElement.style.background =
     "#fef2f2";
 
+
   statusElement.style.color =
     "#991b1b";
+
+}
+
+
+/* =========================================
+   DISPLAY ORDER
+========================================= */
+
+if(orderId){
+
+  orderIdElement.textContent =
+    orderId;
+
+}else if(trackingId){
+
+  orderIdElement.textContent =
+    trackingId;
+
+}
+
+
+/* =========================================
+   DISPLAY AMOUNT
+========================================= */
+
+if(amount){
+
+  amountElement.textContent =
+    formatMoney(
+      amount,
+      currency
+    );
+
+}
+
+
+/* =========================================
+   RESTORE SAVED ORDER
+========================================= */
+
+function getSavedOrder(){
+
+  const keys = [
+
+    "pendingMarketplaceOrder",
+    "pendingCourseOrder",
+    "pendingCommunityOrder",
+    "pendingFreelanceOrder",
+    "pendingMarketingOrder",
+    "pendingPayment",
+    "marketplacePayment",
+    "coursePayment",
+    "communityPayment",
+    "freelancePayment",
+    "marketingPayment"
+
+  ];
+
+
+  for(
+    const key of keys
+  ){
+
+    try{
+
+      const raw =
+        localStorage.getItem(
+          key
+        );
+
+
+      if(!raw){
+        continue;
+      }
+
+
+      const data =
+        JSON.parse(
+          raw
+        );
+
+
+      if(
+        data &&
+        typeof data ===
+        "object"
+      ){
+
+        if(
+          !orderId ||
+          data.orderId ===
+          orderId
+        ){
+
+          return data;
+
+        }
+
+      }
+
+    }catch(error){
+
+      console.warn(
+        "Saved order error:",
+        error
+      );
+
+    }
+
+  }
+
+
+  return null;
+
+}
+
+
+const savedOrder =
+  getSavedOrder();
+
+
+/* =========================================
+   RESTORE AMOUNT FROM SAVED ORDER
+========================================= */
+
+if(
+  !amount &&
+  savedOrder
+){
+
+  const savedAmount =
+    savedOrder.amount ||
+    savedOrder.total ||
+    savedOrder.totalAmount;
+
+
+  if(savedAmount){
+
+    amountElement.textContent =
+      formatMoney(
+        savedAmount,
+        savedOrder.currency ||
+        currency
+      );
+
+  }
+
+}
+
+
+/* =========================================
+   OPEN SUCCESS PAGE
+========================================= */
+
+function openSuccessPage(
+  status = "COMPLETED"
+){
+
+  const successParams =
+    new URLSearchParams();
+
+
+  if(orderId){
+
+    successParams.set(
+      "orderId",
+      orderId
+    );
+
+  }
+
+
+  if(trackingId){
+
+    successParams.set(
+      "orderTrackingId",
+      trackingId
+    );
+
+  }
+
+
+  if(merchantReference){
+
+    successParams.set(
+      "merchantReference",
+      merchantReference
+    );
+
+  }
+
+
+  if(productType){
+
+    successParams.set(
+      "productType",
+      productType
+    );
+
+  }
+
+
+  if(amount){
+
+    successParams.set(
+      "amount",
+      amount
+    );
+
+  }else if(
+    savedOrder &&
+    savedOrder.amount
+  ){
+
+    successParams.set(
+      "amount",
+      savedOrder.amount
+    );
+
+  }
+
+
+  successParams.set(
+    "currency",
+    currency
+  );
+
+
+  successParams.set(
+    "status",
+    status
+  );
+
+
+  window.location.href =
+    SUCCESS_PAGE +
+    "?" +
+    successParams.toString();
+
+}
+
+
+/* =========================================
+   CHECK PAYMENT STATUS
+========================================= */
+
+async function checkPaymentStatus(){
+
+  if(!trackingId){
+
+    return null;
+
+  }
+
+
+  try{
+
+    const response =
+      await fetch(
+        PAYMENT_API +
+        "/api/pesapal/payment-status?orderTrackingId=" +
+        encodeURIComponent(
+          trackingId
+        ),
+        {
+          method:
+            "GET",
+          headers:{
+            "Accept":
+              "application/json"
+          },
+          cache:
+            "no-store"
+        }
+      );
+
+
+    const result =
+      await response
+        .json()
+        .catch(
+          () => ({})
+        );
+
+
+    return result;
+
+  }catch(error){
+
+    console.warn(
+      "STATUS CHECK:",
+      error
+    );
+
+    return null;
+
+  }
+
 }
 
 
@@ -517,99 +920,191 @@ function showError(message){
 async function loadPayment(){
 
   /*
-    If Pesapal URL was passed directly,
-    use it.
+    Normal universal flow:
+    
+    checkout
+       ↓
+    Node API
+       ↓
+    Pesapal
+       ↓
+    redirectUrl
+       ↓
+    this page
   */
 
   if(redirectUrl){
 
-    frame.src =
-      redirectUrl;
-
-    statusElement.textContent =
-      "Complete your payment below.";
-
-    return;
-  }
-
-
-  /*
-    If an existing tracking ID exists,
-    try to obtain/verify its payment URL
-    through Node.
-  */
-
-  if(trackingId){
-
     try{
 
-      const response =
-        await fetch(
-          PAYMENT_API +
-          "/api/pesapal/payment-status?orderTrackingId=" +
-          encodeURIComponent(
-            trackingId
-          )
-        );
+      frame.src =
+        redirectUrl;
 
-      const result =
-        await response.json()
-          .catch(
-            ()=>({})
-          );
+      statusElement.textContent =
+        "Complete your payment below.";
 
+      loading.style.display =
+        "flex";
 
-      /*
-        If backend returns redirectUrl,
-        load it.
-      */
-
-      if(
-        result.redirectUrl ||
-        result.redirect_url
-      ){
-
-        frame.src =
-          result.redirectUrl ||
-          result.redirect_url;
-
-        statusElement.textContent =
-          "Complete your payment below.";
-
-        return;
-      }
-
-
-      /*
-        Tracking ID exists but URL is not
-        returned. The normal flow should
-        open payment.html with redirectUrl.
-      */
-
-      showError(
-        "The Pesapal payment session could not be loaded."
-      );
+      return;
 
     }catch(error){
 
       console.error(
-        "Payment loading error:",
+        "IFRAME URL ERROR:",
         error
       );
+
+      showError(
+        "The payment session could not be opened."
+      );
+
+      return;
+
+    }
+
+  }
+
+
+  /*
+    Fallback:
+    tracking ID exists but redirectUrl
+    was not included in the URL.
+  */
+
+  if(trackingId){
+
+    statusElement.textContent =
+      "Checking your payment session...";
+
+
+    const result =
+      await checkPaymentStatus();
+
+
+    if(!result){
 
       showError(
         "Unable to connect to the payment server."
       );
 
+      return;
+
     }
 
+
+    const returnedStatus =
+      String(
+        result.status ||
+        result.paymentStatus ||
+        result.data?.status ||
+        ""
+      )
+      .toUpperCase();
+
+
+    /*
+      If already completed,
+      go directly to success.
+    */
+
+    if(
+      returnedStatus ===
+        "COMPLETED" ||
+      returnedStatus ===
+        "1" ||
+      result.success ===
+        true &&
+      (
+        result.completed ===
+          true ||
+        result.paid ===
+          true
+      )
+    ){
+
+      openSuccessPage(
+        "COMPLETED"
+      );
+
+      return;
+
+    }
+
+
+    const returnedRedirectUrl =
+      result.redirectUrl ||
+      result.redirect_url ||
+      result.paymentUrl ||
+      result.payment_url ||
+      result.iframeUrl ||
+      result.iframeURL ||
+      result.order?.redirectUrl ||
+      "";
+
+
+    if(returnedRedirectUrl){
+
+      frame.src =
+        returnedRedirectUrl;
+
+      statusElement.textContent =
+        "Complete your payment below.";
+
+      return;
+
+    }
+
+
+    /*
+      If status says failed/reversed.
+    */
+
+    if(
+      returnedStatus ===
+        "FAILED" ||
+      returnedStatus ===
+        "2"
+    ){
+
+      showError(
+        "The payment transaction failed. Please start a new payment."
+      );
+
+      return;
+
+    }
+
+
+    if(
+      returnedStatus ===
+        "REVERSED" ||
+      returnedStatus ===
+        "3"
+    ){
+
+      showError(
+        "The payment transaction was reversed."
+      );
+
+      return;
+
+    }
+
+
+    showError(
+      "The Pesapal payment session could not be loaded."
+    );
+
     return;
+
   }
 
 
   showError(
     "No payment session was provided."
   );
+
 }
 
 
@@ -623,6 +1118,7 @@ frame.addEventListener(
 
     loading.style.display =
       "none";
+
 
     statusElement.textContent =
       "Complete your payment below.";
@@ -648,35 +1144,141 @@ frame.addEventListener(
 
 
 /* =========================================
-   DISPLAY ORDER
+   PAYMENT MONITOR
 ========================================= */
 
-if(orderId){
-
-  orderIdElement.textContent =
-    orderId;
-
-}else if(trackingId){
-
-  orderIdElement.textContent =
-    trackingId;
-
-}
+let paymentCheckTimer =
+  null;
 
 
-/* =========================================
-   OPTIONAL AMOUNT
-========================================= */
+function startPaymentMonitor(){
 
-const savedAmount =
-  localStorage.getItem(
-    "letsStudyPaymentAmount"
-  );
+  if(!trackingId){
 
-if(savedAmount){
+    return;
 
-  amountElement.textContent =
-    formatMoney(savedAmount);
+  }
+
+
+  let attempts =
+    0;
+
+
+  const maxAttempts =
+    120;
+
+
+  paymentCheckTimer =
+    setInterval(
+      async ()=>{
+
+        attempts++;
+
+
+        if(
+          attempts >
+          maxAttempts
+        ){
+
+          clearInterval(
+            paymentCheckTimer
+          );
+
+          return;
+
+        }
+
+
+        const result =
+          await checkPaymentStatus();
+
+
+        if(!result){
+
+          return;
+
+        }
+
+
+        const status =
+          String(
+            result.status ||
+            result.paymentStatus ||
+            result.data?.status ||
+            ""
+          )
+          .toUpperCase();
+
+
+        if(
+          status ===
+            "COMPLETED" ||
+          status ===
+            "1" ||
+          result.completed ===
+            true ||
+          result.paid ===
+            true
+        ){
+
+          clearInterval(
+            paymentCheckTimer
+          );
+
+
+          statusElement.textContent =
+            "Payment successful. Redirecting...";
+
+
+          openSuccessPage(
+            "COMPLETED"
+          );
+
+          return;
+
+        }
+
+
+        if(
+          status ===
+            "FAILED" ||
+          status ===
+            "2"
+        ){
+
+          clearInterval(
+            paymentCheckTimer
+          );
+
+
+          statusElement.textContent =
+            "Payment failed.";
+
+          return;
+
+        }
+
+
+        if(
+          status ===
+            "REVERSED" ||
+          status ===
+            "3"
+        ){
+
+          clearInterval(
+            paymentCheckTimer
+          );
+
+
+          statusElement.textContent =
+            "Payment reversed.";
+
+        }
+
+      },
+      5000
+    );
 
 }
 
@@ -685,10 +1287,15 @@ if(savedAmount){
    INIT
 ========================================= */
 
-loadPayment();
+(async function(){
+
+  await loadPayment();
+
+  startPaymentMonitor();
+
+})();
 
 </script>
 
 </body>
 </html>
-
