@@ -1,7 +1,7 @@
 /* =========================================================
    LETSSTUDY PRO
    PAYMENT.JS
-   Checkout → Payment → Pesapal
+   Checkout → Node Payment API → Pesapal
    ========================================================= */
 
 import {
@@ -30,8 +30,17 @@ const PAYMENT_CONFIG = {
   ordersCollection:
     "orders",
 
+  /*
+   IMPORTANT:
+   Replace this with the public URL of
+   ~/letsstudy-payment-api after deployment.
+
+   Example:
+   https://payments.letsstudy.pro
+   */
+
   paymentApi:
-    "/api/create-payment",
+    "https://YOUR-NODE-PAYMENT-API-DOMAIN",
 
   verifyPage:
     "verify.html",
@@ -55,23 +64,17 @@ const PAYMENT_CONFIG = {
    STATE
    ========================================================= */
 
-let currentUser =
-  null;
-
-let currentOrder =
-  null;
-
-let orderId =
-  null;
+let currentUser = null;
+let currentOrder = null;
+let orderId = null;
 
 
 /* =========================================================
    HELPERS
    ========================================================= */
 
-const $ =
-  id =>
-    document.getElementById(id);
+const $ = id =>
+  document.getElementById(id);
 
 
 function getOrderId(){
@@ -81,7 +84,6 @@ function getOrderId(){
       window.location.search
     );
 
-
   return (
     params.get("orderId") ||
     params.get("id")
@@ -90,34 +92,23 @@ function getOrderId(){
 }
 
 
-function formatMoney(
-  amount
-){
+function formatMoney(amount){
 
   return new Intl.NumberFormat(
     "en-TZ",
     {
-      style:
-        "currency",
-
-      currency:
-        "TZS",
-
-      maximumFractionDigits:
-        0
+      style: "currency",
+      currency: "TZS",
+      maximumFractionDigits: 0
     }
   ).format(
-    Number(
-      amount || 0
-    )
+    Number(amount || 0)
   );
 
 }
 
 
-function escapeHTML(
-  value
-){
+function escapeHTML(value){
 
   return String(
     value ?? ""
@@ -131,27 +122,20 @@ function escapeHTML(
 }
 
 
-function showMessage(
-  message
-){
+function showMessage(message){
 
   if(
     typeof window.showToast ===
     "function"
   ){
 
-    window.showToast(
-      message
-    );
-
+    window.showToast(message);
     return;
 
   }
 
-
   const box =
     $("paymentMessage");
-
 
   if(box){
 
@@ -163,9 +147,7 @@ function showMessage(
 
   }else{
 
-    alert(
-      message
-    );
+    alert(message);
 
   }
 
@@ -181,7 +163,6 @@ async function loadOrder(){
   orderId =
     getOrderId();
 
-
   if(!orderId){
 
     showError(
@@ -192,11 +173,9 @@ async function loadOrder(){
 
   }
 
-
   try{
 
     showLoading();
-
 
     const orderRef =
       doc(
@@ -205,12 +184,8 @@ async function loadOrder(){
         orderId
       );
 
-
     const snapshot =
-      await getDoc(
-        orderRef
-      );
-
+      await getDoc(orderRef);
 
     if(
       !snapshot.exists()
@@ -223,7 +198,6 @@ async function loadOrder(){
       return;
 
     }
-
 
     currentOrder = {
 
@@ -241,10 +215,9 @@ async function loadOrder(){
     */
 
     if(
-      currentUser &&
       currentOrder.userId &&
       currentOrder.userId !==
-        currentUser.uid
+        currentUser?.uid
     ){
 
       showError(
@@ -268,7 +241,6 @@ async function loadOrder(){
       error
     );
 
-
     showError(
       "Unable to load payment information."
     );
@@ -287,7 +259,6 @@ function showLoading(){
   const title =
     $("paymentTitle");
 
-
   if(title){
 
     title.textContent =
@@ -302,29 +273,24 @@ function showLoading(){
    ERROR
    ========================================================= */
 
-function showError(
-  message
-){
+function showError(message){
 
   const container =
     $("paymentContainer");
-
 
   if(container){
 
     container.innerHTML = `
       <div class="payment-error">
 
-        <div>
-          ⚠️
-        </div>
+        <div>⚠️</div>
 
         <h2>
           ${escapeHTML(message)}
         </h2>
 
         <a
-          href="checkout.html"
+          href="${PAYMENT_CONFIG.checkoutPage}"
           class="btn btn-primary"
         >
           Back to Checkout
@@ -332,6 +298,10 @@ function showError(
 
       </div>
     `;
+
+  }else{
+
+    showMessage(message);
 
   }
 
@@ -342,13 +312,10 @@ function showError(
    RENDER ORDER
    ========================================================= */
 
-function renderOrder(
-  order
-){
+function renderOrder(order){
 
   const title =
     $("paymentTitle");
-
 
   if(title){
 
@@ -361,7 +328,6 @@ function renderOrder(
   const orderNumber =
     $("paymentOrderId");
 
-
   if(orderNumber){
 
     orderNumber.textContent =
@@ -372,7 +338,6 @@ function renderOrder(
 
   const email =
     $("paymentEmail");
-
 
   if(email){
 
@@ -387,7 +352,6 @@ function renderOrder(
   const total =
     $("paymentTotal");
 
-
   if(total){
 
     total.textContent =
@@ -401,13 +365,23 @@ function renderOrder(
   const items =
     $("paymentItems");
 
-
   if(items){
 
     items.innerHTML =
       (order.items || [])
-        .map(
-          item => `
+        .map(item => {
+
+          const quantity =
+            Number(
+              item.quantity || 1
+            );
+
+          const price =
+            Number(
+              item.price || 0
+            );
+
+          return `
 
             <div class="payment-item">
 
@@ -416,34 +390,28 @@ function renderOrder(
                 <strong>
                   ${escapeHTML(
                     item.title ||
-                    "Course"
+                    item.name ||
+                    "Product"
                   )}
                 </strong>
 
                 <small>
-                  ×
-                  ${Number(
-                    item.quantity || 1
-                  )}
+                  × ${quantity}
                 </small>
 
               </div>
 
               <strong>
                 ${formatMoney(
-                  Number(
-                    item.price || 0
-                  ) *
-                  Number(
-                    item.quantity || 1
-                  )
+                  price * quantity
                 )}
               </strong>
 
             </div>
 
-          `
-        )
+          `;
+
+        })
         .join("");
 
   }
@@ -451,7 +419,6 @@ function renderOrder(
 
   const status =
     $("paymentStatus");
-
 
   if(status){
 
@@ -473,26 +440,20 @@ function renderOrder(
    PAYMENT BUTTON
    ========================================================= */
 
-function updatePaymentButton(
-  order
-){
+function updatePaymentButton(order){
 
   const button =
     $("payNowBtn");
 
-
   if(!button){
-
     return;
-
   }
 
 
   if(
-    order.status ===
-      "completed" ||
-    order.paymentStatus ===
-      "paid"
+    order.status === "completed" ||
+    order.paymentStatus === "paid" ||
+    order.paymentStatus === "completed"
   ){
 
     button.textContent =
@@ -506,11 +467,23 @@ function updatePaymentButton(
   }
 
 
+  if(
+    order.paymentStatus ===
+      "processing"
+  ){
+
+    button.textContent =
+      "Payment Processing...";
+
+  }else{
+
+    button.textContent =
+      "Pay Now";
+
+  }
+
   button.disabled =
     false;
-
-  button.textContent =
-    "Pay Now";
 
 }
 
@@ -544,19 +517,27 @@ async function startPayment(){
 
 
   if(
-    !currentOrder.total ||
-    Number(
-      currentOrder.total
-    ) <= 0
+    !currentOrder.id
   ){
 
     showMessage(
-      "This order does not require payment."
+      "Invalid order."
     );
 
     return;
 
   }
+
+
+  /*
+   IMPORTANT:
+   The frontend does NOT decide
+   the final payment amount.
+
+   The Node backend receives only
+   the orderId and loads the order
+   securely from Firestore.
+  */
 
 
   const button =
@@ -576,21 +557,10 @@ async function startPayment(){
     }
 
 
-    /*
-     IMPORTANT:
-     This endpoint must exist on your
-     secure backend.
-
-     Do NOT put:
-     PESAPAL_CONSUMER_KEY
-     PESAPAL_CONSUMER_SECRET
-
-     inside frontend JavaScript.
-    */
-
     const response =
       await fetch(
-        PAYMENT_CONFIG.paymentApi,
+        PAYMENT_CONFIG.paymentApi +
+        "/api/pesapal/create-order",
         {
 
           method:
@@ -609,25 +579,11 @@ async function startPayment(){
               orderId:
                 currentOrder.id,
 
-              amount:
-                Number(
-                  currentOrder.total
-                ),
-
-              currency:
-                "TZS",
-
-              description:
-                `LetsStudy Pro Order ${currentOrder.id}`,
-
-              email:
-                currentOrder.customerEmail ||
-                currentUser.email ||
-                "",
-
               callbackUrl:
                 window.location.origin +
-                "/verify.html?orderId=" +
+                "/" +
+                PAYMENT_CONFIG.verifyPage +
+                "?orderId=" +
                 encodeURIComponent(
                   currentOrder.id
                 )
@@ -639,7 +595,8 @@ async function startPayment(){
 
 
     const data =
-      await response.json()
+      await response
+        .json()
         .catch(
           () => ({})
         );
@@ -657,11 +614,6 @@ async function startPayment(){
 
     }
 
-
-    /*
-     Accept common response names
-     from your backend.
-    */
 
     const redirectUrl =
       data.redirectUrl ||
@@ -687,12 +639,12 @@ async function startPayment(){
 
 
     /*
-     Save payment information
-     locally for verification page.
+     Save pending payment locally.
     */
 
     localStorage.setItem(
       PAYMENT_CONFIG.pendingOrderKey,
+
       JSON.stringify({
 
         orderId:
@@ -702,18 +654,16 @@ async function startPayment(){
 
         redirectUrl,
 
-        amount:
-          currentOrder.total,
-
         createdAt:
           Date.now()
 
       })
+
     );
 
 
     /*
-     Update order status.
+     Update frontend order state.
     */
 
     const orderRef =
@@ -723,6 +673,12 @@ async function startPayment(){
         currentOrder.id
       );
 
+
+    /*
+     This update is only UI/payment state.
+     Final payment confirmation MUST
+     come from the Node backend/IPN.
+    */
 
     await updateDoc(
       orderRef,
@@ -748,8 +704,9 @@ async function startPayment(){
      Redirect to Pesapal.
     */
 
-    window.location.href =
-      redirectUrl;
+    window.location.assign(
+      redirectUrl
+    );
 
 
   }catch(error){
@@ -788,8 +745,7 @@ async function startPayment(){
 function cancelPayment(){
 
   if(
-    currentOrder &&
-    currentOrder.id
+    currentOrder?.id
   ){
 
     window.location.href =
