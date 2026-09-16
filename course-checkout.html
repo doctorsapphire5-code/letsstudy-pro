@@ -249,10 +249,6 @@ select:focus{
     font-size:28px;
   }
 
-  .header-inner{
-    padding:0;
-  }
-
   .course{
     flex-wrap:wrap;
   }
@@ -351,6 +347,69 @@ select:focus{
 
       </div>
 
+      <div class="field">
+
+        <label for="phone">
+          Phone Number
+        </label>
+
+        <input
+          id="phone"
+          type="tel"
+          placeholder="+255700000000"
+          autocomplete="tel"
+          required>
+
+      </div>
+
+      <div class="field">
+
+        <label for="country">
+          Country
+        </label>
+
+        <select id="country" required>
+
+          <option value="">
+            Select country
+          </option>
+
+          <option value="TZ">
+            Tanzania
+          </option>
+
+          <option value="KE">
+            Kenya
+          </option>
+
+          <option value="UG">
+            Uganda
+          </option>
+
+          <option value="RW">
+            Rwanda
+          </option>
+
+          <option value="NG">
+            Nigeria
+          </option>
+
+          <option value="GH">
+            Ghana
+          </option>
+
+          <option value="ZA">
+            South Africa
+          </option>
+
+          <option value="OTHER">
+            Other
+          </option>
+
+        </select>
+
+      </div>
+
       <h2>
         Payment Method
       </h2>
@@ -369,7 +428,7 @@ select:focus{
             Choose payment method
           </option>
 
-          <option value="mobile">
+          <option value="mobile_money">
             Mobile Money
           </option>
 
@@ -377,8 +436,8 @@ select:focus{
             Credit / Debit Card
           </option>
 
-          <option value="other">
-            Other
+          <option value="bank">
+            Bank Payment
           </option>
 
         </select>
@@ -396,9 +455,9 @@ select:focus{
 
       <div class="note">
 
-        Your payment is not considered successful until it is
-        verified by the payment system. Do not close the page
-        while the payment process is starting.
+        Your payment is processed securely through Pesapal.
+        Your order becomes successful only after payment
+        confirmation.
 
       </div>
 
@@ -431,7 +490,7 @@ select:focus{
         </span>
 
         <strong id="subtotal">
-          0
+          0 TZS
         </strong>
 
       </div>
@@ -443,7 +502,7 @@ select:focus{
         </span>
 
         <strong>
-          0
+          0 TZS
         </strong>
 
       </div>
@@ -455,7 +514,7 @@ select:focus{
         </span>
 
         <span id="total">
-          0
+          0 TZS
         </span>
 
       </div>
@@ -510,6 +569,7 @@ const firebaseConfig = {
 
   measurementId:
     "G-85B7V5H5J0"
+
 };
 
 const app =
@@ -754,13 +814,8 @@ function isPaidCourse(course){
 
 function formatPrice(amount){
 
-  return new Intl.NumberFormat(
-    undefined,
-    {
-      minimumFractionDigits:0,
-      maximumFractionDigits:2
-    }
-  ).format(amount);
+  return Number(amount || 0)
+    .toLocaleString("en-TZ");
 
 }
 
@@ -967,7 +1022,7 @@ async function loadCheckout(){
 
 
 /* =====================================================
-   RENDER
+   RENDER COURSES
 ===================================================== */
 
 function renderCourses(){
@@ -1030,7 +1085,7 @@ function renderCourses(){
         </div>
 
         <div class="price">
-          ${formatPrice(price)}
+          ${formatPrice(price)} TZS
         </div>
 
       `;
@@ -1046,21 +1101,19 @@ function renderCourses(){
     cartCourses.length;
 
   subtotalEl.textContent =
-    formatPrice(subtotal);
+    formatPrice(subtotal) + " TZS";
 
   totalEl.textContent =
-    formatPrice(subtotal);
+    formatPrice(subtotal) + " TZS";
 
 }
 
 
 /* =====================================================
-   CREATE PAYMENT
+   CREATE PESAPAL PAYMENT
 ===================================================== */
 
-async function createPaymentOrder(
-  order
-){
+async function createPaymentOrder(order){
 
   const PAYMENT_API =
     "https://api.letsstudy.pro";
@@ -1093,17 +1146,48 @@ async function createPaymentOrder(
             description:
               `LetsStudy Pro Course Order ${order.orderId}`,
 
-            customerName:
-              order.customer.name,
-
-            customerEmail:
+            email:
               order.customer.email,
+
+            firstName:
+              order.customer.firstName,
+
+            lastName:
+              order.customer.lastName,
+
+            phoneNumber:
+              order.customer.phone,
+
+            country:
+              order.customer.country,
 
             paymentMethod:
               order.paymentMethod,
 
+            productType:
+              "course",
+
             items:
-              order.courses
+              order.courses.map(
+                course => ({
+
+                  productId:
+                    course.courseId,
+
+                  productType:
+                    "course",
+
+                  title:
+                    course.title,
+
+                  quantity:
+                    1,
+
+                  price:
+                    course.price
+
+                })
+              )
 
           })
 
@@ -1133,11 +1217,22 @@ async function createPaymentOrder(
 
   }
 
+  if(data?.success === false){
+
+    throw new Error(
+      data?.message ||
+      "Unable to create payment."
+    );
+
+  }
+
   const redirectUrl =
     data?.redirectUrl ||
     data?.redirect_url ||
     data?.paymentUrl ||
-    data?.payment_url;
+    data?.payment_url ||
+    data?.iframeUrl ||
+    data?.iframe_url;
 
   if(!redirectUrl){
 
@@ -1181,10 +1276,24 @@ checkoutBtn.addEventListener(
         .trim()
         .toLowerCase();
 
+    const phone =
+      document
+        .getElementById("phone")
+        .value
+        .trim();
+
+    const country =
+      document
+        .getElementById("country")
+        .value;
+
     const paymentMethod =
       document
         .getElementById("paymentMethod")
         .value;
+
+
+    /* VALIDATION */
 
     if(!fullName){
 
@@ -1196,6 +1305,7 @@ checkoutBtn.addEventListener(
 
     }
 
+
     if(!email){
 
       showError(
@@ -1205,6 +1315,29 @@ checkoutBtn.addEventListener(
       return;
 
     }
+
+
+    if(!phone){
+
+      showError(
+        "Please enter your phone number."
+      );
+
+      return;
+
+    }
+
+
+    if(!country){
+
+      showError(
+        "Please select your country."
+      );
+
+      return;
+
+    }
+
 
     if(!paymentMethod){
 
@@ -1216,6 +1349,7 @@ checkoutBtn.addEventListener(
 
     }
 
+
     if(!cartCourses.length){
 
       showError(
@@ -1225,6 +1359,7 @@ checkoutBtn.addEventListener(
       return;
 
     }
+
 
     if(
       !Number.isFinite(subtotal) ||
@@ -1239,194 +1374,268 @@ checkoutBtn.addEventListener(
 
     }
 
+
     checkoutBtn.disabled =
       true;
 
     checkoutBtn.textContent =
       "Creating Payment...";
 
+
     try{
 
-      const orderId =
-        "ORD-" +
-        Date.now() +
-        "-" +
-        Math.random()
-          .toString(36)
-          .slice(2,8)
-          .toUpperCase();
+      /* ================================================
+         NAME
+      ================================================ */
 
-      const orderCourses =
-        cartCourses.map(
-          course => ({
+      const parts =
+  fullName
+    .split(/\s+/)
+    .filter(Boolean);
 
-            courseId:
-              course.id,
+const firstName =
+  parts.shift() ||
+  "Customer";
 
-            title:
-              getTitle(course),
+const lastName =
+  parts.join(" ") ||
+  "Customer";
 
-            price:
-              getPrice(course)
 
-          })
-        );
+/* ================================================
+   INTERNAL ORDER ID
+================================================ */
 
-      const pendingOrder = {
+const orderId =
+  "COURSE-" +
+  Date.now() +
+  "-" +
+  Math.random()
+    .toString(36)
+    .slice(2,8)
+    .toUpperCase();
 
-        orderId,
 
-        productType:
-          "course",
+/* ================================================
+   UNIVERSAL COURSE ITEMS
+================================================ */
 
-        customer:{
+const orderCourses =
+  cartCourses.map(
+    course => ({
 
-          name:
-            fullName,
+      courseId:
+        course.id,
 
-          email:
-            email
+      productId:
+        course.id,
 
-        },
+      productType:
+        "course",
 
-        courses:
-          orderCourses,
+      title:
+        getTitle(course),
 
-        total:
-          subtotal,
+      price:
+        getPrice(course),
 
-        currency:
-          "TZS",
+      quantity:
+        1
 
-        paymentMethod,
+    })
+  );
 
-        status:
-          "pending",
 
-        createdAt:
-          new Date()
-            .toISOString()
+/* ================================================
+   PENDING ORDER
+================================================ */
 
-      };
+const pendingOrder = {
 
-      /*
-        Create Pesapal order
-        through Node.js backend.
-      */
+  orderId,
 
-      const payment =
-        await createPaymentOrder(
-          pendingOrder
-        );
+  productType:
+    "course",
 
-      const redirectUrl =
-        payment.redirectUrl;
+  customer:{
 
-      const trackingId =
-        payment.orderTrackingId ||
-        payment.OrderTrackingId ||
-        payment.trackingId ||
-        "";
+    name:
+      fullName,
 
-      const merchantReference =
-        payment.merchantReference ||
-        payment.merchant_reference ||
-        orderId;
+    firstName:
+      firstName,
 
-      /*
-        Save complete pending
-        payment information.
-      */
+    lastName:
+      lastName,
 
-      localStorage.setItem(
-        "pendingCourseOrder",
-        JSON.stringify({
+    email:
+      email,
 
-          ...pendingOrder,
+    phone:
+      phone,
 
-          orderTrackingId:
-            trackingId,
+    country:
+      country
 
-          merchantReference,
+  },
 
-          redirectUrl
+  courses:
+    orderCourses,
 
-        })
-      );
+  total:
+    subtotal,
 
-      /*
-        Send order information
-        to course-payment.html.
-      */
+  currency:
+    "TZS",
 
-      const params =
-        new URLSearchParams();
+  paymentMethod,
 
-      params.set(
-        "orderId",
-        orderId
-      );
+  status:
+    "PENDING",
 
-      params.set(
-        "redirectUrl",
-        redirectUrl
-      );
+  createdAt:
+    new Date()
+      .toISOString()
 
-      if(trackingId){
+};
 
-        params.set(
-          "orderTrackingId",
-          trackingId
-        );
 
-      }
+/* ================================================
+   CREATE PESAPAL ORDER
+================================================ */
 
-      if(merchantReference){
+const payment =
+  await createPaymentOrder(
+    pendingOrder
+  );
 
-        params.set(
-          "merchantReference",
-          merchantReference
-        );
 
-      }
+const redirectUrl =
+  payment.redirectUrl;
 
-      showSuccess(
-        "Payment created. Opening secure payment..."
-      );
 
-      setTimeout(
-        () => {
+const trackingId =
+  payment.orderTrackingId ||
+  payment.OrderTrackingId ||
+  payment.trackingId ||
+  "";
 
-          window.location.href =
-            `course-payment.html?${params.toString()}`;
 
-                },
+const merchantReference =
+  payment.merchantReference ||
+  payment.merchant_reference ||
+  orderId;
 
-        500
-      );
 
-    }catch(error){
+if(!trackingId){
 
-      console.error(
-        "Payment creation error:",
-        error
-      );
+  console.warn(
+    "Pesapal tracking ID missing:",
+    payment
+  );
 
-      checkoutBtn.disabled =
-        false;
+}
 
-      checkoutBtn.textContent =
-        "Continue to Payment";
 
-      showError(
-        error?.message ||
-        "Unable to create payment. Please try again."
-      );
+/* ================================================
+   SAVE PENDING PAYMENT
+================================================ */
 
-    }
+localStorage.setItem(
+  "pendingCourseOrder",
+  JSON.stringify({
 
-  }
+    ...pendingOrder,
+
+    orderTrackingId:
+      trackingId,
+
+    merchantReference:
+      merchantReference,
+
+    redirectUrl:
+      redirectUrl
+
+  })
 );
+
+
+/* ================================================
+   EXISTING UNIVERSAL PAYMENT.HTML
+================================================ */
+
+const paymentUrl =
+  new URL(
+    "payment.html",
+    window.location.href
+  );
+
+
+paymentUrl.searchParams.set(
+  "orderId",
+  orderId
+);
+
+
+if(trackingId){
+
+  paymentUrl.searchParams.set(
+    "orderTrackingId",
+    trackingId
+  );
+
+}
+
+
+paymentUrl.searchParams.set(
+  "merchantReference",
+  merchantReference
+);
+
+
+paymentUrl.searchParams.set(
+  "redirectUrl",
+  redirectUrl
+);
+
+
+showSuccess(
+  "Payment created. Opening secure payment..."
+);
+
+
+setTimeout(
+  () => {
+
+    window.location.href =
+      paymentUrl.href;
+
+  },
+  500
+);
+
+
+}catch(error){
+
+  console.error(
+    "Payment creation error:",
+    error
+  );
+
+  checkoutBtn.disabled =
+    false;
+
+  checkoutBtn.textContent =
+    "Continue to Payment";
+
+  showError(
+    error?.message ||
+    "Unable to create payment. Please try again."
+  );
+
+}
+
+});
 
 
 /* =====================================================
@@ -1456,4 +1665,3 @@ loadCheckout().catch(
 
 </body>
 </html>
-    
