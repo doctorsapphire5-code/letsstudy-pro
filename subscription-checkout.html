@@ -286,7 +286,6 @@ Back
 
 </header>
 
-
 <main class="container">
 
 <div
@@ -294,7 +293,6 @@ id="loading"
 class="card loading">
 Loading subscription...
 </div>
-
 
 <div
 id="checkout"
@@ -312,12 +310,9 @@ Review your subscription and complete your payment.
 
 </div>
 
-
 <div class="layout">
 
-
 <section>
-
 
 <div class="card">
 
@@ -349,7 +344,6 @@ class="price">
 
 </div>
 
-
 <div class="card">
 
 <h2>
@@ -368,7 +362,6 @@ placeholder="Enter your full name"
 required
 >
 
-
 <label for="email">
 Email Address
 </label>
@@ -381,7 +374,6 @@ placeholder="Enter your email"
 required
 >
 
-
 <label for="phone">
 Phone Number
 </label>
@@ -392,7 +384,6 @@ type="tel"
 autocomplete="tel"
 placeholder="Enter phone number"
 >
-
 
 <label for="billing">
 Billing Cycle
@@ -411,7 +402,6 @@ Yearly
 </select>
 
 </div>
-
 
 <div class="card">
 
@@ -444,7 +434,6 @@ Secure online payment
 
 </label>
 
-
 <label class="method">
 
 <input
@@ -466,7 +455,6 @@ Visa / Mastercard
 </div>
 
 </label>
-
 
 <label class="method">
 
@@ -492,19 +480,16 @@ Available payment options
 
 </div>
 
-
 <div
 id="message"
 class="message">
 </div>
-
 
 <button
 id="payButton"
 class="btn">
 Continue to Payment
 </button>
-
 
 <p class="security">
 Your payment is processed securely through Pesapal.
@@ -514,7 +499,6 @@ Do not share your password or payment credentials.
 </div>
 
 </section>
-
 
 <aside>
 
@@ -536,7 +520,6 @@ Plan
 
 </div>
 
-
 <div class="summary-row">
 
 <span>
@@ -548,7 +531,6 @@ Monthly
 </strong>
 
 </div>
-
 
 <div class="summary-row">
 
@@ -562,7 +544,6 @@ Subtotal
 
 </div>
 
-
 <div class="summary-row">
 
 <span>
@@ -574,7 +555,6 @@ Discount
 </strong>
 
 </div>
-
 
 <div class="summary-row total">
 
@@ -589,7 +569,6 @@ Total
 </div>
 
 </div>
-
 
 <div class="card">
 
@@ -611,14 +590,7 @@ Your subscription becomes active after successful payment confirmation.
 
 </main>
 
-
 <script>
-
-/*
-==================================================
-LETSSTUDY PRO — UNIVERSAL SUBSCRIPTION CHECKOUT
-==================================================
-*/
 
 const API_BASE =
 "https://api.letsstudy.pro";
@@ -627,27 +599,22 @@ const CREATE_ORDER_ENDPOINT =
 API_BASE +
 "/api/pesapal/create-order";
 
-
 const params =
 new URLSearchParams(
 location.search
 );
-
 
 const planId =
 params.get("planId") ||
 params.get("plan") ||
 "premium";
 
-
 let plan = null;
 
 
-/*
-==================================================
-DEFAULT PLANS
-==================================================
-*/
+/* =========================================
+   DEFAULT PLANS
+   ========================================= */
 
 const defaultPlans = {
 
@@ -655,7 +622,7 @@ premium:{
   id:"premium",
   name:"Premium",
   description:
-  "Premium access to LetsStudy Pro learning features.",
+    "Premium access to LetsStudy Pro learning features.",
   monthlyPrice:30000,
   yearlyPrice:300000,
   currency:"TZS"
@@ -665,7 +632,7 @@ pro:{
   id:"pro",
   name:"Pro",
   description:
-  "Advanced learning and professional features.",
+    "Advanced learning and professional features.",
   monthlyPrice:50000,
   yearlyPrice:500000,
   currency:"TZS"
@@ -674,914 +641,1003 @@ pro:{
 };
 
 
-/*
-==================================================
-LOAD PLAN
-==================================================
-*/
+/* =========================================
+   LOAD PLAN
+   ========================================= */
 
 loadPlan();
 
-
 async function loadPlan(){
 
-try{
+  try{
 
-const response =
-await fetch(
-"/api/subscriptions/plans/" +
-encodeURIComponent(planId),
-{
-method:"GET",
-headers:{
-"Accept":"application/json"
-}
-}
-);
+    const response =
+      await fetch(
+        "/api/subscriptions/plans/" +
+        encodeURIComponent(planId),
+        {
+          method:"GET",
+          headers:{
+            "Accept":"application/json"
+          }
+        }
+      );
 
+    if(!response.ok){
+      throw new Error("Plan unavailable");
+    }
 
-if(!response.ok){
+    const result =
+      await response.json();
 
-throw new Error(
-"Plan unavailable"
-);
+    plan =
+      result.plan ||
+      result;
 
-}
+    if(!plan || !plan.id){
+      throw new Error("Invalid plan");
+    }
 
+  }catch(error){
 
-const result =
-await response.json();
+    console.warn(
+      "PLAN LOAD WARNING:",
+      error
+    );
 
+    plan =
+      defaultPlans[planId] ||
+      defaultPlans.premium;
 
-plan =
-result.plan ||
-result;
+  }
 
+  renderPlan();
 
-if(
-!plan ||
-!plan.id
-){
+  document.getElementById(
+    "loading"
+  ).classList.add("hidden");
 
-throw new Error(
-"Invalid plan"
-);
-
-}
-
-
-}catch(error){
-
-plan =
-defaultPlans[planId] ||
-defaultPlans.premium;
-
-}
-
-
-renderPlan();
-
-
-document.getElementById(
-"loading"
-).classList.add(
-"hidden"
-);
-
-
-document.getElementById(
-"checkout"
-).classList.remove(
-"hidden"
-);
+  document.getElementById(
+    "checkout"
+  ).classList.remove("hidden");
 
 }
 
 
-/*
-==================================================
-RENDER PLAN
-==================================================
-*/
+/* =========================================
+   RENDER PLAN
+   ========================================= */
 
 function renderPlan(){
 
-document.getElementById(
-"planName"
-).textContent =
-plan.name ||
-"Premium Plan";
+  document.getElementById(
+    "planName"
+  ).textContent =
+    plan.name ||
+    "Premium Plan";
 
+  document.getElementById(
+    "planDescription"
+  ).textContent =
+    plan.description ||
+    "Premium subscription.";
 
-document.getElementById(
-"planDescription"
-).textContent =
-plan.description ||
-"Premium subscription.";
-
-
-updatePrice();
+  updatePrice();
 
 }
 
 
-/*
-==================================================
-BILLING
-==================================================
-*/
+/* =========================================
+   BILLING
+   ========================================= */
 
 document.getElementById(
-"billing"
+  "billing"
 ).addEventListener(
-"change",
-updatePrice
+  "change",
+  updatePrice
 );
 
 
 function updatePrice(){
 
-if(!plan){
-return;
-}
+  if(!plan){
+    return;
+  }
 
+  const billing =
+    document.getElementById(
+      "billing"
+    ).value;
 
-const billing =
-document.getElementById(
-"billing"
-).value;
+  const amount =
+    getPlanPrice(
+      billing
+    );
 
+  const currency =
+    plan.currency ||
+    "TZS";
 
-const amount =
-getPlanPrice(
-billing
-);
+  const formatted =
+    formatMoney(
+      amount,
+      currency
+    );
 
+  document.getElementById(
+    "planPrice"
+  ).innerHTML =
+    escapeHTML(formatted) +
+    ' <small>' +
+    escapeHTML(
+      billing === "yearly"
+        ? "/ year"
+        : "/ month"
+    ) +
+    "</small>";
 
-const currency =
-plan.currency ||
-"TZS";
+  document.getElementById(
+    "summaryPlan"
+  ).textContent =
+    plan.name ||
+    "Premium";
 
+  document.getElementById(
+    "summaryBilling"
+  ).textContent =
+    billing === "yearly"
+      ? "Yearly"
+      : "Monthly";
 
-const formatted =
-formatMoney(
-amount,
-currency
-);
+  document.getElementById(
+    "subtotal"
+  ).textContent =
+    formatted;
 
-
-document.getElementById(
-"planPrice"
-).innerHTML =
-escapeHTML(
-formatted
-) +
-' <small>' +
-escapeHTML(
-billing === "yearly"
-? "/ year"
-: "/ month"
-) +
-"</small>";
-
-
-document.getElementById(
-"summaryPlan"
-).textContent =
-plan.name ||
-"Premium";
-
-
-document.getElementById(
-"summaryBilling"
-).textContent =
-billing === "yearly"
-? "Yearly"
-: "Monthly";
-
-
-document.getElementById(
-"subtotal"
-).textContent =
-formatted;
-
-
-document.getElementById(
-"total"
-).textContent =
-formatted;
+  document.getElementById(
+    "total"
+  ).textContent =
+    formatted;
 
 }
 
 
-/*
-==================================================
-GET PLAN PRICE
-==================================================
-*/
+/* =========================================
+   GET PLAN PRICE
+   ========================================= */
 
 function getPlanPrice(
-billing
+  billing
 ){
 
-if(!plan){
-return 0;
-}
+  if(!plan){
+    return 0;
+  }
 
+  if(billing === "yearly"){
 
-if(
-billing === "yearly"
-){
+    return Number(
+      plan.yearlyPrice ??
+      plan.yearly ??
+      plan.priceYearly ??
+      0
+    );
 
-return Number(
-plan.yearlyPrice ??
-plan.yearly ??
-plan.priceYearly ??
-0
-);
+  }
 
-}
-
-
-return Number(
-plan.monthlyPrice ??
-plan.monthly ??
-plan.priceMonthly ??
-plan.price ??
-0
-);
+  return Number(
+    plan.monthlyPrice ??
+    plan.monthly ??
+    plan.priceMonthly ??
+    plan.price ??
+    0
+  );
 
 }
 
 
-/*
-==================================================
-PAYMENT METHOD
-==================================================
-*/
+/* =========================================
+   PAYMENT METHOD
+   ========================================= */
 
 document
 .querySelectorAll(
-'input[name="payment"]'
+  'input[name="payment"]'
 )
 .forEach(
-function(input){
+  function(input){
 
-input.addEventListener(
-"change",
-function(){
+    input.addEventListener(
+      "change",
+      function(){
 
-if(
-input.value === "mobile"
-){
+        if(
+          input.value === "mobile"
+        ){
 
-showMessage(
-"Mobile Money is processed through Pesapal. Continue to payment to select the available option.",
-"success"
+          showMessage(
+            "Mobile Money is processed through Pesapal. Continue to payment to select the available option.",
+            "success"
+          );
+
+        }else{
+
+          hideMessage();
+
+        }
+
+      }
+    );
+
+  }
 );
 
-}
 
-}
-);
-
-}
-);
-
-
-/*
-==================================================
-START CHECKOUT
-==================================================
-*/
+/* =========================================
+   START CHECKOUT
+   ========================================= */
 
 document.getElementById(
-"payButton"
+  "payButton"
 ).addEventListener(
-"click",
-startCheckout
+  "click",
+  startCheckout
 );
 
 
 async function startCheckout(){
 
-if(!plan){
+  if(!plan){
 
-showMessage(
-"Subscription plan is not available.",
-"error"
-);
+    showMessage(
+      "Subscription plan is not available.",
+      "error"
+    );
 
-return;
+    return;
+
+  }
+
+  const name =
+    document.getElementById(
+      "name"
+    ).value.trim();
+
+  const email =
+    document.getElementById(
+      "email"
+    ).value
+    .trim()
+    .toLowerCase();
+
+  const phone =
+    document.getElementById(
+      "phone"
+    ).value.trim();
+
+  const billing =
+    document.getElementById(
+      "billing"
+    ).value;
+
+  const paymentMethod =
+    document.querySelector(
+      'input[name="payment"]:checked'
+    )?.value ||
+    "pesapal";
+
+  const amount =
+    getPlanPrice(
+      billing
+    );
+
+  const currency =
+    plan.currency ||
+    "TZS";
+
+
+  /* =========================================
+     VALIDATION
+     ========================================= */
+
+  if(!name){
+
+    showMessage(
+      "Please enter your full name.",
+      "error"
+    );
+
+    return;
+
+  }
+
+  if(
+    !email ||
+    !isValidEmail(email)
+  ){
+
+    showMessage(
+      "Please enter a valid email address.",
+      "error"
+    );
+
+    return;
+
+  }
+
+  if(
+    !amount ||
+    amount <= 0
+  ){
+
+    showMessage(
+      "This subscription plan does not have a valid price.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  /* =========================================
+     NAME
+     ========================================= */
+
+  const parts =
+    name
+      .split(/\s+/)
+      .filter(Boolean);
+
+  const firstName =
+    parts.shift() ||
+    "Customer";
+
+  const lastName =
+    parts.join(" ") ||
+    firstName;
+
+
+  /* =========================================
+     ORDER ID
+     ========================================= */
+
+  const orderId =
+    "SUB-" +
+    Date.now() +
+    "-" +
+    Math.random()
+      .toString(36)
+      .slice(2,8)
+      .toUpperCase();
+
+
+  /* =========================================
+     UNIVERSAL ITEM
+     ========================================= */
+
+  const item = {
+
+    productId:
+      plan.id ||
+      planId,
+
+    productType:
+      "subscription",
+
+    title:
+      (
+        plan.name ||
+        "Subscription"
+      ) +
+      " - " +
+      (
+        billing === "yearly"
+          ? "Yearly"
+          : "Monthly"
+      ),
+
+    quantity:
+      1,
+
+    price:
+      Number(amount)
+
+  };
+
+
+  const payload = {
+
+    orderId:
+
+      orderId,
+
+    amount:
+
+      Number(amount),
+
+    currency:
+
+      currency,
+
+    description:
+
+      "LetsStudy Pro Subscription Order " +
+      orderId,
+
+    email:
+
+      email,
+
+    firstName:
+
+      firstName,
+
+    lastName:
+
+      lastName,
+
+    phoneNumber:
+
+      phone,
+
+    country:
+
+      "TZ",
+
+    paymentMethod:
+
+      paymentMethod,
+
+    productType:
+
+      "subscription",
+
+    type:
+
+      "subscription",
+
+    planId:
+
+      plan.id ||
+      planId,
+
+    planName:
+
+      plan.name ||
+      "Premium",
+
+    billing:
+
+      billing,
+
+    items:
+
+      [item]
+
+  };
+
+
+  const button =
+    document.getElementById(
+      "payButton"
+    );
+
+  button.disabled = true;
+
+  button.textContent =
+    "Creating order...";
+
+
+  try{
+
+    /* =========================================
+       CREATE UNIVERSAL PESAPAL ORDER
+       ========================================= */
+
+    const response =
+      await fetch(
+        CREATE_ORDER_ENDPOINT,
+        {
+
+          method:
+            "POST",
+
+          headers:{
+            "Content-Type":
+              "application/json",
+
+            "Accept":
+              "application/json"
+          },
+
+          body:
+            JSON.stringify(
+              payload
+            )
+
+        }
+      );
+
+
+    const result =
+      await response
+        .json()
+        .catch(
+          function(){
+            return {};
+          }
+        );
+
+
+    if(
+      !response.ok ||
+      result.success === false
+    ){
+
+      throw new Error(
+        result.error ||
+        result.message ||
+        "Unable to create subscription order."
+      );
+
+    }
+
+
+    /* =========================================
+       PAYMENT RESPONSE
+       ========================================= */
+
+    const returnedOrderId =
+      result.orderId ||
+      result.orderID ||
+      result.id ||
+      result.order?.orderId ||
+      result.data?.orderId ||
+      orderId;
+
+
+    const orderTrackingId =
+      result.orderTrackingId ||
+      result.OrderTrackingId ||
+      result.order?.orderTrackingId ||
+      result.data?.orderTrackingId ||
+      "";
+
+
+    const merchantReference =
+      result.merchantReference ||
+      result.merchant_reference ||
+      result.order?.merchantReference ||
+      result.data?.merchantReference ||
+      returnedOrderId;
+
+
+    const redirectUrl =
+      result.redirectUrl ||
+      result.redirect_url ||
+      result.paymentUrl ||
+      result.payment_url ||
+      result.redirectURL ||
+      result.iframeUrl ||
+      result.order?.redirectUrl ||
+      result.data?.redirectUrl ||
+      "";
+
+
+    if(
+      !redirectUrl &&
+      !orderTrackingId
+    ){
+
+      throw new Error(
+        "Payment URL was not returned by the payment server."
+      );
+
+    }
+
+
+    /* =========================================
+       SAVE PENDING ORDER
+       ========================================= */
+
+    const pendingOrder = {
+
+      orderId:
+        returnedOrderId,
+
+      orderTrackingId:
+        orderTrackingId,
+
+      merchantReference:
+        merchantReference,
+
+      redirectUrl:
+        redirectUrl,
+
+      productType:
+        "subscription",
+
+      planId:
+        plan.id ||
+        planId,
+
+      planName:
+        plan.name ||
+        "Premium",
+
+      billing:
+        billing,
+
+      amount:
+        Number(amount),
+
+      currency:
+        currency,
+
+      name:
+        name,
+
+      firstName:
+        firstName,
+
+      lastName:
+        lastName,
+
+      email:
+        email,
+
+      phone:
+        phone,
+
+      paymentMethod:
+        paymentMethod,
+
+      items:
+        [item],
+
+      status:
+        "PENDING",
+
+      createdAt:
+        new Date().toISOString()
+
+    };
+
+
+    localStorage.setItem(
+      "pendingSubscriptionOrder",
+      JSON.stringify(
+        pendingOrder
+      )
+    );
+
+
+    localStorage.setItem(
+      "subscriptionPayment",
+      JSON.stringify({
+
+        orderId:
+          returnedOrderId,
+
+        orderTrackingId:
+          orderTrackingId,
+
+        merchantReference:
+          merchantReference,
+
+        redirectUrl:
+          redirectUrl,
+
+        productType:
+          "subscription",
+
+        planId:
+          plan.id ||
+          planId,
+
+        billing:
+          billing,
+
+        amount:
+          Number(amount),
+
+        currency:
+          currency
+
+      })
+    );
+
+
+    localStorage.setItem(
+      "letsStudyPaymentAmount",
+      String(amount)
+    );
+
+
+    localStorage.setItem(
+      "paymentPending",
+      "true"
+    );
+
+
+    localStorage.setItem(
+      "checkoutType",
+      "subscription"
+    );
+
+
+    localStorage.setItem(
+      "checkoutId",
+      returnedOrderId
+    );
+
+
+    localStorage.setItem(
+      "checkoutAmount",
+      String(amount)
+    );
+
+
+    localStorage.setItem(
+      "checkoutCurrency",
+      currency
+    );
+
+
+    if(orderTrackingId){
+
+      localStorage.setItem(
+        "pesapalOrderTrackingId",
+        orderTrackingId
+      );
+
+    }
+
+
+    /* =========================================
+       UNIVERSAL PAYMENT PAGE
+       ========================================= */
+
+    const paymentParams =
+      new URLSearchParams();
+
+
+    paymentParams.set(
+      "type",
+      "subscription"
+    );
+
+
+    paymentParams.set(
+      "productType",
+      "subscription"
+    );
+
+
+    paymentParams.set(
+      "orderId",
+      returnedOrderId
+    );
+
+
+    paymentParams.set(
+      "id",
+      returnedOrderId
+    );
+
+
+    paymentParams.set(
+      "merchantReference",
+      merchantReference
+    );
+
+
+    paymentParams.set(
+      "amount",
+      String(amount)
+    );
+
+
+    paymentParams.set(
+      "currency",
+      currency
+    );
+
+
+    paymentParams.set(
+      "planId",
+      plan.id ||
+      planId
+    );
+
+
+    paymentParams.set(
+      "billing",
+      billing
+    );
+
+
+    if(orderTrackingId){
+
+      paymentParams.set(
+        "orderTrackingId",
+        orderTrackingId
+      );
+
+    }
+
+
+    if(redirectUrl){
+
+      paymentParams.set(
+        "redirectUrl",
+        redirectUrl
+      );
+
+    }
+
+
+    showMessage(
+      "Order created. Redirecting to secure payment...",
+      "success"
+    );
+
+
+    setTimeout(
+      function(){
+
+        window.location.href =
+          "payment.html?" +
+          paymentParams.toString();
+
+      },
+      400
+    );
+
+
+  }catch(error){
+
+    console.error(
+      "SUBSCRIPTION CHECKOUT ERROR:",
+      error
+    );
+
+
+    showMessage(
+      error.message ||
+      "Unable to start payment. Please try again.",
+      "error"
+    );
+
+
+    button.disabled =
+      false;
+
+    button.textContent =
+      "Continue to Payment";
+
+  }
 
 }
 
 
-const name =
+/* =========================================
+   SAVE CUSTOMER
+   ========================================= */
+
 document.getElementById(
-"name"
-).value.trim();
-
-
-const email =
-document.getElementById(
-"email"
-).value.trim();
-
-
-const phone =
-document.getElementById(
-"phone"
-).value.trim();
-
-
-const billing =
-document.getElementById(
-"billing"
-).value;
-
-
-const paymentMethod =
-document.querySelector(
-'input[name="payment"]:checked'
-)?.value ||
-"pesapal";
-
-
-const amount =
-getPlanPrice(
-billing
-);
-
-
-const currency =
-plan.currency ||
-"TZS";
-
-
-/*
-==================================================
-VALIDATION
-==================================================
-*/
-
-if(!name){
-
-showMessage(
-"Please enter your full name.",
-"error"
-);
-
-return;
-
-}
-
-
-if(
-!email ||
-!isValidEmail(email)
-){
-
-showMessage(
-"Please enter a valid email address.",
-"error"
-);
-
-return;
-
-}
-
-
-if(
-!amount ||
-amount <= 0
-){
-
-showMessage(
-"This subscription plan does not have a valid price.",
-"error"
-);
-
-return;
-
-}
-
-
-const button =
-document.getElementById(
-"payButton"
-);
-
-
-button.disabled = true;
-
-button.textContent =
-"Creating order...";
-
-
-try{
-
-/*
-==================================================
-CREATE UNIVERSAL PESAPAL ORDER
-==================================================
-*/
-
-const response =
-await fetch(
-CREATE_ORDER_ENDPOINT,
-{
-method:"POST",
-
-headers:{
-"Content-Type":
-"application/json",
-"Accept":
-"application/json"
-},
-
-body:JSON.stringify({
-
-productType:
-"subscription",
-
-type:
-"subscription",
-
-planId:
-plan.id ||
-planId,
-
-billing:
-billing,
-
-name:
-name,
-
-email:
-email,
-
-phone:
-phone,
-
-paymentMethod:
-paymentMethod,
-
-currency:
-currency,
-
-amount:
-Number(
-amount
-),
-
-returnUrl:
-new URL(
-"payment.html",
-window.location.href
-).href
-
-})
-
-}
-);
-
-
-let result = null;
-
-try{
-
-result =
-await response.json();
-
-}catch(jsonError){
-
-result = {};
-
-}
-
-
-if(!response.ok){
-
-throw new Error(
-result.error ||
-result.message ||
-"Unable to create subscription order."
-);
-
-}
-
-
-/*
-==================================================
-READ PAYMENT RESPONSE
-==================================================
-*/
-
-const orderId =
-result.orderId ||
-result.id ||
-result.order?.orderId ||
-result.data?.orderId;
-
-
-const orderTrackingId =
-result.orderTrackingId ||
-result.OrderTrackingId ||
-result.order?.orderTrackingId ||
-result.data?.orderTrackingId;
-
-
-const merchantReference =
-result.merchantReference ||
-result.merchant_reference ||
-result.order?.merchantReference ||
-result.data?.merchantReference;
-
-
-const redirectUrl =
-result.redirectUrl ||
-result.paymentUrl ||
-result.payment_url ||
-result.redirectURL ||
-result.order?.redirectUrl ||
-result.data?.redirectUrl;
-
-
-if(
-!redirectUrl &&
-!orderTrackingId
-){
-
-throw new Error(
-"Payment URL was not returned by the payment server."
-);
-
-}
-
-
-/*
-==================================================
-SAVE PENDING SUBSCRIPTION
-==================================================
-*/
-
-const pendingOrder = {
-
-orderId:
-orderId || "",
-
-orderTrackingId:
-orderTrackingId || "",
-
-merchantReference:
-merchantReference || "",
-
-planId:
-plan.id || planId,
-
-planName:
-plan.name || "Premium",
-
-billing:
-billing,
-
-amount:
-Number(amount),
-
-currency:
-currency,
-
-name:
-name,
-
-email:
-email,
-
-phone:
-phone,
-
-paymentMethod:
-paymentMethod,
-
-createdAt:
-new Date().toISOString()
-
-};
-
-
-localStorage.setItem(
-"pendingSubscriptionOrder",
-JSON.stringify(
-pendingOrder
-)
-);
-
-
-localStorage.setItem(
-"paymentPending",
-"true"
-);
-
-
-localStorage.setItem(
-"checkoutType",
-"subscription"
-);
-
-
-localStorage.setItem(
-"checkoutId",
-orderId || ""
-);
-
-
-localStorage.setItem(
-"checkoutAmount",
-String(amount)
-);
-
-
-localStorage.setItem(
-"checkoutCurrency",
-currency
-);
-
-
-if(orderTrackingId){
-
-localStorage.setItem(
-"pesapalOrderTrackingId",
-orderTrackingId
-);
-
-}
-
-
-/*
-==================================================
-BUILD UNIVERSAL PAYMENT URL
-==================================================
-*/
-
-const paymentParams =
-new URLSearchParams();
-
-
-paymentParams.set(
-"type",
-"subscription"
-);
-
-
-paymentParams.set(
-"productType",
-"subscription"
-);
-
-
-if(orderId){
-
-paymentParams.set(
-"orderId",
-orderId
-);
-
-}
-
-
-paymentParams.set(
-"id",
-orderId || plan.id || planId
-);
-
-
-if(orderTrackingId){
-
-paymentParams.set(
-"orderTrackingId",
-orderTrackingId
-);
-
-}
-
-
-if(merchantReference){
-
-paymentParams.set(
-"merchantReference",
-merchantReference
-);
-
-}
-
-
-paymentParams.set(
-"amount",
-String(amount)
-);
-
-
-paymentParams.set(
-"currency",
-currency
-);
-
-
-paymentParams.set(
-"planId",
-plan.id || planId
-);
-
-
-paymentParams.set(
-"billing",
-billing
-);
-
-
-if(redirectUrl){
-
-paymentParams.set(
-"redirectUrl",
-redirectUrl
-);
-
-}
-
-
-/*
-==================================================
-REDIRECT TO UNIVERSAL PAYMENT PAGE
-==================================================
-*/
-
-showMessage(
-"Order created. Redirecting to secure payment...",
-"success"
-);
-
-
-setTimeout(
-function(){
-
-window.location.href =
-"payment.html?" +
-paymentParams.toString();
-
-},
-400
-);
-
-
-}catch(error){
-
-console.error(
-"Subscription checkout error:",
-error
-);
-
-
-showMessage(
-error.message ||
-"Unable to start payment. Please try again.",
-"error"
-);
-
-
-button.disabled = false;
-
-button.textContent =
-"Continue to Payment";
-
-}
-
-}
-
-
-/*
-==================================================
-SAVE CUSTOMER DATA
-==================================================
-*/
-
-document.getElementById(
-"name"
+  "name"
 ).addEventListener(
-"input",
-saveCustomer
+  "input",
+  saveCustomer
 );
 
-
 document.getElementById(
-"email"
+  "email"
 ).addEventListener(
-"input",
-saveCustomer
+  "input",
+  saveCustomer
 );
 
-
 document.getElementById(
-"phone"
+  "phone"
 ).addEventListener(
-"input",
-saveCustomer
+  "input",
+  saveCustomer
 );
 
 
 function saveCustomer(){
 
-const customer = {
+  const customer = {
 
-name:
-document.getElementById(
-"name"
-).value.trim(),
+    name:
+      document.getElementById(
+        "name"
+      ).value.trim(),
 
-email:
-document.getElementById(
-"email"
-).value.trim(),
+    email:
+      document.getElementById(
+        "email"
+      ).value
+      .trim()
+      .toLowerCase(),
 
-phone:
-document.getElementById(
-"phone"
-).value.trim()
+    phone:
+      document.getElementById(
+        "phone"
+      ).value.trim()
 
-};
+  };
 
 
-localStorage.setItem(
-"subscriptionCustomer",
-JSON.stringify(
-customer
-)
-);
+  localStorage.setItem(
+    "subscriptionCustomer",
+    JSON.stringify(
+      customer
+    )
+  );
 
 }
 
 
-/*
-==================================================
-RESTORE CUSTOMER DATA
-==================================================
-*/
+/* =========================================
+   RESTORE CUSTOMER DATA
+   ========================================= */
 
 function restoreCustomer(){
 
-try{
+  try{
 
-const raw =
-localStorage.getItem(
-"subscriptionCustomer"
-);
+    const raw =
+      localStorage.getItem(
+        "subscriptionCustomer"
+      );
 
+    if(!raw){
+      return;
+    }
 
-if(!raw){
-return;
-}
+    const customer =
+      JSON.parse(raw);
 
+    if(customer.name){
 
-const customer =
-JSON.parse(raw);
+      document.getElementById(
+        "name"
+      ).value =
+        customer.name;
 
+    }
 
-if(customer.name){
+    if(customer.email){
 
-document.getElementById(
-"name"
-).value =
-customer.name;
+      document.getElementById(
+        "email"
+      ).value =
+        customer.email;
 
-}
+    }
 
+    if(customer.phone){
 
-if(customer.email){
+      document.getElementById(
+        "phone"
+      ).value =
+        customer.phone;
 
-document.getElementById(
-"email"
-).value =
-customer.email;
+    }
 
-}
+  }catch(error){
 
+    console.warn(
+      "CUSTOMER RESTORE WARNING:",
+      error
+    );
 
-if(customer.phone){
-
-document.getElementById(
-"phone"
-).value =
-customer.phone;
-
-}
-
-}catch(error){
-
-console.warn(
-"Unable to restore customer data."
-);
-
-}
+  }
 
 }
 
@@ -1589,108 +1645,114 @@ console.warn(
 restoreCustomer();
 
 
-/*
-==================================================
-FORMAT MONEY
-==================================================
-*/
+/* =========================================
+   FORMAT MONEY
+   ========================================= */
 
 function formatMoney(
-amount,
-currency="TZS"
+  amount,
+  currency="TZS"
 ){
 
-return Number(
-amount || 0
-).toLocaleString(
-"en-US"
-) +
-" " +
-(
-currency ||
-"TZS"
-);
+  return Number(
+    amount || 0
+  ).toLocaleString(
+    "en-US"
+  ) +
+  " " +
+  (
+    currency ||
+    "TZS"
+  );
 
 }
 
 
-/*
-==================================================
-EMAIL VALIDATION
-==================================================
-*/
+/* =========================================
+   EMAIL VALIDATION
+   ========================================= */
 
 function isValidEmail(
-email
+  email
 ){
 
-return /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-.test(email);
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    .test(email);
 
 }
 
 
-/*
-==================================================
-MESSAGE
-==================================================
-*/
+/* =========================================
+   MESSAGE
+   ========================================= */
 
 function showMessage(
-text,
-type
+  text,
+  type
 ){
 
-const message =
-document.getElementById(
-"message"
-);
+  const message =
+    document.getElementById(
+      "message"
+    );
 
+  message.textContent =
+    text;
 
-message.textContent =
-text;
-
-
-message.className =
-"message " +
-type;
+  message.className =
+    "message " +
+    type;
 
 }
 
 
-/*
-==================================================
-ESCAPE HTML
-==================================================
-*/
+function hideMessage(){
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+  message.textContent =
+    "";
+
+  message.className =
+    "message";
+
+}
+
+
+/* =========================================
+   ESCAPE HTML
+   ========================================= */
 
 function escapeHTML(
-value
+  value
 ){
 
-return String(
-value ?? ""
-)
-.replace(
-/&/g,
-"&amp;"
-)
-.replace(
-/</g,
-"&lt;"
-)
-.replace(
-/>/g,
-"&gt;"
-)
-.replace(
-/"/g,
-"&quot;"
-)
-.replace(
-/'/g,
-"&#039;"
-);
+  return String(
+    value ?? ""
+  )
+  .replace(
+    /&/g,
+    "&amp;"
+  )
+  .replace(
+    /</g,
+    "&lt;"
+  )
+  .replace(
+    />/g,
+    "&gt;"
+  )
+  .replace(
+    /"/g,
+    "&quot;"
+  )
+  .replace(
+    /'/g,
+    "&#039;"
+  );
 
 }
 
