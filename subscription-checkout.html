@@ -10,7 +10,11 @@
 content="Complete your LetsStudy Pro subscription checkout securely.">
 
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0
+}
 
 body{
   font-family:Arial,sans-serif;
@@ -35,7 +39,9 @@ header{
   font-weight:800
 }
 
-.logo span{color:#2563eb}
+.logo span{
+  color:#2563eb
+}
 
 header a:last-child{
   text-decoration:none;
@@ -492,14 +498,16 @@ id="message"
 class="message">
 </div>
 
+
 <button
 id="payButton"
 class="btn">
 Continue to Payment
 </button>
 
+
 <p class="security">
-Your payment is processed through the selected payment provider.
+Your payment is processed securely through Pesapal.
 Do not share your password or payment credentials.
 </p>
 
@@ -528,6 +536,7 @@ Plan
 
 </div>
 
+
 <div class="summary-row">
 
 <span>
@@ -539,6 +548,7 @@ Monthly
 </strong>
 
 </div>
+
 
 <div class="summary-row">
 
@@ -552,6 +562,7 @@ Subtotal
 
 </div>
 
+
 <div class="summary-row">
 
 <span>
@@ -563,6 +574,7 @@ Discount
 </strong>
 
 </div>
+
 
 <div class="summary-row total">
 
@@ -585,8 +597,7 @@ Total
 Subscription
 </h2>
 
-<p
-class="subtitle">
+<p class="subtitle">
 Your subscription becomes active after successful payment confirmation.
 </p>
 
@@ -605,55 +616,16 @@ Your subscription becomes active after successful payment confirmation.
 
 /*
 ==================================================
-LETSSTUDY PRO SUBSCRIPTIONS CHECKOUT
-
-URL EXAMPLES:
-
-subscriptions-checkout.html?planId=premium
-
-or
-
-subscriptions-checkout.html?plan=premium
-
-API:
-
-GET /api/subscriptions/plans/PLAN_ID
-
-EXPECTED:
-
-{
-  id:"premium",
-  name:"Premium",
-  description:"Premium learning access.",
-  monthlyPrice:30000,
-  yearlyPrice:300000,
-  currency:"TZS"
-}
-
-CREATE ORDER:
-
-POST /api/subscriptions/orders
-
-BODY:
-
-{
-  planId,
-  billing,
-  name,
-  email,
-  phone,
-  paymentMethod
-}
-
-EXPECTED RESPONSE:
-
-{
-  orderId:"SUB-123",
-  paymentUrl:"payment.html?orderId=SUB-123&type=subscription"
-}
-
+LETSSTUDY PRO — UNIVERSAL SUBSCRIPTION CHECKOUT
 ==================================================
 */
+
+const API_BASE =
+"https://api.letsstudy.pro";
+
+const CREATE_ORDER_ENDPOINT =
+API_BASE +
+"/api/pesapal/create-order";
 
 
 const params =
@@ -671,38 +643,42 @@ params.get("plan") ||
 let plan = null;
 
 
-/* =========================
-   DEFAULT PLANS
-========================= */
+/*
+==================================================
+DEFAULT PLANS
+==================================================
+*/
 
 const defaultPlans = {
 
 premium:{
-id:"premium",
-name:"Premium",
-description:
-"Premium access to LetsStudy Pro learning features.",
-monthlyPrice:30000,
-yearlyPrice:300000,
-currency:"TZS"
+  id:"premium",
+  name:"Premium",
+  description:
+  "Premium access to LetsStudy Pro learning features.",
+  monthlyPrice:30000,
+  yearlyPrice:300000,
+  currency:"TZS"
 },
 
 pro:{
-id:"pro",
-name:"Pro",
-description:
-"Advanced learning and professional features.",
-monthlyPrice:50000,
-yearlyPrice:500000,
-currency:"TZS"
+  id:"pro",
+  name:"Pro",
+  description:
+  "Advanced learning and professional features.",
+  monthlyPrice:50000,
+  yearlyPrice:500000,
+  currency:"TZS"
 }
 
 };
 
 
-/* =========================
-   LOAD PLAN
-========================= */
+/*
+==================================================
+LOAD PLAN
+==================================================
+*/
 
 loadPlan();
 
@@ -714,8 +690,15 @@ try{
 const response =
 await fetch(
 "/api/subscriptions/plans/" +
-encodeURIComponent(planId)
+encodeURIComponent(planId),
+{
+method:"GET",
+headers:{
+"Accept":"application/json"
+}
+}
 );
+
 
 if(!response.ok){
 
@@ -725,12 +708,27 @@ throw new Error(
 
 }
 
+
 const result =
 await response.json();
+
 
 plan =
 result.plan ||
 result;
+
+
+if(
+!plan ||
+!plan.id
+){
+
+throw new Error(
+"Invalid plan"
+);
+
+}
+
 
 }catch(error){
 
@@ -740,13 +738,16 @@ defaultPlans.premium;
 
 }
 
+
 renderPlan();
+
 
 document.getElementById(
 "loading"
 ).classList.add(
 "hidden"
 );
+
 
 document.getElementById(
 "checkout"
@@ -757,9 +758,11 @@ document.getElementById(
 }
 
 
-/* =========================
-   RENDER PLAN
-========================= */
+/*
+==================================================
+RENDER PLAN
+==================================================
+*/
 
 function renderPlan(){
 
@@ -782,9 +785,11 @@ updatePrice();
 }
 
 
-/* =========================
-   BILLING
-========================= */
+/*
+==================================================
+BILLING
+==================================================
+*/
 
 document.getElementById(
 "billing"
@@ -796,6 +801,11 @@ updatePrice
 
 function updatePrice(){
 
+if(!plan){
+return;
+}
+
+
 const billing =
 document.getElementById(
 "billing"
@@ -803,33 +813,29 @@ document.getElementById(
 
 
 const amount =
-billing === "yearly"
-? Number(
-plan.yearlyPrice ??
-plan.yearly ??
-plan.priceYearly ??
-0
-)
-: Number(
-plan.monthlyPrice ??
-plan.monthly ??
-plan.priceMonthly ??
-plan.price ??
-0
+getPlanPrice(
+billing
 );
+
+
+const currency =
+plan.currency ||
+"TZS";
 
 
 const formatted =
 formatMoney(
 amount,
-plan.currency
+currency
 );
 
 
 document.getElementById(
 "planPrice"
 ).innerHTML =
-formatted +
+escapeHTML(
+formatted
+) +
 ' <small>' +
 escapeHTML(
 billing === "yearly"
@@ -868,9 +874,86 @@ formatted;
 }
 
 
-/* =========================
-   CHECKOUT
-========================= */
+/*
+==================================================
+GET PLAN PRICE
+==================================================
+*/
+
+function getPlanPrice(
+billing
+){
+
+if(!plan){
+return 0;
+}
+
+
+if(
+billing === "yearly"
+){
+
+return Number(
+plan.yearlyPrice ??
+plan.yearly ??
+plan.priceYearly ??
+0
+);
+
+}
+
+
+return Number(
+plan.monthlyPrice ??
+plan.monthly ??
+plan.priceMonthly ??
+plan.price ??
+0
+);
+
+}
+
+
+/*
+==================================================
+PAYMENT METHOD
+==================================================
+*/
+
+document
+.querySelectorAll(
+'input[name="payment"]'
+)
+.forEach(
+function(input){
+
+input.addEventListener(
+"change",
+function(){
+
+if(
+input.value === "mobile"
+){
+
+showMessage(
+"Mobile Money is processed through Pesapal. Continue to payment to select the available option.",
+"success"
+);
+
+}
+
+}
+);
+
+}
+);
+
+
+/*
+==================================================
+START CHECKOUT
+==================================================
+*/
 
 document.getElementById(
 "payButton"
@@ -881,6 +964,18 @@ startCheckout
 
 
 async function startCheckout(){
+
+if(!plan){
+
+showMessage(
+"Subscription plan is not available.",
+"error"
+);
+
+return;
+
+}
+
 
 const name =
 document.getElementById(
@@ -909,8 +1004,26 @@ document.getElementById(
 const paymentMethod =
 document.querySelector(
 'input[name="payment"]:checked'
-)?.value;
+)?.value ||
+"pesapal";
 
+
+const amount =
+getPlanPrice(
+billing
+);
+
+
+const currency =
+plan.currency ||
+"TZS";
+
+
+/*
+==================================================
+VALIDATION
+==================================================
+*/
 
 if(!name){
 
@@ -924,12 +1037,28 @@ return;
 }
 
 
-if(!email ||
+if(
+!email ||
 !isValidEmail(email)
 ){
 
 showMessage(
 "Please enter a valid email address.",
+"error"
+);
+
+return;
+
+}
+
+
+if(
+!amount ||
+amount <= 0
+){
+
+showMessage(
+"This subscription plan does not have a valid price.",
 "error"
 );
 
@@ -952,18 +1081,32 @@ button.textContent =
 
 try{
 
+/*
+==================================================
+CREATE UNIVERSAL PESAPAL ORDER
+==================================================
+*/
+
 const response =
 await fetch(
-"/api/subscriptions/orders",
+CREATE_ORDER_ENDPOINT,
 {
 method:"POST",
 
 headers:{
 "Content-Type":
+"application/json",
+"Accept":
 "application/json"
 },
 
 body:JSON.stringify({
+
+productType:
+"subscription",
+
+type:
+"subscription",
 
 planId:
 plan.id ||
@@ -982,7 +1125,21 @@ phone:
 phone,
 
 paymentMethod:
-paymentMethod
+paymentMethod,
+
+currency:
+currency,
+
+amount:
+Number(
+amount
+),
+
+returnUrl:
+new URL(
+"payment.html",
+window.location.href
+).href
 
 })
 
@@ -990,92 +1147,110 @@ paymentMethod
 );
 
 
-const result =
+let result = null;
+
+try{
+
+result =
 await response.json();
+
+}catch(jsonError){
+
+result = {};
+
+}
 
 
 if(!response.ok){
 
 throw new Error(
 result.error ||
+result.message ||
 "Unable to create subscription order."
 );
 
 }
 
 
+/*
+==================================================
+READ PAYMENT RESPONSE
+==================================================
+*/
+
 const orderId =
 result.orderId ||
-result.id;
+result.id ||
+result.order?.orderId ||
+result.data?.orderId;
 
 
-const paymentUrl =
-result.paymentUrl;
+const orderTrackingId =
+result.orderTrackingId ||
+result.OrderTrackingId ||
+result.order?.orderTrackingId ||
+result.data?.orderTrackingId;
 
 
-showMessage(
-"Order created. Redirecting to payment...",
-"success"
-);
+const merchantReference =
+result.merchantReference ||
+result.merchant_reference ||
+result.order?.merchantReference ||
+result.data?.merchantReference;
 
 
-setTimeout(
-()=>{
+const redirectUrl =
+result.redirectUrl ||
+result.paymentUrl ||
+result.payment_url ||
+result.redirectURL ||
+result.order?.redirectUrl ||
+result.data?.redirectUrl;
 
-if(paymentUrl){
 
-location.href =
-paymentUrl;
-
-}else if(orderId){
-
-location.href =
-"payment.html?orderId=" +
-encodeURIComponent(
-orderId
-) +
-"&type=subscription";
-
-}else{
+if(
+!redirectUrl &&
+!orderTrackingId
+){
 
 throw new Error(
-"Payment URL was not returned."
+"Payment URL was not returned by the payment server."
 );
 
 }
 
-},
-500
-);
-
-
-}catch(error){
 
 /*
-Fallback for development:
-create a local checkout reference.
-Remove this fallback when API
-is fully connected.
+==================================================
+SAVE PENDING SUBSCRIPTION
+==================================================
 */
 
-const localOrderId =
-"SUB-" +
-Date.now();
-
-
-localStorage.setItem(
-"subscriptionOrder",
-JSON.stringify({
+const pendingOrder = {
 
 orderId:
-localOrderId,
+orderId || "",
+
+orderTrackingId:
+orderTrackingId || "",
+
+merchantReference:
+merchantReference || "",
 
 planId:
-plan.id ||
-planId,
+plan.id || planId,
+
+planName:
+plan.name || "Premium",
 
 billing:
 billing,
+
+amount:
+Number(amount),
+
+currency:
+currency,
 
 name:
 name,
@@ -1087,30 +1262,323 @@ phone:
 phone,
 
 paymentMethod:
-paymentMethod
+paymentMethod,
 
-})
+createdAt:
+new Date().toISOString()
+
+};
+
+
+localStorage.setItem(
+"pendingSubscriptionOrder",
+JSON.stringify(
+pendingOrder
+)
 );
 
 
+localStorage.setItem(
+"paymentPending",
+"true"
+);
+
+
+localStorage.setItem(
+"checkoutType",
+"subscription"
+);
+
+
+localStorage.setItem(
+"checkoutId",
+orderId || ""
+);
+
+
+localStorage.setItem(
+"checkoutAmount",
+String(amount)
+);
+
+
+localStorage.setItem(
+"checkoutCurrency",
+currency
+);
+
+
+if(orderTrackingId){
+
+localStorage.setItem(
+"pesapalOrderTrackingId",
+orderTrackingId
+);
+
+}
+
+
+/*
+==================================================
+BUILD UNIVERSAL PAYMENT URL
+==================================================
+*/
+
+const paymentParams =
+new URLSearchParams();
+
+
+paymentParams.set(
+"type",
+"subscription"
+);
+
+
+paymentParams.set(
+"productType",
+"subscription"
+);
+
+
+if(orderId){
+
+paymentParams.set(
+"orderId",
+orderId
+);
+
+}
+
+
+paymentParams.set(
+"id",
+orderId || plan.id || planId
+);
+
+
+if(orderTrackingId){
+
+paymentParams.set(
+"orderTrackingId",
+orderTrackingId
+);
+
+}
+
+
+if(merchantReference){
+
+paymentParams.set(
+"merchantReference",
+merchantReference
+);
+
+}
+
+
+paymentParams.set(
+"amount",
+String(amount)
+);
+
+
+paymentParams.set(
+"currency",
+currency
+);
+
+
+paymentParams.set(
+"planId",
+plan.id || planId
+);
+
+
+paymentParams.set(
+"billing",
+billing
+);
+
+
+if(redirectUrl){
+
+paymentParams.set(
+"redirectUrl",
+redirectUrl
+);
+
+}
+
+
+/*
+==================================================
+REDIRECT TO UNIVERSAL PAYMENT PAGE
+==================================================
+*/
+
 showMessage(
-"Payment service is not connected yet. Opening payment page.",
+"Order created. Redirecting to secure payment...",
 "success"
 );
 
 
 setTimeout(
-()=>{
+function(){
 
-location.href =
-"payment.html?orderId=" +
-encodeURIComponent(
-localOrderId
-) +
-"&type=subscription";
+window.location.href =
+"payment.html?" +
+paymentParams.toString();
 
 },
-600
+400
+);
+
+
+}catch(error){
+
+console.error(
+"Subscription checkout error:",
+error
+);
+
+
+showMessage(
+error.message ||
+"Unable to start payment. Please try again.",
+"error"
+);
+
+
+button.disabled = false;
+
+button.textContent =
+"Continue to Payment";
+
+}
+
+}
+
+
+/*
+==================================================
+SAVE CUSTOMER DATA
+==================================================
+*/
+
+document.getElementById(
+"name"
+).addEventListener(
+"input",
+saveCustomer
+);
+
+
+document.getElementById(
+"email"
+).addEventListener(
+"input",
+saveCustomer
+);
+
+
+document.getElementById(
+"phone"
+).addEventListener(
+"input",
+saveCustomer
+);
+
+
+function saveCustomer(){
+
+const customer = {
+
+name:
+document.getElementById(
+"name"
+).value.trim(),
+
+email:
+document.getElementById(
+"email"
+).value.trim(),
+
+phone:
+document.getElementById(
+"phone"
+).value.trim()
+
+};
+
+
+localStorage.setItem(
+"subscriptionCustomer",
+JSON.stringify(
+customer
+)
+);
+
+}
+
+
+/*
+==================================================
+RESTORE CUSTOMER DATA
+==================================================
+*/
+
+function restoreCustomer(){
+
+try{
+
+const raw =
+localStorage.getItem(
+"subscriptionCustomer"
+);
+
+
+if(!raw){
+return;
+}
+
+
+const customer =
+JSON.parse(raw);
+
+
+if(customer.name){
+
+document.getElementById(
+"name"
+).value =
+customer.name;
+
+}
+
+
+if(customer.email){
+
+document.getElementById(
+"email"
+).value =
+customer.email;
+
+}
+
+
+if(customer.phone){
+
+document.getElementById(
+"phone"
+).value =
+customer.phone;
+
+}
+
+}catch(error){
+
+console.warn(
+"Unable to restore customer data."
 );
 
 }
@@ -1118,9 +1586,14 @@ localOrderId
 }
 
 
-/* =========================
-   HELPERS
-========================= */
+restoreCustomer();
+
+
+/*
+==================================================
+FORMAT MONEY
+==================================================
+*/
 
 function formatMoney(
 amount,
@@ -1141,6 +1614,12 @@ currency ||
 }
 
 
+/*
+==================================================
+EMAIL VALIDATION
+==================================================
+*/
+
 function isValidEmail(
 email
 ){
@@ -1150,6 +1629,12 @@ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 }
 
+
+/*
+==================================================
+MESSAGE
+==================================================
+*/
 
 function showMessage(
 text,
@@ -1161,8 +1646,10 @@ document.getElementById(
 "message"
 );
 
+
 message.textContent =
 text;
+
 
 message.className =
 "message " +
@@ -1171,6 +1658,12 @@ type;
 }
 
 
+/*
+==================================================
+ESCAPE HTML
+==================================================
+*/
+
 function escapeHTML(
 value
 ){
@@ -1178,11 +1671,26 @@ value
 return String(
 value ?? ""
 )
-.replace(/&/g,"&amp;")
-.replace(/</g,"&lt;")
-.replace(/>/g,"&gt;")
-.replace(/"/g,"&quot;")
-.replace(/'/g,"&#039;");
+.replace(
+/&/g,
+"&amp;"
+)
+.replace(
+/</g,
+"&lt;"
+)
+.replace(
+/>/g,
+"&gt;"
+)
+.replace(
+/"/g,
+"&quot;"
+)
+.replace(
+/'/g,
+"&#039;"
+);
 
 }
 
