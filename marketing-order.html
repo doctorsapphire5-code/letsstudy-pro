@@ -251,10 +251,6 @@ li{
     style="display:none"
   >
 
-    <!-- =====================================
-         SERVICE
-    ====================================== -->
-
     <section class="card">
 
       <span class="badge">
@@ -324,10 +320,6 @@ li{
     </section>
 
 
-    <!-- =====================================
-         ORDER FORM
-    ====================================== -->
-
     <section class="card">
 
       <h2>
@@ -385,7 +377,7 @@ li{
           id="phone"
           name="phone"
           type="tel"
-          placeholder="+..."
+          placeholder="+255..."
           autocomplete="tel"
           required
         >
@@ -426,8 +418,8 @@ li{
 
 
         <div class="notice">
-          The final order amount is verified by the payment
-          server using the marketing service ID.
+          Your payment amount is verified by the payment server
+          using the marketing service ID.
         </div>
 
       </form>
@@ -593,6 +585,30 @@ function getCurrency(data){
 }
 
 
+function splitName(fullName){
+
+  const parts =
+    String(fullName)
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+
+
+  return {
+
+    firstName:
+      parts[0] ||
+      "Customer",
+
+    lastName:
+      parts.slice(1).join(" ") ||
+      "Customer"
+
+  };
+
+}
+
+
 function showError(message){
 
   errorBox.textContent =
@@ -631,6 +647,7 @@ async function loadService(){
 
     loading.innerHTML = `
       <strong>Missing service ID.</strong>
+
       <p>
         Please open this page from a marketing service.
       </p>
@@ -656,7 +673,7 @@ async function loadService(){
         url,
         {
           headers:{
-            "Accept":
+            Accept:
               "application/json"
           }
         }
@@ -941,6 +958,34 @@ form.addEventListener(
     }
 
 
+    const {
+      firstName,
+      lastName
+    } =
+      splitName(name);
+
+
+    const currency =
+      getCurrency(service);
+
+
+    const title =
+      service.title ||
+      service.name ||
+      service.serviceTitle ||
+      "Marketing Service";
+
+
+    const orderId =
+      "MARKETING-" +
+      Date.now() +
+      "-" +
+      Math.random()
+        .toString(36)
+        .slice(2,8)
+        .toUpperCase();
+
+
     submitBtn.disabled =
       true;
 
@@ -955,58 +1000,145 @@ form.addEventListener(
 
     try{
 
-      /*
-        Universal Pesapal order.
-
-        IMPORTANT:
-        The backend should fetch the real
-        price from Firestore using serviceId.
-      */
+      /* =====================================
+         UNIVERSAL PAYMENT PAYLOAD
+      ====================================== */
 
       const payload = {
 
-        productType:
-          "marketing",
+        orderId:
 
-        serviceId:
-          serviceId,
+          orderId,
 
-        productId:
-          serviceId,
 
-        name:
-          name,
+        amount:
+
+          price,
+
+
+        currency:
+
+          currency,
+
+
+        description:
+
+          `LetsStudy Pro Marketing Service Order ${orderId}`,
+
 
         email:
+
           email,
 
-        phone:
+
+        firstName:
+
+          firstName,
+
+
+        lastName:
+
+          lastName,
+
+
+        phoneNumber:
+
           phone,
 
+
         country:
+
           country,
 
+
+        paymentMethod:
+
+          "pesapal",
+
+
+        productType:
+
+          "marketing",
+
+
+        productId:
+
+          serviceId,
+
+
+        serviceId:
+
+          serviceId,
+
+
+        serviceName:
+
+          title,
+
+
         note:
-          note
+
+          note,
+
+
+        items:[
+
+          {
+
+            productId:
+
+              serviceId,
+
+
+            productType:
+
+              "marketing",
+
+
+            title:
+
+              title,
+
+
+            quantity:
+
+              1,
+
+
+            price:
+
+              price
+
+          }
+
+        ]
 
       };
 
 
+      /* =====================================
+         CREATE PESAPAL ORDER
+      ====================================== */
+
       const response =
         await fetch(
+
           API_BASE +
           "/api/pesapal/create-order",
+
           {
 
             method:
               "POST",
 
             headers:{
+
               "Content-Type":
                 "application/json",
 
               "Accept":
                 "application/json"
+
             },
 
             body:
@@ -1015,6 +1147,7 @@ form.addEventListener(
               )
 
           }
+
         );
 
 
@@ -1033,8 +1166,8 @@ form.addEventListener(
 
         throw new Error(
 
-          result.error ||
           result.message ||
+          result.error ||
           "Unable to create payment order."
 
         );
@@ -1043,14 +1176,14 @@ form.addEventListener(
 
 
       /* =====================================
-         PAYMENT DATA
+         PAYMENT RESPONSE
       ====================================== */
 
-      const orderId =
+      const returnedOrderId =
         result.orderId ||
         result.orderID ||
         result.order?.orderId ||
-        "";
+        orderId;
 
 
       const orderTrackingId =
@@ -1064,7 +1197,7 @@ form.addEventListener(
         result.merchantReference ||
         result.merchant_reference ||
         result.order?.merchantReference ||
-        "";
+        returnedOrderId;
 
 
       const redirectUrl =
@@ -1072,6 +1205,7 @@ form.addEventListener(
         result.redirect_url ||
         result.paymentUrl ||
         result.payment_url ||
+        result.iframeUrl ||
         result.order?.redirectUrl ||
         "";
 
@@ -1094,67 +1228,137 @@ form.addEventListener(
 
       const pendingPayment = {
 
+        orderId:
+
+          returnedOrderId,
+
+
         productType:
+
           "marketing",
 
-        serviceId:
+
+        productId:
+
           serviceId,
 
-        orderId:
-          orderId,
+
+        serviceId:
+
+          serviceId,
+
+
+        productName:
+
+          title,
+
+
+        amount:
+
+          price,
+
+
+        currency:
+
+          currency,
+
 
         orderTrackingId:
+
           orderTrackingId,
 
+
         merchantReference:
+
           merchantReference,
 
+
         redirectUrl:
+
           redirectUrl,
 
+
         customer:{
+
           name:
+
             name,
 
+          firstName:
+
+            firstName,
+
+          lastName:
+
+            lastName,
+
           email:
+
             email,
 
           phone:
+
             phone,
 
           country:
+
             country
+
         },
 
+
         note:
+
           note,
 
-        amount:
-          price,
-
-        currency:
-          getCurrency(service),
 
         createdAt:
-          new Date().toISOString()
+
+          new Date()
+            .toISOString()
 
       };
 
 
       try{
 
-        sessionStorage.setItem(
-          "marketingPayment",
+        localStorage.setItem(
+
+          "pendingMarketingOrder",
+
           JSON.stringify(
             pendingPayment
           )
+
         );
 
-      }catch(error){
+      }catch(storageError){
+
+        console.warn(
+          "LOCAL STORAGE:",
+          storageError
+        );
+
+      }
+
+
+      try{
+
+        sessionStorage.setItem(
+
+          "marketingPayment",
+
+          JSON.stringify(
+            pendingPayment
+          )
+
+        );
+
+      }catch(storageError){
 
         console.warn(
           "SESSION STORAGE:",
-          error
+          storageError
         );
 
       }
@@ -1168,14 +1372,10 @@ form.addEventListener(
         new URLSearchParams();
 
 
-      if(orderId){
-
-        paymentParams.set(
-          "orderId",
-          orderId
-        );
-
-      }
+      paymentParams.set(
+        "orderId",
+        returnedOrderId
+      );
 
 
       if(orderTrackingId){
@@ -1215,16 +1415,39 @@ form.addEventListener(
 
 
       paymentParams.set(
+        "productId",
+        serviceId
+      );
+
+
+      paymentParams.set(
         "serviceId",
         serviceId
       );
 
 
-      window.location.href =
-        "payment.html?" +
-        paymentParams.toString();
+      /* =====================================
+         GO TO UNIVERSAL PAYMENT
+      ====================================== */
 
-  }catch(error){
+      showSuccess(
+        "Order created. Opening secure payment..."
+      );
+
+
+      setTimeout(
+        () => {
+
+          window.location.href =
+            "payment.html?" +
+            paymentParams.toString();
+
+        },
+        400
+      );
+
+
+    }catch(error){
 
       console.error(
         "PAYMENT:",
@@ -1259,10 +1482,12 @@ try{
 
   const saved =
     JSON.parse(
+
       localStorage.getItem(
         "marketingCustomer"
       ) ||
       "null"
+
     );
 
 
@@ -1281,30 +1506,37 @@ try{
 
     if(saved.email){
 
-      $("email").value =
-        saved.email;
+  $("email").value =
+    saved.email;
 
-    }
-
-
-    if(saved.phone){
-
-      $("phone").value =
-        saved.phone;
-
-    }
+}
 
 
-    if(saved.country){
+if(saved.phone){
 
-      $("country").value =
-        saved.country;
+  $("phone").value =
+    saved.phone;
 
-    }
+}
+
+
+if(saved.country){
+
+  $("country").value =
+    saved.country;
 
   }
 
-}catch(error){}
+}
+
+}catch(error){
+
+  console.warn(
+    "CUSTOMER RESTORE:",
+    error
+  );
+
+}
 
 
 /* =========================================
@@ -1317,6 +1549,7 @@ try{
   "phone",
   "country"
 ].forEach(
+
   id => {
 
     $(id).addEventListener(
@@ -1352,7 +1585,14 @@ try{
             })
           );
 
-        }catch(error){}
+        }catch(error){
+
+          console.warn(
+            "CUSTOMER SAVE:",
+            error
+          );
+
+        }
 
       }
     );
