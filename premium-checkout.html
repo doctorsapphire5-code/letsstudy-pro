@@ -12,7 +12,10 @@
   content="Complete your LetsStudy Pro Premium membership checkout."
 >
 
-<meta name="robots" content="noindex,follow">
+<meta
+  name="robots"
+  content="noindex,nofollow"
+>
 
 <style>
 
@@ -266,7 +269,7 @@ label{
 <header>
 
 <a
-  href="index.html"
+  href="index-auth.html"
   class="logo"
 >
   LetsStudy <span>Pro</span>
@@ -326,7 +329,6 @@ Choose your Premium membership plan.
 
 
 <div class="plans">
-
 
 <div
   class="plan active"
@@ -401,7 +403,6 @@ Premium access for one year.
 </small>
 
 </div>
-
 
 </div>
 
@@ -495,7 +496,7 @@ Phone
 <input
   id="phone"
   type="tel"
-  placeholder="Phone number"
+  placeholder="+255700000000"
   autocomplete="tel"
   required
 >
@@ -508,14 +509,11 @@ Payment Method
 
 <div class="methods">
 
-
 <div
   class="method active"
   data-method="pesapal"
 >
-
 💳 Pesapal
-
 </div>
 
 
@@ -523,11 +521,8 @@ Payment Method
   class="method"
   data-method="mobile"
 >
-
 📱 Mobile Money
-
 </div>
-
 
 </div>
 
@@ -582,8 +577,12 @@ const API_BASE =
   "https://api.letsstudy.pro";
 
 
+const PAYMENT_PAGE =
+  "payment.html";
+
+
 /* =========================================
-   URL
+   URL PARAMETERS
 ========================================= */
 
 const params =
@@ -599,7 +598,8 @@ const userId =
 
 
 const urlPlan =
-  params.get("plan") || "";
+  params.get("plan") ||
+  "monthly";
 
 
 /* =========================================
@@ -657,11 +657,15 @@ function formatMoney(
   amount
 ){
 
-  return Number(
-    amount || 0
-  ).toLocaleString(
-    "en-US"
-  ) + " TZS";
+  const number =
+    Number(amount) || 0;
+
+  return (
+    number.toLocaleString(
+      "en-TZ"
+    ) +
+    " TZS"
+  );
 
 }
 
@@ -683,7 +687,8 @@ function showError(
   );
 
   errorBox.textContent =
-    message;
+    message ||
+    "Unable to load checkout.";
 
   errorBox.classList.remove(
     "hidden"
@@ -693,7 +698,7 @@ function showError(
 
 
 /* =========================================
-   SELECT PLAN
+   PLAN SELECTOR
 ========================================= */
 
 function selectPlan(
@@ -748,7 +753,7 @@ function selectPlan(
     "summaryPlan"
   ).textContent =
     title
-      ? title.textContent
+      ? title.textContent.trim()
       : "Premium";
 
 
@@ -792,10 +797,6 @@ planCards.forEach(
 );
 
 
-/* =========================================
-   URL PLAN
-========================================= */
-
 if(
   [
     "monthly",
@@ -808,6 +809,12 @@ if(
 
   selectPlan(
     urlPlan
+  );
+
+}else{
+
+  selectPlan(
+    "monthly"
   );
 
 }
@@ -900,7 +907,7 @@ try{
 }catch(error){
 
   console.warn(
-    "Customer restore failed:",
+    "CUSTOMER RESTORE:",
     error
   );
 
@@ -908,7 +915,7 @@ try{
 
 
 /* =========================================
-   START PAYMENT
+   CREATE PREMIUM PAYMENT
 ========================================= */
 
 payButton.addEventListener(
@@ -988,11 +995,11 @@ payButton.addEventListener(
 
 
     if(
-      !selectedPlan
+      selectedPrice <= 0
     ){
 
       alert(
-        "Please select a Premium plan."
+        "Invalid Premium plan price."
       );
 
       return;
@@ -1000,23 +1007,18 @@ payButton.addEventListener(
     }
 
 
-    /*
-      Currently Premium payment uses Pesapal.
-      Mobile Money can be enabled by the backend
-      when a supported gateway flow is implemented.
-    */
-
     if(
       selectedMethod !==
       "pesapal"
     ){
 
       alert(
-        "Mobile Money payment is not available in this checkout yet. Please select Pesapal."
+        "Mobile Money is not available through this payment flow yet. Please select Pesapal."
       );
 
       selectedMethod =
         "pesapal";
+
 
       methodCards.forEach(
         card => {
@@ -1046,29 +1048,160 @@ payButton.addEventListener(
     try{
 
       /* =====================================
-         SAVE CUSTOMER
+         NAME
       ====================================== */
 
-      try{
+      const parts =
+        name
+          .split(/\s+/)
+          .filter(Boolean);
 
-        localStorage.setItem(
-          "premiumCustomer",
-          JSON.stringify({
 
-            name,
+      const firstName =
+        parts[0] ||
+        "Customer";
 
-            email,
 
-            phone
-
-          })
-        );
-
-      }catch(error){}
+      const lastName =
+        parts
+          .slice(1)
+          .join(" ") ||
+        "User";
 
 
       /* =====================================
-         CREATE PREMIUM ORDER
+         ORDER ID
+      ====================================== */
+
+      const orderId =
+        "PREMIUM-" +
+        Date.now() +
+        "-" +
+        Math.random()
+          .toString(36)
+          .slice(2,8)
+          .toUpperCase();
+
+
+      /* =====================================
+         UNIVERSAL ITEM
+      ====================================== */
+
+      const item = {
+
+        productId:
+          "premium-" +
+          selectedPlan,
+
+        productType:
+          "premium",
+
+        title:
+          "LetsStudy Pro Premium " +
+          selectedPlan
+            .charAt(0)
+            .toUpperCase() +
+          selectedPlan
+            .slice(1),
+
+        quantity:
+          1,
+
+        price:
+          selectedPrice
+
+      };
+
+
+      /* =====================================
+         UNIVERSAL PAYLOAD
+      ====================================== */
+
+      const payload = {
+
+        orderId:
+
+          orderId,
+
+
+        amount:
+
+          selectedPrice,
+
+
+        currency:
+
+          "TZS",
+
+
+        description:
+
+          "LetsStudy Pro Premium " +
+          selectedPlan +
+          " Membership Order " +
+          orderId,
+
+
+        email:
+
+          email,
+
+
+        firstName:
+
+          firstName,
+
+
+        lastName:
+
+          lastName,
+
+
+        phoneNumber:
+
+          phone,
+
+
+        country:
+
+          "TZ",
+
+
+        paymentMethod:
+
+          "pesapal",
+
+
+        productType:
+
+          "premium",
+
+
+        productId:
+
+          "premium-" +
+          selectedPlan,
+
+
+        plan:
+
+          selectedPlan,
+
+
+        userId:
+
+          userId,
+
+
+        items:
+
+          [item]
+
+      };
+
+
+      /* =====================================
+         API REQUEST
       ====================================== */
 
       const response =
@@ -1089,27 +1222,9 @@ payButton.addEventListener(
             },
 
             body:
-              JSON.stringify({
-
-                productType:
-                  "premium",
-
-                plan:
-                  selectedPlan,
-
-                userId:
-                  userId,
-
-                name:
-                  name,
-
-                email:
-                  email,
-
-                phone:
-                  phone
-
-              })
+              JSON.stringify(
+                payload
+              )
 
           }
         );
@@ -1129,25 +1244,23 @@ payButton.addEventListener(
       ){
 
         throw new Error(
-
-          result.error ||
           result.message ||
+          result.error ||
           "Unable to create Premium payment order."
-
         );
 
       }
 
 
       /* =====================================
-         GET PAYMENT DATA
+         RESPONSE DATA
       ====================================== */
 
-      const orderId =
+      const returnedOrderId =
         result.orderId ||
         result.orderID ||
         result.order?.orderId ||
-        "";
+        orderId;
 
 
       const orderTrackingId =
@@ -1161,7 +1274,7 @@ payButton.addEventListener(
         result.merchantReference ||
         result.merchant_reference ||
         result.order?.merchantReference ||
-        "";
+        returnedOrderId;
 
 
       const redirectUrl =
@@ -1169,6 +1282,8 @@ payButton.addEventListener(
         result.redirect_url ||
         result.paymentUrl ||
         result.payment_url ||
+        result.iframeUrl ||
+        result.iframeURL ||
         result.order?.redirectUrl ||
         "";
 
@@ -1186,22 +1301,13 @@ payButton.addEventListener(
 
 
       /* =====================================
-         SAVE PENDING ORDER
+         SAVE PENDING PAYMENT
       ====================================== */
 
-      const pendingOrder = {
-
-        productType:
-          "premium",
-
-        userId:
-          userId,
-
-        plan:
-          selectedPlan,
+      const pendingPayment = {
 
         orderId:
-          orderId,
+          returnedOrderId,
 
         orderTrackingId:
           orderTrackingId,
@@ -1212,14 +1318,21 @@ payButton.addEventListener(
         redirectUrl:
           redirectUrl,
 
-        name:
-          name,
+        productType:
+          "premium",
 
-        email:
-          email,
+        productId:
+          "premium-" +
+          selectedPlan,
 
-        phone:
-          phone,
+        plan:
+          selectedPlan,
+
+        userId:
+          userId,
+
+        title:
+          item.title,
 
         amount:
           selectedPrice,
@@ -1227,10 +1340,52 @@ payButton.addEventListener(
         currency:
           "TZS",
 
+        customer:{
+
+          name:
+            name,
+
+          firstName:
+            firstName,
+
+          lastName:
+            lastName,
+
+          email:
+            email,
+
+          phone:
+            phone
+
+        },
+
+        status:
+          "PENDING",
+
         createdAt:
-          new Date().toISOString()
+          new Date()
+            .toISOString()
 
       };
+
+
+      try{
+
+        localStorage.setItem(
+          "pendingPremiumOrder",
+          JSON.stringify(
+            pendingPayment
+          )
+        );
+
+      }catch(error){
+
+        console.warn(
+          "LOCAL STORAGE:",
+          error
+        );
+
+      }
 
 
       try{
@@ -1238,14 +1393,14 @@ payButton.addEventListener(
         sessionStorage.setItem(
           "premiumPayment",
           JSON.stringify(
-            pendingOrder
+            pendingPayment
           )
         );
 
       }catch(error){
 
         console.warn(
-          "Session storage unavailable:",
+          "SESSION STORAGE:",
           error
         );
 
@@ -1253,21 +1408,33 @@ payButton.addEventListener(
 
 
       /* =====================================
-         UNIVERSAL PAYMENT.HTML
+         SAVE AMOUNT FOR PAYMENT.HTML
+      ====================================== */
+
+      try{
+
+        localStorage.setItem(
+          "letsStudyPaymentAmount",
+          String(
+            selectedPrice
+          )
+        );
+
+      }catch(error){}
+
+
+      /* =====================================
+         OPEN UNIVERSAL PAYMENT PAGE
       ====================================== */
 
       const paymentParams =
         new URLSearchParams();
 
 
-      if(orderId){
-
-        paymentParams.set(
-          "orderId",
-          orderId
-        );
-
-      }
+      paymentParams.set(
+        "orderId",
+        returnedOrderId
+      );
 
 
       if(orderTrackingId){
@@ -1301,6 +1468,12 @@ payButton.addEventListener(
 
 
       paymentParams.set(
+        "productType",
+        "premium"
+      );
+
+
+      paymentParams.set(
         "type",
         "premium"
       );
@@ -1313,13 +1486,22 @@ payButton.addEventListener(
 
 
       paymentParams.set(
-        "productType",
-        "premium"
+        "amount",
+        String(
+          selectedPrice
+        )
+      );
+
+
+      paymentParams.set(
+        "currency",
+        "TZS"
       );
 
 
       window.location.href =
-        "payment.html?" +
+        PAYMENT_PAGE +
+        "?" +
         paymentParams.toString();
 
     }catch(error){
