@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1"
+>
+
+<title>Course Payment | LetsStudy Pro</title>
+
+<meta
+  name="description"
+  content="Secure course payment powered by LetsStudy Pro and Pesapal."
+>
+
+<style>
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:#f5f7fb;
+  color:#172033;
+}
+
+.header{
+  background:#ffffff;
+  border-bottom:1px solid #e5e7eb;
+  padding:18px 20px;
+}
+
+.logo{
+  font-size:22px;
+  font-weight:800;
+}
+
+.logo span{
+  font-weight:500;
+}
+
+.container{
+  width:min(1100px,94%);
+  margin:30px auto;
+}
+
+.card{
+  background:#ffffff;
+  border-radius:16px;
+  padding:24px;
+  box-shadow:0 8px 30px rgba(0,0,0,.08);
+}
+
+h1{
+  margin:0 0 8px;
+  font-size:26px;
+}
+
+.subtitle{
+  color:#667085;
+  margin-bottom:22px;
+}
+
+.info{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  margin-bottom:20px;
+}
+
+.info-box{
+  background:#f8fafc;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  padding:14px;
+}
+
+.info-label{
+  font-size:12px;
+  color:#667085;
+  margin-bottom:5px;
+}
+
+.info-value{
+  font-weight:700;
+  word-break:break-word;
+}
+
+.payment-box{
+  position:relative;
+  width:100%;
+  min-height:650px;
+  overflow:hidden;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  background:#fff;
+}
+
+#paymentFrame{
+  width:100%;
+  height:650px;
+  border:0;
+  display:block;
+}
+
+.loading{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#fff;
+  z-index:2;
+  font-weight:600;
+  color:#475467;
+}
+
+.error{
+  display:none;
+  margin-top:20px;
+  padding:15px;
+  border-radius:10px;
+  background:#fef3f2;
+  color:#b42318;
+  border:1px solid #fecdca;
+}
+
+.actions{
+  display:flex;
+  gap:10px;
+  margin-top:18px;
+  flex-wrap:wrap;
+}
+
+button,
+a{
+  border:0;
+  border-radius:9px;
+  padding:12px 18px;
+  font-weight:700;
+  text-decoration:none;
+  cursor:pointer;
+}
+
+.back{
+  background:#eef2f6;
+  color:#344054;
+}
+
+.success{
+  background:#12b76a;
+  color:#fff;
+}
+
+@media(max-width:700px){
+
+  .info{
+    grid-template-columns:1fr;
+  }
+
+  .container{
+    margin:18px auto;
+  }
+
+  .card{
+    padding:16px;
+  }
+
+  #paymentFrame{
+    height:700px;
+  }
+
+  .payment-box{
+    min-height:700px;
+  }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header class="header">
+
+  <div class="logo">
+    LetsStudy <span>Pro</span>
+  </div>
+
+</header>
+
+
+<main class="container">
+
+  <div class="card">
+
+    <h1>
+      Complete Your Course Payment
+    </h1>
+
+    <div class="subtitle">
+      Complete your payment securely using Pesapal.
+    </div>
+
+
+    <div class="info">
+
+      <div class="info-box">
+
+        <div class="info-label">
+          Order ID
+        </div>
+
+        <div
+          class="info-value"
+          id="orderId"
+        >
+          —
+        </div>
+
+      </div>
+
+
+      <div class="info-box">
+
+        <div class="info-label">
+          Transaction ID
+        </div>
+
+        <div
+          class="info-value"
+          id="trackingId"
+        >
+          —
+        </div>
+
+      </div>
+
+
+      <div class="info-box">
+
+        <div class="info-label">
+          Merchant Reference
+        </div>
+
+        <div
+          class="info-value"
+          id="merchantReference"
+        >
+          —
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="payment-box">
+
+      <div
+        class="loading"
+        id="loading"
+      >
+        Loading secure payment...
+      </div>
+
+      <iframe
+        id="paymentFrame"
+        title="Pesapal Payment"
+        allow="payment"
+        loading="eager"
+      ></iframe>
+
+    </div>
+
+
+    <div
+      class="error"
+      id="error"
+    ></div>
+
+
+    <div class="actions">
+
+      <a
+        href="course-checkout.html"
+        class="back"
+      >
+        Back to Checkout
+      </a>
+
+      <a
+        href="success.html"
+        class="success"
+        id="successButton"
+        style="display:none"
+      >
+        Continue
+      </a>
+
+    </div>
+
+  </div>
+
+</main>
+
+
+<script>
+
+"use strict";
+
+
+/* =====================================================
+   URL PARAMETERS
+===================================================== */
+
+const params =
+  new URLSearchParams(
+    window.location.search
+  );
+
+
+const orderId =
+  params.get("orderId") ||
+  params.get("orderID") ||
+  params.get("order_id") ||
+  "";
+
+
+const orderTrackingId =
+  params.get("orderTrackingId") ||
+  params.get("OrderTrackingId") ||
+  params.get("ordertrackingid") ||
+  "";
+
+
+const merchantReference =
+  params.get("merchantReference") ||
+  params.get("merchantreference") ||
+  params.get("merchantReferenceId") ||
+  "";
+
+
+const redirectUrl =
+  params.get("redirectUrl") ||
+  params.get("redirect_url") ||
+  params.get("paymentUrl") ||
+  params.get("payment_url") ||
+  "";
+
+
+/* =====================================================
+   ELEMENTS
+===================================================== */
+
+const orderIdEl =
+  document.getElementById(
+    "orderId"
+  );
+
+const trackingIdEl =
+  document.getElementById(
+    "trackingId"
+  );
+
+const merchantReferenceEl =
+  document.getElementById(
+    "merchantReference"
+  );
+
+const frame =
+  document.getElementById(
+    "paymentFrame"
+  );
+
+const loading =
+  document.getElementById(
+    "loading"
+  );
+
+const errorBox =
+  document.getElementById(
+    "error"
+  );
+
+
+/* =====================================================
+   DISPLAY ORDER INFORMATION
+===================================================== */
+
+orderIdEl.textContent =
+  orderId || "—";
+
+trackingIdEl.textContent =
+  orderTrackingId || "—";
+
+merchantReferenceEl.textContent =
+  merchantReference || "—";
+
+
+/* =====================================================
+   ERROR
+===================================================== */
+
+function showError(message){
+
+  loading.style.display =
+    "none";
+
+  errorBox.style.display =
+    "block";
+
+  errorBox.textContent =
+    message;
+
+}
+
+
+/* =====================================================
+   BUILD SUCCESS URL
+===================================================== */
+
+function buildSuccessUrl(){
+
+  const successParams =
+    new URLSearchParams();
+
+  if(orderId){
+
+    successParams.set(
+      "orderId",
+      orderId
+    );
+
+  }
+
+  if(orderTrackingId){
+
+    successParams.set(
+      "orderTrackingId",
+      orderTrackingId
+    );
+
+  }
+
+  if(merchantReference){
+
+    successParams.set(
+      "merchantReference",
+      merchantReference
+    );
+
+  }
+
+  return (
+    "success.html?" +
+    successParams.toString()
+  );
+
+}
+
+
+/* =====================================================
+   LOAD PESAPAL PAYMENT
+===================================================== */
+
+function loadPayment(){
+
+  /*
+   * Best case:
+   * checkout/backend already supplied
+   * the Pesapal redirect URL.
+   */
+
+  if(redirectUrl){
+
+    frame.src =
+      redirectUrl;
+
+    return;
+
+  }
+
+
+  /*
+   * If only OrderTrackingId exists,
+   * ask backend for the current payment
+   * information.
+   */
+
+  if(orderTrackingId){
+
+    const apiUrl =
+      "https://api.letsstudy.pro" +
+      "/api/pesapal/payment-status" +
+      "?orderTrackingId=" +
+      encodeURIComponent(
+        orderTrackingId
+      );
+
+
+    fetch(apiUrl)
+
+      .then(response => {
+
+        if(!response.ok){
+
+          throw new Error(
+            "Unable to connect to payment server."
+          );
+
+        }
+
+        return response.json();
+
+      })
+
+      .then(data => {
+
+        const url =
+          data.redirectUrl ||
+          data.redirect_url ||
+          data.paymentUrl ||
+          data.payment_url ||
+          "";
+
+
+        if(!url){
+
+          throw new Error(
+            "Pesapal payment URL was not returned."
+          );
+
+        }
+
+
+        frame.src =
+          url;
+
+      })
+
+      .catch(error => {
+
+        console.error(
+          "Payment loading error:",
+          error
+        );
+
+        showError(
+          error.message ||
+          "Unable to load the Pesapal payment page."
+        );
+
+      });
+
+    return;
+
+  }
+
+
+  showError(
+    "No payment information was provided."
+  );
+
+}
+
+
+/* =====================================================
+   IFRAME LOADED
+===================================================== */
+
+frame.addEventListener(
+  "load",
+  function(){
+
+    loading.style.display =
+      "none";
+
+  }
+);
+
+
+/* =====================================================
+   START
+===================================================== */
+
+loadPayment();
+
+
+/* =====================================================
+   OPTIONAL SUCCESS CHECK
+===================================================== */
+
+if(orderTrackingId){
+
+  const successUrl =
+    buildSuccessUrl();
+
+  const successButton =
+    document.getElementById(
+      "successButton"
+    );
+
+  successButton.href =
+    successUrl;
+
+}
+
+
+/* =====================================================
+   BACK BUTTON
+===================================================== */
+
+window.addEventListener(
+  "pageshow",
+  function(){
+
+    loading.style.display =
+      "none";
+
+  }
+);
+
+</script>
+
+</body>
+</html>
