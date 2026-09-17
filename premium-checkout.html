@@ -158,23 +158,24 @@ h2{
   font-size:15px;
 }
 
-.methods{
-  display:grid;
-  gap:8px;
+.payment-box{
+  border:2px solid #2563eb;
+  background:#f8fbff;
+  border-radius:10px;
+  padding:14px;
   margin-bottom:15px;
 }
 
-.method{
-  border:1px solid #dbe2ea;
-  padding:12px;
-  border-radius:9px;
-  cursor:pointer;
-  font-size:12px;
+.payment-title{
+  font-size:13px;
+  font-weight:800;
 }
 
-.method.active{
-  border:2px solid #2563eb;
-  background:#f8fbff;
+.payment-text{
+  color:#64748b;
+  font-size:10px;
+  margin-top:5px;
+  line-height:1.5;
 }
 
 input[type="text"],
@@ -187,6 +188,10 @@ input[type="tel"]{
   outline:none;
   margin-top:6px;
   margin-bottom:12px;
+}
+
+input:focus{
+  border-color:#2563eb;
 }
 
 label{
@@ -311,7 +316,7 @@ label{
 
 
 <!-- =================================
-     PLANS
+     PREMIUM PLANS
 ================================= -->
 
 <section class="card">
@@ -453,7 +458,7 @@ Total
 
 
 <!-- =================================
-     PAYMENT
+     CUSTOMER + PAYMENT
 ================================= -->
 
 <section class="card">
@@ -507,21 +512,15 @@ Payment Method
 </h2>
 
 
-<div class="methods">
+<div class="payment-box">
 
-<div
-  class="method active"
-  data-method="pesapal"
->
+<div class="payment-title">
 💳 Pesapal
 </div>
 
-
-<div
-  class="method"
-  data-method="mobile"
->
-📱 Mobile Money
+<div class="payment-text">
+Secure payment through Pesapal. Available payment options
+are provided by Pesapal during checkout.
 </div>
 
 </div>
@@ -573,8 +572,8 @@ Secure checkout • LetsStudy Pro
    CONFIG
 ========================================= */
 
-const API_BASE =
-  "https://api.letsstudy.pro";
+const CREATE_ORDER_ENDPOINT =
+  "https://api.letsstudy.pro/api/pesapal/create-order";
 
 
 const PAYMENT_PAGE =
@@ -611,25 +610,24 @@ const loading =
     "loading"
   );
 
+
 const checkout =
   document.getElementById(
     "checkout"
   );
+
 
 const errorBox =
   document.getElementById(
     "error"
   );
 
+
 const planCards =
   document.querySelectorAll(
     ".plan"
   );
 
-const methodCards =
-  document.querySelectorAll(
-    ".method"
-  );
 
 const payButton =
   document.getElementById(
@@ -645,10 +643,6 @@ let selectedPrice =
   10000;
 
 
-let selectedMethod =
-  "pesapal";
-
-
 /* =========================================
    MONEY
 ========================================= */
@@ -659,6 +653,7 @@ function formatMoney(
 
   const number =
     Number(amount) || 0;
+
 
   return (
     number.toLocaleString(
@@ -682,13 +677,16 @@ function showError(
     "hidden"
   );
 
+
   checkout.classList.add(
     "hidden"
   );
 
+
   errorBox.textContent =
     message ||
     "Unable to load checkout.";
+
 
   errorBox.classList.remove(
     "hidden"
@@ -821,40 +819,6 @@ if(
 
 
 /* =========================================
-   PAYMENT METHOD
-========================================= */
-
-methodCards.forEach(
-  card => {
-
-    card.addEventListener(
-      "click",
-      () => {
-
-        methodCards.forEach(
-          item =>
-            item.classList.remove(
-              "active"
-            )
-        );
-
-
-        card.classList.add(
-          "active"
-        );
-
-
-        selectedMethod =
-          card.dataset.method;
-
-      }
-    );
-
-  }
-);
-
-
-/* =========================================
    RESTORE CUSTOMER
 ========================================= */
 
@@ -946,6 +910,10 @@ payButton.addEventListener(
       ).checked;
 
 
+    /* =====================================
+       VALIDATION
+    ====================================== */
+
     if(!name){
 
       alert(
@@ -1007,36 +975,6 @@ payButton.addEventListener(
     }
 
 
-    if(
-      selectedMethod !==
-      "pesapal"
-    ){
-
-      alert(
-        "Mobile Money is not available through this payment flow yet. Please select Pesapal."
-      );
-
-      selectedMethod =
-        "pesapal";
-
-
-      methodCards.forEach(
-        card => {
-
-          card.classList.toggle(
-            "active",
-            card.dataset.method ===
-            "pesapal"
-          );
-
-        }
-      );
-
-      return;
-
-    }
-
-
     payButton.disabled =
       true;
 
@@ -1089,14 +1027,11 @@ payButton.addEventListener(
 
       const item = {
 
-        productId:
+        id:
           "premium-" +
           selectedPlan,
 
-        productType:
-          "premium",
-
-        title:
+        name:
           "LetsStudy Pro Premium " +
           selectedPlan
             .charAt(0)
@@ -1138,8 +1073,7 @@ payButton.addEventListener(
 
           "LetsStudy Pro Premium " +
           selectedPlan +
-          " Membership Order " +
-          orderId,
+          " Membership",
 
 
         email:
@@ -1177,22 +1111,6 @@ payButton.addEventListener(
           "premium",
 
 
-        productId:
-
-          "premium-" +
-          selectedPlan,
-
-
-        plan:
-
-          selectedPlan,
-
-
-        userId:
-
-          userId,
-
-
         items:
 
           [item]
@@ -1206,8 +1124,7 @@ payButton.addEventListener(
 
       const response =
         await fetch(
-          API_BASE +
-          "/api/pesapal/create-order",
+          CREATE_ORDER_ENDPOINT,
           {
 
             method:
@@ -1266,6 +1183,7 @@ payButton.addEventListener(
       const orderTrackingId =
         result.orderTrackingId ||
         result.OrderTrackingId ||
+        result.trackingId ||
         result.order?.orderTrackingId ||
         "";
 
@@ -1283,6 +1201,7 @@ payButton.addEventListener(
         result.paymentUrl ||
         result.payment_url ||
         result.iframeUrl ||
+        result.iframe_url ||
         result.iframeURL ||
         result.order?.redirectUrl ||
         "";
@@ -1301,7 +1220,7 @@ payButton.addEventListener(
 
 
       /* =====================================
-         SAVE PENDING PAYMENT
+         PENDING PAYMENT
       ====================================== */
 
       const pendingPayment = {
@@ -1332,7 +1251,7 @@ payButton.addEventListener(
           userId,
 
         title:
-          item.title,
+          item.name,
 
         amount:
           selectedPrice,
@@ -1355,7 +1274,10 @@ payButton.addEventListener(
             email,
 
           phone:
-            phone
+            phone,
+
+          country:
+            "TZ"
 
         },
 
@@ -1369,7 +1291,19 @@ payButton.addEventListener(
       };
 
 
+      /* =====================================
+         SAVE PENDING PAYMENT
+      ====================================== */
+
       try{
+
+        localStorage.setItem(
+          "pendingPayment",
+          JSON.stringify(
+            pendingPayment
+          )
+        );
+
 
         localStorage.setItem(
           "pendingPremiumOrder",
@@ -1408,7 +1342,39 @@ payButton.addEventListener(
 
 
       /* =====================================
-         SAVE AMOUNT FOR PAYMENT.HTML
+         SAVE CUSTOMER
+      ====================================== */
+
+      try{
+
+        localStorage.setItem(
+          "premiumCustomer",
+          JSON.stringify({
+
+            name:
+              name,
+
+            email:
+              email,
+
+            phone:
+              phone
+
+          })
+        );
+
+      }catch(error){
+
+        console.warn(
+          "CUSTOMER STORAGE:",
+          error
+        );
+
+      }
+
+
+      /* =====================================
+         SAVE PAYMENT AMOUNT
       ====================================== */
 
       try{
@@ -1424,68 +1390,47 @@ payButton.addEventListener(
 
 
       /* =====================================
-         OPEN UNIVERSAL PAYMENT PAGE
+         UNIVERSAL PAYMENT PAGE
       ====================================== */
 
-      const paymentParams =
-        new URLSearchParams();
+      const paymentPage =
+        new URL(
+          PAYMENT_PAGE,
+          window.location.origin
+        );
 
 
-      paymentParams.set(
+      paymentPage.searchParams.set(
         "orderId",
         returnedOrderId
       );
 
 
-      if(orderTrackingId){
-
-        paymentParams.set(
-          "orderTrackingId",
-          orderTrackingId
-        );
-
-      }
+      paymentPage.searchParams.set(
+        "merchantReference",
+        merchantReference
+      );
 
 
-      if(merchantReference){
-
-        paymentParams.set(
-          "merchantReference",
-          merchantReference
-        );
-
-      }
-
-
-      if(redirectUrl){
-
-        paymentParams.set(
-          "redirectUrl",
-          redirectUrl
-        );
-
-      }
-
-
-      paymentParams.set(
+      paymentPage.searchParams.set(
         "productType",
         "premium"
       );
 
 
-      paymentParams.set(
+      paymentPage.searchParams.set(
         "type",
         "premium"
       );
 
 
-      paymentParams.set(
+      paymentPage.searchParams.set(
         "plan",
         selectedPlan
       );
 
 
-      paymentParams.set(
+      paymentPage.searchParams.set(
         "amount",
         String(
           selectedPrice
@@ -1493,16 +1438,38 @@ payButton.addEventListener(
       );
 
 
-      paymentParams.set(
+      paymentPage.searchParams.set(
         "currency",
         "TZS"
       );
 
 
+      if(orderTrackingId){
+
+        paymentPage.searchParams.set(
+          "orderTrackingId",
+          orderTrackingId
+        );
+
+      }
+
+
+      if(redirectUrl){
+
+        paymentPage.searchParams.set(
+          "redirectUrl",
+          redirectUrl
+        );
+
+      }
+
+
+      payButton.textContent =
+        "Opening Payment...";
+
+
       window.location.href =
-        PAYMENT_PAGE +
-        "?" +
-        paymentParams.toString();
+        paymentPage.href;
 
     }catch(error){
 
@@ -1538,6 +1505,7 @@ payButton.addEventListener(
 loading.classList.add(
   "hidden"
 );
+
 
 checkout.classList.remove(
   "hidden"
