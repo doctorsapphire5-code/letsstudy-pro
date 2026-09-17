@@ -70,6 +70,10 @@ body{
   font-weight:800;
 }
 
+.back:hover{
+  color:#2563eb;
+}
+
 .container{
   max-width:1180px;
   margin:35px auto;
@@ -136,6 +140,7 @@ body{
   outline:none;
   font:inherit;
   background:#fff;
+  color:#172033;
 }
 
 .field input:focus,
@@ -166,6 +171,7 @@ body{
   padding:13px;
   border:1px solid #e8edf4;
   border-radius:15px;
+  background:#fff;
 }
 
 .item img{
@@ -222,6 +228,27 @@ body{
 .total strong{
   color:#2563eb;
   font-size:26px;
+}
+
+.payment-box{
+  margin:20px 0;
+  padding:16px;
+  border:1px solid #dbeafe;
+  background:#eff6ff;
+  border-radius:14px;
+}
+
+.payment-title{
+  font-size:14px;
+  font-weight:900;
+  color:#1e3a8a;
+  margin-bottom:6px;
+}
+
+.payment-text{
+  font-size:13px;
+  color:#475569;
+  line-height:1.5;
 }
 
 .checkout-btn{
@@ -303,6 +330,14 @@ body{
     padding:14px 13px;
   }
 
+  .brand{
+    font-size:18px;
+  }
+
+  .back{
+    font-size:13px;
+  }
+
   .card{
     padding:20px;
   }
@@ -332,16 +367,16 @@ body{
 
 <nav class="nav">
 
-  <div class="brand">
-    LetsStudy Pro
-  </div>
+<div class="brand">
+  LetsStudy Pro
+</div>
 
-  <a
-    href="marketplace-cart.html"
-    class="back"
-  >
-    ← Back to Cart
-  </a>
+<a
+  href="marketplace-cart.html"
+  class="back"
+>
+  ← Back to Cart
+</a>
 
 </nav>
 
@@ -352,13 +387,13 @@ body{
 
 <div class="head">
 
-  <h1>
-    Checkout
-  </h1>
+<h1>
+  Checkout
+</h1>
 
-  <p>
-    Complete your information and continue to secure payment.
-  </p>
+<p>
+  Complete your information and continue to secure payment.
+</p>
 
 </div>
 
@@ -525,7 +560,7 @@ body{
 </span>
 
 <strong id="subtotal">
-  0
+  TZS 0
 </strong>
 
 </div>
@@ -538,7 +573,7 @@ body{
 </span>
 
 <strong id="discount">
-  0
+  TZS 0
 </strong>
 
 </div>
@@ -551,8 +586,22 @@ body{
 </span>
 
 <strong id="total">
-  0
+  TZS 0
 </strong>
+
+</div>
+
+
+<div class="payment-box">
+
+<div class="payment-title">
+  Payment Method
+</div>
+
+<div class="payment-text">
+  Pay securely through Pesapal. Available payment options
+  are provided by the payment gateway.
+</div>
 
 </div>
 
@@ -587,16 +636,23 @@ body{
 
 import {
   initializeApp
-} from
+}
+from
 "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
 
 import {
   getFirestore,
   doc,
   getDoc
-} from
+}
+from
 "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+
+/* =====================================================
+   FIREBASE CONFIG
+===================================================== */
 
 const firebaseConfig = {
 
@@ -628,28 +684,32 @@ const app =
 
 
 const db =
-  getFirestore(app);
+  getFirestore(
+    app
+  );
 
 
 /* =====================================================
-   UNIVERSAL PAYMENT API
+   UNIVERSAL PAYMENT ENDPOINT
 ===================================================== */
 
-const PAYMENT_API =
-  "https://api.letsstudy.pro";
+const CREATE_ORDER_ENDPOINT =
+  "https://api.letsstudy.pro/api/pesapal/create-order";
 
 
 /* =====================================================
-   ELEMENT
+   ELEMENT HELPER
 ===================================================== */
 
 const $ =
   id =>
-    document.getElementById(id);
+    document.getElementById(
+      id
+    );
 
 
 /* =====================================================
-   URL
+   URL PARAMETERS
 ===================================================== */
 
 const params =
@@ -659,7 +719,7 @@ const params =
 
 
 /* =====================================================
-   ITEM IDS
+   GET MARKETPLACE IDS
 ===================================================== */
 
 function getItemIds(){
@@ -672,7 +732,9 @@ function getItemIds(){
 
   if(directId){
 
-    return [directId];
+    return [
+      directId
+    ];
 
   }
 
@@ -691,7 +753,9 @@ function getItemIds(){
   try{
 
     const decoded =
-      decodeURIComponent(raw);
+      decodeURIComponent(
+        raw
+      );
 
 
     let parsed;
@@ -700,7 +764,9 @@ function getItemIds(){
     try{
 
       parsed =
-        JSON.parse(decoded);
+        JSON.parse(
+          decoded
+        );
 
     }catch(error){
 
@@ -719,12 +785,16 @@ function getItemIds(){
 
     return [
       ...new Set(
+
         parsed
           .map(
             value =>
-              String(value).trim()
+              String(
+                value
+              ).trim()
           )
           .filter(Boolean)
+
       )
     ];
 
@@ -750,19 +820,25 @@ const itemIds =
    LOAD MARKETPLACE ITEM
 ===================================================== */
 
-async function loadItem(id){
+async function loadItem(
+  id
+){
 
   const snapshot =
     await getDoc(
+
       doc(
         db,
         "marketplace",
         id
       )
+
     );
 
 
-  if(!snapshot.exists()){
+  if(
+    !snapshot.exists()
+  ){
 
     return null;
 
@@ -781,7 +857,7 @@ async function loadItem(id){
 
 
 /* =====================================================
-   VALUE
+   FIRST VALUE
 ===================================================== */
 
 function firstValue(
@@ -820,11 +896,15 @@ function firstValue(
    PRICE
 ===================================================== */
 
-function getPrice(data){
+function getPrice(
+  data
+){
 
   const value =
     firstValue(
+
       data,
+
       [
         "price",
         "amount",
@@ -833,7 +913,9 @@ function getPrice(data){
         "currentPrice",
         "marketplacePrice"
       ],
+
       0
+
     );
 
 
@@ -841,7 +923,9 @@ function getPrice(data){
     typeof value === "number"
   ){
 
-    return Number.isFinite(value)
+    return Number.isFinite(
+      value
+    )
       ? value
       : 0;
 
@@ -850,15 +934,21 @@ function getPrice(data){
 
   const number =
     Number(
-      String(value)
-        .replace(
-          /[^0-9.-]/g,
-          ""
-        )
+
+      String(
+        value
+      )
+      .replace(
+        /[^0-9.-]/g,
+        ""
+      )
+
     );
 
 
-  return Number.isFinite(number)
+  return Number.isFinite(
+    number
+  )
     ? number
     : 0;
 
@@ -869,24 +959,33 @@ function getPrice(data){
    CURRENCY
 ===================================================== */
 
-function getCurrency(data){
+function getCurrency(
+  data
+){
 
   return String(
+
     firstValue(
+
       data,
+
       [
         "currency",
         "currencyCode"
       ],
+
       "TZS"
+
     )
-  ).toUpperCase();
+
+  )
+  .toUpperCase();
 
 }
 
 
 /* =====================================================
-   FORMAT
+   FORMAT PRICE
 ===================================================== */
 
 function formatPrice(
@@ -895,46 +994,60 @@ function formatPrice(
 ){
 
   return (
+
     currency +
     " " +
     new Intl.NumberFormat(
+
       "en-TZ",
+
       {
         maximumFractionDigits:2
       }
+
     ).format(
-      Number(amount) || 0
+      Number(
+        amount
+      ) || 0
     )
+
   );
 
 }
 
 
 /* =====================================================
-   ESCAPE
+   ESCAPE HTML
 ===================================================== */
 
-function escapeHtml(value){
+function escapeHtml(
+  value
+){
 
   return String(
     value ?? ""
   )
+
   .replace(
     /&/g,
     "&amp;"
   )
+
   .replace(
     /</g,
     "&lt;"
   )
+
   .replace(
     />/g,
     "&gt;"
   )
+
   .replace(
     /"/g,
     "&quot;"
   )
+
   .replace(
     /'/g,
     "&#039;"
@@ -944,7 +1057,7 @@ function escapeHtml(value){
 
 
 /* =====================================================
-   SPLIT NAME
+   SPLIT CUSTOMER NAME
 ===================================================== */
 
 function splitName(
@@ -952,10 +1065,14 @@ function splitName(
 ){
 
   const parts =
-    String(fullName)
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean);
+    String(
+      fullName
+    )
+    .trim()
+    .split(
+      /\s+/
+    )
+    .filter(Boolean);
 
 
   return {
@@ -965,7 +1082,9 @@ function splitName(
       "Customer",
 
     lastName:
-      parts.slice(1).join(" ") ||
+      parts
+        .slice(1)
+        .join(" ") ||
       "Customer"
 
   };
@@ -992,10 +1111,14 @@ async function loadCheckout(){
 
   const results =
     await Promise.all(
+
       itemIds.map(
         id =>
-          loadItem(id)
+          loadItem(
+            id
+          )
       )
+
     );
 
 
@@ -1038,7 +1161,9 @@ async function loadCheckout(){
 
     const title =
       firstValue(
+
         item,
+
         [
           "title",
           "name",
@@ -1046,26 +1171,34 @@ async function loadCheckout(){
           "productName",
           "itemTitle"
         ],
+
         "Marketplace Item"
+
       );
 
 
     const category =
       firstValue(
+
         item,
+
         [
           "category",
           "marketplaceCategory",
           "productCategory",
           "field"
         ],
+
         "Marketplace"
+
       );
 
 
     const image =
       firstValue(
+
         item,
+
         [
           "image",
           "imageUrl",
@@ -1074,16 +1207,22 @@ async function loadCheckout(){
           "cover",
           "coverImage"
         ],
+
         ""
+
       );
 
 
     const price =
-      getPrice(item);
+      getPrice(
+        item
+      );
 
 
     currency =
-      getCurrency(item);
+      getCurrency(
+        item
+      );
 
 
     subtotal +=
@@ -1196,37 +1335,43 @@ async function loadCheckout(){
 ===================================================== */
 
 loadCheckout()
-  .catch(
-    error => {
 
-      console.error(
-        "CHECKOUT:",
-        error
-      );
+.catch(
 
+  error => {
 
-      $("loading").style.display =
-        "none";
+    console.error(
+      "CHECKOUT:",
+      error
+    );
 
 
-      $("error").textContent =
-        error.message ||
-        "Unable to prepare checkout.";
+    $("loading").style.display =
+      "none";
 
 
-      $("error").style.display =
-        "block";
+    $("error").textContent =
+      error.message ||
+      "Unable to prepare checkout.";
 
-    }
-  );
+
+    $("error").style.display =
+      "block";
+
+  }
+
+);
 
 
 /* =====================================================
-   CREATE UNIVERSAL PAYMENT
+   CREATE PAYMENT ORDER
 ===================================================== */
 
-$("payBtn").addEventListener(
+$("payBtn")
+.addEventListener(
+
   "click",
+
   async () => {
 
     const checkout =
@@ -1280,7 +1425,8 @@ $("payBtn").addEventListener(
         "Please enter your full name."
       );
 
-      $("customerName").focus();
+      $("customerName")
+        .focus();
 
       return;
 
@@ -1288,16 +1434,22 @@ $("payBtn").addEventListener(
 
 
     if(
+
       !email ||
+
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        .test(email)
+        .test(
+          email
+        )
+
     ){
 
       alert(
         "Please enter a valid email address."
       );
 
-      $("customerEmail").focus();
+      $("customerEmail")
+        .focus();
 
       return;
 
@@ -1308,7 +1460,9 @@ $("payBtn").addEventListener(
       firstName,
       lastName
     } =
-      splitName(name);
+      splitName(
+        name
+      );
 
 
     const button =
@@ -1335,27 +1489,27 @@ $("payBtn").addEventListener(
         "-" +
         Math.random()
           .toString(36)
-          .slice(2,8)
+          .slice(
+            2,
+            8
+          )
           .toUpperCase();
 
 
       /* =====================================
-         UNIVERSAL ITEMS
+         ITEMS
       ====================================== */
 
       const items =
         checkout.items.map(
-          item => ({
 
-            productId:
-              item.id,
+          item => {
 
-            productType:
-              "marketplace",
-
-            title:
+            const itemName =
               firstValue(
+
                 item,
+
                 [
                   "title",
                   "name",
@@ -1363,109 +1517,82 @@ $("payBtn").addEventListener(
                   "productName",
                   "itemTitle"
                 ],
+
                 "Marketplace Item"
-              ),
 
-            quantity:
-              1,
+              );
 
-            price:
-              getPrice(item)
 
-          })
+            return {
+
+              id:
+                item.id,
+
+              name:
+                itemName,
+
+              quantity:
+                1,
+
+              price:
+                getPrice(
+                  item
+                )
+
+            };
+
+          }
+
         );
 
 
       /* =====================================
-         UNIVERSAL PAYLOAD
+         EXACT UNIVERSAL PAYMENT SYSTEM
       ====================================== */
 
       const payload = {
 
-        orderId:
-
-          orderId,
-
+        orderId,
 
         amount:
-
           checkout.total,
 
-
         currency:
-
           checkout.currency,
 
-
         description:
-
           `LetsStudy Pro Marketplace Order ${orderId}`,
 
+        email,
 
-        email:
+        firstName,
 
-          email,
-
-
-        firstName:
-
-          firstName,
-
-
-        lastName:
-
-          lastName,
-
+        lastName,
 
         phoneNumber:
-
           phone,
 
-
-        country:
-
-          country,
-
+        country,
 
         paymentMethod:
-
           "pesapal",
 
-
         productType:
-
           "marketplace",
 
-
-        items:
-
-          items,
-
-
-        itemIds:
-
-          checkout.items.map(
-            item =>
-              item.id
-          ),
-
-
-        note:
-
-          note
+        items
 
       };
 
 
       /* =====================================
-         EXISTING UNIVERSAL API
+         SEND ORDER TO API
       ====================================== */
 
       const response =
         await fetch(
 
-          PAYMENT_API +
-          "/api/pesapal/create-order",
+          CREATE_ORDER_ENDPOINT,
 
           {
 
@@ -1482,7 +1609,7 @@ $("payBtn").addEventListener(
 
             },
 
-            body:
+                        body:
               JSON.stringify(
                 payload
               )
@@ -1530,306 +1657,237 @@ $("payBtn").addEventListener(
       const orderTrackingId =
         result.orderTrackingId ||
         result.OrderTrackingId ||
+        result.trackingId ||
         result.order?.orderTrackingId ||
         "";
 
 
       const merchantReference =
-  result.merchantReference ||
-  result.merchant_reference ||
-  result.order?.merchantReference ||
-  returnedOrderId;
-
-
-const redirectUrl =
-  result.redirectUrl ||
-  result.redirect_url ||
-  result.paymentUrl ||
-  result.payment_url ||
-  result.iframeUrl ||
-  result.iframeURL ||
-  result.order?.redirectUrl ||
-  result.order?.redirect_url ||
-  "";
-
-
-/* =====================================
-   VALIDATE PAYMENT RESPONSE
-===================================== */
-
-if(
-  !redirectUrl &&
-  !orderTrackingId
-){
-
-  throw new Error(
-    "Pesapal did not return a valid payment URL or tracking ID."
-  );
-
-}
-
-
-/* =====================================
-   SAVE PENDING PAYMENT
-===================================== */
-
-const pendingPayment = {
-
-  orderId:
-    returnedOrderId,
-
-  orderTrackingId:
-    orderTrackingId,
-
-  merchantReference:
-    merchantReference,
-
-  redirectUrl:
-    redirectUrl,
-
-  productType:
-    "marketplace",
-
-  itemIds:
-    checkout.items.map(
-      item =>
-        item.id
-    ),
-
-  items:
-    items,
-
-  amount:
-    checkout.total,
-
-  currency:
-    checkout.currency,
-
-  customer:{
-
-    name:
-      name,
-
-    firstName:
-      firstName,
-
-    lastName:
-      lastName,
-
-    email:
-      email,
-
-    phone:
-      phone,
-
-    country:
-      country
-
-  },
-
-  note:
-    note,
-
-  status:
-    "PENDING",
-
-  createdAt:
-    new Date()
-      .toISOString()
-
-};
-
-
-try{
-
-  localStorage.setItem(
-    "pendingMarketplaceOrder",
-    JSON.stringify(
-      pendingPayment
-    )
-  );
-
-}catch(error){
-
-  console.warn(
-    "LOCAL STORAGE:",
-    error
-  );
-
-}
-
-
-try{
-
-  sessionStorage.setItem(
-    "marketplacePayment",
-    JSON.stringify(
-      pendingPayment
-    )
-  );
-
-}catch(error){
-
-  console.warn(
-    "SESSION STORAGE:",
-    error
-  );
-
-}
-
-
-/* =====================================
-   BUILD UNIVERSAL PAYMENT URL
-===================================== */
-
-const paymentParams =
-  new URLSearchParams();
-
-
-paymentParams.set(
-  "orderId",
-  returnedOrderId
-);
-
-
-if(orderTrackingId){
-
-  paymentParams.set(
-    "orderTrackingId",
-    orderTrackingId
-  );
-
-}
-
-
-if(merchantReference){
-
-  paymentParams.set(
-    "merchantReference",
-    merchantReference
-  );
-
-}
-
-
-if(redirectUrl){
-
-  paymentParams.set(
-    "redirectUrl",
-    redirectUrl
-  );
-
-}
-
-
-paymentParams.set(
-  "productType",
-  "marketplace"
-);
-
-
-/* =====================================
-   OPEN UNIVERSAL PAYMENT PAGE
-===================================== */
-
-button.textContent =
-  "Opening Payment...";
-
-
-window.location.href =
-  "payment.html?" +
-  paymentParams.toString();
-
-
-}catch(error){
-
-  console.error(
-    "PAYMENT CREATION:",
-    error
-  );
-
-
-  alert(
-    error.message ||
-    "Unable to start payment. Please try again."
-  );
-
-
-  button.disabled =
-    false;
-
-
-  button.textContent =
-    "Continue to Payment";
-
-}
-
-});
-
-
-/* =====================================================
-   SAVE CUSTOMER DATA
-===================================================== */
-
-[
-  "customerName",
-  "customerEmail",
-  "customerPhone",
-  "customerCountry"
-].forEach(
-  id => {
-
-    $(id).addEventListener(
-      "input",
-      () => {
-
-        try{
-
-          localStorage.setItem(
-            "marketplaceCustomer",
-            JSON.stringify({
-
-              name:
-                $("customerName")
-                  .value
-                  .trim(),
-
-              email:
-                $("customerEmail")
-                  .value
-                  .trim(),
-
-              phone:
-                $("customerPhone")
-                  .value
-                  .trim(),
-
-              country:
-                $("customerCountry")
-                  .value
-                  .trim()
-
-            })
-          );
-
-        }catch(error){
-
-          console.warn(
-            "CUSTOMER SAVE:",
-            error
-          );
-
-        }
+        result.merchantReference ||
+        result.merchant_reference ||
+        result.order?.merchantReference ||
+        returnedOrderId;
+
+
+      const redirectUrl =
+        result.redirectUrl ||
+        result.redirect_url ||
+        result.paymentUrl ||
+        result.payment_url ||
+        result.iframeUrl ||
+        result.iframe_url ||
+        "";
+
+
+      if(
+        !redirectUrl &&
+        !orderTrackingId
+      ){
+
+        throw new Error(
+          "Payment URL was not returned by the payment gateway."
+        );
 
       }
-    );
+
+
+      /* =====================================
+         SAVE PENDING PAYMENT
+      ====================================== */
+
+      const pendingPayment = {
+
+        orderId:
+          returnedOrderId,
+
+        merchantReference:
+          merchantReference,
+
+        orderTrackingId:
+          orderTrackingId,
+
+        productType:
+          "marketplace",
+
+        amount:
+          checkout.total,
+
+        currency:
+          checkout.currency,
+
+        customer:{
+
+          name:
+            name,
+
+          email:
+            email,
+
+          phone:
+            phone,
+
+          country:
+            country
+
+        },
+
+        items:
+          items,
+
+        note:
+          note,
+
+        createdAt:
+          new Date().toISOString()
+
+      };
+
+
+      localStorage.setItem(
+        "pendingPayment",
+        JSON.stringify(
+          pendingPayment
+        )
+      );
+
+
+      localStorage.setItem(
+        "pendingMarketplacePayment",
+        JSON.stringify(
+          pendingPayment
+        )
+      );
+
+
+      /* =====================================
+         SAVE CUSTOMER
+      ====================================== */
+
+      localStorage.setItem(
+        "marketplaceCustomer",
+        JSON.stringify({
+
+          name:
+            name,
+
+          email:
+            email,
+
+          phone:
+            phone,
+
+          country:
+            country
+
+        })
+      );
+
+
+      /* =====================================
+         BUILD PAYMENT PAGE
+      ====================================== */
+
+      const paymentPage =
+        new URL(
+          "payment.html",
+          window.location.origin
+        );
+
+
+      paymentPage.searchParams.set(
+        "orderId",
+        returnedOrderId
+      );
+
+
+      paymentPage.searchParams.set(
+        "merchantReference",
+        merchantReference
+      );
+
+
+      paymentPage.searchParams.set(
+        "productType",
+        "marketplace"
+      );
+
+
+      paymentPage.searchParams.set(
+        "amount",
+        String(
+          checkout.total
+        )
+      );
+
+
+      paymentPage.searchParams.set(
+        "currency",
+        checkout.currency
+      );
+
+
+      if(orderTrackingId){
+
+        paymentPage.searchParams.set(
+          "orderTrackingId",
+          orderTrackingId
+        );
+
+      }
+
+
+      if(redirectUrl){
+
+        paymentPage.searchParams.set(
+          "redirectUrl",
+          redirectUrl
+        );
+
+      }
+
+
+      /* =====================================
+         REDIRECT TO PAYMENT
+      ====================================== */
+
+      button.textContent =
+        "Opening Payment...";
+
+
+      window.location.href =
+        paymentPage.href;
+
+
+    }catch(error){
+
+      console.error(
+        "MARKETPLACE PAYMENT:",
+        error
+      );
+
+
+      button.disabled =
+        false;
+
+
+      button.textContent =
+        "Continue to Payment";
+
+
+      alert(
+        error.message ||
+        "Unable to create payment. Please try again."
+      );
+
+    }
 
   }
+
 );
 
 
 /* =====================================================
-   RESTORE CUSTOMER DATA
+   RESTORE CUSTOMER INFORMATION
 ===================================================== */
 
 try{
@@ -1889,6 +1947,71 @@ try{
   );
 
 }
+
+
+/* =====================================================
+   SAVE CUSTOMER INFORMATION
+===================================================== */
+
+function saveCustomer(){
+
+  try{
+
+    localStorage.setItem(
+      "marketplaceCustomer",
+      JSON.stringify({
+
+        name:
+          $("customerName")
+            .value
+            .trim(),
+
+        email:
+          $("customerEmail")
+            .value
+            .trim(),
+
+        phone:
+          $("customerPhone")
+            .value
+            .trim(),
+
+        country:
+          $("customerCountry")
+            .value
+            .trim()
+
+      })
+    );
+
+  }catch(error){
+
+    console.warn(
+      "CUSTOMER SAVE:",
+      error
+    );
+
+  }
+
+}
+
+
+[
+  "customerName",
+  "customerEmail",
+  "customerPhone",
+  "customerCountry"
+]
+.forEach(
+  id => {
+
+    $(id).addEventListener(
+      "input",
+      saveCustomer
+    );
+
+  }
+);
 
 </script>
 
