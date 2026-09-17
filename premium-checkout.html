@@ -468,15 +468,28 @@ Payment Details
 </h2>
 
 
-<label for="name">
-Full Name
+<label for="firstName">
+First Name
 </label>
 
 <input
-  id="name"
+  id="firstName"
   type="text"
-  placeholder="Your full name"
-  autocomplete="name"
+  placeholder="Your first name"
+  autocomplete="given-name"
+  required
+>
+
+
+<label for="lastName">
+Last Name
+</label>
+
+<input
+  id="lastName"
+  type="text"
+  placeholder="Your last name"
+  autocomplete="family-name"
   required
 >
 
@@ -494,15 +507,29 @@ Email
 >
 
 
-<label for="phone">
+<label for="phoneNumber">
 Phone
 </label>
 
 <input
-  id="phone"
+  id="phoneNumber"
   type="tel"
   placeholder="+255700000000"
   autocomplete="tel"
+  required
+>
+
+
+<label for="country">
+Country
+</label>
+
+<input
+  id="country"
+  type="text"
+  placeholder="TZ"
+  value="TZ"
+  autocomplete="country"
   required
 >
 
@@ -673,16 +700,6 @@ function showError(
   message
 ){
 
-  loading.classList.add(
-    "hidden"
-  );
-
-
-  checkout.classList.add(
-    "hidden"
-  );
-
-
   errorBox.textContent =
     message ||
     "Unable to load checkout.";
@@ -837,12 +854,22 @@ try{
     typeof saved === "object"
   ){
 
-    if(saved.name){
+    if(saved.firstName){
 
       document.getElementById(
-        "name"
+        "firstName"
       ).value =
-        saved.name;
+        saved.firstName;
+
+    }
+
+
+    if(saved.lastName){
+
+      document.getElementById(
+        "lastName"
+      ).value =
+        saved.lastName;
 
     }
 
@@ -857,12 +884,22 @@ try{
     }
 
 
-    if(saved.phone){
+    if(saved.phoneNumber){
 
       document.getElementById(
-        "phone"
+        "phoneNumber"
       ).value =
-        saved.phone;
+        saved.phoneNumber;
+
+    }
+
+
+    if(saved.country){
+
+      document.getElementById(
+        "country"
+      ).value =
+        saved.country;
 
     }
 
@@ -879,6 +916,58 @@ try{
 
 
 /* =========================================
+   SAVE CUSTOMER
+========================================= */
+
+function saveCustomer(){
+
+  try{
+
+    localStorage.setItem(
+      "premiumCustomer",
+      JSON.stringify({
+
+        firstName:
+          document.getElementById(
+            "firstName"
+          ).value.trim(),
+
+        lastName:
+          document.getElementById(
+            "lastName"
+          ).value.trim(),
+
+        email:
+          document.getElementById(
+            "email"
+          ).value.trim(),
+
+        phoneNumber:
+          document.getElementById(
+            "phoneNumber"
+          ).value.trim(),
+
+        country:
+          document.getElementById(
+            "country"
+          ).value.trim()
+
+      })
+    );
+
+  }catch(error){
+
+    console.warn(
+      "CUSTOMER SAVE:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =========================================
    CREATE PREMIUM PAYMENT
 ========================================= */
 
@@ -886,9 +975,15 @@ payButton.addEventListener(
   "click",
   async () => {
 
-    const name =
+    const firstName =
       document.getElementById(
-        "name"
+        "firstName"
+      ).value.trim();
+
+
+    const lastName =
+      document.getElementById(
+        "lastName"
       ).value.trim();
 
 
@@ -898,9 +993,15 @@ payButton.addEventListener(
       ).value.trim();
 
 
-    const phone =
+    const phoneNumber =
       document.getElementById(
-        "phone"
+        "phoneNumber"
+      ).value.trim();
+
+
+    const country =
+      document.getElementById(
+        "country"
       ).value.trim();
 
 
@@ -914,10 +1015,21 @@ payButton.addEventListener(
        VALIDATION
     ====================================== */
 
-    if(!name){
+    if(!firstName){
 
       alert(
-        "Please enter your full name."
+        "Please enter your first name."
+      );
+
+      return;
+
+    }
+
+
+    if(!lastName){
+
+      alert(
+        "Please enter your last name."
       );
 
       return;
@@ -940,10 +1052,21 @@ payButton.addEventListener(
     }
 
 
-    if(!phone){
+    if(!phoneNumber){
 
       alert(
         "Please enter your phone number."
+      );
+
+      return;
+
+    }
+
+
+    if(!country){
+
+      alert(
+        "Please enter your country."
       );
 
       return;
@@ -963,6 +1086,9 @@ payButton.addEventListener(
 
 
     if(
+      !Number.isFinite(
+        selectedPrice
+      ) ||
       selectedPrice <= 0
     ){
 
@@ -985,26 +1111,7 @@ payButton.addEventListener(
 
     try{
 
-      /* =====================================
-         NAME
-      ====================================== */
-
-      const parts =
-        name
-          .split(/\s+/)
-          .filter(Boolean);
-
-
-      const firstName =
-        parts[0] ||
-        "Customer";
-
-
-      const lastName =
-        parts
-          .slice(1)
-          .join(" ") ||
-        "User";
+      saveCustomer();
 
 
       /* =====================================
@@ -1022,8 +1129,16 @@ payButton.addEventListener(
 
 
       /* =====================================
-         UNIVERSAL ITEM
+         PREMIUM ITEM
       ====================================== */
+
+      const planName =
+        selectedPlan
+          .charAt(0)
+          .toUpperCase() +
+        selectedPlan
+          .slice(1);
+
 
       const item = {
 
@@ -1033,11 +1148,7 @@ payButton.addEventListener(
 
         name:
           "LetsStudy Pro Premium " +
-          selectedPlan
-            .charAt(0)
-            .toUpperCase() +
-          selectedPlan
-            .slice(1),
+          planName,
 
         quantity:
           1,
@@ -1054,66 +1165,47 @@ payButton.addEventListener(
 
       const payload = {
 
-        orderId:
-
-          orderId,
-
+        orderId,
 
         amount:
-
           selectedPrice,
 
-
         currency:
-
           "TZS",
 
-
         description:
-
           "LetsStudy Pro Premium " +
-          selectedPlan +
+          planName +
           " Membership",
 
+        email,
 
-        email:
+        firstName,
 
-          email,
+        lastName,
 
+        phoneNumber,
 
-        firstName:
-
-          firstName,
-
-
-        lastName:
-
-          lastName,
-
-
-        phoneNumber:
-
-          phone,
-
-
-        country:
-
-          "TZ",
-
+        country,
 
         paymentMethod:
-
           "pesapal",
 
-
         productType:
-
           "premium",
 
+        productId:
+          item.id,
 
-        items:
+        plan:
+          selectedPlan,
 
-          [item]
+        userId:
+          userId,
+
+        items:[
+          item
+        ]
 
       };
 
@@ -1126,7 +1218,6 @@ payButton.addEventListener(
         await fetch(
           CREATE_ORDER_ENDPOINT,
           {
-
             method:
               "POST",
 
@@ -1147,22 +1238,31 @@ payButton.addEventListener(
         );
 
 
-      const result =
-        await response
-          .json()
-          .catch(
-            () => ({})
-          );
+      let result = null;
+
+
+      try{
+
+        result =
+          await response.json();
+
+      }catch{
+
+        result =
+          null;
+
+      }
 
 
       if(
         !response.ok ||
-        result.success === false
+        !result ||
+        result.success !== true
       ){
 
         throw new Error(
-          result.message ||
-          result.error ||
+          result?.message ||
+          result?.error ||
           "Unable to create Premium payment order."
         );
 
@@ -1182,6 +1282,7 @@ payButton.addEventListener(
 
       const orderTrackingId =
         result.orderTrackingId ||
+        result.order_tracking_id ||
         result.OrderTrackingId ||
         result.trackingId ||
         result.order?.orderTrackingId ||
@@ -1241,8 +1342,7 @@ payButton.addEventListener(
           "premium",
 
         productId:
-          "premium-" +
-          selectedPlan,
+          item.id,
 
         plan:
           selectedPlan,
@@ -1259,25 +1359,24 @@ payButton.addEventListener(
         currency:
           "TZS",
 
+        description:
+          payload.description,
+
+        items:[
+          item
+        ],
+
         customer:{
 
-          name:
-            name,
+          firstName,
 
-          firstName:
-            firstName,
+          lastName,
 
-          lastName:
-            lastName,
+          email,
 
-          email:
-            email,
+          phoneNumber,
 
-          phone:
-            phone,
-
-          country:
-            "TZ"
+          country
 
         },
 
@@ -1292,35 +1391,54 @@ payButton.addEventListener(
 
 
       /* =====================================
-         SAVE PENDING PAYMENT
+         LOCAL STORAGE
       ====================================== */
 
-      try{
-
-        localStorage.setItem(
-          "pendingPayment",
-          JSON.stringify(
-            pendingPayment
-          )
-        );
+      localStorage.setItem(
+        "pendingPayment",
+        JSON.stringify(
+          pendingPayment
+        )
+      );
 
 
-        localStorage.setItem(
-          "pendingPremiumOrder",
-          JSON.stringify(
-            pendingPayment
-          )
-        );
+      localStorage.setItem(
+        "pendingPremiumPayment",
+        JSON.stringify(
+          pendingPayment
+        )
+      );
 
-      }catch(error){
 
-        console.warn(
-          "LOCAL STORAGE:",
-          error
-        );
+      localStorage.setItem(
+        "pendingPremiumOrder",
+        JSON.stringify(
+          pendingPayment
+        )
+      );
 
-      }
 
+      localStorage.setItem(
+        "pendingCheckoutCustomer",
+        JSON.stringify({
+
+          firstName,
+
+          lastName,
+
+          email,
+
+          phoneNumber,
+
+          country
+
+        })
+      );
+
+
+      /* =====================================
+         SESSION STORAGE
+      ====================================== */
 
       try{
 
@@ -1339,54 +1457,6 @@ payButton.addEventListener(
         );
 
       }
-
-
-      /* =====================================
-         SAVE CUSTOMER
-      ====================================== */
-
-      try{
-
-        localStorage.setItem(
-          "premiumCustomer",
-          JSON.stringify({
-
-            name:
-              name,
-
-            email:
-              email,
-
-            phone:
-              phone
-
-          })
-        );
-
-      }catch(error){
-
-        console.warn(
-          "CUSTOMER STORAGE:",
-          error
-        );
-
-      }
-
-
-      /* =====================================
-         SAVE PAYMENT AMOUNT
-      ====================================== */
-
-      try{
-
-        localStorage.setItem(
-          "letsStudyPaymentAmount",
-          String(
-            selectedPrice
-          )
-        );
-
-      }catch(error){}
 
 
       /* =====================================
@@ -1425,6 +1495,12 @@ payButton.addEventListener(
 
 
       paymentPage.searchParams.set(
+        "productId",
+        item.id
+      );
+
+
+      paymentPage.searchParams.set(
         "plan",
         selectedPlan
       );
@@ -1447,7 +1523,7 @@ payButton.addEventListener(
       if(orderTrackingId){
 
         paymentPage.searchParams.set(
-          "orderTrackingId",
+                    "orderTrackingId",
           orderTrackingId
         );
 
@@ -1471,6 +1547,7 @@ payButton.addEventListener(
       window.location.href =
         paymentPage.href;
 
+
     }catch(error){
 
       console.error(
@@ -1480,8 +1557,8 @@ payButton.addEventListener(
 
 
       showError(
-        error.message ||
-        "Unable to start payment."
+        error?.message ||
+        "Unable to start payment. Please try again."
       );
 
 
@@ -1499,6 +1576,35 @@ payButton.addEventListener(
 
 
 /* =========================================
+   CUSTOMER AUTO SAVE
+========================================= */
+
+[
+  "firstName",
+  "lastName",
+  "email",
+  "phoneNumber",
+  "country"
+].forEach(
+  id => {
+
+    const field =
+      document.getElementById(id);
+
+    if(field){
+
+      field.addEventListener(
+        "input",
+        saveCustomer
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================================
    SHOW CHECKOUT
 ========================================= */
 
@@ -1506,9 +1612,17 @@ loading.classList.add(
   "hidden"
 );
 
-
 checkout.classList.remove(
   "hidden"
+);
+
+
+/* =========================================
+   INITIAL PLAN
+========================================= */
+
+selectPlan(
+  selectedPlan
 );
 
 </script>
