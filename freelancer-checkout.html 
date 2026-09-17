@@ -233,6 +233,19 @@ h2{
   color:#64748b;
 }
 
+.payment-box{
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+  padding:14px;
+  border-radius:10px;
+  margin-top:10px;
+}
+
+.payment-box strong{
+  display:block;
+  margin-bottom:5px;
+}
+
 @media(max-width:700px){
 
   .checkout{
@@ -410,6 +423,22 @@ h2{
               South Africa
             </option>
 
+            <option value="US">
+              United States
+            </option>
+
+            <option value="GB">
+              United Kingdom
+            </option>
+
+            <option value="CA">
+              Canada
+            </option>
+
+            <option value="AU">
+              Australia
+            </option>
+
             <option value="OTHER">
               Other
             </option>
@@ -454,32 +483,23 @@ h2{
 
         <div class="field">
 
-          <label for="paymentMethod">
+          <label>
             Payment Method
           </label>
 
-          <select
-            id="paymentMethod"
-            required
-          >
+          <div class="payment-box">
 
-            <option value="">
-              Select payment method
-            </option>
+            <strong>
+              Pesapal
+            </strong>
 
-            <option value="mobile_money">
-              Mobile Money
-            </option>
+            <span class="muted">
+              Secure payment through Pesapal.
+              Available payment options will be
+              shown during checkout.
+            </span>
 
-            <option value="card">
-              Bank Card
-            </option>
-
-            <option value="bank">
-              Bank Payment
-            </option>
-
-          </select>
+          </div>
 
         </div>
 
@@ -571,8 +591,8 @@ h2{
         style="margin-top:18px;font-size:13px;"
       >
         Your freelance order is created through
-        the LetsStudy Pro payment system before
-        you continue to Pesapal.
+        the LetsStudy Pro universal payment system
+        before you continue to Pesapal.
       </p>
 
     </aside>
@@ -588,11 +608,11 @@ h2{
 
 
 /* =====================================================
-   CONFIGURATION
+   UNIVERSAL PAYMENT API
 ===================================================== */
 
-const PAYMENT_API =
-  "https://api.letsstudy.pro";
+const CREATE_ORDER_ENDPOINT =
+  "https://api.letsstudy.pro/api/pesapal/create-order";
 
 
 /* =====================================================
@@ -603,6 +623,7 @@ const params =
   new URLSearchParams(
     window.location.search
   );
+
 
 const freelancerId =
   params.get("id") ||
@@ -620,25 +641,30 @@ const loading =
     "loading"
   );
 
+
 const checkout =
   document.getElementById(
     "checkout"
   );
+
 
 const freelancerBox =
   document.getElementById(
     "freelancer"
   );
 
+
 const form =
   document.getElementById(
     "checkoutForm"
   );
 
+
 const message =
   document.getElementById(
     "message"
   );
+
 
 const submitButton =
   document.getElementById(
@@ -719,6 +745,7 @@ async function loadFreelancer(){
     loading.style.display =
       "none";
 
+
     checkout.style.display =
       "grid";
 
@@ -729,6 +756,7 @@ async function loadFreelancer(){
       "LOAD FREELANCER:",
       error
     );
+
 
     showFatalError(
       error.message ||
@@ -741,7 +769,7 @@ async function loadFreelancer(){
 
 
 /* =====================================================
-   FREELANCER DATA
+   FREELANCER NAME
 ===================================================== */
 
 function getFreelancerName(){
@@ -757,6 +785,10 @@ function getFreelancerName(){
 }
 
 
+/* =====================================================
+   SERVICE NAME
+===================================================== */
+
 function getServiceName(){
 
   return (
@@ -770,6 +802,10 @@ function getServiceName(){
 
 }
 
+
+/* =====================================================
+   PRICE
+===================================================== */
 
 function getPrice(){
 
@@ -787,7 +823,9 @@ function getPrice(){
 
     freelancerData?.startingRate,
 
-    freelancerData?.packagePrice
+    freelancerData?.packagePrice,
+
+    freelancerData?.servicePrice
 
   ];
 
@@ -830,6 +868,10 @@ function getPrice(){
 
 }
 
+
+/* =====================================================
+   CURRENCY
+===================================================== */
 
 function getCurrency(){
 
@@ -897,14 +939,18 @@ function renderFreelancer(data){
   const name =
     getFreelancerName();
 
+
   const title =
     getServiceName();
+
 
   const price =
     getPrice();
 
+
   const currency =
     getCurrency();
+
 
   const photo =
     safeImage(
@@ -1019,6 +1065,7 @@ form.addEventListener(
 
     event.preventDefault();
 
+
     hideMessage();
 
 
@@ -1076,12 +1123,12 @@ form.addEventListener(
         .trim();
 
 
-    const paymentMethod =
-      document
-        .getElementById(
-          "paymentMethod"
-        )
-        .value;
+    const amount =
+      getPrice();
+
+
+    const currency =
+      getCurrency();
 
 
     /* =========================================
@@ -1160,26 +1207,6 @@ form.addEventListener(
     }
 
 
-    if(!paymentMethod){
-
-      showMessage(
-        "Please select a payment method.",
-        "error"
-      );
-
-      return;
-
-    }
-
-
-    const amount =
-      getPrice();
-
-
-    const currency =
-      getCurrency();
-
-
     if(
       amount === null ||
       amount <= 0
@@ -1196,7 +1223,7 @@ form.addEventListener(
 
 
     /* =========================================
-       SPLIT NAME
+       SPLIT CUSTOMER NAME
     ========================================== */
 
     const nameParts =
@@ -1216,7 +1243,7 @@ form.addEventListener(
 
 
     /* =========================================
-       CREATE INTERNAL ORDER ID
+       INTERNAL ORDER ID
     ========================================== */
 
     const orderId =
@@ -1230,16 +1257,22 @@ form.addEventListener(
 
 
     /* =========================================
-       UNIVERSAL ORDER ITEMS
+       UNIVERSAL ITEM
     ========================================== */
 
     const item = {
+
+      id:
+        freelancerId,
 
       productId:
         freelancerId,
 
       productType:
         "freelance",
+
+      name:
+        service,
 
       title:
         service,
@@ -1266,7 +1299,7 @@ form.addEventListener(
       currency,
 
       description:
-        `LetsStudy Pro Freelance Service Order ${orderId}`,
+        `LetsStudy Pro Freelance Service - ${service}`,
 
       email:
         customerEmail,
@@ -1280,7 +1313,8 @@ form.addEventListener(
 
       country,
 
-      paymentMethod,
+      paymentMethod:
+        "pesapal",
 
       productType:
         "freelance",
@@ -1305,6 +1339,7 @@ form.addEventListener(
     submitButton.disabled =
       true;
 
+
     submitButton.textContent =
       "Creating Payment...";
 
@@ -1312,13 +1347,12 @@ form.addEventListener(
     try{
 
       /* =========================================
-         EXISTING UNIVERSAL API
+         CREATE PESAPAL ORDER
       ========================================== */
 
       const response =
         await fetch(
-          PAYMENT_API +
-          "/api/pesapal/create-order",
+          CREATE_ORDER_ENDPOINT,
           {
 
             method:
@@ -1376,8 +1410,8 @@ form.addEventListener(
       }
 
 
-      /* =========================================
-         PAYMENT URL
+            /* =========================================
+         PAYMENT REDIRECT URL
       ========================================== */
 
       const redirectUrl =
@@ -1390,182 +1424,199 @@ form.addEventListener(
         "";
 
 
-      if(!redirectUrl){
+      /* =========================================
+         PESAPAL TRACKING ID
+      ========================================== */
+
+      const orderTrackingId =
+        data?.orderTrackingId ||
+        data?.OrderTrackingId ||
+        data?.trackingId ||
+        "";
+
+
+      /* =========================================
+         MERCHANT REFERENCE
+      ========================================== */
+
+      const merchantReference =
+        data?.merchantReference ||
+        data?.merchant_reference ||
+        orderId;
+
+
+      /* =========================================
+         VALIDATE PAYMENT DATA
+      ========================================== */
+
+      if(
+        !redirectUrl &&
+        !orderTrackingId
+      ){
 
         throw new Error(
-          "Pesapal payment URL was not returned."
+          "Pesapal payment information was not returned."
         );
 
       }
 
 
       /* =========================================
-         PESAPAL TRACKING ID
+         SAVE PENDING ORDER
       ========================================== */
 
-      const orderTrackingId =
-  data?.orderTrackingId ||
-  data?.OrderTrackingId ||
-  data?.trackingId ||
-  "";
+      const pendingOrder = {
+
+        ...payload,
+
+        status:
+          "PENDING",
+
+        orderId:
+          data?.orderId ||
+          orderId,
+
+        orderTrackingId,
+
+        merchantReference,
+
+        redirectUrl,
+
+        createdAt:
+          new Date().toISOString()
+
+      };
 
 
-/* =========================================
-   MERCHANT REFERENCE
-========================================= */
-
-const merchantReference =
-  data?.merchantReference ||
-  data?.merchant_reference ||
-  orderId;
+      localStorage.setItem(
+        "pendingFreelanceOrder",
+        JSON.stringify(
+          pendingOrder
+        )
+      );
 
 
-/* =========================================
-   VALIDATE PAYMENT DATA
-========================================= */
-
-if(
-  !redirectUrl &&
-  !orderTrackingId
-){
-
-  throw new Error(
-    "Pesapal payment information was not returned."
-  );
-
-}
+      localStorage.setItem(
+        "pendingPayment",
+        JSON.stringify(
+          pendingOrder
+        )
+      );
 
 
-/* =========================================
-   SAVE PENDING ORDER
-========================================= */
+      /* =========================================
+         BUILD UNIVERSAL PAYMENT URL
+      ========================================== */
 
-const pendingOrder = {
-
-  ...payload,
-
-  status:
-    "PENDING",
-
-  orderId:
-    data?.orderId ||
-    orderId,
-
-  orderTrackingId,
-
-  merchantReference,
-
-  redirectUrl,
-
-  createdAt:
-    new Date()
-      .toISOString()
-
-};
+      const paymentPage =
+        new URL(
+          "payment.html",
+          window.location.href
+        );
 
 
-localStorage.setItem(
-  "pendingFreelanceOrder",
-  JSON.stringify(
-    pendingOrder
-  )
+      paymentPage.searchParams.set(
+        "orderId",
+        data?.orderId ||
+        orderId
+      );
+
+
+      paymentPage.searchParams.set(
+        "merchantReference",
+        merchantReference
+      );
+
+
+      paymentPage.searchParams.set(
+        "productType",
+        "freelance"
+      );
+
+
+      paymentPage.searchParams.set(
+        "amount",
+        String(amount)
+      );
+
+
+      paymentPage.searchParams.set(
+        "currency",
+        currency
+      );
+
+
+      if(orderTrackingId){
+
+        paymentPage.searchParams.set(
+          "orderTrackingId",
+          orderTrackingId
+        );
+
+      }
+
+
+      if(redirectUrl){
+
+        paymentPage.searchParams.set(
+          "redirectUrl",
+          redirectUrl
+        );
+
+      }
+
+
+      /* =========================================
+         STATUS
+      ========================================== */
+
+      showMessage(
+        "Payment created. Opening secure payment...",
+        "success"
+      );
+
+
+      /* =========================================
+         OPEN PAYMENT PAGE
+      ========================================== */
+
+      setTimeout(
+        () => {
+
+          window.location.href =
+            paymentPage.href;
+
+        },
+        500
+      );
+
+
+    }catch(error){
+
+      console.error(
+        "FREELANCE PAYMENT:",
+        error
+      );
+
+
+      submitButton.disabled =
+        false;
+
+
+      submitButton.textContent =
+        "Continue to Payment";
+
+
+      showMessage(
+        error?.message ||
+        "Unable to create payment. Please try again.",
+        "error"
+      );
+
+    }
+
+  }
 );
-
-
-/* =========================================
-   BUILD UNIVERSAL PAYMENT URL
-========================================= */
-
-const paymentPage =
-  new URL(
-    "payment.html",
-    window.location.href
-  );
-
-
-paymentPage.searchParams.set(
-  "orderId",
-  data?.orderId ||
-  orderId
-);
-
-
-paymentPage.searchParams.set(
-  "merchantReference",
-  merchantReference
-);
-
-
-if(orderTrackingId){
-
-  paymentPage.searchParams.set(
-    "orderTrackingId",
-    orderTrackingId
-  );
-
-}
-
-
-if(redirectUrl){
-
-  paymentPage.searchParams.set(
-    "redirectUrl",
-    redirectUrl
-  );
-
-}
-
-
-/* =========================================
-   SHOW STATUS
-========================================= */
-
-showMessage(
-  "Payment created. Opening secure payment...",
-  "success"
-);
-
-
-/* =========================================
-   OPEN UNIVERSAL PAYMENT PAGE
-========================================= */
-
-setTimeout(
-  () => {
-
-    window.location.href =
-      paymentPage.href;
-
-  },
-  500
-);
-
-
-}catch(error){
-
-  console.error(
-    "FREELANCE PAYMENT:",
-    error
-  );
-
-
-  submitButton.disabled =
-    false;
-
-
-  submitButton.textContent =
-    "Continue to Payment";
-
-
-  showMessage(
-    error?.message ||
-    "Unable to create payment. Please try again.",
-    "error"
-  );
-
-}
-
-});
 
 
 /* =====================================================
