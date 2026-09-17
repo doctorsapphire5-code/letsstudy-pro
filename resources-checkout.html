@@ -165,65 +165,24 @@ header{
   font-weight:800;
 }
 
-.payment-methods{
-  display:grid;
-  gap:9px;
-}
-
-.payment-option{
-  position:relative;
-}
-
-.payment-option input{
-  position:absolute;
-  opacity:0;
-  pointer-events:none;
-}
-
-.payment-option label{
-  display:flex;
-  align-items:center;
-  gap:11px;
-  padding:12px;
-  border:1px solid #e5e7eb;
-  border-radius:10px;
-  cursor:pointer;
-  background:#fff;
-}
-
-.payment-option input:checked + label{
-  border-color:#2563eb;
+.payment-box{
+  border:2px solid #2563eb;
   background:#eff6ff;
-  box-shadow:0 0 0 1px #2563eb;
+  border-radius:10px;
+  padding:14px;
 }
 
-.payment-icon{
-  width:34px;
-  height:34px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border-radius:8px;
-  background:#eef2ff;
-  color:#2563eb;
-  font-size:16px;
-  font-weight:800;
-}
-
-.payment-text{
-  flex:1;
-}
-
-.payment-text strong{
+.payment-box strong{
   display:block;
   font-size:13px;
 }
 
-.payment-text small{
+.payment-box small{
   display:block;
-  margin-top:3px;
+  margin-top:5px;
   color:#64748b;
   font-size:11px;
+  line-height:1.5;
 }
 
 .summary{
@@ -613,105 +572,17 @@ Payment Method
 </div>
 
 
-<div class="payment-methods">
-
-
-<div class="payment-option">
-
-<input
-  type="radio"
-  name="paymentMethod"
-  id="mobile"
-  value="mobile"
-  checked
->
-
-<label for="mobile">
-
-<span class="payment-icon">
-M
-</span>
-
-<span class="payment-text">
+<div class="payment-box">
 
 <strong>
-Mobile Money
+💳 Pesapal
 </strong>
 
 <small>
-Choose a supported option inside Pesapal.
+Secure payment through Pesapal.
+Available payment options are provided
+by Pesapal during checkout.
 </small>
-
-</span>
-
-</label>
-
-</div>
-
-
-<div class="payment-option">
-
-<input
-  type="radio"
-  name="paymentMethod"
-  id="card"
-  value="card"
->
-
-<label for="card">
-
-<span class="payment-icon">
-C
-</span>
-
-<span class="payment-text">
-
-<strong>
-Card
-</strong>
-
-<small>
-Use a supported card through Pesapal.
-</small>
-
-</span>
-
-</label>
-
-</div>
-
-
-<div class="payment-option">
-
-<input
-  type="radio"
-  name="paymentMethod"
-  id="other"
-  value="other"
->
-
-<label for="other">
-
-<span class="payment-icon">
-+
-</span>
-
-<span class="payment-text">
-
-<strong>
-Other
-</strong>
-
-<small>
-Choose another option available in Pesapal.
-</small>
-
-</span>
-
-</label>
-
-</div>
-
 
 </div>
 
@@ -887,13 +758,12 @@ const db =
    UNIVERSAL PAYMENT API
 ========================================= */
 
-const API_BASE =
-  "https://api.letsstudy.pro";
-
-
 const CREATE_ORDER_ENDPOINT =
-  API_BASE +
-  "/api/pesapal/create-order";
+  "https://api.letsstudy.pro/api/pesapal/create-order";
+
+
+const PAYMENT_PAGE =
+  "payment.html";
 
 
 /* =========================================
@@ -1324,6 +1194,25 @@ function getCart(){
 
 
 /* =========================================
+   CREATE CLIENT ORDER ID
+========================================= */
+
+function createClientReference(){
+
+  return (
+    "RESOURCE-" +
+    Date.now() +
+    "-" +
+    Math.random()
+      .toString(36)
+      .slice(2,8)
+      .toUpperCase()
+  );
+
+}
+
+
+/* =========================================
    FORMAT MONEY
 ========================================= */
 
@@ -1712,65 +1601,138 @@ function saveCustomer(){
 
   }
 
-  /* =========================================
-     CREATE PESAPAL PAYMENT
-     ========================================= */
+}
 
-  try{
+
+/* =========================================
+   CREATE RESOURCE PAYMENT
+========================================= */
+
+payBtn.addEventListener(
+  "click",
+  async () => {
+
+    if(submitting){
+
+      return;
+
+    }
+
+
+    clearMessage();
+
 
     const fullName =
       fullNameInput.value.trim();
+
 
     const email =
       emailInput.value
         .trim()
         .toLowerCase();
 
-    const parts =
-      fullName
-        .split(/\s+/)
-        .filter(Boolean);
 
-    const firstName =
-      parts.shift() || "Customer";
+    const phone =
+      phoneInput.value.trim();
 
-    const lastName =
-      parts.join(" ") || firstName;
+
+    /* =====================================
+       VALIDATION
+    ====================================== */
+
+    if(!fullName){
+
+      showMessage(
+        "Please enter your full name."
+      );
+
+      fullNameInput.focus();
+
+      return;
+
+    }
+
+
+    if(
+      !email ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        .test(email)
+    ){
+
+      showMessage(
+        "Please enter a valid email address."
+      );
+
+      emailInput.focus();
+
+      return;
+
+    }
+
+
+    if(!phone){
+
+      showMessage(
+        "Please enter your phone number."
+      );
+
+      phoneInput.focus();
+
+      return;
+
+    }
+
+
+        if(
+      !email
+    ){
+
+      emailInput.focus();
+
+      return;
+
+    }
+
+
+    if(
+      !phone
+    ){
+
+      phoneInput.focus();
+
+      return;
+
+    }
+
+
+    if(
+      !country
+    ){
+
+      countryInput.focus();
+
+      return;
+
+    }
+
+
+    if(
+      !selectedPaymentMethod
+    ){
+
+      showMessage(
+        "Please select a payment method.",
+        "error"
+      );
+
+      return;
+
+    }
+
 
     const orderId =
       createClientReference();
 
-    const paymentMethod =
-      getPaymentMethod();
-
-    const items =
-      resources.map(
-        function(resource){
-
-          return {
-
-            productId:
-              resource.id,
-
-            resourceId:
-              resource.id,
-
-            productType:
-              "resource",
-
-            title:
-              getTitle(resource),
-
-            quantity:
-              1,
-
-            price:
-              getPrice(resource)
-
-          };
-
-        }
-      );
 
     const payload = {
 
@@ -1788,8 +1750,11 @@ function saveCustomer(){
 
       description:
 
-        "LetsStudy Pro Resource Order " +
-        orderId,
+        resources.length === 1
+
+          ? getTitle(resources[0])
+
+          : "LetsStudy Pro Resource Order",
 
       email:
 
@@ -1805,178 +1770,156 @@ function saveCustomer(){
 
       phoneNumber:
 
-        "",
+        phone,
 
       country:
 
-        "TZ",
+        country,
 
       paymentMethod:
 
-        paymentMethod,
+        "pesapal",
 
       productType:
 
         "resource",
 
-      resourceIds:
-
-        resources.map(
-          function(resource){
-            return resource.id;
-          }
-        ),
-
       items:
 
-        items
+        resources.map(
+
+          resource => ({
+
+            id:
+
+              resource.id,
+
+            name:
+
+              getTitle(resource),
+
+            quantity:
+
+              1,
+
+            price:
+
+              getPrice(resource)
+
+          })
+
+        )
 
     };
 
-    payBtn.disabled = true;
 
-    payBtn.textContent =
-      "Creating secure payment...";
+    try{
 
-    const response =
-      await fetch(
-        CREATE_ORDER_ENDPOINT,
-        {
-
-          method:
-            "POST",
-
-          headers:{
-            "Content-Type":
-              "application/json",
-
-            "Accept":
-              "application/json"
-          },
-
-          body:
-            JSON.stringify(
-              payload
-            )
-
-        }
+      setLoading(
+        true
       );
 
-    const result =
-      await response
-        .json()
-        .catch(
-          function(){
-            return {};
+
+      const response =
+        await fetch(
+          CREATE_ORDER_ENDPOINT,
+          {
+
+            method:
+              "POST",
+
+            headers:{
+              "Content-Type":
+                "application/json"
+            },
+
+            body:
+              JSON.stringify(
+                payload
+              )
+
           }
         );
 
-    if(
-      !response.ok ||
-      result.success === false
-    ){
 
-      throw new Error(
-        result.error ||
-        result.message ||
-        "Unable to create payment."
-      );
+      const result =
+        await response
+          .json()
+          .catch(
+            () => ({})
+          );
 
-    }
 
-    const returnedOrderId =
-      result.orderId ||
-      result.orderID ||
-      (
-        result.order &&
-        result.order.orderId
-      ) ||
-      orderId;
+      if(
+        !response.ok ||
+        result.success === false
+      ){
 
-    const orderTrackingId =
-      result.orderTrackingId ||
-      result.OrderTrackingId ||
-      (
-        result.order &&
-        result.order.orderTrackingId
-      ) ||
-      "";
+        throw new Error(
+          result.message ||
+          result.error ||
+          "Unable to create payment order."
+        );
 
-    const merchantReference =
-      result.merchantReference ||
-      result.merchant_reference ||
-      (
-        result.order &&
-        result.order.merchantReference
-      ) ||
-      returnedOrderId;
+      }
 
-    const redirectUrl =
-      result.redirectUrl ||
-      result.redirect_url ||
-      result.paymentUrl ||
-      result.payment_url ||
-      result.iframeUrl ||
-      (
-        result.order &&
-        result.order.redirectUrl
-      ) ||
-      "";
 
-    if(
-      !redirectUrl &&
-      !orderTrackingId
-    ){
+      const returnedOrderId =
+        result.orderId ||
+        result.orderID ||
+        result.order?.orderId ||
+        orderId;
 
-      throw new Error(
-        "Pesapal payment URL was not returned."
-      );
 
-    }
+      const orderTrackingId =
+        result.orderTrackingId ||
+        result.OrderTrackingId ||
+        result.trackingId ||
+        result.order?.orderTrackingId ||
+        "";
 
-    /* =========================================
-       SAVE PAYMENT INFORMATION
-       ========================================= */
 
-    localStorage.setItem(
-      "letsStudyPaymentAmount",
-      String(totalAmount)
-    );
+      const merchantReference =
+        result.merchantReference ||
+        result.merchant_reference ||
+        result.order?.merchantReference ||
+        returnedOrderId;
 
-    localStorage.setItem(
-      "resourceCustomer",
-      JSON.stringify({
 
-        name:
-          fullName,
+      const redirectUrl =
+        result.redirectUrl ||
+        result.redirect_url ||
+        result.paymentUrl ||
+        result.payment_url ||
+        result.iframeUrl ||
+        result.iframe_url ||
+        result.iframeURL ||
+        result.order?.redirectUrl ||
+        "";
 
-        email:
-          email,
 
-        firstName:
-          firstName,
+      if(
+        !redirectUrl &&
+        !orderTrackingId
+      ){
 
-        lastName:
-          lastName
+        throw new Error(
+          "Payment URL was not returned by the payment server."
+        );
 
-      })
-    );
+      }
 
-    localStorage.setItem(
-      "pendingResourceOrder",
-      JSON.stringify({
+
+      const pendingPayment = {
 
         orderId:
           returnedOrderId,
 
-        orderTrackingId:
-          orderTrackingId,
-
         merchantReference:
           merchantReference,
 
-        redirectUrl:
-          redirectUrl,
+        orderTrackingId:
+          orderTrackingId,
 
         productType:
           "resource",
@@ -1987,135 +1930,262 @@ function saveCustomer(){
         currency:
           "TZS",
 
-        paymentMethod:
-          paymentMethod,
+        email:
+          email,
+
+        firstName:
+          firstName,
+
+        lastName:
+          lastName,
+
+        phoneNumber:
+          phone,
+
+        country:
+          country,
 
         items:
-          items,
+          payload.items,
 
         createdAt:
           new Date().toISOString()
 
-      })
-    );
+      };
+
+
+      localStorage.setItem(
+        "pendingPayment",
+        JSON.stringify(
+          pendingPayment
+        )
+      );
+
+
+      localStorage.setItem(
+        "pendingResourceOrder",
+        JSON.stringify(
+          pendingPayment
+        )
+      );
+
+
+      localStorage.setItem(
+        "resourcePayment",
+        JSON.stringify(
+          pendingPayment
+        )
+      );
+
+
+      localStorage.setItem(
+        "letsStudyPaymentAmount",
+        String(
+          totalAmount
+        )
+      );
+
+
+      const paymentPage =
+        new URL(
+          "payment.html",
+          window.location.href
+        );
+
+
+      paymentPage.searchParams.set(
+        "orderId",
+        returnedOrderId
+      );
+
+
+      paymentPage.searchParams.set(
+        "merchantReference",
+        merchantReference
+      );
+
+
+      paymentPage.searchParams.set(
+        "productType",
+        "resource"
+      );
+
+
+      paymentPage.searchParams.set(
+        "type",
+        "resource"
+      );
+
+
+      paymentPage.searchParams.set(
+        "amount",
+        String(
+          totalAmount
+        )
+      );
+
+
+      paymentPage.searchParams.set(
+        "currency",
+        "TZS"
+      );
+
+
+      if(
+        orderTrackingId
+      ){
+
+        paymentPage.searchParams.set(
+          "orderTrackingId",
+          orderTrackingId
+        );
+
+      }
+
+
+      if(
+        redirectUrl
+      ){
+
+        paymentPage.searchParams.set(
+          "redirectUrl",
+          redirectUrl
+        );
+
+      }
+
+
+      window.location.href =
+        paymentPage.toString();
+
+
+    }catch(error){
+
+      console.error(
+        "Resource payment error:",
+        error
+      );
+
+
+      showMessage(
+        error.message ||
+        "Unable to start payment.",
+        "error"
+      );
+
+
+    }finally{
+
+      setLoading(
+        false
+      );
+
+    }
+
+  }
+
+
+  function saveCustomer(){
+
+    const customer = {
+
+      fullName:
+        fullNameInput.value.trim(),
+
+      email:
+        emailInput.value.trim(),
+
+      phone:
+        phoneInput.value.trim(),
+
+      country:
+        countryInput.value,
+
+      savedAt:
+        new Date().toISOString()
+
+    };
+
 
     localStorage.setItem(
-      "resourcePayment",
-      JSON.stringify({
-
-        orderId:
-          returnedOrderId,
-
-        orderTrackingId:
-          orderTrackingId,
-
-        merchantReference:
-          merchantReference,
-
-        redirectUrl:
-          redirectUrl,
-
-        amount:
-          totalAmount,
-
-        currency:
-          "TZS",
-
-        productType:
-          "resource"
-
-      })
-    );
-
-    /* =========================================
-       OPEN UNIVERSAL PAYMENT PAGE
-       ========================================= */
-
-    const paymentPage =
-      new URL(
-        "payment.html",
-        window.location.href
-      );
-
-    paymentPage.searchParams.set(
-      "type",
-      "resource"
-    );
-
-    paymentPage.searchParams.set(
-      "productType",
-      "resource"
-    );
-
-    paymentPage.searchParams.set(
-      "orderId",
-      returnedOrderId
-    );
-
-    paymentPage.searchParams.set(
-      "merchantReference",
-      merchantReference
-    );
-
-    paymentPage.searchParams.set(
-      "amount",
-      String(totalAmount)
-    );
-
-    paymentPage.searchParams.set(
-      "currency",
-      "TZS"
-    );
-
-    if(orderTrackingId){
-
-      paymentPage.searchParams.set(
-        "orderTrackingId",
-        orderTrackingId
-      );
-
-    }
-
-    if(redirectUrl){
-
-      paymentPage.searchParams.set(
-        "redirectUrl",
-        redirectUrl
-      );
-
-    }
-
-    window.location.href =
-      paymentPage.toString();
-
-  }catch(error){
-
-    console.error(
-      "RESOURCE PAYMENT ERROR:",
-      error
-    );
-
-    payBtn.disabled = false;
-
-    payBtn.textContent =
-      "Continue to Payment";
-
-    showError(
-      error.message ||
-      "Unable to create payment. Please try again."
+      "resourceCustomer",
+      JSON.stringify(
+        customer
+      )
     );
 
   }
 
-});
+
+  function restoreCustomer(){
+
+    try{
+
+      const saved =
+        JSON.parse(
+          localStorage.getItem(
+            "resourceCustomer"
+          ) || "null"
+        );
 
 
-/* =========================================
-   INITIALIZE
-   ========================================= */
+      if(
+        !saved
+      ) return;
 
-loadResources();
 
+      if(
+        saved.fullName
+      ){
+
+        fullNameInput.value =
+          saved.fullName;
+
+      }
+
+
+      if(
+        saved.email
+      ){
+
+        emailInput.value =
+          saved.email;
+
+      }
+
+
+      if(
+        saved.phone
+      ){
+
+        phoneInput.value =
+          saved.phone;
+
+      }
+
+
+      if(
+        saved.country
+      ){
+
+        countryInput.value =
+          saved.country;
+
+      }
+
+    }catch(error){
+
+      console.warn(
+        "Unable to restore customer:",
+        error
+      );
+
+    }
+
+  }
+
+
+  restoreCustomer();
 
 </script>
 
