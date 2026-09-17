@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8">
@@ -12,9 +13,15 @@
   content="Order a marketing service from LetsStudy Pro."
 >
 
-<meta name="robots" content="noindex,follow">
+<meta
+  name="robots"
+  content="noindex,follow"
+>
 
-<link rel="icon" href="favicon.ico">
+<link
+  rel="icon"
+  href="favicon.ico"
+>
 
 <style>
 
@@ -225,13 +232,19 @@ li{
     grid-template-columns:1fr;
   }
 
+  .top-inner{
+    align-items:flex-start;
+  }
+
 }
 
 </style>
 
 </head>
 
+
 <body>
+
 
 <header class="top">
 
@@ -256,6 +269,7 @@ li{
 
 <main class="container">
 
+
   <div
     id="loading"
     class="card loading"
@@ -270,15 +284,22 @@ li{
     style="display:none"
   >
 
+
+    <!-- =====================================
+         SERVICE DETAILS
+    ====================================== -->
+
     <section class="card">
 
       <span class="badge">
         MARKETING PLAN
       </span>
 
+
       <h1>
         Place Your Order
       </h1>
+
 
       <p class="muted">
         Complete the form to order this marketing service.
@@ -286,6 +307,7 @@ li{
 
 
       <div class="service">
+
 
         <div
           id="serviceTitle"
@@ -320,6 +342,7 @@ li{
           class="notice"
         ></div>
 
+
       </div>
 
 
@@ -336,10 +359,17 @@ li{
 
       </ul>
 
+
     </section>
 
 
+
+    <!-- =====================================
+         CUSTOMER CHECKOUT
+    ====================================== -->
+
     <section class="card">
+
 
       <h2>
         Customer Information
@@ -360,9 +390,11 @@ li{
 
       <form id="orderForm">
 
+
         <label for="name">
           Full Name
         </label>
+
 
         <input
           id="name"
@@ -375,9 +407,11 @@ li{
         >
 
 
+
         <label for="email">
           Email Address
         </label>
+
 
         <input
           id="email"
@@ -390,9 +424,11 @@ li{
         >
 
 
+
         <label for="phone">
           Phone Number
         </label>
+
 
         <input
           id="phone"
@@ -405,9 +441,11 @@ li{
         >
 
 
+
         <label for="country">
           Country
         </label>
+
 
         <input
           id="country"
@@ -420,9 +458,11 @@ li{
         >
 
 
+
         <label for="note">
           Order Details
         </label>
+
 
         <textarea
           id="note"
@@ -432,9 +472,11 @@ li{
         ></textarea>
 
 
+
         <label>
           Payment Method
         </label>
+
 
         <div class="payment-box">
 
@@ -451,6 +493,7 @@ li{
         </div>
 
 
+
         <button
           id="submitBtn"
           class="btn"
@@ -465,11 +508,15 @@ li{
           LetsStudy Pro universal payment system.
         </div>
 
+
       </form>
+
 
     </section>
 
+
   </div>
+
 
 </main>
 
@@ -692,7 +739,7 @@ function showSuccess(text){
 
 
 /* =========================================
-   LOAD SERVICE
+   LOAD MARKETING SERVICE
 ========================================= */
 
 async function loadService(){
@@ -724,6 +771,7 @@ async function loadService(){
 
   try{
 
+
     const url =
       API_BASE +
       "/api/data?collection=marketing&id=" +
@@ -746,12 +794,13 @@ async function loadService(){
 
     let result = {};
 
+
     try{
 
       result =
         await response.json();
 
-    }catch(error){
+    }catch{
 
       result = {};
 
@@ -905,6 +954,7 @@ async function loadService(){
 
     }
 
+
   }catch(error){
 
     console.error(
@@ -948,13 +998,6 @@ form.addEventListener(
   async event => {
 
     event.preventDefault();
-
-
-    showSuccess("");
-
-
-    errorBox.style.display =
-      "none";
 
 
     if(!service){
@@ -1034,8 +1077,9 @@ form.addEventListener(
 
 
     if(
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        .test(email)
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+        email
+      )
     ){
 
       showError(
@@ -1169,8 +1213,9 @@ form.addEventListener(
 
     try{
 
+
       /* =========================================
-         CREATE ORDER
+         CREATE PESAPAL ORDER
       ========================================== */
 
       const response =
@@ -1202,21 +1247,20 @@ form.addEventListener(
 
       let data = {};
 
+
       try{
 
         data =
           await response.json();
 
-      }catch(error){
+      }catch{
 
         data = {};
 
       }
 
 
-      if(
-        !response.ok
-      ){
+      if(!response.ok){
 
         throw new Error(
           data?.message ||
@@ -1240,7 +1284,7 @@ form.addEventListener(
 
 
       /* =========================================
-         PESAPAL REDIRECT URL
+         PESAPAL URL
       ========================================== */
 
       const redirectUrl =
@@ -1259,6 +1303,7 @@ form.addEventListener(
 
       const orderTrackingId =
         data?.orderTrackingId ||
+        data?.order_tracking_id ||
         data?.OrderTrackingId ||
         data?.trackingId ||
         "";
@@ -1273,10 +1318,6 @@ form.addEventListener(
         data?.merchant_reference ||
         orderId;
 
-
-      /* =========================================
-         VALIDATE
-      ========================================== */
 
       if(
         !redirectUrl &&
@@ -1333,11 +1374,39 @@ form.addEventListener(
       );
 
 
+      localStorage.setItem(
+        "pendingMarketingPayment",
+        JSON.stringify(
+          pendingPayment
+        )
+      );
+
+
       sessionStorage.setItem(
         "marketingPayment",
         JSON.stringify(
           pendingPayment
         )
+      );
+
+
+      /* =========================================
+         CUSTOMER DATA
+      ========================================== */
+
+      localStorage.setItem(
+        "marketingCustomer",
+        JSON.stringify({
+
+          name,
+
+          email,
+
+          phone,
+
+          country
+
+        })
       );
 
 
@@ -1366,7 +1435,7 @@ form.addEventListener(
 
 
       paymentPage.searchParams.set(
-        "productType",
+                "productType",
         "marketing"
       );
 
@@ -1407,62 +1476,63 @@ form.addEventListener(
 
       if(redirectUrl){
 
-  paymentPage.searchParams.set(
-    "redirectUrl",
-    redirectUrl
-  );
+        paymentPage.searchParams.set(
+          "redirectUrl",
+          redirectUrl
+        );
 
-}
+      }
 
 
-/* =========================================
-   SHOW STATUS
-========================================= */
+      /* =========================================
+         SHOW STATUS
+      ========================================== */
 
-showSuccess(
-  "Payment created. Opening secure payment..."
+      showSuccess(
+        "Payment created. Opening secure payment..."
+      );
+
+
+      /* =========================================
+         OPEN UNIVERSAL PAYMENT PAGE
+      ========================================== */
+
+      setTimeout(
+        () => {
+
+          window.location.href =
+            paymentPage.href;
+
+        },
+        500
+      );
+
+
+    }catch(error){
+
+      console.error(
+        "MARKETING PAYMENT:",
+        error
+      );
+
+
+      submitBtn.disabled =
+        false;
+
+
+      submitBtn.textContent =
+        "Continue to Payment";
+
+
+      showError(
+        error?.message ||
+        "Unable to create payment. Please try again."
+      );
+
+    }
+
+  }
 );
-
-
-/* =========================================
-   OPEN UNIVERSAL PAYMENT PAGE
-========================================= */
-
-setTimeout(
-  () => {
-
-    window.location.href =
-      paymentPage.href;
-
-  },
-  500
-);
-
-
-}catch(error){
-
-  console.error(
-    "MARKETING PAYMENT:",
-    error
-  );
-
-
-  submitBtn.disabled =
-    false;
-
-
-  submitBtn.textContent =
-    "Continue to Payment";
-
-
-  showError(
-    error?.message ||
-    "Unable to create payment. Please try again."
-  );
-
-}
-
-});
 
 
 /* =========================================
@@ -1601,4 +1671,5 @@ loadService();
 </script>
 
 </body>
+
 </html>
