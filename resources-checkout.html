@@ -385,10 +385,6 @@ Complete your details and continue to secure payment.
 <div class="layout">
 
 
-<!-- =====================================
-     CUSTOMER INFORMATION
-===================================== -->
-
 <section class="card">
 
 <h2>
@@ -482,10 +478,6 @@ Country
 </div>
 
 
-<!-- =====================================
-     PESAPAL
-===================================== -->
-
 <div class="payment-box">
 
 <div class="payment-title">
@@ -531,10 +523,6 @@ Continue to Payment
 
 </section>
 
-
-<!-- =====================================
-     ORDER SUMMARY
-===================================== -->
 
 <aside class="card summary">
 
@@ -678,12 +666,11 @@ const db =
 
 
 /* =========================================
-   UNIVERSAL PAYMENT API
+   PAYMENT
 ========================================= */
 
 const CREATE_ORDER_ENDPOINT =
   "https://api.letsstudy.pro/api/pesapal/create-order";
-
 
 const PAYMENT_PAGE =
   "payment.html";
@@ -694,57 +681,31 @@ const PAYMENT_PAGE =
 ========================================= */
 
 const loading =
-  document.getElementById(
-    "loading"
-  );
-
+  document.getElementById("loading");
 
 const content =
-  document.getElementById(
-    "content"
-  );
-
+  document.getElementById("content");
 
 const empty =
-  document.getElementById(
-    "empty"
-  );
-
+  document.getElementById("empty");
 
 const resourceList =
-  document.getElementById(
-    "resourceList"
-  );
-
+  document.getElementById("resourceList");
 
 const resourceCount =
-  document.getElementById(
-    "resourceCount"
-  );
-
+  document.getElementById("resourceCount");
 
 const subtotalElement =
-  document.getElementById(
-    "subtotal"
-  );
-
+  document.getElementById("subtotal");
 
 const totalElement =
-  document.getElementById(
-    "total"
-  );
-
+  document.getElementById("total");
 
 const payButton =
-  document.getElementById(
-    "payButton"
-  );
-
+  document.getElementById("payButton");
 
 const statusBox =
-  document.getElementById(
-    "status"
-  );
+  document.getElementById("status");
 
 
 let resources = [];
@@ -760,36 +721,21 @@ function getCart(){
 
     const stored =
       JSON.parse(
-        localStorage.getItem(
-          "resourceCart"
-        ) || "[]"
+        localStorage.getItem("resourceCart") || "[]"
       );
 
-
-    if(
-      !Array.isArray(
-        stored
-      )
-    ){
-
+    if(!Array.isArray(stored)){
       return [];
-
     }
-
 
     return [
       ...new Set(
         stored
           .map(item => {
 
-            if(
-              typeof item === "string"
-            ){
-
+            if(typeof item === "string"){
               return item;
-
             }
-
 
             if(
               item &&
@@ -803,7 +749,6 @@ function getCart(){
               );
 
             }
-
 
             return null;
 
@@ -876,14 +821,10 @@ function getPrice(data){
     data.planPrice ??
     0;
 
-
   const number =
     Number(value);
 
-
-  return Number.isFinite(
-    number
-  )
+  return Number.isFinite(number)
     ? number
     : 0;
 
@@ -899,11 +840,8 @@ function getAccess(data){
     data.plan ||
     "";
 
-
   const text =
-    String(value)
-      .toLowerCase();
-
+    String(value).toLowerCase();
 
   if(
     text === "plan" ||
@@ -916,7 +854,6 @@ function getAccess(data){
 
   }
 
-
   if(
     data.isPremium === true ||
     data.premium === true ||
@@ -926,7 +863,6 @@ function getAccess(data){
     return "plan";
 
   }
-
 
   return "free";
 
@@ -952,9 +888,7 @@ function formatMoney(value){
 
   return (
     Number(value) || 0
-  ).toLocaleString(
-    "en-TZ"
-  ) + " TZS";
+  ).toLocaleString("en-TZ") + " TZS";
 
 }
 
@@ -962,26 +896,11 @@ function formatMoney(value){
 function escapeHtml(value){
 
   return String(value)
-    .replaceAll(
-      "&",
-      "&amp;"
-    )
-    .replaceAll(
-      "<",
-      "&lt;"
-    )
-    .replaceAll(
-      ">",
-      "&gt;"
-    )
-    .replaceAll(
-      '"',
-      "&quot;"
-    )
-    .replaceAll(
-      "'",
-      "&#039;"
-    );
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 
 }
 
@@ -997,7 +916,6 @@ function showStatus(
 
   statusBox.textContent =
     message || "";
-
 
   statusBox.className =
     "status " +
@@ -1015,10 +933,7 @@ async function loadResources(){
   const cartIds =
     getCart();
 
-
-  if(
-    !cartIds.length
-  ){
+  if(!cartIds.length){
 
     loading.style.display =
       "none";
@@ -1035,8 +950,7 @@ async function loadResources(){
 
 
   for(
-    const resourceId
-    of cartIds
+    const resourceId of cartIds
   ){
 
     try{
@@ -1048,30 +962,19 @@ async function loadResources(){
           resourceId
         );
 
-
       const snapshot =
         await getDoc(
           reference
         );
 
-
-      if(
-        !snapshot.exists()
-      ){
-
+      if(!snapshot.exists()){
         continue;
-
       }
 
 
       const data =
         snapshot.data();
 
-
-      /*
-        Checkout only accepts
-        paid/plan resources.
-      */
 
       if(
         getAccess(data) !== "plan"
@@ -1087,9 +990,7 @@ async function loadResources(){
 
 
       if(
-        !Number.isFinite(
-          price
-        ) ||
+        !Number.isFinite(price) ||
         price <= 0
       ){
 
@@ -1123,17 +1024,11 @@ async function loadResources(){
     loaded;
 
 
-  /*
-    Keep only valid resources
-    in local cart.
-  */
-
   localStorage.setItem(
     "resourceCart",
     JSON.stringify(
       resources.map(
-        resource =>
-          resource.id
+        resource => resource.id
       )
     )
   );
@@ -1143,9 +1038,7 @@ async function loadResources(){
     "none";
 
 
-  if(
-    !resources.length
-  ){
+  if(!resources.length){
 
     empty.style.display =
       "block";
@@ -1180,10 +1073,8 @@ function renderSummary(){
         const title =
           getTitle(resource);
 
-
         const price =
           getPrice(resource);
-
 
         const thumbnail =
           getThumbnail(resource);
@@ -1197,7 +1088,7 @@ function renderSummary(){
 
             ? `
               <img
-                src="${thumbnail}"
+                src="${escapeHtml(thumbnail)}"
                 alt="${escapeHtml(title)}"
               >
             `
@@ -1240,10 +1131,8 @@ function renderSummary(){
   resourceCount.textContent =
     resources.length;
 
-
   subtotalElement.textContent =
     formatMoney(total);
-
 
   totalElement.textContent =
     formatMoney(total);
@@ -1265,41 +1154,31 @@ function saveCustomer(){
 
         firstName:
           document
-            .getElementById(
-              "firstName"
-            )
+            .getElementById("firstName")
             .value
             .trim(),
 
         lastName:
           document
-            .getElementById(
-              "lastName"
-            )
+            .getElementById("lastName")
             .value
             .trim(),
 
         email:
           document
-            .getElementById(
-              "email"
-            )
+            .getElementById("email")
             .value
             .trim(),
 
         phoneNumber:
           document
-            .getElementById(
-              "phoneNumber"
-            )
+            .getElementById("phoneNumber")
             .value
             .trim(),
 
         country:
           document
-            .getElementById(
-              "country"
-            )
+            .getElementById("country")
             .value
             .trim()
 
@@ -1402,28 +1281,6 @@ function restoreCustomer(){
 
 
 /* =========================================
-   CUSTOMER AUTO SAVE
-========================================= */
-
-[
-  "firstName",
-  "lastName",
-  "email",
-  "phoneNumber",
-  "country"
-].forEach(id => {
-
-  document
-    .getElementById(id)
-    .addEventListener(
-      "input",
-      saveCustomer
-    );
-
-});
-
-
-/* =========================================
    CHECKOUT
 ========================================= */
 
@@ -1433,45 +1290,35 @@ payButton.addEventListener(
 
     const firstName =
       document
-        .getElementById(
-          "firstName"
-        )
+        .getElementById("firstName")
         .value
         .trim();
 
 
     const lastName =
       document
-        .getElementById(
-          "lastName"
-        )
+        .getElementById("lastName")
         .value
         .trim();
 
 
     const email =
       document
-        .getElementById(
-          "email"
-        )
+        .getElementById("email")
         .value
         .trim();
 
 
     const phoneNumber =
       document
-        .getElementById(
-          "phoneNumber"
-        )
+        .getElementById("phoneNumber")
         .value
         .trim();
 
 
     const country =
       document
-        .getElementById(
-          "country"
-        )
+        .getElementById("country")
         .value
         .trim();
 
@@ -1512,8 +1359,7 @@ payButton.addEventListener(
 
     if(
       !email ||
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        .test(email)
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
     ){
 
       showStatus(
@@ -1574,37 +1420,52 @@ payButton.addEventListener(
     }
 
 
-    let total = 0;
+    /* =====================================
+       ORDER ID
+    ====================================== */
 
+    const orderId =
+      "RES-" +
+      Date.now() +
+      "-" +
+      Math.random()
+        .toString(36)
+        .slice(2,8)
+        .toUpperCase();
+
+
+    /* =====================================
+       ITEMS + TOTAL
+    ====================================== */
 
     const items =
       resources.map(
-        resource => {
+        resource => ({
 
-          const price =
-            getPrice(resource);
+          id:
+            resource.id,
+
+          name:
+            getTitle(resource),
+
+          quantity:
+            1,
+
+          price:
+            Number(
+              getPrice(resource)
+            )
+
+        })
+      );
 
 
-          total += price;
-
-
-          return {
-
-            id:
-              resource.id,
-
-            name:
-              getTitle(resource),
-
-            quantity:
-              1,
-
-            price:
-              price
-
-          };
-
-        }
+    const total =
+      items.reduce(
+        (sum,item) =>
+          sum +
+          Number(item.price),
+        0
       );
 
 
@@ -1623,42 +1484,23 @@ payButton.addEventListener(
     }
 
 
-        /* =========================
-       ORDER ID
-    ========================= */
-
-    const orderId =
-      "RES-" +
-      Date.now() +
-      "-" +
-      Math.random()
-        .toString(36)
-        .slice(2, 8)
-        .toUpperCase();
-
+    /* =====================================
+       DESCRIPTION
+    ====================================== */
 
     const description =
       resources.length === 1
-        ? getTitle(resources[0])
+
+        ? getTitle(
+            resources[0]
+          )
+
         : `LetsStudy Pro Resource Order - ${resources.length} Resources`;
 
 
-    /* =========================
-       ITEMS
-    ========================= */
-
-    const items =
-      resources.map(resource => ({
-        id: resource.id,
-        name: getTitle(resource),
-        quantity: 1,
-        price: Number(getPrice(resource))
-      }));
-
-
-    /* =========================
+    /* =====================================
        UNIVERSAL PAYLOAD
-    ========================= */
+    ====================================== */
 
     const payload = {
 
@@ -1711,445 +1553,378 @@ payButton.addEventListener(
       saveCustomer();
 
 
-      const response =
-        await fetch(
-          CREATE_ORDER_ENDPOINT,
-          {
-            method:
-              "POST",
+      /* =====================================
+         CREATE PAYMENT
+      ===================================== */
 
-            headers:{
-              "Content-Type":
-                "application/json",
+      form.addEventListener("submit", async (event) => {
 
-              "Accept":
-                "application/json"
-            },
+        event.preventDefault();
 
-            body:
-              JSON.stringify(
-                payload
-              )
+        errorBox.textContent = "";
+
+        if (!terms.checked) {
+          errorBox.textContent =
+            "Please accept the terms and conditions.";
+          return;
+        }
+
+        const firstName =
+          document.getElementById("firstName").value.trim();
+
+        const lastName =
+          document.getElementById("lastName").value.trim();
+
+        const email =
+          document.getElementById("email").value.trim();
+
+        const phoneNumber =
+          document.getElementById("phoneNumber").value.trim();
+
+        const country =
+          document.getElementById("country").value.trim() || "TZ";
+
+        if (!firstName || !lastName || !email || !phoneNumber) {
+          errorBox.textContent =
+            "Please complete all required customer information.";
+          return;
+        }
+
+        payButton.disabled = true;
+        payButton.textContent = "Creating Payment...";
+
+        try {
+
+          const orderId =
+            "RES-" +
+            Date.now() +
+            "-" +
+            Math.random()
+              .toString(36)
+              .substring(2, 8)
+              .toUpperCase();
+
+          const items =
+            resources.map(resource => ({
+              id: resource.id,
+              name: getTitle(resource),
+              quantity: 1,
+              price: Number(getPrice(resource))
+            }));
+
+          const total =
+            items.reduce(
+              (sum, item) =>
+                sum + Number(item.price),
+              0
+            );
+
+          if (!items.length || total <= 0) {
+            throw new Error(
+              "No valid paid resources found."
+            );
           }
-        );
 
+          const description =
+            resources.length === 1
+              ? getTitle(resources[0])
+              : `LetsStudy Pro - ${resources.length} Resources`;
 
-      let data = null;
+          const payload = {
+            orderId,
+            amount: Number(total),
+            currency: "TZS",
+            description,
+            email,
+            firstName,
+            lastName,
+            phoneNumber,
+            country,
+            paymentMethod: "pesapal",
+            productType: "resource",
+            items
+          };
 
-
-      try{
-
-        data =
-          await response.json();
-
-      }catch{
-
-        data =
-          null;
-
-      }
-
-
-      if(
-        !response.ok ||
-        !data ||
-        data.success !== true
-      ){
-
-        throw new Error(
-          data?.message ||
-          data?.error ||
-          "Unable to create payment order."
-        );
-
-      }
-
-
-      /* =========================
-         PESAPAL RESPONSE
-      ========================= */
-
-      const redirectUrl =
-        data.redirectUrl ||
-        data.iframeUrl ||
-        data.redirect_url ||
-        data.paymentUrl ||
-        data.payment_url ||
-        "";
-
-
-      const orderTrackingId =
-        data.orderTrackingId ||
-        data.order_tracking_id ||
-        data.OrderTrackingId ||
-        data.trackingId ||
-        "";
-
-
-      const merchantReference =
-        data.merchantReference ||
-        data.merchant_reference ||
-        orderId;
-
-
-      const returnedOrderId =
-        data.orderId ||
-        orderId;
-
-
-      if(
-        !redirectUrl &&
-        !orderTrackingId
-      ){
-
-        throw new Error(
-          "Pesapal payment URL was not returned."
-        );
-
-      }
-
-
-      /* =========================
-         PENDING PAYMENT
-      ========================= */
-
-      const pendingPayment = {
-
-        orderId:
-          returnedOrderId,
-
-        orderTrackingId:
-          orderTrackingId,
-
-        merchantReference:
-          merchantReference,
-
-        redirectUrl:
-          redirectUrl,
-
-        productType:
-          "resource",
-
-        amount:
-          Number(total),
-
-        currency:
-          "TZS",
-
-        description,
-
-        items,
-
-        resources:
-          resources.map(
-            resource => ({
-
-              id:
-                resource.id,
-
-              title:
-                getTitle(resource),
-
-              price:
-                getPrice(resource)
-
+          localStorage.setItem(
+            "pendingPayment",
+            JSON.stringify({
+              orderId,
+              amount: Number(total),
+              currency: "TZS",
+              productType: "resource",
+              items,
+              email,
+              firstName,
+              lastName,
+              phoneNumber,
+              country,
+              createdAt: Date.now()
             })
-          ),
+          );
 
-        customer:{
+          localStorage.setItem(
+            "pendingResourcePayment",
+            JSON.stringify(payload)
+          );
 
-          firstName,
+          localStorage.setItem(
+            "pendingResourceOrder",
+            JSON.stringify(payload)
+          );
 
-          lastName,
+          localStorage.setItem(
+            "pendingCheckoutCustomer",
+            JSON.stringify({
+              firstName,
+              lastName,
+              email,
+              phoneNumber,
+              country
+            })
+          );
 
-          email,
+          sessionStorage.setItem(
+            "resourcePayment",
+            JSON.stringify(payload)
+          );
 
-          phoneNumber,
+          const response =
+            await fetch(
+              CREATE_ORDER_ENDPOINT,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type":
+                    "application/json"
+                },
+                body:
+                  JSON.stringify(payload)
+              }
+            );
 
-          country
+          const data =
+            await response.json();
 
-        },
+          if (!response.ok || !data.success) {
+            throw new Error(
+              data.message ||
+              data.error ||
+              "Unable to create payment."
+            );
+          }
 
-        status:
-          "PENDING",
+          const orderTrackingId =
+            data.orderTrackingId ||
+            data.order_tracking_id ||
+            data.trackingId ||
+            "";
 
-        createdAt:
-          new Date()
-            .toISOString()
+          const merchantReference =
+            data.merchantReference ||
+            data.merchant_reference ||
+            orderId;
 
-      };
+          const redirectUrl =
+            data.redirectUrl ||
+            data.redirect_url ||
+            data.iframeUrl ||
+            "";
 
+          if (!orderTrackingId) {
+            throw new Error(
+              "Payment tracking ID was not returned."
+            );
+          }
 
-      /* =========================
-         LOCAL STORAGE
-      ========================= */
+          const paymentPage =
+            new URL(PAYMENT_PAGE, window.location.href);
 
-      localStorage.setItem(
-        "pendingPayment",
-        JSON.stringify(
-          pendingPayment
-        )
-      );
+          paymentPage.searchParams.set(
+            "orderId",
+            orderId
+          );
 
+          paymentPage.searchParams.set(
+            "merchantReference",
+            merchantReference
+          );
 
-      localStorage.setItem(
-        "pendingResourcePayment",
-        JSON.stringify(
-          pendingPayment
-        )
-      );
+          paymentPage.searchParams.set(
+            "productType",
+            "resource"
+          );
 
+          paymentPage.searchParams.set(
+            "type",
+            "resource"
+          );
 
-      localStorage.setItem(
-        "pendingResourceOrder",
-        JSON.stringify(
-          pendingPayment
-        )
-      );
+          paymentPage.searchParams.set(
+            "amount",
+            String(total)
+          );
 
+          paymentPage.searchParams.set(
+            "currency",
+            "TZS"
+          );
 
-      localStorage.setItem(
-        "pendingCheckoutCustomer",
-        JSON.stringify({
+          paymentPage.searchParams.set(
+            "orderTrackingId",
+            orderTrackingId
+          );
 
-          firstName,
+          if (redirectUrl) {
 
-          lastName,
+            paymentPage.searchParams.set(
+              "redirectUrl",
+              redirectUrl
+            );
 
-          email,
+          }
 
-          phoneNumber,
-
-          country
-
-        })
-      );
-
-
-      /* =========================
-         SESSION STORAGE
-      ========================= */
-
-      try{
-
-        sessionStorage.setItem(
-          "resourcePayment",
-          JSON.stringify(
-            pendingPayment
-          )
-        );
-
-      }catch(error){
-
-        console.warn(
-          "SESSION STORAGE:",
-          error
-        );
-
-      }
-
-
-      /* =========================
-         PAYMENT PAGE
-      ========================= */
-
-      const paymentPage =
-        new URL(
-          PAYMENT_PAGE,
-          window.location.origin
-        );
-
-
-      paymentPage.searchParams.set(
-        "orderId",
-        returnedOrderId
-      );
-
-
-      paymentPage.searchParams.set(
-        "merchantReference",
-        merchantReference
-      );
-
-
-      paymentPage.searchParams.set(
-        "productType",
-        "resource"
-      );
-
-
-      paymentPage.searchParams.set(
-        "type",
-        "resource"
-      );
-
-
-      paymentPage.searchParams.set(
-        "amount",
-        String(total)
-      );
-
-
-      paymentPage.searchParams.set(
-        "currency",
-        "TZS"
-      );
-
-
-      if(orderTrackingId){
-
-        paymentPage.searchParams.set(
-          "orderTrackingId",
-          orderTrackingId
-        );
-
-      }
-
-
-      if(redirectUrl){
-
-        paymentPage.searchParams.set(
-          "redirectUrl",
-          redirectUrl
-        );
-
-      }
-
-
-      showStatus(
-        "Payment created. Opening secure payment...",
-        "loading"
-      );
-
-
-      payButton.textContent =
-        "Opening Payment...";
-
-
-      setTimeout(
-        () => {
+          payButton.textContent =
+            "Opening Payment...";
 
           window.location.href =
             paymentPage.href;
 
-        },
-        400
-      );
+        } catch (error) {
+
+          console.error(
+            "RESOURCE PAYMENT ERROR:",
+            error
+          );
+
+          errorBox.textContent =
+            error?.message ||
+            "Unable to start payment. Please try again.";
+
+          payButton.disabled = false;
+
+          payButton.textContent =
+            "Continue to Payment";
+        }
+
+      });
 
 
-    }catch(error){
+      /* =====================================
+         CUSTOMER AUTO SAVE
+      ===================================== */
+
+      [
+        "firstName",
+        "lastName",
+        "email",
+        "phoneNumber",
+        "country"
+      ].forEach(id => {
+
+        const field =
+          document.getElementById(id);
+
+        if (field) {
+
+          field.addEventListener(
+            "input",
+            saveCustomer
+          );
+
+        }
+
+      });
+
+
+      /* =====================================
+         RESTORE CUSTOMER
+      ===================================== */
+
+      function restoreCustomer() {
+
+        try {
+
+          const saved =
+            JSON.parse(
+              localStorage.getItem(
+                "resourceCustomer"
+              ) || "null"
+            );
+
+          if (!saved) return;
+
+          [
+            "firstName",
+            "lastName",
+            "email",
+            "phoneNumber",
+            "country"
+          ].forEach(id => {
+
+            const field =
+              document.getElementById(id);
+
+            if (
+              field &&
+              saved[id] !== undefined
+            ) {
+
+              field.value =
+                saved[id];
+
+            }
+
+          });
+
+        } catch (error) {
+
+          console.error(
+            "CUSTOMER RESTORE ERROR:",
+            error
+          );
+
+        }
+
+      }
+
+
+      /* =====================================
+         INITIALIZE
+      ===================================== */
+
+      restoreCustomer();
+
+      saveCustomer();
+
+      loading.classList.add("hidden");
+
+      checkout.classList.remove("hidden");
+
+    } catch (error) {
 
       console.error(
-        "RESOURCE PAYMENT:",
+        "RESOURCE CHECKOUT ERROR:",
         error
       );
 
+      loading.classList.add("hidden");
 
-      showStatus(
+      errorBox.textContent =
         error?.message ||
-        "Payment could not be created. Please try again.",
-        "error"
-      );
+        "Unable to load checkout.";
 
-
-      payButton.disabled =
-        false;
-
-
-      payButton.textContent =
-        "Continue to Payment";
+      checkout.classList.add("hidden");
 
     }
 
   }
-);
 
 
-/* =========================
-   CUSTOMER AUTO SAVE
-========================= */
+  /* =====================================
+     START
+  ===================================== */
 
-[
-  "firstName",
-  "lastName",
-  "email",
-  "phoneNumber",
-  "country"
-].forEach(
-  id => {
-
-    const field =
-      document.getElementById(
-        id
-      );
-
-
-    if(field){
-
-      field.addEventListener(
-        "input",
-        saveCustomer
-      );
-
-    }
-
-  }
-);
-
-
-/* =========================
-   INITIALIZE
-========================= */
-
-restoreCustomer();
-
-
-loadResources()
-  .catch(error => {
-
-    console.error(
-      "RESOURCE CHECKOUT:",
-      error
-    );
-
-
-    loading.style.display =
-      "none";
-
-
-    content.style.display =
-      "none";
-
-
-    empty.style.display =
-      "block";
-
-
-    empty.innerHTML = `
-
-      <div class="empty">
-
-        <div class="empty-icon">
-          ⚠️
-        </div>
-
-        <h2>
-          Unable to load checkout
-        </h2>
-
-        <p>
-          Please return to your resource cart and try again.
-        </p>
-
-        <a href="resource-cart.html">
-          Back to Resource Cart
-        </a>
-
-      </div>
-
-    `;
-
-  });
+  loadResources();
 
 </script>
 
