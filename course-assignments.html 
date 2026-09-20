@@ -1,13 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Course Assignments | LetsStudy Pro</title>
-
-<style>
+<!DOCTYPE html><html lang="en">
+<head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Course Assignments | LetsStudy Pro</title><style>
 
 *{
   box-sizing:border-box;
@@ -239,82 +232,45 @@ body{
 
 }
 
-</style>
-
-</head>
-
-<body>
-
-
-<header class="header">
-
-  <div class="logo">
+</style></head><body><header class="header">  <div class="logo">
     LetsStudy <span>Pro</span>
-  </div>
+  </div><a
+href="course-learn.html"
+class="back-btn">
 
-  <a
-    href="course-learn.html"
-    class="back-btn">
+← Back to Course
 
-    ← Back to Course
+  </a></header><main class="container">  <section class="hero"><h1>
+  Course Assignments
+</h1>
 
-  </a>
+<p>
+  View your assignments, instructions,
+  points and submission deadlines.
+</p>
 
-</header>
+<div
+  class="course-info"
+  id="courseInfo">
 
+  Loading assignments...
 
-<main class="container">
+</div>
 
+  </section>  <div class="search-box"><input
+  type="search"
+  id="searchInput"
+  placeholder="Search assignments...">
 
-  <section class="hero">
-
-    <h1>
-      Course Assignments
-    </h1>
-
-    <p>
-      View your assignments, instructions,
-      points and submission deadlines.
-    </p>
-
-    <div
-      class="course-info"
-      id="courseInfo">
-
-      Loading assignments...
-
-    </div>
-
-  </section>
-
-
-  <div class="search-box">
-
-    <input
-      type="search"
-      id="searchInput"
-      placeholder="Search assignments...">
-
-  </div>
-
-
-  <section
+  </div>  <section
     id="assignmentList"
-    class="assignment-list">
+    class="assignment-list"><div class="loading">
 
-    <div class="loading">
+  Loading assignments...
 
-      Loading assignments...
+</div>
 
-    </div>
-
-  </section>
-
-
-</main>
-
-
-<script type="module">
+  </section></main><script type="module">
 
 import {
   initializeApp
@@ -542,50 +498,74 @@ function deadlineClass(value){
 
 /* =====================================================
    LOAD ASSIGNMENTS
+   ONLY THE CURRENT COURSE
 ===================================================== */
 
 async function loadAssignments(){
 
   try{
 
-    let snapshot;
+    /*
+      A courseId is REQUIRED.
+
+      This page will NEVER load all
+      assignments from Firestore.
+    */
+
+    if(!courseId){
+
+      courseInfo.textContent =
+        "Course not specified";
 
 
-    if(courseId){
+      assignmentList.innerHTML = `
 
-      const assignmentQuery =
-        query(
+        <div class="error">
 
-          collection(
-            db,
-            "assignments"
-          ),
+          <h3 style="margin-bottom:8px;">
+            Course not specified
+          </h3>
 
-          where(
-            "courseId",
-            "==",
-            courseId
-          )
+          <p>
+            Please open assignments from a specific course.
+          </p>
 
-        );
+        </div>
 
+      `;
 
-      snapshot =
-        await getDocs(
-          assignmentQuery
-        );
-
-    }else{
-
-      snapshot =
-        await getDocs(
-          collection(
-            db,
-            "assignments"
-          )
-        );
+      return;
 
     }
+
+
+    /*
+      Fetch ONLY assignments where:
+
+      assignment.courseId === current courseId
+    */
+
+    const assignmentQuery =
+      query(
+
+        collection(
+          db,
+          "assignments"
+        ),
+
+        where(
+          "courseId",
+          "==",
+          courseId
+        )
+
+      );
+
+
+    const snapshot =
+      await getDocs(
+        assignmentQuery
+      );
 
 
     assignments = [];
@@ -594,14 +574,33 @@ async function loadAssignments(){
     snapshot.forEach(
       assignmentDoc => {
 
-        assignments.push({
+        const data =
+          assignmentDoc.data();
 
-          id:
-            assignmentDoc.id,
 
-          ...assignmentDoc.data()
+        /*
+          Extra safety check.
 
-        });
+          Even though Firestore already filters
+          by courseId, only keep documents whose
+          courseId exactly matches this page.
+        */
+
+        if(
+          String(data.courseId || "") ===
+          String(courseId)
+        ){
+
+          assignments.push({
+
+            id:
+              assignmentDoc.id,
+
+            ...data
+
+          });
+
+        }
 
       }
     );
@@ -621,9 +620,23 @@ async function loadAssignments(){
           );
 
 
-        if(!dateA) return 1;
+        if(!dateA && !dateB){
 
-        if(!dateB) return -1;
+          return 0;
+
+        }
+
+        if(!dateA){
+
+          return 1;
+
+        }
+
+        if(!dateB){
+
+          return -1;
+
+        }
 
 
         return (
@@ -636,9 +649,13 @@ async function loadAssignments(){
 
 
     courseInfo.textContent =
-      courseId
-      ? `Course ID: ${courseId} • ${assignments.length} assignment${assignments.length === 1 ? "" : "s"}`
-      : `All assignments • ${assignments.length} assignment${assignments.length === 1 ? "" : "s"}`;
+      `Course ID: ${courseId} • ${
+        assignments.length
+      } assignment${
+        assignments.length === 1
+        ? ""
+        : "s"
+      }`;
 
 
     renderAssignments();
@@ -898,7 +915,5 @@ searchInput.addEventListener(
 
 loadAssignments();
 
-</script>
-
-</body>
+</script></body>
 </html>
