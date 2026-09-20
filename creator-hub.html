@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Creator Hub - LetsStudy Pro</title>
+<meta name="description" content="Discover and connect with creators building knowledge, skills and opportunities on LetsStudy Pro.">
+<link rel="icon" href="https://letsstudy.pro/favicon.ico">
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+header{background:#fff;border-bottom:1px solid #e7eaf0;padding:15px 5%;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.logo{font-size:22px;font-weight:800;color:#1769ff;text-decoration:none}
+nav a{margin-left:16px;text-decoration:none;color:#39445a;font-size:14px}
+.hero{padding:55px 6%;background:linear-gradient(135deg,#eef5ff,#fff);text-align:center}
+.hero h1{font-size:38px;margin:0 0 12px}
+.hero p{max-width:680px;margin:auto;color:#657084;line-height:1.6}
+.actions{display:flex;gap:10px;justify-content:center;margin-top:25px;flex-wrap:wrap}
+.btn{padding:12px 18px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;border:1px solid #1769ff}
+.primary{background:#1769ff;color:#fff}
+.secondary{background:#fff;color:#1769ff}
+.wrap{max-width:1150px;margin:auto;padding:30px 5%}
+.tools{display:flex;gap:10px;margin-bottom:25px;flex-wrap:wrap}
+input,select{padding:13px;border:1px solid #dce1e9;border-radius:10px;background:#fff}
+input{flex:1;min-width:220px}
+select{min-width:160px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
+.card{background:#fff;border:1px solid #e7eaf0;border-radius:16px;padding:20px;box-shadow:0 5px 18px #1720330a}
+.avatar{width:82px;height:82px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 14px;background:#edf1f7}
+.card h3{text-align:center;margin:8px 0}
+.role{text-align:center;color:#1769ff;font-size:13px;font-weight:700}
+.bio{color:#697386;font-size:14px;line-height:1.5;margin:12px 0}
+.meta{font-size:13px;color:#70798a;margin:7px 0}
+.view{display:block;text-align:center;background:#1769ff;color:#fff;padding:11px;border-radius:9px;text-decoration:none;margin-top:15px;font-weight:700}
+.empty{text-align:center;padding:50px;color:#687386;grid-column:1/-1}
+footer{text-align:center;padding:35px 20px;color:#778094;font-size:13px}
+@media(max-width:650px){
+.hero h1{font-size:30px}
+nav a{display:none}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<a class="logo" href="index.html">LetsStudy Pro</a>
+<nav>
+<a href="courses.html">Courses</a>
+<a href="resources.html">Resources</a>
+<a href="services.html">Services</a>
+<a href="business-hub.html">Business</a>
+</nav>
+</header>
+
+<section class="hero">
+<h1>Creator Hub</h1>
+<p>
+Discover creators, educators, professionals and digital contributors
+building knowledge, skills, content and opportunities through LetsStudy Pro.
+</p>
+
+<div class="actions">
+<a class="btn primary" href="creator-register.html">Become a Creator</a>
+<a class="btn secondary" href="how-it-works.html">How It Works</a>
+</div>
+</section>
+
+<main class="wrap">
+
+<div class="tools">
+<input id="search" type="search" placeholder="Search creators, skills or categories...">
+<select id="category">
+<option value="">All Categories</option>
+</select>
+</div>
+
+<div id="grid" class="grid">
+<div class="empty">Loading creators...</div>
+</div>
+
+</main>
+
+<footer>
+<strong>LetsStudy Pro</strong><br><br>
+THE DIGITAL ECOSYSTEM — Learn. Build. Work. Grow.
+<br><br>
+© 2026 LetsStudy Pro. All rights reserved.
+</footer>
+
+<script type="module">
+
+import {initializeApp}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+getDocs
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyBcOYDfAVKXbkljsyRgI0rjodBn678tCc",
+authDomain:"let-s-study-pro-course.firebaseapp.com",
+databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+projectId:"let-s-study-pro-course",
+storageBucket:"let-s-study-pro-course.firebasestorage.app",
+messagingSenderId:"474928293390",
+appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+measurementId:"G-85B7V5H5J0"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+const grid=document.getElementById("grid");
+const search=document.getElementById("search");
+const category=document.getElementById("category");
+
+let creators=[];
+
+const val=(...x)=>x.find(v=>v!==undefined&&v!==null&&String(v).trim())||"";
+
+function render(){
+
+const q=search.value.toLowerCase().trim();
+const cat=category.value.toLowerCase();
+
+const filtered=creators.filter(c=>{
+
+const text=[
+c.name,c.creatorName,c.title,c.bio,c.description,
+c.category,c.skills,c.location,c.role
+].join(" ").toLowerCase();
+
+const categories=Array.isArray(c.category)
+?c.category.join(" ").toLowerCase()
+:String(c.category||"").toLowerCase();
+
+return (!q||text.includes(q)) &&
+(!cat||categories.includes(cat));
+
+});
+
+if(!filtered.length){
+grid.innerHTML='<div class="empty">No creators found.</div>';
+return;
+}
+
+grid.innerHTML=filtered.map(c=>{
+
+const name=val(c.name,c.creatorName,c.title,"Creator");
+const role=val(c.role,c.creatorType,c.category,"Creator");
+const bio=val(c.bio,c.description,"Creator on LetsStudy Pro.");
+const image=val(c.image,c.avatar,c.photo,c.profileImage,c.thumbnail);
+const location=val(c.location,c.city);
+const skills=Array.isArray(c.skills)
+?c.skills.join(", ")
+:val(c.skills,c.expertise);
+
+return `
+<article class="card">
+
+${image
+?`<img class="avatar" src="${image}" alt="${name}" onerror="this.style.display='none'">`
+:`<div class="avatar"></div>`}
+
+<h3>${name}</h3>
+
+<div class="role">${role}</div>
+
+<p class="bio">${bio}</p>
+
+${skills?`<div class="meta"><b>Skills:</b> ${skills}</div>`:""}
+
+${location?`<div class="meta"><b>Location:</b> ${location}</div>`:""}
+
+<a class="view"
+href="creator-details.html?id=${encodeURIComponent(c.id)}">
+View Creator
+</a>
+
+</article>
+`;
+
+}).join("");
+
+}
+
+async function load(){
+
+try{
+
+const snap=await getDocs(collection(db,"creators"));
+
+creators=snap.docs.map(d=>({
+id:d.id,
+...d.data()
+}));
+
+const cats=new Set();
+
+creators.forEach(c=>{
+if(Array.isArray(c.category)){
+c.category.forEach(x=>cats.add(x));
+}else if(c.category){
+cats.add(c.category);
+}
+});
+
+[...cats].sort().forEach(x=>{
+const option=document.createElement("option");
+option.value=x;
+option.textContent=x;
+category.appendChild(option);
+});
+
+render();
+
+}catch(error){
+
+console.error(error);
+
+grid.innerHTML=`
+<div class="empty">
+Unable to load creators right now.
+</div>
+`;
+
+}
+
+}
+
+search.addEventListener("input",render);
+category.addEventListener("change",render);
+
+load();
+
+</script>
+
+</body>
+</html>
