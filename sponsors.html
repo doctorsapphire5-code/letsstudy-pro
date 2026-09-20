@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sponsors - LetsStudy Pro</title>
+<meta name="description" content="Meet the organizations and partners supporting the LetsStudy Pro digital ecosystem.">
+<link rel="icon" href="https://letsstudy.pro/favicon.ico">
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+header{background:#fff;border-bottom:1px solid #e7eaf0;padding:15px 5%;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.logo{font-size:22px;font-weight:800;color:#1769ff;text-decoration:none}
+nav a{margin-left:16px;text-decoration:none;color:#39445a;font-size:14px}
+.hero{padding:55px 6%;text-align:center;background:linear-gradient(135deg,#eef5ff,#fff)}
+.hero h1{font-size:38px;margin:0 0 12px}
+.hero p{max-width:680px;margin:auto;color:#657084;line-height:1.6}
+.wrap{max-width:1150px;margin:auto;padding:30px 5%}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:25px}
+input,select{padding:13px;border:1px solid #dce1e9;border-radius:10px;background:#fff}
+input{flex:1;min-width:220px}
+select{min-width:170px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
+.card{background:#fff;border:1px solid #e7eaf0;border-radius:16px;padding:22px;box-shadow:0 5px 18px #1720330a;text-align:center}
+.logoBox{height:110px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.logoBox img{max-width:150px;max-height:100px;object-fit:contain}
+.placeholder{width:85px;height:85px;border-radius:15px;background:#edf1f7}
+.card h3{margin:10px 0 6px}
+.badge{display:inline-block;background:#eef5ff;color:#1769ff;padding:5px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.card p{color:#697386;font-size:14px;line-height:1.5}
+.meta{font-size:13px;color:#70798a;margin:8px 0}
+.actions{display:flex;gap:8px;margin-top:15px}
+.btn{flex:1;padding:10px;border-radius:9px;text-decoration:none;font-size:13px;font-weight:700}
+.primary{background:#1769ff;color:#fff}
+.secondary{border:1px solid #1769ff;color:#1769ff}
+.empty{text-align:center;padding:50px;color:#687386;grid-column:1/-1}
+footer{text-align:center;padding:35px;color:#778094;font-size:13px}
+@media(max-width:650px){
+.hero h1{font-size:30px}
+nav a{display:none}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<a class="logo" href="index.html">LetsStudy Pro</a>
+
+<nav>
+<a href="courses.html">Courses</a>
+<a href="creator-hub.html">Creators</a>
+<a href="business-hub.html">Business</a>
+<a href="services.html">Services</a>
+</nav>
+</header>
+
+<section class="hero">
+<h1>Our Sponsors</h1>
+
+<p>
+Meet organizations, companies and partners supporting learning,
+digital growth and opportunities through LetsStudy Pro.
+</p>
+</section>
+
+<main class="wrap">
+
+<div class="tools">
+<input id="search" type="search"
+placeholder="Search sponsors...">
+
+<select id="category">
+<option value="">All Categories</option>
+</select>
+</div>
+
+<div id="grid" class="grid">
+<div class="empty">Loading sponsors...</div>
+</div>
+
+</main>
+
+<footer>
+<strong>LetsStudy Pro</strong><br><br>
+THE DIGITAL ECOSYSTEM — Learn. Build. Work. Grow.
+<br><br>
+© 2026 LetsStudy Pro. All rights reserved.
+</footer>
+
+<script type="module">
+
+import {initializeApp}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+getDocs
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyBcOYDfAVKXbkljsyRgI0rjodBn678tCc",
+authDomain:"let-s-study-pro-course.firebaseapp.com",
+databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+projectId:"let-s-study-pro-course",
+storageBucket:"let-s-study-pro-course.firebasestorage.app",
+messagingSenderId:"474928293390",
+appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+measurementId:"G-85B7V5H5J0"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+const grid=document.getElementById("grid");
+const search=document.getElementById("search");
+const category=document.getElementById("category");
+
+let sponsors=[];
+
+const val=(...values)=>
+values.find(v=>
+v!==undefined &&
+v!==null &&
+String(v).trim()
+)||"";
+
+function render(){
+
+const q=search.value.toLowerCase().trim();
+const cat=category.value.toLowerCase();
+
+const filtered=sponsors.filter(s=>{
+
+const name=val(
+s.name,
+s.sponsorName,
+s.companyName,
+s.organization,
+s.title,
+"Sponsor"
+);
+
+const description=val(
+s.description,
+s.bio,
+s.about,
+s.content
+);
+
+const categoryValue=Array.isArray(s.category)
+?s.category.join(" ")
+:String(s.category||"");
+
+const text=`
+${name}
+${description}
+${categoryValue}
+${s.industry||""}
+${s.location||""}
+${s.country||""}
+${s.tags||""}
+`.toLowerCase();
+
+return (!q||text.includes(q)) &&
+(!cat||categoryValue.toLowerCase().includes(cat));
+
+});
+
+if(!filtered.length){
+
+grid.innerHTML=`
+<div class="empty">
+No sponsors found.
+</div>`;
+
+return;
+}
+
+grid.innerHTML=filtered.map(s=>{
+
+const name=val(
+s.name,
+s.sponsorName,
+s.companyName,
+s.organization,
+s.title,
+"Sponsor"
+);
+
+const description=val(
+s.description,
+s.bio,
+s.about,
+s.content,
+"Supporting the LetsStudy Pro ecosystem."
+);
+
+const image=val(
+s.logo,
+s.logoUrl,
+s.image,
+s.imageUrl,
+s.thumbnail
+);
+
+const cat=val(
+s.category,
+s.industry,
+"Sponsor"
+);
+
+const website=val(
+s.website,
+s.websiteUrl,
+s.url,
+s.link
+);
+
+const location=val(
+s.location,
+s.city,
+s.country
+);
+
+return `
+<article class="card">
+
+<div class="logoBox">
+
+${
+image
+?`
+<img
+src="${image}"
+alt="${name}"
+onerror="this.style.display='none'"
+>
+`
+:`
+<div class="placeholder"></div>
+`
+}
+
+</div>
+
+<span class="badge">
+${cat}
+</span>
+
+<h3>${name}</h3>
+
+<p>${description}</p>
+
+${location
+?`<div class="meta">${location}</div>`
+:""}
+
+<div class="actions">
+
+<a class="btn primary"
+href="sponsor-details.html?id=${encodeURIComponent(s.id)}">
+View Sponsor
+</a>
+
+${
+website
+?`
+<a class="btn secondary"
+href="${website}"
+target="_blank"
+rel="noopener noreferrer">
+Website
+</a>
+`
+:""
+}
+
+</div>
+
+</article>
+`;
+
+}).join("");
+
+}
+
+async function load(){
+
+try{
+
+const snap=await getDocs(
+collection(db,"sponsors")
+);
+
+sponsors=snap.docs.map(d=>({
+id:d.id,
+...d.data()
+}));
+
+const categories=new Set();
+
+sponsors.forEach(s=>{
+
+if(Array.isArray(s.category)){
+
+s.category.forEach(c=>{
+if(c)categories.add(c);
+});
+
+}else if(s.category){
+
+categories.add(s.category);
+
+}
+
+});
+
+[...categories]
+.sort()
+.forEach(c=>{
+
+const option=document.createElement("option");
+
+option.value=String(c).toLowerCase();
+option.textContent=c;
+
+category.appendChild(option);
+
+});
+
+render();
+
+}catch(error){
+
+console.error(error);
+
+grid.innerHTML=`
+<div class="empty">
+Unable to load sponsors right now.
+</div>
+`;
+
+}
+
+}
+
+search.addEventListener("input",render);
+category.addEventListener("change",render);
+
+load();
+
+</script>
+
+</body>
+</html>
