@@ -1,15 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <title>Course Notifications | LetsStudy Pro</title><meta
+name="description"
+content="View important course notifications, announcements and updates on LetsStudy Pro."
 
-  <title>Course Notifications | LetsStudy Pro</title>
-  <meta name="description" content="View important course notifications, announcements and updates on LetsStudy Pro.">
+«»
 
-  <link rel="icon" href="favicon.ico">
-
-  <style>
+  <meta name="robots" content="noindex,nofollow">  <link rel="icon" href="favicon.ico">  <style>
     *{
       box-sizing:border-box;
       margin:0;
@@ -91,6 +89,16 @@
       opacity:.9;
     }
 
+    .course-id{
+      margin-top:15px;
+      display:inline-block;
+      padding:7px 11px;
+      border-radius:8px;
+      background:rgba(255,255,255,.14);
+      font-size:12px;
+      font-weight:700;
+    }
+
     .toolbar{
       background:#fff;
       border:1px solid #e5e7eb;
@@ -110,7 +118,7 @@
       font-weight:600;
     }
 
-    .filter {
+    .filter{
       display:flex;
       gap:8px;
     }
@@ -220,6 +228,11 @@
       color:#667085;
     }
 
+    .error{
+      color:#b42318;
+      background:#fef3f2;
+    }
+
     footer{
       text-align:center;
       padding:25px;
@@ -248,183 +261,313 @@
       .mark{
         margin-left:0;
       }
+
     }
-  </style>
-</head>
+  </style></head><body><header>  <div class="nav"><a href="index.html" class="brand">
+  LetsStudy <span>Pro</span>
+</a>
 
-<body>
+<a
+  id="backLink"
+  href="#"
+  class="back"
+>
+  ← Course
+</a>
 
-<header>
-  <div class="nav">
+  </div></header><main>  <section class="hero"><small>
+  COURSE NOTIFICATIONS
+</small>
 
-    <a href="index.html" class="brand">
-      LetsStudy <span>Pro</span>
-    </a>
+<h1 id="courseTitle">
+  Loading course...
+</h1>
 
-    <a id="backLink" href="#" class="back">
-      ← Course
-    </a>
+<p id="courseDescription">
+  Stay updated with important course announcements and changes.
+</p>
 
-  </div>
-</header>
+<div
+  class="course-id"
+  id="courseIdBox"
+>
+  Course ID: —
+</div>
 
-<main>
-
-  <section class="hero">
-
-    <small>COURSE NOTIFICATIONS</small>
-
-    <h1 id="courseTitle">
-      Loading course...
-    </h1>
-
-    <p id="courseDescription">
-      Stay updated with important course announcements and changes.
-    </p>
-
-  </section>
-
-  <div id="loading" class="loading">
+  </section>  <div
+    id="loading"
+    class="loading"
+  >
     Loading notifications...
+  </div>  <div
+    id="error"
+    class="error"
+    style="display:none;"
+  ><h2>
+  Unable to load notifications
+</h2>
+
+<p id="errorText">
+  Please try again later.
+</p>
+
+  </div>  <div
+    id="empty"
+    class="empty"
+    style="display:none;"
+  ><h2>
+  No notifications
+</h2>
+
+<p>
+  There are no notifications available for this course yet.
+</p>
+
+  </div>  <div
+    id="content"
+    style="display:none;"
+  ><div class="toolbar">
+
+  <div
+    class="count"
+    id="count"
+  >
+    0 notifications
   </div>
 
-  <div id="error" class="error" style="display:none;">
-    <h2>Unable to load notifications</h2>
-    <p id="errorText">
-      Please try again later.
-    </p>
-  </div>
 
-  <div id="empty" class="empty" style="display:none;">
-    <h2>No notifications</h2>
-    <p>
-      There are no notifications available for this course yet.
-    </p>
-  </div>
+  <div class="filter">
 
-  <div id="content" style="display:none;">
+    <button
+      id="allBtn"
+      class="active"
+      type="button"
+    >
+      All
+    </button>
 
-    <div class="toolbar">
-
-      <div class="count" id="count">
-        0 notifications
-      </div>
-
-      <div class="filter">
-
-        <button
-          id="allBtn"
-          class="active"
-          type="button">
-          All
-        </button>
-
-        <button
-          id="unreadBtn"
-          type="button">
-          Unread
-        </button>
-
-      </div>
-
-    </div>
-
-    <section
-      id="notifications"
-      class="notifications">
-    </section>
+    <button
+      id="unreadBtn"
+      type="button"
+    >
+      Unread
+    </button>
 
   </div>
 
-</main>
+</div>
 
-<footer>
-  © <span id="year"></span> LetsStudy Pro. Learn. Practice. Grow.
-</footer>
 
-<script type="module">
+<section
+  id="notifications"
+  class="notifications"
+></section>
+
+  </div></main><footer>©
+<span id="year"></span>
+LetsStudy Pro.
+Learn. Practice. Grow.
+
+</footer><script type="module">
 
   import {
     initializeApp
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 
+
   import {
     getFirestore,
     doc,
-    getDoc
+    getDoc,
+    collection,
+    query,
+    where,
+    getDocs
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+
+  /* =====================================================
+     FIREBASE
+  ===================================================== */
+
   const firebaseConfig = {
-    apiKey: "AIzaSyBcOYDfAVK5XbkljsyRgI_0rj0odBn678tCc",
-    authDomain: "let-s-study-pro-course.firebaseapp.com",
-    databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
-    projectId: "let-s-study-pro-course",
-    storageBucket: "let-s-study-pro-course.firebasestorage.app",
-    messagingSenderId: "474928293390",
-    appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
-    measurementId: "G-85B7V5H5J0"
+
+    apiKey:
+      "AIzaSyBcOYDfAVK5XbkljsyRgI_0rjodBn678tCc",
+
+    authDomain:
+      "let-s-study-pro-course.firebaseapp.com",
+
+    databaseURL:
+      "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+    projectId:
+      "let-s-study-pro-course",
+
+    storageBucket:
+      "let-s-study-pro-course.firebasestorage.app",
+
+    messagingSenderId:
+      "474928293390",
+
+    appId:
+      "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+    measurementId:
+      "G-85B7V5H5J0"
+
   };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+
+  const app =
+    initializeApp(firebaseConfig);
+
+
+  const db =
+    getFirestore(app);
+
+
+  /* =====================================================
+     URL
+  ===================================================== */
 
   const params =
-    new URLSearchParams(window.location.search);
+    new URLSearchParams(
+      window.location.search
+    );
+
 
   const courseId =
-    params.get("id");
+    (
+      params.get("courseId") ||
+      params.get("courseID") ||
+      params.get("id") ||
+      params.get("course") ||
+      ""
+    ).trim();
+
+
+  /* =====================================================
+     ELEMENTS
+  ===================================================== */
 
   const courseTitle =
-    document.getElementById("courseTitle");
+    document.getElementById(
+      "courseTitle"
+    );
+
 
   const courseDescription =
-    document.getElementById("courseDescription");
+    document.getElementById(
+      "courseDescription"
+    );
+
+
+  const courseIdBox =
+    document.getElementById(
+      "courseIdBox"
+    );
+
 
   const notificationsContainer =
-    document.getElementById("notifications");
+    document.getElementById(
+      "notifications"
+    );
+
 
   const loading =
-    document.getElementById("loading");
+    document.getElementById(
+      "loading"
+    );
+
 
   const empty =
-    document.getElementById("empty");
+    document.getElementById(
+      "empty"
+    );
+
 
   const error =
-    document.getElementById("error");
+    document.getElementById(
+      "error"
+    );
+
 
   const errorText =
-    document.getElementById("errorText");
+    document.getElementById(
+      "errorText"
+    );
+
 
   const content =
-    document.getElementById("content");
+    document.getElementById(
+      "content"
+    );
+
 
   const count =
-    document.getElementById("count");
+    document.getElementById(
+      "count"
+    );
+
 
   const allBtn =
-    document.getElementById("allBtn");
+    document.getElementById(
+      "allBtn"
+    );
+
 
   const unreadBtn =
-    document.getElementById("unreadBtn");
+    document.getElementById(
+      "unreadBtn"
+    );
+
 
   const backLink =
-    document.getElementById("backLink");
+    document.getElementById(
+      "backLink"
+    );
+
+
+  document.getElementById(
+    "year"
+  ).textContent =
+    new Date().getFullYear();
+
+
+  courseIdBox.textContent =
+    "Course ID: " +
+    (courseId || "Missing");
+
+
+  backLink.href =
+    courseId
+      ? `course-details.html?id=${encodeURIComponent(courseId)}`
+      : "course-details.html";
+
+
+  /* =====================================================
+     STATE
+  ===================================================== */
 
   let notifications = [];
 
   let currentFilter = "all";
 
-  document.getElementById("year").textContent =
-    new Date().getFullYear();
 
-  backLink.href = courseId
-    ? `course-details.html?id=${encodeURIComponent(courseId)}`
-    : "course-details.html";
+  /* =====================================================
+     HELPERS
+  ===================================================== */
 
+  function first(
+    obj,
+    fields,
+    fallback = ""
+  ){
 
-  function first(obj, fields, fallback=""){
-
-    for(const field of fields){
+    for(
+      const field of fields
+    ){
 
       if(
         obj &&
@@ -440,148 +583,94 @@
     }
 
     return fallback;
+
   }
 
 
-  function getNotifications(course){
+  function escapeHTML(value){
 
-    let data =
-      course.notifications ??
-      course.notification ??
-      course.announcements ??
-      course.announcement ??
-      course.courseNotifications ??
-      course.updates ??
-      [];
-
-    if(Array.isArray(data)){
-      return data;
-    }
-
-    if(data && Array.isArray(data.items)){
-      return data.items;
-    }
-
-    if(data && Array.isArray(data.notifications)){
-      return data.notifications;
-    }
-
-    if(data && typeof data === "object"){
-
-      return Object.entries(data).map(
-        ([id,value]) => ({
-          ...(typeof value === "object"
-            ? value
-            : {}),
-          notificationId:id
-        })
+    return String(value ?? "")
+      .replace(
+        /&/g,
+        "&amp;"
+      )
+      .replace(
+        /</g,
+        "&lt;"
+      )
+      .replace(
+        />/g,
+        "&gt;"
+      )
+      .replace(
+        /"/g,
+        "&quot;"
+      )
+      .replace(
+        /'/g,
+        "&#039;"
       );
 
-    }
-
-    return [];
   }
 
 
-  function getTitle(item,index){
+  function showError(
+    message
+  ){
 
-    return first(
-      item,
-      [
-        "title",
-        "name",
-        "notificationTitle",
-        "announcementTitle"
-      ],
-      `Course Update ${index + 1}`
-    );
+    loading.style.display =
+      "none";
 
-  }
+    content.style.display =
+      "none";
 
+    empty.style.display =
+      "none";
 
-  function getMessage(item){
+    error.style.display =
+      "block";
 
-    return first(
-      item,
-      [
-        "message",
-        "description",
-        "content",
-        "body",
-        "text",
-        "details"
-      ],
-      "There is a new update available for this course."
-    );
+    errorText.textContent =
+      message;
 
   }
 
 
-  function getType(item){
+  /* =====================================================
+     DATE
+  ===================================================== */
 
-    return first(
-      item,
-      [
-        "type",
-        "notificationType",
-        "category"
-      ],
-      "Update"
-    );
-
-  }
-
-
-  function getDate(item){
-
-    return first(
-      item,
-      [
-        "createdAt",
-        "date",
-        "publishedAt",
-        "timestamp",
-        "createdDate"
-      ],
-      ""
-    );
-
-  }
-
-
-  function isUnread(item,index){
-
-    if(
-      item.read === true ||
-      item.isRead === true
-    ){
-      return false;
-    }
-
-    const key =
-      `courseNotificationRead_${courseId}_${index}`;
-
-    return localStorage.getItem(key) !== "true";
-  }
-
-
-  function formatDate(value){
+  function formatDate(
+    value
+  ){
 
     if(!value){
       return "";
     }
 
+
     try{
 
       let date;
 
+
       if(
         typeof value === "object" &&
-        value.seconds
+        value.seconds !== undefined
       ){
 
         date =
-          new Date(value.seconds * 1000);
+          new Date(
+            value.seconds * 1000
+          );
+
+      }else if(
+        typeof value === "object" &&
+        typeof value.toDate === "function"
+      ){
+
+        date =
+          value.toDate();
 
       }else{
 
@@ -590,9 +679,17 @@
 
       }
 
-      if(Number.isNaN(date.getTime())){
+
+      if(
+        Number.isNaN(
+          date.getTime()
+        )
+      ){
+
         return String(value);
+
       }
+
 
       return date.toLocaleDateString(
         undefined,
@@ -612,175 +709,373 @@
   }
 
 
-  function escapeHTML(value){
+  /* =====================================================
+     READ STATUS
+  ===================================================== */
 
-    return String(value ?? "")
-      .replace(/&/g,"&amp;")
-      .replace(/</g,"&lt;")
-      .replace(/>/g,"&gt;")
-      .replace(/"/g,"&quot;")
-      .replace(/'/g,"&#039;");
+  function isUnread(
+    item,
+    index
+  ){
+
+    if(
+      item.read === true ||
+      item.isRead === true
+    ){
+
+      return false;
+
+    }
+
+
+    const key =
+      `courseNotificationRead_${courseId}_${index}`;
+
+
+    return (
+      localStorage.getItem(key) !==
+      "true"
+    );
 
   }
 
 
+  /* =====================================================
+     NOTIFICATION FIELD HELPERS
+  ===================================================== */
+
+  function getTitle(
+    item,
+    index
+  ){
+
+    return first(
+      item,
+      [
+        "title",
+        "name",
+        "notificationTitle",
+        "announcementTitle"
+      ],
+      `Course Update ${index + 1}`
+    );
+
+  }
+
+
+  function getMessage(
+    item
+  ){
+
+    return first(
+      item,
+      [
+        "message",
+        "description",
+        "content",
+        "body",
+        "text",
+        "details"
+      ],
+      "There is a new update available for this course."
+    );
+
+  }
+
+
+  function getType(
+    item
+  ){
+
+    return first(
+      item,
+      [
+        "type",
+        "notificationType",
+        "category"
+      ],
+      "Update"
+    );
+
+  }
+
+
+  function getDate(
+    item
+  ){
+
+    return first(
+      item,
+      [
+        "createdAt",
+        "date",
+        "publishedAt",
+        "timestamp",
+        "createdDate",
+        "updatedAt"
+      ],
+      ""
+    );
+
+  }
+
+
+  /* =====================================================
+     RENDER
+  ===================================================== */
+
   function render(){
 
-    notificationsContainer.innerHTML = "";
+    notificationsContainer.innerHTML =
+      "";
 
-    let filtered =
-      notifications.filter((item,index)=>{
 
-        if(currentFilter === "all"){
-          return true;
+    const filtered =
+      notifications.filter(
+        (item,index) => {
+
+          if(
+            currentFilter ===
+            "all"
+          ){
+
+            return true;
+
+          }
+
+
+          return isUnread(
+            item,
+            index
+          );
+
         }
+      );
 
-        return isUnread(item,index);
-
-      });
 
     const unreadCount =
       notifications.filter(
-        (item,index)=>isUnread(item,index)
+        (item,index) =>
+          isUnread(
+            item,
+            index
+          )
       ).length;
 
-    count.textContent =
-      currentFilter === "all"
-        ? `${notifications.length} notification${notifications.length === 1 ? "" : "s"}`
-        : `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}`;
+
+    if(
+      currentFilter ===
+      "all"
+    ){
+
+      count.textContent =
+        `${notifications.length} notification${
+          notifications.length === 1
+            ? ""
+            : "s"
+        }`;
+
+    }else{
+
+      count.textContent =
+        `${unreadCount} unread notification${
+          unreadCount === 1
+            ? ""
+            : "s"
+        }`;
+
+    }
 
 
     if(!filtered.length){
 
       notificationsContainer.innerHTML = `
+
         <div class="empty">
-          <h2>No ${currentFilter === "unread" ? "unread " : ""}notifications</h2>
+
+          <h2>
+            No ${
+              currentFilter === "unread"
+                ? "unread "
+                : ""
+            }notifications
+          </h2>
+
           <p>
             You're all caught up.
           </p>
+
         </div>
+
       `;
 
       return;
+
     }
 
 
-    filtered.forEach((item,index)=>{
+    filtered.forEach(
+      item => {
 
-      const originalIndex =
-        notifications.indexOf(item);
-
-      const title =
-        getTitle(item,originalIndex);
-
-      const message =
-        getMessage(item);
-
-      const type =
-        getType(item);
-
-      const date =
-        getDate(item);
-
-      const unread =
-        isUnread(item,originalIndex);
-
-      const card =
-        document.createElement("article");
-
-      card.className =
-        `notification ${unread ? "unread" : ""}`;
+        const originalIndex =
+          notifications.indexOf(
+            item
+          );
 
 
-      card.innerHTML = `
+        const title =
+          getTitle(
+            item,
+            originalIndex
+          );
 
-        <div class="notification-top">
 
-          <div class="title">
-            ${escapeHTML(title)}
+        const message =
+          getMessage(item);
+
+
+        const type =
+          getType(item);
+
+
+        const date =
+          getDate(item);
+
+
+        const unread =
+          isUnread(
+            item,
+            originalIndex
+          );
+
+
+        const card =
+          document.createElement(
+            "article"
+          );
+
+
+        card.className =
+          `notification ${
+            unread
+              ? "unread"
+              : ""
+          }`;
+
+
+        card.innerHTML = `
+
+          <div class="notification-top">
+
+            <div class="title">
+              ${escapeHTML(title)}
+            </div>
+
+            <span class="badge">
+              ${escapeHTML(type)}
+            </span>
+
           </div>
 
-          <span class="badge">
-            ${escapeHTML(type)}
-          </span>
 
-        </div>
-
-        <div class="message">
-          ${escapeHTML(message)}
-        </div>
-
-        <div class="meta">
-
-          ${
-            date
-              ? `
-                <span class="date">
-                  ${escapeHTML(formatDate(date))}
-                </span>
-              `
-              : ""
-          }
-
-          ${
-            unread
-              ? `
-                <button
-                  class="mark"
-                  type="button">
-                  Mark as read
-                </button>
-              `
-              : `
-                <span class="date">
-                  Read
-                </span>
-              `
-          }
-
-        </div>
-
-      `;
+          <div class="message">
+            ${escapeHTML(message)}
+          </div>
 
 
-      const markButton =
-        card.querySelector(".mark");
+          <div class="meta">
+
+            ${
+              date
+                ? `
+                  <span class="date">
+                    ${escapeHTML(
+                      formatDate(date)
+                    )}
+                  </span>
+                `
+                : ""
+            }
 
 
-      if(markButton){
+            ${
+              unread
+                ? `
+                  <button
+                    class="mark"
+                    type="button"
+                  >
+                    Mark as read
+                  </button>
+                `
+                : `
+                  <span class="date">
+                    Read
+                  </span>
+                `
+            }
 
-        markButton.addEventListener(
-          "click",
-          ()=>{
+          </div>
 
-            localStorage.setItem(
-              `courseNotificationRead_${courseId}_${originalIndex}`,
-              "true"
-            );
+        `;
 
-            render();
 
-          }
-        );
+        const markButton =
+          card.querySelector(
+            ".mark"
+          );
+
+
+        if(markButton){
+
+          markButton.addEventListener(
+            "click",
+            () => {
+
+              localStorage.setItem(
+                `courseNotificationRead_${courseId}_${originalIndex}`,
+                "true"
+              );
+
+
+              render();
+
+            }
+          );
+
+        }
+
+
+        notificationsContainer
+          .appendChild(card);
 
       }
-
-
-      notificationsContainer.appendChild(card);
-
-    });
+    );
 
   }
 
 
+  /* =====================================================
+     BUTTONS
+  ===================================================== */
+
   allBtn.addEventListener(
     "click",
-    ()=>{
+    () => {
 
-      currentFilter = "all";
+      currentFilter =
+        "all";
 
-      allBtn.classList.add("active");
-      unreadBtn.classList.remove("active");
+
+      allBtn.classList.add(
+        "active"
+      );
+
+
+      unreadBtn.classList.remove(
+        "active"
+      );
+
 
       render();
 
@@ -790,12 +1085,21 @@
 
   unreadBtn.addEventListener(
     "click",
-    ()=>{
+    () => {
 
-      currentFilter = "unread";
+      currentFilter =
+        "unread";
 
-      unreadBtn.classList.add("active");
-      allBtn.classList.remove("active");
+
+      unreadBtn.classList.add(
+        "active"
+      );
+
+
+      allBtn.classList.remove(
+        "active"
+      );
+
 
       render();
 
@@ -803,16 +1107,21 @@
   );
 
 
+  /* =====================================================
+     LOAD COURSE
+  ===================================================== */
+
   async function loadCourse(){
+
+    /*
+     * Strict single-course rule.
+     */
 
     if(!courseId){
 
-      loading.style.display = "none";
-
-      error.style.display = "block";
-
-      errorText.textContent =
-        "Course information is missing.";
+      showError(
+        "Course ID is missing. Please open this page using ?courseId=COURSE_ID"
+      );
 
       return;
 
@@ -821,6 +1130,12 @@
 
     try{
 
+      /*
+       * Load ONLY:
+       *
+       * courses/{courseId}
+       */
+
       const courseRef =
         doc(
           db,
@@ -828,18 +1143,18 @@
           courseId
         );
 
+
       const snapshot =
-        await getDoc(courseRef);
+        await getDoc(
+          courseRef
+        );
 
 
       if(!snapshot.exists()){
 
-        loading.style.display = "none";
-
-        error.style.display = "block";
-
-        errorText.textContent =
-          "The requested course could not be found.";
+        showError(
+          "The requested course could not be found."
+        );
 
         return;
 
@@ -847,7 +1162,26 @@
 
 
       const course =
-        snapshot.data();
+        snapshot.data() || {};
+
+
+      /*
+       * Optional safety check.
+       */
+
+      if(
+        course.courseId &&
+        String(course.courseId) !==
+        String(courseId)
+      ){
+
+        showError(
+          "The requested course does not match this course record."
+        );
+
+        return;
+
+      }
 
 
       courseTitle.textContent =
@@ -874,46 +1208,342 @@
         );
 
 
-      notifications =
-        getNotifications(course);
+      /*
+       * Load notifications from the
+       * course's own embedded notification data
+       * first.
+       */
+
+      let embedded =
+        course.notifications ??
+        course.notification ??
+        course.announcements ??
+        course.announcement ??
+        course.courseNotifications ??
+        course.updates ??
+        [];
 
 
-      loading.style.display = "none";
+      if(
+        !Array.isArray(embedded) &&
+        embedded &&
+        Array.isArray(embedded.items)
+      ){
 
-
-      if(!notifications.length){
-
-        empty.style.display = "block";
-
-        return;
+        embedded =
+          embedded.items;
 
       }
 
 
-      content.style.display = "block";
+      if(
+        !Array.isArray(embedded) &&
+        embedded &&
+        Array.isArray(
+          embedded.notifications
+        )
+      ){
 
-      render();
+        embedded =
+          embedded.notifications;
+
+      }
 
 
-    }catch(err){
+      if(
+        embedded &&
+        typeof embedded === "object" &&
+        !Array.isArray(embedded)
+      ){
 
-      console.error(err);
+        embedded =
+          Object.entries(
+            embedded
+          ).map(
+            ([id,value]) => ({
 
-      loading.style.display = "none";
+              ...(typeof value === "object"
+                ? value
+                : {}),
 
-      error.style.display = "block";
+              notificationId:
+                id
 
-      errorText.textContent =
-        "There was a problem loading course notifications.";
+            })
+          );
 
-    }
+      }
+
+
+      notifications =
+        Array.isArray(embedded)
+          ? embedded
+          : [];
+
+
+      /*
+       * If the course document has no embedded
+       * notifications, query ONLY the current
+       * course's announcements.
+       *
+       * Never load all announcements.
+       */
+
+      if(
+        notifications.length === 0
+      ){
+
+        const announcementsQuery =
+          query(
+            collection(
+              db,
+      "announcements"
+),
+where(
+"courseId",
+"==",
+courseId
+)
+);
+
+    const announcementSnapshot =
+      await getDocs(
+        announcementsQuery
+      );
+
+
+    notifications = [];
+
+
+    announcementSnapshot.forEach(
+      announcementDoc => {
+
+        const data =
+          announcementDoc.data() || {};
+
+
+        /*
+         * Extra safety:
+         * only accept announcements belonging
+         * to the currently opened course.
+         */
+
+        if(
+          String(
+            data.courseId || ""
+          ) !==
+          String(courseId)
+        ){
+          return;
+        }
+
+
+        notifications.push({
+
+          ...data,
+
+          notificationId:
+            announcementDoc.id
+
+        });
+
+      }
+    );
 
   }
 
 
-  loadCourse();
+  /*
+   * Sort notifications from newest
+   * to oldest when a date exists.
+   */
 
-</script>
+  notifications.sort(
+    (a, b) => {
 
-</body>
+      const dateA =
+        getDate(a);
+
+      const dateB =
+        getDate(b);
+
+      const timeA =
+        getTimestamp(dateA);
+
+      const timeB =
+        getTimestamp(dateB);
+
+
+      if(
+        timeA === null &&
+        timeB === null
+      ){
+        return 0;
+      }
+
+
+      if(timeA === null){
+        return 1;
+      }
+
+
+      if(timeB === null){
+        return -1;
+      }
+
+
+      return timeB - timeA;
+
+    }
+  );
+
+
+  loading.style.display =
+    "none";
+
+
+  /*
+   * No notifications for this
+   * particular course.
+   */
+
+  if(
+    notifications.length === 0
+  ){
+
+    empty.style.display =
+      "block";
+
+    return;
+
+  }
+
+
+  /*
+   * Show course-specific content.
+   */
+
+  content.style.display =
+    "block";
+
+
+  render();
+
+
+}catch(err){
+
+  console.error(
+    "Course notifications error:",
+    err
+  );
+
+
+  loading.style.display =
+    "none";
+
+
+  content.style.display =
+    "none";
+
+
+  empty.style.display =
+    "none";
+
+
+  error.style.display =
+    "block";
+
+
+  errorText.textContent =
+    "There was a problem loading notifications for this course.";
+
+}
+
+}
+
+/* =====================================================
+TIMESTAMP HELPER
+===================================================== */
+
+function getTimestamp(
+value
+){
+
+if(!value){
+  return null;
+}
+
+
+try{
+
+  /*
+   * Firestore Timestamp
+   */
+
+  if(
+    typeof value === "object" &&
+    typeof value.toDate === "function"
+  ){
+
+    return value
+      .toDate()
+      .getTime();
+
+  }
+
+
+  /*
+   * Firestore Timestamp-like object
+   */
+
+  if(
+    typeof value === "object" &&
+    value.seconds !== undefined
+  ){
+
+    return (
+      Number(value.seconds) * 1000
+    );
+
+  }
+
+
+  /*
+   * Normal JavaScript date/string
+   */
+
+  const date =
+    new Date(value);
+
+
+  const time =
+    date.getTime();
+
+
+  if(
+    Number.isNaN(time)
+  ){
+
+    return null;
+
+  }
+
+
+  return time;
+
+}catch{
+
+  return null;
+
+}
+
+}
+
+/* =====================================================
+START
+===================================================== */
+
+loadCourse();
+
+</script></body>
 </html>
