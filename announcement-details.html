@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Announcement | LetsStudy Pro</title>
+<meta name="description" content="Read the latest announcement from LetsStudy Pro.">
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;
+  background:#f6f8fc;
+  color:#111827
+}
+
+header{
+  position:sticky;
+  top:0;
+  z-index:10;
+  background:#fff;
+  border-bottom:1px solid #e5e7eb;
+  padding:16px
+}
+
+nav{
+  max-width:900px;
+  margin:auto;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px
+}
+
+.logo{
+  color:#2563eb;
+  font-size:21px;
+  font-weight:900;
+  text-decoration:none
+}
+
+nav a{
+  color:#374151;
+  text-decoration:none;
+  font-weight:700
+}
+
+main{
+  max-width:900px;
+  margin:auto;
+  padding:35px 16px
+}
+
+.back{
+  display:inline-block;
+  margin-bottom:18px;
+  color:#2563eb;
+  text-decoration:none;
+  font-weight:800;
+  font-size:14px
+}
+
+.article{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 10px 35px rgba(0,0,0,.06)
+}
+
+.cover{
+  width:100%;
+  height:330px;
+  object-fit:cover;
+  background:#e5e7eb
+}
+
+.content{
+  padding:28px
+}
+
+.badge{
+  display:inline-block;
+  padding:6px 10px;
+  border-radius:999px;
+  background:#eff6ff;
+  color:#1d4ed8;
+  font-size:11px;
+  font-weight:800;
+  margin-bottom:12px
+}
+
+h1{
+  margin:0 0 12px;
+  font-size:clamp(28px,5vw,44px);
+  line-height:1.12
+}
+
+.meta{
+  color:#6b7280;
+  font-size:13px;
+  margin-bottom:25px
+}
+
+.description{
+  color:#374151;
+  line-height:1.8;
+  font-size:15px;
+  white-space:pre-wrap
+}
+
+.extra{
+  margin-top:25px;
+  padding:18px;
+  background:#f8fafc;
+  border-radius:14px;
+  color:#4b5563;
+  line-height:1.7
+}
+
+.action{
+  margin-top:25px
+}
+
+.action a{
+  display:inline-block;
+  padding:12px 18px;
+  border-radius:10px;
+  background:#2563eb;
+  color:#fff;
+  text-decoration:none;
+  font-weight:800
+}
+
+.status{
+  text-align:center;
+  padding:50px 20px;
+  color:#6b7280
+}
+
+.error{
+  text-align:center;
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:18px;
+  padding:35px 20px
+}
+
+.error a{
+  display:inline-block;
+  margin-top:15px;
+  color:#2563eb;
+  font-weight:800;
+  text-decoration:none
+}
+
+footer{
+  text-align:center;
+  padding:25px;
+  color:#98a2b3;
+  font-size:12px
+}
+
+@media(max-width:600px){
+  main{padding:25px 12px}
+  .cover{height:220px}
+  .content{padding:20px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<nav>
+  <a href="index.html" class="logo">LetsStudy Pro</a>
+  <a href="index.html">Home</a>
+</nav>
+</header>
+
+<main>
+
+<a href="index.html" class="back">← Back</a>
+
+<div id="app">
+
+  <div class="status">
+    Loading announcement...
+  </div>
+
+</div>
+
+</main>
+
+<footer>
+© <span id="year"></span> LetsStudy Pro
+</footer>
+
+<script type="module">
+
+import {initializeApp}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+const firebaseConfig={
+  apiKey:"AIzaSyBcOYDfAVKXKbljsyRgI_0rjodBn678tCc",
+  authDomain:"let-s-study-pro-course.firebaseapp.com",
+  projectId:"let-s-study-pro-course",
+  storageBucket:"let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId:"474928293390",
+  appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f"
+};
+
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+const appBox=document.getElementById("app");
+
+const params=new URLSearchParams(
+  window.location.search
+);
+
+const announcementId=params.get("id");
+
+
+async function loadAnnouncement(){
+
+  if(!announcementId){
+
+    showError("No announcement ID was provided.");
+    return;
+
+  }
+
+  try{
+
+    const ref=doc(
+      db,
+      "announcements",
+      announcementId
+    );
+
+    const snap=await getDoc(ref);
+
+    if(!snap.exists()){
+
+      showError("Announcement not found.");
+      return;
+
+    }
+
+    const data=snap.data();
+
+    renderAnnouncement(data);
+
+  }catch(error){
+
+    console.error(error);
+
+    showError(
+      "Unable to load this announcement."
+    );
+
+  }
+
+}
+
+
+function renderAnnouncement(data){
+
+  const title=
+    data.title||
+    data.name||
+    "LetsStudy Pro Announcement";
+
+  const description=
+    data.description||
+    data.content||
+    data.message||
+    "No announcement content available.";
+
+  const image=
+    data.image||
+    data.thumbnail||
+    data.imageUrl||
+    "https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=1200&q=85";
+
+  const category=
+    data.category||
+    data.type||
+    "Announcement";
+
+  const date=
+    data.date||
+    data.createdAt||
+    "";
+
+  const link=
+    data.link||
+    data.url||
+    "";
+
+  appBox.innerHTML=`
+
+    <article class="article">
+
+      <img
+        class="cover"
+        src="${image}"
+        alt="${title}"
+        onerror="this.style.display='none'"
+      >
+
+      <div class="content">
+
+        <span class="badge">
+          ${category}
+        </span>
+
+        <h1>${title}</h1>
+
+        ${
+          date
+          ? `<div class="meta">${formatDate(date)}</div>`
+          : ""
+        }
+
+        <div class="description">
+          ${description}
+        </div>
+
+        ${
+          data.details
+          ? `
+            <div class="extra">
+              ${data.details}
+            </div>
+          `
+          : ""
+        }
+
+        ${
+          link
+          ? `
+            <div class="action">
+              <a
+                href="${link}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Learn More
+              </a>
+            </div>
+          `
+          : ""
+        }
+
+      </div>
+
+    </article>
+
+  `;
+
+}
+
+
+function formatDate(value){
+
+  try{
+
+    if(
+      typeof value==="object" &&
+      value.seconds
+    ){
+
+      return new Date(
+        value.seconds*1000
+      ).toLocaleDateString(
+        undefined,
+        {
+          year:"numeric",
+          month:"long",
+          day:"numeric"
+        }
+      );
+
+    }
+
+    return new Date(value).toLocaleDateString(
+      undefined,
+      {
+        year:"numeric",
+        month:"long",
+        day:"numeric"
+      }
+    );
+
+  }catch{
+
+    return value;
+
+  }
+
+}
+
+
+function showError(message){
+
+  appBox.innerHTML=`
+
+    <div class="error">
+
+      <h2>${message}</h2>
+
+      <p>
+        The announcement may have been removed
+        or the link may be incorrect.
+      </p>
+
+      <a href="index.html">
+        Return Home
+      </a>
+
+    </div>
+
+  `;
+
+}
+
+
+document.getElementById("year").textContent=
+  new Date().getFullYear();
+
+
+loadAnnouncement();
+
+</script>
+
+</body>
+</html>
