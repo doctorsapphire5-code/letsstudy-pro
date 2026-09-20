@@ -1,19 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <title>Course Modules | LetsStudy Pro</title><meta
+name="description"
+content="Explore course modules and lessons on LetsStudy Pro."
 
-  <title>Course Modules | LetsStudy Pro</title>
+«»
 
-  <meta
-    name="description"
-    content="Explore course modules and lessons on LetsStudy Pro."
-  >
-
-  <link rel="icon" href="favicon.png">
-
-  <style>
+  <meta name="robots" content="noindex,nofollow">  <link rel="icon" href="favicon.png">  <style>
     * {
       box-sizing: border-box;
       margin: 0;
@@ -256,60 +250,41 @@
         font-size: 17px;
       }
     }
-  </style>
-</head>
-
-<body>
-
-<header>
-  <div class="brand">🎓 LetsStudy Pro</div>
-
-  <button class="back-btn" onclick="goBack()">
+  </style></head><body><header>  <div class="brand">
+    🎓 LetsStudy Pro
+  </div>  <button class="back-btn" onclick="goBack()">
     ← Back
-  </button>
-</header>
+  </button></header><main>  <section class="hero"><small>Course / Modules</small>
 
-<main>
+<h1>
+  Course Modules
+</h1>
 
-  <section class="hero">
+<p>
+  Explore the modules available in this course and continue learning
+  step by step.
+</p>
 
-    <small>Course / Modules</small>
+<div class="course-id" id="courseIdBox">
+  Course ID: —
+</div>
 
-    <h1>Course Modules</h1>
+  </section>  <section class="toolbar"><input
+  type="search"
+  id="searchInput"
+  class="search"
+  placeholder="Search modules..."
+  autocomplete="off"
+>
 
-    <p>
-      Explore the modules available in this course and continue learning
-      step by step.
-    </p>
+  </section>  <section
+    id="modulesContainer"
+    class="modules"
+  ><div class="state">
+  Loading modules...
+</div>
 
-    <div class="course-id" id="courseIdBox">
-      Course ID: —
-    </div>
-
-  </section>
-
-  <section class="toolbar">
-
-    <input
-      type="search"
-      id="searchInput"
-      class="search"
-      placeholder="Search modules..."
-    >
-
-  </section>
-
-  <section id="modulesContainer" class="modules">
-
-    <div class="state">
-      Loading modules...
-    </div>
-
-  </section>
-
-</main>
-
-<script type="module">
+  </section></main><script type="module">
 
   import {
     initializeApp
@@ -318,6 +293,8 @@
   import {
     getFirestore,
     collection,
+    query,
+    where,
     getDocs
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -327,7 +304,7 @@
   ===================================================== */
 
   const firebaseConfig = {
-    apiKey: "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+    apiKey: "AIzaSyBcOYDfAVK5XbkljsyRgI_0rjodBn678tCc",
     authDomain: "let-s-study-pro-course.firebaseapp.com",
     databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
     projectId: "let-s-study-pro-course",
@@ -339,6 +316,7 @@
 
 
   const app = initializeApp(firebaseConfig);
+
   const db = getFirestore(app);
 
 
@@ -346,16 +324,36 @@
      URL
   ===================================================== */
 
-  const params = new URLSearchParams(window.location.search);
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
 
   const courseId =
-    params.get("courseId") ||
-    params.get("id") ||
-    "";
+    (
+      params.get("courseId") ||
+      params.get("courseID") ||
+      params.get("id") ||
+      params.get("course") ||
+      ""
+    ).trim();
 
 
-  document.getElementById("courseIdBox").textContent =
-    "Course ID: " + (courseId || "All Courses");
+  const courseIdBox =
+    document.getElementById(
+      "courseIdBox"
+    );
+
+
+  /*
+   * Never display "All Courses".
+   * This page is strictly for one course.
+   */
+
+  courseIdBox.textContent =
+    "Course ID: " +
+    (courseId || "Missing");
 
 
   /* =====================================================
@@ -384,6 +382,7 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
+
   }
 
 
@@ -394,16 +393,99 @@
   let MODULES = [];
 
 
+  /* =====================================================
+     ERROR
+  ===================================================== */
+
+  function showError(title, message) {
+
+    const container =
+      document.getElementById(
+        "modulesContainer"
+      );
+
+
+    container.innerHTML = `
+
+      <div class="state error">
+
+        <div style="font-size:40px;">
+          ⚠️
+        </div>
+
+        <h3 style="margin-top:12px;">
+          ${escapeHtml(title)}
+        </h3>
+
+        <p style="margin-top:8px;">
+          ${escapeHtml(message)}
+        </p>
+
+      </div>
+
+    `;
+
+  }
+
+
+  /* =====================================================
+     LOAD MODULES
+  ===================================================== */
+
   async function loadModules() {
 
     const container =
-      document.getElementById("modulesContainer");
+      document.getElementById(
+        "modulesContainer"
+      );
+
+
+    /*
+     * STRICT REQUIREMENT:
+     *
+     * This page must always have a courseId.
+     *
+     * If courseId is missing, do NOT load
+     * all modules.
+     */
+
+    if (!courseId) {
+
+      showError(
+        "Course ID is missing",
+        "Please open this page using ?courseId=COURSE_ID"
+      );
+
+      return;
+
+    }
+
 
     try {
 
+      /*
+       * IMPORTANT:
+       *
+       * Firestore filters at DATABASE level.
+       *
+       * We do NOT download the complete
+       * modules collection.
+       */
+
+      const modulesQuery =
+        query(
+          collection(db, "modules"),
+          where(
+            "courseId",
+            "==",
+            courseId
+          )
+        );
+
+
       const snapshot =
         await getDocs(
-          collection(db, "modules")
+          modulesQuery
         );
 
 
@@ -412,20 +494,35 @@
 
       snapshot.forEach(docSnap => {
 
-        const data = docSnap.data() || {};
+        const data =
+          docSnap.data() || {};
 
-        const documentId = docSnap.id;
+
+        /*
+         * Extra client-side safety check.
+         */
+
+        if (
+          String(
+            data.courseId || ""
+          ) !==
+          String(courseId)
+        ) {
+
+          return;
+
+        }
 
 
         MODULES.push({
 
           ...data,
 
-          id: documentId,
+          id: docSnap.id,
 
-          moduleId: documentId,
+          moduleId: docSnap.id,
 
-          documentId: documentId
+          documentId: docSnap.id
 
         });
 
@@ -433,31 +530,26 @@
 
 
       /*
-        IMPORTANT:
-
-        Filter by courseId first.
-        This prevents modules belonging to another
-        course from appearing in this course.
-      */
-
-      if (courseId) {
-
-        MODULES = MODULES.filter(
-          module =>
-            String(module.courseId || "") ===
-            String(courseId)
-        );
-
-      }
-
+       * Sort modules by order.
+       */
 
       MODULES.sort((a, b) => {
 
         const orderA =
-          Number(a.order ?? 999999);
+          Number(
+            a.order ??
+            a.moduleOrder ??
+            999999
+          );
+
 
         const orderB =
-          Number(b.order ?? 999999);
+          Number(
+            b.order ??
+            b.moduleOrder ??
+            999999
+          );
+
 
         return orderA - orderB;
 
@@ -466,19 +558,30 @@
 
       renderModules();
 
+
     } catch (error) {
 
-      console.error(error);
+      console.error(
+        "Unable to load course modules:",
+        error
+      );
 
-      container.innerHTML = `
-        <div class="state error">
-          <h3>Unable to load modules</h3>
 
-          <p style="margin-top:8px;">
-            ${escapeHtml(error.message)}
-          </p>
-        </div>
-      `;
+      /*
+       * IMPORTANT:
+       *
+       * There is NO fallback such as:
+       *
+       * getDocs(collection(db,"modules"))
+       *
+       * because that could expose modules
+       * from other courses.
+       */
+
+      showError(
+        "Unable to load modules",
+        "The modules for this course could not be loaded. Please try again."
+      );
 
     }
 
@@ -492,20 +595,31 @@
   function renderModules() {
 
     const container =
-      document.getElementById("modulesContainer");
+      document.getElementById(
+        "modulesContainer"
+      );
 
-    const query =
-      document
-        .getElementById("searchInput")
-        .value
-        .trim()
-        .toLowerCase();
+
+    const searchInput =
+      document.getElementById(
+        "searchInput"
+      );
+
+
+    const queryText =
+      searchInput
+        ? searchInput.value
+            .trim()
+            .toLowerCase()
+        : "";
 
 
     const filtered =
       MODULES.filter(module => {
 
-        if (!query) return true;
+        if (!queryText) {
+          return true;
+        }
 
 
         const text = [
@@ -523,11 +637,16 @@
           module.order
 
         ]
-        .map(value => safe(value).toLowerCase())
-        .join(" ");
+          .map(value =>
+            safe(value)
+              .toLowerCase()
+          )
+          .join(" ");
 
 
-        return text.includes(query);
+        return text.includes(
+          queryText
+        );
 
       });
 
@@ -535,6 +654,7 @@
     if (!filtered.length) {
 
       container.innerHTML = `
+
         <div class="state">
 
           <div style="font-size:40px;">
@@ -550,6 +670,7 @@
           </p>
 
         </div>
+
       `;
 
       return;
@@ -558,93 +679,152 @@
 
 
     container.innerHTML =
-      filtered.map((module, index) => {
+      filtered
+        .map((module, index) => {
 
-        const order =
-          module.order !== undefined &&
-          module.order !== null &&
-          module.order !== ""
-            ? module.order
-            : index + 1;
-
-
-        return `
-
-          <article class="module">
-
-            <div class="module-top">
-
-              <div class="module-number">
-                ${escapeHtml(order)}
-              </div>
+          const order =
+            module.order !== undefined &&
+            module.order !== null &&
+            module.order !== ""
+              ? module.order
+              : index + 1;
 
 
-              <div class="module-info">
+          const moduleId =
+            String(
+              module.moduleId || ""
+            );
 
-                <div class="module-title">
-                  ${escapeHtml(
-                    module.title || "Untitled Module"
-                  )}
+
+          const selectedCourseId =
+            String(
+              module.courseId ||
+              courseId
+            );
+
+
+          return `
+
+            <article class="module">
+
+              <div class="module-top">
+
+                <div class="module-number">
+                  ${escapeHtml(order)}
                 </div>
 
 
-                <div class="module-description">
+                <div class="module-info">
 
-                  ${escapeHtml(
-                    module.description ||
-                    "Continue learning through the lessons in this module."
-                  )}
+                  <div class="module-title">
+
+                    ${escapeHtml(
+                      module.title ||
+                      "Untitled Module"
+                    )}
+
+                  </div>
+
+
+                  <div class="module-description">
+
+                    ${escapeHtml(
+                      module.description ||
+                      "Continue learning through the lessons in this module."
+                    )}
+
+                  </div>
+
+
+                  <span class="badge">
+
+                    ${escapeHtml(
+                      module.status ||
+                      "published"
+                    )}
+
+                  </span>
+
+                </div>
+
+              </div>
+
+
+              <div class="module-meta">
+
+                <div class="meta-item">
+
+                  📦 Module ID:
+                  ${escapeHtml(moduleId)}
 
                 </div>
 
 
-                <span class="badge">
+                <div class="meta-item">
 
-                  ${escapeHtml(
-                    module.status || "published"
-                  )}
+                  🔢 Order:
+                  ${escapeHtml(order)}
 
-                </span>
+                </div>
+
+
+                <div class="meta-item">
+
+                  📚 Course:
+                  ${escapeHtml(selectedCourseId)}
+
+                </div>
 
               </div>
 
-            </div>
+
+              <button
+                class="open-btn"
+                data-module-id="${escapeHtml(moduleId)}"
+                data-course-id="${escapeHtml(selectedCourseId)}"
+              >
+                View Lessons →
+              </button>
+
+            </article>
+
+          `;
+
+        })
+        .join("");
 
 
-            <div class="module-meta">
+    /*
+     * Attach buttons safely after rendering.
+     */
 
-              <div class="meta-item">
-                📦 Module ID:
-                ${escapeHtml(module.moduleId)}
-              </div>
+    container
+      .querySelectorAll(
+        ".open-btn"
+      )
+      .forEach(button => {
 
+        button.addEventListener(
+          "click",
+          () => {
 
-              <div class="meta-item">
-                🔢 Order:
-                ${escapeHtml(order)}
-              </div>
-
-
-              <div class="meta-item">
-                📚 Course:
-                ${escapeHtml(module.courseId)}
-              </div>
-
-            </div>
+            const moduleId =
+              button.dataset.moduleId;
 
 
-            <button
-              class="open-btn"
-              onclick="openModule('${encodeURIComponent(module.moduleId)}','${encodeURIComponent(module.courseId || courseId)}')"
-            >
-              View Lessons →
-            </button>
+            const selectedCourseId =
+              button.dataset.courseId;
 
-          </article>
 
-        `;
+            openModule(
+              moduleId,
+              selectedCourseId
+            );
 
-      }).join("");
+          }
+        );
+
+      });
 
   }
 
@@ -653,17 +833,50 @@
      OPEN MODULE
   ===================================================== */
 
-  window.openModule =
-    function(moduleId, selectedCourseId) {
+  function openModule(
+    moduleId,
+    selectedCourseId
+  ) {
 
-      window.location.href =
-        "course-lesson.html" +
-        "?moduleId=" +
-        moduleId +
-        "&courseId=" +
-        selectedCourseId;
+    /*
+     * Safety:
+     * Never allow a module from another
+     * course to be opened through this page.
+     */
 
-    };
+    if (
+      String(selectedCourseId) !==
+      String(courseId)
+    ) {
+
+      console.error(
+        "Course mismatch blocked."
+      );
+
+      return;
+
+    }
+
+
+    if (!moduleId) {
+
+      return;
+
+    }
+
+
+    window.location.href =
+      "course-lesson.html" +
+      "?moduleId=" +
+      encodeURIComponent(
+        moduleId
+      ) +
+      "&courseId=" +
+      encodeURIComponent(
+        courseId
+      );
+
+  }
 
 
   /* =====================================================
@@ -671,27 +884,36 @@
   ===================================================== */
 
   document
-    .getElementById("searchInput")
-    .addEventListener("input", renderModules);
+    .getElementById(
+      "searchInput"
+    )
+    .addEventListener(
+      "input",
+      renderModules
+    );
 
 
   /* =====================================================
      BACK
   ===================================================== */
 
-  window.goBack = function() {
+  window.goBack =
+    function() {
 
-    if (history.length > 1) {
+      if (
+        window.history.length > 1
+      ) {
 
-      history.back();
+        window.history.back();
 
-    } else {
+      } else {
 
-      window.location.href = "courses.html";
+        window.location.href =
+          "courses.html";
 
-    }
+      }
 
-  };
+    };
 
 
   /* =====================================================
@@ -700,7 +922,5 @@
 
   loadModules();
 
-</script>
-
-</body>
+</script></body>
 </html>
