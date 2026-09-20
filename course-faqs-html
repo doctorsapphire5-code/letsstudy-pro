@@ -74,6 +74,11 @@
       padding:11px 17px;
     }
 
+    button:disabled{
+      opacity:.6;
+      cursor:not-allowed;
+    }
+
     .btn-primary{
       background:#2563eb;
       color:white;
@@ -328,22 +333,32 @@
 <body>
 
 <header class="header">
-  <div class="brand">LetsStudy Pro</div>
+
+  <div class="brand">
+    LetsStudy Pro
+  </div>
+
   <div class="course-id" id="courseIdDisplay">
     Course FAQ
   </div>
+
 </header>
+
 
 <main class="container">
 
   <div class="top">
 
     <div>
-      <h1>Course FAQs</h1>
+
+      <h1>
+        Course FAQs
+      </h1>
 
       <div class="subtitle">
         Manage frequently asked questions for this course.
       </div>
+
     </div>
 
     <button
@@ -355,15 +370,18 @@
 
   </div>
 
+
   <div
     id="successMessage"
     class="status success"
   ></div>
 
+
   <div
     id="errorMessage"
     class="status error"
   ></div>
+
 
   <div
     id="loading"
@@ -372,18 +390,23 @@
     Loading FAQs...
   </div>
 
+
   <div
     id="faqList"
     class="faq-list"
     style="display:none;"
   ></div>
 
+
   <div
     id="empty"
     class="empty"
     style="display:none;"
   >
-    <h3>No FAQs yet</h3>
+
+    <h3>
+      No FAQs yet
+    </h3>
 
     <p style="margin-top:8px;">
       Add the first frequently asked question for this course.
@@ -396,6 +419,7 @@
     >
       + Add First FAQ
     </button>
+
   </div>
 
 </main>
@@ -419,11 +443,13 @@
       <button
         class="close"
         id="closeModal"
+        type="button"
       >
         ×
       </button>
 
     </div>
+
 
     <form id="faqForm">
 
@@ -518,7 +544,10 @@
     doc,
     updateDoc,
     deleteDoc,
-    serverTimestamp
+    serverTimestamp,
+    query,
+    where,
+    orderBy
   } from
   "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -576,31 +605,10 @@
       window.location.search
     );
 
+
   const courseId =
     params.get("courseId") ||
     params.get("id");
-
-
-  if(!courseId){
-
-    document.getElementById("loading").style.display =
-      "none";
-
-    document.getElementById("errorMessage").textContent =
-      "Course ID is missing. Open this page using ?courseId=COURSE_ID";
-
-    document.getElementById("errorMessage").style.display =
-      "block";
-
-  }
-
-
-  document.getElementById(
-    "courseIdDisplay"
-  ).textContent =
-    courseId
-      ? "Course: " + courseId
-      : "Course FAQ";
 
 
   /*
@@ -639,8 +647,46 @@
   const saveBtn =
     document.getElementById("saveBtn");
 
+  const addFaqBtn =
+    document.getElementById("addFaqBtn");
+
 
   let editingFaqId = null;
+
+
+  /*
+  =====================================================
+  COURSE ID VALIDATION
+  =====================================================
+  */
+
+  if(!courseId){
+
+    loading.style.display =
+      "none";
+
+    addFaqBtn.disabled =
+      true;
+
+    document.getElementById(
+      "errorMessage"
+    ).textContent =
+      "Course ID is missing. Open this page using ?courseId=COURSE_ID";
+
+    document.getElementById(
+      "errorMessage"
+    ).style.display =
+      "block";
+
+  }
+
+
+  document.getElementById(
+    "courseIdDisplay"
+  ).textContent =
+    courseId
+      ? "Course: " + courseId
+      : "Course FAQ";
 
 
   /*
@@ -668,13 +714,17 @@
         "successMessage"
       );
 
-    box.textContent = message;
+    box.textContent =
+      message;
 
-    box.style.display = "block";
+    box.style.display =
+      "block";
+
 
     setTimeout(() => {
 
-      box.style.display = "none";
+      box.style.display =
+        "none";
 
     },3000);
 
@@ -688,9 +738,11 @@
         "errorMessage"
       );
 
-    box.textContent = message;
+    box.textContent =
+      message;
 
-    box.style.display = "block";
+    box.style.display =
+      "block";
 
   }
 
@@ -699,11 +751,13 @@
 
     document.getElementById(
       "successMessage"
-    ).style.display = "none";
+    ).style.display =
+      "none";
 
     document.getElementById(
       "errorMessage"
-    ).style.display = "none";
+    ).style.display =
+      "none";
 
   }
 
@@ -716,7 +770,12 @@
 
   async function loadFAQs(){
 
-    if(!courseId) return;
+    if(!courseId){
+
+      return;
+
+    }
+
 
     try{
 
@@ -730,12 +789,39 @@
         "none";
 
 
-      const snapshot =
-        await getDocs(
+      /*
+      IMPORTANT:
+      Only query FAQs belonging to THIS course.
+
+      We do NOT load the entire courseFAQs
+      collection anymore.
+      */
+
+      const faqQuery =
+        query(
+
           collection(
             db,
             "courseFAQs"
+          ),
+
+          where(
+            "courseId",
+            "==",
+            courseId
+          ),
+
+          orderBy(
+            "order",
+            "asc"
           )
+
+        );
+
+
+      const snapshot =
+        await getDocs(
+          faqQuery
         );
 
 
@@ -749,15 +835,20 @@
             faqDoc.data();
 
 
+          /*
+          Extra client-side safety check.
+          */
+
           if(
             String(data.courseId || "")
-              ===
+            ===
             String(courseId)
           ){
 
             faqs.push({
 
-              id: faqDoc.id,
+              id:
+                faqDoc.id,
 
               ...data
 
@@ -769,11 +860,16 @@
       );
 
 
+      /*
+      Fallback sort in case order
+      contains inconsistent values.
+      */
+
       faqs.sort(
         (a,b) =>
-          Number(a.order || 0)
+          Number(a.order ?? 0)
           -
-          Number(b.order || 0)
+          Number(b.order ?? 0)
       );
 
 
@@ -798,7 +894,10 @@
         faqs.map(
           (faq,index) => `
 
-          <div class="faq-card">
+          <div
+            class="faq-card"
+            data-faq-id="${escapeHtml(faq.id)}"
+          >
 
             <div class="faq-head">
 
@@ -821,11 +920,12 @@
             <div class="faq-meta">
 
               Order:
-              ${Number(faq.order || 0)}
+              ${Number(faq.order ?? 0)}
 
-              ${faq.createdBy
-                ? ` • Created by: ${escapeHtml(faq.createdBy)}`
-                : ""
+              ${
+                faq.createdBy
+                  ? ` • Created by: ${escapeHtml(faq.createdBy)}`
+                  : ""
               }
 
             </div>
@@ -835,14 +935,15 @@
 
               <button
                 class="btn-edit"
-                onclick="editFAQ('${faq.id}')"
+                onclick="editFAQ('${escapeHtml(faq.id)}')"
               >
                 Edit
               </button>
 
+
               <button
                 class="btn-danger"
-                onclick="deleteFAQ('${faq.id}')"
+                onclick="deleteFAQ('${escapeHtml(faq.id)}')"
               >
                 Delete
               </button>
@@ -866,12 +967,32 @@
         error
       );
 
+
       loading.style.display =
         "none";
 
-      showError(
-        "Unable to load course FAQs."
-      );
+
+      /*
+      Firestore may request a composite
+      index for courseId + order.
+      */
+
+      if(
+        error.code ===
+        "failed-precondition"
+      ){
+
+        showError(
+          "Firestore needs an index for Course FAQs. Open the Firebase Console and create the suggested index for courseFAQs using courseId and order."
+        );
+
+      }else{
+
+        showError(
+          "Unable to load course FAQs."
+        );
+
+      }
 
     }
 
@@ -887,25 +1008,43 @@
   window.openAddModal =
     function(){
 
+      if(!courseId){
+
+        showError(
+          "Cannot add FAQ because Course ID is missing."
+        );
+
+        return;
+
+      }
+
+
       clearMessages();
+
 
       editingFaqId =
         null;
 
+
       modalTitle.textContent =
         "Add Course FAQ";
+
 
       saveBtn.textContent =
         "Save FAQ";
 
+
       faqForm.reset();
+
 
       orderInput.value =
         "0";
 
+
       modal.classList.add(
         "show"
       );
+
 
       questionInput.focus();
 
@@ -918,9 +1057,7 @@
   =====================================================
   */
 
-  document.getElementById(
-    "addFaqBtn"
-  ).addEventListener(
+  addFaqBtn.addEventListener(
     "click",
     openAddModal
   );
@@ -935,9 +1072,25 @@
   window.editFAQ =
     async function(faqId){
 
+      if(!courseId){
+
+        showError(
+          "Course ID is missing."
+        );
+
+        return;
+
+      }
+
+
       clearMessages();
 
+
       try{
+
+        /*
+        Get the selected FAQ document.
+        */
 
         const faqRef =
           doc(
@@ -968,12 +1121,34 @@
           faqSnap.data();
 
 
+        /*
+        IMPORTANT:
+        Prevent editing an FAQ belonging
+        to another course.
+        */
+
+        if(
+          String(data.courseId || "")
+          !==
+          String(courseId)
+        ){
+
+          showError(
+            "This FAQ does not belong to the selected course."
+          );
+
+          return;
+
+        }
+
+
         editingFaqId =
           faqId;
 
 
         modalTitle.textContent =
           "Edit Course FAQ";
+
 
         saveBtn.textContent =
           "Update FAQ";
@@ -982,8 +1157,10 @@
         questionInput.value =
           data.question || "";
 
+
         answerInput.value =
           data.answer || "";
+
 
         orderInput.value =
           data.order ?? 0;
@@ -1003,6 +1180,7 @@
           "Edit FAQ error:",
           error
         );
+
 
         showError(
           "Unable to open FAQ."
@@ -1025,14 +1203,28 @@
 
       event.preventDefault();
 
+
+      if(!courseId){
+
+        showError(
+          "Course ID is missing. FAQ cannot be saved."
+        );
+
+        return;
+
+      }
+
+
       clearMessages();
 
 
       const question =
         questionInput.value.trim();
 
+
       const answer =
         answerInput.value.trim();
+
 
       const order =
         Number(
@@ -1067,6 +1259,7 @@
         saveBtn.disabled =
           true;
 
+
         saveBtn.textContent =
           editingFaqId
             ? "Updating..."
@@ -1075,127 +1268,140 @@
 
         /*
         =================================================
-        UPDATE
+        UPDATE EXISTING FAQ
         =================================================
         */
 
         if(editingFaqId){
 
-          await updateDoc(
-
+          const faqRef =
             doc(
               db,
               "courseFAQs",
               editingFaqId
-            ),
-
-            {
-
-              question,
-
-              answer,
-
-              order,
-
-              updatedAt:
-                serverTimestamp()
-
-            }
-
-          );
+            );
 
 
-          showSuccess(
-            "FAQ updated successfully."
-          );
+          /*
+          Verify again before updating.
+          */
 
-        }
-
-        /*
-        =================================================
-        CREATE
-        =================================================
-        */
-
-        else{
-
-          await addDoc(
-
-            collection(
-              db,
-              "courseFAQs"
-            ),
-
-            {
-
-              courseId,
-
-              question,
-
-              answer,
-
-              order,
-
-              createdBy:
-                "admin",
-
-              createdAt:
-                serverTimestamp()
-
-            }
-
-          );
+          const faqSnap =
+            await getDoc(
+              faqRef
+            );
 
 
-          showSuccess(
-            "FAQ added successfully."
-          );
+          if(!faqSnap.exists()){
 
-        }
+            throw new Error(
+              "FAQ_NOT_FOUND"
+            );
 
-
-        modal.classList.remove(
-          "show"
-        );
+          }
 
 
-        faqForm.reset();
-
-        editingFaqId =
-          null;
+          const existingData =
+            faqSnap.data();
 
 
-        await loadFAQs();
+          if(
+            String(existingData.courseId || "")
+            !==
+            String(courseId)
+          ){
+
+            throw new Error(
+              "FAQ_COURSE_MISMATCH"
+            );
+
+          }
 
 
-      }catch(error){
+          await updateDoc(
+  faqRef,
+  {
+    question,
+    answer,
+    order,
+    updatedAt: serverTimestamp()
+  }
+);
 
-        console.error(
-          "Save FAQ error:",
-          error
-        );
+showSuccess(
+  "FAQ updated successfully."
+);
 
-        showError(
-          "Unable to save FAQ. Please try again."
-        );
+Na kisha endelea na sehemu inayofuata:
 
-      }finally{
+} else {
 
-        saveBtn.disabled =
-          false;
-
-        saveBtn.textContent =
-          editingFaqId
-            ? "Update FAQ"
-            : "Save FAQ";
-
-      }
-
+  await addDoc(
+    collection(
+      db,
+      "courseFAQs"
+    ),
+    {
+      courseId: String(courseId),
+      question,
+      answer,
+      order,
+      createdBy: "admin",
+      createdAt: serverTimestamp()
     }
   );
 
+  showSuccess(
+    "FAQ added successfully."
+  );
+}
 
-  /*
+modal.classList.remove("show");
+
+faqForm.reset();
+
+editingFaqId = null;
+
+await loadFAQs();
+
+} catch(error) {
+
+  console.error(
+    "Save FAQ error:",
+    error
+  );
+
+  if(error.message === "FAQ_NOT_FOUND") {
+
+    showError(
+      "The FAQ no longer exists."
+    );
+
+  } else if(error.message === "FAQ_COURSE_MISMATCH") {
+
+    showError(
+      "This FAQ does not belong to the selected course."
+    );
+
+  } else {
+
+    showError(
+      "Unable to save FAQ. Please try again."
+    );
+  }
+
+} finally {
+
+  saveBtn.disabled = false;
+
+  saveBtn.textContent =
+    editingFaqId
+      ? "Update FAQ"
+      : "Save FAQ";
+
+}
+
+/*
   =====================================================
   DELETE FAQ
   =====================================================
@@ -1204,26 +1410,88 @@
   window.deleteFAQ =
     async function(faqId){
 
+      if(!courseId){
+
+        showError(
+          "Course ID is missing."
+        );
+
+        return;
+
+      }
+
+
       const confirmed =
         confirm(
           "Are you sure you want to delete this FAQ?"
         );
 
 
-      if(!confirmed)
+      if(!confirmed){
+
         return;
+
+      }
 
 
       try{
 
-        await deleteDoc(
+        /*
+        Verify that the FAQ belongs
+        to the current course.
+        */
 
+        const faqRef =
           doc(
             db,
             "courseFAQs",
             faqId
-          )
+          );
 
+
+        const faqSnap =
+          await getDoc(
+            faqRef
+          );
+
+
+        if(!faqSnap.exists()){
+
+          showError(
+            "FAQ not found."
+          );
+
+          return;
+
+        }
+
+
+        const data =
+          faqSnap.data();
+
+
+        /*
+        Prevent deleting an FAQ
+        from another course.
+        */
+
+        if(
+          String(data.courseId || "")
+          !==
+          String(courseId)
+        ){
+
+          showError(
+            "This FAQ does not belong to the selected course."
+          );
+
+          return;
+
+        }
+
+
+        await deleteDoc(
+          faqRef
         );
 
 
@@ -1241,6 +1509,7 @@
           "Delete FAQ error:",
           error
         );
+
 
         showError(
           "Unable to delete FAQ."
@@ -1263,10 +1532,20 @@
       "show"
     );
 
+
     faqForm.reset();
+
 
     editingFaqId =
       null;
+
+
+    saveBtn.disabled =
+      false;
+
+
+    saveBtn.textContent =
+      "Save FAQ";
 
   }
 
@@ -1286,6 +1565,12 @@
     closeModal
   );
 
+
+  /*
+  =====================================================
+  CLOSE MODAL WHEN CLICKING OUTSIDE
+  =====================================================
+  */
 
   modal.addEventListener(
     "click",
@@ -1309,43 +1594,47 @@
   =====================================================
   */
 
-      document.addEventListener(
-      "keydown",
-      event => {
+  document.addEventListener(
+    "keydown",
+    event => {
 
-        if(
-          event.key === "Escape"
-        ){
+      if(
+        event.key === "Escape"
+      ){
 
-          closeModal();
-
-        }
+        closeModal();
 
       }
-    );
-
-
-    /*
-    =====================================================
-    START
-    =====================================================
-    */
-
-    if(courseId){
-
-      loadFAQs();
-
-    }else{
-
-      loading.style.display =
-        "none";
-
-      empty.style.display =
-        "none";
 
     }
+  );
 
-  </script>
+
+  /*
+  =====================================================
+  START PAGE
+  =====================================================
+  */
+
+  if(courseId){
+
+    loadFAQs();
+
+  }else{
+
+    loading.style.display =
+      "none";
+
+    faqList.style.display =
+      "none";
+
+    empty.style.display =
+      "none";
+
+  }
+
+</script>
 
 </body>
 </html>
+
