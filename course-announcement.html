@@ -1,13 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Course Announcements | LetsStudy Pro</title>
-
-<style>
+<!DOCTYPE html><html lang="en">
+<head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Course Announcements | LetsStudy Pro</title><style>
 
 *{
   box-sizing:border-box;
@@ -251,75 +244,41 @@ body{
 
 }
 
-</style>
-
-</head>
-
-<body>
-
-
-<header class="header">
-
-  <div class="logo">
+</style></head><body><header class="header">  <div class="logo">
     LetsStudy <span>Pro</span>
-  </div>
+  </div><a
+href="course-learn.html"
+class="back-btn">
+← Back to Course
+</a>
 
-  <a
-    href="course-learn.html"
-    class="back-btn">
-    ← Back to Course
-  </a>
+</header><main class="container">  <section class="hero"><h1>
+  Course Announcements
+</h1>
 
-</header>
+<p>
+  Stay updated with the latest announcements,
+  important notices and course updates.
+</p>
 
+<div
+  class="course-name"
+  id="courseName">
+  Loading course...
+</div>
 
-<main class="container">
+  </section>  <div class="toolbar"><input
+  type="search"
+  id="searchInput"
+  placeholder="Search announcements...">
 
-
-  <section class="hero">
-
-    <h1>
-      Course Announcements
-    </h1>
-
-    <p>
-      Stay updated with the latest announcements,
-      important notices and course updates.
-    </p>
-
-    <div
-      class="course-name"
-      id="courseName">
-      Loading course...
-    </div>
-
-  </section>
-
-
-  <div class="toolbar">
-
-    <input
-      type="search"
-      id="searchInput"
-      placeholder="Search announcements...">
-
-  </div>
-
-
-  <section
+  </div>  <section
     id="announcementList"
-    class="announcement-list">
+    class="announcement-list"><div class="loading">
+  Loading announcements...
+</div>
 
-    <div class="loading">
-      Loading announcements...
-    </div>
-
-  </section>
-
-</main>
-
-
-<script type="module">
+  </section></main><script type="module">
 
 import {
   initializeApp
@@ -538,133 +497,6 @@ function priorityClass(priority){
 
 
 /* =====================================================
-   LOAD ANNOUNCEMENTS
-===================================================== */
-
-async function loadAnnouncements(){
-
-  try{
-
-    let snapshot;
-
-
-    if(courseId){
-
-      const announcementsQuery =
-        query(
-          collection(
-            db,
-            "announcements"
-          ),
-          where(
-            "courseId",
-            "==",
-            courseId
-          )
-        );
-
-
-      snapshot =
-        await getDocs(
-          announcementsQuery
-        );
-
-    }else{
-
-      snapshot =
-        await getDocs(
-          collection(
-            db,
-            "announcements"
-          )
-        );
-
-    }
-
-
-    announcements = [];
-
-
-    snapshot.forEach(
-      announcementDoc => {
-
-        announcements.push({
-
-          id:
-            announcementDoc.id,
-
-          ...announcementDoc.data()
-
-        });
-
-      }
-    );
-
-
-    announcements.sort(
-      (a,b) => {
-
-        const dateA =
-          getTime(
-            a.publishDate
-          );
-
-        const dateB =
-          getTime(
-            b.publishDate
-          );
-
-        return dateB - dateA;
-
-      }
-    );
-
-
-    if(
-      announcements.length > 0
-    ){
-
-      courseName.textContent =
-        announcements[0].courseName ||
-        `Course ID: ${courseId || "All Courses"}`;
-
-    }else{
-
-      courseName.textContent =
-        courseId
-        ? `Course ID: ${courseId}`
-        : "All Course Announcements";
-
-    }
-
-
-    renderAnnouncements();
-
-  }catch(error){
-
-    console.error(
-      "Announcement loading error:",
-      error
-    );
-
-
-    list.innerHTML = `
-
-      <div class="error">
-
-        Unable to load announcements.
-        Please try again.
-
-      </div>
-
-    `;
-
-  }
-
-}
-
-
-/* =====================================================
    GET TIMESTAMP
 ===================================================== */
 
@@ -697,6 +529,164 @@ function getTime(value){
   }catch(error){
 
     return 0;
+
+  }
+
+}
+
+
+/* =====================================================
+   LOAD ANNOUNCEMENTS
+   COURSE-SPECIFIC ONLY
+===================================================== */
+
+async function loadAnnouncements(){
+
+  try{
+
+    /*
+      IMPORTANT:
+
+      This page MUST have a courseId.
+
+      It will NEVER load all announcements.
+    */
+
+    if(!courseId){
+
+      courseName.textContent =
+        "Course not specified";
+
+      list.innerHTML = `
+
+        <div class="error">
+
+          <h3 style="margin-bottom:8px;">
+            Course not specified
+          </h3>
+
+          <p>
+            Please open announcements from a specific course.
+          </p>
+
+        </div>
+
+      `;
+
+      return;
+
+    }
+
+
+    /*
+      Get announcements ONLY for this courseId.
+    */
+
+    const announcementsQuery =
+      query(
+        collection(
+          db,
+          "announcements"
+        ),
+        where(
+          "courseId",
+          "==",
+          courseId
+        )
+      );
+
+
+    const snapshot =
+      await getDocs(
+        announcementsQuery
+      );
+
+
+    announcements = [];
+
+
+    snapshot.forEach(
+      announcementDoc => {
+
+        announcements.push({
+
+          id:
+            announcementDoc.id,
+
+          ...announcementDoc.data()
+
+        });
+
+      }
+    );
+
+
+    /*
+      Sort newest announcements first.
+    */
+
+    announcements.sort(
+      (a,b) => {
+
+        const dateA =
+          getTime(
+            a.publishDate
+          );
+
+        const dateB =
+          getTime(
+            b.publishDate
+          );
+
+        return dateB - dateA;
+
+      }
+    );
+
+
+    /*
+      Display course name.
+
+      It comes from the announcement's
+      courseName field if available.
+    */
+
+    if(
+      announcements.length > 0 &&
+      announcements[0].courseName
+    ){
+
+      courseName.textContent =
+        announcements[0].courseName;
+
+    }else{
+
+      courseName.textContent =
+        `Course ID: ${courseId}`;
+
+    }
+
+
+    renderAnnouncements();
+
+  }catch(error){
+
+    console.error(
+      "Announcement loading error:",
+      error
+    );
+
+
+    list.innerHTML = `
+
+      <div class="error">
+
+        Unable to load announcements.
+        Please try again.
+
+      </div>
+
+    `;
 
   }
 
@@ -911,7 +901,5 @@ searchInput.addEventListener(
 
 loadAnnouncements();
 
-</script>
-
-</body>
+</script></body>
 </html>
