@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Scholarships | LetsStudy Pro</title>
+<meta name="description" content="Find scholarships and funding opportunities on LetsStudy Pro.">
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;
+  background:#f6f8fc;
+  color:#111827
+}
+header{
+  position:sticky;
+  top:0;
+  z-index:10;
+  background:#fff;
+  border-bottom:1px solid #e5e7eb;
+  padding:17px
+}
+nav{
+  max-width:1100px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between
+}
+.logo{
+  color:#2563eb;
+  font-size:21px;
+  font-weight:900
+}
+nav a{
+  text-decoration:none;
+  color:#374151;
+  font-weight:700
+}
+main{
+  max-width:1100px;
+  margin:auto;
+  padding:30px 16px
+}
+.hero{
+  text-align:center;
+  margin-bottom:22px
+}
+.hero h1{
+  margin:0 0 8px;
+  font-size:clamp(30px,5vw,46px)
+}
+.hero p{
+  margin:0;
+  color:#6b7280
+}
+.search{
+  width:100%;
+  padding:14px 16px;
+  margin:20px 0;
+  border:1px solid #d1d5db;
+  border-radius:12px;
+  font-size:15px;
+  outline:none
+}
+.search:focus{
+  border-color:#2563eb
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(270px,1fr));
+  gap:18px
+}
+.card{
+  overflow:hidden;
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  box-shadow:0 8px 25px rgba(0,0,0,.05)
+}
+.card img{
+  width:100%;
+  height:165px;
+  object-fit:cover;
+  background:#e5e7eb
+}
+.content{
+  padding:16px
+}
+.content h2{
+  margin:0 0 8px;
+  font-size:19px
+}
+.meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin:10px 0
+}
+.meta span{
+  padding:5px 8px;
+  border-radius:7px;
+  background:#eff6ff;
+  color:#1d4ed8;
+  font-size:11px;
+  font-weight:700
+}
+.content p{
+  color:#6b7280;
+  font-size:13px;
+  line-height:1.5
+}
+.btn{
+  display:block;
+  text-align:center;
+  margin-top:14px;
+  padding:11px;
+  border-radius:10px;
+  background:#2563eb;
+  color:#fff;
+  text-decoration:none;
+  font-weight:800
+}
+.status{
+  text-align:center;
+  padding:25px;
+  color:#6b7280
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<nav>
+  <div class="logo">LetsStudy Pro</div>
+  <a href="index.html">Home</a>
+</nav>
+</header>
+
+<main>
+
+<section class="hero">
+  <h1>Scholarships</h1>
+  <p>Discover scholarships and funding opportunities from around the world.</p>
+</section>
+
+<input
+  id="search"
+  class="search"
+  type="search"
+  placeholder="Search scholarships..."
+  aria-label="Search scholarships"
+>
+
+<div id="status" class="status">
+  Loading scholarships...
+</div>
+
+<div id="scholarships" class="grid"></div>
+
+</main>
+
+<script type="module">
+
+import {initializeApp}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  getDocs
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig={
+  apiKey:"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+  authDomain:"let-s-study-pro-course.firebaseapp.com",
+  projectId:"let-s-study-pro-course",
+  storageBucket:"let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId:"474928293390",
+  appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+const container=document.getElementById("scholarships");
+const status=document.getElementById("status");
+const search=document.getElementById("search");
+
+let allScholarships=[];
+
+async function loadScholarships(){
+
+  try{
+
+    const snap=await getDocs(
+      collection(db,"scholarships")
+    );
+
+    allScholarships=snap.docs.map(doc=>({
+      id:doc.id,
+      ...doc.data()
+    }));
+
+    render(allScholarships);
+
+  }catch(error){
+
+    console.error(error);
+
+    status.textContent="Unable to load scholarships.";
+
+  }
+
+}
+
+function render(list){
+
+  container.innerHTML="";
+
+  if(!list.length){
+
+    status.textContent="No scholarships found.";
+    return;
+
+  }
+
+  status.textContent=
+    `${list.length} scholarship${list.length>1?"s":""} available`;
+
+  list.forEach(item=>{
+
+    const title=
+      item.title||
+      item.name||
+      "Scholarship Opportunity";
+
+    const description=
+      item.description||
+      "Explore this scholarship opportunity.";
+
+    const image=
+      item.thumbnail||
+      item.image||
+      "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=800&q=80";
+
+    const university=
+      item.university||
+      item.provider||
+      item.organization||
+      "";
+
+    const country=
+      item.country||
+      "";
+
+    const deadline=
+      item.deadline||
+      "";
+
+    const card=document.createElement("article");
+
+    card.className="card";
+
+    card.innerHTML=`
+
+      <img
+        src="${image}"
+        alt="${title}"
+        loading="lazy"
+        onerror="this.src='https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=800&q=80'"
+      >
+
+      <div class="content">
+
+        <h2>${title}</h2>
+
+        <div class="meta">
+
+          ${
+            university
+            ? `<span>${university}</span>`
+            : ""
+          }
+
+          ${
+            country
+            ? `<span>${country}</span>`
+            : ""
+          }
+
+          ${
+            deadline
+            ? `<span>Deadline: ${deadline}</span>`
+            : ""
+          }
+
+        </div>
+
+        <p>${description}</p>
+
+        <a
+          class="btn"
+          href="scholarship-details.html?id=${encodeURIComponent(item.id)}"
+        >
+          View Scholarship
+        </a>
+
+      </div>
+
+    `;
+
+    container.appendChild(card);
+
+  });
+
+}
+
+search.addEventListener("input",()=>{
+
+  const q=search.value.toLowerCase().trim();
+
+  const filtered=allScholarships.filter(item=>{
+
+    const text=[
+      item.title,
+      item.name,
+      item.description,
+      item.university,
+      item.provider,
+      item.organization,
+      item.country,
+      item.category
+    ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+    return text.includes(q);
+
+  });
+
+  render(filtered);
+
+});
+
+loadScholarships();
+
+</script>
+
+</body>
+</html>
