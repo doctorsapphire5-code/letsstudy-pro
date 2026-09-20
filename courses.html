@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Courses | LetsStudy Pro</title>
+<meta name="description" content="Explore courses on LetsStudy Pro.">
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;
+  background:#f6f8fc;
+  color:#111827
+}
+header{
+  padding:18px;
+  background:#fff;
+  border-bottom:1px solid #e5e7eb;
+  position:sticky;
+  top:0;
+  z-index:10
+}
+nav{
+  max-width:1100px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px
+}
+.logo{
+  font-size:21px;
+  font-weight:900;
+  color:#2563eb
+}
+nav a{
+  text-decoration:none;
+  color:#374151;
+  font-weight:700
+}
+main{
+  max-width:1100px;
+  margin:auto;
+  padding:30px 16px
+}
+.hero{
+  text-align:center;
+  margin-bottom:25px
+}
+.hero h1{
+  margin:0 0 8px;
+  font-size:clamp(30px,5vw,46px)
+}
+.hero p{
+  color:#6b7280;
+  margin:0
+}
+.search{
+  width:100%;
+  padding:14px 16px;
+  border:1px solid #d1d5db;
+  border-radius:12px;
+  margin:20px 0;
+  font-size:15px
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+  gap:18px
+}
+.card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 8px 25px rgba(0,0,0,.05)
+}
+.card img{
+  width:100%;
+  height:160px;
+  object-fit:cover;
+  background:#e5e7eb
+}
+.content{padding:16px}
+.content h2{
+  margin:0 0 8px;
+  font-size:19px
+}
+.content p{
+  color:#6b7280;
+  font-size:13px;
+  line-height:1.5
+}
+.btn{
+  display:block;
+  text-align:center;
+  background:#2563eb;
+  color:#fff;
+  text-decoration:none;
+  padding:11px;
+  border-radius:10px;
+  font-weight:800;
+  margin-top:14px
+}
+.status{
+  text-align:center;
+  padding:30px;
+  color:#6b7280
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<nav>
+  <div class="logo">LetsStudy Pro</div>
+  <a href="index.html">Home</a>
+</nav>
+</header>
+
+<main>
+
+<section class="hero">
+  <h1>Explore Courses</h1>
+  <p>Learn practical skills and grow with LetsStudy Pro.</p>
+</section>
+
+<input
+  id="search"
+  class="search"
+  type="search"
+  placeholder="Search courses..."
+  aria-label="Search courses"
+>
+
+<div id="status" class="status">Loading courses...</div>
+<div id="courses" class="grid"></div>
+
+</main>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  getDocs
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig={
+  apiKey:"AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+  authDomain:"let-s-study-pro-course.firebaseapp.com",
+  projectId:"let-s-study-pro-course",
+  storageBucket:"let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId:"474928293390",
+  appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+const container=document.getElementById("courses");
+const status=document.getElementById("status");
+const search=document.getElementById("search");
+
+let allCourses=[];
+
+async function loadCourses(){
+
+  try{
+
+    const snap=await getDocs(collection(db,"courses"));
+
+    allCourses=snap.docs.map(doc=>({
+      id:doc.id,
+      ...doc.data()
+    }));
+
+    render(allCourses);
+
+  }catch(error){
+
+    console.error(error);
+
+    status.textContent="Unable to load courses.";
+
+  }
+}
+
+function render(courses){
+
+  container.innerHTML="";
+
+  if(!courses.length){
+
+    status.textContent="No courses found.";
+    return;
+
+  }
+
+  status.textContent=`${courses.length} course${courses.length>1?"s":""} available`;
+
+  courses.forEach(course=>{
+
+    const title=course.title||course.name||"Untitled Course";
+
+    const description=
+      course.description||
+      "Learn practical knowledge and skills.";
+
+    const image=
+      course.thumbnail||
+      course.image||
+      "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80";
+
+    const card=document.createElement("article");
+
+    card.className="card";
+
+    card.innerHTML=`
+
+      <img
+        src="${image}"
+        alt="${title}"
+        loading="lazy"
+        onerror="this.src='https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80'"
+      >
+
+      <div class="content">
+
+        <h2>${title}</h2>
+
+        <p>${description}</p>
+
+        <a
+          class="btn"
+          href="course-details.html?id=${encodeURIComponent(course.id)}"
+        >
+          View Course
+        </a>
+
+      </div>
+
+    `;
+
+    container.appendChild(card);
+
+  });
+
+}
+
+search.addEventListener("input",()=>{
+
+  const q=search.value.toLowerCase().trim();
+
+  const filtered=allCourses.filter(course=>
+
+    String(course.title||course.name||"")
+      .toLowerCase()
+      .includes(q)
+
+    ||
+
+    String(course.description||"")
+      .toLowerCase()
+      .includes(q)
+
+    ||
+
+    String(course.category||"")
+      .toLowerCase()
+      .includes(q)
+
+  );
+
+  render(filtered);
+
+});
+
+loadCourses();
+
+</script>
+
+</body>
+</html>
