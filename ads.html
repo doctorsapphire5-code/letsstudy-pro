@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ads - LetsStudy Pro</title>
+<meta name="description" content="Discover featured promotions, opportunities and services on LetsStudy Pro.">
+<link rel="icon" href="https://letsstudy.pro/favicon.ico">
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+header{background:#fff;border-bottom:1px solid #e7eaf0;padding:15px 5%;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.logo{font-size:22px;font-weight:800;color:#1769ff;text-decoration:none}
+nav a{margin-left:16px;text-decoration:none;color:#39445a;font-size:14px}
+.hero{padding:55px 6%;text-align:center;background:linear-gradient(135deg,#eef5ff,#fff)}
+.hero h1{font-size:38px;margin:0 0 12px}
+.hero p{max-width:680px;margin:auto;color:#657084;line-height:1.6}
+.wrap{max-width:1150px;margin:auto;padding:30px 5%}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:25px}
+input,select{padding:13px;border:1px solid #dce1e9;border-radius:10px;background:#fff}
+input{flex:1;min-width:220px}
+select{min-width:170px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.card{background:#fff;border:1px solid #e7eaf0;border-radius:16px;overflow:hidden;box-shadow:0 5px 18px #1720330a}
+.media{height:180px;background:#edf1f7}
+.media img{width:100%;height:100%;object-fit:cover}
+.content{padding:18px}
+.badge{display:inline-block;background:#eef5ff;color:#1769ff;padding:5px 10px;border-radius:20px;font-size:11px;font-weight:700}
+h3{margin:11px 0 8px}
+p{color:#697386;font-size:14px;line-height:1.5}
+.meta{font-size:12px;color:#7a8392;margin-top:8px}
+.actions{display:flex;gap:8px;margin-top:15px}
+.btn{flex:1;padding:11px;border-radius:9px;text-decoration:none;text-align:center;font-size:13px;font-weight:700}
+.primary{background:#1769ff;color:#fff}
+.secondary{border:1px solid #1769ff;color:#1769ff}
+.empty{text-align:center;padding:50px;color:#687386;grid-column:1/-1}
+footer{text-align:center;padding:35px;color:#778094;font-size:13px}
+@media(max-width:650px){
+.hero h1{font-size:30px}
+nav a{display:none}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<a class="logo" href="index.html">LetsStudy Pro</a>
+
+<nav>
+<a href="trending.html">Trending</a>
+<a href="courses.html">Courses</a>
+<a href="services.html">Services</a>
+<a href="business-hub.html">Business</a>
+</nav>
+</header>
+
+<section class="hero">
+<h1>Featured Ads</h1>
+<p>
+Explore relevant promotions, services, products and opportunities
+featured across the LetsStudy Pro ecosystem.
+</p>
+</section>
+
+<main class="wrap">
+
+<div class="tools">
+<input id="search" type="search" placeholder="Search ads...">
+
+<select id="category">
+<option value="">All Categories</option>
+</select>
+</div>
+
+<div id="grid" class="grid">
+<div class="empty">Loading ads...</div>
+</div>
+
+</main>
+
+<footer>
+<strong>LetsStudy Pro</strong><br><br>
+THE DIGITAL ECOSYSTEM — Learn. Build. Work. Grow.
+<br><br>
+© 2026 LetsStudy Pro. All rights reserved.
+</footer>
+
+<script type="module">
+
+import {initializeApp}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+getDocs
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyBcOYDfAVKXbkljsyRgI0rjodBn678tCc",
+authDomain:"let-s-study-pro-course.firebaseapp.com",
+databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+projectId:"let-s-study-pro-course",
+storageBucket:"let-s-study-pro-course.firebasestorage.app",
+messagingSenderId:"474928293390",
+appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+measurementId:"G-85B7V5H5J0"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+const grid=document.getElementById("grid");
+const search=document.getElementById("search");
+const category=document.getElementById("category");
+
+let ads=[];
+
+const val=(...values)=>
+values.find(v=>
+v!==undefined &&
+v!==null &&
+String(v).trim()
+)||"";
+
+function render(){
+
+const q=search.value.toLowerCase().trim();
+const selected=category.value.toLowerCase();
+
+const filtered=ads
+.filter(ad=>{
+
+const title=val(
+ad.title,
+ad.name,
+ad.adTitle,
+ad.headline,
+"Advertisement"
+);
+
+const description=val(
+ad.description,
+ad.content,
+ad.message,
+ad.text
+);
+
+const cat=Array.isArray(ad.category)
+?ad.category.join(" ")
+:String(ad.category||"");
+
+const text=`
+${title}
+${description}
+${cat}
+${ad.advertiser||""}
+${ad.company||""}
+${ad.tags||""}
+`.toLowerCase();
+
+return (!q||text.includes(q))
+&&(!selected||cat.toLowerCase().includes(selected));
+
+})
+.sort((a,b)=>{
+
+const aPriority=Number(
+a.priority||a.adPriority||a.order||0
+);
+
+const bPriority=Number(
+b.priority||b.adPriority||b.order||0
+);
+
+return bPriority-aPriority;
+
+});
+
+if(!filtered.length){
+
+grid.innerHTML=`
+<div class="empty">
+No ads found.
+</div>`;
+
+return;
+
+}
+
+grid.innerHTML=filtered.map(ad=>{
+
+const title=val(
+ad.title,
+ad.name,
+ad.adTitle,
+ad.headline,
+"Advertisement"
+);
+
+const description=val(
+ad.description,
+ad.content,
+ad.message,
+ad.text,
+"Discover more on LetsStudy Pro."
+);
+
+const image=val(
+ad.image,
+ad.imageUrl,
+ad.banner,
+ad.bannerUrl,
+ad.thumbnail,
+ad.thumbnailUrl
+);
+
+const cat=val(
+ad.category,
+ad.type,
+"Featured"
+);
+
+const advertiser=val(
+ad.advertiser,
+ad.company,
+ad.companyName,
+ad.businessName
+);
+
+const target=val(
+ad.targetUrl,
+ad.website,
+ad.websiteUrl,
+ad.url,
+ad.link
+);
+
+const cta=val(
+ad.cta,
+ad.buttonText,
+"Learn More"
+);
+
+return `
+<article class="card">
+
+<div class="media">
+
+${
+image
+?`
+<img
+src="${image}"
+alt="${title}"
+onerror="this.parentElement.style.display='none'">
+`
+:""
+}
+
+</div>
+
+<div class="content">
+
+<span class="badge">
+${cat}
+</span>
+
+<h3>${title}</h3>
+
+<p>${description}</p>
+
+${
+advertiser
+?`<div class="meta">Advertiser: ${advertiser}</div>`
+:""
+}
+
+<div class="actions">
+
+<a class="btn primary"
+href="ad-details.html?id=${encodeURIComponent(ad.id)}">
+View Ad
+</a>
+
+${
+target
+?`
+<a class="btn secondary"
+href="${target}"
+target="_blank"
+rel="noopener noreferrer">
+${cta}
+</a>
+`
+:""
+}
+
+</div>
+
+</div>
+
+</article>
+`;
+
+}).join("");
+
+}
+
+async function load(){
+
+try{
+
+const snap=await getDocs(
+collection(db,"ads")
+);
+
+ads=snap.docs.map(d=>({
+id:d.id,
+...d.data()
+}));
+
+const categories=new Set();
+
+ads.forEach(ad=>{
+
+if(Array.isArray(ad.category)){
+
+ad.category.forEach(c=>{
+if(c)categories.add(c);
+});
+
+}else if(ad.category){
+
+categories.add(ad.category);
+
+}
+
+});
+
+[...categories]
+.sort()
+.forEach(c=>{
+
+const option=document.createElement("option");
+
+option.value=String(c).toLowerCase();
+option.textContent=c;
+
+category.appendChild(option);
+
+});
+
+render();
+
+}catch(error){
+
+console.error(error);
+
+grid.innerHTML=`
+<div class="empty">
+Unable to load ads right now.
+</div>
+`;
+
+}
+
+}
+
+search.addEventListener("input",render);
+category.addEventListener("change",render);
+
+load();
+
+</script>
+
+</body>
+</html>
