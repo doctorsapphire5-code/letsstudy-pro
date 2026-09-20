@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trending - LetsStudy Pro</title>
+<meta name="description" content="Discover trending courses, resources, scholarships, careers, services and videos on LetsStudy Pro.">
+<link rel="icon" href="https://letsstudy.pro/favicon.ico">
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+header{background:#fff;border-bottom:1px solid #e7eaf0;padding:15px 5%;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:5}
+.logo{font-size:22px;font-weight:800;color:#1769ff;text-decoration:none}
+nav a{margin-left:15px;text-decoration:none;color:#39445a;font-size:14px}
+.hero{padding:50px 6%;text-align:center;background:linear-gradient(135deg,#eef5ff,#fff)}
+.hero h1{font-size:38px;margin:0 0 10px}
+.hero p{color:#687386;max-width:680px;margin:auto;line-height:1.6}
+.wrap{max-width:1150px;margin:auto;padding:30px 5%}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:25px}
+input,select{padding:13px;border:1px solid #dce1e9;border-radius:10px;background:#fff}
+input{flex:1;min-width:220px}
+select{min-width:170px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
+.card{background:#fff;border:1px solid #e7eaf0;border-radius:16px;overflow:hidden;box-shadow:0 5px 18px #1720330a}
+.card img{width:100%;height:170px;object-fit:cover;background:#edf1f7}
+.content{padding:18px}
+.badge{display:inline-block;background:#eef5ff;color:#1769ff;padding:5px 9px;border-radius:20px;font-size:11px;font-weight:700}
+h3{margin:10px 0 8px;font-size:18px}
+p{color:#697386;font-size:14px;line-height:1.5}
+.view{display:block;text-align:center;background:#1769ff;color:#fff;padding:11px;border-radius:9px;text-decoration:none;font-weight:700;margin-top:15px}
+.empty{text-align:center;padding:50px;color:#687386;grid-column:1/-1}
+footer{text-align:center;padding:35px;color:#778094;font-size:13px}
+@media(max-width:650px){
+.hero h1{font-size:30px}
+nav a{display:none}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<a class="logo" href="index.html">LetsStudy Pro</a>
+<nav>
+<a href="courses.html">Courses</a>
+<a href="resources.html">Resources</a>
+<a href="scholarships.html">Scholarships</a>
+<a href="careers.html">Careers</a>
+</nav>
+</header>
+
+<section class="hero">
+<h1>Trending</h1>
+<p>
+Explore what's getting attention across the LetsStudy Pro digital ecosystem.
+Discover learning, opportunities, resources, services and more.
+</p>
+</section>
+
+<main class="wrap">
+
+<div class="tools">
+<input id="search" type="search" placeholder="Search trending content...">
+
+<select id="type">
+<option value="">All Content</option>
+<option value="course">Courses</option>
+<option value="resource">Resources</option>
+<option value="scholarship">Scholarships</option>
+<option value="career">Careers</option>
+<option value="video">Videos</option>
+<option value="service">Services</option>
+</select>
+
+<select id="category">
+<option value="">All Categories</option>
+</select>
+</div>
+
+<div id="grid" class="grid">
+<div class="empty">Loading trending content...</div>
+</div>
+
+</main>
+
+<footer>
+<strong>LetsStudy Pro</strong><br><br>
+THE DIGITAL ECOSYSTEM — Learn. Build. Work. Grow.
+<br><br>
+© 2026 LetsStudy Pro. All rights reserved.
+</footer>
+
+<script type="module">
+
+import {initializeApp}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+getDocs
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyBcOYDfAVKXbkljsyRgI0rjodBn678tCc",
+authDomain:"let-s-study-pro-course.firebaseapp.com",
+databaseURL:"https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+projectId:"let-s-study-pro-course",
+storageBucket:"let-s-study-pro-course.firebasestorage.app",
+messagingSenderId:"474928293390",
+appId:"1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+measurementId:"G-85B7V5H5J0"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+const grid=document.getElementById("grid");
+const search=document.getElementById("search");
+const type=document.getElementById("type");
+const category=document.getElementById("category");
+
+let items=[];
+
+const val=(...x)=>
+x.find(v=>v!==undefined&&v!==null&&String(v).trim())||"";
+
+const configs=[
+["courses","course","course-details.html"],
+["resources","resource","resource-details.html"],
+["scholarships","scholarship","scholarship-details.html"],
+["careers","career","career-details.html"],
+["videos","video","video-details.html"],
+["services","service","service-details.html"]
+];
+
+async function load(){
+
+try{
+
+const results=await Promise.all(
+configs.map(async ([collectionName,itemType,page])=>{
+
+const snap=await getDocs(collection(db,collectionName));
+
+return snap.docs.map(d=>({
+
+id:d.id,
+type:itemType,
+page,
+...d.data()
+
+}));
+
+})
+);
+
+items=results.flat();
+
+const cats=new Set();
+
+items.forEach(x=>{
+
+if(Array.isArray(x.category)){
+x.category.forEach(c=>cats.add(c));
+}else if(x.category){
+cats.add(x.category);
+}
+
+});
+
+[...cats].sort().forEach(c=>{
+
+const option=document.createElement("option");
+option.value=String(c).toLowerCase();
+option.textContent=c;
+category.appendChild(option);
+
+});
+
+render();
+
+}catch(error){
+
+console.error(error);
+
+grid.innerHTML=`
+<div class="empty">
+Unable to load trending content.
+</div>
+`;
+
+}
+
+}
+
+function render(){
+
+const q=search.value.toLowerCase().trim();
+const selectedType=type.value;
+const selectedCategory=category.value;
+
+let filtered=items.filter(x=>{
+
+const title=val(x.title,x.name,x.courseName,x.jobTitle,x.serviceName);
+const description=val(x.description,x.bio,x.content);
+const cat=Array.isArray(x.category)
+?x.category.join(" ")
+:String(x.category||"");
+
+const text=`
+${title}
+${description}
+${cat}
+${x.tags||""}
+${x.skills||""}
+${x.author||""}
+${x.instructor||""}
+`.toLowerCase();
+
+return (!q||text.includes(q))
+&&(!selectedType||x.type===selectedType)
+&&(!selectedCategory||cat.toLowerCase().includes(selectedCategory));
+
+});
+
+/* Trending priority */
+filtered.sort((a,b)=>{
+
+const aScore=Number(a.views||a.viewCount||a.likes||a.engagement||a.trendingScore||0);
+const bScore=Number(b.views||b.viewCount||b.likes||b.engagement||b.trendingScore||0);
+
+return bScore-aScore;
+
+});
+
+if(!filtered.length){
+
+grid.innerHTML=`
+<div class="empty">
+No trending content found.
+</div>`;
+
+return;
+
+}
+
+grid.innerHTML=filtered.map(x=>{
+
+const title=val(
+x.title,
+x.name,
+x.courseName,
+x.jobTitle,
+x.serviceName,
+"Untitled"
+);
+
+const description=val(
+x.description,
+x.bio,
+x.content,
+"Explore this content on LetsStudy Pro."
+);
+
+const image=val(
+x.thumbnail,
+x.image,
+x.imageUrl,
+x.thumbnailUrl
+);
+
+const cat=val(x.category,x.type,"Trending");
+
+return `
+<article class="card">
+
+${image
+?`<img src="${image}" alt="${title}"
+onerror="this.style.display='none'">`
+:`<div style="height:170px;background:#edf1f7"></div>`}
+
+<div class="content">
+
+<span class="badge">
+${String(x.type).toUpperCase()}
+</span>
+
+<h3>${title}</h3>
+
+<p>${description}</p>
+
+<p>
+<strong>Category:</strong> ${cat}
+</p>
+
+<a class="view"
+href="${x.page}?id=${encodeURIComponent(x.id)}">
+View Details
+</a>
+
+</div>
+
+</article>
+`;
+
+}).join("");
+
+}
+
+search.addEventListener("input",render);
+type.addEventListener("change",render);
+category.addEventListener("change",render);
+
+load();
+
+</script>
+
+</body>
+</html>
