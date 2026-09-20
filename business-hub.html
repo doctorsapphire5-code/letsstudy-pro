@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Business Hub | LetsStudy Pro</title>
+<meta name="description" content="Discover businesses, brands, entrepreneurs and professional opportunities on LetsStudy Pro.">
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;
+  background:#f6f8fc;
+  color:#111827
+}
+
+header{
+  position:sticky;
+  top:0;
+  z-index:10;
+  background:#fff;
+  border-bottom:1px solid #e5e7eb;
+  padding:17px
+}
+
+nav{
+  max-width:1100px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px
+}
+
+.logo{
+  color:#2563eb;
+  font-size:21px;
+  font-weight:900;
+  text-decoration:none
+}
+
+nav a{
+  color:#374151;
+  text-decoration:none;
+  font-weight:700
+}
+
+main{
+  max-width:1100px;
+  margin:auto;
+  padding:30px 16px
+}
+
+.hero{
+  text-align:center;
+  margin-bottom:25px
+}
+
+.hero h1{
+  margin:0 0 10px;
+  font-size:clamp(30px,5vw,48px)
+}
+
+.hero p{
+  margin:0 auto;
+  max-width:700px;
+  color:#6b7280;
+  line-height:1.7
+}
+
+.actions{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin:22px 0;
+  flex-wrap:wrap
+}
+
+.action{
+  padding:11px 16px;
+  border-radius:10px;
+  background:#2563eb;
+  color:#fff;
+  text-decoration:none;
+  font-weight:800
+}
+
+.action.alt{
+  background:#fff;
+  color:#2563eb;
+  border:1px solid #bfdbfe
+}
+
+.tools{
+  display:grid;
+  grid-template-columns:1fr 220px;
+  gap:10px;
+  margin:20px 0
+}
+
+.search,
+select{
+  width:100%;
+  padding:14px 16px;
+  border:1px solid #d1d5db;
+  border-radius:12px;
+  background:#fff;
+  font-size:15px;
+  outline:none
+}
+
+.search:focus,
+select:focus{
+  border-color:#2563eb
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(270px,1fr));
+  gap:18px
+}
+
+.card{
+  overflow:hidden;
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  box-shadow:0 8px 25px rgba(0,0,0,.05)
+}
+
+.card img{
+  width:100%;
+  height:170px;
+  object-fit:cover;
+  background:#e5e7eb
+}
+
+.content{
+  padding:17px
+}
+
+.content h2{
+  margin:0 0 7px;
+  font-size:19px
+}
+
+.meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin:10px 0
+}
+
+.meta span{
+  padding:5px 8px;
+  border-radius:7px;
+  background:#eff6ff;
+  color:#1d4ed8;
+  font-size:11px;
+  font-weight:700
+}
+
+.content p{
+  color:#6b7280;
+  font-size:13px;
+  line-height:1.55
+}
+
+.btn{
+  display:block;
+  text-align:center;
+  margin-top:14px;
+  padding:11px;
+  border-radius:10px;
+  background:#2563eb;
+  color:#fff;
+  text-decoration:none;
+  font-weight:800
+}
+
+.status{
+  text-align:center;
+  padding:25px;
+  color:#6b7280
+}
+
+footer{
+  text-align:center;
+  padding:30px;
+  color:#98a2b3;
+  font-size:12px
+}
+
+@media(max-width:650px){
+  .tools{
+    grid-template-columns:1fr
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+
+<nav>
+
+<a href="index.html" class="logo">
+LetsStudy Pro
+</a>
+
+<a href="index.html">
+Home
+</a>
+
+</nav>
+
+</header>
+
+
+<main>
+
+<section class="hero">
+
+<h1>Business Hub</h1>
+
+<p>
+Discover businesses, brands, entrepreneurs and professional
+opportunities within the LetsStudy Pro ecosystem.
+</p>
+
+<div class="actions">
+
+<a class="action" href="services.html">
+Find Services
+</a>
+
+<a class="action alt" href="business-register.html">
+Add Business
+</a>
+
+</div>
+
+</section>
+
+
+<div class="tools">
+
+<input
+id="search"
+class="search"
+type="search"
+placeholder="Search businesses..."
+aria-label="Search businesses"
+>
+
+<select id="category">
+
+<option value="">
+All Categories
+</option>
+
+</select>
+
+</div>
+
+
+<div id="status" class="status">
+Loading businesses...
+</div>
+
+
+<div id="businesses" class="grid"></div>
+
+</main>
+
+
+<footer>
+
+© <span id="year"></span> LetsStudy Pro ·
+Business Hub
+
+</footer>
+
+
+<script type="module">
+
+import {initializeApp}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+getDocs
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+const firebaseConfig={
+
+apiKey:"AIzaSyBcOYDfAVKXKbljsyRgI0rjodBn678tCc",
+
+authDomain:
+"let-s-study-pro-course.firebaseapp.com",
+
+projectId:
+"let-s-study-pro-course",
+
+storageBucket:
+"let-s-study-pro-course.firebasestorage.app",
+
+messagingSenderId:
+"474928293390",
+
+appId:
+"1:474928293390:web:2bcc2aebf2351c12a9fe5f"
+
+};
+
+
+const app=initializeApp(firebaseConfig);
+
+const db=getFirestore(app);
+
+
+const container=
+document.getElementById("businesses");
+
+const status=
+document.getElementById("status");
+
+const search=
+document.getElementById("search");
+
+const category=
+document.getElementById("category");
+
+
+let allBusinesses=[];
+
+
+async function loadBusinesses(){
+
+try{
+
+const snap=
+await getDocs(
+collection(db,"businesses")
+);
+
+
+allBusinesses=
+snap.docs.map(doc=>({
+
+id:doc.id,
+
+...doc.data()
+
+}));
+
+
+createCategories();
+
+render(allBusinesses);
+
+
+}catch(error){
+
+console.error(error);
+
+status.textContent=
+"Unable to load businesses.";
+
+}
+
+}
+
+
+function createCategories(){
+
+const categories=[
+
+...new Set(
+
+allBusinesses
+
+.map(item=>item.category)
+
+.filter(Boolean)
+
+)
+
+];
+
+
+categories.sort();
+
+
+categories.forEach(cat=>{
+
+const option=
+document.createElement("option");
+
+option.value=cat;
+
+option.textContent=cat;
+
+category.appendChild(option);
+
+});
+
+}
+
+
+function render(list){
+
+container.innerHTML="";
+
+
+if(!list.length){
+
+status.textContent=
+"No businesses found.";
+
+return;
+
+}
+
+
+status.textContent=
+`${list.length} business${list.length>1?"es":""} available`;
+
+
+list.forEach(business=>{
+
+
+const title=
+
+business.name||
+
+business.businessName||
+
+business.title||
+
+"Business";
+
+
+const description=
+
+business.description||
+
+business.bio||
+
+"Discover this business on LetsStudy Pro.";
+
+
+const image=
+
+business.logo||
+
+business.image||
+
+business.thumbnail||
+
+business.imageUrl||
+
+"https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=800&q=80";
+
+
+const cat=
+
+business.category||
+
+business.industry||
+
+"";
+
+
+const location=
+
+business.location||
+
+business.city||
+
+"";
+
+
+const type=
+
+business.type||
+
+business.businessType||
+
+"";
+
+
+const card=
+document.createElement("article");
+
+
+card.className="card";
+
+
+card.innerHTML=`
+
+<img
+
+src="${image}"
+
+alt="${title}"
+
+loading="lazy"
+
+onerror="this.src='https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=800&q=80'"
+
+>
+
+
+<div class="content">
+
+
+<h2>
+${title}
+</h2>
+
+
+<div class="meta">
+
+${
+
+cat
+
+? `<span>${cat}</span>`
+
+: ""
+
+}
+
+
+${
+
+location
+
+? `<span>${location}</span>`
+
+: ""
+
+}
+
+
+${
+
+type
+
+? `<span>${type}</span>`
+
+: ""
+
+}
+
+</div>
+
+
+<p>
+${description}
+</p>
+
+
+<a
+
+class="btn"
+
+href="business-details.html?id=${encodeURIComponent(business.id)}"
+
+>
+
+View Business
+
+</a>
+
+
+</div>
+
+`;
+
+
+container.appendChild(card);
+
+});
+
+}
+
+
+function filterBusinesses(){
+
+const q=
+search.value
+.toLowerCase()
+.trim();
+
+
+const cat=
+category.value;
+
+
+const filtered=
+allBusinesses.filter(business=>{
+
+
+const text=[
+
+business.name,
+
+business.businessName,
+
+business.title,
+
+business.description,
+
+business.bio,
+
+business.category,
+
+business.industry,
+
+business.location,
+
+business.city,
+
+business.type,
+
+business.businessType,
+
+business.tags
+
+]
+
+.filter(Boolean)
+
+.join(" ")
+
+.toLowerCase();
+
+
+return (
+
+text.includes(q)
+
+&&
+
+(!cat ||
+business.category===cat)
+
+);
+
+});
+
+
+render(filtered);
+
+}
+
+
+search.addEventListener(
+"input",
+filterBusinesses
+);
+
+
+category.addEventListener(
+"change",
+filterBusinesses
+);
+
+
+document.getElementById("year").textContent=
+new Date().getFullYear();
+
+
+loadBusinesses();
+
+</script>
+
+</body>
+</html>
