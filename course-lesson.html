@@ -90,37 +90,6 @@ main{
   padding:25px 20px 50px;
 }
 
-/* COURSE SELECTOR */
-
-.course-selector{
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:16px;
-  padding:18px;
-  margin-bottom:20px;
-  box-shadow:0 5px 20px rgba(0,0,0,.04);
-}
-
-.course-selector label{
-  display:block;
-  font-weight:700;
-  margin-bottom:8px;
-}
-
-.course-selector select{
-  width:100%;
-  padding:13px;
-  border:1px solid #d1d5db;
-  border-radius:10px;
-  background:#fff;
-  font-size:15px;
-  outline:none;
-}
-
-.course-selector select:focus{
-  border-color:#6366f1;
-}
-
 /* HERO */
 
 .hero{
@@ -211,6 +180,15 @@ main{
 
 .section-title h2{
   font-size:24px;
+}
+
+.lesson-count{
+  background:#eef2ff;
+  color:#3730a3;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:700;
 }
 
 /* SEARCH */
@@ -356,9 +334,11 @@ main{
 }
 
 @keyframes spin{
+
   to{
     transform:rotate(360deg);
   }
+
 }
 
 /* EMPTY */
@@ -496,12 +476,18 @@ footer{
       id="backBtn"
       type="button"
     >
+
       <i class="fa-solid fa-arrow-left"></i>
+
       Back
+
     </button>
 
+
     <div class="brand">
+
       LetsStudy <span>Pro</span>
+
     </div>
 
   </div>
@@ -511,25 +497,6 @@ footer{
 
 <main>
 
-  <div
-    class="course-selector"
-    id="courseSelector"
-    style="display:none;"
-  >
-
-    <label for="courseSelect">
-      Courses
-    </label>
-
-    <select id="courseSelect">
-      <option value="">
-        Loading courses...
-      </option>
-    </select>
-
-  </div>
-
-
   <div id="pageContent">
 
     <div class="loading">
@@ -537,7 +504,7 @@ footer{
       <div class="spinner"></div>
 
       <p>
-        Loading courses...
+        Loading course lessons...
       </p>
 
     </div>
@@ -564,18 +531,20 @@ footer{
 
 import {
   initializeApp
-} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+} from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 
 import {
   getFirestore,
   collection,
-  getDocs,
   getDoc,
+  getDocs,
   doc,
   query,
   where
-} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+} from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
 /* =====================================================
@@ -585,7 +554,7 @@ import {
 const firebaseConfig = {
 
   apiKey:
-    "AIzaSyBcOYDfAVKXbkljsyRg0rj0odBn678tCc",
+    "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
 
   authDomain:
     "let-s-study-pro-course.firebaseapp.com",
@@ -631,18 +600,6 @@ const pageContent =
   );
 
 
-const courseSelector =
-  document.getElementById(
-    "courseSelector"
-  );
-
-
-const courseSelect =
-  document.getElementById(
-    "courseSelect"
-  );
-
-
 const backBtn =
   document.getElementById(
     "backBtn"
@@ -650,24 +607,7 @@ const backBtn =
 
 
 /* =====================================================
-   STATE
-===================================================== */
-
-let allCourses = [];
-
-let enrolledCourses = [];
-
-let currentCourseId = "";
-
-let currentCourse = null;
-
-let allLessons = [];
-
-let filteredLessons = [];
-
-
-/* =====================================================
-   URL PARAMETERS
+   COURSE ID
 ===================================================== */
 
 const params =
@@ -676,11 +616,10 @@ const params =
   );
 
 
-const urlCourseId = (
+const courseId = (
   params.get("courseId") ||
   params.get("courseID") ||
   params.get("id") ||
-  params.get("course") ||
   ""
 ).trim();
 
@@ -693,13 +632,13 @@ backBtn.addEventListener(
   "click",
   () => {
 
-    if (
+    if(
       window.history.length > 1
-    ) {
+    ){
 
       window.history.back();
 
-    } else {
+    }else{
 
       window.location.href =
         "courses.html";
@@ -711,145 +650,121 @@ backBtn.addEventListener(
 
 
 /* =====================================================
-   START
+   VALIDATE COURSE ID
 ===================================================== */
 
-loadCourses();
+if(!courseId){
+
+  showError(
+    "Course ID is missing. Please open this page from a specific course using ?courseId=COURSE_ID"
+  );
+
+}else{
+
+  loadCourse();
+
+}
 
 
 /* =====================================================
-   LOAD COURSES
+   LOAD ONLY THE SELECTED COURSE
 ===================================================== */
 
-async function loadCourses(){
+async function loadCourse(){
 
   try{
 
-    pageContent.innerHTML = `
-
-      <div class="loading">
-
-        <div class="spinner"></div>
-
-        <p>
-          Loading courses...
-        </p>
-
-      </div>
-
-    `;
-
-
-    const snapshot =
-      await getDocs(
-        collection(
-          db,
-          "courses"
-        )
-      );
-
-
-    allCourses =
-      snapshot.docs.map(
-        courseDoc => ({
-
-          id:
-            courseDoc.id,
-
-          ...courseDoc.data()
-
-        })
-      );
-
-
     /*
-      Only hide clearly inactive courses.
-      Empty status remains visible.
+    IMPORTANT:
+
+    Only this exact course document is loaded.
+
+    No:
+    getDocs(collection(db,"courses"))
+
+    No loading all courses.
     */
 
-    allCourses =
-      allCourses.filter(
-        course => {
+    const courseRef =
+      doc(
+        db,
+        "courses",
+        courseId
+      );
 
-          const status =
-            String(
-              course.status ||
-              ""
-            ).toLowerCase();
 
-          return (
-            status === "" ||
-            status === "published" ||
-            status === "active" ||
-            status === "available"
-          );
-
-        }
+    const courseSnap =
+      await getDoc(
+        courseRef
       );
 
 
     if(
-      allCourses.length === 0
+      !courseSnap.exists()
     ){
 
-      showNoCourses();
+      showError(
+        "The selected course could not be found."
+      );
 
       return;
 
     }
 
 
+    const courseData =
+      courseSnap.data();
+
+
     /*
-      URL course selection.
+    Extra safety if the document itself
+    contains a courseId field.
     */
 
-    const requestedCourse =
-      allCourses.find(
-        course =>
-          course.id ===
-          urlCourseId
-      );
-
-
     if(
-      requestedCourse
+      courseData.courseId &&
+      String(
+        courseData.courseId
+      ) !==
+      String(
+        courseId
+      )
     ){
 
-      currentCourseId =
-        requestedCourse.id;
+      showError(
+        "This course document does not match the selected Course ID."
+      );
 
-    }else{
-
-      currentCourseId =
-        allCourses[0].id;
+      return;
 
     }
 
 
-    /*
-      Keep the variable name for compatibility
-      with existing page logic.
-    */
+    const course = {
 
-    enrolledCourses =
-      allCourses;
+      id:
+        courseSnap.id,
+
+      ...courseData
+
+    };
 
 
-    renderCourseSelector();
-
-    await loadSelectedCourse();
+    await loadLessons(
+      course
+    );
 
 
   }catch(error){
 
     console.error(
-      "Courses error:",
+      "Load course error:",
       error
     );
 
 
     showError(
-      "Unable to load courses from Firebase."
+      "Unable to load this course from Firebase."
     );
 
   }
@@ -858,213 +773,36 @@ async function loadCourses(){
 
 
 /* =====================================================
-   COURSE SELECTOR
+   LOAD ONLY LESSONS FOR THIS COURSE
 ===================================================== */
 
-function renderCourseSelector(){
-
-  if(
-    allCourses.length <= 1
-  ){
-
-    courseSelector.style.display =
-      "none";
-
-    return;
-
-  }
-
-
-  courseSelector.style.display =
-    "block";
-
-
-  courseSelect.innerHTML =
-    allCourses.map(
-      course => {
-
-        const title =
-          getCourseTitle(
-            course
-          );
-
-
-        return `
-
-          <option
-            value="${escapeHTML(
-              course.id
-            )}"
-            ${
-              course.id ===
-              currentCourseId
-                ? "selected"
-                : ""
-            }
-          >
-            ${escapeHTML(title)}
-          </option>
-
-        `;
-
-      }
-    ).join("");
-
-}
-
-
-/* =====================================================
-   COURSE CHANGE
-===================================================== */
-
-courseSelect.addEventListener(
-  "change",
-  async event => {
-
-    const id =
-      event.target.value;
-
-
-    if(!id){
-      return;
-    }
-
-
-    const exists =
-      allCourses.some(
-        course =>
-          course.id === id
-      );
-
-
-    if(!exists){
-      return;
-    }
-
-
-    currentCourseId =
-      id;
-
-
-    const newUrl =
-      new URL(
-        window.location.href
-      );
-
-
-    newUrl.searchParams.set(
-      "courseId",
-      id
-    );
-
-
-    window.history.replaceState(
-      {},
-      "",
-      newUrl
-    );
-
-
-    await loadSelectedCourse();
-
-  }
-);
-
-
-/* =====================================================
-   LOAD SELECTED COURSE
-===================================================== */
-
-async function loadSelectedCourse(){
-
-  const course =
-    allCourses.find(
-      item =>
-        item.id ===
-        currentCourseId
-    );
-
-
-  if(!course){
-
-    showError(
-      "Course not found."
-    );
-
-    return;
-
-  }
-
-
-  currentCourse = course;
-
-
-  pageContent.innerHTML = `
-
-    <div class="loading">
-
-      <div class="spinner"></div>
-
-      <p>
-        Loading course lessons...
-      </p>
-
-    </div>
-
-  `;
-
+async function loadLessons(
+  course
+){
 
   try{
 
-    await loadLessons();
+    /*
+    IMPORTANT:
 
-    renderCourse();
-
-
-  }catch(error){
-
-    console.error(
-      "Selected course error:",
-      error
-    );
-
-
-    showError(
-      "Unable to load this course."
-    );
-
-  }
-
-}
-
-
-/* =====================================================
-   LOAD LESSONS
-===================================================== */
-
-async function loadLessons(){
-
-  allLessons = [];
-
-
-  /*
-    Primary schema:
-    lessons.courseId
-  */
-
-  try{
+    Only lessons with this exact
+    courseId are requested.
+    */
 
     const lessonsQuery =
       query(
+
         collection(
           db,
           "lessons"
         ),
+
         where(
           "courseId",
           "==",
-          currentCourseId
+          courseId
         )
+
       );
 
 
@@ -1074,7 +812,7 @@ async function loadLessons(){
       );
 
 
-    allLessons =
+    let lessons =
       snapshot.docs.map(
         lessonDoc => ({
 
@@ -1087,159 +825,122 @@ async function loadLessons(){
       );
 
 
+    /*
+    Extra client-side safety.
+    */
+
+    lessons =
+      lessons.filter(
+        lesson =>
+          String(
+            lesson.courseId || ""
+          ) ===
+          String(
+            courseId
+          )
+      );
+
+
+    /*
+    Only display published/active lessons.
+    Empty status is also allowed.
+    */
+
+    lessons =
+      lessons.filter(
+        lesson => {
+
+          const status =
+            String(
+              lesson.status || ""
+            ).toLowerCase();
+
+
+          return (
+
+            status === "" ||
+
+            status === "published" ||
+
+            status === "active"
+
+          );
+
+        }
+      );
+
+
+    /*
+    Sort lessons by order.
+    */
+
+    lessons.sort(
+      (a,b) => {
+
+        const orderA =
+          Number(
+            a.order ??
+            a.lessonOrder ??
+            a.position ??
+            0
+          );
+
+
+        const orderB =
+          Number(
+            b.order ??
+            b.lessonOrder ??
+            b.position ??
+            0
+          );
+
+
+        return (
+          orderA -
+          orderB
+        );
+
+      }
+    );
+
+
+    renderCourse(
+      course,
+      lessons
+    );
+
+
   }catch(error){
 
-    console.warn(
-      "courseId query failed:",
+    console.error(
+      "Load lessons error:",
       error
     );
 
 
     /*
-      Fallback for:
-      courseID / course
+    Firestore may require an index only
+    if the database configuration demands it.
     */
 
-    try{
+    if(
+      error.code ===
+      "failed-precondition"
+    ){
 
-      const snapshot =
-        await getDocs(
-          collection(
-            db,
-            "lessons"
-          )
-        );
-
-
-      allLessons =
-        snapshot.docs
-          .map(
-            lessonDoc => ({
-
-              id:
-                lessonDoc.id,
-
-              ...lessonDoc.data()
-
-            })
-          )
-          .filter(
-            lesson => {
-
-              const lessonCourse =
-                lesson.courseId ||
-                lesson.courseID ||
-                lesson.course ||
-                "";
-
-
-              return String(
-                lessonCourse
-              ) === String(
-                currentCourseId
-              );
-
-            }
-          );
-
-
-    }catch(fallbackError){
-
-      console.error(
-        "Lesson fallback error:",
-        fallbackError
+      showError(
+        "Firestore requires an index for the lessons courseId query. Open the Firebase Console and create the suggested index."
       );
 
+    }else{
 
-      allLessons = [];
+      showError(
+        "Unable to load lessons for this course."
+      );
 
     }
 
   }
-
-
-  /*
-    Public lesson states.
-  */
-
-  allLessons =
-    allLessons.filter(
-      lesson => {
-
-        const status =
-          String(
-            lesson.status ||
-            ""
-          ).toLowerCase();
-
-
-        return (
-          status === "" ||
-          status === "published" ||
-          status === "active"
-        );
-
-      }
-    );
-
-
-  /*
-    Sort lessons.
-  */
-
-  allLessons.sort(
-    (a,b) => {
-
-      const moduleA =
-        Number(
-          a.moduleOrder ??
-          a.modulePosition ??
-          0
-        );
-
-
-      const moduleB =
-        Number(
-          b.moduleOrder ??
-          b.modulePosition ??
-          0
-        );
-
-
-      if(
-        moduleA !==
-        moduleB
-      ){
-
-        return moduleA -
-          moduleB;
-
-      }
-
-
-      const orderA =
-        Number(
-          a.order ??
-          a.lessonOrder ??
-          a.position ??
-          0
-        );
-
-
-      const orderB =
-        Number(
-          b.order ??
-          b.lessonOrder ??
-          b.position ??
-          0
-        );
-
-
-      return orderA -
-        orderB;
-
-    }
-  );
 
 }
 
@@ -1248,76 +949,89 @@ async function loadLessons(){
    RENDER COURSE
 ===================================================== */
 
-function renderCourse(){
+function renderCourse(
+  course,
+  lessons
+){
 
   const title =
     getCourseTitle(
-      currentCourse
+      course
     );
 
 
   const description =
     getCourseDescription(
-      currentCourse
+      course
     );
 
 
   const image =
     getCourseImage(
-      currentCourse
+      course
     );
 
 
   const instructor =
-    currentCourse.instructor ||
-    currentCourse.teacher ||
-    currentCourse.author ||
+    course.instructor ||
+    course.instructorName ||
+    course.teacher ||
+    course.author ||
     "";
 
 
   const category =
-    currentCourse.category ||
-    currentCourse.subject ||
+    course.category ||
+    course.subject ||
     "Course";
 
 
   const level =
-    currentCourse.level ||
-    currentCourse.difficulty ||
+    course.level ||
+    course.difficulty ||
     "";
 
 
   const courseType =
-    currentCourse.type ||
-    currentCourse.courseType ||
+    course.type ||
+    course.courseType ||
     "";
 
 
   const videoLessons =
-    allLessons.filter(
-      lesson =>
-        String(
-          lesson.type ||
-          lesson.lessonType ||
-          ""
-        ).toLowerCase()
-        === "video"
+    lessons.filter(
+      lesson => {
+
+        const type =
+          String(
+            lesson.type ||
+            lesson.lessonType ||
+            ""
+          ).toLowerCase();
+
+
+        return type === "video";
+
+      }
     ).length;
+
+
+  const moduleValues =
+    lessons
+      .map(
+        lesson =>
+          lesson.moduleId ||
+          lesson.moduleID ||
+          lesson.module ||
+          ""
+      )
+      .filter(Boolean)
+      .map(String);
 
 
   const moduleCount =
     new Set(
-      allLessons
-        .map(
-          lesson =>
-            lesson.moduleId ||
-            lesson.moduleID ||
-            lesson.module ||
-            lesson.moduleOrder ||
-            ""
-        )
-        .filter(Boolean)
-        .map(String)
+      moduleValues
     ).size;
 
 
@@ -1328,12 +1042,14 @@ function renderCourse(){
       ${
         image
           ? `
+
             <img
               class="hero-image"
               src="${safeUrl(image)}"
               alt="${escapeHTML(title)}"
               onerror="this.style.display='none';"
             >
+
           `
           : ""
       }
@@ -1345,7 +1061,9 @@ function renderCourse(){
 
           <span class="badge">
 
-            <i class="fa-solid fa-book-open"></i>
+            <i
+              class="fa-solid fa-book-open"
+            ></i>
 
             ${escapeHTML(category)}
 
@@ -1355,13 +1073,17 @@ function renderCourse(){
           ${
             level
               ? `
+
                 <span class="badge">
 
-                  <i class="fa-solid fa-layer-group"></i>
+                  <i
+                    class="fa-solid fa-layer-group"
+                  ></i>
 
                   ${escapeHTML(level)}
 
                 </span>
+
               `
               : ""
           }
@@ -1370,13 +1092,17 @@ function renderCourse(){
           ${
             courseType
               ? `
+
                 <span class="badge">
 
-                  <i class="fa-solid fa-tag"></i>
+                  <i
+                    class="fa-solid fa-tag"
+                  ></i>
 
                   ${escapeHTML(courseType)}
 
                 </span>
+
               `
               : ""
           }
@@ -1385,16 +1111,24 @@ function renderCourse(){
 
 
         <h1>
+
           ${escapeHTML(title)}
+
         </h1>
 
 
         ${
           description
             ? `
+
               <div class="hero-description">
-                ${formatText(description)}
+
+                ${formatText(
+                  description
+                )}
+
               </div>
+
             `
             : ""
         }
@@ -1403,6 +1137,7 @@ function renderCourse(){
         ${
           instructor
             ? `
+
               <div class="hero-description">
 
                 <strong>
@@ -1414,6 +1149,7 @@ function renderCourse(){
                 )}
 
               </div>
+
             `
             : ""
         }
@@ -1424,7 +1160,7 @@ function renderCourse(){
           <div class="stat">
 
             <strong>
-              ${allLessons.length}
+              ${lessons.length}
             </strong>
 
             <span>
@@ -1437,80 +1173,81 @@ function renderCourse(){
           <div class="stat">
 
             <strong>
-  ${videoLessons}
-</strong>
+              ${videoLessons}
+            </strong>
 
-<span>
-  Video Lessons
-</span>
+            <span>
+              Video Lessons
+            </span>
 
-</div>
-
-
-<div class="stat">
-
-  <strong>
-    ${moduleCount}
-  </strong>
-
-  <span>
-    Modules
-  </span>
-
-</div>
-
-</div>
-
-</div>
-
-</section>
+          </div>
 
 
-<section>
+          <div class="stat">
 
-  <div class="section-title">
+            <strong>
+              ${moduleCount}
+            </strong>
 
-    <h2>
-      Course Lessons
-    </h2>
+            <span>
+              Modules
+            </span>
 
-    <span id="lessonCount">
-      ${allLessons.length}
-    </span>
+          </div>
 
-  </div>
+        </div>
 
+      </div>
 
-  <div class="search-box">
-
-    <i class="fa-solid fa-search"></i>
-
-    <input
-      id="lessonSearch"
-      type="search"
-      placeholder="Search lessons..."
-      autocomplete="off"
-    >
-
-  </div>
+    </section>
 
 
-  <div
-    class="lessons"
-    id="lessonsList"
-  ></div>
+    <section>
 
-</section>
+      <div class="section-title">
 
-`;
+        <h2>
+          Course Lessons
+        </h2>
+
+        <span
+          class="lesson-count"
+          id="lessonCount"
+        >
+          ${lessons.length}
+        </span>
+
+      </div>
 
 
-  filteredLessons =
-    [...allLessons];
+      <div class="search-box">
+
+        <i
+          class="fa-solid fa-search"
+        ></i>
+
+        <input
+          id="lessonSearch"
+          type="search"
+          placeholder="Search lessons..."
+          autocomplete="off"
+        >
+
+      </div>
+
+
+      <div
+        class="lessons"
+        id="lessonsList"
+      ></div>
+
+    </section>
+
+  `;
 
 
   renderLessons(
-    filteredLessons
+    lessons
   );
 
 
@@ -1520,93 +1257,88 @@ function renderCourse(){
     );
 
 
-  if(searchInput){
+  searchInput.addEventListener(
+    "input",
+    event => {
 
-    searchInput.addEventListener(
-      "input",
-      event => {
-
-        const term =
-          String(
-            event.target.value || ""
-          )
-          .trim()
-          .toLowerCase();
+      const term =
+        String(
+          event.target.value || ""
+        )
+        .trim()
+        .toLowerCase();
 
 
-        if(!term){
-
-          filteredLessons =
-            [...allLessons];
-
-        }else{
-
-          filteredLessons =
-            allLessons.filter(
-              lesson => {
-
-                const searchableText = [
-
-                  lesson.title,
-
-                  lesson.name,
-
-                  lesson.lessonTitle,
-
-                  lesson.description,
-
-                  lesson.summary,
-
-                  lesson.type,
-
-                  lesson.lessonType,
-
-                  lesson.moduleId,
-
-                  lesson.moduleID,
-
-                  lesson.module,
-
-                  lesson.duration
-
-                ]
-                .filter(Boolean)
-                .join(" ")
-                .toLowerCase();
+      let filtered =
+        lessons;
 
 
-                return searchableText.includes(
-                  term
-                );
+      if(term){
 
-              }
-            );
+        filtered =
+          lessons.filter(
+            lesson => {
 
-        }
+              const searchableText = [
+
+                lesson.title,
+
+                lesson.name,
+
+                lesson.lessonTitle,
+
+                lesson.description,
+
+                lesson.summary,
+
+                lesson.type,
+
+                lesson.lessonType,
+
+                lesson.duration,
+
+                lesson.moduleId,
+
+                lesson.moduleID,
+
+                lesson.module
+
+              ]
+              .filter(Boolean)
+              .join(" ")
+              .toLowerCase();
 
 
-        const count =
-          document.getElementById(
-            "lessonCount"
+              return searchableText.includes(
+                term
+              );
+
+            }
           );
 
-
-        if(count){
-
-          count.textContent =
-            filteredLessons.length;
-
-        }
+      }
 
 
-        renderLessons(
-          filteredLessons
+      const count =
+        document.getElementById(
+          "lessonCount"
         );
 
-      }
-    );
 
-  }
+      if(count){
+
+        count.textContent =
+          filtered.length;
+
+      }
+
+
+      renderLessons(
+        filtered
+      );
+
+    }
+  );
 
 }
 
@@ -1640,14 +1372,16 @@ function renderLessons(
 
       <div class="empty">
 
-        <i class="fa-solid fa-book-open"></i>
+        <i
+          class="fa-solid fa-book-open"
+        ></i>
 
         <h2>
           No Lessons Found
         </h2>
 
         <p>
-          No lessons match your search.
+          This course currently has no lessons.
         </p>
 
       </div>
@@ -1679,7 +1413,7 @@ function renderLessons(
         const type =
           lesson.type ||
           lesson.lessonType ||
-          "lesson";
+          "Lesson";
 
 
         const duration =
@@ -1732,478 +1466,532 @@ function renderLessons(
               ></i>
 
             </div>
+        
+           <div class="lesson-icon">
+              <i class="${icon}"></i>
+            </div>        <div class="lesson-info">
+          <div class="lesson-number">
+            Lesson ${index + 1}
+          </div>
 
+          <h3 class="lesson-title">
+            ${escapeHtml(lesson.title || "Untitled Lesson")}
+          </h3>
 
-            <div
-              class="lesson-info"
-            >
+          <div class="lesson-meta">
+            <span>
+              <i class="fas fa-${lesson.type === "video" ? "play-circle" : "file-alt"}"></i>
+              ${escapeHtml(lesson.type || "Lesson")}
+            </span>
 
-              <h3>
-
-                ${escapeHTML(
-                  String(title)
-                )}
-
-              </h3>
-
-
-              ${
-                description
-                  ? `
-
-                    <div
-                      class="lesson-description"
-                    >
-
-                      ${escapeHTML(
-                        String(description)
-                      )}
-
-                    </div>
-
-                  `
-                  : ""
-              }
-
-
-              <div
-                class="lesson-meta"
-              >
-
+            ${
+              lesson.duration
+                ? `
                 <span>
-
-                  <i
-                    class="fa-solid fa-file-lines"
-                  ></i>
-
-                  ${escapeHTML(
-                    String(type)
-                  )}
-
+                  <i class="fas fa-clock"></i>
+                  ${escapeHtml(lesson.duration)}
                 </span>
+                `
+                : ""
+            }
 
-
-                ${
-                  module
-                    ? `
-
-                      <span>
-
-                        <i
-                          class="fa-solid fa-layer-group"
-                        ></i>
-
-                        Module
-                        ${escapeHTML(
-                          String(module)
-                        )}
-
-                      </span>
-
-                    `
-                    : ""
-                }
-
-
-                ${
-                  duration
-                    ? `
-
-                      <span>
-
-                        <i
-                          class="fa-regular fa-clock"
-                        ></i>
-
-                        ${escapeHTML(
-                          String(duration)
-                        )}
-
-                      </span>
-
-                    `
-                    : ""
-                }
-
-
+            ${
+              lesson.moduleName
+                ? `
                 <span>
-
-                  <i
-                    class="fa-solid fa-list-ol"
-                  ></i>
-
-                  Lesson
-                  ${escapeHTML(
-                    String(order)
-                  )}
-
+                  <i class="fas fa-layer-group"></i>
+                  ${escapeHtml(lesson.moduleName)}
                 </span>
+                `
+                : ""
+            }
+          </div>
 
-              </div>
+          ${
+            lesson.description
+              ? `
+              <p class="lesson-description">
+                ${escapeHtml(lesson.description)}
+              </p>
+              `
+              : ""
+          }
+        </div>
 
-            </div>
+        <div class="lesson-action">
+          <a
+            href="lesson-watch.html?id=${encodeURIComponent(lesson.id)}"
+            class="watch-btn"
+          >
+            <span>Open Lesson</span>
+            <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
 
+      </div>
+    `;
+  });
 
-            <a
-              class="open-btn"
-              href="lesson-watch.html?id=${encodeURIComponent(
-                lesson.id
-              )}"
-            >
-
-              Open
-
-              <i
-                class="fa-solid fa-arrow-right"
-              ></i>
-
-            </a>
-
-          </article>
-
-        `;
-
-      }
-    )
-    .join("");
-
+  lessonsList.innerHTML = html;
 }
 
+function updateStats() {
+  const totalLessons = allLessons.length;
 
-/* =====================================================
-   COURSE TITLE
-===================================================== */
+  const videoLessons = allLessons.filter(
+    lesson =>
+      String(lesson.type || "").toLowerCase() === "video" ||
+      String(lesson.lessonType || "").toLowerCase() === "video"
+  ).length;
 
-function getCourseTitle(
-  course
-){
+  const modules = new Set(
+    allLessons
+      .map(lesson =>
+        lesson.moduleId ||
+        lesson.module ||
+        lesson.moduleName ||
+        ""
+      )
+      .filter(Boolean)
+  ).size;
 
-  return (
+  const totalLessonsEl = document.getElementById("totalLessons");
+  const videoLessonsEl = document.getElementById("videoLessons");
+  const modulesEl = document.getElementById("modulesCount");
 
-    course.title ||
-
-    course.name ||
-
-    course.courseTitle ||
-
-    course.courseName ||
-
-    "Untitled Course"
-
-  );
-
-}
-
-
-/* =====================================================
-   COURSE DESCRIPTION
-===================================================== */
-
-function getCourseDescription(
-  course
-){
-
-  return (
-
-    course.description ||
-
-    course.summary ||
-
-    course.details ||
-
-    course.about ||
-
-    ""
-
-  );
-
-}
-
-
-/* =====================================================
-   COURSE IMAGE
-===================================================== */
-
-function getCourseImage(
-  course
-){
-
-  return (
-
-    course.imageUrl ||
-
-    course.thumbnail ||
-
-    course.thumbnailUrl ||
-
-    course.coverImage ||
-
-    course.coverUrl ||
-
-    course.image ||
-
-    ""
-
-  );
-
-}
-
-
-/* =====================================================
-   LESSON ICON
-===================================================== */
-
-function getLessonIcon(
-  type
-){
-
-  const value =
-    String(
-      type || ""
-    )
-    .toLowerCase();
-
-
-  if(
-    value.includes("video")
-  ){
-
-    return "fa-solid fa-circle-play";
-
+  if (totalLessonsEl) {
+    totalLessonsEl.textContent = totalLessons;
   }
 
-
-  if(
-    value.includes("audio")
-  ){
-
-    return "fa-solid fa-headphones";
-
+  if (videoLessonsEl) {
+    videoLessonsEl.textContent = videoLessons;
   }
 
-
-  if(
-    value.includes("pdf")
-  ){
-
-    return "fa-solid fa-file-pdf";
-
+  if (modulesEl) {
+    modulesEl.textContent = modules;
   }
-
-
-  if(
-    value.includes("text") ||
-    value.includes("article")
-  ){
-
-    return "fa-solid fa-file-lines";
-
-  }
-
-
-  if(
-    value.includes("live")
-  ){
-
-    return "fa-solid fa-tower-broadcast";
-
-  }
-
-
-  if(
-    value.includes("quiz")
-  ){
-
-    return "fa-solid fa-circle-question";
-
-  }
-
-
-  if(
-    value.includes("assignment")
-  ){
-
-    return "fa-solid fa-pen-to-square";
-
-  }
-
-
-  return "fa-solid fa-book-open";
-
 }
 
+function setupSearch() {
+  const searchInput = document.getElementById("lessonSearch");
 
-/* =====================================================
-   NO COURSES
-===================================================== */
+  if (!searchInput) return;
 
-function showNoCourses(){
+  searchInput.addEventListener("input", () => {
+    const term = searchInput.value.trim().toLowerCase();
 
-  courseSelector.style.display =
-    "none";
+    if (!term) {
+      filteredLessons = [...allLessons];
+    } else {
+      filteredLessons = allLessons.filter(lesson => {
+        const title = String(lesson.title || "").toLowerCase();
+        const description = String(
+          lesson.description || ""
+        ).toLowerCase();
 
+        const moduleName = String(
+          lesson.moduleName ||
+          lesson.module ||
+          ""
+        ).toLowerCase();
 
-  pageContent.innerHTML = `
-
-    <div class="empty">
-
-      <i
-        class="fa-solid fa-graduation-cap"
-      ></i>
-
-      <h2>
-        No Courses Available
-      </h2>
-
-      <p>
-        There are currently no courses available.
-      </p>
-
-    </div>
-
-  `;
-
-}
-
-
-/* =====================================================
-   ERROR
-===================================================== */
-
-function showError(
-  message
-){
-
-  pageContent.innerHTML = `
-
-    <div class="error">
-
-      <i
-        class="fa-solid fa-triangle-exclamation"
-      ></i>
-
-      <h2>
-        Something Went Wrong
-      </h2>
-
-      <p>
-        ${escapeHTML(
-          String(message)
-        )}
-      </p>
-
-      <button
-        class="retry-btn"
-        type="button"
-        onclick="location.reload()"
-      >
-
-        Try Again
-
-      </button>
-
-    </div>
-
-  `;
-
-}
-
-
-/* =====================================================
-   TEXT FORMAT
-===================================================== */
-
-function formatText(
-  text
-){
-
-  return escapeHTML(
-    String(text ?? "")
-  )
-  .replace(
-    /\n/g,
-    "<br>"
-  );
-
-}
-
-
-/* =====================================================
-   HTML ESCAPE
-===================================================== */
-
-function escapeHTML(
-  value
-){
-
-  return String(
-    value ?? ""
-  )
-  .replace(
-    /&/g,
-    "&amp;"
-  )
-  .replace(
-    /</g,
-    "&lt;"
-  )
-  .replace(
-    />/g,
-    "&gt;"
-  )
-  .replace(
-    /"/g,
-    "&quot;"
-  )
-  .replace(
-    /'/g,
-    "&#039;"
-  );
-
-}
-
-
-/* =====================================================
-   SAFE URL
-===================================================== */
-
-function safeUrl(
-  value
-){
-
-  try{
-
-    const url =
-      new URL(
-        String(value),
-        window.location.href
-      );
-
-
-    if(
-      url.protocol === "http:" ||
-      url.protocol === "https:"
-    ){
-
-      return escapeHTML(
-        url.href
-      );
-
+        return (
+          title.includes(term) ||
+          description.includes(term) ||
+          moduleName.includes(term)
+        );
+      });
     }
 
-
-    return "";
-
-  }catch{
-
-    return "";
-
-  }
-
+    renderLessons();
+  });
 }
 
-</script>
+function showError(message) {
+  const errorContainer =
+    document.getElementById("errorContainer");
 
-</body>
+  const loadingContainer =
+    document.getElementById("loadingContainer");
 
+  const courseContent =
+    document.getElementById("courseContent");
+
+  if (loadingContainer) {
+    loadingContainer.style.display = "none";
+  }
+
+  if (courseContent) {
+    courseContent.style.display = "none";
+  }
+
+  if (errorContainer) {
+    errorContainer.style.display = "flex";
+
+    const errorMessage =
+      errorContainer.querySelector(".error-message");
+
+    if (errorMessage) {
+      errorMessage.textContent = message;
+    }
+  } else {
+    console.error(message);
+  }
+}
+
+function hideLoading() {
+  const loadingContainer =
+    document.getElementById("loadingContainer");
+
+  if (loadingContainer) {
+    loadingContainer.style.display = "none";
+  }
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function getLessonIcon(type) {
+  const lessonType = String(type || "").toLowerCase();
+
+  if (
+    lessonType === "video" ||
+    lessonType === "video lesson"
+  ) {
+    return "fa-play";
+  }
+
+  if (lessonType === "pdf" || lessonType === "document") {
+    return "fa-file-pdf";
+  }
+
+  if (lessonType === "quiz") {
+    return "fa-question-circle";
+  }
+
+  if (lessonType === "assignment") {
+    return "fa-tasks";
+  }
+
+  return "fa-book-open";
+}
+
+async function loadLessons() {
+  if (!currentCourseId) {
+    showError(
+      "Course ID is missing. Please open this page using ?courseId=COURSE_ID"
+    );
+    return;
+  }
+
+  try {
+    const lessonsQuery = query(
+      collection(db, "lessons"),
+      where("courseId", "==", currentCourseId)
+    );
+
+    const snapshot = await getDocs(lessonsQuery);
+
+    allLessons = [];
+
+    snapshot.forEach(lessonDoc => {
+      const data = lessonDoc.data();
+
+      /*
+       * Extra safety check:
+       * Only keep lessons whose courseId exactly matches
+       * the course currently opened in the URL.
+       */
+      if (
+        String(data.courseId || "") !==
+        String(currentCourseId)
+      ) {
+        return;
+      }
+
+      const status = String(
+        data.status || "published"
+      ).toLowerCase();
+
+      if (
+        status !== "published" &&
+        status !== "active" &&
+        status !== ""
+      ) {
+        return;
+      }
+
+      allLessons.push({
+        id: lessonDoc.id,
+        ...data
+      });
+    });
+
+    allLessons.sort((a, b) => {
+      const moduleA = Number(
+        a.moduleOrder ??
+        a.modulePosition ??
+        0
+      );
+
+      const moduleB = Number(
+        b.moduleOrder ??
+        b.modulePosition ??
+        0
+      );
+
+      if (moduleA !== moduleB) {
+        return moduleA - moduleB;
+      }
+
+      const orderA = Number(
+        a.order ??
+        a.lessonOrder ??
+        a.position ??
+        0
+      );
+
+      const orderB = Number(
+        b.order ??
+        b.lessonOrder ??
+        b.position ??
+        0
+      );
+
+      return orderA - orderB;
+    });
+
+    filteredLessons = [...allLessons];
+
+    updateStats();
+    renderLessons();
+
+  } catch (error) {
+    console.error(
+      "Error loading course lessons:",
+      error
+    );
+
+    /*
+     * IMPORTANT:
+     * Never fall back to loading the complete lessons
+     * collection. This page belongs to ONE course only.
+     */
+    showError(
+      "Unable to load lessons for this course. Please try again."
+    );
+  }
+}
+
+async function loadCourse() {
+  if (!currentCourseId) {
+    showError(
+      "Course ID is missing. Please open this page using ?courseId=COURSE_ID"
+    );
+    return;
+  }
+
+  try {
+    /*
+     * Load ONLY the requested course document.
+     * No collection-wide courses query is performed.
+     */
+    const courseRef = doc(
+      db,
+      "courses",
+      currentCourseId
+    );
+
+    const courseSnap = await getDoc(courseRef);
+
+    if (!courseSnap.exists()) {
+      showError(
+        "The requested course could not be found."
+      );
+      return;
+    }
+
+    currentCourse = {
+      id: courseSnap.id,
+      ...courseSnap.data()
+    };
+
+    /*
+     * Safety check in case the document itself contains
+     * a courseId field.
+     */
+    if (
+      currentCourse.courseId &&
+      String(currentCourse.courseId) !==
+        String(currentCourseId)
+    ) {
+      showError(
+        "This course does not match the requested course ID."
+      );
+      return;
+    }
+
+    renderCourse();
+
+    await loadLessons();
+
+    const courseContent =
+      document.getElementById("courseContent");
+
+    if (courseContent) {
+      courseContent.style.display = "block";
+    }
+
+    hideLoading();
+
+  } catch (error) {
+    console.error(
+      "Error loading course:",
+      error
+    );
+
+    showError(
+      "Unable to load this course. Please try again."
+    );
+  }
+}
+
+function renderCourse() {
+  if (!currentCourse) return;
+
+  const title =
+    currentCourse.title ||
+    currentCourse.courseName ||
+    "Untitled Course";
+
+  const description =
+    currentCourse.description ||
+    currentCourse.shortDescription ||
+    "Explore the lessons in this course.";
+
+  const instructor =
+    currentCourse.instructor ||
+    currentCourse.instructorName ||
+    "LetsStudy Pro";
+
+  const image =
+    currentCourse.thumbnail ||
+    currentCourse.image ||
+    currentCourse.coverImage ||
+    "";
+
+  const titleEl =
+    document.getElementById("courseTitle");
+
+  const descriptionEl =
+    document.getElementById("courseDescription");
+
+  const instructorEl =
+    document.getElementById("courseInstructor");
+
+  const imageEl =
+    document.getElementById("courseImage");
+
+  if (titleEl) {
+    titleEl.textContent = title;
+  }
+
+  if (descriptionEl) {
+    descriptionEl.textContent = description;
+  }
+
+  if (instructorEl) {
+    instructorEl.textContent = instructor;
+  }
+
+  if (imageEl && image) {
+    imageEl.src = image;
+    imageEl.alt = title;
+
+    imageEl.onerror = () => {
+      imageEl.style.display = "none";
+    };
+  }
+
+  document.title =
+    `${title} | LetsStudy Pro`;
+}
+
+function initializeCourseId() {
+  const params =
+    new URLSearchParams(window.location.search);
+
+  /*
+   * Supported:
+   * ?courseId=123
+   * ?courseID=123
+   * ?id=123
+   * ?course=123
+   */
+  currentCourseId =
+    params.get("courseId") ||
+    params.get("courseID") ||
+    params.get("id") ||
+    params.get("course") ||
+    "";
+
+  currentCourseId =
+    currentCourseId.trim();
+}
+
+async function init() {
+  try {
+    initializeCourseId();
+
+    if (!currentCourseId) {
+      showError(
+        "Course ID is missing. Please open this page using ?courseId=COURSE_ID"
+      );
+      return;
+    }
+
+    setupSearch();
+
+    await loadCourse();
+
+  } catch (error) {
+    console.error(
+      "Initialization error:",
+      error
+    );
+
+    showError(
+      "Something went wrong while opening this course."
+    );
+  }
+}
+
+/*
+ * Back button
+ */
+const backButton =
+  document.getElementById("backButton");
+
+if (backButton) {
+  backButton.addEventListener("click", () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.href = "course-details.html";
+    }
+  });
+}
+
+/*
+ * Start page
+ */
+init();
+
+  </script></body>
 </html>
