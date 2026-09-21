@@ -1282,6 +1282,325 @@ window.addEventListener(
 
 </div>
 
+<script>
+
+"use strict";
+
+
+/* =====================================================
+   LETSSTUDY PRO PWA SYSTEM
+===================================================== */
+
+(function () {
+
+
+  let deferredInstallPrompt = null;
+
+
+  const installButton =
+    document.getElementById(
+      "letsstudy-pwa-install"
+    );
+
+
+  const message =
+    document.getElementById(
+      "letsstudy-pwa-message"
+    );
+
+
+  const closeButton =
+    document.getElementById(
+      "letsstudy-pwa-close"
+    );
+
+
+  /* =====================================================
+     CHECK INSTALLED MODE
+  ===================================================== */
+
+  function isInstalled() {
+
+    return (
+
+      window.matchMedia(
+        "(display-mode: standalone)"
+      ).matches
+
+      ||
+
+      window.navigator.standalone === true
+
+    );
+
+  }
+
+
+  /* =====================================================
+     SHOW INSTALL BUTTON
+  ===================================================== */
+
+  function showInstallButton() {
+
+    if (!installButton) {
+      return;
+    }
+
+    if (isInstalled()) {
+
+      installButton.style.display = "none";
+
+      return;
+
+    }
+
+    installButton.style.display = "flex";
+
+  }
+
+
+  /* =====================================================
+     HIDE INSTALL BUTTON
+  ===================================================== */
+
+  function hideInstallButton() {
+
+    if (!installButton) {
+      return;
+    }
+
+    installButton.style.display = "none";
+
+  }
+
+
+  /* =====================================================
+     SERVICE WORKER
+  ===================================================== */
+
+  if ("serviceWorker" in navigator) {
+
+    window.addEventListener(
+      "load",
+      function () {
+
+        navigator.serviceWorker
+          .register(
+            "/sw.js",
+            {
+              scope: "/"
+            }
+          )
+          .then(
+            function (registration) {
+
+              console.log(
+                "LetsStudy Pro Service Worker registered:",
+                registration.scope
+              );
+
+            }
+          )
+          .catch(
+            function (error) {
+
+              console.error(
+                "LetsStudy Pro Service Worker error:",
+                error
+              );
+
+            }
+          );
+
+      }
+    );
+
+  }
+
+
+  /* =====================================================
+     NATIVE INSTALL PROMPT
+  ===================================================== */
+
+  window.addEventListener(
+    "beforeinstallprompt",
+    function (event) {
+
+      event.preventDefault();
+
+      deferredInstallPrompt = event;
+
+      console.log(
+        "LetsStudy Pro installation is available."
+      );
+
+      showInstallButton();
+
+    }
+  );
+
+
+  /* =====================================================
+     INSTALL BUTTON
+  ===================================================== */
+
+  if (installButton) {
+
+    installButton.addEventListener(
+      "click",
+      async function () {
+
+
+        /*
+          Browser provided native installation.
+        */
+
+        if (deferredInstallPrompt) {
+
+          deferredInstallPrompt.prompt();
+
+
+          try {
+
+            const result =
+              await deferredInstallPrompt.userChoice;
+
+            console.log(
+              "Install result:",
+              result.outcome
+            );
+
+          } catch (error) {
+
+            console.error(
+              "Install prompt error:",
+              error
+            );
+
+          }
+
+
+          deferredInstallPrompt = null;
+
+          hideInstallButton();
+
+          return;
+
+        }
+
+
+        /*
+          If native prompt is unavailable,
+          show instructions.
+        */
+
+        if (message) {
+
+          message.style.display = "block";
+
+        }
+
+      }
+    );
+
+  }
+
+
+  /* =====================================================
+     CLOSE MESSAGE
+  ===================================================== */
+
+  if (closeButton) {
+
+    closeButton.addEventListener(
+      "click",
+      function () {
+
+        message.style.display = "none";
+
+      }
+    );
+
+  }
+
+
+  /* =====================================================
+     APP INSTALLED
+  ===================================================== */
+
+  window.addEventListener(
+    "appinstalled",
+    function () {
+
+      console.log(
+        "LetsStudy Pro successfully installed."
+      );
+
+      deferredInstallPrompt = null;
+
+      hideInstallButton();
+
+    }
+  );
+
+
+  /* =====================================================
+     DISPLAY MODE CHANGE
+  ===================================================== */
+
+  const displayMode =
+    window.matchMedia(
+      "(display-mode: standalone)"
+    );
+
+
+  if (displayMode) {
+
+    displayMode.addEventListener(
+      "change",
+      function () {
+
+        if (isInstalled()) {
+
+          hideInstallButton();
+
+        } else {
+
+          showInstallButton();
+
+        }
+
+      }
+    );
+
+  }
+
+
+  /* =====================================================
+     INITIAL UI
+  ===================================================== */
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+      /*
+        We intentionally show the button.
+        If the browser supports native PWA
+        installation, beforeinstallprompt will
+        provide the real installation flow.
+      */
+
+      showInstallButton();
+
+    }
+  );
+
+
+})();
+
+</script>
+
 </script>
 
 </body>
