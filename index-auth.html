@@ -1116,5 +1116,159 @@ window.addEventListener(
 
 </script>
 
+<!-- =====================================================
+     LETSSTUDY PRO PWA SYSTEM
+===================================================== -->
+
+<script>
+(function () {
+
+  "use strict";
+
+  /* -----------------------------------------------------
+     SERVICE WORKER
+  ----------------------------------------------------- */
+
+  if ("serviceWorker" in navigator) {
+
+    window.addEventListener("load", function () {
+
+      navigator.serviceWorker
+        .register("/sw.js", {
+          scope: "/"
+        })
+        .then(function (registration) {
+
+          console.log(
+            "LetsStudy Pro PWA: Service Worker registered.",
+            registration.scope
+          );
+
+        })
+        .catch(function (error) {
+
+          console.error(
+            "LetsStudy Pro PWA: Service Worker registration failed.",
+            error
+          );
+
+        });
+
+    });
+
+  }
+
+
+  /* -----------------------------------------------------
+     INSTALL APP
+  ----------------------------------------------------- */
+
+  let deferredPrompt = null;
+
+  window.addEventListener(
+    "beforeinstallprompt",
+    function (event) {
+
+      event.preventDefault();
+
+      deferredPrompt = event;
+
+      createInstallButton();
+
+    }
+  );
+
+
+  function createInstallButton() {
+
+    if (document.getElementById("letsstudy-install-app")) {
+      return;
+    }
+
+    const button = document.createElement("button");
+
+    button.id = "letsstudy-install-app";
+
+    button.type = "button";
+
+    button.innerHTML =
+      "📱 Install LetsStudy Pro";
+
+    button.style.cssText = `
+      position:fixed;
+      right:18px;
+      bottom:18px;
+      z-index:999999;
+      border:0;
+      border-radius:14px;
+      padding:14px 18px;
+      background:#0d6efd;
+      color:#fff;
+      font-size:15px;
+      font-weight:700;
+      cursor:pointer;
+      box-shadow:0 8px 30px rgba(0,0,0,.20);
+    `;
+
+    document.body.appendChild(button);
+
+
+    button.addEventListener(
+      "click",
+      async function () {
+
+        if (!deferredPrompt) {
+          return;
+        }
+
+        deferredPrompt.prompt();
+
+        const result =
+          await deferredPrompt.userChoice;
+
+        console.log(
+          "LetsStudy Pro install:",
+          result.outcome
+        );
+
+        deferredPrompt = null;
+
+        button.remove();
+
+      }
+    );
+
+  }
+
+
+  /* -----------------------------------------------------
+     INSTALLED EVENT
+  ----------------------------------------------------- */
+
+  window.addEventListener(
+    "appinstalled",
+    function () {
+
+      console.log(
+        "LetsStudy Pro has been installed."
+      );
+
+      deferredPrompt = null;
+
+      const button =
+        document.getElementById(
+          "letsstudy-install-app"
+        );
+
+      if (button) {
+        button.remove();
+      }
+
+    }
+  );
+
+})();
+</script>
+
 </body>
 </html>
