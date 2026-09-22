@@ -1,0 +1,2998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Admin Domains - LetsStudy Pro</title>
+
+  <meta
+    name="description"
+    content="LetsStudy Pro Admin Domains Management"
+  >
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --sidebar: #111827;
+    }
+
+    body {
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* =====================================================
+       LAYOUT
+    ===================================================== */
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+    }
+
+    .sidebar {
+      width: 260px;
+      background: var(--sidebar);
+      color: #fff;
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      transition: .25s ease;
+    }
+
+    .brand {
+      padding: 24px 20px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+
+    .brand h2 {
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .brand span {
+      display: block;
+      color: #9ca3af;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .nav {
+      padding: 18px 12px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .nav-title {
+      color: #6b7280;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      padding: 10px 12px;
+    }
+
+    .nav a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 9px;
+      margin-bottom: 4px;
+      color: #d1d5db;
+      font-size: 14px;
+      transition: .2s ease;
+    }
+
+    .nav a:hover,
+    .nav a.active {
+      background: rgba(255,255,255,.09);
+      color: #fff;
+    }
+
+    .nav-icon {
+      width: 24px;
+      text-align: center;
+    }
+
+    .sidebar-footer {
+      padding: 16px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+
+    .admin-user {
+      margin-bottom: 12px;
+    }
+
+    .admin-user small {
+      color: #9ca3af;
+      display: block;
+      font-size: 11px;
+    }
+
+    .admin-user strong {
+      display: block;
+      font-size: 13px;
+      margin-top: 3px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .logout-btn {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      color: #fff;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    .logout-btn:hover {
+      background: rgba(255,255,255,.1);
+    }
+
+    .main {
+      margin-left: 260px;
+      width: calc(100% - 260px);
+      min-height: 100vh;
+    }
+
+    /* =====================================================
+       TOPBAR
+    ===================================================== */
+
+    .topbar {
+      height: 68px;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      position: sticky;
+      top: 0;
+      z-index: 500;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .menu-btn {
+      display: none;
+      border: 0;
+      background: transparent;
+      font-size: 22px;
+    }
+
+    .topbar-title {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .admin-badge {
+      background: #eff6ff;
+      color: var(--primary);
+      border-radius: 20px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    /* =====================================================
+       CONTENT
+    ===================================================== */
+
+    .content {
+      padding: 28px;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+
+    .page-header h1 {
+      font-size: 28px;
+      margin-bottom: 6px;
+    }
+
+    .page-header p {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-weight: 700;
+      font-size: 13px;
+      transition: .2s ease;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .btn-danger {
+      background: #fee2e2;
+      color: var(--danger);
+    }
+
+    .btn-warning {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    /* =====================================================
+       STATS
+    ===================================================== */
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(5, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+
+    .stat-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .stat-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: #eff6ff;
+      font-size: 18px;
+    }
+
+    .stat-card span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .stat-card h3 {
+      font-size: 25px;
+      margin-top: 3px;
+    }
+
+    /* =====================================================
+       TOOLBAR
+    ===================================================== */
+
+    .toolbar {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 230px;
+    }
+
+    .search-box input,
+    .toolbar select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      outline: none;
+      background: #fff;
+    }
+
+    .search-box input:focus,
+    .toolbar select:focus {
+      border-color: var(--primary);
+    }
+
+    .toolbar-item {
+      min-width: 160px;
+    }
+
+    /* =====================================================
+       TABLE
+    ===================================================== */
+
+    .table-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .table-header {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .table-header h3 {
+      font-size: 15px;
+    }
+
+    .results-count {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1050px;
+    }
+
+    th {
+      text-align: left;
+      background: #f9fafb;
+      color: #6b7280;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 15px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .domain-cell strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    .domain-cell small {
+      display: block;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .owner-cell strong {
+      display: block;
+    }
+
+    .owner-cell small {
+      display: block;
+      color: var(--muted);
+      margin-top: 3px;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 20px;
+      padding: 5px 9px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge-active {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .badge-pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-suspended,
+    .badge-inactive,
+    .badge-failed {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .badge-success {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .badge-warning {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-neutral {
+      background: #f3f4f6;
+      color: #4b5563;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 6px;
+    }
+
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+    }
+
+    .icon-btn:hover {
+      background: #f9fafb;
+    }
+
+    /* =====================================================
+       EMPTY STATE
+    ===================================================== */
+
+    .empty-state {
+      text-align: center;
+      padding: 55px 20px;
+    }
+
+    .empty-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+
+    .empty-state h3 {
+      margin-bottom: 6px;
+    }
+
+    .empty-state p {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* =====================================================
+       MODAL
+    ===================================================== */
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(17,24,39,.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 3000;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-box {
+      width: min(760px, 100%);
+      max-height: 90vh;
+      overflow-y: auto;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    }
+
+    .modal-header {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header h3 {
+      font-size: 17px;
+    }
+
+    .close-btn {
+      border: 0;
+      background: #f3f4f6;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      font-size: 18px;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .detail-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .detail-icon {
+      width: 52px;
+      height: 52px;
+      background: #eff6ff;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+    }
+
+    .detail-header h3 {
+      font-size: 19px;
+    }
+
+    .detail-header p {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .detail-item {
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 12px;
+    }
+
+    .detail-item.full {
+      grid-column: 1 / -1;
+    }
+
+    .detail-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      margin-bottom: 5px;
+    }
+
+    .detail-item strong {
+      font-size: 13px;
+      word-break: break-word;
+    }
+
+    .modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    /* =====================================================
+       TOAST
+    ===================================================== */
+
+    .toast-container {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 5000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      min-width: 260px;
+      max-width: 380px;
+      padding: 13px 15px;
+      border-radius: 9px;
+      background: #111827;
+      color: #fff;
+      box-shadow: 0 10px 30px rgba(0,0,0,.18);
+      font-size: 13px;
+    }
+
+    .toast.success {
+      background: #166534;
+    }
+
+    .toast.error {
+      background: #991b1b;
+    }
+
+    .toast.warning {
+      background: #92400e;
+    }
+
+    /* =====================================================
+       MOBILE OVERLAY
+    ===================================================== */
+
+    .mobile-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 900;
+    }
+
+    .mobile-overlay.show {
+      display: block;
+    }
+
+    /* =====================================================
+       RESPONSIVE
+    ===================================================== */
+
+    @media (max-width: 1200px) {
+
+      .stats-grid {
+        grid-template-columns:
+          repeat(3, minmax(0, 1fr));
+      }
+
+    }
+
+    @media (max-width: 900px) {
+
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .main {
+        margin-left: 0;
+        width: 100%;
+      }
+
+      .menu-btn {
+        display: block;
+      }
+
+      .stats-grid {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+
+    }
+
+    @media (max-width: 600px) {
+
+      .content {
+        padding: 18px;
+      }
+
+      .topbar {
+        padding: 0 18px;
+      }
+
+      .page-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .detail-item.full {
+        grid-column: auto;
+      }
+
+      .admin-badge {
+        display: none;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- =====================================================
+       SIDEBAR
+  ====================================================== -->
+
+  <aside
+    class="sidebar"
+    id="sidebar"
+  >
+
+    <div class="brand">
+
+      <h2>LetsStudy Pro</h2>
+
+      <span>
+        Hosting Administration
+      </span>
+
+    </div>
+
+    <nav class="nav">
+
+      <div class="nav-title">
+        Hosting
+      </div>
+
+      <a href="admin-hosting.html">
+        <span class="nav-icon">🏠</span>
+        <span>Hosting Overview</span>
+      </a>
+
+      <a href="admin-hosting-plans.html">
+        <span class="nav-icon">📦</span>
+        <span>Hosting Plans</span>
+      </a>
+
+      <a href="admin-hosting-users.html">
+        <span class="nav-icon">👥</span>
+        <span>Hosting Users</span>
+      </a>
+
+      <a href="admin-websites.html">
+        <span class="nav-icon">🌐</span>
+        <span>Websites</span>
+      </a>
+
+      <a
+        href="admin-domains.html"
+        class="active"
+      >
+        <span class="nav-icon">🔗</span>
+        <span>Domains</span>
+      </a>
+
+      <a href="admin-hosting.html#orders">
+        <span class="nav-icon">🛒</span>
+        <span>Orders</span>
+      </a>
+
+      <a href="admin-hosting.html#accounts">
+        <span class="nav-icon">💳</span>
+        <span>Subscriptions</span>
+      </a>
+
+      <a href="admin-hosting.html#tickets">
+        <span class="nav-icon">🎫</span>
+        <span>Tickets</span>
+      </a>
+
+      <div class="nav-title">
+        Platform
+      </div>
+
+      <a href="admin-dashboard.html">
+        <span class="nav-icon">📊</span>
+        <span>Admin Dashboard</span>
+      </a>
+
+    </nav>
+
+    <div class="sidebar-footer">
+
+      <div class="admin-user">
+
+        <small>Signed in as</small>
+
+        <strong id="adminEmail">
+          Loading...
+        </strong>
+
+      </div>
+
+      <button
+        class="logout-btn"
+        id="logoutButton"
+      >
+        🚪 Logout
+      </button>
+
+    </div>
+
+  </aside>
+
+  <div
+    class="mobile-overlay"
+    id="mobileOverlay"
+  ></div>
+
+  <!-- =====================================================
+       MAIN
+  ====================================================== -->
+
+  <main class="main">
+
+    <header class="topbar">
+
+      <div class="topbar-left">
+
+        <button
+          class="menu-btn"
+          id="menuButton"
+        >
+          ☰
+        </button>
+
+        <div class="topbar-title">
+          Domain Management
+        </div>
+
+      </div>
+
+      <div class="topbar-right">
+
+        <span class="admin-badge">
+          ADMIN
+        </span>
+
+      </div>
+
+    </header>
+
+    <section class="content">
+
+      <!-- =================================================
+           PAGE HEADER
+      ================================================== -->
+
+      <div class="page-header">
+
+        <div>
+
+          <h1>
+            Domains
+          </h1>
+
+          <p>
+            Manage customer domains, verification,
+            DNS and SSL status.
+          </p>
+
+        </div>
+
+        <button
+          class="btn btn-primary"
+          id="refreshButton"
+        >
+          🔄 Refresh
+        </button>
+
+      </div>
+
+      <!-- =================================================
+           STATS
+      ================================================== -->
+
+      <div class="stats-grid">
+
+        <div class="stat-card">
+
+          <div class="stat-top">
+
+            <span>
+              Total Domains
+            </span>
+
+            <div class="stat-icon">
+              🔗
+            </div>
+
+          </div>
+
+          <h3 id="totalDomains">
+            0
+          </h3>
+
+        </div>
+
+        <div class="stat-card">
+
+          <div class="stat-top">
+
+            <span>
+              Active
+            </span>
+
+            <div class="stat-icon">
+              ✅
+            </div>
+
+          </div>
+
+          <h3 id="activeDomains">
+            0
+          </h3>
+
+        </div>
+
+        <div class="stat-card">
+
+          <div class="stat-top">
+
+            <span>
+              Pending
+            </span>
+
+            <div class="stat-icon">
+              ⏳
+            </div>
+
+          </div>
+
+          <h3 id="pendingDomains">
+            0
+          </h3>
+
+        </div>
+
+        <div class="stat-card">
+
+          <div class="stat-top">
+
+            <span>
+              Verified
+            </span>
+
+            <div class="stat-icon">
+              ✔️
+            </div>
+
+          </div>
+
+          <h3 id="verifiedDomains">
+            0
+          </h3>
+
+        </div>
+
+        <div class="stat-card">
+
+          <div class="stat-top">
+
+            <span>
+              SSL Active
+            </span>
+
+            <div class="stat-icon">
+              🔒
+            </div>
+
+          </div>
+
+          <h3 id="sslDomains">
+            0
+          </h3>
+
+        </div>
+
+      </div>
+
+      <!-- =================================================
+           FILTER TOOLBAR
+      ================================================== -->
+
+      <div class="toolbar">
+
+        <div class="search-box">
+
+          <input
+            type="search"
+            id="domainSearch"
+            placeholder="Search domain, owner, website..."
+          >
+
+        </div>
+
+        <div class="toolbar-item">
+
+          <select id="domainStatusFilter">
+
+            <option value="all">
+              All Statuses
+            </option>
+
+            <option value="active">
+              Active
+            </option>
+
+            <option value="pending">
+              Pending
+            </option>
+
+                        <option value="suspended">
+              Suspended
+            </option>
+
+            <option value="inactive">
+              Inactive
+            </option>
+
+          </select>
+
+        </div>
+
+        <div class="toolbar-item">
+
+          <select id="verificationFilter">
+
+            <option value="all">
+              All Verification
+            </option>
+
+            <option value="verified">
+              Verified
+            </option>
+
+            <option value="pending">
+              Pending
+            </option>
+
+            <option value="failed">
+              Failed
+            </option>
+
+          </select>
+
+        </div>
+
+        <div class="toolbar-item">
+
+          <select id="sslFilter">
+
+            <option value="all">
+              All SSL
+            </option>
+
+            <option value="active">
+              SSL Active
+            </option>
+
+            <option value="pending">
+              SSL Pending
+            </option>
+
+            <option value="inactive">
+              SSL Inactive
+            </option>
+
+          </select>
+
+        </div>
+
+        <button
+          class="btn btn-secondary"
+          id="clearFilters"
+        >
+          Clear
+        </button>
+
+      </div>
+
+      <!-- =================================================
+           DOMAINS TABLE
+      ================================================== -->
+
+      <div class="table-card">
+
+        <div class="table-header">
+
+          <h3>
+            Customer Domains
+          </h3>
+
+          <span
+            class="results-count"
+            id="resultsCount"
+          >
+            0 domains
+          </span>
+
+        </div>
+
+        <div class="table-wrapper">
+
+          <table>
+
+            <thead>
+
+              <tr>
+
+                <th>Domain</th>
+                <th>Owner</th>
+                <th>Website</th>
+                <th>Status</th>
+                <th>Verification</th>
+                <th>SSL</th>
+                <th>DNS</th>
+                <th>Created</th>
+                <th>Actions</th>
+
+              </tr>
+
+            </thead>
+
+            <tbody id="domainsTableBody">
+
+              <tr>
+
+                <td colspan="9">
+
+                  <div class="empty-state">
+
+                    <div class="empty-icon">
+                      ⏳
+                    </div>
+
+                    <h3>
+                      Loading domains...
+                    </h3>
+
+                    <p>
+                      Please wait while domains are loaded.
+                    </p>
+
+                  </div>
+
+                </td>
+
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+
+<!-- =====================================================
+     MOBILE OVERLAY
+====================================================== -->
+
+<div
+  class="mobile-overlay"
+  id="mobileOverlay"
+></div>
+
+
+<!-- =====================================================
+     DOMAIN DETAILS MODAL
+====================================================== -->
+
+<div
+  class="modal"
+  id="domainModal"
+>
+
+  <div class="modal-box">
+
+    <div class="modal-header">
+
+      <h3>
+        Domain Details
+      </h3>
+
+      <button
+        class="close-btn"
+        id="closeDomainModal"
+        type="button"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div
+      class="modal-body"
+      id="domainDetails"
+    ></div>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     TOAST
+====================================================== -->
+
+<div
+  class="toast-container"
+  id="toastContainer"
+></div>
+
+
+<!-- =====================================================
+     FIREBASE
+====================================================== -->
+
+<script type="module">
+
+  import {
+    initializeApp
+  } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+
+  import {
+    getFirestore,
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    updateDoc,
+    deleteDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+
+
+  /* =====================================================
+     FIREBASE CONFIG
+  ===================================================== */
+
+  const firebaseConfig = {
+
+    apiKey:
+      "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+    authDomain:
+      "let-s-study-pro-course.firebaseapp.com",
+
+    databaseURL:
+      "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+    projectId:
+      "let-s-study-pro-course",
+
+    storageBucket:
+      "let-s-study-pro-course.firebasestorage.app",
+
+    messagingSenderId:
+      "474928293390",
+
+    appId:
+      "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+    measurementId:
+      "G-85B7V5H5J0"
+
+  };
+
+
+  const app =
+    initializeApp(firebaseConfig);
+
+  const auth =
+    getAuth(app);
+
+  const db =
+    getFirestore(app);
+
+
+  /* =====================================================
+     STATE
+  ===================================================== */
+
+  let currentUser = null;
+
+  let adminData = null;
+
+  let domains = [];
+
+  let websites = [];
+
+  let selectedDomain = null;
+
+
+  /* =====================================================
+     DOM HELPER
+  ===================================================== */
+
+  function $(id) {
+    return document.getElementById(id);
+  }
+
+
+  /* =====================================================
+     ESCAPE HTML
+  ===================================================== */
+
+  function escapeHtml(value) {
+
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+  }
+
+
+  /* =====================================================
+     NORMALIZE STATUS
+  ===================================================== */
+
+  function normalizeStatus(value) {
+
+    return String(
+      value || "pending"
+    )
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "-");
+
+  }
+
+
+  /* =====================================================
+     FORMAT DATE
+  ===================================================== */
+
+  function formatDate(value) {
+
+    if (!value) {
+      return "—";
+    }
+
+    try {
+
+      let date;
+
+      if (
+        typeof value?.toDate === "function"
+      ) {
+
+        date =
+          value.toDate();
+
+      } else if (
+        value?.seconds
+      ) {
+
+        date =
+          new Date(
+            value.seconds * 1000
+          );
+
+      } else {
+
+        date =
+          new Date(value);
+
+      }
+
+      if (
+        Number.isNaN(
+          date.getTime()
+        )
+      ) {
+        return "—";
+      }
+
+      return date.toLocaleDateString(
+        "en-US",
+        {
+          year: "numeric",
+          month: "short",
+          day: "numeric"
+        }
+      );
+
+    } catch (error) {
+
+      return "—";
+
+    }
+
+  }
+
+
+  /* =====================================================
+     TOAST
+  ===================================================== */
+
+  function showToast(
+    message,
+    type = "success"
+  ) {
+
+    const container =
+      $("toastContainer");
+
+    if (!container) return;
+
+    const toast =
+      document.createElement("div");
+
+    toast.className =
+      `toast ${type}`;
+
+    toast.textContent =
+      message;
+
+    container.appendChild(
+      toast
+    );
+
+    setTimeout(
+      () => toast.remove(),
+      3500
+    );
+
+  }
+
+
+  /* =====================================================
+     STATUS BADGE
+  ===================================================== */
+
+  function statusBadge(status) {
+
+    const normalized =
+      normalizeStatus(status);
+
+    let label =
+      normalized
+        .replace(/-/g, " ");
+
+    label =
+      label.charAt(0).toUpperCase() +
+      label.slice(1);
+
+    let className =
+      "badge-neutral";
+
+    if (
+      normalized === "active" ||
+      normalized === "connected"
+    ) {
+
+      className =
+        "badge-active";
+
+    } else if (
+      normalized === "pending" ||
+      normalized === "processing"
+    ) {
+
+      className =
+        "badge-pending";
+
+    } else if (
+      normalized === "suspended" ||
+      normalized === "inactive" ||
+      normalized === "failed"
+    ) {
+
+      className =
+        "badge-suspended";
+
+    }
+
+    return `
+      <span class="badge ${className}">
+        ${escapeHtml(label)}
+      </span>
+    `;
+
+  }
+
+
+  /* =====================================================
+     VERIFICATION BADGE
+  ===================================================== */
+
+  function verificationBadge(
+    value
+  ) {
+
+    const status =
+      normalizeStatus(value);
+
+    if (
+      status === "verified" ||
+      status === "success" ||
+      status === "active"
+    ) {
+
+      return `
+        <span class="badge badge-success">
+          ✓ Verified
+        </span>
+      `;
+
+    }
+
+    if (
+      status === "failed" ||
+      status === "error"
+    ) {
+
+      return `
+        <span class="badge badge-failed">
+          ✕ Failed
+        </span>
+      `;
+
+    }
+
+    return `
+      <span class="badge badge-warning">
+        ⏳ Pending
+      </span>
+    `;
+
+  }
+
+
+  /* =====================================================
+     SSL BADGE
+  ===================================================== */
+
+  function sslBadge(value) {
+
+    const status =
+      normalizeStatus(value);
+
+    if (
+      status === "active" ||
+      status === "enabled" ||
+      status === "issued"
+    ) {
+
+      return `
+        <span class="badge badge-success">
+          🔒 Active
+        </span>
+      `;
+
+    }
+
+    if (
+      status === "inactive" ||
+      status === "failed"
+    ) {
+
+      return `
+        <span class="badge badge-suspended">
+          🔓 Inactive
+        </span>
+      `;
+
+    }
+
+    return `
+      <span class="badge badge-warning">
+        ⏳ Pending
+      </span>
+    `;
+
+  }
+
+
+  /* =====================================================
+     DNS BADGE
+  ===================================================== */
+
+  function dnsBadge(value) {
+
+    const status =
+      normalizeStatus(value);
+
+    if (
+      status === "active" ||
+      status === "configured" ||
+      status === "verified"
+    ) {
+
+      return `
+        <span class="badge badge-success">
+          ✓ Configured
+        </span>
+      `;
+
+    }
+
+    if (
+      status === "failed"
+    ) {
+
+      return `
+        <span class="badge badge-suspended">
+          ✕ Failed
+        </span>
+      `;
+
+    }
+
+    return `
+      <span class="badge badge-warning">
+        ⏳ Pending
+      </span>
+    `;
+
+  }
+
+
+  /* =====================================================
+     LOAD WEBSITES
+  ===================================================== */
+
+  async function loadWebsites() {
+
+    try {
+
+      const snapshot =
+        await getDocs(
+          collection(
+            db,
+            "websites"
+          )
+        );
+
+      websites =
+        snapshot.docs.map(
+          item => ({
+            id: item.id,
+            ...item.data()
+          })
+        );
+
+    } catch (error) {
+
+      console.error(
+        "Website loading error:",
+        error
+      );
+
+      websites = [];
+
+    }
+
+  }
+
+
+  /* =====================================================
+     LOAD DOMAINS
+  ===================================================== */
+
+  async function loadDomains() {
+
+    const snapshot =
+      await getDocs(
+        collection(
+          db,
+          "domains"
+        )
+      );
+
+    domains =
+      snapshot.docs.map(
+        item => ({
+          id: item.id,
+          ...item.data()
+        })
+      );
+
+    domains.sort(
+      (a, b) => {
+
+        const aDate =
+          a.createdAt?.seconds || 0;
+
+        const bDate =
+          b.createdAt?.seconds || 0;
+
+        return bDate - aDate;
+
+      }
+    );
+
+    updateStats();
+
+    renderDomains();
+
+  }
+
+
+  /* =====================================================
+     UPDATE STATS
+  ===================================================== */
+
+  function updateStats() {
+
+    const total =
+      domains.length;
+
+    const active =
+      domains.filter(
+        domain =>
+          normalizeStatus(
+            domain.status
+          ) === "active"
+      ).length;
+
+    const pending =
+      domains.filter(
+        domain =>
+          normalizeStatus(
+            domain.status
+          ) === "pending"
+      ).length;
+
+    const verified =
+      domains.filter(
+        domain => {
+
+          const value =
+            normalizeStatus(
+              domain.verificationStatus
+            );
+
+          return (
+            value === "verified" ||
+            value === "success" ||
+            value === "active"
+          );
+
+        }
+      ).length;
+
+    const ssl =
+      domains.filter(
+        domain => {
+
+          const value =
+            normalizeStatus(
+              domain.sslStatus
+            );
+
+          return (
+            value === "active" ||
+            value === "enabled" ||
+            value === "issued"
+          );
+
+        }
+      ).length;
+
+
+    $("totalDomains")
+      .textContent = total;
+
+    $("activeDomains")
+      .textContent = active;
+
+    $("pendingDomains")
+      .textContent = pending;
+
+    $("verifiedDomains")
+      .textContent = verified;
+
+    $("sslDomains")
+      .textContent = ssl;
+
+  }
+
+
+  /* =====================================================
+     FIND WEBSITE
+  ===================================================== */
+
+  function findWebsite(
+    websiteId
+  ) {
+
+    if (!websiteId) {
+      return null;
+    }
+
+    return websites.find(
+      website =>
+        website.id === websiteId
+    ) || null;
+
+  }
+
+
+  /* =====================================================
+     FILTER DOMAINS
+  ===================================================== */
+
+  function getFilteredDomains() {
+
+    const search =
+      String(
+        $("domainSearch")?.value || ""
+      )
+        .trim()
+        .toLowerCase();
+
+    const statusFilter =
+      $("domainStatusFilter")?.value ||
+      "all";
+
+    const verificationFilter =
+      $("verificationFilter")?.value ||
+      "all";
+
+    const sslFilter =
+      $("sslFilter")?.value ||
+      "all";
+
+
+    return domains.filter(
+      domain => {
+
+        const website =
+          findWebsite(
+            domain.websiteId
+          );
+
+        const domainName =
+          String(
+            domain.domain || ""
+          ).toLowerCase();
+
+        const owner =
+          String(
+            domain.userId ||
+            domain.ownerId ||
+            ""
+          ).toLowerCase();
+
+        const websiteName =
+          String(
+            website?.name ||
+            website?.title ||
+            ""
+          ).toLowerCase();
+
+        const websiteId =
+          String(
+            domain.websiteId ||
+            ""
+          ).toLowerCase();
+
+
+        const matchesSearch =
+          !search ||
+          domainName.includes(search) ||
+          owner.includes(search) ||
+          websiteName.includes(search) ||
+          websiteId.includes(search);
+
+
+        const status =
+          normalizeStatus(
+            domain.status
+          );
+
+        const verification =
+          normalizeStatus(
+            domain.verificationStatus
+          );
+
+        const ssl =
+          normalizeStatus(
+            domain.sslStatus
+          );
+
+
+        const matchesStatus =
+          statusFilter === "all" ||
+          status === statusFilter;
+
+
+        const matchesVerification =
+          verificationFilter === "all" ||
+          (
+            verificationFilter === "verified" &&
+            (
+              verification === "verified" ||
+              verification === "success" ||
+              verification === "active"
+            )
+          ) ||
+          (
+            verificationFilter === "pending" &&
+            (
+              verification === "pending" ||
+              verification === "processing" ||
+              !verification
+            )
+          ) ||
+          (
+            verificationFilter === "failed" &&
+            (
+              verification === "failed" ||
+              verification === "error"
+            )
+          );
+
+
+        const matchesSsl =
+          sslFilter === "all" ||
+          (
+            sslFilter === "active" &&
+            (
+              ssl === "active" ||
+              ssl === "enabled" ||
+              ssl === "issued"
+            )
+          ) ||
+          (
+            sslFilter === "pending" &&
+            (
+              ssl === "pending" ||
+              ssl === "processing" ||
+              !ssl
+            )
+          ) ||
+          (
+            sslFilter === "inactive" &&
+            (
+              ssl === "inactive" ||
+              ssl === "failed"
+            )
+          );
+
+
+        return (
+          matchesSearch &&
+          matchesStatus &&
+          matchesVerification &&
+          matchesSsl
+        );
+
+      }
+    );
+
+  }
+
+
+  /* =====================================================
+     RENDER DOMAINS
+  ===================================================== */
+
+  function renderDomains() {
+
+    const tbody =
+      $("domainsTableBody");
+
+    const filtered =
+      getFilteredDomains();
+
+    $("resultsCount")
+      .textContent =
+        `${filtered.length} domain${filtered.length === 1 ? "" : "s"}`;
+
+
+    if (!filtered.length) {
+
+      tbody.innerHTML = `
+
+        <tr>
+
+          <td colspan="9">
+
+            <div class="empty-state">
+
+              <div class="empty-icon">
+                🔗
+              </div>
+
+              <h3>
+                No domains found
+              </h3>
+
+              <p>
+                Try changing your search or filters.
+              </p>
+
+            </div>
+
+          </td>
+
+        </tr>
+
+      `;
+
+      return;
+
+    }
+
+
+    tbody.innerHTML =
+      filtered.map(
+        domain => {
+
+          const website =
+            findWebsite(
+              domain.websiteId
+            );
+
+          const owner =
+            domain.userEmail ||
+            domain.userId ||
+            domain.ownerId ||
+            "Unknown";
+
+          const domainName =
+            domain.domain ||
+            "Unnamed domain";
+
+          const websiteName =
+            website?.name ||
+            website?.title ||
+            domain.websiteId ||
+            "Not connected";
+
+
+          return `
+
+            <tr>
+
+              <td>
+
+                <div class="domain-cell">
+
+                  <strong>
+                    ${escapeHtml(
+                      domainName
+                    )}
+                  </strong>
+
+                  <small>
+                    ${escapeHtml(
+                      domain.type ||
+                      "custom domain"
+                    )}
+                  </small>
+
+                </div>
+
+              </td>
+
+
+              <td>
+
+                <div class="owner-cell">
+
+                  <strong>
+                    ${escapeHtml(
+                      owner
+                    )}
+                  </strong>
+
+                  <small>
+                    ${escapeHtml(
+                      domain.userId ||
+                      domain.ownerId ||
+                      "—"
+                    )}
+                  </small>
+
+                </div>
+
+              </td>
+
+
+              <td>
+
+                <div class="domain-cell">
+
+                  <strong>
+                    ${escapeHtml(
+                      websiteName
+                    )}
+                  </strong>
+
+                  <small>
+                    ${escapeHtml(
+                      domain.websiteId ||
+                      "—"
+                    )}
+                  </small>
+
+                </div>
+
+              </td>
+
+
+              <td>
+                ${statusBadge(
+                  domain.status
+                )}
+              </td>
+
+
+              <td>
+                ${verificationBadge(
+                  domain.verificationStatus
+                )}
+              </td>
+
+
+              <td>
+                              ${sslBadge(
+                  domain.sslStatus || domain.ssl || "inactive"
+                )}
+              </td>
+
+              <td>
+                ${dnsBadge(
+                  domain.dnsStatus || domain.dns || "pending"
+                )}
+              </td>
+
+              <td>
+                ${formatDate(domain.createdAt)}
+              </td>
+
+              <td>
+                <div class="table-actions">
+
+                  <button
+                    class="action-btn view"
+                    onclick="viewDomain('${domain.id}')"
+                    title="View Domain"
+                  >
+                    👁️
+                  </button>
+
+                  <button
+                    class="action-btn toggle"
+                    onclick="toggleDomainStatus('${domain.id}')"
+                    title="Toggle Status"
+                  >
+                    ${normalizeStatus(domain.status) === "active" ? "⏸️" : "▶️"}
+                  </button>
+
+                  <button
+                    class="action-btn delete"
+                    onclick="deleteDomain('${domain.id}')"
+                    title="Delete Domain"
+                  >
+                    🗑️
+                  </button>
+
+                </div>
+              </td>
+
+            </tr>
+          `;
+        }).join("");
+
+      $("resultsCount").textContent =
+        `${filtered.length} domain${filtered.length === 1 ? "" : "s"}`;
+    }
+
+    /* =====================================================
+       VIEW DOMAIN
+    ===================================================== */
+
+    function viewDomain(domainId) {
+
+      const domain = domains.find(item => item.id === domainId);
+
+      if (!domain) {
+        showToast("Domain not found.", "error");
+        return;
+      }
+
+      selectedDomain = domain;
+
+      const website = findWebsite(domain.websiteId);
+
+      const domainName =
+        domain.domain ||
+        domain.name ||
+        "Unnamed Domain";
+
+      const status =
+        normalizeStatus(domain.status || "pending");
+
+      const verification =
+        normalizeStatus(
+          domain.verificationStatus ||
+          domain.verification ||
+          "pending"
+        );
+
+      const ssl =
+        normalizeStatus(
+          domain.sslStatus ||
+          domain.ssl ||
+          "inactive"
+        );
+
+      const dns =
+        normalizeStatus(
+          domain.dnsStatus ||
+          domain.dns ||
+          "pending"
+        );
+
+      $("domainDetails").innerHTML = `
+
+        <div class="detail-header">
+
+          <div class="domain-icon">
+            🌐
+          </div>
+
+          <div>
+
+            <h3>
+              ${escapeHtml(domainName)}
+            </h3>
+
+            <p>
+              ${escapeHtml(
+                domain.type ||
+                "Custom Domain"
+              )}
+            </p>
+
+          </div>
+
+        </div>
+
+        <div class="detail-grid">
+
+          <div class="detail-item">
+            <span>Domain</span>
+            <strong>
+              ${escapeHtml(domainName)}
+            </strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Type</span>
+            <strong>
+              ${escapeHtml(domain.type || "custom")}
+            </strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Owner ID</span>
+            <strong>
+              ${escapeHtml(
+                domain.userId ||
+                domain.ownerId ||
+                "—"
+              )}
+            </strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Website</span>
+            <strong>
+              ${escapeHtml(
+                website?.name ||
+                domain.websiteId ||
+                "Not connected"
+              )}
+            </strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Status</span>
+            <strong>
+              ${statusBadge(status)}
+            </strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Verification</span>
+            <strong>
+              ${verificationBadge(verification)}
+            </strong>
+          </div>
+
+          <div class="detail-item">
+            <span>SSL</span>
+            <strong>
+              ${sslBadge(ssl)}
+            </strong>
+          </div>
+
+          <div class="detail-item">
+            <span>DNS</span>
+            <strong>
+              ${dnsBadge(dns)}
+            </strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Created</span>
+            <strong>
+              ${formatDate(domain.createdAt)}
+            </strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Updated</span>
+            <strong>
+              ${formatDate(domain.updatedAt)}
+            </strong>
+          </div>
+
+        </div>
+
+        ${
+          domain.verificationToken
+            ? `
+              <div class="verification-box">
+
+                <h4>
+                  Verification Token
+                </h4>
+
+                <code>
+                  ${escapeHtml(
+                    domain.verificationToken
+                  )}
+                </code>
+
+              </div>
+            `
+            : ""
+        }
+
+        <div class="modal-actions">
+
+          ${
+            website
+              ? `
+                <button
+                  class="btn btn-primary"
+                  onclick="openWebsite('${
+                    escapeHtml(
+                      website.customDomain ||
+                      website.subdomain ||
+                      domainName
+                    )
+                  }')"
+                >
+                  🌐 Open Website
+                </button>
+              `
+              : ""
+          }
+
+          <button
+            class="btn btn-secondary"
+            onclick="toggleDomainStatus('${domain.id}')"
+          >
+            ${
+              status === "active"
+                ? "⏸️ Suspend Domain"
+                : "▶️ Activate Domain"
+            }
+          </button>
+
+          <button
+            class="btn btn-danger"
+            onclick="deleteDomain('${domain.id}')"
+          >
+            🗑️ Delete Domain
+          </button>
+
+        </div>
+
+      `;
+
+      $("domainModal").classList.add("show");
+      document.body.classList.add("modal-open");
+    }
+
+    /* =====================================================
+       CLOSE DOMAIN MODAL
+    ===================================================== */
+
+    function closeDomainModal() {
+
+      $("domainModal").classList.remove("show");
+
+      document.body.classList.remove("modal-open");
+
+      selectedDomain = null;
+    }
+
+    /* =====================================================
+       OPEN WEBSITE
+    ===================================================== */
+
+    function openWebsite(url) {
+
+      if (!url) {
+        showToast(
+          "Website URL is not available.",
+          "error"
+        );
+        return;
+      }
+
+      let target = String(url).trim();
+
+      if (!/^https?:\/\//i.test(target)) {
+        target = `https://${target}`;
+      }
+
+      window.open(
+        target,
+        "_blank",
+        "noopener,noreferrer"
+      );
+    }
+
+    /* =====================================================
+       TOGGLE DOMAIN STATUS
+    ===================================================== */
+
+    async function toggleDomainStatus(domainId) {
+
+      const domain = domains.find(
+        item => item.id === domainId
+      );
+
+      if (!domain) {
+        showToast(
+          "Domain not found.",
+          "error"
+        );
+        return;
+      }
+
+      const currentStatus =
+        normalizeStatus(
+          domain.status || "pending"
+        );
+
+      const nextStatus =
+        currentStatus === "active"
+          ? "suspended"
+          : "active";
+
+      const confirmed = confirm(
+        `Change domain status to "${nextStatus}"?`
+      );
+
+      if (!confirmed) return;
+
+      try {
+
+        await updateDoc(
+          doc(db, "domains", domainId),
+          {
+            status: nextStatus,
+            updatedAt: serverTimestamp()
+          }
+        );
+
+        showToast(
+          `Domain ${nextStatus === "active" ? "activated" : "suspended"} successfully.`,
+          "success"
+        );
+
+        await loadDomains();
+
+        if (
+          selectedDomain &&
+          selectedDomain.id === domainId
+        ) {
+          closeDomainModal();
+        }
+
+      } catch (error) {
+
+        console.error(
+          "toggleDomainStatus error:",
+          error
+        );
+
+        showToast(
+          error.message ||
+          "Failed to update domain status.",
+          "error"
+        );
+      }
+    }
+
+    /* =====================================================
+       DELETE DOMAIN
+    ===================================================== */
+
+    async function deleteDomain(domainId) {
+
+      const domain = domains.find(
+        item => item.id === domainId
+      );
+
+      if (!domain) {
+        showToast(
+          "Domain not found.",
+          "error"
+        );
+        return;
+      }
+
+      const domainName =
+        domain.domain ||
+        domain.name ||
+        "this domain";
+
+      const confirmed = confirm(
+        `Delete "${domainName}" permanently?`
+      );
+
+      if (!confirmed) return;
+
+      try {
+
+        await deleteDoc(
+          doc(db, "domains", domainId)
+        );
+
+        showToast(
+          "Domain deleted successfully.",
+          "success"
+        );
+
+        if (
+          selectedDomain &&
+          selectedDomain.id === domainId
+        ) {
+          closeDomainModal();
+        }
+
+        await loadDomains();
+
+      } catch (error) {
+
+        console.error(
+          "deleteDomain error:",
+          error
+        );
+
+        showToast(
+          error.message ||
+          "Failed to delete domain.",
+          "error"
+        );
+      }
+    }
+
+    /* =====================================================
+       REFRESH
+    ===================================================== */
+
+    async function refreshDomains() {
+
+      const button =
+        $("refreshButton");
+
+      if (button) {
+        button.disabled = true;
+        button.innerHTML = "⏳ Refreshing...";
+      }
+
+      try {
+
+        await loadDomains();
+
+        showToast(
+          "Domains refreshed.",
+          "success"
+        );
+
+      } catch (error) {
+
+        console.error(
+          "refreshDomains error:",
+          error
+        );
+
+        showToast(
+          "Failed to refresh domains.",
+          "error"
+        );
+
+      } finally {
+
+        if (button) {
+          button.disabled = false;
+          button.innerHTML = "🔄 Refresh";
+        }
+      }
+    }
+
+    /* =====================================================
+       FILTER EVENTS
+    ===================================================== */
+
+    $("domainSearch").addEventListener(
+      "input",
+      renderDomains
+    );
+
+    $("domainStatusFilter").addEventListener(
+      "change",
+      renderDomains
+    );
+
+    $("verificationFilter").addEventListener(
+      "change",
+      renderDomains
+    );
+
+    $("sslFilter").addEventListener(
+      "change",
+      renderDomains
+    );
+
+    $("clearFilters").addEventListener(
+      "click",
+      () => {
+
+        $("domainSearch").value = "";
+
+        $("domainStatusFilter").value = "all";
+
+        $("verificationFilter").value = "all";
+
+        $("sslFilter").value = "all";
+
+        renderDomains();
+      }
+    );
+
+    $("refreshButton").addEventListener(
+      "click",
+      refreshDomains
+    );
+
+    /* =====================================================
+       MODAL EVENTS
+    ===================================================== */
+
+    $("closeDomainModal").addEventListener(
+      "click",
+      closeDomainModal
+    );
+
+    $("domainModal").addEventListener(
+      "click",
+      event => {
+
+        if (
+          event.target ===
+          $("domainModal")
+        ) {
+          closeDomainModal();
+        }
+
+      }
+    );
+
+    document.addEventListener(
+      "keydown",
+      event => {
+
+        if (
+          event.key === "Escape" &&
+          $("domainModal").classList.contains("show")
+        ) {
+          closeDomainModal();
+        }
+
+      }
+    );
+
+    /* =====================================================
+       LOGOUT
+    ===================================================== */
+
+    $("logoutButton").addEventListener(
+      "click",
+      async () => {
+
+        try {
+
+          await signOut(auth);
+
+          window.location.href =
+            "admin-login.html";
+
+        } catch (error) {
+
+          console.error(
+            "Logout error:",
+            error
+          );
+
+          showToast(
+            "Failed to logout.",
+            "error"
+          );
+        }
+      }
+    );
+
+    /* =====================================================
+       MOBILE MENU
+    ===================================================== */
+
+    const menuButton =
+      $("menuButton");
+
+    const sidebar =
+      $("sidebar");
+
+    const mobileOverlay =
+      $("mobileOverlay");
+
+    function closeMobileMenu() {
+
+      if (sidebar) {
+        sidebar.classList.remove("open");
+      }
+
+      if (mobileOverlay) {
+        mobileOverlay.classList.remove("show");
+      }
+    }
+
+    if (menuButton) {
+
+      menuButton.addEventListener(
+        "click",
+        () => {
+
+          sidebar.classList.toggle("open");
+
+          mobileOverlay.classList.toggle(
+            "show"
+          );
+
+        }
+      );
+
+    }
+
+    if (mobileOverlay) {
+
+      mobileOverlay.addEventListener(
+        "click",
+        closeMobileMenu
+      );
+
+    }
+
+    /* =====================================================
+       CURRENT YEAR
+    ===================================================== */
+
+    $("currentYear").textContent =
+      new Date().getFullYear();
+
+    /* =====================================================
+       GLOBAL FUNCTIONS
+    ===================================================== */
+
+    window.viewDomain =
+      viewDomain;
+
+    window.closeDomainModal =
+      closeDomainModal;
+
+    window.openWebsite =
+      openWebsite;
+
+    window.toggleDomainStatus =
+      toggleDomainStatus;
+
+    window.deleteDomain =
+      deleteDomain;
+
+    window.refreshDomains =
+      refreshDomains;
+
+    /* =====================================================
+       AUTHENTICATION
+    ===================================================== */
+
+    onAuthStateChanged(
+      auth,
+      async user => {
+
+        if (!user) {
+
+          window.location.href =
+            "admin-login.html";
+
+          return;
+        }
+
+        currentUser = user;
+
+        try {
+
+          const adminRef = doc(
+            db,
+            "admins",
+            user.uid
+          );
+
+          const adminSnap =
+            await getDoc(adminRef);
+
+          if (
+            !adminSnap.exists() ||
+            adminSnap.data().role !== "admin"
+          ) {
+
+            await signOut(auth);
+
+            window.location.href =
+              "admin-login.html";
+
+            return;
+          }
+
+          adminData =
+            adminSnap.data();
+
+          if ($("adminEmail")) {
+            $("adminEmail").textContent =
+              user.email ||
+              adminData.email ||
+              "Admin";
+          }
+
+          await loadWebsites();
+
+          await loadDomains();
+
+        } catch (error) {
+
+          console.error(
+            "Admin authentication error:",
+            error
+          );
+
+          showToast(
+            error.message ||
+            "Failed to load admin data.",
+            "error"
+          );
+        }
+
+      }
+    );
+
+  </script>
+
+</body>
+</html>
