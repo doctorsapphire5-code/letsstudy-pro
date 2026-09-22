@@ -1,0 +1,3215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Admin Websites - LetsStudy Pro</title>
+
+  <meta
+    name="description"
+    content="Manage LetsStudy Pro hosted websites."
+  >
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --info: #0891b2;
+      --sidebar: #111827;
+    }
+
+    body {
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* =====================================================
+       LAYOUT
+    ===================================================== */
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+    }
+
+    .sidebar {
+      width: 260px;
+      background: var(--sidebar);
+      color: #fff;
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 1000;
+      overflow-y: auto;
+      transition: transform .25s ease;
+    }
+
+    .sidebar-header {
+      padding: 22px 20px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(
+        135deg,
+        #2563eb,
+        #7c3aed
+      );
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 18px;
+    }
+
+    .brand-text strong {
+      display: block;
+      font-size: 16px;
+    }
+
+    .brand-text span {
+      display: block;
+      color: #9ca3af;
+      font-size: 11px;
+      margin-top: 3px;
+    }
+
+    .nav {
+      padding: 18px 12px;
+    }
+
+    .nav-section {
+      color: #6b7280;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      padding: 12px 10px 8px;
+    }
+
+    .nav a {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 11px 12px;
+      border-radius: 9px;
+      color: #d1d5db;
+      margin-bottom: 4px;
+      font-size: 14px;
+      transition: .2s;
+    }
+
+    .nav a:hover,
+    .nav a.active {
+      background: rgba(37,99,235,.18);
+      color: #fff;
+    }
+
+    .nav-icon {
+      width: 22px;
+      text-align: center;
+    }
+
+    .sidebar-footer {
+      padding: 14px;
+      border-top: 1px solid rgba(255,255,255,.08);
+      position: sticky;
+      bottom: 0;
+      background: var(--sidebar);
+    }
+
+    .admin-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .admin-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #2563eb;
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .admin-profile div:last-child {
+      min-width: 0;
+    }
+
+    .admin-profile strong {
+      display: block;
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .admin-profile span {
+      display: block;
+      color: #9ca3af;
+      font-size: 10px;
+    }
+
+    .logout-btn {
+      width: 100%;
+      border: 0;
+      background: #1f2937;
+      color: #d1d5db;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    .logout-btn:hover {
+      background: #374151;
+      color: #fff;
+    }
+
+    /* =====================================================
+       MAIN
+    ===================================================== */
+
+    .main {
+      flex: 1;
+      margin-left: 260px;
+      min-width: 0;
+    }
+
+    .topbar {
+      height: 70px;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      position: sticky;
+      top: 0;
+      z-index: 500;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .menu-button {
+      display: none;
+      border: 0;
+      background: #f3f4f6;
+      width: 40px;
+      height: 40px;
+      border-radius: 9px;
+      font-size: 20px;
+    }
+
+    .page-content {
+      padding: 28px;
+    }
+
+    .page-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .page-heading h1 {
+      font-size: 28px;
+      margin-bottom: 6px;
+    }
+
+    .page-heading p {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .heading-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* =====================================================
+       BUTTONS
+    ===================================================== */
+
+    .btn {
+      border: 0;
+      border-radius: 9px;
+      padding: 10px 15px;
+      font-weight: 600;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: .2s;
+    }
+
+    .btn.primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn.primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn.secondary {
+      background: #eef2f7;
+      color: #374151;
+    }
+
+    .btn.secondary:hover {
+      background: #e5e7eb;
+    }
+
+    .btn.danger {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .btn.success {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .btn.small {
+      padding: 7px 10px;
+      font-size: 12px;
+    }
+
+    /* =====================================================
+       STATS
+    ===================================================== */
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(5, minmax(0, 1fr));
+      gap: 15px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 3px 12px rgba(15,23,42,.03);
+    }
+
+    .stat-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .stat-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: #eff6ff;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .stat-value {
+      font-size: 25px;
+      font-weight: 750;
+    }
+
+    /* =====================================================
+       TOOLBAR
+    ===================================================== */
+
+    .toolbar {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 15px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 220px;
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 11px 13px 11px 38px;
+      outline: none;
+      background: #fff;
+    }
+
+    .search-box input:focus,
+    .toolbar select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9ca3af;
+    }
+
+    .toolbar select {
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 9px;
+      padding: 10px 12px;
+      min-width: 145px;
+      outline: none;
+    }
+
+    /* =====================================================
+       TABLE
+    ===================================================== */
+
+    .table-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .table-header {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .table-header h2 {
+      font-size: 16px;
+    }
+
+    .results-count {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1050px;
+    }
+
+    th {
+      background: #f9fafb;
+      color: #6b7280;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      text-align: left;
+      padding: 13px 15px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 14px 15px;
+      border-bottom: 1px solid #f0f1f3;
+      vertical-align: middle;
+      font-size: 13px;
+    }
+
+    tbody tr:hover {
+      background: #fafcff;
+    }
+
+    .website-cell {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 220px;
+    }
+
+    .website-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: #eff6ff;
+      display: grid;
+      place-items: center;
+      color: var(--primary);
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .website-info {
+      min-width: 0;
+    }
+
+    .website-info strong {
+      display: block;
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .website-info span,
+    .website-info small {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 3px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 220px;
+    }
+
+    .owner-info strong {
+      display: block;
+    }
+
+    .owner-info span {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .domain-info strong {
+      display: block;
+      font-size: 12px;
+    }
+
+    .domain-info span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      margin-top: 3px;
+    }
+
+    /* =====================================================
+       BADGES
+    ===================================================== */
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: capitalize;
+      white-space: nowrap;
+    }
+
+    .badge::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .badge.active,
+    .badge.published {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .badge.pending,
+    .badge.draft {
+      background: #fef3c7;
+      color: #a16207;
+    }
+
+    .badge.suspended,
+    .badge.inactive,
+    .badge.offline {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .badge.connected,
+    .badge.secure {
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+
+    .badge.warning {
+      background: #ffedd5;
+      color: #c2410c;
+    }
+
+    .badge.none {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 6px;
+    }
+
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+    }
+
+    .icon-btn:hover {
+      background: #f3f4f6;
+    }
+
+    /* =====================================================
+       EMPTY / LOADING
+    ===================================================== */
+
+    .empty-state {
+      padding: 55px 20px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .empty-icon {
+      font-size: 42px;
+      margin-bottom: 12px;
+    }
+
+    .empty-state h3 {
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .loading-row {
+      text-align: center;
+      padding: 45px !important;
+      color: var(--muted);
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #dbeafe;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* =====================================================
+       MODAL
+    ===================================================== */
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 3000;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-card {
+      width: min(760px, 100%);
+      max-height: 90vh;
+      overflow-y: auto;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 25px 70px rgba(0,0,0,.2);
+    }
+
+    .modal-header {
+      padding: 19px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+    }
+
+    .modal-header h2 {
+      font-size: 18px;
+    }
+
+    .close-modal {
+      width: 34px;
+      height: 34px;
+      border: 0;
+      background: #f3f4f6;
+      border-radius: 8px;
+      font-size: 18px;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .detail-hero {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+
+    .detail-icon {
+      width: 58px;
+      height: 58px;
+      border-radius: 14px;
+      background: #eff6ff;
+      color: var(--primary);
+      display: grid;
+      place-items: center;
+      font-size: 26px;
+    }
+
+    .detail-hero h3 {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .detail-hero p {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .detail-item {
+      border: 1px solid var(--border);
+      background: #fafafa;
+      border-radius: 10px;
+      padding: 13px;
+    }
+
+    .detail-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: 5px;
+    }
+
+    .detail-item strong {
+      display: block;
+      font-size: 13px;
+      word-break: break-word;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* =====================================================
+       TOAST
+    ===================================================== */
+
+    .toast-container {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 5000;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .toast {
+      min-width: 260px;
+      max-width: 380px;
+      padding: 13px 15px;
+      border-radius: 10px;
+      color: #fff;
+      background: #111827;
+      box-shadow: 0 10px 30px rgba(0,0,0,.15);
+      font-size: 13px;
+      animation: toastIn .2s ease;
+    }
+
+    .toast.success {
+      background: #15803d;
+    }
+
+    .toast.error {
+      background: #b91c1c;
+    }
+
+    .toast.warning {
+      background: #b45309;
+    }
+
+    @keyframes toastIn {
+      from {
+        transform: translateY(10px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* =====================================================
+       OVERLAY
+    ===================================================== */
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 900;
+    }
+
+    .sidebar-overlay.show {
+      display: block;
+    }
+
+    /* =====================================================
+       RESPONSIVE
+    ===================================================== */
+
+    @media (max-width: 1200px) {
+      .stats-grid {
+        grid-template-columns:
+          repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 850px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .main {
+        margin-left: 0;
+      }
+
+      .menu-button {
+        display: grid;
+        place-items: center;
+      }
+
+      .page-content {
+        padding: 20px;
+      }
+
+      .topbar {
+        padding: 0 18px;
+      }
+    }
+
+    @media (max-width: 650px) {
+      .stats-grid {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+
+      .page-heading {
+        flex-direction: column;
+      }
+
+      .heading-actions {
+        width: 100%;
+      }
+
+      .heading-actions .btn {
+        flex: 1;
+      }
+
+      .toolbar {
+        align-items: stretch;
+      }
+
+      .search-box {
+        min-width: 100%;
+      }
+
+      .toolbar select,
+      .toolbar .btn {
+        flex: 1;
+      }
+
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .modal {
+        padding: 10px;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .page-content {
+        padding: 14px;
+      }
+
+      .page-heading h1 {
+        font-size: 23px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="app">
+
+    <!-- ===================================================
+         SIDEBAR
+    ==================================================== -->
+
+    <aside class="sidebar" id="sidebar">
+
+      <div class="sidebar-header">
+
+        <div class="brand">
+
+          <div class="brand-logo">
+            LP
+          </div>
+
+          <div class="brand-text">
+            <strong>LetsStudy Pro</strong>
+            <span>Admin Panel</span>
+          </div>
+
+        </div>
+
+      </div>
+
+      <nav class="nav">
+
+        <div class="nav-section">
+          Hosting
+        </div>
+
+        <a href="admin-hosting.html">
+          <span class="nav-icon">🏠</span>
+          <span>Hosting Overview</span>
+        </a>
+
+        <a href="admin-hosting-plans.html">
+          <span class="nav-icon">💳</span>
+          <span>Hosting Plans</span>
+        </a>
+
+        <a href="admin-hosting-users.html">
+          <span class="nav-icon">👥</span>
+          <span>Hosting Users</span>
+        </a>
+
+        <a
+          href="admin-websites.html"
+          class="active"
+        >
+          <span class="nav-icon">🌐</span>
+          <span>Websites</span>
+        </a>
+
+        <a href="domains.html">
+          <span class="nav-icon">🔗</span>
+          <span>Domains</span>
+        </a>
+
+        <a href="dns-manager.html">
+          <span class="nav-icon">⚙️</span>
+          <span>DNS Manager</span>
+        </a>
+
+        <div class="nav-section">
+          Management
+        </div>
+
+        <a href="admin-hosting.html#orders">
+          <span class="nav-icon">🧾</span>
+          <span>Orders</span>
+        </a>
+
+        <a href="admin-hosting.html#accounts">
+          <span class="nav-icon">📦</span>
+          <span>Accounts</span>
+        </a>
+
+        <a href="admin-hosting.html#payments">
+          <span class="nav-icon">💰</span>
+          <span>Payments</span>
+        </a>
+
+                <a href="admin-hosting.html#tickets">
+          <span class="nav-icon">🎫</span>
+          <span>Tickets</span>
+        </a>
+
+      </nav>
+
+      <div class="sidebar-footer">
+
+        <div class="admin-profile">
+
+          <div class="admin-avatar">
+            A
+          </div>
+
+          <div>
+            <strong id="adminEmail">
+              Admin
+            </strong>
+
+            <span>
+              Administrator
+            </span>
+          </div>
+
+        </div>
+
+        <button
+          class="logout-btn"
+          id="logoutButton"
+        >
+          Logout
+        </button>
+
+      </div>
+
+    </aside>
+
+    <div
+      class="sidebar-overlay"
+      id="sidebarOverlay"
+    ></div>
+
+    <!-- ===================================================
+         MAIN CONTENT
+    ==================================================== -->
+
+    <main class="main">
+
+      <header class="topbar">
+
+        <div class="topbar-left">
+
+          <button
+            class="menu-button"
+            id="menuButton"
+            aria-label="Open menu"
+          >
+            ☰
+          </button>
+
+          <strong>
+            Website Management
+          </strong>
+
+        </div>
+
+        <button
+          class="btn secondary"
+          id="refreshButton"
+        >
+          ↻ Refresh
+        </button>
+
+      </header>
+
+      <section class="page-content">
+
+        <!-- =================================================
+             PAGE HEADING
+        ================================================== -->
+
+        <div class="page-heading">
+
+          <div>
+            <h1>
+              Websites
+            </h1>
+
+            <p>
+              Manage websites created and hosted through
+              LetsStudy Pro.
+            </p>
+          </div>
+
+          <div class="heading-actions">
+
+            <button
+              class="btn primary"
+              id="refreshTopButton"
+            >
+              ↻ Refresh Websites
+            </button>
+
+          </div>
+
+        </div>
+
+        <!-- =================================================
+             STATISTICS
+        ================================================== -->
+
+        <div class="stats-grid">
+
+          <div class="stat-card">
+
+            <div class="stat-top">
+
+              <div class="stat-icon">
+                🌐
+              </div>
+
+            </div>
+
+            <span class="stat-label">
+              Total Websites
+            </span>
+
+            <div
+              class="stat-value"
+              id="totalWebsites"
+            >
+              0
+            </div>
+
+          </div>
+
+
+          <div class="stat-card">
+
+            <div class="stat-top">
+
+              <div class="stat-icon">
+                🚀
+              </div>
+
+            </div>
+
+            <span class="stat-label">
+              Published
+            </span>
+
+            <div
+              class="stat-value"
+              id="publishedWebsites"
+            >
+              0
+            </div>
+
+          </div>
+
+
+          <div class="stat-card">
+
+            <div class="stat-top">
+
+              <div class="stat-icon">
+                📝
+              </div>
+
+            </div>
+
+            <span class="stat-label">
+              Drafts
+            </span>
+
+            <div
+              class="stat-value"
+              id="draftWebsites"
+            >
+              0
+            </div>
+
+          </div>
+
+
+          <div class="stat-card">
+
+            <div class="stat-top">
+
+              <div class="stat-icon">
+                🔗
+              </div>
+
+            </div>
+
+            <span class="stat-label">
+              Custom Domains
+            </span>
+
+            <div
+              class="stat-value"
+              id="customDomains"
+            >
+              0
+            </div>
+
+          </div>
+
+
+          <div class="stat-card">
+
+            <div class="stat-top">
+
+              <div class="stat-icon">
+                🔒
+              </div>
+
+            </div>
+
+            <span class="stat-label">
+              SSL Active
+            </span>
+
+            <div
+              class="stat-value"
+              id="sslActive"
+            >
+              0
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- =================================================
+             FILTERS / SEARCH
+        ================================================== -->
+
+        <div class="toolbar">
+
+          <div class="search-box">
+
+            <span class="search-icon">
+              🔍
+            </span>
+
+            <input
+              type="search"
+              id="websiteSearch"
+              placeholder="Search website, owner, domain..."
+              autocomplete="off"
+            >
+
+          </div>
+
+
+          <select id="websiteStatusFilter">
+
+            <option value="all">
+              All Statuses
+            </option>
+
+            <option value="active">
+              Active
+            </option>
+
+            <option value="draft">
+              Draft
+            </option>
+
+            <option value="suspended">
+              Suspended
+            </option>
+
+            <option value="inactive">
+              Inactive
+            </option>
+
+          </select>
+
+
+          <select id="publishedFilter">
+
+            <option value="all">
+              All Publishing
+            </option>
+
+            <option value="published">
+              Published
+            </option>
+
+            <option value="draft">
+              Draft
+            </option>
+
+          </select>
+
+
+          <select id="domainFilter">
+
+            <option value="all">
+              All Domains
+            </option>
+
+            <option value="custom">
+              Custom Domain
+            </option>
+
+            <option value="subdomain">
+              Subdomain
+            </option>
+
+            <option value="none">
+              No Domain
+            </option>
+
+          </select>
+
+
+          <button
+            class="btn secondary"
+            id="clearFilters"
+            type="button"
+          >
+            Clear
+          </button>
+
+        </div>
+
+        <!-- =================================================
+             WEBSITES TABLE
+        ================================================== -->
+
+        <div class="table-card">
+
+          <div class="table-header">
+
+            <h2>
+              Website Accounts
+            </h2>
+
+            <span
+              class="results-count"
+              id="resultsCount"
+            >
+              0 websites
+            </span>
+
+          </div>
+
+
+          <div class="table-wrapper">
+
+            <table>
+
+              <thead>
+
+                <tr>
+
+                  <th>
+                    Website
+                  </th>
+
+                  <th>
+                    Owner
+                  </th>
+
+                  <th>
+                    Domain
+                  </th>
+
+                  <th>
+                    Status
+                  </th>
+
+                  <th>
+                    Published
+                  </th>
+
+                  <th>
+                    SSL
+                  </th>
+
+                  <th>
+                    Created
+                  </th>
+
+                  <th>
+                    Actions
+                  </th>
+
+                </tr>
+
+              </thead>
+
+
+              <tbody id="websitesTableBody">
+
+                <tr>
+
+                  <td
+                    colspan="8"
+                    class="loading-row"
+                  >
+
+                    <span class="spinner"></span>
+
+                    Loading websites...
+
+                  </td>
+
+                </tr>
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+
+  <!-- =====================================================
+       WEBSITE DETAILS MODAL
+  ====================================================== -->
+
+  <div
+    class="modal"
+    id="websiteModal"
+    aria-hidden="true"
+  >
+
+    <div class="modal-card">
+
+      <div class="modal-header">
+
+        <h2>
+          Website Details
+        </h2>
+
+        <button
+          class="close-modal"
+          id="closeWebsiteModal"
+          type="button"
+          aria-label="Close"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <div
+        class="modal-body"
+        id="websiteDetails"
+      >
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       TOAST CONTAINER
+  ====================================================== -->
+
+  <div
+    class="toast-container"
+    id="toastContainer"
+  ></div>
+
+
+  <!-- =====================================================
+       FIREBASE
+  ====================================================== -->
+
+  <script type="module">
+
+    import {
+      initializeApp
+    } from
+      "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from
+      "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+
+    import {
+      getFirestore,
+      collection,
+      doc,
+      getDoc,
+      getDocs,
+      updateDoc,
+      deleteDoc,
+      serverTimestamp
+    } from
+      "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+
+
+    /* =====================================================
+       FIREBASE CONFIG
+    ===================================================== */
+
+    const firebaseConfig = {
+
+      apiKey:
+        "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+      authDomain:
+        "let-s-study-pro-course.firebaseapp.com",
+
+      databaseURL:
+        "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+      projectId:
+        "let-s-study-pro-course",
+
+      storageBucket:
+        "let-s-study-pro-course.firebasestorage.app",
+
+      messagingSenderId:
+        "474928293390",
+
+      appId:
+        "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+      measurementId:
+        "G-85B7V5H5J0"
+
+    };
+
+
+    const app =
+      initializeApp(
+        firebaseConfig
+      );
+
+
+    const auth =
+      getAuth(app);
+
+
+    const db =
+      getFirestore(app);
+
+
+    /* =====================================================
+       STATE
+    ===================================================== */
+
+    let currentUser = null;
+
+    let adminData = null;
+
+    let websites = [];
+
+    let selectedWebsite = null;
+
+
+    /* =====================================================
+       DOM HELPER
+    ===================================================== */
+
+    function $(id) {
+      return document.getElementById(id);
+    }
+
+
+    /* =====================================================
+       ESCAPE HTML
+    ===================================================== */
+
+    function escapeHtml(value) {
+
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+    }
+
+
+    /* =====================================================
+       NORMALIZE STATUS
+    ===================================================== */
+
+    function normalizeStatus(status) {
+
+      const value =
+        String(status || "")
+          .trim()
+          .toLowerCase();
+
+
+      if (value === "published") {
+        return "active";
+      }
+
+
+      if (value === "disabled") {
+        return "inactive";
+      }
+
+
+      return value || "draft";
+
+    }
+
+
+    /* =====================================================
+       STATUS BADGE
+    ===================================================== */
+
+    function statusBadge(status) {
+
+      const normalized =
+        normalizeStatus(status);
+
+
+      const label =
+        normalized
+          .charAt(0)
+          .toUpperCase() +
+        normalized.slice(1);
+
+
+      return `
+        <span class="badge ${escapeHtml(
+          normalized
+        )}">
+          ${escapeHtml(label)}
+        </span>
+      `;
+
+    }
+
+
+    /* =====================================================
+       PUBLISHED BADGE
+    ===================================================== */
+
+    function publishedBadge(
+      published
+    ) {
+
+      if (published === true) {
+
+        return `
+          <span class="badge published">
+            Published
+          </span>
+        `;
+
+      }
+
+
+      return `
+        <span class="badge draft">
+          Draft
+        </span>
+      `;
+
+    }
+
+
+    /* =====================================================
+       DOMAIN DISPLAY
+    ===================================================== */
+
+    function domainBadge(
+      website
+    ) {
+
+      if (website.customDomain) {
+
+        return `
+          <div class="domain-info">
+
+            <strong>
+              ${escapeHtml(
+                website.customDomain
+              )}
+            </strong>
+
+            <span>
+              Custom Domain
+            </span>
+
+          </div>
+        `;
+
+      }
+
+
+      if (website.subdomain) {
+
+        return `
+          <div class="domain-info">
+
+            <strong>
+              ${escapeHtml(
+                website.subdomain
+              )}
+            </strong>
+
+            <span>
+              LetsStudy Pro Subdomain
+            </span>
+
+          </div>
+        `;
+
+      }
+
+
+      return `
+        <span class="badge none">
+          No Domain
+        </span>
+      `;
+
+    }
+
+
+    /* =====================================================
+       SSL BADGE
+    ===================================================== */
+
+    function sslBadge(
+      status
+    ) {
+
+      const value =
+        String(status || "")
+          .toLowerCase();
+
+
+      if (
+        value === "active" ||
+        value === "secure" ||
+        value === "enabled"
+      ) {
+
+        return `
+          <span class="badge secure">
+            Secure
+          </span>
+        `;
+
+      }
+
+
+      if (
+        value === "pending" ||
+        value === "processing"
+      ) {
+
+        return `
+          <span class="badge warning">
+            Pending
+          </span>
+        `;
+
+      }
+
+
+      return `
+        <span class="badge none">
+          Not Active
+        </span>
+      `;
+
+    }
+
+
+    /* =====================================================
+       DATE
+    ===================================================== */
+
+    function formatDate(
+      value
+    ) {
+
+      if (!value) {
+        return "—";
+      }
+
+
+      try {
+
+        let date;
+
+
+        if (
+          typeof value === "object" &&
+          value.seconds
+        ) {
+
+          date =
+            new Date(
+              value.seconds * 1000
+            );
+
+        } else {
+
+          date =
+            new Date(value);
+
+        }
+
+
+        if (
+          Number.isNaN(
+            date.getTime()
+          )
+        ) {
+
+          return "—";
+
+        }
+
+
+        return new Intl.DateTimeFormat(
+          "en-GB",
+          {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+          }
+        ).format(date);
+
+      } catch {
+
+        return "—";
+
+      }
+
+    }
+
+
+    /* =====================================================
+       TOAST
+    ===================================================== */
+
+    function showToast(
+      message,
+      type = "success"
+    ) {
+
+      const container =
+        $("toastContainer");
+
+
+      const toast =
+        document.createElement(
+          "div"
+        );
+
+
+      toast.className =
+        `toast ${type}`;
+
+
+      toast.textContent =
+        message;
+
+
+      container.appendChild(
+        toast
+      );
+
+
+      setTimeout(
+        () => toast.remove(),
+        3500
+      );
+
+    }
+
+
+    /* =====================================================
+       LOAD WEBSITES
+    ===================================================== */
+
+    async function loadWebsites() {
+
+      const tbody =
+        $("websitesTableBody");
+
+
+      tbody.innerHTML = `
+        <tr>
+          <td
+            colspan="8"
+            class="loading-row"
+          >
+            <span class="spinner"></span>
+            Loading websites...
+          </td>
+        </tr>
+      `;
+
+
+      try {
+
+        const snapshot =
+          await getDocs(
+            collection(
+              db,
+              "websites"
+            )
+          );
+
+
+        websites =
+          snapshot.docs.map(
+            websiteDoc => {
+
+              return {
+
+                id:
+                  websiteDoc.id,
+
+                ...websiteDoc.data()
+
+              };
+
+            }
+          );
+
+
+        websites.sort(
+          (a, b) => {
+
+            const aTime =
+              a.createdAt?.seconds ||
+              0;
+
+            const bTime =
+              b.createdAt?.seconds ||
+              0;
+
+            return bTime - aTime;
+
+          }
+        );
+
+
+        updateStats();
+
+        renderWebsites();
+
+      } catch (error) {
+
+        console.error(
+          error
+        );
+
+
+        tbody.innerHTML = `
+          <tr>
+            <td
+              colspan="8"
+              class="loading-row"
+            >
+              Unable to load websites.
+            </td>
+          </tr>
+        `;
+
+
+        showToast(
+          error.message ||
+          "Failed to load websites.",
+          "error"
+        );
+
+      }
+
+    }
+
+
+    /* =====================================================
+       UPDATE STATS
+    ===================================================== */
+
+    function updateStats() {
+
+      const total =
+        websites.length;
+
+
+      const published =
+        websites.filter(
+          website =>
+            website.published === true
+        ).length;
+
+
+      const drafts =
+        websites.filter(
+          website =>
+            website.published !== true
+        ).length;
+
+
+      const customDomains =
+        websites.filter(
+          website =>
+            Boolean(
+              website.customDomain
+            )
+        ).length;
+
+
+      const sslActive =
+        websites.filter(
+          website => {
+
+            const ssl =
+              String(
+                website.sslStatus ||
+                ""
+              ).toLowerCase();
+
+
+            return (
+              ssl === "active" ||
+              ssl === "secure" ||
+              ssl === "enabled"
+            );
+
+          }
+        ).length;
+
+
+      $("totalWebsites")
+        .textContent =
+          total;
+
+
+      $("publishedWebsites")
+        .textContent =
+          published;
+
+
+      $("draftWebsites")
+        .textContent =
+          drafts;
+
+
+      $("customDomains")
+        .textContent =
+          customDomains;
+
+
+      $("sslActive")
+        .textContent =
+          sslActive;
+
+    }
+
+
+    /* =====================================================
+       FILTER WEBSITES
+    ===================================================== */
+
+    function getFilteredWebsites() {
+
+      const search =
+        $("websiteSearch")
+          .value
+          .trim()
+          .toLowerCase();
+
+
+      const status =
+        $("websiteStatusFilter")
+          .value;
+
+
+      const published =
+        $("publishedFilter")
+          .value;
+
+
+      const domain =
+        $("domainFilter")
+          .value;
+
+
+      return websites.filter(
+        website => {
+
+          const name =
+            String(
+              website.name ||
+              ""
+            ).toLowerCase();
+
+
+          const slug =
+            String(
+              website.slug ||
+              ""
+            ).toLowerCase();
+
+
+          const owner =
+            String(
+              website.ownerId ||
+              ""
+            ).toLowerCase();
+
+
+          const subdomain =
+            String(
+              website.subdomain ||
+              ""
+            ).toLowerCase();
+
+
+          const customDomain =
+            String(
+              website.customDomain ||
+              ""
+            ).toLowerCase();
+
+
+                      const matchesSearch =
+              !search ||
+              name.includes(search) ||
+              slug.includes(search) ||
+              owner.includes(search) ||
+              subdomain.includes(search) ||
+              customDomain.includes(search) ||
+              websiteId.includes(search);
+
+            const matchesStatus =
+              statusFilter === "all" ||
+              status === statusFilter;
+
+            const matchesPublished =
+              publishedFilter === "all" ||
+              (publishedFilter === "published" && website.published === true) ||
+              (publishedFilter === "draft" && website.published !== true);
+
+            const matchesDomain =
+              domainFilter === "all" ||
+              (domainFilter === "custom" && !!customDomain) ||
+              (domainFilter === "subdomain" && !!subdomain) ||
+              (domainFilter === "none" && !customDomain && !subdomain);
+
+            return (
+              matchesSearch &&
+              matchesStatus &&
+              matchesPublished &&
+              matchesDomain
+            );
+          });
+        }
+
+        /* =====================================================
+           RENDER WEBSITES
+        ===================================================== */
+
+        function renderWebsites() {
+          const tbody = $("websitesTableBody");
+          const filtered = getFilteredWebsites();
+
+          $("resultsCount").textContent =
+            `${filtered.length} website${filtered.length === 1 ? "" : "s"}`;
+
+          if (!filtered.length) {
+            tbody.innerHTML = `
+              <tr>
+                <td colspan="8">
+                  <div class="empty-state">
+                    <div class="empty-icon">🌐</div>
+                    <h3>No websites found</h3>
+                    <p>Try changing your search or filters.</p>
+                  </div>
+                </td>
+              </tr>
+            `;
+            return;
+          }
+
+          tbody.innerHTML = filtered.map(website => {
+            const owner =
+              website.ownerName ||
+              website.ownerEmail ||
+              website.ownerId ||
+              "Unknown";
+
+            const domain =
+              website.customDomain ||
+              website.subdomain ||
+              "—";
+
+            const created =
+              formatDate(website.createdAt);
+
+            return `
+              <tr>
+
+                <td>
+                  <div class="website-cell">
+                    <div class="website-icon">🌐</div>
+
+                    <div>
+                      <strong>
+                        ${escapeHtml(
+                          website.name ||
+                          website.title ||
+                          "Untitled Website"
+                        )}
+                      </strong>
+
+                      <small>
+                        ${escapeHtml(
+                          website.slug ||
+                          website.id ||
+                          ""
+                        )}
+                      </small>
+                    </div>
+                  </div>
+                </td>
+
+                <td>
+                  <div class="owner-cell">
+                    <strong>
+                      ${escapeHtml(owner)}
+                    </strong>
+
+                    <small>
+                      ${escapeHtml(
+                        website.ownerId || "—"
+                      )}
+                    </small>
+                  </div>
+                </td>
+
+                <td>
+                  ${domainBadge(website)}
+                </td>
+
+                <td>
+                  ${statusBadge(website.status)}
+                </td>
+
+                <td>
+                  ${publishedBadge(website.published)}
+                </td>
+
+                <td>
+                  ${sslBadge(website.sslStatus)}
+                </td>
+
+                <td>
+                  ${created}
+                </td>
+
+                <td>
+                  <div class="action-buttons">
+
+                    <button
+                      class="icon-btn"
+                      title="View"
+                      onclick="viewWebsite('${website.id}')"
+                    >
+                      👁️
+                    </button>
+
+                    <button
+                      class="icon-btn"
+                      title="Open Website"
+                      onclick="openWebsite('${escapeHtml(
+                        website.customDomain ||
+                        website.subdomain ||
+                        ""
+                      )}')"
+                    >
+                      ↗️
+                    </button>
+
+                    <button
+                      class="icon-btn"
+                      title="${website.published ? "Unpublish" : "Publish"}"
+                      onclick="togglePublished('${website.id}')"
+                    >
+                      ${website.published ? "⏸️" : "▶️"}
+                    </button>
+
+                  </div>
+                </td>
+
+              </tr>
+            `;
+          }).join("");
+        }
+
+        /* =====================================================
+           VIEW WEBSITE
+        ===================================================== */
+
+        function viewWebsite(websiteId) {
+          const website = websites.find(
+            item => item.id === websiteId
+          );
+
+          if (!website) {
+            showToast(
+              "Website not found.",
+              "error"
+            );
+            return;
+          }
+
+          selectedWebsite = website;
+
+          const domain =
+            website.customDomain ||
+            website.subdomain ||
+            "Not connected";
+
+          $("websiteDetails").innerHTML = `
+
+            <div class="detail-header">
+
+              <div class="detail-icon">
+                🌐
+              </div>
+
+              <div>
+                <h3>
+                  ${escapeHtml(
+                    website.name ||
+                    website.title ||
+                    "Untitled Website"
+                  )}
+                </h3>
+
+                <p>
+                  ${escapeHtml(
+                    website.slug ||
+                    website.id
+                  )}
+                </p>
+              </div>
+
+            </div>
+
+            <div class="detail-grid">
+
+              <div class="detail-item">
+                <span>Website ID</span>
+                <strong>
+                  ${escapeHtml(website.id)}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Owner ID</span>
+                <strong>
+                  ${escapeHtml(
+                    website.ownerId || "—"
+                  )}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Hosting Account</span>
+                <strong>
+                  ${escapeHtml(
+                    website.hostingAccountId || "—"
+                  )}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Template</span>
+                <strong>
+                  ${escapeHtml(
+                    website.templateId || "Default"
+                  )}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Status</span>
+                <strong>
+                  ${statusBadge(website.status)}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Published</span>
+                <strong>
+                  ${publishedBadge(website.published)}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Domain</span>
+                <strong>
+                  ${escapeHtml(domain)}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Domain Status</span>
+                <strong>
+                  ${escapeHtml(
+                    website.domainStatus || "—"
+                  )}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>SSL Status</span>
+                <strong>
+                  ${escapeHtml(
+                    website.sslStatus || "—"
+                  )}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Created</span>
+                <strong>
+                  ${formatDate(
+                    website.createdAt
+                  )}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Updated</span>
+                <strong>
+                  ${formatDate(
+                    website.updatedAt
+                  )}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Subdomain</span>
+                <strong>
+                  ${escapeHtml(
+                    website.subdomain || "—"
+                  )}
+                </strong>
+              </div>
+
+              <div class="detail-item full">
+                <span>Custom Domain</span>
+                <strong>
+                  ${escapeHtml(
+                    website.customDomain || "—"
+                  )}
+                </strong>
+              </div>
+
+            </div>
+
+            <div class="modal-actions">
+
+              ${
+                domain !== "Not connected"
+                  ? `
+                    <button
+                      class="btn primary"
+                      onclick="openWebsite('${escapeHtml(domain)}')"
+                    >
+                      ↗️ Open Website
+                    </button>
+                  `
+                  : ""
+              }
+
+              <button
+                class="btn secondary"
+                onclick="togglePublished('${website.id}')"
+              >
+                ${
+                  website.published
+                    ? "⏸️ Unpublish"
+                    : "▶️ Publish"
+                }
+              </button>
+
+              <button
+                class="btn warning"
+                onclick="toggleWebsiteStatus('${website.id}')"
+              >
+                ${
+                  normalizeStatus(website.status) === "suspended"
+                    ? "✅ Activate"
+                    : "⛔ Suspend"
+                }
+              </button>
+
+              <button
+                class="btn danger"
+                onclick="deleteWebsite('${website.id}')"
+              >
+                🗑️ Delete
+              </button>
+
+            </div>
+          `;
+
+          $("websiteModal").classList.add("show");
+        }
+
+        /* =====================================================
+           CLOSE WEBSITE MODAL
+        ===================================================== */
+
+        function closeWebsiteModal() {
+          $("websiteModal").classList.remove("show");
+          selectedWebsite = null;
+        }
+
+        /* =====================================================
+           OPEN WEBSITE
+        ===================================================== */
+
+        function openWebsite(url) {
+          if (!url) {
+            showToast(
+              "No website URL is available.",
+              "error"
+            );
+            return;
+          }
+
+          let target = String(url).trim();
+
+          if (
+            !target.startsWith("http://") &&
+            !target.startsWith("https://")
+          ) {
+            target = `https://${target}`;
+          }
+
+          window.open(
+            target,
+            "_blank",
+            "noopener,noreferrer"
+          );
+        }
+
+        /* =====================================================
+           TOGGLE PUBLISHED
+        ===================================================== */
+
+        async function togglePublished(websiteId) {
+          const website = websites.find(
+            item => item.id === websiteId
+          );
+
+          if (!website) return;
+
+          const nextValue = !website.published;
+
+          try {
+
+            await updateDoc(
+              doc(db, "websites", websiteId),
+              {
+                published: nextValue,
+                updatedAt: serverTimestamp(),
+                status: nextValue
+                  ? "active"
+                  : "draft"
+              }
+            );
+
+            showToast(
+              nextValue
+                ? "Website published successfully."
+                : "Website unpublished.",
+              "success"
+            );
+
+            closeWebsiteModal();
+
+            await loadWebsites();
+
+          } catch (error) {
+
+            console.error(error);
+
+            showToast(
+              error.message ||
+              "Failed to update website.",
+              "error"
+            );
+          }
+        }
+
+        /* =====================================================
+           TOGGLE WEBSITE STATUS
+        ===================================================== */
+
+        async function toggleWebsiteStatus(websiteId) {
+          const website = websites.find(
+            item => item.id === websiteId
+          );
+
+          if (!website) return;
+
+          const currentStatus =
+            normalizeStatus(website.status);
+
+          const nextStatus =
+            currentStatus === "suspended"
+              ? "active"
+              : "suspended";
+
+          try {
+
+            await updateDoc(
+              doc(db, "websites", websiteId),
+              {
+                status: nextStatus,
+                updatedAt: serverTimestamp()
+              }
+            );
+
+            showToast(
+              nextStatus === "suspended"
+                ? "Website suspended."
+                : "Website activated.",
+              "success"
+            );
+
+            closeWebsiteModal();
+
+            await loadWebsites();
+
+          } catch (error) {
+
+            console.error(error);
+
+            showToast(
+              error.message ||
+              "Failed to update website status.",
+              "error"
+            );
+          }
+        }
+
+        /* =====================================================
+           DELETE WEBSITE
+        ===================================================== */
+
+        async function deleteWebsite(websiteId) {
+
+          const website = websites.find(
+            item => item.id === websiteId
+          );
+
+          if (!website) return;
+
+          const websiteName =
+            website.name ||
+            website.title ||
+            "this website";
+
+          const confirmed = confirm(
+            `Delete "${websiteName}"?\n\nThis will remove the website document from Firestore.`
+          );
+
+          if (!confirmed) return;
+
+          try {
+
+            await deleteDoc(
+              doc(db, "websites", websiteId)
+            );
+
+            showToast(
+              "Website deleted successfully.",
+              "success"
+            );
+
+            closeWebsiteModal();
+
+            await loadWebsites();
+
+          } catch (error) {
+
+            console.error(error);
+
+            showToast(
+              error.message ||
+              "Failed to delete website.",
+              "error"
+            );
+          }
+        }
+
+        /* =====================================================
+           REFRESH
+        ===================================================== */
+
+        async function refreshWebsites() {
+          const button = $("refreshButton");
+
+          if (button) {
+            button.disabled = true;
+            button.textContent = "⏳ Loading...";
+          }
+
+          try {
+            await loadWebsites();
+
+            showToast(
+              "Websites refreshed.",
+              "success"
+            );
+
+          } catch (error) {
+
+            console.error(error);
+
+            showToast(
+              "Unable to refresh websites.",
+              "error"
+            );
+
+          } finally {
+
+            if (button) {
+              button.disabled = false;
+              button.textContent = "🔄 Refresh";
+            }
+          }
+        }
+
+        /* =====================================================
+           AUTHENTICATION
+        ===================================================== */
+
+        onAuthStateChanged(auth, async (user) => {
+
+          if (!user) {
+            window.location.href =
+              "admin-login.html";
+            return;
+          }
+
+          currentUser = user;
+
+          try {
+
+            const adminSnap = await getDoc(
+              doc(db, "admins", user.uid)
+            );
+
+            if (
+              !adminSnap.exists() ||
+              adminSnap.data()?.role !== "admin"
+            ) {
+              showToast(
+                "Admin access required.",
+                "error"
+              );
+
+              await signOut(auth);
+
+              setTimeout(() => {
+                window.location.href =
+                  "admin-login.html";
+              }, 1000);
+
+              return;
+            }
+
+            adminData = adminSnap.data();
+
+            $("adminEmail").textContent =
+              user.email ||
+              adminData.email ||
+              "Admin";
+
+            await loadWebsites();
+
+          } catch (error) {
+
+            console.error(error);
+
+            showToast(
+              "Failed to load admin data.",
+              "error"
+            );
+          }
+        });
+
+        /* =====================================================
+           SEARCH
+        ===================================================== */
+
+        $("websiteSearch")?.addEventListener(
+          "input",
+          renderWebsites
+        );
+
+        /* =====================================================
+           FILTERS
+        ===================================================== */
+
+        $("websiteStatusFilter")?.addEventListener(
+          "change",
+          renderWebsites
+        );
+
+        $("publishedFilter")?.addEventListener(
+          "change",
+          renderWebsites
+        );
+
+        $("domainFilter")?.addEventListener(
+          "change",
+          renderWebsites
+        );
+
+        /* =====================================================
+           CLEAR FILTERS
+        ===================================================== */
+
+        $("clearFilters")?.addEventListener(
+          "click",
+          () => {
+
+            $("websiteSearch").value = "";
+
+            $("websiteStatusFilter").value =
+              "all";
+
+            $("publishedFilter").value =
+              "all";
+
+            $("domainFilter").value =
+              "all";
+
+            renderWebsites();
+          }
+        );
+
+        /* =====================================================
+           REFRESH BUTTON
+        ===================================================== */
+
+        $("refreshButton")?.addEventListener(
+          "click",
+          refreshWebsites
+        );
+
+        /* =====================================================
+           MODAL CLOSE
+        ===================================================== */
+
+        $("closeWebsiteModal")?.addEventListener(
+          "click",
+          closeWebsiteModal
+        );
+
+        $("websiteModal")?.addEventListener(
+          "click",
+          (event) => {
+
+            if (
+              event.target.id ===
+              "websiteModal"
+            ) {
+              closeWebsiteModal();
+            }
+          }
+        );
+
+        /* =====================================================
+           LOGOUT
+        ===================================================== */
+
+        $("logoutButton")?.addEventListener(
+          "click",
+          async () => {
+
+            try {
+
+              await signOut(auth);
+
+              window.location.href =
+                "admin-login.html";
+
+            } catch (error) {
+
+              console.error(error);
+
+                            showToast(
+                "Unable to load admin data.",
+                "error"
+              );
+            }
+        });
+
+        /* =====================================================
+           SEARCH
+        ===================================================== */
+
+        $("websiteSearch")?.addEventListener(
+          "input",
+          renderWebsites
+        );
+
+        /* =====================================================
+           FILTERS
+        ===================================================== */
+
+        $("websiteStatusFilter")?.addEventListener(
+          "change",
+          renderWebsites
+        );
+
+        $("publishedFilter")?.addEventListener(
+          "change",
+          renderWebsites
+        );
+
+        $("domainFilter")?.addEventListener(
+          "change",
+          renderWebsites
+        );
+
+        /* =====================================================
+           CLEAR FILTERS
+        ===================================================== */
+
+        $("clearFilters")?.addEventListener(
+          "click",
+          () => {
+
+            const search =
+              $("websiteSearch");
+
+            const status =
+              $("websiteStatusFilter");
+
+            const published =
+              $("publishedFilter");
+
+            const domain =
+              $("domainFilter");
+
+            if (search) {
+              search.value = "";
+            }
+
+            if (status) {
+              status.value = "all";
+            }
+
+            if (published) {
+              published.value = "all";
+            }
+
+            if (domain) {
+              domain.value = "all";
+            }
+
+            renderWebsites();
+          }
+        );
+
+        /* =====================================================
+           REFRESH
+        ===================================================== */
+
+        $("refreshButton")?.addEventListener(
+          "click",
+          refreshWebsites
+        );
+
+        /* =====================================================
+           MODAL CLOSE
+        ===================================================== */
+
+        $("closeWebsiteModal")?.addEventListener(
+          "click",
+          closeWebsiteModal
+        );
+
+        $("websiteModal")?.addEventListener(
+          "click",
+          (event) => {
+
+            if (
+              event.target ===
+              $("websiteModal")
+            ) {
+              closeWebsiteModal();
+            }
+
+          }
+        );
+
+        /* =====================================================
+           LOGOUT
+        ===================================================== */
+
+        $("logoutButton")?.addEventListener(
+          "click",
+          async () => {
+
+            try {
+
+              await signOut(auth);
+
+              window.location.href =
+                "admin-login.html";
+
+            } catch (error) {
+
+              console.error(error);
+
+              showToast(
+                "Unable to logout.",
+                "error"
+              );
+
+            }
+          }
+        );
+
+        /* =====================================================
+           MOBILE MENU
+        ===================================================== */
+
+        const menuButton =
+          $("menuButton");
+
+        const sidebar =
+          $("sidebar");
+
+        const mobileOverlay =
+          $("mobileOverlay");
+
+        function openMobileMenu() {
+
+          sidebar?.classList.add("open");
+
+          mobileOverlay?.classList.add("show");
+
+        }
+
+        function closeMobileMenu() {
+
+          sidebar?.classList.remove("open");
+
+          mobileOverlay?.classList.remove("show");
+
+        }
+
+        menuButton?.addEventListener(
+          "click",
+          openMobileMenu
+        );
+
+        mobileOverlay?.addEventListener(
+          "click",
+          closeMobileMenu
+        );
+
+        document
+          .querySelectorAll(".sidebar a")
+          .forEach(link => {
+
+            link.addEventListener(
+              "click",
+              closeMobileMenu
+            );
+
+          });
+
+        /* =====================================================
+           ESC KEY
+        ===================================================== */
+
+        document.addEventListener(
+          "keydown",
+          (event) => {
+
+            if (event.key === "Escape") {
+
+              closeWebsiteModal();
+
+              closeMobileMenu();
+
+            }
+
+          }
+        );
+
+        /* =====================================================
+           CURRENT YEAR
+        ===================================================== */
+
+        const yearElement =
+          $("currentYear");
+
+        if (yearElement) {
+
+          yearElement.textContent =
+            new Date().getFullYear();
+
+        }
+
+        /* =====================================================
+           GLOBAL FUNCTIONS
+        ===================================================== */
+
+        window.viewWebsite =
+          viewWebsite;
+
+        window.closeWebsiteModal =
+          closeWebsiteModal;
+
+        window.openWebsite =
+          openWebsite;
+
+        window.togglePublished =
+          togglePublished;
+
+        window.toggleWebsiteStatus =
+          toggleWebsiteStatus;
+
+        window.deleteWebsite =
+          deleteWebsite;
+
+        window.refreshWebsites =
+          refreshWebsites;
+
+      </script>
+
+</body>
+</html>
