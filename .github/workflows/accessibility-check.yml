@@ -1,0 +1,276 @@
+name: LetsStudy Pro - Accessibility Audit
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  accessibility:
+    name: Accessibility Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Lighthouse
+        run: |
+          npm install -g lighthouse
+
+      - name: Run Accessibility Audit
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " LETSSTUDY PRO ACCESSIBILITY AUDIT"
+          echo "======================================"
+
+          lighthouse \
+            https://letsstudy.pro/ \
+            --only-categories=accessibility \
+            --output=html \
+            --output=json \
+            --output-path=./accessibility-report \
+            --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage"
+
+      - name: Show Accessibility Score
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+
+          const report = JSON.parse(
+            fs.readFileSync(
+              "./accessibility-report.report.json",
+              "utf8"
+            )
+          );
+
+          const score = Math.round(
+            report.categories.accessibility.score * 100
+          );
+
+          console.log("");
+          console.log("======================================");
+          console.log(" ACCESSIBILITY SCORE");
+          console.log("======================================");
+          console.log(`Accessibility: ${score}/100`);
+          console.log("======================================");
+          NODE
+
+      - name: Enforce Accessibility Score
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+
+          const report = JSON.parse(
+            fs.readFileSync(
+              "./accessibility-report.report.json",
+              "utf8"
+            )
+          );
+
+          const score = Math.round(
+            report.categories.accessibility.score * 100
+          );
+
+          const minimum = 90;
+
+          console.log("");
+          console.log("======================================");
+          console.log(" ACCESSIBILITY QUALITY GATE");
+          console.log("======================================");
+
+          console.log(
+            `Accessibility: ${score}/100`
+          );
+
+          console.log(
+            `Required minimum: ${minimum}/100`
+          );
+
+          console.log("======================================");
+
+          if (score < minimum) {
+            console.error(
+              "ERROR: Accessibility score is below 90."
+            );
+
+            process.exit(1);
+          }
+
+          console.log(
+            "Accessibility quality gate passed."
+          );
+          NODE
+
+      - name: Check HTML images for alt attributes
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " IMAGE ALT TEXT CHECK"
+          echo "======================================"
+
+          FAILED=0
+
+          while IFS= read -r FILE; do
+            [ -z "$FILE" ] && continue
+
+            echo "Checking: $FILE"
+
+            if grep -Eiq '<img[^>]*>' "$FILE"; then
+
+              if grep -Eiq \
+                '<img[^>]*\balt\s*=' \
+                "$FILE"; then
+
+                echo "Image alt attributes detected."
+
+              else
+
+                echo "WARNING: Images may be missing alt attributes."
+                FAILED=1
+
+              fi
+
+            fi
+
+          done < <(
+            find . \
+              -type f \
+              -name "*.html" \
+              -not -path "./.git/*"
+          )
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo ""
+            echo "ERROR: Accessibility image check failed."
+            echo "Review image alt attributes."
+            exit 1
+          fi
+
+          echo ""
+          echo "Image accessibility check passed."
+
+      - name: Check form labels
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " FORM ACCESSIBILITY CHECK"
+          echo "======================================"
+
+          FAILED=0
+
+          while IFS= read -r FILE; do
+            [ -z "$FILE" ] && continue
+
+            if grep -Eiq \
+              '<(input|select|textarea)[^>]*>' \
+              "$FILE"; then
+
+              echo "Checking forms: $FILE"
+
+              if grep -Eiq \
+                '<label[^>]*>' \
+                "$FILE"; then
+
+                echo "Labels detected."
+
+              else
+
+                echo "WARNING: Form controls may be missing labels."
+                FAILED=1
+
+              fi
+            fi
+
+          done < <(
+            find . \
+              -type f \
+              -name "*.html" \
+              -not -path "./.git/*"
+          )
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo ""
+            echo "ERROR: Some forms may need accessible labels."
+            exit 1
+          fi
+
+          echo ""
+          echo "Form accessibility check passed."
+
+      - name: Check HTML language attribute
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " HTML LANGUAGE CHECK"
+          echo "======================================"
+
+          FAILED=0
+
+          while IFS= read -r FILE; do
+            [ -z "$FILE" ] && continue
+
+            if grep -Eiq '<html[^>]*>' "$FILE"; then
+
+              if grep -Eiq \
+                '<html[^>]*\blang\s*=' \
+                "$FILE"; then
+
+                echo "Language attribute found: $FILE"
+
+              else
+
+                echo "ERROR: Missing lang attribute: $FILE"
+                FAILED=1
+
+              fi
+            fi
+
+          done < <(
+            find . \
+              -type f \
+              -name "*.html" \
+              -not -path "./.git/*"
+          )
+
+          if [ "$FAILED" -ne 0 ]; then
+            exit 1
+          fi
+
+          echo ""
+          echo "HTML language check passed."
+
+      - name: Upload Accessibility Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessibility-report
+          path: |
+            accessibility-report.report.html
+            accessibility-report.report.json
+          retention-days: 30
+
+      - name: Accessibility audit complete
+        run: |
+          echo ""
+          echo "======================================"
+          echo " ACCESSIBILITY AUDIT PASSED"
+          echo "======================================"
+          echo ""
+          echo "LetsStudy Pro passed the accessibility quality checks."
