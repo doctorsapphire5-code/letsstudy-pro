@@ -1,0 +1,119 @@
+name: LetsStudy Pro - AdSense Code Check
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  adsense-check:
+    name: Check Google AdSense
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check AdSense Publisher ID
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " ADSENSE PUBLISHER CHECK"
+          echo "======================================"
+
+          PUBLISHER_ID="ca-pub-9557927842145806"
+
+          FILES=$(find . \
+            -type f \
+            -name "*.html" \
+            -not -path "./.git/*")
+
+          if [ -z "$FILES" ]; then
+            echo "ERROR: No HTML files found"
+            exit 1
+          fi
+
+          if ! grep -Rqs "$PUBLISHER_ID" \
+            --include="*.html" \
+            --exclude-dir=.git .; then
+
+            echo "ERROR: AdSense Publisher ID not found"
+            echo "Expected: $PUBLISHER_ID"
+            exit 1
+          fi
+
+          echo "AdSense Publisher ID found"
+
+      - name: Check AdSense script
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " ADSENSE SCRIPT CHECK"
+          echo "======================================"
+
+          if ! grep -Rqs \
+            "pagead2.googlesyndication.com/pagead/js/adsbygoogle.js" \
+            --include="*.html" \
+            --exclude-dir=.git .; then
+
+            echo "ERROR: Google AdSense script not found"
+            exit 1
+          fi
+
+          echo "AdSense script found"
+
+      - name: Check adsbygoogle
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " ADSBYGOOGLE CHECK"
+          echo "======================================"
+
+          if ! grep -Rqs \
+            "adsbygoogle" \
+            --include="*.html" \
+            --exclude-dir=.git .; then
+
+            echo "ERROR: adsbygoogle code not found"
+            exit 1
+          fi
+
+          echo "adsbygoogle code found"
+
+      - name: Check public homepage
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " PRODUCTION ADSENSE CHECK"
+          echo "======================================"
+
+          HTML=$(curl -L -s https://letsstudy.pro)
+
+          if ! echo "$HTML" | grep -q "ca-pub-9557927842145806"; then
+            echo "ERROR: AdSense Publisher ID not found on production"
+            exit 1
+          fi
+
+          if ! echo "$HTML" | grep -q "adsbygoogle.js"; then
+            echo "ERROR: AdSense script not found on production"
+            exit 1
+          fi
+
+          echo "Production AdSense code detected"
+
+      - name: AdSense validation complete
+        run: |
+          echo ""
+          echo "======================================"
+          echo " ADSENSE CHECK PASSED"
+          echo "======================================"
