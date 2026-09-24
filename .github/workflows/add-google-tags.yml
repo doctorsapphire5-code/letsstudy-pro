@@ -1,0 +1,77 @@
+name: Add Google Analytics and AdSense
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  add-google-tags:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Add Google tags to HTML files
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          code = '''
+          <!-- Google Analytics 4 -->
+          <script async src="https://www.googletagmanager.com/gtag/js?id=G-3RD5Z87VF0"></script>
+          <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-3RD5Z87VF0');
+          </script>
+
+          <!-- Google AdSense -->
+          <script async
+            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9557927842145806"
+            crossorigin="anonymous"></script>
+          '''
+
+          for path in Path('.').rglob('*.html'):
+              if any(part in {'.git', 'node_modules'} for part in path.parts):
+                  continue
+
+              text = path.read_text(encoding='utf-8')
+
+              if 'G-3RD5Z87VF0' in text or 'ca-pub-9557927842145806' in text:
+                  print(f'SKIP: {path}')
+                  continue
+
+              lower = text.lower()
+
+              if '<head>' not in lower:
+                  print(f'NO <head>: {path}')
+                  continue
+
+              pos = lower.index('<head>') + len('<head>')
+              text = text[:pos] + '\n' + code + '\n' + text[pos:]
+
+              path.write_text(text, encoding='utf-8')
+              print(f'UPDATED: {path}')
+          PY
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add .
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Add Google Analytics and AdSense tags"
+            git push
+          fi
