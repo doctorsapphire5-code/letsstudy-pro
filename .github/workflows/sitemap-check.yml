@@ -1,0 +1,155 @@
+name: LetsStudy Pro - Sitemap Validation
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  sitemap-check:
+    name: Validate Sitemap
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check sitemap.xml exists
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " SITEMAP EXISTENCE CHECK"
+          echo "======================================"
+
+          if [ ! -f sitemap.xml ]; then
+            echo "ERROR: sitemap.xml not found"
+            exit 1
+          fi
+
+          echo "sitemap.xml found"
+
+      - name: Validate sitemap XML
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " XML VALIDATION"
+          echo "======================================"
+
+          if ! command -v xmllint >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y libxml2-utils
+          fi
+
+          xmllint --noout sitemap.xml
+
+          echo "Sitemap XML is valid"
+
+      - name: Check sitemap structure
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " SITEMAP STRUCTURE"
+          echo "======================================"
+
+          grep -q "<urlset" sitemap.xml || {
+            echo "ERROR: <urlset> not found"
+            exit 1
+          }
+
+          grep -q "<url>" sitemap.xml || {
+            echo "ERROR: No <url> entries found"
+            exit 1
+          }
+
+          grep -q "<loc>" sitemap.xml || {
+            echo "ERROR: No <loc> entries found"
+            exit 1
+          }
+
+          echo "Sitemap structure looks correct"
+
+      - name: Check LetsStudy Pro URLs
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " URL CHECK"
+          echo "======================================"
+
+          if grep -q "http://letsstudy.pro" sitemap.xml; then
+            echo "ERROR: HTTP LetsStudy Pro URL found"
+            exit 1
+          fi
+
+          if grep -q "localhost" sitemap.xml; then
+            echo "ERROR: localhost URL found"
+            exit 1
+          fi
+
+          if grep -q "127.0.0.1" sitemap.xml; then
+            echo "ERROR: 127.0.0.1 URL found"
+            exit 1
+          fi
+
+          if grep -q "https://letsstudy.pro" sitemap.xml; then
+            echo "LetsStudy Pro URLs found"
+          else
+            echo "ERROR: No LetsStudy Pro URLs found"
+            exit 1
+          fi
+
+      - name: Count sitemap URLs
+        run: |
+          COUNT=$(grep -o "<loc>" sitemap.xml | wc -l)
+
+          echo "======================================"
+          echo " SITEMAP URL COUNT"
+          echo "======================================"
+          echo "URLs found: $COUNT"
+
+          if [ "$COUNT" -eq 0 ]; then
+            echo "ERROR: Sitemap contains zero URLs"
+            exit 1
+          fi
+
+      - name: Production sitemap check
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " PRODUCTION SITEMAP CHECK"
+          echo "======================================"
+
+          STATUS=$(curl -L -s -o /tmp/production-sitemap.xml \
+            -w "%{http_code}" \
+            https://letsstudy.pro/sitemap.xml)
+
+          echo "Production sitemap HTTP status: $STATUS"
+
+          if [ "$STATUS" != "200" ]; then
+            echo "ERROR: Production sitemap is not returning HTTP 200"
+            exit 1
+          fi
+
+          if ! grep -q "<urlset" /tmp/production-sitemap.xml; then
+            echo "ERROR: Production sitemap does not contain <urlset>"
+            exit 1
+          fi
+
+          echo "Production sitemap is accessible and valid"
+
+      - name: Sitemap validation complete
+        run: |
+          echo ""
+          echo "======================================"
+          echo " SITEMAP VALIDATION PASSED"
+          echo "======================================"
