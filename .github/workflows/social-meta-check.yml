@@ -1,0 +1,274 @@
+name: LetsStudy Pro - Social Meta Check
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  social-meta:
+    name: Open Graph & Social Meta Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check Open Graph metadata
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " OPEN GRAPH META CHECK"
+          echo "======================================"
+
+          FAILED=0
+          COUNT=0
+
+          while IFS= read -r FILE; do
+            [ -z "$FILE" ] && continue
+
+            COUNT=$((COUNT + 1))
+
+            echo ""
+            echo "Checking: $FILE"
+
+            REQUIRED=(
+              'og:title'
+              'og:description'
+              'og:image'
+              'og:url'
+              'og:type'
+            )
+
+            for PROPERTY in "${REQUIRED[@]}"; do
+
+              if grep -Eiq \
+                "<meta[^>]+property=[\"']${PROPERTY}[\"']" \
+                "$FILE"; then
+
+                echo "PASS: $PROPERTY"
+
+              else
+
+                echo "ERROR: Missing $PROPERTY"
+                FAILED=1
+
+              fi
+
+            done
+
+          done < <(
+            find . \
+              -type f \
+              -name "*.html" \
+              -not -path "./.git/*" \
+              -not -path "./node_modules/*"
+          )
+
+          echo ""
+          echo "HTML files checked: $COUNT"
+
+          if [ "$COUNT" -eq 0 ]; then
+            echo "ERROR: No HTML files found"
+            exit 1
+          fi
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo ""
+            echo "======================================"
+            echo " OPEN GRAPH CHECK FAILED"
+            echo "======================================"
+            exit 1
+          fi
+
+          echo ""
+          echo "Open Graph metadata check passed."
+
+      - name: Check Twitter/X metadata
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " TWITTER / X META CHECK"
+          echo "======================================"
+
+          FAILED=0
+
+          while IFS= read -r FILE; do
+            [ -z "$FILE" ] && continue
+
+            echo ""
+            echo "Checking: $FILE"
+
+            if ! grep -Eiq \
+              '<meta[^>]+name=["'\'']twitter:card["'\'']' \
+              "$FILE"; then
+
+              echo "ERROR: twitter:card missing"
+              FAILED=1
+
+            else
+              echo "PASS: twitter:card"
+            fi
+
+            if ! grep -Eiq \
+              '<meta[^>]+name=["'\'']twitter:title["'\'']' \
+              "$FILE"; then
+
+              echo "ERROR: twitter:title missing"
+              FAILED=1
+
+            else
+              echo "PASS: twitter:title"
+            fi
+
+            if ! grep -Eiq \
+              '<meta[^>]+name=["'\'']twitter:description["'\'']' \
+              "$FILE"; then
+
+              echo "ERROR: twitter:description missing"
+              FAILED=1
+
+            else
+              echo "PASS: twitter:description"
+            fi
+
+            if ! grep -Eiq \
+              '<meta[^>]+name=["'\'']twitter:image["'\'']' \
+              "$FILE"; then
+
+              echo "ERROR: twitter:image missing"
+              FAILED=1
+
+            else
+              echo "PASS: twitter:image"
+            fi
+
+          done < <(
+            find . \
+              -type f \
+              -name "*.html" \
+              -not -path "./.git/*" \
+              -not -path "./node_modules/*"
+          )
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo ""
+            echo "Twitter/X metadata check failed."
+            exit 1
+          fi
+
+          echo ""
+          echo "Twitter/X metadata check passed."
+
+      - name: Check LetsStudy Pro social URLs
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " SOCIAL URL CHECK"
+          echo "======================================"
+
+          FAILED=0
+
+          while IFS= read -r FILE; do
+            [ -z "$FILE" ] && continue
+
+            if grep -Eiq \
+              'og:url' \
+              "$FILE"; then
+
+              if grep -Eiq \
+                'https://letsstudy\.pro' \
+                "$FILE"; then
+
+                echo "PASS: LetsStudy Pro URL detected in $FILE"
+
+              else
+
+                echo "ERROR: Invalid LetsStudy Pro social URL in $FILE"
+                FAILED=1
+
+              fi
+            fi
+
+          done < <(
+            find . \
+              -type f \
+              -name "*.html" \
+              -not -path "./.git/*" \
+              -not -path "./node_modules/*"
+          )
+
+          if [ "$FAILED" -ne 0 ]; then
+            exit 1
+          fi
+
+          echo "Social URL check passed."
+
+      - name: Check production homepage social metadata
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " PRODUCTION SOCIAL META CHECK"
+          echo "======================================"
+
+          HTML=$(curl \
+            -L \
+            -s \
+            --max-time 20 \
+            https://letsstudy.pro/)
+
+          REQUIRED=(
+            'og:title'
+            'og:description'
+            'og:image'
+            'og:url'
+            'twitter:card'
+          )
+
+          FAILED=0
+
+          for META in "${REQUIRED[@]}"; do
+
+            if echo "$HTML" | grep -Eiq "$META"; then
+
+              echo "PASS: $META"
+
+            else
+
+              echo "ERROR: Production homepage missing $META"
+              FAILED=1
+
+            fi
+
+          done
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo ""
+            echo "Production social metadata check failed."
+            exit 1
+          fi
+
+          echo ""
+          echo "Production social metadata detected."
+
+      - name: Social metadata audit complete
+        run: |
+          echo ""
+          echo "======================================"
+          echo " SOCIAL META AUDIT PASSED"
+          echo "======================================"
+          echo ""
+          echo "LetsStudy Pro social sharing metadata is configured."
