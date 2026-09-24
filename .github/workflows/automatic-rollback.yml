@@ -1,0 +1,194 @@
+name: LetsStudy Pro - Automatic Rollback Protection
+
+on:
+  workflow_run:
+    workflows:
+      - "LetsStudy Pro - Firebase Deploy"
+    types:
+      - completed
+
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: "Commit SHA to deploy as rollback"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  verify-deployment:
+    name: Verify Production Deployment
+    runs-on: ubuntu-latest
+
+    outputs:
+      rollback_required: ${{ steps.verify.outputs.rollback_required }}
+
+    steps:
+      - name: Wait for production
+        run: sleep 20
+
+      - name: Verify production
+        id: verify
+        shell: bash
+        run: |
+          set -e
+
+          URL="https://letsstudy.pro"
+
+          echo "Checking production: $URL"
+
+          STATUS=$(curl \
+            -L \
+            -s \
+            -o /tmp/homepage.html \
+            -w "%{http_code}" \
+            --max-time 30 \
+            "$URL")
+
+          echo "HTTP status: $STATUS"
+
+          if [ "$STATUS" != "200" ]; then
+            echo "Production check failed."
+            echo "rollback_required=true" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+          if ! grep -qi "LetsStudy Pro" /tmp/homepage.html; then
+            echo "LetsStudy Pro branding was not found."
+            echo "rollback_required=true" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+          if ! grep -qi "<html" /tmp/homepage.html; then
+            echo "HTML document was not detected."
+            echo "rollback_required=true" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+          if ! grep -qi "<title" /tmp/homepage.html; then
+            echo "Page title was not detected."
+            echo "rollback_required=true" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+          echo "Production verification passed."
+          echo "rollback_required=false" >> "$GITHUB_OUTPUT"
+
+  rollback:
+    name: Rollback Firebase Hosting
+    needs: verify-deployment
+    if: ${{ failure() || needs.verify-deployment.outputs.rollback_required == 'true' }}
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Find previous successful backup tag
+        id: find_backup
+        shell: bash
+        run: |
+          set -e
+
+          echo "Finding previous Firebase backup tag..."
+
+          CURRENT_SHA="${{ github.event.workflow_run.head_sha }}"
+
+          TAG=$(git tag --sort=-creatordate \
+            | grep '^backup-' \
+            | while read tag; do
+                SHA=$(git rev-list -n 1 "$tag")
+
+                if [ "$SHA" != "$CURRENT_SHA" ]; then
+                  echo "$tag"
+                  break
+                fi
+              done)
+
+          if [ -z "$TAG" ]; then
+            echo "ERROR: No previous backup tag found."
+            exit 1
+          fi
+
+          echo "Rollback tag: $TAG"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout rollback version
+        run: |
+          git checkout "${{ steps.find_backup.outputs.tag }}"
+
+          echo "Rollback commit:"
+          git rev-parse HEAD
+
+      - name: Verify Firebase configuration
+        run: |
+          test -f firebase.json || {
+            echo "ERROR: firebase.json not found."
+            exit 1
+          }
+
+          echo "firebase.json found."
+
+      - name: Firebase rollback deployment
+        run: |
+          firebase deploy \
+            --only hosting \
+            --project let-s-study-pro-course \
+            --non-interactive
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+      - name: Verify rollback
+        run: |
+          sleep 20
+
+          STATUS=$(curl \
+            -L \
+            -s \
+            -o /tmp/rollback.html \
+            -w "%{http_code}" \
+            --max-time 30 \
+            https://letsstudy.pro
+
+          echo "Rollback HTTP status: $STATUS"
+
+          if [ "$STATUS" != "200" ]; then
+            echo "ERROR: Rollback verification failed."
+            exit 1
+          fi
+
+          grep -qi "LetsStudy Pro" /tmp/rollback.html || {
+            echo "ERROR: LetsStudy Pro branding missing after rollback."
+            exit 1
+          }
+
+          echo "Rollback completed successfully."
+
+      - name: Rollback summary
+        if: always()
+        run: |
+          echo "# LetsStudy Pro Automatic Rollback" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Production deployment verification failed." \
+            >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "The previous backup version was deployed." \
+            >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Production: https://letsstudy.pro" \
+            >> "$GITHUB_STEP_SUMMARY"
