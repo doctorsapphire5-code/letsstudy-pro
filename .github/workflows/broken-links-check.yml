@@ -1,0 +1,110 @@
+name: LetsStudy Pro - Broken Links Check
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  broken-links:
+    name: Check Broken Links
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install link checker
+        run: |
+          npm install -g broken-link-checker
+
+      - name: Check important production pages
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " LETSSTUDY PRO BROKEN LINK CHECK"
+          echo "======================================"
+
+          URLS="
+          https://letsstudy.pro/
+          https://letsstudy.pro/courses.html
+          https://letsstudy.pro/resources.html
+          https://letsstudy.pro/scholarships.html
+          https://letsstudy.pro/careers.html
+          https://letsstudy.pro/services.html
+          https://letsstudy.pro/blog.html
+          "
+
+          FAILED=0
+
+          while IFS= read -r URL; do
+
+            [ -z "$URL" ] && continue
+
+            echo ""
+            echo "Checking: $URL"
+
+            if ! blc "$URL" \
+              --recursive \
+              --ordered \
+              --filter-level 3; then
+
+              echo "BROKEN LINK DETECTED: $URL"
+              FAILED=1
+            fi
+
+          done <<< "$URLS"
+
+          echo ""
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo "======================================"
+            echo " BROKEN LINKS FOUND"
+            echo "======================================"
+            exit 1
+          fi
+
+          echo "======================================"
+          echo " NO BROKEN LINKS FOUND"
+          echo "======================================"
+
+      - name: Check local HTML links
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " LOCAL HTML LINK CHECK"
+          echo "======================================"
+
+          HTML_COUNT=$(find . \
+            -type f \
+            -name "*.html" \
+            -not -path "./.git/*" | wc -l)
+
+          echo "HTML files found: $HTML_COUNT"
+
+          if [ "$HTML_COUNT" -eq 0 ]; then
+            echo "ERROR: No HTML files found"
+            exit 1
+          fi
+
+          echo "HTML files detected successfully"
+
+      - name: Broken link validation complete
+        run: |
+          echo ""
+          echo "======================================"
+          echo " BROKEN LINK CHECK PASSED"
+          echo "======================================"
