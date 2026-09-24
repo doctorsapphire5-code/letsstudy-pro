@@ -1,0 +1,124 @@
+name: LetsStudy Pro - Dependency Security Scan
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-security:
+    name: Dependency Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+        continue-on-error: true
+
+      - name: Check package files
+        run: |
+          echo "======================================"
+          echo " PACKAGE FILE CHECK"
+          echo "======================================"
+
+          if [ -f package.json ]; then
+            echo "package.json found"
+          else
+            echo "No package.json found."
+            echo "LetsStudy Pro may be using static frontend files."
+            exit 0
+          fi
+
+          if [ -f package-lock.json ]; then
+            echo "package-lock.json found"
+          else
+            echo "WARNING: package-lock.json not found"
+          fi
+
+      - name: Install dependencies
+        if: hashFiles('package.json') != ''
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " INSTALLING DEPENDENCIES"
+          echo "======================================"
+
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Run npm audit
+        if: hashFiles('package.json') != ''
+        run: |
+          echo "======================================"
+          echo " NPM SECURITY AUDIT"
+          echo "======================================"
+
+          npm audit --audit-level=high
+
+      - name: Check outdated packages
+        if: hashFiles('package.json') != ''
+        run: |
+          echo "======================================"
+          echo " OUTDATED DEPENDENCY CHECK"
+          echo "======================================"
+
+          npm outdated || true
+
+      - name: Check package scripts
+        if: hashFiles('package.json') != ''
+        run: |
+          echo "======================================"
+          echo " PACKAGE SCRIPT CHECK"
+          echo "======================================"
+
+          node <<'NODE'
+          const fs = require("fs");
+
+          const pkg = JSON.parse(
+            fs.readFileSync("package.json", "utf8")
+          );
+
+          console.log("Package:", pkg.name || "Unnamed");
+          console.log("Version:", pkg.version || "Unknown");
+
+          if (pkg.scripts) {
+            console.log("");
+            console.log("Available scripts:");
+
+            for (const [name, command] of Object.entries(pkg.scripts)) {
+              console.log(`- ${name}: ${command}`);
+            }
+          } else {
+            console.log("No npm scripts found.");
+          }
+          NODE
+
+      - name: Dependency scan complete
+        run: |
+          echo ""
+          echo "======================================"
+          echo " DEPENDENCY SECURITY SCAN PASSED"
+          echo "======================================"
+          echo ""
+          echo "No high-level npm vulnerabilities were detected."
