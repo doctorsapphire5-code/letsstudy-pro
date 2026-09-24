@@ -1,162 +1,45 @@
-name: LetsStudy Pro - Firebase Deploy
+name: Firebase Backup and Deploy
 
 on:
   push:
     branches:
       - main
-
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  deploy:
-    name: Deploy to Firebase Hosting
+  backup-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create backup tag
+        run: |
+          TAG="firebase-backup-$(date -u +'%Y%m%d-%H%M%S')"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git tag "$TAG" "$GITHUB_SHA"
+          git push origin "$TAG"
+
+          echo "Backup created: $TAG"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
-
-      - name: Verify Firebase Files
-        shell: bash
-        run: |
-          set -e
-
-          echo "======================================"
-          echo " FIREBASE DEPLOY CHECK"
-          echo "======================================"
-
-          test -f firebase.json
-          test -f .firebaserc
-
-          echo "firebase.json: FOUND"
-          echo ".firebaserc: FOUND"
-
-          echo ""
-          echo "Firebase configuration:"
-          cat .firebaserc
+          node-version: 20
 
       - name: Install Firebase CLI
-        shell: bash
-        run: |
-          set -e
-
-          npm install -g firebase-tools
-
-          echo ""
-          firebase --version
-
-      - name: Check Firebase Authentication
-        shell: bash
-        env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-        run: |
-          set +e
-
-          echo "======================================"
-          echo " FIREBASE AUTH CHECK"
-          echo "======================================"
-
-          if [ -z "$FIREBASE_TOKEN" ]; then
-            echo "ERROR: FIREBASE_TOKEN secret is missing."
-            exit 1
-          fi
-
-          echo "FIREBASE_TOKEN: FOUND"
-
-          firebase projects:list \
-            --token "$FIREBASE_TOKEN"
-
-          STATUS=$?
-
-          echo ""
-          echo "Firebase authentication exit code: $STATUS"
-
-          if [ "$STATUS" -ne 0 ]; then
-            echo ""
-            echo "ERROR: Firebase authentication failed."
-            exit "$STATUS"
-          fi
+        run: npm install -g firebase-tools
 
       - name: Deploy Firebase Hosting
-        shell: bash
+        run: firebase deploy --only hosting --project let-s-study-pro-course
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-        run: |
-          set +e
-
-          echo "======================================"
-          echo " FIREBASE HOSTING DEPLOY"
-          echo "======================================"
-
-          firebase deploy \
-            --only hosting \
-            --project let-s-study-pro-course \
-            --token "$FIREBASE_TOKEN" \
-            --non-interactive
-
-          STATUS=$?
-
-          echo ""
-          echo "Firebase deploy exit code: $STATUS"
-
-          if [ "$STATUS" -ne 0 ]; then
-            echo ""
-            echo "======================================"
-            echo " FIREBASE DEPLOY FAILED"
-            echo "======================================"
-            echo ""
-            echo "The exact Firebase CLI error is shown above."
-            exit "$STATUS"
-          fi
-
-          echo ""
-          echo "======================================"
-          echo " FIREBASE DEPLOY SUCCESS"
-          echo "======================================"
-
-      - name: Verify Production Website
-        shell: bash
-        run: |
-          set +e
-
-          echo "======================================"
-          echo " PRODUCTION VERIFICATION"
-          echo "======================================"
-
-          STATUS=$(curl \
-            -L \
-            -s \
-            -o /dev/null \
-            -w "%{http_code}" \
-            --max-time 30 \
-            "https://letsstudy.pro/")
-
-          echo "https://letsstudy.pro/"
-          echo "HTTP status: $STATUS"
-
-          if [ "$STATUS" = "200" ] || \
-             [ "$STATUS" = "301" ] || \
-             [ "$STATUS" = "302" ]; then
-
-            echo ""
-            echo "Production website is reachable."
-
-          else
-
-            echo ""
-            echo "WARNING: Unexpected production HTTP status."
-
-          fi
-
-          echo ""
-          echo "Deployment verification completed."
-
-          exit 0
