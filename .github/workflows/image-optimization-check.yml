@@ -1,0 +1,245 @@
+name: LetsStudy Pro - Image Optimization Check
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  image-check:
+    name: Check Image Optimization
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install image tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            imagemagick \
+            webp
+
+      - name: Find images
+        run: |
+          echo "======================================"
+          echo " IMAGE INVENTORY"
+          echo "======================================"
+
+          IMAGE_COUNT=$(find . \
+            -type f \
+            \( \
+              -iname "*.jpg" \
+              -o -iname "*.jpeg" \
+              -o -iname "*.png" \
+              -o -iname "*.gif" \
+              -o -iname "*.webp" \
+              -o -iname "*.avif" \
+            \) \
+            -not -path "./.git/*" \
+            | wc -l)
+
+          echo "Images found: $IMAGE_COUNT"
+
+      - name: Detect large images
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " LARGE IMAGE CHECK"
+          echo "======================================"
+
+          MAX_SIZE=$((500 * 1024))
+          FAILED=0
+
+          while IFS= read -r FILE; do
+            [ -z "$FILE" ] && continue
+
+            SIZE=$(stat -c%s "$FILE")
+
+            if [ "$SIZE" -gt "$MAX_SIZE" ]; then
+
+              SIZE_KB=$((SIZE / 1024))
+
+              echo "WARNING: Large image"
+              echo "File: $FILE"
+              echo "Size: ${SIZE_KB} KB"
+              echo ""
+
+              FAILED=1
+            fi
+
+          done < <(
+            find . \
+              -type f \
+              \( \
+                -iname "*.jpg" \
+                -o -iname "*.jpeg" \
+                -o -iname "*.png" \
+                -o -iname "*.gif" \
+                -o -iname "*.webp" \
+                -o -iname "*.avif" \
+              \) \
+              -not -path "./.git/*"
+          )
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo "Large images were detected."
+            echo "Consider compressing or converting them."
+          else
+            echo "No images larger than 500 KB detected."
+          fi
+
+      - name: Check modern image formats
+        run: |
+          echo "======================================"
+          echo " MODERN IMAGE FORMAT CHECK"
+          echo "======================================"
+
+          TOTAL=0
+          MODERN=0
+
+          while IFS= read -r FILE; do
+            [ -z "$FILE" ] && continue
+
+            TOTAL=$((TOTAL + 1))
+
+            case "$FILE" in
+              *.webp|*.WEBP|*.avif|*.AVIF)
+                MODERN=$((MODERN + 1))
+                ;;
+            esac
+
+          done < <(
+            find . \
+              -type f \
+              \( \
+                -iname "*.jpg" \
+                -o -iname "*.jpeg" \
+                -o -iname "*.png" \
+                -o -iname "*.gif" \
+                -o -iname "*.webp" \
+                -o -iname "*.avif" \
+              \) \
+              -not -path "./.git/*"
+          )
+
+          echo "Total images: $TOTAL"
+          echo "Modern format images: $MODERN"
+
+          if [ "$TOTAL" -gt 0 ]; then
+            PERCENT=$((MODERN * 100 / TOTAL))
+            echo "Modern format ratio: ${PERCENT}%"
+          fi
+
+      - name: Check image dimensions
+        run: |
+          echo "======================================"
+          echo " IMAGE DIMENSION CHECK"
+          echo "======================================"
+
+          while IFS= read -r FILE; do
+            [ -z "$FILE" ] && continue
+
+            DIMENSIONS=$(identify \
+              -format "%wx%h" \
+              "$FILE" 2>/dev/null || true)
+
+            if [ -n "$DIMENSIONS" ]; then
+              echo "$DIMENSIONS  $FILE"
+            fi
+
+          done < <(
+            find . \
+              -type f \
+              \( \
+                -iname "*.jpg" \
+                -o -iname "*.jpeg" \
+                -o -iname "*.png" \
+                -o -iname "*.webp" \
+                -o -iname "*.avif" \
+              \) \
+              -not -path "./.git/*"
+          )
+
+      - name: Check HTML image loading attributes
+        run: |
+          echo "======================================"
+          echo " HTML IMAGE ATTRIBUTE CHECK"
+          echo "======================================"
+
+          FAILED=0
+
+          while IFS= read -r FILE; do
+            [ -z "$FILE" ] && continue
+
+            if grep -Eiq '<img[^>]*>' "$FILE"; then
+
+              echo "Checking: $FILE"
+
+              if grep -Eiq \
+                '<img[^>]*\bloading\s*=\s*["'\'']lazy["'\'']' \
+                "$FILE"; then
+
+                echo "Lazy loading detected."
+
+              else
+
+                echo "INFO: No lazy-loading image detected in $FILE"
+
+              fi
+
+            fi
+
+          done < <(
+            find . \
+              -type f \
+              -name "*.html" \
+              -not -path "./.git/*"
+          )
+
+          echo ""
+          echo "Image loading attribute check complete."
+
+      - name: Generate image report
+        run: |
+          echo "======================================"
+          echo " IMAGE OPTIMIZATION SUMMARY"
+          echo "======================================"
+
+          find . \
+            -type f \
+            \( \
+              -iname "*.jpg" \
+              -o -iname "*.jpeg" \
+              -o -iname "*.png" \
+              -o -iname "*.gif" \
+              -o -iname "*.webp" \
+              -o -iname "*.avif" \
+            \) \
+            -not -path "./.git/*" \
+            -printf "%s %p\n" \
+            | sort -nr \
+            | head -20
+
+          echo ""
+          echo "Top 20 largest images listed above."
+
+      - name: Image optimization check complete
+        run: |
+          echo ""
+          echo "======================================"
+          echo " IMAGE CHECK COMPLETE"
+          echo "======================================"
+          echo ""
+          echo "LetsStudy Pro image optimization check completed."
