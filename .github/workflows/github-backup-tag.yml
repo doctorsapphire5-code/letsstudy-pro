@@ -1,0 +1,80 @@
+name: LetsStudy Pro - GitHub Backup Tag
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    name: Create Git Backup Tag
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout full repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create backup tag
+        shell: bash
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " LETSSTUDY PRO GITHUB BACKUP"
+          echo "======================================"
+
+          SHORT_SHA="${GITHUB_SHA::8}"
+          TAG="backup-${SHORT_SHA}"
+
+          echo "Commit: $GITHUB_SHA"
+          echo "Backup tag: $TAG"
+
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag already exists: $TAG"
+            exit 0
+          fi
+
+          git tag \
+            -a "$TAG" \
+            "$GITHUB_SHA" \
+            -m "LetsStudy Pro backup for commit $GITHUB_SHA"
+
+          git push origin "$TAG"
+
+          echo ""
+          echo "Backup tag created successfully:"
+          echo "$TAG"
+
+      - name: Show commit information
+        run: |
+          echo "======================================"
+          echo " BACKUP INFORMATION"
+          echo "======================================"
+
+          git log -1 \
+            --pretty=format:"Commit: %H%nAuthor: %an%nDate: %ad%nMessage: %s"
+
+          echo ""
+          echo ""
+          echo "GitHub backup tag:"
+          echo "backup-${GITHUB_SHA::8}"
+
+      - name: Backup complete
+        run: |
+          echo ""
+          echo "======================================"
+          echo " GITHUB BACKUP COMPLETE"
+          echo "======================================"
+          echo ""
+          echo "LetsStudy Pro commit has been preserved as a Git tag."
