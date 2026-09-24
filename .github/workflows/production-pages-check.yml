@@ -1,0 +1,151 @@
+name: LetsStudy Pro - Production Pages Check
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  production-check:
+    name: Check Production Pages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check production URLs
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " LETSSTUDY PRO PRODUCTION CHECK"
+          echo "======================================"
+
+          URLS="
+          https://letsstudy.pro/
+          https://letsstudy.pro/courses.html
+          https://letsstudy.pro/resources.html
+          https://letsstudy.pro/scholarships.html
+          https://letsstudy.pro/careers.html
+          https://letsstudy.pro/services.html
+          https://letsstudy.pro/blog.html
+          https://letsstudy.pro/robots.txt
+          https://letsstudy.pro/sitemap.xml
+          "
+
+          FAILED=0
+
+          while IFS= read -r URL; do
+
+            [ -z "$URL" ] && continue
+
+            STATUS=$(curl \
+              -L \
+              -s \
+              -o /dev/null \
+              -w "%{http_code}" \
+              --max-time 20 \
+              "$URL")
+
+            echo "$STATUS  $URL"
+
+            if [ "$STATUS" != "200" ]; then
+              echo "ERROR: $URL returned HTTP $STATUS"
+              FAILED=1
+            fi
+
+          done <<< "$URLS"
+
+          echo ""
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo "======================================"
+            echo " PRODUCTION CHECK FAILED"
+            echo "======================================"
+            exit 1
+          fi
+
+          echo "======================================"
+          echo " ALL PRODUCTION URLS PASSED"
+          echo "======================================"
+
+      - name: Check homepage content
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " HOMEPAGE CONTENT CHECK"
+          echo "======================================"
+
+          HTML=$(curl \
+            -L \
+            -s \
+            --max-time 20 \
+            https://letsstudy.pro/)
+
+          if [ -z "$HTML" ]; then
+            echo "ERROR: Homepage returned empty content"
+            exit 1
+          fi
+
+          if ! echo "$HTML" | grep -qi "<html"; then
+            echo "ERROR: Homepage does not appear to be HTML"
+            exit 1
+          fi
+
+          if ! echo "$HTML" | grep -qi "<title"; then
+            echo "ERROR: Homepage title is missing"
+            exit 1
+          fi
+
+          echo "Homepage content looks valid"
+
+      - name: Check for server errors
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " SERVER ERROR CHECK"
+          echo "======================================"
+
+          for URL in \
+            https://letsstudy.pro/ \
+            https://letsstudy.pro/courses.html \
+            https://letsstudy.pro/resources.html \
+            https://letsstudy.pro/scholarships.html \
+            https://letsstudy.pro/careers.html \
+            https://letsstudy.pro/services.html \
+            https://letsstudy.pro/blog.html
+          do
+
+            STATUS=$(curl \
+              -L \
+              -s \
+              -o /dev/null \
+              -w "%{http_code}" \
+              --max-time 20 \
+              "$URL")
+
+            case "$STATUS" in
+              500|501|502|503|504)
+                echo "ERROR: Server error $STATUS on $URL"
+                exit 1
+                ;;
+            esac
+
+          done
+
+          echo "No server errors detected"
+
+      - name: Production verification complete
+        run: |
+          echo ""
+          echo "======================================"
+          echo " PRODUCTION VERIFICATION PASSED"
+          echo "======================================"
+          echo ""
+          echo "LetsStudy Pro production pages are responding correctly."
