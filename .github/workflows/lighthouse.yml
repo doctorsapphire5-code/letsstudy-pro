@@ -1,0 +1,150 @@
+name: LetsStudy Pro - Lighthouse Audit
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  lighthouse:
+    name: Lighthouse Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Wait for production
+        run: |
+          set -e
+
+          echo "Waiting for production site..."
+
+          for i in {1..12}; do
+            STATUS=$(curl \
+              -L \
+              -s \
+              -o /dev/null \
+              -w "%{http_code}" \
+              --max-time 20 \
+              https://letsstudy.pro/)
+
+            echo "Attempt $i: HTTP $STATUS"
+
+            if [ "$STATUS" = "200" ]; then
+              echo "Production is ready"
+              exit 0
+            fi
+
+            sleep 10
+          done
+
+          echo "ERROR: Production site did not become ready"
+          exit 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run Lighthouse
+        run: |
+          npx --yes lighthouse \
+            https://letsstudy.pro/ \
+            --output=html \
+            --output=json \
+            --output-path=./lighthouse-report \
+            --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage"
+
+      - name: Show Lighthouse scores
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+
+          const report = JSON.parse(
+            fs.readFileSync("./lighthouse-report.report.json", "utf8")
+          );
+
+          const categories = report.categories;
+
+          console.log("");
+          console.log("======================================");
+          console.log(" LETSSTUDY PRO LIGHTHOUSE SCORES");
+          console.log("======================================");
+
+          for (const [name, category] of Object.entries(categories)) {
+            const score = Math.round(category.score * 100);
+
+            console.log(
+              `${name.padEnd(18)} ${score}/100`
+            );
+          }
+
+          console.log("======================================");
+          NODE
+
+      - name: Enforce minimum Lighthouse scores
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+
+          const report = JSON.parse(
+            fs.readFileSync("./lighthouse-report.report.json", "utf8")
+          );
+
+          const minimum = {
+            performance: 70,
+            accessibility: 90,
+            "best-practices": 90,
+            seo: 95
+          };
+
+          let failed = false;
+
+          console.log("");
+          console.log("======================================");
+          console.log(" LIGHTHOUSE QUALITY GATE");
+          console.log("======================================");
+
+          for (const [name, min] of Object.entries(minimum)) {
+            const score = Math.round(
+              report.categories[name].score * 100
+            );
+
+            console.log(
+              `${name}: ${score}/100 (minimum ${min})`
+            );
+
+            if (score < min) {
+              console.log(
+                `FAILED: ${name} is below the required score`
+              );
+
+              failed = true;
+            }
+          }
+
+          console.log("======================================");
+
+          if (failed) {
+            process.exit(1);
+          }
+
+          console.log("Lighthouse quality gate passed");
+          NODE
+
+      - name: Upload Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: |
+            lighthouse-report.report.html
+            lighthouse-report.report.json
+          retention-days: 30
