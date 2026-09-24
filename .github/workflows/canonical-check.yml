@@ -1,0 +1,217 @@
+name: LetsStudy Pro - Canonical URL Check
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  canonical:
+    name: Canonical URL Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check canonical tags
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " CANONICAL URL CHECK"
+          echo "======================================"
+
+          FAILED=0
+          COUNT=0
+
+          while IFS= read -r FILE; do
+            [ -z "$FILE" ] && continue
+
+            COUNT=$((COUNT + 1))
+
+            echo ""
+            echo "Checking: $FILE"
+
+            if ! grep -Eiq \
+              '<link[^>]+rel=["'\'']canonical["'\'']' \
+              "$FILE"; then
+
+              echo "ERROR: Canonical tag missing"
+              FAILED=1
+              continue
+            fi
+
+            CANONICAL=$(grep -Eio \
+              '<link[^>]+rel=["'\'']canonical["'\''][^>]*>' \
+              "$FILE" \
+              | head -1 \
+              | sed -nE 's/.*href=["'\'']([^"'\'']+)["'\''].*/\1/p')
+
+            echo "Canonical: $CANONICAL"
+
+            if [ -z "$CANONICAL" ]; then
+              echo "ERROR: Canonical href could not be detected"
+              FAILED=1
+              continue
+            fi
+
+            case "$CANONICAL" in
+              https://letsstudy.pro/*|https://letsstudy.pro)
+                echo "PASS: Correct LetsStudy Pro canonical"
+                ;;
+              *)
+                echo "ERROR: Incorrect canonical domain"
+                FAILED=1
+                ;;
+            esac
+
+            if echo "$CANONICAL" | grep -Eiq \
+              '^http://|localhost|127\.0\.0\.1'; then
+
+              echo "ERROR: Invalid canonical URL detected"
+              FAILED=1
+
+            fi
+
+          done < <(
+            find . \
+              -type f \
+              -name "*.html" \
+              -not -path "./.git/*" \
+              -not -path "./node_modules/*"
+          )
+
+          echo ""
+          echo "HTML files checked: $COUNT"
+
+          if [ "$COUNT" -eq 0 ]; then
+            echo "ERROR: No HTML files found"
+            exit 1
+          fi
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo ""
+            echo "======================================"
+            echo " CANONICAL CHECK FAILED"
+            echo "======================================"
+            exit 1
+          fi
+
+          echo ""
+          echo "======================================"
+          echo " CANONICAL CHECK PASSED"
+          echo "======================================"
+
+      - name: Check homepage canonical
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " PRODUCTION HOMEPAGE CANONICAL"
+          echo "======================================"
+
+          HTML=$(curl \
+            -L \
+            -s \
+            --max-time 20 \
+            https://letsstudy.pro/)
+
+          CANONICAL=$(echo "$HTML" \
+            | grep -Eio \
+              '<link[^>]+rel=["'\'']canonical["'\''][^>]*>' \
+            | head -1 \
+            | sed -nE 's/.*href=["'\'']([^"'\'']+)["'\''].*/\1/p')
+
+          echo "Production canonical: $CANONICAL"
+
+          if [ "$CANONICAL" != "https://letsstudy.pro/" ] &&
+             [ "$CANONICAL" != "https://letsstudy.pro" ]; then
+
+            echo "ERROR: Homepage canonical is incorrect."
+            exit 1
+          fi
+
+          echo "Homepage canonical is correct."
+
+      - name: Check important production pages
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " PRODUCTION CANONICAL CHECK"
+          echo "======================================"
+
+          URLS="
+          https://letsstudy.pro/courses.html
+          https://letsstudy.pro/resources.html
+          https://letsstudy.pro/scholarships.html
+          https://letsstudy.pro/careers.html
+          https://letsstudy.pro/services.html
+          https://letsstudy.pro/blog.html
+          "
+
+          FAILED=0
+
+          while IFS= read -r URL; do
+            [ -z "$URL" ] && continue
+
+            echo ""
+            echo "Checking: $URL"
+
+            HTML=$(curl \
+              -L \
+              -s \
+              --max-time 20 \
+              "$URL")
+
+            CANONICAL=$(echo "$HTML" \
+              | grep -Eio \
+                '<link[^>]+rel=["'\'']canonical["'\''][^>]*>' \
+              | head -1 \
+              | sed -nE 's/.*href=["'\'']([^"'\'']+)["'\''].*/\1/p')
+
+            echo "Canonical: $CANONICAL"
+
+            if [ -z "$CANONICAL" ]; then
+              echo "ERROR: Canonical missing"
+              FAILED=1
+              continue
+            fi
+
+            case "$CANONICAL" in
+              https://letsstudy.pro/*|https://letsstudy.pro)
+                echo "PASS"
+                ;;
+              *)
+                echo "ERROR: Wrong canonical domain"
+                FAILED=1
+                ;;
+            esac
+
+          done <<< "$URLS"
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo ""
+            echo "Production canonical check failed."
+            exit 1
+          fi
+
+          echo ""
+          echo "All important production pages have valid canonicals."
+
+      - name: Canonical audit complete
+        run: |
+          echo ""
+          echo "======================================"
+          echo " CANONICAL URL AUDIT PASSED"
+          echo "======================================"
