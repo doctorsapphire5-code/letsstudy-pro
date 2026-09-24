@@ -1,0 +1,327 @@
+name: LetsStudy Pro - Schema.org Check
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  schema-check:
+    name: Schema.org Structured Data Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check JSON-LD presence
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " JSON-LD CHECK"
+          echo "======================================"
+
+          COUNT=0
+
+          while IFS= read -r FILE; do
+            [ -z "$FILE" ] && continue
+
+            if grep -Eiq \
+              '<script[^>]+type=["'\'']application/ld\+json["'\'']' \
+              "$FILE"; then
+
+              echo "PASS: JSON-LD found: $FILE"
+              COUNT=$((COUNT + 1))
+
+            fi
+
+          done < <(
+            find . \
+              -type f \
+              -name "*.html" \
+              -not -path "./.git/*" \
+              -not -path "./node_modules/*"
+          )
+
+          echo ""
+          echo "Pages containing JSON-LD: $COUNT"
+
+          if [ "$COUNT" -eq 0 ]; then
+            echo "ERROR: No JSON-LD structured data found."
+            exit 1
+          fi
+
+      - name: Validate JSON-LD syntax
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " JSON-LD SYNTAX CHECK"
+          echo "======================================"
+
+          node <<'NODE'
+          const fs = require("fs");
+          const path = require("path");
+
+          function walk(dir) {
+            let results = [];
+
+            for (const item of fs.readdirSync(dir)) {
+              if (
+                item === ".git" ||
+                item === "node_modules"
+              ) {
+                continue;
+              }
+
+              const full = path.join(dir, item);
+              const stat = fs.statSync(full);
+
+              if (stat.isDirectory()) {
+                results = results.concat(walk(full));
+              } else if (
+                full.endsWith(".html")
+              ) {
+                results.push(full);
+              }
+            }
+
+            return results;
+          }
+
+          const files = walk(".");
+
+          let found = 0;
+          let failed = false;
+
+          for (const file of files) {
+            const html = fs.readFileSync(file, "utf8");
+
+            const regex =
+              /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+
+            let match;
+
+            while ((match = regex.exec(html)) !== null) {
+              found++;
+
+              try {
+                JSON.parse(match[1].trim());
+
+                console.log(
+                  `PASS: ${file} JSON-LD is valid`
+                );
+
+              } catch (error) {
+
+                console.error(
+                  `ERROR: Invalid JSON-LD in ${file}`
+                );
+
+                console.error(error.message);
+
+                failed = true;
+              }
+            }
+          }
+
+          console.log("");
+          console.log(
+            `JSON-LD blocks checked: ${found}`
+          );
+
+          if (found === 0) {
+            console.error(
+              "ERROR: No JSON-LD blocks found."
+            );
+
+            process.exit(1);
+          }
+
+          if (failed) {
+            process.exit(1);
+          }
+
+          console.log(
+            "All JSON-LD blocks contain valid JSON."
+          );
+          NODE
+
+      - name: Check Organization schema
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " ORGANIZATION SCHEMA CHECK"
+          echo "======================================"
+
+          if grep -Rqs \
+            '"@type"[[:space:]]*:[[:space:]]*"Organization"' \
+            --include="*.html" \
+            --exclude-dir=.git \
+            .; then
+
+            echo "Organization schema found."
+
+          else
+
+            echo "WARNING: Organization schema not found."
+
+          fi
+
+      - name: Check WebSite schema
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " WEBSITE SCHEMA CHECK"
+          echo "======================================"
+
+          if grep -Rqs \
+            '"@type"[[:space:]]*:[[:space:]]*"WebSite"' \
+            --include="*.html" \
+            --exclude-dir=.git \
+            .; then
+
+            echo "WebSite schema found."
+
+          else
+
+            echo "WARNING: WebSite schema not found."
+
+          fi
+
+      - name: Check Course schema
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " COURSE SCHEMA CHECK"
+          echo "======================================"
+
+          if grep -Rqs \
+            '"@type"[[:space:]]*:[[:space:]]*"Course"' \
+            --include="*.html" \
+            --exclude-dir=.git \
+            .; then
+
+            echo "Course schema found."
+
+          else
+
+            echo "INFO: Course schema not found."
+            echo "Add Course structured data to course pages when applicable."
+
+          fi
+
+      - name: Check Breadcrumb schema
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " BREADCRUMB SCHEMA CHECK"
+          echo "======================================"
+
+          if grep -Rqs \
+            '"@type"[[:space:]]*:[[:space:]]*"BreadcrumbList"' \
+            --include="*.html" \
+            --exclude-dir=.git \
+            .; then
+
+            echo "BreadcrumbList schema found."
+
+          else
+
+            echo "INFO: BreadcrumbList schema not found."
+
+          fi
+
+      - name: Check LetsStudy Pro schema URLs
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " SCHEMA URL CHECK"
+          echo "======================================"
+
+          FAILED=0
+
+          while IFS= read -r FILE; do
+            [ -z "$FILE" ] && continue
+
+            if grep -Eiq \
+              'application/ld\+json' \
+              "$FILE"; then
+
+              if grep -Eiq \
+                'https://letsstudy\.pro' \
+                "$FILE"; then
+
+                echo "PASS: LetsStudy Pro URL found in $FILE"
+
+              else
+
+                echo "WARNING: No LetsStudy Pro URL in $FILE"
+                FAILED=1
+
+              fi
+
+            fi
+
+          done < <(
+            find . \
+              -type f \
+              -name "*.html" \
+              -not -path "./.git/*" \
+              -not -path "./node_modules/*"
+          )
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo ""
+            echo "Some JSON-LD files may need URL review."
+          fi
+
+      - name: Check production homepage schema
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " PRODUCTION SCHEMA CHECK"
+          echo "======================================"
+
+          HTML=$(curl \
+            -L \
+            -s \
+            --max-time 20 \
+            https://letsstudy.pro/)
+
+          if echo "$HTML" | grep -Eiq \
+            'application/ld\+json'; then
+
+            echo "Production JSON-LD detected."
+
+          else
+
+            echo "ERROR: Production homepage has no JSON-LD."
+            exit 1
+
+          fi
+
+      - name: Schema audit complete
+        run: |
+          echo ""
+          echo "======================================"
+          echo " SCHEMA.ORG AUDIT COMPLETE"
+          echo "======================================"
+          echo ""
+          echo "LetsStudy Pro structured-data checks completed."
