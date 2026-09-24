@@ -1,0 +1,109 @@
+name: LetsStudy Pro - Google Analytics Check
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  analytics-check:
+    name: Check Google Analytics 4
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check GA4 Measurement ID
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " GOOGLE ANALYTICS 4 CHECK"
+          echo "======================================"
+
+          GA_ID="G-3RD5Z87VF0"
+
+          if ! grep -Rqs "$GA_ID" \
+            --include="*.html" \
+            --exclude-dir=.git .; then
+
+            echo "ERROR: GA4 Measurement ID not found"
+            echo "Expected: $GA_ID"
+            exit 1
+          fi
+
+          echo "GA4 Measurement ID found: $GA_ID"
+
+      - name: Check Google Analytics script
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " GA4 SCRIPT CHECK"
+          echo "======================================"
+
+          if ! grep -Rqs \
+            "googletagmanager.com/gtag/js" \
+            --include="*.html" \
+            --exclude-dir=.git .; then
+
+            echo "ERROR: Google Analytics script not found"
+            exit 1
+          fi
+
+          echo "Google Analytics script found"
+
+      - name: Check gtag configuration
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " GTAG CONFIG CHECK"
+          echo "======================================"
+
+          if ! grep -Rqs \
+            "gtag.*G-3RD5Z87VF0" \
+            --include="*.html" \
+            --exclude-dir=.git .; then
+
+            echo "ERROR: gtag configuration not found"
+            exit 1
+          fi
+
+          echo "gtag configuration found"
+
+      - name: Check production homepage
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " PRODUCTION GA4 CHECK"
+          echo "======================================"
+
+          HTML=$(curl -L -s https://letsstudy.pro)
+
+          if ! echo "$HTML" | grep -q "G-3RD5Z87VF0"; then
+            echo "ERROR: GA4 Measurement ID not found on production"
+            exit 1
+          fi
+
+          if ! echo "$HTML" | grep -q "googletagmanager.com/gtag/js"; then
+            echo "ERROR: GA4 script not found on production"
+            exit 1
+          fi
+
+          echo "Production GA4 code detected"
+
+      - name: Analytics validation complete
+        run: |
+          echo ""
+          echo "======================================"
+          echo " GOOGLE ANALYTICS CHECK PASSED"
+          echo "======================================"
