@@ -1,0 +1,304 @@
+name: LetsStudy Pro - Production Smoke Test
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-test:
+    name: Production Smoke Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Wait for production
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " WAITING FOR PRODUCTION"
+          echo "======================================"
+
+          for i in {1..12}; do
+
+            STATUS=$(curl \
+              -L \
+              -s \
+              -o /dev/null \
+              -w "%{http_code}" \
+              --max-time 20 \
+              https://letsstudy.pro/)
+
+            echo "Attempt $i: HTTP $STATUS"
+
+            if [ "$STATUS" = "200" ]; then
+              echo "Production is ready."
+              exit 0
+            fi
+
+            sleep 10
+
+          done
+
+          echo "ERROR: Production did not become ready."
+          exit 1
+
+      - name: Check critical pages
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " CRITICAL PAGE CHECK"
+          echo "======================================"
+
+          URLS="
+          https://letsstudy.pro/
+          https://letsstudy.pro/courses.html
+          https://letsstudy.pro/resources.html
+          https://letsstudy.pro/scholarships.html
+          https://letsstudy.pro/careers.html
+          https://letsstudy.pro/services.html
+          https://letsstudy.pro/blog.html
+          https://letsstudy.pro/robots.txt
+          https://letsstudy.pro/sitemap.xml
+          "
+
+          FAILED=0
+
+          while IFS= read -r URL; do
+            [ -z "$URL" ] && continue
+
+            STATUS=$(curl \
+              -L \
+              -s \
+              -o /dev/null \
+              -w "%{http_code}" \
+              --max-time 20 \
+              "$URL")
+
+            echo "$STATUS  $URL"
+
+            if [ "$STATUS" != "200" ]; then
+              echo "ERROR: $URL returned $STATUS"
+              FAILED=1
+            fi
+
+          done <<< "$URLS"
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo ""
+            echo "Production page check failed."
+            exit 1
+          fi
+
+          echo ""
+          echo "All critical pages returned HTTP 200."
+
+      - name: Check homepage HTML
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " HOMEPAGE HTML CHECK"
+          echo "======================================"
+
+          HTML=$(curl \
+            -L \
+            -s \
+            --max-time 20 \
+            https://letsstudy.pro/)
+
+          if [ -z "$HTML" ]; then
+            echo "ERROR: Homepage returned empty content."
+            exit 1
+          fi
+
+          echo "$HTML" | grep -Eiq '<html' || {
+            echo "ERROR: HTML element not found."
+            exit 1
+          }
+
+          echo "$HTML" | grep -Eiq '<head' || {
+            echo "ERROR: HEAD element not found."
+            exit 1
+          }
+
+          echo "$HTML" | grep -Eiq '<body' || {
+            echo "ERROR: BODY element not found."
+            exit 1
+          }
+
+          echo "$HTML" | grep -Eiq '<title' || {
+            echo "ERROR: TITLE element not found."
+            exit 1
+          }
+
+          echo "Homepage HTML structure looks valid."
+
+      - name: Check LetsStudy Pro branding
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " BRAND CHECK"
+          echo "======================================"
+
+          HTML=$(curl \
+            -L \
+            -s \
+            --max-time 20 \
+            https://letsstudy.pro/)
+
+          if echo "$HTML" | grep -qi "LetsStudy Pro"; then
+            echo "LetsStudy Pro branding detected."
+          else
+            echo "ERROR: LetsStudy Pro branding not detected."
+            exit 1
+          fi
+
+      - name: Check Google integrations
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " GOOGLE INTEGRATION CHECK"
+          echo "======================================"
+
+          HTML=$(curl \
+            -L \
+            -s \
+            --max-time 20 \
+            https://letsstudy.pro/)
+
+          if echo "$HTML" | grep -q "G-3RD5Z87VF0"; then
+            echo "PASS: Google Analytics 4 detected."
+          else
+            echo "WARNING: GA4 Measurement ID not detected."
+          fi
+
+          if echo "$HTML" | grep -q "ca-pub-9557927842145806"; then
+            echo "PASS: Google AdSense detected."
+          else
+            echo "WARNING: AdSense Publisher ID not detected."
+          fi
+
+      - name: Check SEO essentials
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " SEO ESSENTIALS CHECK"
+          echo "======================================"
+
+          HTML=$(curl \
+            -L \
+            -s \
+            --max-time 20 \
+            https://letsstudy.pro/)
+
+          FAILED=0
+
+          if echo "$HTML" | grep -Eiq '<title[^>]*>'; then
+            echo "PASS: Title"
+          else
+            echo "ERROR: Title missing"
+            FAILED=1
+          fi
+
+          if echo "$HTML" | grep -Eiq \
+            '<meta[^>]+name=["'\'']description["'\'']'; then
+            echo "PASS: Meta description"
+          else
+            echo "ERROR: Meta description missing"
+            FAILED=1
+          fi
+
+          if echo "$HTML" | grep -Eiq \
+            'rel=["'\'']canonical["'\'']'; then
+            echo "PASS: Canonical"
+          else
+            echo "ERROR: Canonical missing"
+            FAILED=1
+          fi
+
+          if echo "$HTML" | grep -Eiq \
+            'application/ld\+json'; then
+            echo "PASS: JSON-LD"
+          else
+            echo "WARNING: JSON-LD missing"
+          fi
+
+          if [ "$FAILED" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Check robots and sitemap
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " ROBOTS & SITEMAP CHECK"
+          echo "======================================"
+
+          ROBOTS=$(curl \
+            -L \
+            -s \
+            --max-time 20 \
+            https://letsstudy.pro/robots.txt)
+
+          if [ -z "$ROBOTS" ]; then
+            echo "ERROR: robots.txt is empty."
+            exit 1
+          fi
+
+          echo "robots.txt detected."
+
+          SITEMAP=$(curl \
+            -L \
+            -s \
+            --max-time 20 \
+            https://letsstudy.pro/sitemap.xml)
+
+          if echo "$SITEMAP" | grep -q "<urlset"; then
+            echo "sitemap.xml detected and contains urlset."
+          else
+            echo "ERROR: Invalid or empty sitemap."
+            exit 1
+          fi
+
+      - name: Check HTTPS
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " HTTPS CHECK"
+          echo "======================================"
+
+          STATUS=$(curl \
+            -L \
+            -s \
+            -o /dev/null \
+            -w "%{http_code}" \
+            --max-time 20 \
+            https://letsstudy.pro/)
+
+          if [ "$STATUS" != "200" ]; then
+            echo "ERROR: HTTPS request failed."
+            exit 1
+          fi
+
+          echo "HTTPS is working."
+
+      - name: Smoke test complete
+        run: |
+          echo ""
+          echo "======================================"
+          echo " PRODUCTION SMOKE TEST PASSED"
+          echo "======================================"
+          echo ""
+          echo "LetsStudy Pro production health check completed successfully."
