@@ -1,0 +1,127 @@
+name: LetsStudy Pro - Security Headers Check
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  security-headers:
+    name: Check Security Headers
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check production security headers
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " LETSSTUDY PRO SECURITY HEADERS"
+          echo "======================================"
+
+          HEADERS=$(curl \
+            -L \
+            -s \
+            -I \
+            --max-time 20 \
+            https://letsstudy.pro/)
+
+          echo "$HEADERS"
+
+          echo ""
+          echo "======================================"
+          echo " SECURITY HEADER CHECK"
+          echo "======================================"
+
+          FAILED=0
+
+          check_header() {
+            HEADER="$1"
+
+            if echo "$HEADERS" | grep -Eiq "^${HEADER}:"; then
+              echo "PASS: $HEADER"
+            else
+              echo "WARNING: $HEADER is missing"
+              FAILED=1
+            fi
+          }
+
+          check_header "strict-transport-security"
+          check_header "x-content-type-options"
+          check_header "referrer-policy"
+          check_header "content-security-policy"
+          check_header "permissions-policy"
+
+          echo ""
+          echo "======================================"
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo "WARNING: One or more security headers are missing."
+            echo "Review Firebase Hosting configuration."
+            exit 1
+          fi
+
+          echo "All required security headers are present."
+
+      - name: Check HTTPS
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " HTTPS CHECK"
+          echo "======================================"
+
+          STATUS=$(curl \
+            -L \
+            -s \
+            -o /dev/null \
+            -w "%{http_code}" \
+            --max-time 20 \
+            https://letsstudy.pro/)
+
+          if [ "$STATUS" != "200" ]; then
+            echo "ERROR: HTTPS site returned HTTP $STATUS"
+            exit 1
+          fi
+
+          echo "HTTPS is working correctly."
+
+      - name: Check HTTP to HTTPS redirect
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " HTTP → HTTPS CHECK"
+          echo "======================================"
+
+          RESPONSE=$(curl \
+            -s \
+            -I \
+            --max-time 20 \
+            http://letsstudy.pro/ || true)
+
+          echo "$RESPONSE"
+
+          if echo "$RESPONSE" | grep -Eiq \
+            "location: https://letsstudy\.pro"; then
+
+            echo "HTTP correctly redirects to HTTPS."
+
+          else
+
+            echo "WARNING: HTTP to HTTPS redirect was not detected."
+
+          fi
+
+      - name: Security check complete
+        run: |
+          echo ""
+          echo "======================================"
+          echo " SECURITY HEADER CHECK COMPLETE"
+          echo "======================================"
