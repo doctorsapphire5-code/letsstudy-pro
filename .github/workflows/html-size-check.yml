@@ -1,0 +1,213 @@
+name: LetsStudy Pro - HTML Size & Performance Check
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  html-size:
+    name: HTML Size & Performance Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check HTML file sizes
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " HTML SIZE CHECK"
+          echo "======================================"
+
+          MAX_SIZE=$((500 * 1024))
+          FAILED=0
+          COUNT=0
+
+          while IFS= read -r FILE; do
+            [ -z "$FILE" ] && continue
+
+            COUNT=$((COUNT + 1))
+
+            SIZE=$(stat -c%s "$FILE")
+            SIZE_KB=$((SIZE / 1024))
+
+            echo "${SIZE_KB} KB  $FILE"
+
+            if [ "$SIZE" -gt "$MAX_SIZE" ]; then
+              echo "WARNING: HTML file is larger than 500 KB"
+              FAILED=1
+            fi
+
+          done < <(
+            find . \
+              -type f \
+              -name "*.html" \
+              -not -path "./.git/*" \
+              -not -path "./node_modules/*"
+          )
+
+          echo ""
+          echo "HTML files checked: $COUNT"
+
+          if [ "$COUNT" -eq 0 ]; then
+            echo "ERROR: No HTML files found"
+            exit 1
+          fi
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo ""
+            echo "WARNING: Large HTML files detected."
+            echo "Consider reducing inline CSS, JavaScript and unnecessary markup."
+          else
+            echo ""
+            echo "All HTML files are within the recommended size limit."
+          fi
+
+      - name: Check production page sizes
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " PRODUCTION PAGE SIZE CHECK"
+          echo "======================================"
+
+          URLS="
+          https://letsstudy.pro/
+          https://letsstudy.pro/courses.html
+          https://letsstudy.pro/resources.html
+          https://letsstudy.pro/scholarships.html
+          https://letsstudy.pro/careers.html
+          https://letsstudy.pro/services.html
+          https://letsstudy.pro/blog.html
+          "
+
+          MAX_SIZE=$((1000 * 1024))
+          FAILED=0
+
+          while IFS= read -r URL; do
+            [ -z "$URL" ] && continue
+
+            echo ""
+            echo "Checking: $URL"
+
+            SIZE=$(curl \
+              -L \
+              -s \
+              --max-time 30 \
+              "$URL" \
+              | wc -c)
+
+            SIZE_KB=$((SIZE / 1024))
+
+            echo "Page size: ${SIZE_KB} KB"
+
+            if [ "$SIZE" -gt "$MAX_SIZE" ]; then
+              echo "WARNING: Production page is larger than 1 MB"
+              FAILED=1
+            else
+              echo "PASS: Production page size is acceptable"
+            fi
+
+          done <<< "$URLS"
+
+          echo ""
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo "WARNING: One or more production pages exceed 1 MB."
+          else
+            echo "All production pages are below 1 MB."
+          fi
+
+      - name: Check HTML compression
+        run: |
+          set -e
+
+          echo "======================================"
+          echo " HTML COMPRESSION CHECK"
+          echo "======================================"
+
+          URL="https://letsstudy.pro/"
+
+          HEADERS=$(curl \
+            -L \
+            -s \
+            -I \
+            --max-time 20 \
+            "$URL")
+
+          echo "$HEADERS"
+
+          if echo "$HEADERS" | grep -Eiq \
+            "^content-encoding: (br|gzip)"; then
+
+            echo ""
+            echo "PASS: Production HTML is compressed."
+
+          else
+
+            echo ""
+            echo "WARNING: HTML compression header was not detected."
+            echo "Firebase/CDN configuration should be reviewed."
+
+          fi
+
+      - name: Check HTML whitespace
+        run: |
+          echo "======================================"
+          echo " HTML WHITESPACE CHECK"
+          echo "======================================"
+
+          while IFS= read -r FILE; do
+            [ -z "$FILE" ] && continue
+
+            SIZE=$(stat -c%s "$FILE")
+
+            EMPTY_LINES=$(grep -c '^$' "$FILE" || true)
+
+            echo "$FILE"
+            echo "  Size: $((SIZE / 1024)) KB"
+            echo "  Empty lines: $EMPTY_LINES"
+
+          done < <(
+            find . \
+              -type f \
+              -name "*.html" \
+              -not -path "./.git/*" \
+              -not -path "./node_modules/*"
+          )
+
+      - name: Show largest HTML files
+        run: |
+          echo "======================================"
+          echo " LARGEST HTML FILES"
+          echo "======================================"
+
+          find . \
+            -type f \
+            -name "*.html" \
+            -not -path "./.git/*" \
+            -not -path "./node_modules/*" \
+            -printf "%s %p\n" \
+            | sort -nr \
+            | head -20
+
+      - name: Performance summary
+        run: |
+          echo ""
+          echo "======================================"
+          echo " HTML PERFORMANCE CHECK COMPLETE"
+          echo "======================================"
+          echo ""
+          echo "LetsStudy Pro HTML size and performance checks completed."
