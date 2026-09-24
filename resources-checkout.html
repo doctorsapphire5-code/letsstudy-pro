@@ -645,7 +645,7 @@ import {
 const firebaseConfig = {
 
   apiKey:
-    "AIzaSyBcOYDfAVK5XbkljsyRgI_0rj0odBn678tCc",
+    "AIzaSyBcOYDfAVKXbkljsyRgI_0rj0odBn678tCc",
 
   authDomain:
     "let-s-study-pro-course.firebaseapp.com",
@@ -672,9 +672,7 @@ const firebaseConfig = {
 
 
 const app =
-  initializeApp(
-    firebaseConfig
-  );
+  initializeApp(firebaseConfig);
 
 
 const db =
@@ -941,6 +939,120 @@ function showStatus(
 
 
 /* =========================================
+   CUSTOMER STORAGE
+========================================= */
+
+function saveCustomer(){
+
+  try{
+
+    localStorage.setItem(
+      "resourceCustomer",
+      JSON.stringify({
+
+        firstName:
+          document
+            .getElementById("firstName")
+            .value
+            .trim(),
+
+        lastName:
+          document
+            .getElementById("lastName")
+            .value
+            .trim(),
+
+        email:
+          document
+            .getElementById("email")
+            .value
+            .trim(),
+
+        phoneNumber:
+          document
+            .getElementById("phoneNumber")
+            .value
+            .trim(),
+
+        country:
+          document
+            .getElementById("country")
+            .value
+            .trim()
+
+      })
+    );
+
+  }catch(error){
+
+    console.warn(
+      "CUSTOMER SAVE:",
+      error
+    );
+
+  }
+
+}
+
+
+function restoreCustomer(){
+
+  try{
+
+    const saved =
+      JSON.parse(
+        localStorage.getItem(
+          "resourceCustomer"
+        ) || "null"
+      );
+
+
+    if(
+      !saved ||
+      typeof saved !== "object"
+    ){
+
+      return;
+
+    }
+
+
+    [
+      "firstName",
+      "lastName",
+      "email",
+      "phoneNumber",
+      "country"
+    ].forEach(id => {
+
+      const field =
+        document.getElementById(id);
+
+      if(
+        field &&
+        saved[id] !== undefined
+      ){
+
+        field.value =
+          saved[id];
+
+      }
+
+    });
+
+  }catch(error){
+
+    console.warn(
+      "CUSTOMER RESTORE:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =========================================
    LOAD RESOURCES
 ========================================= */
 
@@ -948,6 +1060,7 @@ async function loadResources(){
 
   const cartIds =
     getCart();
+
 
   if(!cartIds.length){
 
@@ -978,13 +1091,22 @@ async function loadResources(){
           resourceId
         );
 
+
       const snapshot =
         await getDoc(
           reference
         );
 
+
       if(!snapshot.exists()){
+
+        console.warn(
+          "Resource not found:",
+          resourceId
+        );
+
         continue;
+
       }
 
 
@@ -1157,147 +1279,7 @@ function renderSummary(){
 
 
 /* =========================================
-   CUSTOMER STORAGE
-========================================= */
-
-function saveCustomer(){
-
-  try{
-
-    localStorage.setItem(
-      "resourceCustomer",
-      JSON.stringify({
-
-        firstName:
-          document
-            .getElementById("firstName")
-            .value
-            .trim(),
-
-        lastName:
-          document
-            .getElementById("lastName")
-            .value
-            .trim(),
-
-        email:
-          document
-            .getElementById("email")
-            .value
-            .trim(),
-
-        phoneNumber:
-          document
-            .getElementById("phoneNumber")
-            .value
-            .trim(),
-
-        country:
-          document
-            .getElementById("country")
-            .value
-            .trim()
-
-      })
-    );
-
-  }catch(error){
-
-    console.warn(
-      "CUSTOMER SAVE:",
-      error
-    );
-
-  }
-
-}
-
-
-function restoreCustomer(){
-
-  try{
-
-    const saved =
-      JSON.parse(
-        localStorage.getItem(
-          "resourceCustomer"
-        ) || "null"
-      );
-
-
-    if(
-      !saved ||
-      typeof saved !== "object"
-    ){
-
-      return;
-
-    }
-
-
-    if(saved.firstName){
-
-      document.getElementById(
-        "firstName"
-      ).value =
-        saved.firstName;
-
-    }
-
-
-    if(saved.lastName){
-
-      document.getElementById(
-        "lastName"
-      ).value =
-        saved.lastName;
-
-    }
-
-
-    if(saved.email){
-
-      document.getElementById(
-        "email"
-      ).value =
-        saved.email;
-
-    }
-
-
-    if(saved.phoneNumber){
-
-      document.getElementById(
-        "phoneNumber"
-      ).value =
-        saved.phoneNumber;
-
-    }
-
-
-    if(saved.country){
-
-      document.getElementById(
-        "country"
-      ).value =
-        saved.country;
-
-    }
-
-  }catch(error){
-
-    console.warn(
-      "CUSTOMER RESTORE:",
-      error
-    );
-
-  }
-
-}
-
-
-/* =========================================
-   CHECKOUT
+   CREATE PESAPAL ORDER
 ========================================= */
 
 payButton.addEventListener(
@@ -1336,13 +1318,13 @@ payButton.addEventListener(
       document
         .getElementById("country")
         .value
-        .trim();
+        .trim() || "TZ";
 
 
     const terms =
-      document.getElementById(
-        "terms"
-      ).checked;
+      document
+        .getElementById("terms")
+        .checked;
 
 
     /* =====================================
@@ -1437,21 +1419,7 @@ payButton.addEventListener(
 
 
     /* =====================================
-       ORDER ID
-    ====================================== */
-
-    const orderId =
-      "RES-" +
-      Date.now() +
-      "-" +
-      Math.random()
-        .toString(36)
-        .slice(2,8)
-        .toUpperCase();
-
-
-    /* =====================================
-       ITEMS + TOTAL
+       ITEMS
     ====================================== */
 
     const items =
@@ -1475,6 +1443,10 @@ payButton.addEventListener(
         })
       );
 
+
+    /* =====================================
+       TOTAL
+    ====================================== */
 
     const total =
       items.reduce(
@@ -1501,6 +1473,20 @@ payButton.addEventListener(
 
 
     /* =====================================
+       ORDER ID
+    ====================================== */
+
+    const orderId =
+      "RES-" +
+      Date.now() +
+      "-" +
+      Math.random()
+        .toString(36)
+        .substring(2,8)
+        .toUpperCase();
+
+
+    /* =====================================
        DESCRIPTION
     ====================================== */
 
@@ -1515,7 +1501,7 @@ payButton.addEventListener(
 
 
     /* =====================================
-       UNIVERSAL PAYLOAD
+       PAYLOAD
     ====================================== */
 
     const payload = {
@@ -1551,11 +1537,104 @@ payButton.addEventListener(
     };
 
 
+    /* =====================================
+       SAVE PAYMENT DATA
+    ====================================== */
+
+    try{
+
+      saveCustomer();
+
+
+      localStorage.setItem(
+        "pendingPayment",
+        JSON.stringify({
+
+          orderId,
+
+          amount:
+            Number(total),
+
+          currency:
+            "TZS",
+
+          productType:
+            "resource",
+
+          items,
+
+          email,
+
+          firstName,
+
+          lastName,
+
+          phoneNumber,
+
+          country,
+
+          createdAt:
+            Date.now()
+
+        })
+      );
+
+
+      localStorage.setItem(
+        "pendingResourcePayment",
+        JSON.stringify(payload)
+      );
+
+
+      localStorage.setItem(
+        "pendingResourceOrder",
+        JSON.stringify(payload)
+      );
+
+
+      localStorage.setItem(
+        "pendingCheckoutCustomer",
+        JSON.stringify({
+
+          firstName,
+
+          lastName,
+
+          email,
+
+          phoneNumber,
+
+          country
+
+        })
+      );
+
+
+      sessionStorage.setItem(
+        "resourcePayment",
+        JSON.stringify(payload)
+      );
+
+
+    }catch(error){
+
+      console.warn(
+        "PAYMENT STORAGE:",
+        error
+      );
+
+    }
+
+
+    /* =====================================
+       DISABLE BUTTON
+    ====================================== */
+
     payButton.disabled =
       true;
 
     payButton.textContent =
-      "Preparing Payment...";
+      "Creating Payment...";
 
 
     showStatus(
@@ -1564,383 +1643,318 @@ payButton.addEventListener(
     );
 
 
+    /* =====================================
+       CREATE ORDER REQUEST
+    ====================================== */
+
     try{
 
-      saveCustomer();
+      const response =
+        await fetch(
+          CREATE_ORDER_ENDPOINT,
+          {
 
+            method:
+              "POST",
 
-      /* =====================================
-         CREATE PAYMENT
-      ===================================== */
+            headers: {
 
-      form.addEventListener("submit", async (event) => {
+              "Content-Type":
+                "application/json",
 
-        event.preventDefault();
+              "Accept":
+                "application/json"
 
-        errorBox.textContent = "";
+            },
 
-        if (!terms.checked) {
-          errorBox.textContent =
-            "Please accept the terms and conditions.";
-          return;
-        }
-
-        const firstName =
-          document.getElementById("firstName").value.trim();
-
-        const lastName =
-          document.getElementById("lastName").value.trim();
-
-        const email =
-          document.getElementById("email").value.trim();
-
-        const phoneNumber =
-          document.getElementById("phoneNumber").value.trim();
-
-        const country =
-          document.getElementById("country").value.trim() || "TZ";
-
-        if (!firstName || !lastName || !email || !phoneNumber) {
-          errorBox.textContent =
-            "Please complete all required customer information.";
-          return;
-        }
-
-        payButton.disabled = true;
-        payButton.textContent = "Creating Payment...";
-
-        try {
-
-          const orderId =
-            "RES-" +
-            Date.now() +
-            "-" +
-            Math.random()
-              .toString(36)
-              .substring(2, 8)
-              .toUpperCase();
-
-          const items =
-            resources.map(resource => ({
-              id: resource.id,
-              name: getTitle(resource),
-              quantity: 1,
-              price: Number(getPrice(resource))
-            }));
-
-          const total =
-            items.reduce(
-              (sum, item) =>
-                sum + Number(item.price),
-              0
-            );
-
-          if (!items.length || total <= 0) {
-            throw new Error(
-              "No valid paid resources found."
-            );
-          }
-
-          const description =
-            resources.length === 1
-              ? getTitle(resources[0])
-              : `LetsStudy Pro - ${resources.length} Resources`;
-
-          const payload = {
-            orderId,
-            amount: Number(total),
-            currency: "TZS",
-            description,
-            email,
-            firstName,
-            lastName,
-            phoneNumber,
-            country,
-            paymentMethod: "pesapal",
-            productType: "resource",
-            items
-          };
-
-          localStorage.setItem(
-            "pendingPayment",
-            JSON.stringify({
-              orderId,
-              amount: Number(total),
-              currency: "TZS",
-              productType: "resource",
-              items,
-              email,
-              firstName,
-              lastName,
-              phoneNumber,
-              country,
-              createdAt: Date.now()
-            })
-          );
-
-          localStorage.setItem(
-            "pendingResourcePayment",
-            JSON.stringify(payload)
-          );
-
-          localStorage.setItem(
-            "pendingResourceOrder",
-            JSON.stringify(payload)
-          );
-
-          localStorage.setItem(
-            "pendingCheckoutCustomer",
-            JSON.stringify({
-              firstName,
-              lastName,
-              email,
-              phoneNumber,
-              country
-            })
-          );
-
-          sessionStorage.setItem(
-            "resourcePayment",
-            JSON.stringify(payload)
-          );
-
-          const response =
-            await fetch(
-              CREATE_ORDER_ENDPOINT,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type":
-                    "application/json"
-                },
-                body:
-                  JSON.stringify(payload)
-              }
-            );
-
-          const data =
-            await response.json();
-
-          if (!response.ok || !data.success) {
-            throw new Error(
-              data.message ||
-              data.error ||
-              "Unable to create payment."
-            );
-          }
-
-          const orderTrackingId =
-            data.orderTrackingId ||
-            data.order_tracking_id ||
-            data.trackingId ||
-            "";
-
-          const merchantReference =
-            data.merchantReference ||
-            data.merchant_reference ||
-            orderId;
-
-          const redirectUrl =
-            data.redirectUrl ||
-            data.redirect_url ||
-            data.iframeUrl ||
-            "";
-
-          if (!orderTrackingId) {
-            throw new Error(
-              "Payment tracking ID was not returned."
-            );
-          }
-
-          const paymentPage =
-            new URL(PAYMENT_PAGE, window.location.href);
-
-          paymentPage.searchParams.set(
-            "orderId",
-            orderId
-          );
-
-          paymentPage.searchParams.set(
-            "merchantReference",
-            merchantReference
-          );
-
-          paymentPage.searchParams.set(
-            "productType",
-            "resource"
-          );
-
-          paymentPage.searchParams.set(
-            "type",
-            "resource"
-          );
-
-          paymentPage.searchParams.set(
-            "amount",
-            String(total)
-          );
-
-          paymentPage.searchParams.set(
-            "currency",
-            "TZS"
-          );
-
-          paymentPage.searchParams.set(
-            "orderTrackingId",
-            orderTrackingId
-          );
-
-          if (redirectUrl) {
-
-            paymentPage.searchParams.set(
-              "redirectUrl",
-              redirectUrl
-            );
+            body:
+              JSON.stringify(payload)
 
           }
-
-          payButton.textContent =
-            "Opening Payment...";
-
-          window.location.href =
-            paymentPage.href;
-
-        } catch (error) {
-
-          console.error(
-            "RESOURCE PAYMENT ERROR:",
-            error
-          );
-
-          errorBox.textContent =
-            error?.message ||
-            "Unable to start payment. Please try again.";
-
-          payButton.disabled = false;
-
-          payButton.textContent =
-            "Continue to Payment";
-        }
-
-      });
+        );
 
 
-      /* =====================================
-         CUSTOMER AUTO SAVE
-      ===================================== */
-
-      [
-        "firstName",
-        "lastName",
-        "email",
-        "phoneNumber",
-        "country"
-      ].forEach(id => {
-
-        const field =
-          document.getElementById(id);
-
-        if (field) {
-
-          field.addEventListener(
-            "input",
-            saveCustomer
-          );
-
-        }
-
-      });
+      let data = null;
 
 
-      /* =====================================
-         RESTORE CUSTOMER
-      ===================================== */
+      try{
 
-      function restoreCustomer() {
+        data =
+          await response.json();
 
-        try {
+      }catch(parseError){
 
-          const saved =
-            JSON.parse(
-              localStorage.getItem(
-                "resourceCustomer"
-              ) || "null"
-            );
+        throw new Error(
+          `Invalid server response (${response.status}).`
+        );
 
-          if (!saved) return;
+      }
 
-          [
-            "firstName",
-            "lastName",
-            "email",
-            "phoneNumber",
-            "country"
-          ].forEach(id => {
 
-            const field =
-              document.getElementById(id);
+      console.log(
+        "Pesapal create-order response:",
+        data
+      );
 
-            if (
-              field &&
-              saved[id] !== undefined
-            ) {
 
-              field.value =
-                saved[id];
+      if(!response.ok){
 
-            }
+        throw new Error(
 
-          });
+          data?.message ||
 
-        } catch (error) {
+          data?.error ||
 
-          console.error(
-            "CUSTOMER RESTORE ERROR:",
-            error
-          );
+          `Payment server returned HTTP ${response.status}.`
 
-        }
+        );
+
+      }
+
+
+      if(data?.success === false){
+
+        throw new Error(
+
+          data?.message ||
+
+          data?.error ||
+
+          "Unable to create Pesapal order."
+
+        );
+
+      }
+
+
+      const orderTrackingId =
+
+        data?.orderTrackingId ||
+
+        data?.order_tracking_id ||
+
+        data?.trackingId ||
+
+        data?.tracking_id ||
+
+        "";
+
+
+      const merchantReference =
+
+        data?.merchantReference ||
+
+        data?.merchant_reference ||
+
+        data?.merchantRef ||
+
+        orderId;
+
+
+      const redirectUrl =
+
+        data?.redirectUrl ||
+
+        data?.redirect_url ||
+
+        data?.iframeUrl ||
+
+        data?.iframe_url ||
+
+        "";
+
+
+      if(!orderTrackingId){
+
+        console.error(
+          "Pesapal response missing tracking ID:",
+          data
+        );
+
+        throw new Error(
+          "Pesapal order was not created because no order tracking ID was returned."
+        );
 
       }
 
 
       /* =====================================
-         INITIALIZE
-      ===================================== */
+         SAVE RESPONSE
+      ====================================== */
 
-      restoreCustomer();
+      localStorage.setItem(
+        "pesapalOrderResponse",
+        JSON.stringify({
 
-      saveCustomer();
+          ...data,
 
-      loading.classList.add("hidden");
+          orderId,
 
-      checkout.classList.remove("hidden");
+          merchantReference,
 
-    } catch (error) {
+          orderTrackingId
+
+        })
+      );
+
+
+      /* =====================================
+         PAYMENT PAGE
+      ====================================== */
+
+      const paymentPage =
+        new URL(
+          PAYMENT_PAGE,
+          window.location.href
+        );
+
+
+      paymentPage.searchParams.set(
+        "orderId",
+        orderId
+      );
+
+
+      paymentPage.searchParams.set(
+        "merchantReference",
+        merchantReference
+      );
+
+
+      paymentPage.searchParams.set(
+        "orderTrackingId",
+        orderTrackingId
+      );
+
+
+      paymentPage.searchParams.set(
+        "productType",
+        "resource"
+      );
+
+
+      paymentPage.searchParams.set(
+        "type",
+        "resource"
+      );
+
+
+      paymentPage.searchParams.set(
+        "amount",
+        String(total)
+      );
+
+
+      paymentPage.searchParams.set(
+        "currency",
+        "TZS"
+      );
+
+
+      if(redirectUrl){
+
+        paymentPage.searchParams.set(
+          "redirectUrl",
+          redirectUrl
+        );
+
+      }
+
+
+      payButton.textContent =
+        "Opening Payment...";
+
+
+      window.location.href =
+        paymentPage.href;
+
+
+    }catch(error){
 
       console.error(
-        "RESOURCE CHECKOUT ERROR:",
+        "RESOURCE PAYMENT ERROR:",
         error
       );
 
-      loading.classList.add("hidden");
 
-      errorBox.textContent =
+      showStatus(
+
         error?.message ||
-        "Unable to load checkout.";
 
-      checkout.classList.add("hidden");
+        "Unable to start payment. Please try again.",
+
+        "error"
+
+      );
+
+
+      payButton.disabled =
+        false;
+
+
+      payButton.textContent =
+        "Continue to Payment";
 
     }
 
   }
+);
 
 
-  /* =====================================
-     START
-  ===================================== */
+/* =========================================
+   CUSTOMER AUTO SAVE
+========================================= */
 
-  loadResources();
+[
+  "firstName",
+  "lastName",
+  "email",
+  "phoneNumber",
+  "country"
+].forEach(id => {
+
+  const field =
+    document.getElementById(id);
+
+
+  if(field){
+
+    field.addEventListener(
+      "input",
+      saveCustomer
+    );
+
+  }
+
+});
+
+
+/* =========================================
+   INITIALIZE
+========================================= */
+
+restoreCustomer();
+
+loadResources().catch(error => {
+
+  console.error(
+    "CHECKOUT INITIALIZATION:",
+    error
+  );
+
+
+  loading.style.display =
+    "none";
+
+
+  content.style.display =
+    "none";
+
+
+  empty.style.display =
+    "block";
+
+});
 
 </script>
 
