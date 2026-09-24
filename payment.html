@@ -1,1320 +1,1379 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b1220">
+  <title>Secure Payment - LetsStudy Pro</title>  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-<!-- Google Analytics 4 -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-3RD5Z87VF0"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-3RD5Z87VF0');
-</script>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f5f7fb;
+      color: #101828;
+    }
 
-<!-- Google AdSense -->
-<script async
-  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9557927842145806"
-  crossorigin="anonymous"></script>
+    body {
+      display: flex;
+      justify-content: center;
+    }
 
+    .page {
+      width: 100%;
+      max-width: 1100px;
+      padding: 20px;
+    }
 
+    .card {
+      background: #fff;
+      border: 1px solid #e4e7ec;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(16, 24, 40, .08);
+    }
 
+    .header {
+      padding: 24px;
+      background: #0b1220;
+      color: #fff;
+    }
 
+    .brand {
+      font-size: 23px;
+      font-weight: 800;
+    }
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    .subtitle {
+      margin-top: 7px;
+      color: #cbd5e1;
+      font-size: 14px;
+    }
 
-<title>Payment | LetsStudy Pro</title>
+    .summary {
+      padding: 20px 24px;
+      border-bottom: 1px solid #eaecf0;
+    }
 
-<meta
-  name="description"
-  content="Secure payment for your LetsStudy Pro order."
->
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
 
-<meta
-  name="robots"
-  content="noindex,nofollow"
->
+    .item {
+      background: #f8fafc;
+      border: 1px solid #eaecf0;
+      border-radius: 12px;
+      padding: 13px;
+      min-width: 0;
+    }
 
-<style>
-*{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
-}
+    .label {
+      font-size: 11px;
+      color: #667085;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin-bottom: 5px;
+    }
 
-body{
-  font-family:Inter,Arial,sans-serif;
-  background:#f6f8fc;
-  color:#111827;
-}
+    .value {
+      font-size: 14px;
+      font-weight: 700;
+      word-break: break-word;
+    }
 
-button,
-input{
-  font:inherit;
-}
+    .payment-area {
+      position: relative;
+      min-height: 620px;
+      background: #fff;
+    }
 
-.header{
-  background:#fff;
-  border-bottom:1px solid #e5e7eb;
-}
+    #paymentFrame {
+      display: none;
+      width: 100%;
+      min-height: 620px;
+      border: 0;
+      background: #fff;
+    }
 
-.nav{
-  max-width:1100px;
-  margin:auto;
-  padding:16px 20px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-}
+    .loading {
+      position: absolute;
+      inset: 0;
+      min-height: 620px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      background: #fff;
+      z-index: 5;
+    }
 
-.logo{
-  text-decoration:none;
-  color:#111827;
-  font-size:22px;
-  font-weight:900;
-}
+    .loading-box {
+      width: 100%;
+      max-width: 460px;
+      text-align: center;
+      padding: 30px;
+    }
 
-.logo span{
-  color:#2563eb;
-}
+    .spinner {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 18px;
+      border: 4px solid #e4e7ec;
+      border-top-color: #175cd3;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
 
-.secure{
-  color:#16a34a;
-  font-size:13px;
-  font-weight:800;
-}
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
 
-main{
-  max-width:900px;
-  margin:auto;
-  padding:45px 20px 70px;
-}
+    .loading-title {
+      font-size: 19px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
 
-.card{
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:20px;
-  box-shadow:0 10px 30px rgba(15,23,42,.06);
-  overflow:hidden;
-}
+    .loading-text {
+      color: #667085;
+      font-size: 14px;
+      line-height: 1.6;
+    }
 
-.top{
-  padding:28px;
-  border-bottom:1px solid #e5e7eb;
-}
+    .status {
+      margin-top: 16px;
+      padding: 11px 14px;
+      border-radius: 10px;
+      background: #eff8ff;
+      color: #175cd3;
+      font-size: 13px;
+      line-height: 1.5;
+    }
 
-.top h1{
-  font-size:30px;
-  margin-bottom:7px;
-}
+    .error {
+      background: #fef3f2;
+      color: #b42318;
+    }
 
-.top p{
-  color:#6b7280;
-  font-size:14px;
-  line-height:1.6;
-}
+    .success {
+      background: #ecfdf3;
+      color: #027a48;
+    }
 
-.order-info{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:15px;
-  padding:22px 28px;
-  background:#fafafa;
-  border-bottom:1px solid #e5e7eb;
-}
+    .actions {
+      display: none;
+      padding: 18px 24px;
+      border-top: 1px solid #eaecf0;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
 
-.info{
-  padding:14px;
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:12px;
-}
+    button,
+    .button {
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 17px;
+      cursor: pointer;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-.info-label{
-  display:block;
-  color:#6b7280;
-  font-size:11px;
-  font-weight:700;
-  margin-bottom:5px;
-  text-transform:uppercase;
-}
+    .primary {
+      background: #175cd3;
+      color: #fff;
+    }
 
-.info-value{
-  font-size:15px;
-  font-weight:900;
-  word-break:break-word;
-}
+    .secondary {
+      background: #f2f4f7;
+      color: #344054;
+    }
 
-.payment-area{
-  padding:20px;
-}
+    .footer {
+      padding: 18px 24px;
+      color: #667085;
+      font-size: 12px;
+      line-height: 1.6;
+      border-top: 1px solid #eaecf0;
+    }
 
-.status{
-  padding:13px 15px;
-  margin-bottom:15px;
-  border-radius:10px;
-  background:#eff6ff;
-  color:#1e40af;
-  font-size:13px;
-  font-weight:700;
-  text-align:center;
-}
+    @media (max-width: 760px) {
+      .page {
+        padding: 8px;
+      }
 
-.frame-wrap{
-  position:relative;
-  width:100%;
-  height:650px;
-  border:1px solid #e5e7eb;
-  border-radius:14px;
-  overflow:hidden;
-  background:#f9fafb;
-}
+      .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
 
-iframe{
-  width:100%;
-  height:100%;
-  border:0;
-  display:block;
-}
+      .payment-area,
+      #paymentFrame,
+      .loading {
+        min-height: 680px;
+      }
+    }
 
-.loading{
-  position:absolute;
-  inset:0;
-  z-index:5;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#fff;
-  color:#374151;
-  font-size:14px;
-  font-weight:800;
-}
+    @media (max-width: 420px) {
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
 
-.error{
-  display:none;
-  padding:30px;
-  text-align:center;
-}
-
-.error h2{
-  font-size:22px;
-  margin-bottom:10px;
-}
-
-.error p{
-  color:#6b7280;
-  font-size:14px;
-  line-height:1.6;
-}
-
-.error a{
-  display:inline-block;
-  margin-top:18px;
-  padding:12px 20px;
-  background:#2563eb;
-  color:#fff;
-  text-decoration:none;
-  border-radius:10px;
-  font-size:13px;
-  font-weight:800;
-}
-
-.footer-note{
-  padding:18px 28px 25px;
-  text-align:center;
-  color:#6b7280;
-  font-size:12px;
-  line-height:1.6;
-}
-
-footer{
-  padding:30px 20px;
-  background:#111827;
-  color:#9ca3af;
-  text-align:center;
-  font-size:13px;
-}
-
-@media(max-width:650px){
-
-  main{
-    padding:25px 12px 50px;
-  }
-
-  .nav{
-    padding:14px 15px;
-  }
-
-  .top{
-    padding:22px 20px;
-  }
-
-  .top h1{
-    font-size:26px;
-  }
-
-  .order-info{
-    grid-template-columns:1fr;
-    padding:16px 20px;
-  }
-
-  .payment-area{
-    padding:12px;
-  }
-
-  .frame-wrap{
-    height:680px;
-    border-radius:10px;
-  }
-
-}
-</style>
-</head>
-
-<body>
-
-<header class="header">
-
-  <nav class="nav">
-
-    <a
-      class="logo"
-      href="index-auth.html"
-    >
-      LetsStudy <span>Pro</span>
-    </a>
-
-    <div class="secure">
-      🔒 Secure Payment
-    </div>
-
-  </nav>
-
+      .header,
+      .summary {
+        padding: 18px;
+      }
+    }
+  </style></head><body><div class="page">  <div class="card"><header class="header">
+  <div class="brand">LetsStudy Pro</div>
+  <div class="subtitle">
+    Secure payment powered by Pesapal
+  </div>
 </header>
 
+<section class="summary">
+  <div class="summary-grid">
 
-<main>
+    <div class="item">
+      <div class="label">Order</div>
+      <div class="value" id="orderId">-</div>
+    </div>
 
-  <div class="card">
+    <div class="item">
+      <div class="label">Amount</div>
+      <div class="value" id="amount">-</div>
+    </div>
 
-    <section class="top">
+    <div class="item">
+      <div class="label">Product</div>
+      <div class="value" id="productType">-</div>
+    </div>
 
-      <h1>
-        Complete Payment
-      </h1>
+    <div class="item">
+      <div class="label">Currency</div>
+      <div class="value" id="currency">TZS</div>
+    </div>
 
-      <p>
-        Complete your payment securely through Pesapal.
-        Your payment status will be verified after the transaction.
-      </p>
+  </div>
+</section>
 
-    </section>
+<section class="payment-area">
 
+  <div class="loading" id="loading">
 
-    <section class="order-info">
+    <div class="loading-box">
 
-      <div class="info">
+      <div class="spinner" id="spinner"></div>
 
-        <span class="info-label">
-          Order
-        </span>
-
-        <div
-          id="orderId"
-          class="info-value"
-        >
-          —
-        </div>
-
+      <div class="loading-title" id="loadingTitle">
+        Preparing secure payment
       </div>
 
-
-      <div class="info">
-
-        <span class="info-label">
-          Amount
-        </span>
-
-        <div
-          id="amount"
-          class="info-value"
-        >
-          —
-        </div>
-
+      <div class="loading-text" id="loadingText">
+        Connecting your order to Pesapal. Please wait...
       </div>
 
-    </section>
-
-
-    <section class="payment-area">
-
-      <div
-        id="status"
-        class="status"
-      >
-        Loading secure Pesapal payment...
+      <div class="status" id="status">
+        Initializing payment session...
       </div>
-
-
-      <div
-        id="frameWrap"
-        class="frame-wrap"
-      >
-
-        <div
-          id="loading"
-          class="loading"
-        >
-          Loading payment...
-        </div>
-
-        <iframe
-          id="paymentFrame"
-          title="Pesapal Secure Payment"
-          allow="payment"
-          referrerpolicy="strict-origin-when-cross-origin"
-        ></iframe>
-
-      </div>
-
-
-      <div
-        id="error"
-        class="error"
-      >
-
-        <h2>
-          Payment Could Not Be Loaded
-        </h2>
-
-        <p id="errorMessage">
-          Please try again.
-        </p>
-
-        <a href="index-auth.html">
-          Back to LetsStudy Pro
-        </a>
-
-      </div>
-
-    </section>
-
-
-    <div class="footer-note">
-
-      Payments are processed securely by Pesapal.
-      Do not refresh or close this page while completing
-      your payment.
 
     </div>
 
   </div>
 
-</main>
+  <iframe
+    id="paymentFrame"
+    title="LetsStudy Pro Pesapal Payment"
+    allow="payment"
+    referrerpolicy="strict-origin-when-cross-origin">
+  </iframe>
 
+</section>
 
-<footer>
-  © 2026 LetsStudy Pro. Learn • Work • Grow.
+<div class="actions" id="actions">
+
+  <button
+    class="primary"
+    id="retryButton"
+    type="button">
+    Retry Payment
+  </button>
+
+  <a
+    class="button secondary"
+    href="index-auth.html">
+    Back to LetsStudy Pro
+  </a>
+
+</div>
+
+<footer class="footer">
+  Your payment is processed securely through Pesapal.
+  LetsStudy Pro does not store your Pesapal card or mobile-money credentials.
 </footer>
 
+  </div></div><script>
+"use strict";
 
-<script>
+/* =========================================================
+   LETSSTUDY PRO UNIVERSAL PAYMENT CONFIGURATION
+========================================================= */
 
-/* =========================================
-   CONFIG
-========================================= */
+const PAYMENT_API = "https://api.letsstudy.pro";
 
-const PAYMENT_API =
-  "https://api.letsstudy.pro";
+const PESAPAL_SANDBOX =
+  "https://cybqa.pesapal.com/pesapaliframe/PesapalIframe3/Index/";
+
+const PESAPAL_LIVE =
+  "https://pay.pesapal.com/pesapaliframe/PesapalIframe3/Index/";
+
+const SUCCESS_PAGE = "success.html";
+
+const POLL_INTERVAL = 5000;
+
+const MAX_WAIT_TIME = 15 * 60 * 1000;
 
 
-const SUCCESS_PAGE =
-  "success.html";
-
-
-/* =========================================
+/* =========================================================
    ELEMENTS
-========================================= */
+========================================================= */
 
-const orderIdElement =
-  document.getElementById(
-    "orderId"
-  );
+const frame = document.getElementById("paymentFrame");
+const loading = document.getElementById("loading");
+const spinner = document.getElementById("spinner");
 
-const amountElement =
-  document.getElementById(
-    "amount"
-  );
+const loadingTitle = document.getElementById("loadingTitle");
+const loadingText = document.getElementById("loadingText");
+const statusBox = document.getElementById("status");
 
-const statusElement =
-  document.getElementById(
-    "status"
-  );
+const orderIdEl = document.getElementById("orderId");
+const amountEl = document.getElementById("amount");
+const productTypeEl = document.getElementById("productType");
+const currencyEl = document.getElementById("currency");
 
-const frame =
-  document.getElementById(
-    "paymentFrame"
-  );
-
-const loading =
-  document.getElementById(
-    "loading"
-  );
-
-const frameWrap =
-  document.getElementById(
-    "frameWrap"
-  );
-
-const errorBox =
-  document.getElementById(
-    "error"
-  );
-
-const errorMessage =
-  document.getElementById(
-    "errorMessage"
-  );
+const actions = document.getElementById("actions");
+const retryButton = document.getElementById("retryButton");
 
 
-/* =========================================
-   URL PARAMETERS
-========================================= */
+/* =========================================================
+   URL HELPERS
+========================================================= */
 
-const params =
-  new URLSearchParams(
-    window.location.search
-  );
+const params = new URLSearchParams(window.location.search);
 
+function firstParam(...names) {
 
-const trackingId =
-  params.get(
-    "orderTrackingId"
-  ) ||
-  params.get(
-    "OrderTrackingId"
-  ) ||
-  "";
+  for (const name of names) {
 
+    const value = params.get(name);
 
-const redirectUrl =
-  params.get(
-    "redirectUrl"
-  ) ||
-  "";
-
-
-const orderId =
-  params.get(
-    "orderId"
-  ) ||
-  params.get(
-    "merchantReference"
-  ) ||
-  "";
-
-
-const merchantReference =
-  params.get(
-    "merchantReference"
-  ) ||
-  "";
-
-
-const productType =
-  params.get(
-    "productType"
-  ) ||
-  params.get(
-    "type"
-  ) ||
-  params.get(
-    "product"
-  ) ||
-  "";
-
-
-const amount =
-  params.get(
-    "amount"
-  ) ||
-  "";
-
-
-const currency =
-  params.get(
-    "currency"
-  ) ||
-  "TZS";
-
-
-/* =========================================
-   MONEY FORMAT
-========================================= */
-
-function formatMoney(
-  value,
-  currencyCode = "TZS"
-){
-
-  const number =
-    Number(
-      String(
-        value ?? ""
-      )
-      .replace(
-        /,/g,
-        ""
-      )
-      .replace(
-        /[^\d.-]/g,
-        ""
-      )
-    );
-
-
-  if(
-    !Number.isFinite(
-      number
-    )
-  ){
-
-    return "—";
-
+    if (
+      value !== null &&
+      value !== undefined &&
+      String(value).trim() !== ""
+    ) {
+      return String(value).trim();
+    }
   }
 
+  return "";
+}
+
+
+let orderTrackingId = firstParam(
+  "orderTrackingId",
+  "OrderTrackingId",
+  "trackingId",
+  "trackingID",
+  "order_tracking_id"
+);
+
+let orderId = firstParam(
+  "orderId",
+  "OrderId",
+  "orderID",
+  "merchantReference",
+  "merchant_reference",
+  "merchantreference"
+);
+
+let merchantReference = firstParam(
+  "merchantReference",
+  "merchant_reference",
+  "merchantreference",
+  "orderId",
+  "OrderId"
+);
+
+let redirectUrl = firstParam(
+  "redirectUrl",
+  "redirect_url",
+  "iframeUrl",
+  "iframeURL",
+  "paymentUrl",
+  "payment_url"
+);
+
+let productType = firstParam(
+  "productType",
+  "type",
+  "product",
+  "category",
+  "service"
+);
+
+let amount = firstParam(
+  "amount",
+  "Amount",
+  "total",
+  "totalAmount",
+  "total_amount"
+);
+
+let currency = firstParam(
+  "currency",
+  "Currency"
+) || "TZS";
+
+
+/* =========================================================
+   DISPLAY INITIAL ORDER DATA
+========================================================= */
+
+orderIdEl.textContent = orderId || merchantReference || "-";
+
+amountEl.textContent =
+  amount
+    ? `${amount} ${currency}`
+    : "-";
+
+productTypeEl.textContent =
+  productType || "-";
+
+currencyEl.textContent = currency;
+
+
+/* =========================================================
+   STATE
+========================================================= */
+
+let pollingTimer = null;
+let startedAt = Date.now();
+let redirecting = false;
+let currentFrameUrl = "";
+
+
+/* =========================================================
+   UI HELPERS
+========================================================= */
+
+function setStatus(message, type = "") {
+
+  statusBox.textContent = message;
+
+  statusBox.className = "status";
+
+  if (type) {
+    statusBox.classList.add(type);
+  }
+}
+
+
+function showError(message) {
+
+  spinner.style.display = "none";
+
+  loadingTitle.textContent = "Payment could not be loaded";
+
+  loadingText.textContent = message;
+
+  setStatus(message, "error");
+
+  actions.style.display = "flex";
+}
+
+
+function showLoading(message) {
+
+  spinner.style.display = "block";
+
+  loadingTitle.textContent = "Preparing secure payment";
+
+  loadingText.textContent =
+    "Your order is being connected to Pesapal.";
+
+  setStatus(message);
+
+  actions.style.display = "none";
+}
+
+
+function showFrame() {
+
+  loading.style.display = "none";
+
+  frame.style.display = "block";
+}
+
+
+function hideFrame() {
+
+  frame.style.display = "none";
+
+  loading.style.display = "flex";
+}
+
+
+/* =========================================================
+   SAFE PAYMENT URL VALIDATION
+========================================================= */
+
+function isAllowedPaymentUrl(value) {
+
+  try {
+
+    const url = new URL(value);
+
+    const hostname = url.hostname.toLowerCase();
+
+    const allowed = [
+      "cybqa.pesapal.com",
+      "pay.pesapal.com",
+      "api.letsstudy.pro"
+    ];
+
+    return allowed.includes(hostname);
+
+  } catch (error) {
+
+    return false;
+  }
+}
+
+
+/* =========================================================
+   BUILD PESAPAL FRAME URL
+========================================================= */
+
+function buildPesapalFrameUrl(trackingId) {
+
+  if (!trackingId) {
+    return "";
+  }
+
+  /*
+    Sandbox is used by default.
+
+    If the backend explicitly returns a live URL,
+    that URL is used instead.
+  */
 
   return (
-    number.toLocaleString(
-      "en-TZ"
-    ) +
-    " " +
-    currencyCode
+    PESAPAL_SANDBOX +
+    "?OrderTrackingId=" +
+    encodeURIComponent(trackingId)
   );
-
 }
 
 
-/* =========================================
-   ERROR
-========================================= */
+/* =========================================================
+   OPEN PESAPAL FRAME
+========================================================= */
 
-function showError(
-  message
-){
+function openPaymentFrame(url) {
 
-  frameWrap.style.display =
-    "none";
+  if (!url) {
 
-
-  loading.style.display =
-    "none";
-
-
-  errorBox.style.display =
-    "block";
-
-
-  errorMessage.textContent =
-    message ||
-    "Unable to load the payment.";
-
-
-  statusElement.textContent =
-    "Payment unavailable";
-
-
-  statusElement.style.background =
-    "#fef2f2";
-
-
-  statusElement.style.color =
-    "#991b1b";
-
-}
-
-
-/* =========================================
-   DISPLAY ORDER
-========================================= */
-
-if(orderId){
-
-  orderIdElement.textContent =
-    orderId;
-
-}else if(trackingId){
-
-  orderIdElement.textContent =
-    trackingId;
-
-}
-
-
-/* =========================================
-   DISPLAY AMOUNT
-========================================= */
-
-if(amount){
-
-  amountElement.textContent =
-    formatMoney(
-      amount,
-      currency
+    showError(
+      "Pesapal payment URL was not provided."
     );
 
+    return false;
+  }
+
+  if (!isAllowedPaymentUrl(url)) {
+
+    showError(
+      "The payment URL is not an approved LetsStudy Pro or Pesapal URL."
+    );
+
+    return false;
+  }
+
+  currentFrameUrl = url;
+
+  hideFrame();
+
+  loadingTitle.textContent =
+    "Opening secure payment";
+
+  loadingText.textContent =
+    "Please wait while Pesapal loads your payment options.";
+
+  setStatus(
+    "Secure Pesapal payment is loading..."
+  );
+
+  frame.src = url;
+
+  return true;
 }
 
 
-/* =========================================
-   RESTORE SAVED ORDER
-========================================= */
+/* =========================================================
+   IFRAME LOAD
+========================================================= */
 
-function getSavedOrder(){
+frame.addEventListener("load", function () {
 
-  const keys = [
+  if (!currentFrameUrl) {
+    return;
+  }
 
-    "pendingMarketplaceOrder",
-    "pendingCourseOrder",
-    "pendingCommunityOrder",
-    "pendingFreelanceOrder",
-    "pendingMarketingOrder",
-    "pendingPayment",
-    "marketplacePayment",
-    "coursePayment",
-    "communityPayment",
-    "freelancePayment",
-    "marketingPayment"
+  /*
+    The iframe may load an error page from Pesapal.
+    We therefore DO NOT treat iframe load alone as payment success.
+    Payment success is determined only through the API verification.
+  */
 
-  ];
+  loading.style.display = "none";
 
+  frame.style.display = "block";
 
-  for(
-    const key of keys
-  ){
+  setStatus(
+    "Pesapal payment is ready. Complete the payment below."
+  );
 
-    try{
-
-      const raw =
-        localStorage.getItem(
-          key
-        );
+});
 
 
-      if(!raw){
-        continue;
-      }
+/* =========================================================
+   FETCH PAYMENT SESSION BY ORDER ID
+========================================================= */
 
+async function getPaymentSessionByOrderId() {
 
-      const data =
-        JSON.parse(
-          raw
-        );
+  if (!orderId) {
+    return null;
+  }
 
+  const url =
+    PAYMENT_API +
+    "/api/pesapal/payment-session?orderId=" +
+    encodeURIComponent(orderId);
 
-      if(
-        data &&
-        typeof data ===
-        "object"
-      ){
+  try {
 
-        if(
-          !orderId ||
-          data.orderId ===
-          orderId
-        ){
-
-          return data;
-
+    const response = await fetch(
+      url,
+      {
+        method: "GET",
+        cache: "no-store",
+        headers: {
+          "Accept": "application/json"
         }
-
       }
+    );
 
-    }catch(error){
-
-      console.warn(
-        "Saved order error:",
-        error
-      );
-
+    if (!response.ok) {
+      return null;
     }
 
+    const data = await response.json();
+
+    if (!data) {
+      return null;
+    }
+
+    return data;
+
+  } catch (error) {
+
+    console.warn(
+      "Payment session request failed:",
+      error
+    );
+
+    return null;
   }
-
-
-  return null;
-
 }
 
 
-const savedOrder =
-  getSavedOrder();
+/* =========================================================
+   EXTRACT TRACKING ID
+========================================================= */
 
+function extractTrackingId(data) {
 
-/* =========================================
-   RESTORE AMOUNT FROM SAVED ORDER
-========================================= */
-
-if(
-  !amount &&
-  savedOrder
-){
-
-  const savedAmount =
-    savedOrder.amount ||
-    savedOrder.total ||
-    savedOrder.totalAmount;
-
-
-  if(savedAmount){
-
-    amountElement.textContent =
-      formatMoney(
-        savedAmount,
-        savedOrder.currency ||
-        currency
-      );
-
+  if (!data || typeof data !== "object") {
+    return "";
   }
 
+  return (
+    data.orderTrackingId ||
+    data.OrderTrackingId ||
+    data.trackingId ||
+    data.order_tracking_id ||
+    data.order?.orderTrackingId ||
+    data.order?.OrderTrackingId ||
+    ""
+  );
 }
 
 
-/* =========================================
-   OPEN SUCCESS PAGE
-========================================= */
+/* =========================================================
+   EXTRACT PAYMENT URL
+========================================================= */
 
-function openSuccessPage(
-  status = "COMPLETED"
-){
+function extractPaymentUrl(data) {
 
-  const successParams =
-    new URLSearchParams();
+  if (!data || typeof data !== "object") {
+    return "";
+  }
+
+  return (
+    data.redirectUrl ||
+    data.redirect_url ||
+    data.iframeUrl ||
+    data.iframeURL ||
+    data.paymentUrl ||
+    data.payment_url ||
+    data.order?.redirectUrl ||
+    data.order?.redirect_url ||
+    ""
+  );
+}
 
 
-  if(orderId){
+/* =========================================================
+   PAYMENT STATUS REQUEST
+========================================================= */
 
+async function getPaymentStatus() {
+
+  if (!orderTrackingId) {
+    return null;
+  }
+
+  const url =
+    PAYMENT_API +
+    "/api/pesapal/payment-status?orderTrackingId=" +
+    encodeURIComponent(orderTrackingId);
+
+  try {
+
+    const response = await fetch(
+      url,
+      {
+        method: "GET",
+        cache: "no-store",
+        headers: {
+          "Accept": "application/json"
+        }
+      }
+    );
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return await response.json();
+
+  } catch (error) {
+
+    console.warn(
+      "Payment verification request failed:",
+      error
+    );
+
+    return null;
+  }
+}
+
+
+/* =========================================================
+   NORMALIZE STATUS
+========================================================= */
+
+function normalizeStatus(data) {
+
+  if (!data) {
+    return "";
+  }
+
+  const possibleStatus =
+    data.status ||
+    data.paymentStatus ||
+    data.payment_status ||
+    data.transactionStatus ||
+    data.transaction_status ||
+    data.orderStatus ||
+    data.order_status ||
+    data.data?.status ||
+    data.data?.paymentStatus ||
+    "";
+
+  return String(possibleStatus)
+    .trim()
+    .toUpperCase();
+}
+
+
+/* =========================================================
+   SUCCESS STATUS DETECTION
+========================================================= */
+
+function isCompleted(data) {
+
+  const status = normalizeStatus(data);
+
+  return [
+    "COMPLETED",
+    "COMPLETE",
+    "PAID",
+    "SUCCESS",
+    "SUCCESSFUL",
+    "PAYMENT_COMPLETED",
+    "TRANSACTION_COMPLETED"
+  ].includes(status);
+}
+
+
+/* =========================================================
+   FAILED STATUS DETECTION
+========================================================= */
+
+function isFailed(data) {
+
+  const status = normalizeStatus(data);
+
+  return [
+    "FAILED",
+    "FAIL",
+    "CANCELLED",
+    "CANCELED",
+    "INVALID",
+    "INVALID_TRANSACTION",
+    "REVERSED",
+    "REJECTED"
+  ].includes(status);
+}
+
+
+/* =========================================================
+   REDIRECT TO SUCCESS
+========================================================= */
+
+function goToSuccess(data = {}) {
+
+  if (redirecting) {
+    return;
+  }
+
+  redirecting = true;
+
+  if (pollingTimer) {
+    clearInterval(pollingTimer);
+    pollingTimer = null;
+  }
+
+  const finalOrderId =
+    data.orderId ||
+    data.OrderId ||
+    data.merchantReference ||
+    data.merchant_reference ||
+    orderId ||
+    merchantReference ||
+    "";
+
+  const finalTrackingId =
+    extractTrackingId(data) ||
+    orderTrackingId;
+
+  const finalMerchantReference =
+    data.merchantReference ||
+    data.merchant_reference ||
+    merchantReference ||
+    finalOrderId ||
+    "";
+
+  const finalAmount =
+    data.amount ||
+    data.Amount ||
+    data.totalAmount ||
+    amount ||
+    "";
+
+  const finalCurrency =
+    data.currency ||
+    data.Currency ||
+    currency ||
+    "TZS";
+
+  const finalProduct =
+    data.productType ||
+    data.type ||
+    productType ||
+    "";
+
+  const successParams = new URLSearchParams();
+
+  if (finalOrderId) {
     successParams.set(
       "orderId",
-      orderId
+      finalOrderId
     );
-
   }
 
-
-  if(trackingId){
-
+  if (finalTrackingId) {
     successParams.set(
       "orderTrackingId",
-      trackingId
+      finalTrackingId
     );
-
   }
 
-
-  if(merchantReference){
-
+  if (finalMerchantReference) {
     successParams.set(
       "merchantReference",
-      merchantReference
+      finalMerchantReference
     );
-
   }
 
+  if (finalAmount) {
+    successParams.set(
+      "amount",
+      finalAmount
+    );
+  }
 
-  if(productType){
+  if (finalCurrency) {
+    successParams.set(
+      "currency",
+      finalCurrency
+    );
+  }
 
+  if (finalProduct) {
     successParams.set(
       "productType",
-      productType
+      finalProduct
     );
-
   }
 
-
-  if(amount){
-
-    successParams.set(
-      "amount",
-      amount
-    );
-
-  }else if(
-    savedOrder &&
-    savedOrder.amount
-  ){
-
-    successParams.set(
-      "amount",
-      savedOrder.amount
-    );
-
-  }
-
-
-  successParams.set(
-    "currency",
-    currency
-  );
-
+  /*
+    Do not make success.html trust this value.
+    success.html independently verifies the transaction.
+  */
 
   successParams.set(
     "status",
-    status
+    "COMPLETED"
   );
-
 
   window.location.href =
     SUCCESS_PAGE +
     "?" +
     successParams.toString();
-
 }
 
 
-/* =========================================
-   CHECK PAYMENT STATUS
-========================================= */
+/* =========================================================
+   UPDATE DISPLAY FROM API
+========================================================= */
 
-async function checkPaymentStatus(){
+function updateFromStatus(data) {
 
-  if(!trackingId){
-
-    return null;
-
+  if (!data) {
+    return;
   }
 
+  const apiOrderId =
+    data.orderId ||
+    data.OrderId ||
+    data.merchantReference ||
+    data.merchant_reference ||
+    data.data?.orderId ||
+    "";
 
-  try{
+  const apiTrackingId =
+    extractTrackingId(data);
 
-    const response =
-      await fetch(
-        PAYMENT_API +
-        "/api/pesapal/payment-status?orderTrackingId=" +
-        encodeURIComponent(
-          trackingId
-        ),
-        {
-          method:
-            "GET",
-          headers:{
-            "Accept":
-              "application/json"
-          },
-          cache:
-            "no-store"
-        }
-      );
+  const apiAmount =
+    data.amount ||
+    data.Amount ||
+    data.totalAmount ||
+    data.data?.amount ||
+    "";
 
+  const apiCurrency =
+    data.currency ||
+    data.Currency ||
+    data.data?.currency ||
+    "";
 
-    const result =
-      await response
-        .json()
-        .catch(
-          () => ({})
-        );
+  const apiProduct =
+    data.productType ||
+    data.type ||
+    data.data?.productType ||
+    "";
 
-
-    return result;
-
-  }catch(error){
-
-    console.warn(
-      "STATUS CHECK:",
-      error
-    );
-
-    return null;
-
+  if (apiOrderId) {
+    orderId = apiOrderId;
+    orderIdEl.textContent = apiOrderId;
   }
 
+  if (apiTrackingId) {
+    orderTrackingId = apiTrackingId;
+  }
+
+  if (apiAmount) {
+
+    amount = apiAmount;
+
+    amountEl.textContent =
+      `${apiAmount} ${apiCurrency || currency}`;
+  }
+
+  if (apiCurrency) {
+
+    currency = apiCurrency;
+
+    currencyEl.textContent = apiCurrency;
+  }
+
+  if (apiProduct) {
+
+    productType = apiProduct;
+
+    productTypeEl.textContent = apiProduct;
+  }
 }
 
 
-/* =========================================
-   LOAD PAYMENT
-========================================= */
+/* =========================================================
+   VERIFY PAYMENT
+========================================================= */
 
-async function loadPayment(){
+async function verifyPayment() {
 
-  /*
-    Normal universal flow:
-    
-    checkout
-       ↓
-    Node API
-       ↓
-    Pesapal
-       ↓
-    redirectUrl
-       ↓
-    this page
-  */
-
-  if(redirectUrl){
-
-    try{
-
-      frame.src =
-        redirectUrl;
-
-      statusElement.textContent =
-        "Complete your payment below.";
-
-      loading.style.display =
-        "flex";
-
-      return;
-
-    }catch(error){
-
-      console.error(
-        "IFRAME URL ERROR:",
-        error
-      );
-
-      showError(
-        "The payment session could not be opened."
-      );
-
-      return;
-
-    }
-
+  if (!orderTrackingId) {
+    return;
   }
 
+  const data = await getPaymentStatus();
 
-  /*
-    Fallback:
-    tracking ID exists but redirectUrl
-    was not included in the URL.
-  */
+  if (!data) {
 
-  if(trackingId){
-
-    statusElement.textContent =
-      "Checking your payment session...";
-
-
-    const result =
-      await checkPaymentStatus();
-
-
-    if(!result){
-
-      showError(
-        "Unable to connect to the payment server."
-      );
-
-      return;
-
-    }
-
-
-    const returnedStatus =
-      String(
-        result.status ||
-        result.paymentStatus ||
-        result.data?.status ||
-        ""
-      )
-      .toUpperCase();
-
-
-    /*
-      If already completed,
-      go directly to success.
-    */
-
-    if(
-      returnedStatus ===
-        "COMPLETED" ||
-      returnedStatus ===
-        "1" ||
-      result.success ===
-        true &&
-      (
-        result.completed ===
-          true ||
-        result.paid ===
-          true
-      )
-    ){
-
-      openSuccessPage(
-        "COMPLETED"
-      );
-
-      return;
-
-    }
-
-
-    const returnedRedirectUrl =
-      result.redirectUrl ||
-      result.redirect_url ||
-      result.paymentUrl ||
-      result.payment_url ||
-      result.iframeUrl ||
-      result.iframeURL ||
-      result.order?.redirectUrl ||
-      "";
-
-
-    if(returnedRedirectUrl){
-
-      frame.src =
-        returnedRedirectUrl;
-
-      statusElement.textContent =
-        "Complete your payment below.";
-
-      return;
-
-    }
-
-
-    /*
-      If status says failed/reversed.
-    */
-
-    if(
-      returnedStatus ===
-        "FAILED" ||
-      returnedStatus ===
-        "2"
-    ){
-
-      showError(
-        "The payment transaction failed. Please start a new payment."
-      );
-
-      return;
-
-    }
-
-
-    if(
-      returnedStatus ===
-        "REVERSED" ||
-      returnedStatus ===
-        "3"
-    ){
-
-      showError(
-        "The payment transaction was reversed."
-      );
-
-      return;
-
-    }
-
-
-    showError(
-      "The Pesapal payment session could not be loaded."
+    setStatus(
+      "Waiting for Pesapal payment confirmation..."
     );
 
     return;
-
   }
 
+  updateFromStatus(data);
 
-  showError(
-    "No payment session was provided."
+const status = normalizeStatus(data);
+
+if (isCompleted(data)) {
+
+setStatus(
+  "Payment confirmed successfully. Redirecting...",
+  "success"
+);
+
+goToSuccess(data);
+
+return;
+
+}
+
+if (isFailed(data)) {
+
+setStatus(
+  "Pesapal reports that this payment was not completed.",
+  "error"
+);
+
+return;
+
+}
+
+setStatus(
+status
+? "Payment status: ${status}. Complete the payment in Pesapal."
+: "Payment is still waiting for confirmation."
+);
+}
+
+/* =========================================================
+START PAYMENT MONITOR
+========================================================= */
+
+function startPaymentMonitor() {
+
+if (!orderTrackingId) {
+return;
+}
+
+/*
+Verify immediately.
+*/
+verifyPayment();
+
+/*
+Continue checking every 5 seconds.
+*/
+pollingTimer = setInterval(
+async function () {
+
+  if (redirecting) {
+    clearInterval(pollingTimer);
+    pollingTimer = null;
+    return;
+  }
+
+  /*
+    Stop after the maximum waiting period.
+  */
+  if (
+    Date.now() - startedAt >
+    MAX_WAIT_TIME
+  ) {
+
+    clearInterval(pollingTimer);
+    pollingTimer = null;
+
+    setStatus(
+      "Payment confirmation is taking longer than expected. Please check your order status later.",
+      "error"
+    );
+
+    return;
+  }
+
+  await verifyPayment();
+
+},
+POLL_INTERVAL
+
+);
+}
+
+/* =========================================================
+INITIALIZE PAYMENT
+========================================================= */
+
+async function loadPayment() {
+
+showLoading(
+"Initializing your secure payment session..."
+);
+
+/*
+---------------------------------------------------------
+CASE 1
+A complete Pesapal redirect/iframe URL was supplied.
+---------------------------------------------------------
+*/
+
+if (redirectUrl) {
+
+const opened =
+  openPaymentFrame(
+    redirectUrl
   );
 
-}
-
-
-/* =========================================
-   IFRAME LOAD
-========================================= */
-
-frame.addEventListener(
-  "load",
-  ()=>{
-
-    loading.style.display =
-      "none";
-
-
-    statusElement.textContent =
-      "Complete your payment below.";
-
-  }
-);
-
-
-/* =========================================
-   IFRAME ERROR
-========================================= */
-
-frame.addEventListener(
-  "error",
-  ()=>{
-
-    showError(
-      "The Pesapal payment page could not be loaded."
-    );
-
-  }
-);
-
-
-/* =========================================
-   PAYMENT MONITOR
-========================================= */
-
-let paymentCheckTimer =
-  null;
-
-
-function startPaymentMonitor(){
-
-  if(!trackingId){
-
-    return;
-
-  }
-
-
-  let attempts =
-    0;
-
-
-  const maxAttempts =
-    120;
-
-
-  paymentCheckTimer =
-    setInterval(
-      async ()=>{
-
-        attempts++;
-
-
-        if(
-          attempts >
-          maxAttempts
-        ){
-
-          clearInterval(
-            paymentCheckTimer
-          );
-
-          return;
-
-        }
-
-
-        const result =
-          await checkPaymentStatus();
-
-
-        if(!result){
-
-          return;
-
-        }
-
-
-        const status =
-          String(
-            result.status ||
-            result.paymentStatus ||
-            result.data?.status ||
-            ""
-          )
-          .toUpperCase();
-
-
-        if(
-          status ===
-            "COMPLETED" ||
-          status ===
-            "1" ||
-          result.completed ===
-            true ||
-          result.paid ===
-            true
-        ){
-
-          clearInterval(
-            paymentCheckTimer
-          );
-
-
-          statusElement.textContent =
-            "Payment successful. Redirecting...";
-
-
-          openSuccessPage(
-            "COMPLETED"
-          );
-
-          return;
-
-        }
-
-
-        if(
-          status ===
-            "FAILED" ||
-          status ===
-            "2"
-        ){
-
-          clearInterval(
-            paymentCheckTimer
-          );
-
-
-          statusElement.textContent =
-            "Payment failed.";
-
-          return;
-
-        }
-
-
-        if(
-          status ===
-            "REVERSED" ||
-          status ===
-            "3"
-        ){
-
-          clearInterval(
-            paymentCheckTimer
-          );
-
-
-          statusElement.textContent =
-            "Payment reversed.";
-
-        }
-
-      },
-      5000
-    );
-
-}
-
-
-/* =========================================
-   INIT
-========================================= */
-
-(async function(){
-
-  await loadPayment();
+if (opened) {
 
   startPaymentMonitor();
 
-})();
+  return;
+}
 
-</script>
+}
 
-</body>
+/*
+---------------------------------------------------------
+CASE 2
+We already have OrderTrackingId.
+
+Build the official Pesapal iframe URL from it.
+---------------------------------------------------------
+
+*/
+
+if (orderTrackingId) {
+
+const frameUrl =
+  buildPesapalFrameUrl(
+    orderTrackingId
+  );
+
+if (frameUrl) {
+
+  openPaymentFrame(
+    frameUrl
+  );
+
+  startPaymentMonitor();
+
+  return;
+}
+
+}
+
+/*
+---------------------------------------------------------
+CASE 3
+Only orderId / merchantReference was supplied.
+
+Ask the LetsStudy Pro API for the payment session.
+---------------------------------------------------------
+
+*/
+
+if (
+orderId ||
+merchantReference
+) {
+
+setStatus(
+  "Finding your Pesapal payment session..."
+);
+
+const session =
+  await getPaymentSessionByOrderId();
+
+if (session) {
+
+  /*
+    Get OrderTrackingId from backend response.
+  */
+
+  const sessionTrackingId =
+    extractTrackingId(
+      session
+    );
+
+  /*
+    Get exact payment URL if backend supplied one.
+  */
+
+  const sessionPaymentUrl =
+    extractPaymentUrl(
+      session
+    );
+
+
+  if (sessionTrackingId) {
+
+    orderTrackingId =
+      sessionTrackingId;
+
+    const finalPaymentUrl =
+      sessionPaymentUrl ||
+      buildPesapalFrameUrl(
+        sessionTrackingId
+      );
+
+
+    if (
+      openPaymentFrame(
+        finalPaymentUrl
+      )
+    ) {
+
+      startPaymentMonitor();
+
+      return;
+    }
+  }
+}
+
+}
+
+/*
+---------------------------------------------------------
+CASE 4
+Nothing usable was supplied.
+---------------------------------------------------------
+*/
+
+showError(
+"No valid Pesapal payment session was found for this order. Please return to checkout and try again."
+);
+}
+
+/* =========================================================
+RETRY PAYMENT
+========================================================= */
+
+retryButton.addEventListener(
+"click",
+function () {
+
+window.location.reload();
+
+}
+);
+
+/* =========================================================
+PAGE VISIBILITY
+Re-check payment when user returns to the page.
+========================================================= */
+
+document.addEventListener(
+"visibilitychange",
+function () {
+
+if (
+  document.visibilityState === "visible" &&
+  orderTrackingId &&
+  !redirecting
+) {
+
+  verifyPayment();
+
+}
+
+}
+);
+
+/* =========================================================
+PAGE FOCUS
+========================================================= */
+
+window.addEventListener(
+"focus",
+function () {
+
+if (
+  orderTrackingId &&
+  !redirecting
+) {
+
+  verifyPayment();
+
+}
+
+}
+);
+
+/* =========================================================
+START UNIVERSAL PAYMENT FLOW
+========================================================= */
+
+loadPayment();
+
+</script></body>
 </html>
