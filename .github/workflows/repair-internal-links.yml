@@ -1,0 +1,57 @@
+name: Repair Internal Links
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair-links:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Scan and repair internal links
+        run: node scripts/repair-internal-links.js
+
+      - name: Show changes
+        run: |
+          echo "===== GIT STATUS ====="
+          git status --short
+
+          echo "===== CHANGES ====="
+          git diff --stat
+
+          git diff -- . \
+            ':!node_modules' \
+            ':!.git'
+
+      - name: Commit repaired links
+        run: |
+          if git diff --quiet; then
+            echo "No broken internal links were repaired."
+            exit 0
+          fi
+
+          git config user.name "LetsStudy Pro Link Repair Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add .
+
+          git commit -m "fix: repair broken internal links"
+
+          git push
