@@ -1,0 +1,180 @@
+name: LetsStudy Pro - IndexNow
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  indexnow:
+    name: Submit URLs to IndexNow
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Verify IndexNow Key File
+        run: |
+          KEY="d8a8076ff0334612a1eadaa160a99d13"
+          FILE="${KEY}.txt"
+
+          if [ ! -f "$FILE" ]; then
+            echo "❌ IndexNow key file missing: $FILE"
+            exit 1
+          fi
+
+          if ! grep -Fxq "$KEY" "$FILE"; then
+            echo "❌ IndexNow key does not match key file"
+            exit 1
+          fi
+
+          echo "✅ IndexNow key file verified"
+
+      - name: Find Changed HTML URLs
+        id: urls
+        run: |
+          BASE="https://letsstudy.pro"
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            git ls-files '*.html' > changed.txt
+          else
+            git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" \
+              | grep -E '\.html$' \
+              | grep -v '^\.github/' \
+              > changed.txt || true
+          fi
+
+          : > urls.txt
+
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+
+            case "$file" in
+              index.html)
+                echo "$BASE/" >> urls.txt
+                ;;
+              *.html)
+                path="${file%.html}"
+
+                case "$path" in
+                  index-auth)
+                    echo "$BASE/index-auth.html" >> urls.txt
+                    ;;
+                  *)
+                    echo "$BASE/$path" >> urls.txt
+                    echo "$BASE/$path.html" >> urls.txt
+                    ;;
+                esac
+                ;;
+            esac
+          done < changed.txt
+
+          sort -u urls.txt -o urls.txt
+
+          echo "URLs discovered:"
+          cat urls.txt || true
+
+          COUNT=$(wc -l < urls.txt)
+
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+
+      - name: Submit URLs to IndexNow
+        if: steps.urls.outputs.count != '0'
+        env:
+          INDEXNOW_KEY: d8a8076ff0334612a1eadaa160a99d13
+        run: |
+          python3 <<'PY'
+          import json
+          import os
+          import urllib.request
+
+          key = os.environ["INDEXNOW_KEY"]
+
+          with open("urls.txt", "r", encoding="utf-8") as f:
+              urls = [
+                  line.strip()
+                  for line in f
+                  if line.strip()
+              ]
+
+          if not urls:
+              print("No URLs to submit.")
+              raise SystemExit(0)
+
+          payload = {
+              "host": "letsstudy.pro",
+              "key": key,
+              "keyLocation": f"https://letsstudy.pro/{key}.txt",
+              "urlList": urls[:10000]
+          }
+
+          data = json.dumps(payload).encode("utf-8")
+
+          request = urllib.request.Request(
+              "https://api.indexnow.org/IndexNow",
+              data=data,
+              headers={
+                  "Content-Type": "application/json; charset=utf-8",
+                  "User-Agent": "LetsStudy-Pro-IndexNow"
+              },
+              method="POST"
+          )
+
+          try:
+              with urllib.request.urlopen(request, timeout=60) as response:
+                  print("HTTP:", response.status)
+                  body = response.read().decode("utf-8", errors="replace")
+                  print(body)
+
+                  if response.status in (200, 202):
+                      print("✅ URLs successfully submitted to IndexNow")
+                  else:
+                      raise SystemExit(
+                          f"❌ IndexNow returned HTTP {response.status}"
+                      )
+
+          except urllib.error.HTTPError as e:
+              print("❌ IndexNow HTTP error:", e.code)
+              print(e.read().decode("utf-8", errors="replace"))
+              raise
+          PY
+
+      - name: Verify Production Key
+        run: |
+          URL="https://letsstudy.pro/d8a8076ff0334612a1eadaa160a99d13.txt"
+
+          HTTP_CODE=$(curl -L -s -o /tmp/indexnow-key.txt \
+            -w "%{http_code}" \
+            "$URL")
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Production key file returned HTTP $HTTP_CODE"
+            exit 1
+          fi
+
+          EXPECTED="d8a8076ff0334612a1eadaa160a99d13"
+          ACTUAL=$(tr -d '\r\n' < /tmp/indexnow-key.txt)
+
+          if [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "❌ Production IndexNow key does not match"
+            exit 1
+          fi
+
+          echo "✅ Production IndexNow key verified"
+
+      - name: IndexNow Summary
+        run: |
+          echo "=========================================="
+          echo "✅ LetsStudy Pro IndexNow completed"
+          echo "=========================================="
+          echo "Domain: https://letsstudy.pro"
+          echo "IndexNow: https://api.indexnow.org/IndexNow"
+          echo "URLs submitted: ${{ steps.urls.outputs.count }}"
+          echo "=========================================="
