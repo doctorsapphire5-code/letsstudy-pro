@@ -1,0 +1,97 @@
+name: LetsStudy Pro Share Preview
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  share-preview:
+    name: Deploy Share Preview
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Verify Share Page
+        run: |
+          test -f share/index.html
+          echo "✅ share/index.html found"
+
+      - name: Verify Main Image Metadata
+        run: |
+          grep -q 'og:image' share/index.html
+          grep -q 'twitter:image' share/index.html
+          echo "✅ Main image metadata found"
+
+      - name: Verify Firebase Share Rewrite
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+
+          const config = JSON.parse(
+            fs.readFileSync('firebase.json', 'utf8')
+          );
+
+          const rewrites = config.hosting?.rewrites || [];
+
+          const shareRewrite = rewrites.find(
+            item => item.source === '/share/**'
+          );
+
+          if (!shareRewrite) {
+            throw new Error(
+              '❌ /share/** rewrite is missing'
+            );
+          }
+
+          if (
+            shareRewrite.destination !==
+            '/share/index.html'
+          ) {
+            throw new Error(
+              '❌ /share/** must point to /share/index.html'
+            );
+          }
+
+          if (shareRewrite.function) {
+            throw new Error(
+              '❌ Firebase Function detected. Share must use static hosting.'
+            );
+          }
+
+          console.log(
+            '✅ /share/** → /share/index.html'
+          );
+          NODE
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Check Firebase CLI
+        run: |
+          firebase --version
+
+      - name: Deploy LetsStudy Pro Hosting
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          firebase deploy \
+            --only hosting \
+            --project let-s-study-pro-course \
+            --token "$FIREBASE_TOKEN"
+
+      - name: Deployment Complete
+        run: |
+          echo "======================================"
+          echo "✅ LetsStudy Pro Share Preview deployed"
+          echo "======================================"
+          echo "Share URL:"
+          echo "https://letsstudy.pro/share/"
