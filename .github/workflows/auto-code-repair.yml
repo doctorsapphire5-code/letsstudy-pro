@@ -1,0 +1,362 @@
+name: LetsStudy Pro - Auto Code Repair
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "**/*.html"
+      - "**/*.css"
+      - "**/*.js"
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    name: Clean, Repair & Validate Website
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # ==================================================
+      # 1. CHECKOUT
+      # ==================================================
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ==================================================
+      # 2. NODE
+      # ==================================================
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # ==================================================
+      # 3. INSTALL TOOLS
+      # ==================================================
+      - name: Install repair tools
+        run: |
+          npm install --global prettier
+          npm install --global html-validate
+          npm install --global stylelint
+          npm install --global eslint
+
+      # ==================================================
+      # 4. CREATE PRETTIER CONFIG
+      # ==================================================
+      - name: Create Prettier configuration
+        run: |
+          cat > .prettierrc.json <<'EOF'
+          {
+            "printWidth": 120,
+            "tabWidth": 2,
+            "useTabs": false,
+            "semi": true,
+            "singleQuote": false,
+            "trailingComma": "es5",
+            "bracketSpacing": true,
+            "bracketSameLine": false,
+            "htmlWhitespaceSensitivity": "css",
+            "singleAttributePerLine": true
+          }
+          EOF
+
+      # ==================================================
+      # 5. CREATE PRETTIER IGNORE
+      # ==================================================
+      - name: Create Prettier ignore
+        run: |
+          cat > .prettierignore <<'EOF'
+          node_modules
+          .git
+          .firebase
+          firebase-debug.log
+          dist
+          build
+          functions/node_modules
+          vendor
+          EOF
+
+      # ==================================================
+      # 6. FORMAT HTML
+      # ==================================================
+      - name: Clean HTML
+        run: |
+          find . \
+            -type f \
+            -name "*.html" \
+            -not -path "./node_modules/*" \
+            -not -path "./.git/*" \
+            -not -path "./.firebase/*" \
+            -print0 |
+          xargs -0 -r prettier --write
+
+      # ==================================================
+      # 7. FORMAT CSS
+      # ==================================================
+      - name: Clean CSS
+        run: |
+          find . \
+            -type f \
+            -name "*.css" \
+            -not -path "./node_modules/*" \
+            -not -path "./.git/*" \
+            -not -path "./.firebase/*" \
+            -print0 |
+          xargs -0 -r prettier --write
+
+      # ==================================================
+      # 8. FORMAT JAVASCRIPT
+      # ==================================================
+      - name: Clean JavaScript
+        run: |
+          find . \
+            -type f \
+            -name "*.js" \
+            -not -path "./node_modules/*" \
+            -not -path "./.git/*" \
+            -not -path "./.firebase/*" \
+            -not -path "./functions/node_modules/*" \
+            -print0 |
+          xargs -0 -r prettier --write
+
+      # ==================================================
+      # 9. CHECK HTML STRUCTURE
+      # ==================================================
+      - name: Validate HTML
+        run: |
+          find . \
+            -type f \
+            -name "*.html" \
+            -not -path "./node_modules/*" \
+            -not -path "./.git/*" \
+            -not -path "./.firebase/*" \
+            -print0 |
+          xargs -0 -r html-validate
+
+      # ==================================================
+      # 10. CREATE BASIC CSS CONFIG
+      # ==================================================
+      - name: Create CSS validation config
+        run: |
+          cat > .stylelintrc.json <<'EOF'
+          {
+            "extends": "stylelint-config-standard",
+            "rules": {
+              "declaration-block-no-redundant-longhand-properties": null,
+              "selector-class-pattern": null,
+              "selector-id-pattern": null,
+              "custom-property-pattern": null,
+              "keyframes-name-pattern": null,
+              "property-no-unknown": true,
+              "block-no-empty": true,
+              "declaration-block-no-duplicate-properties": true
+            }
+          }
+          EOF
+
+      # ==================================================
+      # 11. CHECK CSS
+      # ==================================================
+      - name: Validate CSS
+        continue-on-error: true
+        run: |
+          find . \
+            -type f \
+            -name "*.css" \
+            -not -path "./node_modules/*" \
+            -not -path "./.git/*" \
+            -not -path "./.firebase/*" \
+            -print0 |
+          xargs -0 -r stylelint
+
+      # ==================================================
+      # 12. CREATE ESLINT CONFIG
+      # ==================================================
+      - name: Create JavaScript validation config
+        run: |
+          cat > eslint.config.js <<'EOF'
+          export default [
+            {
+              files: ["**/*.js"],
+              ignores: [
+                "node_modules/**",
+                ".git/**",
+                ".firebase/**",
+                "functions/node_modules/**"
+              ],
+              languageOptions: {
+                ecmaVersion: "latest",
+                sourceType: "module"
+              },
+              rules: {
+                "no-unexpected-multiline": "error",
+                "no-unreachable": "error",
+                "no-duplicate-case": "error",
+                "no-unreachable-loop": "error",
+                "no-self-assign": "error",
+                "no-self-compare": "error",
+                "no-constant-condition": "warn"
+              }
+            }
+          ];
+          EOF
+
+      # ==================================================
+      # 13. CHECK JAVASCRIPT
+      # ==================================================
+      - name: Validate JavaScript
+        continue-on-error: true
+        run: |
+          eslint . \
+            --no-warn-ignored \
+            --ext .js
+
+      # ==================================================
+      # 14. DETECT DUPLICATE GLOBAL IMPORTS
+      # ==================================================
+      - name: Detect duplicate CSS and JS imports
+        shell: bash
+        run: |
+          python3 <<'PY'
+          import re
+          from pathlib import Path
+
+          files = list(Path(".").rglob("*.html"))
+
+          ignored = {
+              "node_modules",
+              ".git",
+              ".firebase"
+          }
+
+          for file in files:
+
+              if any(part in ignored for part in file.parts):
+                  continue
+
+              try:
+                  text = file.read_text(
+                      encoding="utf-8",
+                      errors="ignore"
+                  )
+              except Exception:
+                  continue
+
+              css = re.findall(
+                  r'<link[^>]+href=["\']([^"\']+\.css[^"\']*)["\']',
+                  text,
+                  re.I
+              )
+
+              js = re.findall(
+                  r'<script[^>]+src=["\']([^"\']+\.js[^"\']*)["\']',
+                  text,
+                  re.I
+              )
+
+              for kind, items in [
+                  ("CSS", css),
+                  ("JS", js)
+              ]:
+
+                  seen = set()
+
+                  for item in items:
+
+                      if item in seen:
+                          print(
+                              f"WARNING: duplicate {kind} import "
+                              f"in {file}: {item}"
+                          )
+
+                      seen.add(item)
+          PY
+
+      # ==================================================
+      # 15. CHECK BROKEN HTML TAG PATTERNS
+      # ==================================================
+      - name: Scan suspicious HTML
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          ignored = {
+              "node_modules",
+              ".git",
+              ".firebase"
+          }
+
+          dangerous = [
+              r"<script[^>]*>\s*</script>",
+              r"<style[^>]*>\s*</style>",
+              r"<a[^>]*href=['\"]{2}",
+              r"<img[^>]+src=['\"]{2}",
+              r"<iframe[^>]+src=['\"]{2}"
+          ]
+
+          for file in Path(".").rglob("*.html"):
+
+              if any(part in ignored for part in file.parts):
+                  continue
+
+              try:
+                  text = file.read_text(
+                      encoding="utf-8",
+                      errors="ignore"
+                  )
+              except Exception:
+                  continue
+
+              for pattern in dangerous:
+
+                  if re.search(pattern, text, re.I):
+                      print(
+                          f"WARNING: suspicious code "
+                          f"in {file}: {pattern}"
+                      )
+          PY
+
+      # ==================================================
+      # 16. SHOW CHANGES
+      # ==================================================
+      - name: Check repaired files
+        id: changes
+        run: |
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes required."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+
+            echo "===================================="
+            echo "FILES CLEANED / FORMATTED"
+            echo "===================================="
+
+            git diff --stat
+          fi
+
+      # ==================================================
+      # 17. COMMIT REPAIRS
+      # ==================================================
+      - name: Commit repairs
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+
+          git commit \
+            -m "chore: auto clean and repair website code"
+
+          git push
