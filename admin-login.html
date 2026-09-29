@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Admin Login - LetsStudy Pro</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, #173b69, transparent 40%),
+        linear-gradient(135deg, #06111f, #0b1d33);
+      color: #fff;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 430px;
+      padding: 35px;
+      border-radius: 24px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 25px 70px rgba(0,0,0,.35);
+    }
+
+    .logo {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 18px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg,#1683ff,#00c6ff);
+      font-size: 30px;
+      font-weight: 800;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 27px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #b8c7d9;
+      font-size: 14px;
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 14px;
+      color: #d9e5f2;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 15px;
+      margin-bottom: 18px;
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 12px;
+      outline: none;
+      background: rgba(0,0,0,.22);
+      color: white;
+      font-size: 15px;
+    }
+
+    input:focus {
+      border-color: #24a8ff;
+      box-shadow: 0 0 0 3px rgba(36,168,255,.12);
+    }
+
+    .password-wrap {
+      position: relative;
+    }
+
+    .password-wrap input {
+      padding-right: 50px;
+    }
+
+    .toggle {
+      position: absolute;
+      right: 13px;
+      top: 13px;
+      border: 0;
+      background: none;
+      color: #b9c9da;
+      cursor: pointer;
+      font-size: 17px;
+    }
+
+    button.login-btn {
+      width: 100%;
+      border: 0;
+      border-radius: 13px;
+      padding: 14px;
+      background: linear-gradient(135deg,#1683ff,#00b9ff);
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    button.login-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    button.login-btn:disabled {
+      opacity: .65;
+      cursor: not-allowed;
+    }
+
+    .message {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 10px;
+      display: none;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .error {
+      display: block;
+      background: rgba(255,70,70,.12);
+      border: 1px solid rgba(255,70,70,.25);
+      color: #ffb4b4;
+    }
+
+    .success {
+      display: block;
+      background: rgba(50,220,130,.12);
+      border: 1px solid rgba(50,220,130,.25);
+      color: #9dffc5;
+    }
+
+    .back {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      color: #a9c8e8;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .back:hover {
+      color: white;
+    }
+
+    .security {
+      margin-top: 22px;
+      text-align: center;
+      font-size: 12px;
+      color: #8497ab;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="login-card">
+
+    <div class="logo">LS</div>
+
+    <h1>Admin Login</h1>
+
+    <p class="subtitle">
+      Sign in with your authorized LetsStudy Pro administrator account.
+    </p>
+
+    <form id="adminLoginForm">
+
+      <label for="email">Admin Email</label>
+      <input
+        id="email"
+        type="email"
+        placeholder="admin@example.com"
+        autocomplete="username"
+        required
+      >
+
+      <label for="password">Password</label>
+
+      <div class="password-wrap">
+        <input
+          id="password"
+          type="password"
+          placeholder="Enter your password"
+          autocomplete="current-password"
+          required
+        >
+
+        <button
+          type="button"
+          class="toggle"
+          id="togglePassword"
+          aria-label="Show password"
+        >
+          👁
+        </button>
+      </div>
+
+      <button
+        type="submit"
+        class="login-btn"
+        id="loginBtn"
+      >
+        Sign In
+      </button>
+
+      <div id="message" class="message"></div>
+
+    </form>
+
+    <a href="/" class="back">
+      ← Back to LetsStudy Pro
+    </a>
+
+    <div class="security">
+      Authorized administrators only.<br>
+      Access is verified through Firebase Authentication and Firestore.
+    </div>
+
+  </main>
+
+
+  <script type="module">
+
+    import {
+      initializeApp
+    } from
+      "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      onAuthStateChanged
+    } from
+      "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    import {
+      getFirestore,
+      doc,
+      getDoc
+    } from
+      "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
+    /* =====================================================
+       FIREBASE CONFIG
+    ===================================================== */
+
+    const firebaseConfig = {
+
+      apiKey:
+        "AIzaSyBcOYDfAVKXbkljsyRgI_0rjodBn678tCc",
+
+      authDomain:
+        "let-s-study-pro-course.firebaseapp.com",
+
+      databaseURL:
+        "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+      projectId:
+        "let-s-study-pro-course",
+
+      storageBucket:
+        "let-s-study-pro-course.firebasestorage.app",
+
+      messagingSenderId:
+        "474928293390",
+
+      appId:
+        "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+      measurementId:
+        "G-85B7V5H5J0"
+
+    };
+
+
+    /* =====================================================
+       INITIALIZE FIREBASE
+    ===================================================== */
+
+    const app = initializeApp(firebaseConfig);
+
+    const auth = getAuth(app);
+
+    const db = getFirestore(app);
+
+
+    /* =====================================================
+       ELEMENTS
+    ===================================================== */
+
+    const form =
+      document.getElementById("adminLoginForm");
+
+    const emailInput =
+      document.getElementById("email");
+
+    const passwordInput =
+      document.getElementById("password");
+
+    const loginBtn =
+      document.getElementById("loginBtn");
+
+    const message =
+      document.getElementById("message");
+
+    const togglePassword =
+      document.getElementById("togglePassword");
+
+
+    /* =====================================================
+       RETURN URL
+    ===================================================== */
+
+    function getReturnUrl() {
+
+      const params =
+        new URLSearchParams(window.location.search);
+
+      let returnUrl =
+        params.get("returnUrl");
+
+
+      /*
+       * If there is no returnUrl in the login URL,
+       * check sessionStorage.
+       */
+
+      if (!returnUrl) {
+
+        returnUrl =
+          sessionStorage.getItem(
+            "adminReturnUrl"
+          );
+
+      }
+
+
+      /*
+       * Default page
+       */
+
+      if (!returnUrl) {
+
+        returnUrl =
+          "/admin-dashboard.html";
+
+      }
+
+
+      /*
+       * Security:
+       * Only allow local paths.
+       *
+       * Prevent:
+       * https://evil-site.com
+       * javascript:
+       * //evil-site.com
+       */
+
+      try {
+
+        const url =
+          new URL(
+            returnUrl,
+            window.location.origin
+          );
+
+        if (
+          url.origin !==
+          window.location.origin
+        ) {
+
+          return "/admin-dashboard.html";
+
+        }
+
+        return (
+          url.pathname +
+          url.search +
+          url.hash
+        );
+
+      } catch (error) {
+
+        return "/admin-dashboard.html";
+
+      }
+
+    }
+
+
+    /* =====================================================
+       SAVE CURRENT PAGE
+       ===================================================== */
+
+    function saveCurrentPage() {
+
+      const currentPath =
+        window.location.pathname +
+        window.location.search +
+        window.location.hash;
+
+
+      /*
+       * Never save the login page itself.
+       */
+
+      if (
+        currentPath.includes("admin-login.html")
+      ) {
+
+        return;
+
+      }
+
+
+      sessionStorage.setItem(
+        "adminReturnUrl",
+        currentPath
+      );
+
+    }
+
+
+    /* =====================================================
+       MESSAGE
+    ===================================================== */
+
+    function showMessage(
+      text,
+      type = "error"
+    ) {
+
+      message.textContent = text;
+
+      message.className =
+        "message " + type;
+
+    }
+
+
+    function clearMessage() {
+
+      message.textContent = "";
+
+      message.className =
+        "message";
+
+    }
+
+
+    /* =====================================================
+       PASSWORD TOGGLE
+    ===================================================== */
+
+    togglePassword.addEventListener(
+      "click",
+      () => {
+
+        const isPassword =
+          passwordInput.type === "password";
+
+        passwordInput.type =
+          isPassword
+            ? "text"
+            : "password";
+
+        togglePassword.textContent =
+          isPassword
+            ? "🙈"
+            : "👁";
+
+      }
+    );
+
+
+    /* =====================================================
+       CHECK ADMIN DOCUMENT
+       
+       IMPORTANT:
+       Admin records are stored in:
+       
+       admins/{uid}
+       
+       ===================================================== */
+
+    async function verifyAdmin(user) {
+
+      if (!user) {
+
+        return null;
+
+      }
+
+
+      const adminRef =
+        doc(
+          db,
+          "admins",
+          user.uid
+        );
+
+
+      const adminSnap =
+        await getDoc(adminRef);
+
+
+      if (!adminSnap.exists()) {
+
+        return null;
+
+      }
+
+
+      const adminData =
+        adminSnap.data();
+
+
+      /*
+       * Normal administrator
+       */
+
+      if (
+        adminData.role !== "admin"
+      ) {
+
+        return null;
+
+      }
+
+
+      return adminData;
+
+    }
+
+
+    /* =====================================================
+       REDIRECT ADMIN
+    ===================================================== */
+
+    function redirectAdmin() {
+
+      const returnUrl =
+        getReturnUrl();
+
+
+      /*
+       * Remove saved URL after
+       * successfully retrieving it.
+       */
+
+      sessionStorage.removeItem(
+        "adminReturnUrl"
+      );
+
+
+      window.location.replace(
+        returnUrl
+      );
+
+    }
+
+
+    /* =====================================================
+       LOGIN
+    ===================================================== */
+
+    form.addEventListener(
+      "submit",
+      async (event) => {
+
+        event.preventDefault();
+
+        clearMessage();
+
+        loginBtn.disabled = true;
+
+        loginBtn.textContent =
+          "Signing in...";
+
+
+        const email =
+          emailInput.value.trim();
+
+        const password =
+          passwordInput.value;
+
+
+        try {
+
+          /*
+           * Firebase Authentication
+           */
+
+          const credential =
+            await signInWithEmailAndPassword(
+              auth,
+              email,
+              password
+            );
+
+
+          const user =
+            credential.user;
+
+
+          /*
+           * Verify that this authenticated
+           * account is actually an admin.
+           */
+
+          const adminData =
+            await verifyAdmin(user);
+
+
+          if (!adminData) {
+
+            /*
+             * Do not allow normal users
+             * into the admin area.
+             */
+
+            await auth.signOut();
+
+            throw new Error(
+              "This account is not authorized as an administrator."
+            );
+
+          }
+
+
+          /*
+           * Login successful
+           */
+
+          showMessage(
+            "Login successful. Redirecting...",
+            "success"
+          );
+
+
+          setTimeout(
+            redirectAdmin,
+            500
+          );
+
+
+        } catch (error) {
+
+          console.error(
+            "Admin login error:",
+            error
+          );
+
+
+          let errorMessage =
+            "Unable to sign in.";
+
+
+          switch (error.code) {
+
+            case "auth/invalid-credential":
+              errorMessage =
+                "Incorrect email or password.";
+              break;
+
+            case "auth/user-disabled":
+              errorMessage =
+                "This account has been disabled.";
+              break;
+
+            case "auth/too-many-requests":
+              errorMessage =
+                "Too many login attempts. Please try again later.";
+              break;
+
+            case "auth/network-request-failed":
+              errorMessage =
+                "Network error. Check your internet connection.";
+              break;
+
+            default:
+
+              if (error.message) {
+
+                errorMessage =
+                  error.message;
+
+              }
+
+          }
+
+
+          showMessage(
+            errorMessage,
+            "error"
+          );
+
+
+          loginBtn.disabled = false;
+
+          loginBtn.textContent =
+            "Sign In";
+
+        }
+
+      }
+    );
+
+
+    /* =====================================================
+       AUTO CHECK CURRENT LOGIN
+    ===================================================== */
+
+    onAuthStateChanged(
+      auth,
+      async (user) => {
+
+        if (!user) {
+
+          return;
+
+        }
+
+
+        /*
+         * If already logged in,
+         * verify whether the account
+         * is an administrator.
+         */
+
+        try {
+
+          const adminData =
+            await verifyAdmin(user);
+
+
+          if (adminData) {
+
+            redirectAdmin();
+
+          }
+
+        } catch (error) {
+
+          console.error(
+            "Admin verification error:",
+            error
+          );
+
+        }
+
+      }
+    );
+
+
+    /* =====================================================
+       SAVE PAGE THAT SENT USER HERE
+    ===================================================== */
+
+    saveCurrentPage();
+
+  </script>
+
+</body>
+</html>
