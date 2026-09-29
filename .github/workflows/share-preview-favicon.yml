@@ -6,46 +6,125 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
-  update-preview:
+  update-share-preview:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Update favicon and share preview
+      - name: Update favicon and social preview
         shell: bash
         run: |
           IMAGE="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgQHmJO8e8twONhRhp3I6pP4NFDh-LPcqVtAmQ9R9XjOGaVMKShfSLmxeK0fVzJsybBBOXKbA8LIhjgTgko83C-UPVhwgXeLtvTfjtVv6aVGgQgniOF-gMC28bY78HryXZ-5OqCwdBpKGqjEfTta5jLjT1mpvtBi2DQKyu35rkxsZNoVvl0nhvxUUn1gDP0/s1600/Untitled%20design_20260717_144337_0000.jpg"
 
-          find . -type f -name "*.html" \
+          find . \
+            -type f \
+            -name "*.html" \
             -not -path "./.git/*" \
             -print0 |
           while IFS= read -r -d '' file; do
 
-            if grep -q '<head' "$file"; then
-
-              sed -i "/<\/head>/i\\
-          <link rel=\"icon\" type=\"image/jpeg\" href=\"$IMAGE\">\\
-          <meta property=\"og:image\" content=\"$IMAGE\">\\
-          <meta property=\"og:image:alt\" content=\"LetsStudy Pro\">\\
-          <meta name=\"twitter:card\" content=\"summary_large_image\">\\
-          <meta name=\"twitter:image\" content=\"$IMAGE\">\\
-          <meta name=\"twitter:image:alt\" content=\"LetsStudy Pro\">" "$file"
-
+            if ! grep -qi "<head" "$file"; then
+              continue
             fi
+
+            python3 - "$file" "$IMAGE" <<'PY'
+          import sys
+          import re
+
+          file = sys.argv[1]
+          image = sys.argv[2]
+
+          with open(file, "r", encoding="utf-8") as f:
+              html = f.read()
+
+          # Remove existing favicon tags
+          html = re.sub(
+              r'<link\b[^>]*rel=["\'](?:icon|shortcut icon|apple-touch-icon)["\'][^>]*>',
+              '',
+              html,
+              flags=re.I
+          )
+
+          # Remove existing Open Graph image tags
+          html = re.sub(
+              r'<meta\b[^>]*property=["\']og:image(?::[^"\']*)?["\'][^>]*>',
+              '',
+              html,
+              flags=re.I
+          )
+
+          # Remove existing Twitter image/card tags
+          html = re.sub(
+              r'<meta\b[^>]*name=["\']twitter:(?:card|image|image:alt)["\'][^>]*>',
+              '',
+              html,
+              flags=re.I
+          )
+
+          # Remove existing OG image alt
+          html = re.sub(
+              r'<meta\b[^>]*property=["\']og:image:alt["\'][^>]*>',
+              '',
+              html,
+              flags=re.I
+          )
+
+          tags = f'''
+          <!-- LetsStudy Pro - Favicon & Social Share Preview -->
+          <link rel="icon" type="image/jpeg" href="{image}">
+          <link rel="shortcut icon" type="image/jpeg" href="{image}">
+
+          <meta property="og:image" content="{image}">
+          <meta property="og:image:alt" content="LetsStudy Pro">
+
+          <meta name="twitter:card" content="summary_large_image">
+          <meta name="twitter:image" content="{image}">
+          <meta name="twitter:image:alt" content="LetsStudy Pro">
+          <!-- End LetsStudy Pro - Favicon & Social Share Preview -->
+          '''
+
+          # Insert immediately before </head>
+          html = re.sub(
+              r'</head>',
+              tags + '\n</head>',
+              html,
+              count=1,
+              flags=re.I
+          )
+
+          with open(file, "w", encoding="utf-8") as f:
+              f.write(html)
+          PY
 
           done
 
+      - name: Check for changes
+        id: changes
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Commit changes
+        if: steps.changes.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add .
-          git diff --cached --quiet || git commit -m "Update favicon and social share preview"
+          git add '*.html'
+
+          git commit -m "Update LetsStudy Pro share preview and favicon"
 
       - name: Push changes
+        if: steps.changes.outputs.changed == 'true'
         run: |
           git push
