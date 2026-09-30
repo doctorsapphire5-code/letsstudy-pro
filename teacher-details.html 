@@ -1,0 +1,2392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Teacher Profile | LetsStudy Pro</title>
+
+  <meta
+    name="description"
+    content="View teacher profile, qualifications, subjects, experience, curricula, availability and tutoring services on LetsStudy Pro."
+  >
+
+  <meta name="theme-color" content="#0b1220">
+
+  <style>
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+    }
+
+    body{
+      font-family:Arial,Helvetica,sans-serif;
+      background:#f4f7fb;
+      color:#172033;
+      line-height:1.6;
+    }
+
+    a{
+      text-decoration:none;
+      color:inherit;
+    }
+
+    button{
+      font-family:inherit;
+    }
+
+    .topbar{
+      background:#0b1220;
+      color:#fff;
+      padding:14px 20px;
+      position:sticky;
+      top:0;
+      z-index:1000;
+    }
+
+    .topbar-inner{
+      max-width:1200px;
+      margin:auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:15px;
+    }
+
+    .brand{
+      font-size:20px;
+      font-weight:800;
+    }
+
+    .brand span{
+      color:#36c2ff;
+    }
+
+    .back-btn{
+      border:1px solid rgba(255,255,255,.25);
+      background:transparent;
+      color:#fff;
+      padding:9px 14px;
+      border-radius:9px;
+      cursor:pointer;
+    }
+
+    .page{
+      max-width:1200px;
+      margin:30px auto;
+      padding:0 18px;
+    }
+
+    .loading,
+    .error{
+      background:#fff;
+      border-radius:18px;
+      padding:40px 25px;
+      text-align:center;
+      box-shadow:0 8px 30px rgba(0,0,0,.06);
+    }
+
+    .error{
+      color:#b42318;
+      display:none;
+    }
+
+    .profile-header{
+      background:linear-gradient(135deg,#0b1220,#16294a);
+      color:#fff;
+      border-radius:22px;
+      padding:30px;
+      display:grid;
+      grid-template-columns:150px 1fr auto;
+      gap:25px;
+      align-items:center;
+      box-shadow:0 15px 45px rgba(10,25,50,.18);
+    }
+
+    .profile-photo{
+      width:150px;
+      height:150px;
+      border-radius:50%;
+      object-fit:cover;
+      border:5px solid rgba(255,255,255,.3);
+      background:#fff;
+    }
+
+    .teacher-name{
+      font-size:32px;
+      line-height:1.2;
+      margin-bottom:6px;
+    }
+
+    .display-name{
+      color:#b8d9ff;
+      margin-bottom:10px;
+    }
+
+    .bio{
+      color:#e5edf8;
+      max-width:700px;
+    }
+
+    .badges{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:15px;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:5px;
+      background:rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.15);
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:13px;
+    }
+
+    .verified{
+      background:#087443;
+      border-color:#087443;
+    }
+
+    .featured{
+      background:#805b00;
+      border-color:#805b00;
+    }
+
+    .header-actions{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .action-btn{
+      border:0;
+      padding:11px 17px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    .primary{
+      background:#36c2ff;
+      color:#06111d;
+    }
+
+    .light{
+      background:#fff;
+      color:#111827;
+    }
+
+    .outline{
+      background:transparent;
+      color:#fff;
+      border:1px solid rgba(255,255,255,.35);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:2fr 1fr;
+      gap:22px;
+      margin-top:22px;
+    }
+
+    .card{
+      background:#fff;
+      border-radius:18px;
+      padding:24px;
+      box-shadow:0 8px 30px rgba(0,0,0,.055);
+      margin-bottom:22px;
+    }
+
+    .card h2{
+      font-size:20px;
+      margin-bottom:18px;
+      color:#101828;
+    }
+
+    .card h3{
+      font-size:15px;
+      margin-bottom:8px;
+    }
+
+    .section-title{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .section-title::before{
+      content:"";
+      width:5px;
+      height:22px;
+      border-radius:4px;
+      background:#36c2ff;
+    }
+
+    .info-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:16px;
+    }
+
+    .info{
+      background:#f7f9fc;
+      border-radius:12px;
+      padding:13px 15px;
+    }
+
+    .label{
+      display:block;
+      font-size:12px;
+      color:#667085;
+      margin-bottom:3px;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+    }
+
+    .value{
+      font-weight:600;
+      color:#1d2939;
+      word-break:break-word;
+    }
+
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .chip{
+      background:#eef7ff;
+      color:#075985;
+      border:1px solid #cfeaff;
+      border-radius:999px;
+      padding:7px 11px;
+      font-size:13px;
+    }
+
+    .chip.green{
+      background:#ecfdf3;
+      color:#067647;
+      border-color:#abefc6;
+    }
+
+    .chip.orange{
+      background:#fff7ed;
+      color:#c2410c;
+      border-color:#fed7aa;
+    }
+
+    .list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .list-item{
+      padding:12px 14px;
+      background:#f7f9fc;
+      border-radius:10px;
+    }
+
+    .price{
+      font-size:32px;
+      font-weight:800;
+      color:#101828;
+    }
+
+    .price small{
+      font-size:14px;
+      font-weight:500;
+      color:#667085;
+    }
+
+    .rating{
+      font-size:26px;
+      font-weight:800;
+    }
+
+    .stars{
+      color:#f59e0b;
+      letter-spacing:2px;
+    }
+
+    .video-box{
+      position:relative;
+      width:100%;
+      aspect-ratio:16/9;
+      overflow:hidden;
+      border-radius:14px;
+      background:#0b1220;
+    }
+
+    .video-box iframe,
+    .video-box video{
+      width:100%;
+      height:100%;
+      border:0;
+    }
+
+    .socials{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .social{
+      padding:9px 13px;
+      border-radius:9px;
+      background:#f2f4f7;
+      color:#344054;
+      font-weight:600;
+    }
+
+    .social:hover{
+      background:#e4e7ec;
+    }
+
+    .contact-box{
+      background:linear-gradient(135deg,#e9f8ff,#f5fbff);
+      border:1px solid #c9ecff;
+      border-radius:15px;
+      padding:18px;
+    }
+
+    .contact-buttons{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:15px;
+    }
+
+    .contact-btn{
+      border:0;
+      border-radius:10px;
+      padding:12px;
+      cursor:pointer;
+      font-weight:700;
+      background:#0b1220;
+      color:#fff;
+    }
+
+    .contact-btn.secondary{
+      background:#36c2ff;
+      color:#06111d;
+    }
+
+    .verification{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:12px;
+      border-radius:10px;
+      background:#ecfdf3;
+      color:#067647;
+      font-weight:700;
+    }
+
+    .profile-id{
+      font-size:12px;
+      color:#667085;
+      word-break:break-all;
+    }
+
+    .footer{
+      text-align:center;
+      padding:35px 20px;
+      color:#667085;
+      font-size:14px;
+    }
+
+    .hidden{
+      display:none!important;
+    }
+
+    @media(max-width:850px){
+      .profile-header{
+        grid-template-columns:1fr;
+        text-align:center;
+      }
+
+      .profile-photo{
+        margin:auto;
+      }
+
+      .badges{
+        justify-content:center;
+      }
+
+      .header-actions{
+        flex-direction:row;
+        justify-content:center;
+        flex-wrap:wrap;
+      }
+
+      .grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media(max-width:600px){
+      .page{
+        margin:18px auto;
+        padding:0 12px;
+      }
+
+      .profile-header{
+        padding:22px 16px;
+        border-radius:17px;
+      }
+
+      .profile-photo{
+        width:120px;
+        height:120px;
+      }
+
+      .teacher-name{
+        font-size:25px;
+      }
+
+      .info-grid{
+        grid-template-columns:1fr;
+      }
+
+      .contact-buttons{
+        grid-template-columns:1fr;
+      }
+
+      .card{
+        padding:18px;
+        border-radius:15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      LetsStudy <span>Pro</span>
+    </div>
+
+    <button class="back-btn" onclick="history.back()">
+      ← Back
+    </button>
+  </div>
+</header>
+
+
+<main class="page">
+
+  <div id="loading" class="loading">
+    Loading teacher profile...
+  </div>
+
+  <div id="errorBox" class="error">
+    <h2>Teacher Not Found</h2>
+    <p id="errorMessage">
+      We could not load this teacher profile.
+    </p>
+  </div>
+
+
+  <section id="teacherContent" class="hidden">
+
+    <!-- PROFILE HEADER -->
+    <div class="profile-header">
+
+      <img
+        id="profilePhoto"
+        class="profile-photo"
+        src=""
+        alt="Teacher profile"
+      >
+
+      <div>
+
+        <h1 id="fullName" class="teacher-name">
+          Teacher Name
+        </h1>
+
+        <div id="displayName" class="display-name"></div>
+
+        <p id="professionalBio" class="bio"></p>
+
+        <div class="badges">
+
+          <span
+            id="verificationBadge"
+            class="badge"
+          >
+            Verification Pending
+          </span>
+
+          <span
+            id="featuredBadge"
+            class="badge featured hidden"
+          >
+            ★ Featured Teacher
+          </span>
+
+          <span
+            id="statusBadge"
+            class="badge"
+          >
+            Active
+          </span>
+
+        </div>
+
+      </div>
+
+      <div class="header-actions">
+
+        <button
+          id="contactBtn"
+          class="action-btn primary"
+        >
+          Contact Teacher
+        </button>
+
+        <button
+          id="shareBtn"
+          class="action-btn light"
+        >
+          Share Profile
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <div class="grid">
+
+      <!-- LEFT COLUMN -->
+      <div>
+
+        <!-- LOCATION -->
+        <section class="card">
+
+          <h2 class="section-title">
+            Location & Languages
+          </h2>
+
+          <div class="info-grid">
+
+            <div class="info">
+              <span class="label">Country</span>
+              <span id="country" class="value">—</span>
+            </div>
+
+            <div class="info">
+              <span class="label">City</span>
+              <span id="city" class="value">—</span>
+            </div>
+
+            <div class="info">
+              <span class="label">Region</span>
+              <span id="region" class="value">—</span>
+            </div>
+
+            <div class="info">
+              <span class="label">Timezone</span>
+              <span id="timezone" class="value">—</span>
+            </div>
+
+          </div>
+
+          <br>
+
+          <h3>Languages</h3>
+          <div id="languages" class="chips"></div>
+
+        </section>
+
+
+        <!-- TEACHING EXPERTISE -->
+        <section class="card">
+
+          <h2 class="section-title">
+            Teaching Expertise
+          </h2>
+
+          <h3>Subjects</h3>
+          <div id="subjects" class="chips"></div>
+
+          <br>
+
+          <h3>Teaching Levels</h3>
+          <div id="teachingLevels" class="chips"></div>
+
+          <br>
+
+          <h3>Age Groups</h3>
+          <div id="ageGroups" class="chips"></div>
+
+          <br>
+
+          <h3>Specializations</h3>
+          <div id="specializations" class="chips"></div>
+
+        </section>
+
+
+        <!-- CURRICULUM -->
+        <section class="card">
+
+          <h2 class="section-title">
+            Curricula & Boards
+          </h2>
+
+          <h3>Curricula</h3>
+          <div id="curricula" class="chips"></div>
+
+          <br>
+
+          <h3>Boards</h3>
+          <div id="boards" class="chips"></div>
+
+        </section>
+
+
+        <!-- QUALIFICATIONS -->
+        <section class="card">
+
+          <h2 class="section-title">
+            Qualifications & Experience
+          </h2>
+
+          <div class="info-grid">
+
+            <div class="info">
+              <span class="label">
+                Years of Experience
+              </span>
+
+              <span
+                id="yearsOfExperience"
+                class="value"
+              >
+                —
+              </span>
+            </div>
+
+            <div class="info">
+              <span class="label">
+                Institutions
+              </span>
+
+              <div
+                id="institutions"
+                class="value"
+              >
+                —
+              </div>
+            </div>
+
+          </div>
+
+          <br>
+
+          <h3>Qualifications</h3>
+
+          <div
+            id="qualifications"
+            class="list"
+          ></div>
+
+          <br>
+
+          <h3>Certifications</h3>
+
+          <div
+            id="certifications"
+            class="list"
+          ></div>
+
+        </section>
+
+
+        <!-- SERVICES -->
+        <section class="card">
+
+          <h2 class="section-title">
+            Teaching Services
+          </h2>
+
+          <h3>Teaching Mode</h3>
+          <div id="teachingMode" class="chips"></div>
+
+          <br>
+
+          <h3>Services</h3>
+          <div id="services" class="chips"></div>
+
+          <br>
+
+          <h3>Teaching Methods</h3>
+          <div id="teachingMethods" class="chips"></div>
+
+          <br>
+
+          <h3>Countries Served</h3>
+          <div id="countriesServed" class="chips"></div>
+
+        </section>
+
+
+        <!-- AVAILABILITY -->
+        <section class="card">
+
+          <h2 class="section-title">
+            Availability
+          </h2>
+
+          <div class="info-grid">
+
+            <div class="info">
+              <span class="label">
+                Available Days
+              </span>
+
+              <div
+                id="availableDays"
+                class="value"
+              >
+                —
+              </div>
+            </div>
+
+            <div class="info">
+              <span class="label">
+                Available Hours
+              </span>
+
+              <div
+                id="availableHours"
+                class="value"
+              >
+                —
+              </div>
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- INTRODUCTION VIDEO -->
+        <section
+          id="introSection"
+          class="card hidden"
+        >
+
+          <h2 class="section-title">
+            Introduction Video
+          </h2>
+
+          <div class="video-box">
+            <iframe
+              id="introductionVideo"
+              allowfullscreen
+              allow="autoplay; encrypted-media"
+            ></iframe>
+          </div>
+
+        </section>
+
+
+        <!-- TEACHING DEMO -->
+        <section
+          id="demoSection"
+          class="card hidden"
+        >
+
+          <h2 class="section-title">
+            Teaching Demo
+          </h2>
+
+          <div class="video-box">
+            <iframe
+              id="teachingDemo"
+              allowfullscreen
+              allow="autoplay; encrypted-media"
+            ></iframe>
+          </div>
+
+        </section>
+
+      </div>
+
+
+      <!-- RIGHT COLUMN -->
+      <aside>
+
+        <!-- PRICING -->
+        <section class="card">
+
+          <h2 class="section-title">
+            Tutoring Pricing
+          </h2>
+
+          <div class="price">
+            <span id="hourlyRate">—</span>
+
+            <small id="currency"></small>
+
+            <small>/ hour</small>
+          </div>
+
+          <br>
+
+          <div
+            id="trialLesson"
+            class="verification"
+          >
+            Trial Lesson Information
+          </div>
+
+          <br>
+
+          <h3>Packages</h3>
+
+          <div
+            id="packagePricing"
+            class="list"
+          ></div>
+
+        </section>
+
+
+        <!-- RATING -->
+        <section class="card">
+
+          <h2 class="section-title">
+            Teacher Performance
+          </h2>
+
+          <div class="rating">
+            <span id="rating">0</span>
+            <span class="stars">★★★★★</span>
+          </div>
+
+          <p>
+            <strong id="reviewCount">0</strong>
+            Reviews
+          </p>
+
+          <p>
+            <strong id="studentCount">0</strong>
+            Students
+          </p>
+
+        </section>
+
+
+        <!-- VERIFICATION -->
+        <section class="card">
+
+          <h2 class="section-title">
+            Verification
+          </h2>
+
+          <div
+            id="identityVerification"
+            class="verification"
+          >
+            Identity verification
+          </div>
+
+          <br>
+
+          <div
+            id="qualificationVerification"
+            class="verification"
+          >
+            Qualification verification
+          </div>
+
+          <br>
+
+          <div class="info">
+
+            <span class="label">
+              Verification Date
+            </span>
+
+            <span
+              id="verificationDate"
+              class="value"
+            >
+              —
+            </span>
+
+          </div>
+
+          <br>
+
+          <div class="info">
+
+            <span class="label">
+              Verified By
+            </span>
+
+            <span
+              id="verifiedBy"
+              class="value"
+            >
+              —
+            </span>
+
+          </div>
+
+        </section>
+
+
+        <!-- CONTACT -->
+        <section class="card">
+
+          <h2 class="section-title">
+            Contact Teacher
+          </h2>
+
+          <div class="contact-box">
+
+            <p>
+              Connect with this teacher for tutoring
+              information and availability.
+            </p>
+
+            <div class="contact-buttons">
+
+              <button
+                id="whatsappBtn"
+                class="contact-btn"
+              >
+                WhatsApp
+              </button>
+
+              <button
+                id="emailBtn"
+                class="contact-btn secondary"
+              >
+                Email
+              </button>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- SOCIAL -->
+        <section class="card">
+
+          <h2 class="section-title">
+            Online Profiles
+          </h2>
+
+          <div class="socials">
+
+            <a
+              id="websiteLink"
+              class="social hidden"
+              target="_blank"
+              rel="noopener"
+            >
+              Website
+            </a>
+
+            <a
+              id="linkedinLink"
+              class="social hidden"
+              target="_blank"
+              rel="noopener"
+            >
+              LinkedIn
+            </a>
+
+            <a
+              id="youtubeLink"
+              class="social hidden"
+              target="_blank"
+              rel="noopener"
+            >
+              YouTube
+            </a>
+
+          </div>
+
+        </section>
+
+
+        <!-- PROFILE INFO -->
+        <section class="card">
+
+          <h2 class="section-title">
+            Profile Information
+          </h2>
+
+          <div class="info">
+
+            <span class="label">
+              Teacher ID
+            </span>
+
+            <span
+              id="teacherId"
+              class="profile-id"
+            >
+              —
+            </span>
+
+          </div>
+
+          <br>
+
+          <div class="info">
+
+            <span class="label">
+              Status
+            </span>
+
+            <span
+              id="profileStatus"
+              class="value"
+            >
+              —
+            </span>
+
+          </div>
+
+          <br>
+
+          <div class="info">
+
+            <span class="label">
+              Created
+            </span>
+
+            <span
+              id="createdAt"
+              class="value"
+            >
+              —
+            </span>
+
+          </div>
+
+          <br>
+
+          <div class="info">
+
+            <span class="label">
+              Last Updated
+            </span>
+
+            <span
+              id="updatedAt"
+              class="value"
+            >
+              —
+            </span>
+
+          </div>
+
+        </section>
+
+      </aside>
+
+    </div>
+
+  </section>
+
+</main>
+
+
+<footer class="footer">
+  © <span id="year"></span> LetsStudy Pro —
+  Learn. Build. Work. Grow.
+</footer>
+
+
+<script type="module">
+
+  import {
+    initializeApp
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+  import {
+    getFirestore,
+    doc,
+    getDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
+  /* =====================================================
+     FIREBASE CONFIG
+  ===================================================== */
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBcOYDfAVKXbljsyRgI_0rjodBn678tCc",
+    authDomain: "let-s-study-pro-course.firebaseapp.com",
+    databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+    projectId: "let-s-study-pro-course",
+    storageBucket: "let-s-study-pro-course.firebasestorage.app",
+    messagingSenderId: "474928293390",
+    appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+    measurementId: "G-85B7V5H5J0"
+  };
+
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+
+  /* =====================================================
+     HELPERS
+  ===================================================== */
+
+  const $ = (id) => document.getElementById(id);
+
+
+  function setText(id, value) {
+    const element = $(id);
+
+    if (!element) return;
+
+    element.textContent =
+      value !== undefined &&
+      value !== null &&
+      value !== ""
+        ? value
+        : "—";
+  }
+
+
+  function getArray(value) {
+
+    if (!Array.isArray(value)) {
+      return [];
+    }
+
+    return value.filter(
+      item =>
+        item !== null &&
+        item !== undefined &&
+        String(item).trim() !== ""
+    );
+
+  }
+
+
+  function renderChips(id, value) {
+
+    const container = $(id);
+
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    const items = getArray(value);
+
+    if (!items.length) {
+
+      container.innerHTML =
+        `<span class="chip">Not specified</span>`;
+
+      return;
+    }
+
+
+    items.forEach(item => {
+
+      const chip =
+        document.createElement("span");
+
+      chip.className = "chip";
+
+      chip.textContent = item;
+
+      container.appendChild(chip);
+
+    });
+
+  }
+
+
+  function renderList(id, value) {
+
+    const container = $(id);
+
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    const items = getArray(value);
+
+    if (!items.length) {
+
+      container.innerHTML =
+        `<div class="list-item">Not specified</div>`;
+
+      return;
+    }
+
+
+    items.forEach(item => {
+
+      const itemElement =
+        document.createElement("div");
+
+      itemElement.className =
+        "list-item";
+
+      if (
+        typeof item === "object" &&
+        item !== null
+      ) {
+
+        itemElement.textContent =
+          Object.entries(item)
+            .map(
+              ([key, value]) =>
+                `${key}: ${value}`
+            )
+            .join(" • ");
+
+      } else {
+
+        itemElement.textContent =
+          item;
+
+      }
+
+      container.appendChild(
+        itemElement
+      );
+
+    });
+
+  }
+
+
+  function formatDate(value) {
+
+    if (!value) {
+      return "—";
+    }
+
+
+    try {
+
+      if (
+        typeof value === "object" &&
+        typeof value.toDate === "function"
+      ) {
+
+        return value
+          .toDate()
+          .toLocaleString();
+
+      }
+
+
+      const date =
+        new Date(value);
+
+      if (isNaN(date.getTime())) {
+        return String(value);
+      }
+
+      return date.toLocaleString();
+
+    } catch {
+
+      return String(value);
+
+    }
+
+  }
+
+
+  function safeUrl(value) {
+
+    if (!value) {
+      return "";
+    }
+
+
+    try {
+
+      const url =
+        new URL(value);
+
+      if (
+        url.protocol === "http:" ||
+        url.protocol === "https:"
+      ) {
+
+        return url.href;
+
+      }
+
+    } catch {}
+
+    return "";
+
+  }
+
+
+  function getYouTubeEmbed(url) {
+
+    const safe =
+      safeUrl(url);
+
+    if (!safe) {
+      return "";
+    }
+
+
+    try {
+
+      const parsed =
+        new URL(safe);
+
+      let videoId = "";
+
+
+      if (
+        parsed.hostname.includes(
+          "youtube.com"
+        )
+      ) {
+
+        videoId =
+          parsed.searchParams.get("v") ||
+          "";
+
+
+        if (
+          parsed.pathname.startsWith(
+            "/shorts/"
+          )
+        ) {
+
+          videoId =
+            parsed.pathname
+              .split("/shorts/")[1]
+              .split("/")[0];
+
+        }
+
+
+        if (
+          parsed.pathname.startsWith(
+            "/embed/"
+          )
+        ) {
+
+          videoId =
+            parsed.pathname
+              .split("/embed/")[1]
+              .split("/")[0];
+
+        }
+
+      }
+
+
+      if (
+        parsed.hostname ===
+        "youtu.be"
+      ) {
+
+        videoId =
+          parsed.pathname
+            .replace("/", "")
+            .split("/")[0];
+
+      }
+
+
+      if (videoId) {
+
+        return (
+          "https://www.youtube.com/embed/" +
+          videoId
+        );
+
+      }
+
+
+      return safe;
+
+    } catch {
+
+      return "";
+
+    }
+
+  }
+
+
+  /* =====================================================
+     URL
+  ===================================================== */
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+
+  const teacherId =
+    params.get("id");
+
+
+  /* =====================================================
+     ERROR HANDLER
+  ===================================================== */
+
+  function showError(message) {
+
+    const loading =
+      $("loading");
+
+    const errorBox =
+      $("errorBox");
+
+    const messageBox =
+      $("errorMessage");
+
+
+    if (loading) {
+      loading.classList.add(
+        "hidden"
+      );
+    }
+
+
+    if (errorBox) {
+      errorBox.style.display =
+        "block";
+    }
+
+
+    if (messageBox) {
+      messageBox.textContent =
+        message;
+    }
+
+  }
+
+
+  /* =====================================================
+     LOAD TEACHER
+  ===================================================== */
+
+  async function loadTeacher() {
+
+    if (!teacherId) {
+
+      showError(
+        "Teacher ID is missing from the URL."
+      );
+
+      return;
+    }
+
+
+    try {
+
+      const teacherRef =
+        doc(
+          db,
+          "teachers",
+          teacherId
+        );
+
+
+      const snapshot =
+        await getDoc(
+          teacherRef
+        );
+
+
+      if (!snapshot.exists()) {
+
+        showError(
+          "Teacher profile was not found."
+        );
+
+        return;
+      }
+
+
+      const teacher =
+        snapshot.data();
+
+
+      renderTeacher(
+        teacher,
+        teacherId
+      );
+
+
+    } catch (error) {
+
+      console.error(
+        "Firebase error:",
+        error
+      );
+
+
+      showError(
+        "Unable to load this teacher profile."
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     RENDER TEACHER
+  ===================================================== */
+
+  function renderTeacher(
+    teacher,
+    documentId
+  ) {
+
+    $("loading")
+      ?.classList.add(
+        "hidden"
+      );
+
+
+    $("teacherContent")
+      ?.classList.remove(
+        "hidden"
+      );
+
+
+    /* =================================================
+       BASIC PROFILE
+    ================================================= */
+
+    setText(
+      "fullName",
+      teacher.fullName
+    );
+
+
+    setText(
+      "displayName",
+      teacher.displayName
+    );
+
+
+    setText(
+      "professionalBio",
+      teacher.professionalBio
+    );
+
+
+    /* =================================================
+       PROFILE PHOTO
+    ================================================= */
+
+    const photo =
+      safeUrl(
+        teacher.profilePhoto
+      );
+
+
+    if ($("profilePhoto")) {
+
+      $("profilePhoto").src =
+        photo ||
+        "https://via.placeholder.com/300x300?text=Teacher";
+
+
+      $("profilePhoto").alt =
+        teacher.fullName ||
+        "Teacher";
+
+    }
+
+
+    /* =================================================
+       LOCATION
+    ================================================= */
+
+    setText(
+      "country",
+      teacher.country
+    );
+
+    setText(
+      "city",
+      teacher.city
+    );
+
+    setText(
+      "region",
+      teacher.region
+    );
+
+    setText(
+      "timezone",
+      teacher.timezone
+    );
+
+
+    renderChips(
+      "languages",
+      teacher.languages
+    );
+
+
+    /* =================================================
+       TEACHING EXPERTISE
+    ================================================= */
+
+    renderChips(
+      "subjects",
+      teacher.subjects
+    );
+
+
+    renderChips(
+      "teachingLevels",
+      teacher.teachingLevels
+    );
+
+
+    renderChips(
+      "ageGroups",
+      teacher.ageGroups
+    );
+
+
+    renderChips(
+      "specializations",
+      teacher.specializations
+    );
+
+
+    /* =================================================
+       CURRICULA
+    ================================================= */
+
+    renderChips(
+      "curricula",
+      teacher.curricula
+    );
+
+
+    renderChips(
+      "boards",
+      teacher.boards
+    );
+
+
+    /* =================================================
+       QUALIFICATIONS
+    ================================================= */
+
+    setText(
+      "yearsOfExperience",
+      teacher.yearsOfExperience
+        ? `${teacher.yearsOfExperience} years`
+        : "—"
+    );
+
+
+    renderList(
+      "qualifications",
+      teacher.qualifications
+    );
+
+
+    renderList(
+      "certifications",
+      teacher.certifications
+    );
+
+
+    renderList(
+      "institutions",
+      teacher.institutions
+    );
+
+
+    /* =================================================
+       SERVICES
+    ================================================= */
+
+    renderChips(
+      "teachingMode",
+      teacher.teachingMode
+    );
+
+
+    renderChips(
+      "countriesServed",
+      teacher.countriesServed
+    );
+
+
+    renderChips(
+      "services",
+      teacher.services
+    );
+
+
+    renderChips(
+      "teachingMethods",
+      teacher.teachingMethods
+    );
+
+
+    /* =================================================
+       AVAILABILITY
+    ================================================= */
+
+    const availability =
+      teacher.availability || {};
+
+
+    renderChips(
+      "availableDays",
+      teacher.availableDays ||
+      availability.days
+    );
+
+
+    let hours =
+      teacher.availableHours;
+
+
+    if (
+      !hours &&
+      availability.startTime &&
+      availability.endTime
+    ) {
+
+      hours =
+        `${availability.startTime} - ${availability.endTime}`;
+
+    }
+
+
+    setText(
+      "availableHours",
+      hours
+    );
+
+
+    /* =================================================
+       PRICING
+    ================================================= */
+
+    setText(
+      "hourlyRate",
+      teacher.hourlyRate
+    );
+
+
+    setText(
+      "currency",
+      teacher.currency
+    );
+
+
+    if ($("trialLesson")) {
+
+      $("trialLesson")
+        .textContent =
+        teacher.trialLesson === true
+          ? "✓ Trial lesson available"
+          : "Trial lesson not available";
+
+    }
+
+
+    renderList(
+      "packagePricing",
+      teacher.packagePricing
+    );
+
+
+    /* =================================================
+       RATING
+    ================================================= */
+
+    setText(
+      "rating",
+      teacher.rating ?? 0
+    );
+
+
+    setText(
+      "reviewCount",
+      teacher.reviewCount ?? 0
+    );
+
+
+    setText(
+      "studentCount",
+      teacher.studentCount ?? 0
+    );
+
+
+    /* =================================================
+       VERIFICATION
+    ================================================= */
+
+    const identityVerified =
+      teacher.identityVerification === true;
+
+
+    const qualificationVerified =
+      teacher.qualificationVerification === true;
+
+
+    if ($("identityVerification")) {
+
+      $("identityVerification")
+        .textContent =
+        identityVerified
+          ? "✓ Identity Verified"
+          : "Identity Not Verified";
+
+    }
+
+
+    if ($("qualificationVerification")) {
+
+      $("qualificationVerification")
+        .textContent =
+        qualificationVerified
+          ? "✓ Qualification Verified"
+          : "Qualification Not Verified";
+
+    }
+
+
+    setText(
+      "verificationDate",
+      formatDate(
+        teacher.verificationDate
+      )
+    );
+
+
+    setText(
+      "verifiedBy",
+      teacher.verifiedBy
+    );
+
+
+    /* =================================================
+       VERIFICATION BADGE
+    ================================================= */
+
+    const verificationStatus =
+      String(
+        teacher.verificationStatus ||
+        "pending"
+      ).toLowerCase();
+
+
+    if ($("verificationBadge")) {
+
+      if (
+        verificationStatus ===
+        "verified"
+      ) {
+
+        $("verificationBadge")
+          .textContent =
+          "✓ Verified Teacher";
+
+        $("verificationBadge")
+          .classList.add(
+            "verified"
+          );
+
+      } else {
+
+        $("verificationBadge")
+          .textContent =
+          "Verification Pending";
+
+      }
+
+    }
+
+
+    /* =================================================
+       FEATURED
+    ================================================= */
+
+    if (
+      teacher.featured === true &&
+      $("featuredBadge")
+    ) {
+
+      $("featuredBadge")
+        .classList.remove(
+          "hidden"
+        );
+
+    }
+
+
+    /* =================================================
+       STATUS
+    ================================================= */
+
+    setText(
+      "profileStatus",
+      teacher.status
+    );
+
+
+    if ($("statusBadge")) {
+
+      $("statusBadge")
+        .textContent =
+        teacher.status ||
+        "Active";
+
+    }
+
+
+    /* =================================================
+       VIDEO
+    ================================================= */
+
+    const introVideo =
+      getYouTubeEmbed(
+        teacher.introductionVideo
+      );
+
+
+    if (
+      introVideo &&
+      $("introSection") &&
+      $("introductionVideo")
+    ) {
+
+      $("introSection")
+        .classList.remove(
+          "hidden"
+        );
+
+      $("introductionVideo")
+        .src =
+        introVideo;
+
+    }
+
+
+    const demoVideo =
+      getYouTubeEmbed(
+        teacher.teachingDemo
+      );
+
+
+    if (
+      demoVideo &&
+      $("demoSection") &&
+      $("teachingDemo")
+    ) {
+
+      $("demoSection")
+        .classList.remove(
+          "hidden"
+        );
+
+      $("teachingDemo")
+        .src =
+        demoVideo;
+
+    }
+
+
+    /* =================================================
+       SOCIAL LINKS
+    ================================================= */
+
+    setupLink(
+      "websiteLink",
+      teacher.website
+    );
+
+
+    setupLink(
+      "linkedinLink",
+      teacher.linkedin
+    );
+
+
+    setupLink(
+      "youtubeLink",
+      teacher.youtube
+    );
+
+
+    /* =================================================
+       PROFILE INFORMATION
+    ================================================= */
+
+    setText(
+      "teacherId",
+      teacher.teacherId ||
+      documentId
+    );
+
+
+    setText(
+      "createdAt",
+      formatDate(
+        teacher.createdAt
+      )
+    );
+
+
+    setText(
+      "updatedAt",
+      formatDate(
+        teacher.updatedAt
+      )
+    );
+
+
+    /* =================================================
+       CONTACT
+    ================================================= */
+
+    setupContact(
+      teacher
+    );
+
+
+    /* =================================================
+       SHARE
+    ================================================= */
+
+    setupShare(
+      teacher
+    );
+
+
+    /* =================================================
+       PAGE TITLE
+    ================================================= */
+
+    const name =
+      teacher.displayName ||
+      teacher.fullName ||
+      "Teacher";
+
+
+    document.title =
+      `${name} | LetsStudy Pro`;
+
+
+    /* =================================================
+       SEO META DESCRIPTION
+    ================================================= */
+
+    const description =
+      teacher.professionalBio ||
+      `${name} is a teacher on LetsStudy Pro.`;
+
+
+    let meta =
+      document.querySelector(
+        'meta[name="description"]'
+      );
+
+
+    if (meta) {
+
+      meta.setAttribute(
+        "content",
+        description
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     SOCIAL LINKS
+  ===================================================== */
+
+  function setupLink(
+    id,
+    value
+  ) {
+
+    const element =
+      $(id);
+
+
+    if (!element) return;
+
+
+    const url =
+      safeUrl(value);
+
+
+    if (url) {
+
+      element.href =
+        url;
+
+      element.classList
+        .remove(
+          "hidden"
+        );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     CONTACT
+  ===================================================== */
+
+  function setupContact(
+    teacher
+  ) {
+
+    const whatsapp =
+      teacher.whatsapp ||
+      teacher.phone ||
+      "";
+
+
+    if ($("whatsappBtn")) {
+
+      $("whatsappBtn")
+        .onclick = () => {
+
+          if (!whatsapp) {
+
+            alert(
+              "WhatsApp number is not available."
+            );
+
+            return;
+          }
+
+
+          const cleanNumber =
+            String(whatsapp)
+              .replace(
+                /[^\d]/g,
+                ""
+              );
+
+
+          window.open(
+            `https://wa.me/${cleanNumber}`,
+            "_blank"
+          );
+
+        };
+
+    }
+
+
+    if ($("emailBtn")) {
+
+      $("emailBtn")
+        .onclick = () => {
+
+          if (!teacher.email) {
+
+            alert(
+              "Teacher email is not available."
+            );
+
+            return;
+          }
+
+
+          window.location.href =
+            `mailto:${teacher.email}`;
+
+        };
+
+    }
+
+
+    if ($("contactBtn")) {
+
+      $("contactBtn")
+        .onclick = () => {
+
+          const contactBox =
+            document.querySelector(
+              ".contact-box"
+            );
+
+
+          if (contactBox) {
+
+            contactBox.scrollIntoView({
+              behavior: "smooth",
+              block: "center"
+            });
+
+          }
+
+        };
+
+    }
+
+  }
+
+
+  /* =====================================================
+     SHARE PROFILE
+  ===================================================== */
+
+  function setupShare(
+    teacher
+  ) {
+
+    if (!$("shareBtn")) {
+      return;
+    }
+
+
+    $("shareBtn")
+      .onclick = async () => {
+
+        const name =
+          teacher.displayName ||
+          teacher.fullName ||
+          "Teacher";
+
+
+        const shareData = {
+
+          title:
+            `${name} | LetsStudy Pro`,
+
+          text:
+            `View ${name}'s teacher profile on LetsStudy Pro.`,
+
+          url:
+            window.location.href
+
+        };
+
+
+        try {
+
+          if (
+            navigator.share
+          ) {
+
+            await navigator.share(
+              shareData
+            );
+
+          } else {
+
+            await navigator
+              .clipboard
+              .writeText(
+                window.location.href
+              );
+
+
+            alert(
+              "Teacher profile link copied."
+            );
+
+          }
+
+        } catch (error) {
+
+          console.log(
+            "Share cancelled:",
+            error
+          );
+
+        }
+
+      };
+
+  }
+
+
+  /* =====================================================
+     BACK BUTTON
+  ===================================================== */
+
+  window.goBack =
+    function() {
+
+      if (
+        document.referrer &&
+        document.referrer.includes(
+          window.location.hostname
+        )
+      ) {
+
+        history.back();
+
+      } else {
+
+        window.location.href =
+          "teachers.html";
+
+      }
+
+    };
+
+
+  /* =====================================================
+     YEAR
+  ===================================================== */
+
+  if ($("year")) {
+
+    $("year").textContent =
+      new Date().getFullYear();
+
+  }
+
+
+  /* =====================================================
+     START
+  ===================================================== */
+
+  loadTeacher();
+
+</script>
+
+</body>
+</html>
