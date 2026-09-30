@@ -1,0 +1,3558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Teacher Dashboard | LetsStudy Pro</title>
+
+  <meta
+    name="description"
+    content="Manage your Global Teacher profile, subjects, availability, qualifications and teaching services on LetsStudy Pro."
+  >
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background: #f4f7fb;
+      color: #172033;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font-family: inherit;
+    }
+
+    .topbar {
+      height: 70px;
+      background: #ffffff;
+      border-bottom: 1px solid #e6eaf0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 25px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .brand {
+      font-size: 20px;
+      font-weight: 800;
+      color: #1769ff;
+    }
+
+    .brand span {
+      color: #111827;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon-btn,
+    .logout-btn {
+      border: none;
+      cursor: pointer;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 600;
+    }
+
+    .icon-btn {
+      background: #eef4ff;
+      color: #1769ff;
+    }
+
+    .logout-btn {
+      background: #feecec;
+      color: #d93025;
+    }
+
+    .layout {
+      display: flex;
+      min-height: calc(100vh - 70px);
+    }
+
+    .sidebar {
+      width: 250px;
+      background: #111827;
+      color: #fff;
+      padding: 25px 15px;
+      position: fixed;
+      top: 70px;
+      bottom: 0;
+      left: 0;
+      overflow-y: auto;
+    }
+
+    .teacher-mini {
+      padding: 15px;
+      background: rgba(255,255,255,.06);
+      border-radius: 14px;
+      margin-bottom: 20px;
+    }
+
+    .teacher-mini img {
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+      margin-bottom: 10px;
+      background: #e5e7eb;
+    }
+
+    .teacher-mini-name {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .teacher-mini-status {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .nav-title {
+      font-size: 11px;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 20px 10px 8px;
+    }
+
+    .nav-item {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 12px 13px;
+      border: none;
+      background: transparent;
+      color: #d1d5db;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 4px;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .nav-item:hover,
+    .nav-item.active {
+      background: #1d4ed8;
+      color: #fff;
+    }
+
+    .main {
+      margin-left: 250px;
+      width: calc(100% - 250px);
+      padding: 30px;
+    }
+
+    .welcome {
+      background: linear-gradient(135deg, #1769ff, #4938e8);
+      color: #fff;
+      border-radius: 20px;
+      padding: 28px;
+      margin-bottom: 25px;
+    }
+
+    .welcome h1 {
+      font-size: 27px;
+      margin-bottom: 8px;
+    }
+
+    .welcome p {
+      opacity: .9;
+      font-size: 14px;
+    }
+
+    .verified {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 15px;
+      padding: 7px 12px;
+      background: rgba(255,255,255,.16);
+      border-radius: 20px;
+      font-size: 12px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 25px;
+    }
+
+    .stat-card {
+      background: #fff;
+      border: 1px solid #e8edf3;
+      border-radius: 15px;
+      padding: 20px;
+    }
+
+    .stat-label {
+      color: #6b7280;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .stat-value {
+      font-size: 25px;
+      font-weight: 800;
+      color: #111827;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .section-title {
+      margin-bottom: 18px;
+    }
+
+    .section-title h2 {
+      font-size: 21px;
+      margin-bottom: 5px;
+    }
+
+    .section-title p {
+      color: #6b7280;
+      font-size: 13px;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e8edf3;
+      border-radius: 16px;
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+
+    .card h3 {
+      margin-bottom: 17px;
+      font-size: 17px;
+    }
+
+    .profile-header {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      margin-bottom: 25px;
+    }
+
+    .profile-photo {
+      width: 105px;
+      height: 105px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #e5e7eb;
+    }
+
+    .profile-header h2 {
+      margin-bottom: 5px;
+    }
+
+    .profile-header p {
+      color: #6b7280;
+      font-size: 13px;
+    }
+
+    .badge {
+      display: inline-block;
+      margin-top: 9px;
+      padding: 6px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      background: #eef2ff;
+      color: #3730a3;
+    }
+
+    .badge.verified {
+      background: #eaf8ef;
+      color: #16803c;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+
+    .field {
+      border: 1px solid #edf0f4;
+      border-radius: 11px;
+      padding: 13px;
+      background: #fafbfc;
+    }
+
+    .field-label {
+      font-size: 11px;
+      color: #6b7280;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+
+    .field-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1f2937;
+      word-break: break-word;
+    }
+
+    .list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      padding: 7px 10px;
+      border-radius: 8px;
+      background: #eef4ff;
+      color: #1557c0;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .empty {
+      color: #9ca3af;
+      font-size: 13px;
+    }
+
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+
+    .action-card {
+      border: 1px solid #e7ebf1;
+      background: #fff;
+      border-radius: 14px;
+      padding: 20px;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .action-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,.06);
+    }
+
+    .action-card strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .action-card span {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .link-btn {
+      display: inline-block;
+      text-decoration: none;
+      color: #1769ff;
+      font-size: 13px;
+      font-weight: 600;
+      margin-right: 12px;
+      margin-bottom: 8px;
+    }
+
+    .notice {
+      padding: 14px;
+      border-radius: 10px;
+      background: #fff8e6;
+      color: #765400;
+      font-size: 13px;
+      margin-bottom: 18px;
+    }
+
+    .success {
+      background: #eaf8ef;
+      color: #176b35;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 70px 20px;
+      color: #6b7280;
+    }
+
+    .error {
+      padding: 25px;
+      background: #fff0f0;
+      color: #a32020;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px 10px;
+      color: #8a94a6;
+      font-size: 12px;
+    }
+
+    @media (max-width: 1000px) {
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .action-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 750px) {
+      .sidebar {
+        width: 72px;
+        padding: 15px 8px;
+      }
+
+      .teacher-mini {
+        padding: 8px;
+      }
+
+      .teacher-mini img {
+        width: 45px;
+        height: 45px;
+      }
+
+      .teacher-mini-name,
+      .teacher-mini-status,
+      .nav-title,
+      .nav-item span {
+        display: none;
+      }
+
+      .nav-item {
+        justify-content: center;
+        padding: 13px 5px;
+      }
+
+      .main {
+        margin-left: 72px;
+        width: calc(100% - 72px);
+        padding: 18px;
+      }
+
+      .grid,
+      .stats,
+      .action-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .profile-header {
+        align-items: flex-start;
+      }
+
+      .topbar {
+        padding: 0 15px;
+      }
+
+      .logout-btn {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="topbar">
+
+  <div class="brand">
+    LetsStudy <span>Pro</span>
+  </div>
+
+  <div class="top-actions">
+
+    <button
+      class="icon-btn"
+      onclick="openProfile()"
+    >
+      Profile
+    </button>
+
+    <button
+      class="logout-btn"
+      id="logoutBtn"
+    >
+      Logout
+    </button>
+
+  </div>
+
+</header>
+
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="teacher-mini">
+
+      <img
+        id="sidePhoto"
+        src="https://via.placeholder.com/100"
+        alt="Teacher"
+      >
+
+      <div
+        class="teacher-mini-name"
+        id="sideName"
+      >
+        Teacher
+      </div>
+
+      <div
+        class="teacher-mini-status"
+        id="sideStatus"
+      >
+        Global Teacher
+      </div>
+
+    </div>
+
+
+    <div class="nav-title">
+      Dashboard
+    </div>
+
+    <button
+      class="nav-item active"
+      data-section="overview"
+    >
+      <span>Overview</span>
+    </button>
+
+    <button
+      class="nav-item"
+      data-section="profile"
+    >
+      <span>My Profile</span>
+    </button>
+
+    <button
+      class="nav-item"
+      data-section="teaching"
+    >
+      <span>Teaching</span>
+    </button>
+
+    <button
+      class="nav-item"
+      data-section="availability"
+    >
+      <span>Availability</span>
+    </button>
+
+    <button
+      class="nav-item"
+      data-section="verification"
+    >
+      <span>Verification</span>
+    </button>
+
+    <button
+      class="nav-item"
+      data-section="links"
+    >
+      <span>Links</span>
+    </button>
+
+    <div class="nav-title">
+      LetsStudy Pro
+    </div>
+
+    <button
+      class="nav-item"
+      onclick="viewPublicProfile()"
+    >
+      <span>Public Profile</span>
+    </button>
+
+    <button
+      class="nav-item"
+      onclick="window.location.href='/'"
+    >
+      <span>Home</span>
+    </button>
+
+  </aside>
+
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <div id="loading" class="loading">
+      Loading teacher dashboard...
+    </div>
+
+
+    <div id="dashboard" style="display:none;">
+
+      <!-- WELCOME -->
+      <section class="welcome">
+
+        <h1>
+          Welcome,
+          <span id="welcomeName">Teacher</span>
+        </h1>
+
+        <p>
+          Manage your Global Teacher profile, teaching information,
+          availability and professional presence on LetsStudy Pro.
+        </p>
+
+        <div
+          class="verified"
+          id="welcomeVerification"
+        >
+          Profile status
+        </div>
+
+      </section>
+
+
+      <!-- STATS -->
+      <div class="stats">
+
+        <div class="stat-card">
+
+          <div class="stat-label">
+            Profile Status
+          </div>
+
+          <div
+            class="stat-value"
+            id="profileStatus"
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <div class="stat-label">
+            Rating
+          </div>
+
+          <div
+            class="stat-value"
+            id="rating"
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <div class="stat-label">
+            Reviews
+          </div>
+
+          <div
+            class="stat-value"
+            id="reviewCount"
+          >
+            0
+          </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <div class="stat-label">
+            Students
+          </div>
+
+          <div
+            class="stat-value"
+            id="studentCount"
+          >
+            0
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- OVERVIEW -->
+      <section
+        id="overview"
+        class="section active"
+      >
+
+        <div class="section-title">
+
+          <h2>
+            Teacher Overview
+          </h2>
+
+          <p>
+            Your professional teaching profile at a glance.
+          </p>
+
+        </div>
+
+
+        <div class="action-grid">
+
+          <div
+            class="action-card"
+            onclick="openSection('profile')"
+          >
+            <strong>
+              My Profile
+            </strong>
+
+            <span>
+              View your professional information and qualifications.
+            </span>
+          </div>
+
+
+          <div
+            class="action-card"
+            onclick="openSection('teaching')"
+          >
+            <strong>
+              Teaching
+            </strong>
+
+            <span>
+              View subjects, levels, curricula and teaching services.
+            </span>
+          </div>
+
+
+          <div
+            class="action-card"
+            onclick="openSection('availability')"
+          >
+            <strong>
+              Availability
+            </strong>
+
+            <span>
+              View your teaching days, hours and timezone.
+            </span>
+          </div>
+
+
+          <div
+            class="action-card"
+            onclick="openSection('verification')"
+          >
+            <strong>
+              Verification
+            </strong>
+
+            <span>
+              Check your identity and qualification verification status.
+            </span>
+          </div>
+
+
+          <div
+            class="action-card"
+            onclick="viewPublicProfile()"
+          >
+            <strong>
+              Public Profile
+            </strong>
+
+            <span>
+              Open the profile students and visitors can view.
+            </span>
+          </div>
+
+
+          <div
+            class="action-card"
+            onclick="openSection('links')"
+          >
+            <strong>
+              Professional Links
+            </strong>
+
+            <span>
+              View your website and professional social profiles.
+            </span>
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- PROFILE -->
+      <section
+        id="profile"
+        class="section"
+      >
+
+        <div class="section-title">
+
+          <h2>
+            My Profile
+          </h2>
+
+          <p>
+            Your professional identity on LetsStudy Pro.
+          </p>
+
+        </div>
+
+
+        <div class="card">
+
+          <div class="profile-header">
+
+            <img
+              id="profilePhoto"
+              class="profile-photo"
+              src="https://via.placeholder.com/150"
+              alt="Teacher profile"
+            >
+
+            <div>
+
+              <h2 id="fullName">
+                —
+              </h2>
+
+              <p id="displayName">
+                —
+              </p>
+
+              <span
+                id="profileBadge"
+                class="badge"
+              >
+                Teacher
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <div class="grid">
+
+            <div class="field">
+              <div class="field-label">Teacher ID</div>
+              <div class="field-value" id="teacherId">—</div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">Email</div>
+              <div class="field-value" id="email">—</div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">Phone</div>
+              <div class="field-value" id="phone">—</div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">WhatsApp</div>
+              <div class="field-value" id="whatsapp">—</div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">Country</div>
+              <div class="field-value" id="country">—</div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">City</div>
+              <div class="field-value" id="city">—</div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">Region</div>
+              <div class="field-value" id="region">—</div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">Timezone</div>
+              <div class="field-value" id="timezone">—</div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">Languages</div>
+              <div class="field-value" id="languages">—</div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">Years of Experience</div>
+              <div class="field-value" id="yearsOfExperience">—</div>
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="card">
+
+          <h3>
+            Professional Bio
+          </h3>
+
+          <div
+            id="professionalBio"
+            style="line-height:1.7;color:#4b5563;font-size:14px;"
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div class="card">
+
+          <h3>
+            Qualifications
+          </h3>
+
+          <div class="grid">
+
+            <div>
+              <div class="field-label">
+                Qualifications
+              </div>
+
+              <div
+                class="list"
+                id="qualifications"
+              ></div>
+            </div>
+
+            <div>
+              <div class="field-label">
+                Certifications
+              </div>
+
+              <div
+                class="list"
+                id="certifications"
+              ></div>
+            </div>
+
+            <div>
+              <div class="field-label">
+                Institutions
+              </div>
+
+              <div
+                class="list"
+                id="institutions"
+              ></div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- TEACHING -->
+      <section
+        id="teaching"
+        class="section"
+      >
+
+        <div class="section-title">
+
+          <h2>
+            Teaching
+          </h2>
+
+          <p>
+            Subjects, levels, curricula and services.
+          </p>
+
+        </div>
+
+
+        <div class="card">
+
+          <h3>
+            Subjects
+          </h3>
+
+          <div
+            class="list"
+            id="subjects"
+          ></div>
+
+        </div>
+
+
+        <div class="card">
+
+          <h3>
+            Teaching Levels
+          </h3>
+
+          <div
+            class="list"
+            id="teachingLevels"
+          ></div>
+
+        </div>
+
+
+        <div class="card">
+
+          <h3>
+            Age Groups
+          </h3>
+
+          <div
+            class="list"
+            id="ageGroups"
+          ></div>
+
+        </div>
+
+
+        <div class="card">
+
+          <h3>
+            Specializations
+          </h3>
+
+          <div
+            class="list"
+            id="specializations"
+          ></div>
+
+        </div>
+
+
+        <div class="card">
+
+          <h3>
+            Curricula
+          </h3>
+
+          <div
+            class="list"
+            id="curricula"
+          ></div>
+
+        </div>
+
+
+        <div class="card">
+
+          <h3>
+            Boards
+          </h3>
+
+          <div
+            class="list"
+            id="boards"
+          ></div>
+
+        </div>
+
+
+        <div class="card">
+
+          <h3>
+            Teaching Mode
+          </h3>
+
+          <div class="grid">
+
+            <div class="field">
+              <div class="field-label">
+                Mode
+              </div>
+
+              <div
+                class="field-value"
+                id="teachingMode"
+              >
+                —
+              </div>
+            </div>
+
+
+            class="field">
+  <div class="field-label">
+    Count
+  </div>
+
+  <div
+    class="field-value"
+    id="count"
+  >
+    0
+  </div>
+</div>
+
+
+<div class="field">
+  <div class="field-label">
+    Profile Status
+  </div>
+
+  <div
+    class="field-value"
+    id="profileStatus"
+  >
+    —
+  </div>
+</div>
+
+
+<div class="field">
+  <div class="field-label">
+    Verification Status
+  </div>
+
+  <div
+    class="field-value"
+    id="verificationStatus"
+  >
+    —
+  </div>
+</div>
+
+
+<div class="field">
+  <div class="field-label">
+    Featured
+  </div>
+
+  <div
+    class="field-value"
+    id="featured"
+  >
+    —
+  </div>
+</div>
+
+
+<div class="field">
+  <div class="field-label">
+    Created At
+  </div>
+
+  <div
+    class="field-value"
+    id="createdAt"
+  >
+    —
+  </div>
+</div>
+
+
+<div class="field">
+  <div class="field-label">
+    Updated At
+  </div>
+
+  <div
+    class="field-value"
+    id="updatedAt"
+  >
+    —
+  </div>
+</div>
+
+</div>
+
+</div>
+
+
+<!-- QUICK ACTIONS -->
+
+<div class="card">
+
+  <h3>
+    Quick Actions
+  </h3>
+
+  <div class="action-grid">
+
+    <div
+      class="action-card"
+      onclick="openSection('profile')"
+    >
+      <strong>
+        View Profile
+      </strong>
+
+      <span>
+        View your complete Global Teacher profile.
+      </span>
+    </div>
+
+
+    <div
+      class="action-card"
+      onclick="viewPublicProfile()"
+    >
+      <strong>
+        Public Profile
+      </strong>
+
+      <span>
+        See how students and visitors view your profile.
+      </span>
+    </div>
+
+
+    <div
+      class="action-card"
+      onclick="openSection('teaching')"
+    >
+      <strong>
+        Teaching Information
+      </strong>
+
+      <span>
+        View your subjects, curricula and teaching services.
+      </span>
+    </div>
+
+
+    <div
+      class="action-card"
+      onclick="openSection('availability')"
+    >
+      <strong>
+        Availability
+      </strong>
+
+      <span>
+        Check your available teaching days and hours.
+      </span>
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ACCOUNT INFORMATION -->
+
+<div class="card">
+
+  <h3>
+    Account Information
+  </h3>
+
+  <div class="grid">
+
+    <div class="field">
+
+      <div class="field-label">
+        Account Email
+      </div>
+
+      <div
+        class="field-value"
+        id="accountEmail"
+      >
+        —
+      </div>
+
+    </div>
+
+
+    <div class="field">
+
+      <div class="field-label">
+        Firebase User ID
+      </div>
+
+      <div
+        class="field-value"
+        id="firebaseUid"
+      >
+        —
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+</section>
+
+
+<!-- PROFILE SECTION -->
+
+<section
+  id="profile"
+  class="section"
+>
+
+  <div class="section-title">
+
+    <h2>
+      My Teacher Profile
+    </h2>
+
+    <p>
+      Your professional information registered on LetsStudy Pro.
+    </p>
+
+  </div>
+
+
+  <div class="card">
+
+    <div class="profile-header">
+
+      <img
+        id="profilePhoto"
+        class="profile-photo"
+        src="https://via.placeholder.com/150"
+        alt="Teacher profile"
+      >
+
+      <div>
+
+        <h2 id="fullName">
+          —
+        </h2>
+
+        <p id="displayName">
+          —
+        </p>
+
+        <span
+          id="profileBadge"
+          class="badge"
+        >
+          Global Teacher
+        </span>
+
+      </div>
+
+    </div>
+
+
+    <div class="grid">
+
+      <div class="field">
+        <div class="field-label">
+          Teacher ID
+        </div>
+
+        <div
+          class="field-value"
+          id="teacherId"
+        >
+          —
+        </div>
+      </div>
+
+
+      <div class="field">
+        <div class="field-label">
+          Full Name
+        </div>
+
+        <div
+          class="field-value"
+          id="profileFullName"
+        >
+          —
+        </div>
+      </div>
+
+
+      <div class="field">
+        <div class="field-label">
+          Email
+        </div>
+
+        <div
+          class="field-value"
+          id="email"
+        >
+          —
+        </div>
+      </div>
+
+
+      <div class="field">
+        <div class="field-label">
+          Phone
+        </div>
+
+        <div
+          class="field-value"
+          id="phone"
+        >
+          —
+        </div>
+      </div>
+
+
+      <div class="field">
+        <div class="field-label">
+          WhatsApp
+        </div>
+
+        <div
+          class="field-value"
+          id="whatsapp"
+        >
+          —
+        </div>
+      </div>
+
+
+      <div class="field">
+        <div class="field-label">
+          Country
+        </div>
+
+        <div
+          class="field-value"
+          id="country"
+        >
+          —
+        </div>
+      </div>
+
+
+      <div class="field">
+        <div class="field-label">
+          City
+        </div>
+
+        <div
+          class="field-value"
+          id="city"
+        >
+          —
+        </div>
+      </div>
+
+
+      <div class="field">
+        <div class="field-label">
+          Region
+        </div>
+
+        <div
+          class="field-value"
+          id="region"
+        >
+          —
+        </div>
+      </div>
+
+
+      <div class="field">
+        <div class="field-label">
+          Timezone
+        </div>
+
+        <div
+          class="field-value"
+          id="timezone"
+        >
+          —
+        </div>
+      </div>
+
+
+      <div class="field">
+        <div class="field-label">
+          Languages
+        </div>
+
+        <div
+          class="field-value"
+          id="languages"
+        >
+          —
+        </div>
+      </div>
+
+
+      <div class="field">
+        <div class="field-label">
+          Years of Experience
+        </div>
+
+        <div
+          class="field-value"
+          id="yearsOfExperience"
+        >
+          —
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="card">
+
+    <h3>
+      Professional Bio
+    </h3>
+
+    <p
+      id="professionalBio"
+      style="
+        color:#4b5563;
+        line-height:1.8;
+        font-size:14px;
+      "
+    >
+      —
+    </p>
+
+  </div>
+
+
+  <div class="card">
+
+    <h3>
+      Qualifications
+    </h3>
+
+    <div class="grid">
+
+      <div>
+
+        <div class="field-label">
+          Qualifications
+        </div>
+
+        <div
+          class="list"
+          id="qualifications"
+        ></div>
+
+      </div>
+
+
+      <div>
+
+        <div class="field-label">
+          Certifications
+        </div>
+
+        <div
+          class="list"
+          id="certifications"
+        ></div>
+
+      </div>
+
+
+      <div>
+
+        <div class="field-label">
+          Institutions
+        </div>
+
+        <div
+          class="list"
+          id="institutions"
+        ></div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- TEACHING SECTION -->
+
+<section
+  id="teaching"
+  class="section"
+>
+
+  <div class="section-title">
+
+    <h2>
+      Teaching Information
+    </h2>
+
+    <p>
+      Manage and review your teaching expertise.
+    </p>
+
+  </div>
+
+
+  <div class="card">
+
+    <h3>
+      Subjects
+    </h3>
+
+    <div
+      class="list"
+      id="subjects"
+    ></div>
+
+  </div>
+
+
+  <div class="card">
+
+    <h3>
+      Teaching Levels
+    </h3>
+
+    <div
+      class="list"
+      id="teachingLevels"
+    ></div>
+
+  </div>
+
+
+  <div class="card">
+
+    <h3>
+      Age Groups
+    </h3>
+
+    <div
+      class="list"
+      id="ageGroups"
+    ></div>
+
+  </div>
+
+
+  <div class="card">
+
+    <h3>
+      Specializations
+    </h3>
+
+    <div
+      class="list"
+      id="specializations"
+    ></div>
+
+  </div>
+
+
+  <div class="card">
+
+    <h3>
+      Curricula
+    </h3>
+
+    <div
+      class="list"
+      id="curricula"
+    ></div>
+
+  </div>
+
+
+  <div class="card">
+
+    <h3>
+      Educational Boards
+    </h3>
+
+    <div
+      class="list"
+      id="boards"
+    ></div>
+
+  </div>
+
+
+  <div class="card">
+
+    <h3>
+      Teaching Mode
+    </h3>
+
+    <div class="grid">
+
+      <div class="field">
+
+        <div class="field-label">
+          Teaching Mode
+        </div>
+
+        <div
+          class="field-value"
+          id="teachingMode"
+        >
+          —
+        </div>
+
+      </div>
+
+
+      <div class="field">
+
+        <div class="field-label">
+          Countries Served
+        </div>
+
+        <div
+          class="field-value"
+          id="countriesServed"
+        >
+          —
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="card">
+
+    <h3>
+      Services
+    </h3>
+
+    <div
+      class="list"
+      id="services"
+    ></div>
+
+  </div>
+
+
+  <div class="card">
+
+    <h3>
+      Teaching Methods
+    </h3>
+
+    <div
+      class="list"
+      id="teachingMethods"
+    ></div>
+
+  </div>
+
+
+  <div class="card">
+
+    <h3>
+      Pricing
+    </h3>
+
+    <div class="grid">
+
+      <div class="field">
+
+        <div class="field-label">
+          Hourly Rate
+        </div>
+
+        <div
+          class="field-value"
+          id="hourlyRate"
+        >
+          —
+        </div>
+
+      </div>
+
+
+      <div class="field">
+
+        <div class="field-label">
+          Currency
+        </div>
+
+        <div
+          class="field-value"
+          id="currency"
+        >
+          —
+        </div>
+
+      </div>
+
+
+      <div class="field">
+
+        <div class="field-label">
+          Trial Lesson
+        </div>
+
+        <div
+          class="field-value"
+          id="trialLesson"
+        >
+          —
+        </div>
+
+      </div>
+
+
+      <div class="field">
+
+        <div class="field-label">
+          Package Pricing
+        </div>
+
+        <div
+          class="field-value"
+          id="packagePricing"
+        >
+          —
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- AVAILABILITY -->
+
+<section
+  id="availability"
+  class="section"
+>
+
+  <div class="section-title">
+
+    <h2>
+      Availability
+    </h2>
+
+    <p>
+      Your available teaching schedule.
+    </p>
+
+  </div>
+
+
+  <div class="card">
+
+    <div class="grid">
+
+      <div class="field">
+
+        <div class="field-label">
+          Availability
+        </div>
+
+        <div
+          class="field-value"
+          id="availabilityValue"
+        >
+          —
+        </div>
+
+      </div>
+
+
+      <div class="field">
+
+        <div class="field-label">
+          Timezone
+        </div>
+
+        <div
+          class="field-value"
+          id="availabilityTimezone"
+        >
+          —
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="card">
+
+    <h3>
+      Available Days
+    </h3>
+
+    <div
+      class="list"
+      id="availableDays"
+    ></div>
+
+  </div>
+
+
+  <div class="card">
+
+    <h3>
+      Available Hours
+    </h3>
+
+    <div
+      class="list"
+      id="availableHours"
+    ></div>
+
+  </div>
+
+</section>
+
+
+<!-- VERIFICATION -->
+
+<section
+  id="verification"
+  class="section"
+>
+
+  <div class="section-title">
+
+    <h2>
+      Verification
+    </h2>
+
+    <p>
+      Your identity and professional verification status.
+    </p>
+
+  </div>
+
+
+  <div
+    id="verificationNotice"
+    class="notice"
+  >
+    Verification information
+  </div>
+
+
+  <div class="card">
+
+    <div class="grid">
+
+      <div class="field">
+
+        <div class="field-label">
+          Identity Verification
+        </div>
+
+        <div
+          class="field-value"
+          id="identityVerification"
+        >
+          —
+        </div>
+
+      </div>
+
+
+      <div class="field">
+
+        <div class="field-label">
+          Qualification Verification
+        </div>
+
+        <div
+          class="field-value"
+          id="qualificationVerification"
+        >
+          —
+        </div>
+
+      </div>
+
+
+      <div class="field">
+
+        <div class="field-label">
+          Verification Status
+        </div>
+
+        <div
+          class="field-value"
+          id="verificationStatus"
+        >
+          —
+        </div>
+
+      </div>
+
+
+      <div class="field">
+
+        <div class="field-label">
+          Verification Date
+        </div>
+
+        <div
+          class="field-value"
+          id="verificationDate"
+        >
+          —
+        </div>
+
+      </div>
+
+
+      <div class="field">
+
+        <div class="field-label">
+          Verified By
+        </div>
+
+        <div
+          class="field-value"
+          id="verifiedBy"
+        >
+          —
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- PROFESSIONAL LINKS -->
+
+<section
+  id="links"
+  class="section"
+>
+
+  <div class="section-title">
+
+    <h2>
+      Professional Links
+    </h2>
+
+    <p>
+      Your professional online presence.
+    </p>
+
+  </div>
+
+
+  <div class="card">
+
+    <div id="linksContainer">
+
+      <span class="empty">
+        No professional links available.
+      </span>
+
+    </div>
+
+  </div>
+
+
+  <div class="card">
+
+    <h3>
+      Introduction Video
+    </h3>
+
+    <div id="introVideoContainer">
+
+      <span class="empty">
+        No introduction video available.
+      </span>
+
+    </div>
+
+  </div>
+
+
+  <div class="card">
+
+    <h3>
+      Teaching Demo
+    </h3>
+
+    <div id="demoVideoContainer">
+
+      <span class="empty">
+        No teaching demo available.
+      </span>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<footer>
+  © 2026 LetsStudy Pro — Learn. Build. Work. Grow.
+</footer>
+
+
+</div>
+
+</main>
+
+</div>
+
+
+<script type="module">
+
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
+const firebaseConfig = {
+
+  apiKey:
+    "AIzaSyBcOYDfAVKXbljsyRgI0rj0odBn678tCc",
+
+  authDomain:
+    "let-s-study-pro-course.firebaseapp.com",
+
+  databaseURL:
+    "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+
+  projectId:
+    "let-s-study-pro-course",
+
+  storageBucket:
+    "let-s-study-pro-course.firebasestorage.app",
+
+  messagingSenderId:
+    "474928293390",
+
+  appId:
+    "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+
+  measurementId:
+    "G-85B7V5H5J0"
+
+};
+
+
+const app =
+  initializeApp(firebaseConfig);
+
+const auth =
+  getAuth(app);
+
+const db =
+  getFirestore(app);
+
+
+let currentUser = null;
+let teacherData = null;
+
+
+const $ =
+  id => document.getElementById(id);
+
+
+function safe(value) {
+
+  if (
+    value === undefined ||
+    value === null ||
+    value === ""
+  ) {
+
+    return "—";
+
+  }
+
+  return String(value);
+
+}
+
+
+function arrayValue(value) {
+
+  if (Array.isArray(value)) {
+
+    return value;
+
+  }
+
+  if (
+    typeof value === "string" &&
+    value.trim()
+  ) {
+
+    return value
+      .split(",")
+      .map(item => item.trim())
+      .filter(Boolean);
+
+  }
+
+  return [];
+
+}
+
+
+function setText(id, value) {
+
+  const element = $(id);
+
+  if (element) {
+
+    element.textContent =
+      safe(value);
+
+  }
+
+}
+
+
+function renderTags(id, value) {
+
+  const element = $(id);
+
+  if (!element) return;
+
+  element.innerHTML = "";
+
+  const items =
+    arrayValue(value);
+
+  if (!items.length) {
+
+    element.innerHTML =
+      '<span class="empty">Not provided</span>';
+
+    return;
+
+  }
+
+  items.forEach(item => {
+
+    const tag =
+      document.createElement("span");
+
+    tag.className =
+      "tag";
+
+    tag.textContent =
+      item;
+
+    element.appendChild(tag);
+
+  });
+
+}
+
+
+function formatDate(value) {
+
+  if (!value) return "—";
+
+  try {
+
+    if (
+      typeof value.toDate ===
+      "function"
+    ) {
+
+      return value
+        .toDate()
+        .toLocaleDateString();
+
+    }
+
+    const date =
+      new Date(value);
+
+    if (!isNaN(date.getTime())) {
+
+      return date.toLocaleDateString();
+
+    }
+
+  } catch (error) {}
+
+  return safe(value);
+
+}
+
+
+function formatBoolean(value) {
+
+  if (value === true) {
+    return "Yes";
+  }
+
+  if (value === false) {
+    return "No";
+  }
+
+  return safe(value);
+
+}
+
+
+async function findTeacher(user) {
+
+  const direct =
+    await getDoc(
+      doc(
+        db,
+        "teachers",
+        user.uid
+      )
+    );
+
+
+  if (direct.exists()) {
+
+    return {
+      id: direct.id,
+      ...direct.data()
+    };
+
+  }
+
+
+  const idQuery =
+    query(
+      collection(db, "teachers"),
+      where(
+        "teacherId",
+        "==",
+        user.uid
+      )
+    );
+
+
+  const idResult =
+    await getDocs(idQuery);
+
+
+  if (!idResult.empty) {
+
+    const item =
+      idResult.docs[0];
+
+    return {
+      id: item.id,
+      ...item.data()
+    };
+
+  }
+
+
+  if (user.email) {
+
+    const emailQuery =
+      query(
+        collection(db, "teachers"),
+        where(
+          "email",
+          "==",
+          user.email
+        )
+      );
+
+
+    const emailResult =
+      await getDocs(emailQuery);
+
+
+    if (!emailResult.empty) {
+
+      const item =
+        emailResult.docs[0];
+
+      return {
+        id: item.id,
+        ...item.data()
+      };
+
+    }
+
+  }
+
+
+  return null;
+
+}
+
+
+function renderTeacher(data) {
+
+  teacherData = data;
+
+
+  const name =
+    data.displayName ||
+    data.fullName ||
+    "Global Teacher";
+
+
+  setText(
+    "welcomeName",
+    name
+  );
+
+  setText(
+    "sideName",
+    name
+  );
+
+  setText(
+    "fullName",
+    data.fullName
+  );
+
+  setText(
+    "profileFullName",
+    data.fullName
+  );
+
+  setText(
+    "displayName",
+    data.displayName
+  );
+
+  setText(
+    "teacherId",
+    data.teacherId ||
+    data.id
+  );
+
+
+  setText(
+    "email",
+    data.email
+  );
+
+  setText(
+    "phone",
+    data.phone
+  );
+
+  setText(
+    "whatsapp",
+    data.whatsapp
+  );
+
+  setText(
+    "country",
+    data.country
+  );
+
+  setText(
+    "city",
+    data.city
+  );
+
+  setText(
+    "region",
+    data.region
+  );
+
+  setText(
+    "timezone",
+    data.timezone
+  );
+
+
+  setText(
+    "languages",
+    arrayValue(
+      data.languages
+    ).join(", ")
+  );
+
+
+  setText(
+    "yearsOfExperience",
+    data.yearsOfExperience
+  );
+
+
+  setText(
+    "professionalBio",
+    data.professionalBio ||
+    "No professional biography available."
+  );
+
+
+  setText(
+    "profileStatus",
+    data.status ||
+    "active"
+  );
+
+
+  setText(
+    "verificationStatus",
+    data.verificationStatus
+  );
+
+
+  setText(
+    "featured",
+    formatBoolean(
+      data.featured
+    )
+  );
+
+
+  setText(
+    "createdAt",
+    formatDate(
+      data.createdAt
+    )
+  );
+
+
+  setText(
+    "updatedAt",
+    formatDate(
+      data.updatedAt
+    )
+  );
+
+
+  setText(
+    "accountEmail",
+    currentUser?.email
+  );
+
+
+  setText(
+    "firebaseUid",
+    currentUser?.uid
+  );
+
+
+  setText(
+    "rating",
+    data.rating !== undefined
+      ? Number(data.rating).toFixed(1)
+      : "—"
+  );
+
+
+  setText(
+    "reviewCount",
+    data.reviewCount || 0
+  );
+
+
+  setText(
+    "studentCount",
+    data.studentCount || 0
+  );
+
+
+  setText(
+    "count",
+    data.count ||
+    data.studentCount ||
+    0
+  );
+
+
+  const photo =
+    data.profilePhoto ||
+    "https://via.placeholder.com/150";
+
+
+  $("profilePhoto").src =
+    photo;
+
+  $("sidePhoto").src =
+    photo;
+
+
+  renderTags(
+    "subjects",
+    data.subjects
+  );
+
+  renderTags(
+    "teachingLevels",
+    data.teachingLevels
+  );
+
+  renderTags(
+    "ageGroups",
+    data.ageGroups
+  );
+
+  renderTags(
+    "specializations",
+    data.specializations
+  );
+
+  renderTags(
+    "curricula",
+    data.curricula
+  );
+
+  renderTags(
+    "boards",
+    data.boards
+  );
+
+  renderTags(
+    "qualifications",
+    data.qualifications
+  );
+
+  renderTags(
+    "certifications",
+    data.certifications
+  );
+
+  renderTags(
+    "institutions",
+    data.institutions
+  );
+
+  renderTags(
+    "services",
+    data.services
+  );
+
+  renderTags(
+    "teachingMethods",
+    data.teachingMethods
+  );
+
+  renderTags(
+    "availableDays",
+    data.availableDays
+  );
+
+  renderTags(
+    "availableHours",
+    data.availableHours
+  );
+
+
+  setText(
+    "teachingMode",
+    arrayValue(
+      data.teachingMode
+    ).join(", ")
+  );
+
+
+  setText(
+    "countriesServed",
+    arrayValue(
+      data.countriesServed
+    ).join(", ")
+  );
+
+
+  setText(
+    "hourlyRate",
+    data.hourlyRate
+  );
+
+  setText(
+    "currency",
+    data.currency
+  );
+
+  setText(
+    "trialLesson",
+    formatBoolean(
+      data.trialLesson
+    )
+  );
+
+  setText(
+    "packagePricing",
+    data.packagePricing
+  );
+
+
+  setText(
+    "availabilityValue",
+typeof data.availability === "object"
+  ? (
+      data.availability.status ||
+      data.availability.value ||
+      data.availability.available ||
+      "Available"
+    )
+  : data.availability
+);
+
+
+setText(
+  "availabilityTimezone",
+  data.timezone
+);
+
+
+renderTags(
+  "availableDays",
+  data.availableDays ||
+  (
+    typeof data.availability === "object"
+      ? data.availability.availableDays
+      : []
+  )
+);
+
+
+renderTags(
+  "availableHours",
+  data.availableHours ||
+  (
+    typeof data.availability === "object"
+      ? data.availability.availableHours
+      : []
+  )
+);
+
+
+/* =====================================================
+   VERIFICATION
+===================================================== */
+
+setText(
+  "identityVerification",
+  data.identityVerification
+);
+
+setText(
+  "qualificationVerification",
+  data.qualificationVerification
+);
+
+setText(
+  "verificationStatus",
+  data.verificationStatus
+);
+
+setText(
+  "verificationDate",
+  formatDate(
+    data.verificationDate
+  )
+);
+
+setText(
+  "verifiedBy",
+  data.verifiedBy
+);
+
+
+/* =====================================================
+   VERIFICATION BADGE
+===================================================== */
+
+const verificationStatus =
+  String(
+    data.verificationStatus || ""
+  ).toLowerCase();
+
+
+if (
+  verificationStatus === "verified"
+) {
+
+  $("profileBadge").textContent =
+    "✓ Verified Teacher";
+
+  $("profileBadge").classList.add(
+    "verified"
+  );
+
+  $("welcomeVerification").textContent =
+    "✓ Verified Global Teacher";
+
+  $("verificationNotice").textContent =
+    "Your Global Teacher profile has been verified.";
+
+  $("verificationNotice").classList.add(
+    "success"
+  );
+
+} else {
+
+  $("profileBadge").textContent =
+    "Global Teacher";
+
+  $("welcomeVerification").textContent =
+    "Profile verification pending";
+
+  $("verificationNotice").textContent =
+    "Your teacher profile is awaiting verification.";
+
+}
+
+
+/* =====================================================
+   PROFESSIONAL LINKS
+===================================================== */
+
+renderLinks(data);
+
+
+/* =====================================================
+   INTRODUCTION VIDEO
+===================================================== */
+
+renderVideo(
+  "introVideoContainer",
+  data.introductionVideo
+);
+
+
+/* =====================================================
+   TEACHING DEMO
+===================================================== */
+
+renderVideo(
+  "demoVideoContainer",
+  data.teachingDemo
+);
+
+
+/* =====================================================
+   FINISH LOADING
+===================================================== */
+
+$("loading").style.display =
+  "none";
+
+$("dashboard").style.display =
+  "block";
+
+}
+
+
+/* =====================================================
+   VALIDATE URL
+===================================================== */
+
+function validUrl(value) {
+
+  if (!value) return false;
+
+  try {
+
+    const url =
+      new URL(value);
+
+    return (
+      url.protocol === "http:" ||
+      url.protocol === "https:"
+    );
+
+  } catch {
+
+    return false;
+
+  }
+
+}
+
+
+/* =====================================================
+   PROFESSIONAL LINKS
+===================================================== */
+
+function renderLinks(data) {
+
+  const container =
+    $("linksContainer");
+
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  const links = [
+
+    {
+      label: "Website",
+      url: data.website
+    },
+
+    {
+      label: "LinkedIn",
+      url: data.linkedin
+    },
+
+    {
+      label: "YouTube",
+      url: data.youtube
+    }
+
+  ];
+
+
+  let found = false;
+
+
+  links.forEach(linkData => {
+
+    if (
+      !validUrl(
+        linkData.url
+      )
+    ) {
+      return;
+    }
+
+
+    found = true;
+
+
+    const link =
+      document.createElement("a");
+
+    link.className =
+      "link-btn";
+
+    link.href =
+      linkData.url;
+
+    link.target =
+      "_blank";
+
+    link.rel =
+      "noopener noreferrer";
+
+    link.textContent =
+      linkData.label + " ↗";
+
+    container.appendChild(
+      link
+    );
+
+  });
+
+
+  /* WhatsApp */
+
+  if (data.whatsapp) {
+
+    const digits =
+      String(
+        data.whatsapp
+      ).replace(
+        /\D/g,
+        ""
+      );
+
+
+    if (digits) {
+
+      found = true;
+
+
+      const link =
+        document.createElement("a");
+
+      link.className =
+        "link-btn";
+
+      link.href =
+        "https://wa.me/" +
+        digits;
+
+      link.target =
+        "_blank";
+
+      link.rel =
+        "noopener noreferrer";
+
+      link.textContent =
+        "WhatsApp ↗";
+
+      container.appendChild(
+        link
+      );
+
+    }
+
+  }
+
+
+  if (!found) {
+
+    container.innerHTML =
+      '<span class="empty">No professional links available.</span>';
+
+  }
+
+}
+
+
+/* =====================================================
+   YOUTUBE EMBED
+===================================================== */
+
+function youtubeEmbed(url) {
+
+  if (!url) return null;
+
+
+  try {
+
+    const parsed =
+      new URL(url);
+
+
+    /* youtube.com/watch?v= */
+
+    if (
+      parsed.hostname.includes(
+        "youtube.com"
+      )
+    ) {
+
+      const videoId =
+        parsed.searchParams.get(
+          "v"
+        );
+
+
+      if (videoId) {
+
+        return (
+          "https://www.youtube.com/embed/" +
+          videoId
+        );
+
+      }
+
+    }
+
+
+    /* youtu.be/videoId */
+
+    if (
+      parsed.hostname ===
+      "youtu.be"
+    ) {
+
+      const videoId =
+        parsed.pathname.substring(
+          1
+        );
+
+
+      if (videoId) {
+
+        return (
+          "https://www.youtube.com/embed/" +
+          videoId
+        );
+
+      }
+
+    }
+
+  } catch (error) {
+
+    console.warn(
+      "Invalid video URL:",
+      error
+    );
+
+  }
+
+
+  return null;
+
+}
+
+
+/* =====================================================
+   VIDEO RENDER
+===================================================== */
+
+function renderVideo(
+  elementId,
+  url
+) {
+
+  const container =
+    $(elementId);
+
+  if (!container) return;
+
+
+  container.innerHTML = "";
+
+
+  if (!url) {
+
+    container.innerHTML =
+      '<span class="empty">No video available.</span>';
+
+    return;
+
+  }
+
+
+  const embedUrl =
+    youtubeEmbed(url);
+
+
+  if (embedUrl) {
+
+    const iframe =
+      document.createElement(
+        "iframe"
+      );
+
+
+    iframe.src =
+      embedUrl;
+
+    iframe.width =
+      "100%";
+
+    iframe.height =
+      "400";
+
+    iframe.style.border =
+      "0";
+
+    iframe.style.borderRadius =
+      "12px";
+
+    iframe.loading =
+      "lazy";
+
+    iframe.allow =
+      "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+
+    iframe.allowFullscreen =
+      true;
+
+
+    container.appendChild(
+      iframe
+    );
+
+    return;
+
+  }
+
+
+  if (
+    validUrl(url)
+  ) {
+
+    const link =
+      document.createElement(
+        "a"
+      );
+
+    link.href =
+      url;
+
+    link.target =
+      "_blank";
+
+    link.rel =
+      "noopener noreferrer";
+
+    link.className =
+      "link-btn";
+
+    link.textContent =
+      "Open Video ↗";
+
+
+    container.appendChild(
+      link
+    );
+
+    return;
+
+  }
+
+
+  container.textContent =
+    url;
+
+}
+
+
+/* =====================================================
+   SECTION NAVIGATION
+===================================================== */
+
+function openSection(
+  sectionId
+) {
+
+  document
+    .querySelectorAll(
+      ".section"
+    )
+    .forEach(section => {
+
+      section.classList.remove(
+        "active"
+      );
+
+    });
+
+
+  const target =
+    $(sectionId);
+
+
+  if (target) {
+
+    target.classList.add(
+      "active"
+    );
+
+  }
+
+
+  document
+    .querySelectorAll(
+      ".nav-item[data-section]"
+    )
+    .forEach(button => {
+
+      button.classList.toggle(
+        "active",
+        button.dataset.section ===
+        sectionId
+      );
+
+    });
+
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+}
+
+
+window.openSection =
+  openSection;
+
+
+/* =====================================================
+   PROFILE BUTTON
+===================================================== */
+
+window.openProfile =
+  function () {
+
+    openSection(
+      "profile"
+    );
+
+  };
+
+
+/* =====================================================
+   PUBLIC TEACHER PROFILE
+===================================================== */
+
+window.viewPublicProfile =
+  function () {
+
+    if (!teacherData) {
+
+      alert(
+        "Teacher profile is not loaded yet."
+      );
+
+      return;
+
+    }
+
+
+    const teacherId =
+      teacherData.teacherId ||
+      teacherData.id;
+
+
+    if (!teacherId) {
+
+      alert(
+        "Teacher ID is not available."
+      );
+
+      return;
+
+    }
+
+
+    window.location.href =
+      "teacher-details.html?id=" +
+      encodeURIComponent(
+        teacherId
+      );
+
+  };
+
+
+/* =====================================================
+   SIDEBAR NAVIGATION
+===================================================== */
+
+document
+  .querySelectorAll(
+    ".nav-item[data-section]"
+  )
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      function () {
+
+        openSection(
+          this.dataset.section
+        );
+
+      }
+    );
+
+  });
+
+
+/* =====================================================
+   LOGOUT
+===================================================== */
+
+$("logoutBtn")
+  .addEventListener(
+    "click",
+    async function () {
+
+      try {
+
+        await signOut(
+          auth
+        );
+
+
+        window.location.href =
+          "auth.html";
+
+      } catch (error) {
+
+        console.error(
+          "Logout error:",
+          error
+        );
+
+
+        alert(
+          "Unable to logout. Please try again."
+        );
+
+      }
+
+    }
+  );
+
+
+/* =====================================================
+   AUTHENTICATION
+===================================================== */
+
+onAuthStateChanged(
+  auth,
+  async function (user) {
+
+    if (!user) {
+
+      window.location.href =
+        "auth.html";
+
+      return;
+
+    }
+
+
+    currentUser =
+      user;
+
+
+    try {
+
+      const teacher =
+        await findTeacher(
+          user
+        );
+
+
+      if (!teacher) {
+
+        $("loading").innerHTML = `
+
+          <div class="error">
+
+            <h3 style="margin-bottom:8px;">
+              Teacher Profile Not Found
+            </h3>
+
+            <p>
+              Your account is signed in, but
+              no Global Teacher profile is
+              connected to this account.
+            </p>
+
+          </div>
+
+        `;
+
+        return;
+
+      }
+
+
+      renderTeacher(
+        teacher
+      );
+
+
+    } catch (error) {
+
+      console.error(
+        "Teacher dashboard error:",
+        error
+      );
+
+
+      $("loading").innerHTML = `
+
+        <div class="error">
+
+          <h3 style="margin-bottom:8px;">
+            Unable to Load Dashboard
+          </h3>
+
+          <p>
+            Something went wrong while loading
+            your teacher profile.
+          </p>
+
+          <button
+            onclick="location.reload()"
+            style="
+              margin-top:15px;
+              border:0;
+              padding:10px 16px;
+              border-radius:8px;
+              background:#1769ff;
+              color:white;
+              cursor:pointer;
+              font-weight:600;
+            "
+          >
+            Refresh
+          </button>
+
+        </div>
+
+      `;
+
+    }
+
+  }
+);
+
+
+/* =====================================================
+   END
+===================================================== */
+
+</script>
+
+</body>
+</html>
