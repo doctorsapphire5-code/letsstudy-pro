@@ -1,28 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-<!-- Google Analytics 4 -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-3RD5Z87VF0"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-3RD5Z87VF0');
-</script>
-
-<!-- Google AdSense -->
-<script async
-  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9557927842145806"
-  crossorigin="anonymous"></script>
-
-
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Download the app - LetsStudy Pro</title>
 <meta name="description" content="Install the LetsStudy Pro app on Android, iPhone or your computer and keep learning anywhere.">
 <meta name="theme-color" content="#07111f">
-<link rel="canonical" href="https://letsstudy.pro/index.auth.html">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="canonical" href="https://letsstudy.pro/index-auth.html">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Download the LetsStudy Pro app">
 <meta property="og:description" content="Learn anywhere. Install LetsStudy Pro on Android, iPhone or your computer.">
@@ -106,32 +92,6 @@ footer nav{display:flex;gap:1.2rem;flex-wrap:wrap}
 header nav a:not(.btn){display:none}
 }
 </style>
-
-<!-- LetsStudy Pro - Favicon & Social Share Preview -->
-
-
-
-
-
-
-
-
-
-<!-- End LetsStudy Pro - Favicon & Social Share Preview -->
-
-
-<!-- LetsStudy Pro - Favicon & Social Share Preview -->
-<link rel="icon" type="image/jpeg" href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgQHmJO8e8twONhRhp3I6pP4NFDh-LPcqVtAmQ9R9XjOGaVMKShfSLmxeK0fVzJsybBBOXKbA8LIhjgTgko83C-UPVhwgXeLtvTfjtVv6aVGgQgniOF-gMC28bY78HryXZ-5OqCwdBpKGqjEfTta5jLjT1mpvtBi2DQKyu35rkxsZNoVvl0nhvxUUn1gDP0/s1600/Untitled%20design_20260717_144337_0000.jpg">
-<link rel="shortcut icon" type="image/jpeg" href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgQHmJO8e8twONhRhp3I6pP4NFDh-LPcqVtAmQ9R9XjOGaVMKShfSLmxeK0fVzJsybBBOXKbA8LIhjgTgko83C-UPVhwgXeLtvTfjtVv6aVGgQgniOF-gMC28bY78HryXZ-5OqCwdBpKGqjEfTta5jLjT1mpvtBi2DQKyu35rkxsZNoVvl0nhvxUUn1gDP0/s1600/Untitled%20design_20260717_144337_0000.jpg">
-
-<meta property="og:image" content="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgQHmJO8e8twONhRhp3I6pP4NFDh-LPcqVtAmQ9R9XjOGaVMKShfSLmxeK0fVzJsybBBOXKbA8LIhjgTgko83C-UPVhwgXeLtvTfjtVv6aVGgQgniOF-gMC28bY78HryXZ-5OqCwdBpKGqjEfTta5jLjT1mpvtBi2DQKyu35rkxsZNoVvl0nhvxUUn1gDP0/s1600/Untitled%20design_20260717_144337_0000.jpg">
-<meta property="og:image:alt" content="LetsStudy Pro">
-
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgQHmJO8e8twONhRhp3I6pP4NFDh-LPcqVtAmQ9R9XjOGaVMKShfSLmxeK0fVzJsybBBOXKbA8LIhjgTgko83C-UPVhwgXeLtvTfjtVv6aVGgQgniOF-gMC28bY78HryXZ-5OqCwdBpKGqjEfTta5jLjT1mpvtBi2DQKyu35rkxsZNoVvl0nhvxUUn1gDP0/s1600/Untitled%20design_20260717_144337_0000.jpg">
-<meta name="twitter:image:alt" content="LetsStudy Pro">
-<!-- End LetsStudy Pro - Favicon & Social Share Preview -->
-
 </head>
 <body>
 
@@ -240,6 +200,13 @@ $("yr").textContent=new Date().getFullYear();
 
 function link(id,url){var a=$(id);if(url){a.href=url;a.hidden=false}}
 link("play",PLAY_URL);link("appstore",APPSTORE_URL);link("apk",APK_URL);
+/* If you upload the file to /downloads/letsstudy-pro.apk the button appears by itself. */
+if(!APK_URL&&window.fetch){
+fetch("/downloads/letsstudy-pro.apk",{method:"HEAD"}).then(function(r){
+var t=r.headers.get("content-type")||"";
+if(r.ok&&t.indexOf("text/html")<0)link("apk","/downloads/letsstudy-pro.apk");
+}).catch(function(){});
+}
 
 var ua=navigator.userAgent||"";
 var ios=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
@@ -252,7 +219,8 @@ $("primary").textContent=label;$("primary").href="#"+mine;
 if(ios&&!APPSTORE_URL)$("note").textContent="On iPhone, use Safari: Share, then Add to Home Screen.";
 
 var standalone=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone;
-if(standalone){$("msg").textContent="You are already using the installed app.";}
+/* The installed app opens here (manifest start_url), so send it straight to the dashboard. */
+if(standalone){location.replace("dashboard.html");return;}
 
 var deferred=null;
 window.addEventListener("beforeinstallprompt",function(e){
@@ -272,8 +240,13 @@ document.querySelectorAll("[data-install]").forEach(function(b){b.hidden=true});
 }
 $("install").addEventListener("click",run);
 document.querySelectorAll("[data-install]").forEach(function(b){b.addEventListener("click",run)});
+setTimeout(function(){
+if(deferred||ios||standalone)return;
+$("note").textContent="No install button? Open your browser menu and choose Install app or Add to Home screen.";
+},3500);
 window.addEventListener("appinstalled",function(){$("msg").textContent="Installed. Open LetsStudy Pro from your home screen."});
 })();
 </script>
+<script>if("serviceWorker"in navigator)window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js").catch(function(){})});</script>
 </body>
 </html>
