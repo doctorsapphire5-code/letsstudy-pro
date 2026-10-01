@@ -610,14 +610,27 @@ tbody tr:hover {
 ===================================================== */
 
 .modal {
+    display: none;
     position: fixed;
     inset: 0;
-    background: rgba(15,23,42,.65);
-    z-index: 3000;
-    display: none;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.65);
     align-items: center;
     justify-content: center;
     padding: 20px;
+}
+
+.modal.active {
+    display: flex !important;
+}
+
+.modal-content {
+    width: min(1000px, 100%);
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
 }
 
 .modal.show {
@@ -2285,32 +2298,42 @@ function renderOrganizations() {
 
 function resetForm() {
 
-    const form = $("organizationForm");
+    const form =
+        document.getElementById("organizationForm");
 
     if (form) {
         form.reset();
     }
 
+    const docId =
+        document.getElementById("organizationDocId");
 
-    $("organizationDocId").value = "";
-    $("verificationStatus").value = "pending";
-    $("status").value = "pending";
-    $("featured").checked = false;
+    if (docId) {
+        docId.value = "";
+    }
 
+    const verification =
+        document.getElementById("verificationStatus");
+
+    if (verification) {
+        verification.value = "pending";
+    }
+
+    const status =
+        document.getElementById("status");
+
+    if (status) {
+        status.value = "pending";
+    }
+
+    const featured =
+        document.getElementById("featured");
+
+    if (featured) {
+        featured.checked = false;
+    }
 
     editingId = null;
-
-
-    if ($("formTitle")) {
-        $("formTitle").textContent =
-            "Add Organization";
-    }
-
-
-    if ($("saveBtn")) {
-        $("saveBtn").innerHTML =
-            `<i class="fas fa-save"></i> Save Organization`;
-    }
 }
 
 
@@ -2318,12 +2341,36 @@ function resetForm() {
    OPEN ADD MODAL
 ===================================================== */
 
-function openAddModal() {
+
+function openAddOrganizationModal() {
 
     resetForm();
 
-    $("formModal").classList.add("active");
+    const modal = document.getElementById("formModal");
+
+    if (!modal) {
+        console.error("formModal not found");
+        return;
+    }
+
+    document.getElementById("formTitle").textContent =
+        "Add Organization";
+
+    document.getElementById("saveBtn").innerHTML =
+        `<i class="fas fa-save"></i> Save Organization`;
+
+    modal.classList.add("active");
+
+    modal.style.display = "flex";
 }
+
+
+document
+    .getElementById("addBtn")
+    ?.addEventListener(
+        "click",
+        openAddOrganizationModal
+    );
 
 
 /* =====================================================
@@ -3194,30 +3241,44 @@ $("refreshBtn")?.addEventListener(
    CLOSE FORM
 ===================================================== */
 
-$("closeFormBtn")?.addEventListener(
-    "click",
-    () => {
+document
+    .getElementById("closeFormBtn")
+    ?.addEventListener(
+        "click",
+        () => {
 
-        $("formModal")
-            .classList
-            .remove("active");
+            const modal =
+                document.getElementById("formModal");
 
-        resetForm();
-    }
-);
+            modal?.classList.remove("active");
+
+            if (modal) {
+                modal.style.display = "none";
+            }
+
+            resetForm();
+        }
+    );
 
 
-$("cancelFormBtn")?.addEventListener(
-    "click",
-    () => {
+document
+    .getElementById("cancelFormBtn")
+    ?.addEventListener(
+        "click",
+        () => {
 
-        $("formModal")
-            .classList
-            .remove("active");
+            const modal =
+                document.getElementById("formModal");
 
-        resetForm();
-    }
-);
+            modal?.classList.remove("active");
+
+            if (modal) {
+                modal.style.display = "none";
+            }
+
+            resetForm();
+        }
+    );
 
 
 /* =====================================================
