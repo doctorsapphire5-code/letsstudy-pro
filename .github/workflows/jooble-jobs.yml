@@ -1,0 +1,55 @@
+name: Jooble Jobs Sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */12 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  fetch-jooble-jobs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Create scripts directory
+        run: mkdir -p scripts data
+
+      - name: Fetch jobs from Jooble
+        env:
+          JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
+        run: |
+          node scripts/jooble-fetch.js
+
+      - name: Show generated jobs
+        run: |
+          if [ -f data/jooble-jobs.json ]; then
+            echo "Jooble jobs file created successfully."
+            wc -c data/jooble-jobs.json
+          else
+            echo "Jooble jobs file was not created."
+            exit 1
+          fi
+
+      - name: Commit updated jobs
+        run: |
+          git config user.name "LetsStudy Pro Bot"
+          git config user.email "actions@github.com"
+
+          git add data/jooble-jobs.json
+
+          if git diff --cached --quiet; then
+            echo "No job changes to commit."
+          else
+            git commit -m "Update Jooble jobs"
+            git push
+          fi
