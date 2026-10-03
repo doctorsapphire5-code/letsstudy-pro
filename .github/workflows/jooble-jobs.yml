@@ -1,19 +1,97 @@
-- name: Check Jooble API key
-  env:
-    JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
-  run: |
-    echo "Checking Jooble API key..."
+name: Jooble Jobs Sync
 
-    if [ -z "$JOOBLE_API_KEY" ]; then
-      echo "❌ JOOBLE_API_KEY IS EMPTY"
-      exit 1
-    fi
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */12 * * *"
 
-    echo "✅ JOOBLE_API_KEY exists"
-    echo "Key length: ${#JOOBLE_API_KEY}"
+permissions:
+  contents: write
 
-- name: Fetch jobs from Jooble
-  env:
-    JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
-  run: |
-    node scripts/jooble-fetch.js
+jobs:
+  fetch-jooble-jobs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check Jooble API Key
+        env:
+          JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
+        run: |
+          if [ -z "$JOOBLE_API_KEY" ]; then
+            echo "ERROR: JOOBLE_API_KEY secret is missing."
+            exit 1
+          fi
+
+          echo "Jooble API key detected."
+          echo "Key length: ${#JOOBLE_API_KEY}"
+
+      - name: Create directories
+        run: |
+          mkdir -p scripts
+          mkdir -p data
+
+      - name: Check fetch script
+        run: |
+          if [ ! -f scripts/jooble-fetch.js ]; then
+            echo "ERROR: scripts/jooble-fetch.js not found."
+            exit 1
+          fi
+
+          echo "Fetch script found."
+
+      - name: Fetch jobs from Jooble
+        env:
+          JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
+        run: |
+          node scripts/jooble-fetch.js
+
+      - name: Validate jobs file
+        run: |
+          if [ ! -f data/jooble-jobs.json ]; then
+            echo "ERROR: data/jooble-jobs.json was not created."
+            exit 1
+          fi
+
+          node - <<'NODE'
+          const fs = require("fs");
+
+          const file = "data/jooble-jobs.json";
+          const data = JSON.parse(fs.readFileSync(file, "utf8"));
+
+          if (!Array.isArray(data.jobs)) {
+            console.error("ERROR: jobs must be an array.");
+            process.exit(1);
+          }
+
+          console.log("Jooble jobs:", data.jobs.length);
+          console.log("Updated:", data.updatedAt || "N/A");
+          NODE
+
+      - name: Show generated jobs
+        run: |
+          echo "Jooble jobs file:"
+          wc -c data/jooble-jobs.json
+          head -c 1000 data/jooble-jobs.json
+          echo
+
+      - name: Commit updated jobs
+        run: |
+          git config user.name "LetsStudy Pro Bot"
+          git config user.email "actions@github.com"
+
+          git add data/jooble-jobs.json
+
+          if git diff --cached --quiet; then
+            echo "No job changes to commit."
+          else
+            git commit -m "Update Jooble jobs"
+            git push
+          fi
