@@ -21,8 +21,21 @@ jobs:
         with:
           node-version: 20
 
-      - name: Create scripts directory
-        run: mkdir -p scripts data
+      - name: Verify API key
+        env:
+          JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
+        run: |
+          if [ -z "$JOOBLE_API_KEY" ]; then
+            echo "ERROR: JOOBLE_API_KEY GitHub Secret is missing."
+            exit 1
+          fi
+
+          echo "Jooble API key detected."
+
+      - name: Create directories
+        run: |
+          mkdir -p scripts
+          mkdir -p data
 
       - name: Fetch jobs from Jooble
         env:
@@ -30,15 +43,32 @@ jobs:
         run: |
           node scripts/jooble-fetch.js
 
-      - name: Show generated jobs
+      - name: Validate generated jobs
         run: |
-          if [ -f data/jooble-jobs.json ]; then
-            echo "Jooble jobs file created successfully."
-            wc -c data/jooble-jobs.json
-          else
-            echo "Jooble jobs file was not created."
+          if [ ! -f data/jooble-jobs.json ]; then
+            echo "ERROR: data/jooble-jobs.json was not created."
             exit 1
           fi
+
+          echo "Jooble jobs file created successfully."
+
+          node -e "
+          const fs = require('fs');
+          const data = JSON.parse(fs.readFileSync('data/jooble-jobs.json', 'utf8'));
+
+          if (!Array.isArray(data.jobs)) {
+            console.error('ERROR: jobs is not an array.');
+            process.exit(1);
+          }
+
+          console.log('Jobs:', data.jobs.length);
+          console.log('Updated:', data.updatedAt || 'N/A');
+          "
+
+      - name: Show generated jobs
+        run: |
+          wc -c data/jooble-jobs.json
+          head -c 1000 data/jooble-jobs.json
 
       - name: Commit updated jobs
         run: |
