@@ -1,85 +1,19 @@
-name: Jooble Jobs Sync
+- name: Check Jooble API key
+  env:
+    JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
+  run: |
+    echo "Checking Jooble API key..."
 
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: "0 */12 * * *"
+    if [ -z "$JOOBLE_API_KEY" ]; then
+      echo "❌ JOOBLE_API_KEY IS EMPTY"
+      exit 1
+    fi
 
-permissions:
-  contents: write
+    echo "✅ JOOBLE_API_KEY exists"
+    echo "Key length: ${#JOOBLE_API_KEY}"
 
-jobs:
-  fetch-jooble-jobs:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Verify API key
-        env:
-          JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
-        run: |
-          if [ -z "$JOOBLE_API_KEY" ]; then
-            echo "ERROR: JOOBLE_API_KEY GitHub Secret is missing."
-            exit 1
-          fi
-
-          echo "Jooble API key detected."
-
-      - name: Create directories
-        run: |
-          mkdir -p scripts
-          mkdir -p data
-
-      - name: Fetch jobs from Jooble
-        env:
-          JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
-        run: |
-          node scripts/jooble-fetch.js
-
-      - name: Validate generated jobs
-        run: |
-          if [ ! -f data/jooble-jobs.json ]; then
-            echo "ERROR: data/jooble-jobs.json was not created."
-            exit 1
-          fi
-
-          echo "Jooble jobs file created successfully."
-
-          node -e "
-          const fs = require('fs');
-          const data = JSON.parse(fs.readFileSync('data/jooble-jobs.json', 'utf8'));
-
-          if (!Array.isArray(data.jobs)) {
-            console.error('ERROR: jobs is not an array.');
-            process.exit(1);
-          }
-
-          console.log('Jobs:', data.jobs.length);
-          console.log('Updated:', data.updatedAt || 'N/A');
-          "
-
-      - name: Show generated jobs
-        run: |
-          wc -c data/jooble-jobs.json
-          head -c 1000 data/jooble-jobs.json
-
-      - name: Commit updated jobs
-        run: |
-          git config user.name "LetsStudy Pro Bot"
-          git config user.email "actions@github.com"
-
-          git add data/jooble-jobs.json
-
-          if git diff --cached --quiet; then
-            echo "No job changes to commit."
-          else
-            git commit -m "Update Jooble jobs"
-            git push
-          fi
+- name: Fetch jobs from Jooble
+  env:
+    JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
+  run: |
+    node scripts/jooble-fetch.js
