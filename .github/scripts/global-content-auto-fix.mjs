@@ -1,0 +1,804 @@
+
+import fs from "fs";
+import path from "path";
+import * as cheerio from "cheerio";
+
+const ROOT = process.cwd();
+
+const SITE =
+  "https://letsstudy.pro";
+
+const BRAND =
+  "LetsStudy Pro";
+
+const EXCLUDED_DIRS = new Set([
+  ".git",
+  ".github",
+  "node_modules",
+  "functions",
+  "scripts",
+  "admin",
+  "private",
+  "test",
+  "tests",
+  "dist",
+  "build",
+  "coverage"
+]);
+
+const EXCLUDED_FILES = new Set([
+  "404.html",
+  "auth.html",
+  "auth-admin.html",
+  "login.html",
+  "register.html",
+  "admin.html"
+]);
+
+const report = {
+  scanned: 0,
+  changed: 0,
+  titlesFixed: 0,
+  descriptionsFixed: 0,
+  h1Fixed: 0,
+  langFixed: 0,
+  duplicateTitle: 0,
+  shortContent: 0,
+  missingInternalLinks: 0,
+  missingAlt: 0,
+  pagesByCategory: {},
+  changedUrls: []
+};
+
+function walk(dir) {
+
+  let results = [];
+
+  let entries = [];
+
+  try {
+    entries =
+      fs.readdirSync(
+        dir,
+        {
+          withFileTypes: true
+        }
+      );
+  } catch {
+    return results;
+  }
+
+  for (
+    const entry of entries
+  ) {
+
+    if (
+      entry.name.startsWith(".") &&
+      entry.name !== ".well-known"
+    ) {
+      continue;
+    }
+
+    if (
+      EXCLUDED_DIRS.has(
+        entry.name
+      )
+    ) {
+      continue;
+    }
+
+    const full =
+      path.join(
+        dir,
+        entry.name
+      );
+
+    if (
+      entry.isDirectory()
+    ) {
+
+      results.push(
+        ...walk(full)
+      );
+
+    } else if (
+      entry.isFile() &&
+      entry.name
+        .toLowerCase()
+        .endsWith(".html") &&
+      !EXCLUDED_FILES.has(
+        entry.name
+      )
+    ) {
+
+      results.push(full);
+    }
+  }
+
+  return results;
+}
+
+function cleanText(value) {
+
+  return String(
+    value || ""
+  )
+    .replace(
+      /\s+/g,
+      " "
+    )
+    .trim();
+}
+
+function escapeHtml(value) {
+
+  return String(value)
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    );
+}
+
+function pageUrl(file) {
+
+  const relative =
+    path
+      .relative(
+        ROOT,
+        file
+      )
+      .split(
+        path.sep
+      )
+      .join("/");
+
+  if (
+    relative ===
+    "index.html"
+  ) {
+    return `${SITE}/`;
+  }
+
+  return `${SITE}/${relative}`;
+}
+
+function pageName(file) {
+
+  return path
+    .basename(
+      file,
+      ".html"
+    )
+    .replace(
+      /[-_]+/g,
+      " "
+    )
+    .replace(
+      /\b\w/g,
+      c =>
+        c.toUpperCase()
+    );
+}
+
+function categoryFromFile(
+  file
+) {
+
+  const name =
+    path
+      .basename(
+        file,
+        ".html"
+      )
+      .toLowerCase();
+
+  if (
+    name.includes(
+      "course"
+    )
+  ) return "Courses";
+
+  if (
+    name.includes(
+      "scholar"
+    )
+  ) return "Scholarships";
+
+  if (
+    name.includes(
+      "career"
+    )
+  ) return "Careers";
+
+  if (
+    name.includes(
+      "job"
+    )
+  ) return "Jobs";
+
+  if (
+    name.includes(
+      "resource"
+    )
+  ) return "Learning Resources";
+
+  if (
+    name.includes(
+      "tutor"
+    ) ||
+    name.includes(
+      "teacher"
+    )
+  ) return "Tutors & Teachers";
+
+  if (
+    name.includes(
+      "freelance"
+    )
+  ) return "Freelancing";
+
+  if (
+    name.includes(
+      "business"
+    )
+  ) return "Business";
+
+  if (
+    name.includes(
+      "service"
+    )
+  ) return "Services";
+
+  if (
+    name.includes(
+      "blog"
+    ) ||
+    name.includes(
+      "article"
+    )
+  ) return "Articles";
+
+  if (
+    name.includes(
+      "ai"
+    )
+  ) return "AI & Technology";
+
+  return "Education & Growth";
+}
+
+function generateTitle(
+  file,
+  h1
+) {
+
+  const name =
+    pageName(file);
+
+  if (
+    path.basename(file) ===
+    "index.html"
+  ) {
+
+    return (
+      "LetsStudy Pro - Global Digital Learning & Growth Ecosystem"
+    );
+  }
+
+  if (h1) {
+
+    const cleaned =
+      cleanText(h1);
+
+    if (
+      cleaned
+        .toLowerCase()
+        .includes(
+          "letsstudy pro"
+        )
+    ) {
+      return cleaned;
+    }
+
+    return `${cleaned} | LetsStudy Pro`;
+  }
+
+  return `${name} | LetsStudy Pro`;
+}
+
+function generateDescription(
+  category,
+  h1
+) {
+
+  const topic =
+    cleanText(
+      h1
+    ) ||
+    category;
+
+  const descriptions = {
+
+    "Courses":
+      `${topic}. Explore online courses, digital skills and learning opportunities on LetsStudy Pro.`,
+
+    "Scholarships":
+      `${topic}. Discover scholarships, funding opportunities and study opportunities on LetsStudy Pro.`,
+
+    "Careers":
+      `${topic}. Explore career opportunities, career guidance, skills and professional growth on LetsStudy Pro.`,
+
+    "Jobs":
+      `${topic}. Find jobs, remote work and career opportunities through LetsStudy Pro.`,
+
+    "Learning Resources":
+      `${topic}. Access learning resources, study materials, notes and educational opportunities on LetsStudy Pro.`,
+
+    "Tutors & Teachers":
+      `${topic}. Discover teachers, tutors, learning services and educational support on LetsStudy Pro.`,
+
+    "Freelancing":
+      `${topic}. Learn about freelance opportunities, digital work and online income skills on LetsStudy Pro.`,
+
+    "Business":
+      `${topic}. Discover business, entrepreneurship, digital growth and opportunity resources on LetsStudy Pro.`,
+
+    "Services":
+      `${topic}. Explore digital, educational and professional services through LetsStudy Pro.`,
+
+    "Articles":
+      `${topic}. Read useful educational, career, technology and digital growth information on LetsStudy Pro.`,
+
+    "AI & Technology":
+      `${topic}. Explore artificial intelligence, technology tools and digital skills on LetsStudy Pro.`,
+
+    "Education & Growth":
+      `${topic}. Learn, build, work and grow with LetsStudy Pro's global digital ecosystem.`
+  };
+
+  let result =
+    descriptions[
+      category
+    ] ||
+    descriptions[
+      "Education & Growth"
+    ];
+
+  result =
+    cleanText(result);
+
+  if (
+    result.length > 155
+  ) {
+
+    result =
+      result
+        .substring(
+          0,
+          152
+        )
+        .replace(
+          /\s+\S*$/,
+          ""
+        ) +
+      "...";
+  }
+
+  return result;
+}
+
+// ======================================================
+// FIND PAGES
+// ======================================================
+
+const files =
+  walk(ROOT);
+
+console.log(
+  `Found ${files.length} public HTML pages.`
+);
+
+// ======================================================
+// COLLECT TITLES
+// ======================================================
+
+const titles = new Map();
+
+for (
+  const file of files
+) {
+
+  const $ =
+    cheerio.load(
+      fs.readFileSync(
+        file,
+        "utf8"
+      ),
+      {
+        decodeEntities:
+          false
+      }
+    );
+
+  const title =
+    cleanText(
+      $("title").text()
+    );
+
+  if (title) {
+
+    if (
+      !titles.has(title)
+    ) {
+      titles.set(
+        title,
+        []
+      );
+    }
+
+    titles
+      .get(title)
+      .push(file);
+  }
+}
+
+// ======================================================
+// PROCESS CONTENT
+// ======================================================
+
+for (
+  const file of files
+) {
+
+  report.scanned++;
+
+  let source =
+    fs.readFileSync(
+      file,
+      "utf8"
+    );
+
+  const $ =
+    cheerio.load(
+      source,
+      {
+        decodeEntities:
+          false
+      }
+    );
+
+  let changed = false;
+
+  const url =
+    pageUrl(file);
+
+  const category =
+    categoryFromFile(
+      file
+    );
+
+  report.pagesByCategory[
+    category
+  ] =
+    (
+      report
+        .pagesByCategory[
+          category
+        ] || 0
+    ) + 1;
+
+  // ====================================================
+  // LANGUAGE
+  // ====================================================
+
+  if (
+    !$("html")
+      .attr("lang")
+  ) {
+
+    $("html").attr(
+      "lang",
+      "en"
+    );
+
+    report.langFixed++;
+
+    changed = true;
+  }
+
+  // ====================================================
+  // H1
+  // ====================================================
+
+  let h1 =
+    cleanText(
+      $("h1")
+        .first()
+        .text()
+    );
+
+  if (
+    !h1 &&
+    $("title").length
+  ) {
+
+    h1 =
+      cleanText(
+        $("title").text()
+      )
+        .replace(
+          /\s*\|\s*LetsStudy Pro\s*$/i,
+          ""
+        );
+
+    if (h1) {
+
+      const firstContent =
+        $("main").length
+          ? $("main")
+          : $("body");
+
+      firstContent.prepend(
+        `<h1>${escapeHtml(
+          h1
+        )}</h1>`
+      );
+
+      report.h1Fixed++;
+
+      changed = true;
+    }
+  }
+
+  // ====================================================
+  // TITLE
+  // ====================================================
+
+  if (
+    !$("title").length
+  ) {
+
+    const title =
+      generateTitle(
+        file,
+        h1
+      );
+
+    $("head").append(
+      `<title>${escapeHtml(
+        title
+      )}</title>`
+    );
+
+    report.titlesFixed++;
+
+    changed = true;
+  }
+
+  // ====================================================
+  // DESCRIPTION
+  // ====================================================
+
+  if (
+    !$(
+      'meta[name="description"]'
+    ).length
+  ) {
+
+    const description =
+      generateDescription(
+        category,
+        h1
+      );
+
+    $("head").append(
+      `<meta name="description" content="${escapeHtml(
+        description
+      )}">`
+    );
+
+    report.descriptionsFixed++;
+
+    changed = true;
+  }
+
+  // ====================================================
+  // KEYWORD NATURAL CONTENT
+  // ====================================================
+
+  const bodyText =
+    cleanText(
+      $("body").text()
+    );
+
+  if (
+    bodyText.length <
+    250
+  ) {
+
+    report.shortContent++;
+  }
+
+  // ====================================================
+  // IMAGE ALT AUDIT
+  // ====================================================
+
+  $("img").each(
+    (_, img) => {
+
+      const alt =
+        cleanText(
+          $(img)
+            .attr("alt")
+        );
+
+      if (!alt) {
+
+        report.missingAlt++;
+      }
+    }
+  );
+
+  // ====================================================
+  // INTERNAL LINKS
+  // ====================================================
+
+  const internalLinks =
+    $("a[href]")
+      .filter(
+        (_, element) => {
+
+          const href =
+            $(element)
+              .attr("href") ||
+            "";
+
+          return (
+            href.endsWith(
+              ".html"
+            ) ||
+            href === "/" ||
+            href.startsWith(
+              "./"
+            ) ||
+            href.startsWith(
+              "../"
+            )
+          );
+        }
+      )
+      .length;
+
+  if (
+    internalLinks === 0 &&
+    files.length > 1
+  ) {
+
+    report
+      .missingInternalLinks++;
+  }
+
+  // ====================================================
+  // SAVE
+  // ====================================================
+
+  if (changed) {
+
+    fs.writeFileSync(
+      file,
+      $.html(),
+      "utf8"
+    );
+
+    report.changed++;
+
+    report.changedUrls.push(
+      url
+    );
+
+    console.log(
+      `CONTENT FIXED: ${url}`
+    );
+  }
+}
+
+// ======================================================
+// GLOBAL CONTENT REPORT
+// ======================================================
+
+const reportText = `
+
+LETSSTUDY PRO
+GLOBAL CONTENT AUTO FIX REPORT
+
+==========================================
+
+Generated:
+${new Date().toISOString()}
+
+Pages scanned:
+${report.scanned}
+
+Pages changed:
+${report.changed}
+
+Titles fixed:
+${report.titlesFixed}
+
+Descriptions fixed:
+${report.descriptionsFixed}
+
+H1 headings added:
+${report.h1Fixed}
+
+Language attributes fixed:
+${report.langFixed}
+
+Pages with short content:
+${report.shortContent}
+
+Pages without internal links:
+${report.missingInternalLinks}
+
+Images missing ALT:
+${report.missingAlt}
+
+==========================================
+CONTENT CATEGORIES
+==========================================
+
+${Object.entries(
+  report.pagesByCategory
+)
+  .map(
+    ([key, value]) =>
+      `${key}: ${value}`
+  )
+  .join("\n")}
+
+==========================================
+CHANGED URLS
+==========================================
+
+${report.changedUrls.join("\n")}
+
+==========================================
+
+`;
+
+fs.writeFileSync(
+  "global-content-report.txt",
+  reportText.trim() +
+    "\n",
+  "utf8"
+);
+
+fs.writeFileSync(
+  ".content-changed-urls.txt",
+  report.changedUrls.join(
+    "\n"
+  ) +
+  (
+    report.changedUrls.length
+      ? "\n"
+      : ""
+  ),
+  "utf8"
+);
+
+console.log(
+  reportText
+);
+
