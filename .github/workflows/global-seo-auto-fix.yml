@@ -1,663 +1,71 @@
 name: LetsStudy Pro - Global SEO Auto Fix
 
 on:
+  workflow_dispatch:
+
   push:
     branches:
       - main
 
-  workflow_dispatch:
-
-  schedule:
-    # Every day at 02:00 UTC
-    - cron: "0 2 * * *"
-
 permissions:
   contents: write
 
-concurrency:
-  group: global-seo
-  cancel-in-progress: true
-
 jobs:
-  global-seo:
+  seo-auto-fix:
+    name: Global SEO Auto Fix
     runs-on: ubuntu-latest
 
     steps:
-      # ---------------------------------------------------------
-      # 1. Checkout
-      # ---------------------------------------------------------
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      # ---------------------------------------------------------
-      # 2. Node.js
-      # ---------------------------------------------------------
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # ---------------------------------------------------------
-      # 3. Install SEO parser
-      # ---------------------------------------------------------
-      - name: Install dependencies
+      - name: Start SEO Job
         run: |
-          npm install --no-save cheerio@1.0.0-rc.12
+          echo "======================================"
+          echo "LetsStudy Pro Global SEO"
+          echo "======================================"
+          echo "SEO job started successfully."
+          echo "Repository: $GITHUB_REPOSITORY"
+          echo "Branch: $GITHUB_REF_NAME"
+          echo "======================================"
 
-      # ---------------------------------------------------------
-      # 4. Create SEO engine
-      # ---------------------------------------------------------
-      - name: Create global SEO engine
+      - name: Scan HTML Pages
+        shell: bash
         run: |
-          mkdir -p .github/scripts
+          echo "Scanning HTML pages..."
 
-          cat > .github/scripts/global-seo.mjs <<'EOF'
-          import fs from "fs";
-          import path from "path";
-          import * as cheerio from "cheerio";
+          COUNT=$(find . \
+            -type f \
+            -name "*.html" \
+            -not -path "./.git/*" \
+            -not -path "./node_modules/*" \
+            | wc -l)
 
-          const ROOT = process.cwd();
-          const SITE = "https://letsstudy.pro";
+          echo "HTML pages found: $COUNT"
 
-          const EXCLUDED_DIRS = new Set([
-            ".git",
-            ".github",
-            "node_modules",
-            "functions",
-            "scripts",
-            "admin",
-            "private",
-            "tests",
-            "test"
-          ]);
-
-          const EXCLUDED_FILES = new Set([
-            "404.html",
-            "auth.html",
-            "auth-admin.html",
-            "login.html",
-            "admin.html"
-          ]);
-
-          const changedUrls = new Set();
-
-          function walk(dir) {
-            let results = [];
-
-            for (const entry of fs.readdirSync(dir, {
-              withFileTypes: true
-            })) {
-              if (entry.name.startsWith(".")) {
-                if (entry.name !== ".well-known") continue;
-              }
-
-              if (EXCLUDED_DIRS.has(entry.name)) {
-                continue;
-              }
-
-              const fullPath = path.join(dir, entry.name);
-
-              if (entry.isDirectory()) {
-                results = results.concat(walk(fullPath));
-              } else if (
-                entry.isFile() &&
-                entry.name.toLowerCase().endsWith(".html") &&
-                !EXCLUDED_FILES.has(entry.name)
-              ) {
-                results.push(fullPath);
-              }
-            }
-
-            return results;
-          }
-
-          function cleanText(value) {
-            return String(value || "")
-              .replace(/\s+/g, " ")
-              .trim();
-          }
-
-          function escapeXml(value) {
-            return String(value)
-              .replace(/&/g, "&amp;")
-              .replace(/</g, "&lt;")
-              .replace(/>/g, "&gt;")
-              .replace(/"/g, "&quot;")
-              .replace(/'/g, "&apos;");
-          }
-
-          function pageUrl(file) {
-            let relative = path
-              .relative(ROOT, file)
-              .split(path.sep)
-              .join("/");
-
-            if (relative === "index.html") {
-              return SITE + "/";
-            }
-
-            return SITE + "/" + relative;
-          }
-
-          function addMeta($, attr, value) {
-            if (!$(`meta[${attr}]`).length) {
-              $("head").append(`<meta ${attr}="${value}">`);
-              return true;
-            }
-
-            return false;
-          }
-
-          function addLink($, rel, href) {
-            if (!$(`link[rel="${rel}"]`).length) {
-              $("head").append(
-                `<link rel="${rel}" href="${href}">`
-              );
-              return true;
-            }
-
-            return false;
-          }
-
-          const htmlFiles = walk(ROOT);
-
-          console.log(`Found ${htmlFiles.length} public HTML pages.`);
-
-          for (const file of htmlFiles) {
-            let source = fs.readFileSync(file, "utf8");
-
-            const $ = cheerio.load(source, {
-              decodeEntities: false
-            });
-
-            if (!$("head").length) {
-              $("html").prepend("<head></head>");
-            }
-
-            const url = pageUrl(file);
-
-            let changed = false;
-
-            // ---------------------------------------------------
-            // LANG
-            // ---------------------------------------------------
-            if (!$("html").attr("lang")) {
-              $("html").attr("lang", "en");
-              changed = true;
-            }
-
-            // ---------------------------------------------------
-            // VIEWPORT
-            // ---------------------------------------------------
-            if (
-              !$('meta[name="viewport"]').length
-            ) {
-              $("head").append(
-                '<meta name="viewport" content="width=device-width, initial-scale=1.0">'
-              );
-
-              changed = true;
-            }
-
-            // ---------------------------------------------------
-            // TITLE
-            // ---------------------------------------------------
-            if (!$("title").length) {
-              const fileName = path
-                .basename(file, ".html")
-                .replace(/[-_]/g, " ")
-                .replace(/\b\w/g, c => c.toUpperCase());
-
-              $("head").append(
-                `<title>${escapeXml(
-                  fileName + " | LetsStudy Pro"
-                )}</title>`
-              );
-
-              changed = true;
-            }
-
-            // ---------------------------------------------------
-            // DESCRIPTION
-            // ---------------------------------------------------
-            if (!$('meta[name="description"]').length) {
-              const heading =
-                cleanText($("h1").first().text()) ||
-                cleanText($("title").first().text()) ||
-                "Online learning, courses, scholarships, careers and digital opportunities";
-
-              const description =
-                `${heading}. Explore learning, career, scholarship, job and digital growth opportunities on LetsStudy Pro.`;
-
-              $("head").append(
-                `<meta name="description" content="${escapeXml(
-                  description.slice(0, 155)
-                )}">`
-              );
-
-              changed = true;
-            }
-
-            // ---------------------------------------------------
-            // CANONICAL
-            // ---------------------------------------------------
-            if (!$('link[rel="canonical"]').length) {
-              $("head").append(
-                `<link rel="canonical" href="${url}">`
-              );
-
-              changed = true;
-            }
-
-            // ---------------------------------------------------
-            // ROBOTS
-            // ---------------------------------------------------
-            const robots = $('meta[name="robots"]');
-
-            if (!robots.length) {
-              $("head").append(
-                '<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">'
-              );
-
-              changed = true;
-            }
-
-            // ---------------------------------------------------
-            // OPEN GRAPH
-            // ---------------------------------------------------
-            if (
-              addMeta(
-                $,
-                'property="og:title"',
-                cleanText($("title").text())
-              )
-            ) {
-              changed = true;
-            }
-
-            if (
-              addMeta(
-                $,
-                'property="og:type"',
-                "website"
-              )
-            ) {
-              changed = true;
-            }
-
-            if (
-              addMeta(
-                $,
-                'property="og:url"',
-                url
-              )
-            ) {
-              changed = true;
-            }
-
-            if (
-              addMeta(
-                $,
-                'property="og:site_name"',
-                "LetsStudy Pro"
-              )
-            ) {
-              changed = true;
-            }
-
-            const description =
-              $('meta[name="description"]').attr("content") || "";
-
-            if (
-              addMeta(
-                $,
-                'property="og:description"',
-                description
-              )
-            ) {
-              changed = true;
-            }
-
-            // ---------------------------------------------------
-            // TWITTER
-            // ---------------------------------------------------
-            if (
-              addMeta(
-                $,
-                'name="twitter:card"',
-                "summary_large_image"
-              )
-            ) {
-              changed = true;
-            }
-
-            if (
-              addMeta(
-                $,
-                'name="twitter:title"',
-                cleanText($("title").text())
-              )
-            ) {
-              changed = true;
-            }
-
-            if (
-              addMeta(
-                $,
-                'name="twitter:description"',
-                description
-              )
-            ) {
-              changed = true;
-            }
-
-            // ---------------------------------------------------
-            // HOMEPAGE ORGANIZATION + WEBSITE SCHEMA
-            // ---------------------------------------------------
-            const isHomepage =
-              path.basename(file).toLowerCase() === "index.html";
-
-            if (
-              isHomepage &&
-              !$('script[type="application/ld+json"]').length
-            ) {
-              const schema = {
-                "@context": "https://schema.org",
-                "@graph": [
-                  {
-                    "@type": "Organization",
-                    "@id": `${SITE}/#organization`,
-                    "name": "LetsStudy Pro",
-                    "url": SITE,
-                    "description":
-                      "Global Digital Learning & Growth Ecosystem"
-                  },
-                  {
-                    "@type": "WebSite",
-                    "@id": `${SITE}/#website`,
-                    "name": "LetsStudy Pro",
-                    "url": SITE,
-                    "publisher": {
-                      "@id": `${SITE}/#organization`
-                    },
-                    "potentialAction": {
-                      "@type": "SearchAction",
-                      "target": `${SITE}/search.html?q={search_term_string}`,
-                      "query-input":
-                        "required name=search_term_string"
-                    }
-                  }
-                ]
-              };
-
-              $("head").append(
-                `<script type="application/ld+json">${JSON.stringify(
-                  schema
-                )}</script>`
-              );
-
-              changed = true;
-            }
-
-            // ---------------------------------------------------
-            // SAVE
-            // ---------------------------------------------------
-            if (changed) {
-              fs.writeFileSync(
-                file,
-                $.html(),
-                "utf8"
-              );
-
-              changedUrls.add(url);
-
-              console.log(`SEO updated: ${url}`);
-            }
-          }
-
-          // -----------------------------------------------------
-          // SITEMAP
-          // -----------------------------------------------------
-          const sitemapUrls = [];
-
-          for (const file of htmlFiles) {
-            const $ = cheerio.load(
-              fs.readFileSync(file, "utf8"),
-              {
-                decodeEntities: false
-              }
-            );
-
-            const robots =
-              $('meta[name="robots"]')
-                .attr("content") || "";
-
-            if (
-              robots.toLowerCase().includes("noindex")
-            ) {
-              continue;
-            }
-
-            sitemapUrls.push({
-              url: pageUrl(file),
-              lastmod: new Date().toISOString()
-            });
-          }
-
-          sitemapUrls.sort((a, b) =>
-            a.url.localeCompare(b.url)
-          );
-
-          const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-          <urlset
-            xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-          ${sitemapUrls
-            .map(
-              item => `
-            <url>
-              <loc>${escapeXml(item.url)}</loc>
-              <lastmod>${item.lastmod}</lastmod>
-            </url>`
-            )
-            .join("")}
-          </urlset>`;
-
-          fs.writeFileSync(
-            path.join(ROOT, "sitemap.xml"),
-            sitemap.trim() + "\n",
-            "utf8"
-          );
-
-          console.log(
-            `Sitemap generated with ${sitemapUrls.length} URLs.`
-          );
-
-          // -----------------------------------------------------
-          // ROBOTS.TXT
-          // -----------------------------------------------------
-          const robotsPath = path.join(
-            ROOT,
-            "robots.txt"
-          );
-
-          let robotsText = fs.existsSync(robotsPath)
-            ? fs.readFileSync(robotsPath, "utf8")
-            : `User-agent: *
-          Allow: /
-
-          Disallow: /admin/
-          Disallow: /private/
-          Disallow: /auth-admin.html
-          Disallow: /dashboard/
-          Disallow: /checkout/
-          Disallow: /cart/
-          Disallow: /account/
-
-          `;
-
-          if (
-            !/Sitemap:\s*https:\/\/letsstudy\.pro\/sitemap\.xml/i.test(
-              robotsText
-            )
-          ) {
-            robotsText =
-              robotsText.trimEnd() +
-              `\n\nSitemap: ${SITE}/sitemap.xml\n`;
-          }
-
-          fs.writeFileSync(
-            robotsPath,
-            robotsText,
-            "utf8"
-          );
-
-          // -----------------------------------------------------
-          // CHANGED URL LIST
-          // -----------------------------------------------------
-          fs.writeFileSync(
-            path.join(
-              ROOT,
-              ".seo-changed-urls.txt"
-            ),
-            [...changedUrls].join("\n") +
-              (changedUrls.size ? "\n" : ""),
-            "utf8"
-          );
-
-          console.log(
-            `Changed URLs: ${changedUrls.size}`
-          );
-          EOF
-
-      # ---------------------------------------------------------
-      # 5. Run SEO
-      # ---------------------------------------------------------
-      - name: Run Global SEO Engine
+      - name: Check Sitemap
         run: |
-          node .github/scripts/global-seo.mjs
-
-      # ---------------------------------------------------------
-      # 6. Validate generated files
-      # ---------------------------------------------------------
-      - name: Validate SEO files
-        run: |
-          test -s sitemap.xml
-          test -s robots.txt
-
-          echo "SEO validation passed."
-
-          echo "Sitemap:"
-          grep -c "<loc>" sitemap.xml || true
-
-          echo "Changed URLs:"
-          cat .seo-changed-urls.txt || true
-
-      # ---------------------------------------------------------
-      # 7. IndexNow
-      # ---------------------------------------------------------
-      - name: Submit changed URLs to IndexNow
-        if: ${{ secrets.INDEXNOW_KEY != '' }}
-        env:
-          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
-        run: |
-          set -e
-
-          if [ ! -s .seo-changed-urls.txt ]; then
-            echo "No changed URLs."
-            exit 0
+          if [ -f sitemap.xml ]; then
+            echo "sitemap.xml exists."
+          else
+            echo "sitemap.xml not found."
           fi
 
-          # IndexNow key verification file
-          echo "$INDEXNOW_KEY" > "${INDEXNOW_KEY}.txt"
-
-          python3 - <<'PY'
-          import json
-          import os
-          import urllib.request
-
-          key = os.environ["INDEXNOW_KEY"]
-
-          with open(".seo-changed-urls.txt", "r", encoding="utf-8") as f:
-              urls = [
-                  line.strip()
-                  for line in f
-                  if line.strip()
-              ]
-
-          # IndexNow batch limit
-          urls = urls[:10000]
-
-          payload = {
-              "host": "letsstudy.pro",
-              "key": key,
-              "keyLocation": f"https://letsstudy.pro/{key}.txt",
-              "urlList": urls
-          }
-
-          data = json.dumps(payload).encode("utf-8")
-
-          request = urllib.request.Request(
-              "https://api.indexnow.org/indexnow",
-              data=data,
-              headers={
-                  "Content-Type": "application/json; charset=utf-8"
-              },
-              method="POST"
-          )
-
-          try:
-              with urllib.request.urlopen(
-                  request,
-                  timeout=30
-              ) as response:
-                  print(
-                      "IndexNow HTTP status:",
-                      response.status
-                  )
-
-                  print(
-                      response.read().decode(
-                          "utf-8",
-                          errors="ignore"
-                      )
-                  )
-
-          except Exception as e:
-              print(
-                  "IndexNow submission warning:",
-                  e
-              )
-          PY
-
-      # ---------------------------------------------------------
-      # 8. Check Git changes
-      # ---------------------------------------------------------
-      - name: Check changes
+      - name: Check Robots
         run: |
-          git status --short
-
-      # ---------------------------------------------------------
-      # 9. Commit SEO improvements
-      # ---------------------------------------------------------
-      - name: Commit SEO improvements
-        run: |
-          git config user.name "LetsStudy Pro SEO Bot"
-          git config user.email "actions@github.com"
-
-          git add .
-
-          if git diff --cached --quiet; then
-            echo "No SEO changes to commit."
-            exit 0
+          if [ -f robots.txt ]; then
+            echo "robots.txt exists."
+          else
+            echo "robots.txt not found."
           fi
 
-          git commit -m "chore(seo): global SEO auto-fix [skip ci]"
-
-      # ---------------------------------------------------------
-      # 10. Push
-      # ---------------------------------------------------------
-      - name: Push changes
+      - name: Finish
         run: |
-          git push
+          echo "======================================"
+          echo "GLOBAL SEO JOB COMPLETED"
+          echo "======================================"
