@@ -1,0 +1,151 @@
+name: LetsStudy Pro SEO Auto Optimize
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  seo:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install SEO tools
+        run: |
+          npm install -g html-validate
+          npm install -g broken-link-checker
+
+      - name: Check important SEO files
+        run: |
+          echo "Checking LetsStudy Pro SEO files..."
+
+          test -f robots.txt || {
+            echo "ERROR: robots.txt missing"
+            exit 1
+          }
+
+          test -f sitemap.xml || {
+            echo "ERROR: sitemap.xml missing"
+            exit 1
+          }
+
+          echo "robots.txt: OK"
+          echo "sitemap.xml: OK"
+
+      - name: Validate robots.txt
+        run: |
+          grep -qi "sitemap:" robots.txt || {
+            echo "WARNING: Sitemap is not declared in robots.txt"
+          }
+
+      - name: Check homepage SEO
+        run: |
+          test -f index.html || {
+            echo "ERROR: index.html missing"
+            exit 1
+          }
+
+          grep -qi "<title>" index.html || {
+            echo "ERROR: Homepage title missing"
+            exit 1
+          }
+
+          grep -qi 'name="description"' index.html || {
+            echo "ERROR: Meta description missing"
+            exit 1
+          }
+
+          grep -qi 'rel="canonical"' index.html || {
+            echo "WARNING: Canonical tag missing"
+          }
+
+          echo "Homepage SEO checks passed."
+
+      - name: Validate HTML
+        run: |
+          find . -maxdepth 2 -name "*.html" \
+            -not -path "./node_modules/*" \
+            -print0 | xargs -0 -r html-validate || true
+
+      - name: Check sitemap URLs
+        run: |
+          echo "Sitemap:"
+          grep -o "https://letsstudy.pro[^<]*" sitemap.xml | head -20 || true
+
+      - name: Check structured data
+        run: |
+          if grep -Rqi 'application/ld+json' \
+            --include="*.html" .; then
+            echo "Structured data detected."
+          else
+            echo "WARNING: No JSON-LD structured data detected."
+          fi
+
+      - name: Check Open Graph
+        run: |
+          if grep -Rqi 'property="og:title"' \
+            --include="*.html" .; then
+            echo "Open Graph detected."
+          else
+            echo "WARNING: Open Graph tags missing."
+          fi
+
+      - name: Check Twitter Cards
+        run: |
+          if grep -Rqi 'name="twitter:card"' \
+            --include="*.html" .; then
+            echo "Twitter Card detected."
+          else
+            echo "WARNING: Twitter Card tags missing."
+          fi
+
+      - name: Create SEO report
+        run: |
+          mkdir -p seo-reports
+
+          cat > seo-reports/latest-seo-report.md <<'EOF'
+          # LetsStudy Pro SEO Report
+
+          ## Checked
+          - robots.txt
+          - sitemap.xml
+          - Homepage title
+          - Meta description
+          - Canonical
+          - Structured data
+          - Open Graph
+          - Twitter Cards
+          - HTML validation
+
+          ## Site
+          https://letsstudy.pro
+
+          ## Generated
+          Automatically by GitHub Actions.
+          EOF
+
+      - name: Commit SEO report
+        run: |
+          git config user.name "LetsStudy Pro SEO Bot"
+          git config user.email "actions@github.com"
+
+          git add seo-reports/latest-seo-report.md
+
+          git diff --cached --quiet || \
+            git commit -m "chore: update SEO report"
+
+          git push
