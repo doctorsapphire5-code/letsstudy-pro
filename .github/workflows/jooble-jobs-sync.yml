@@ -1,0 +1,56 @@
+name: LetsStudy Pro - Jooble Jobs Sync
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: "0 */12 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  jooble-sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Verify sync script
+        run: |
+          if [ ! -f scripts/jooble-fetch.js ]; then
+            echo "ERROR: scripts/jooble-fetch.js not found."
+            exit 1
+          fi
+
+          echo "Jooble sync script found."
+
+      - name: Sync Jooble jobs to Firestore
+        env:
+          JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
+
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+
+          FIREBASE_PROJECT_ID: let-s-study-pro-course
+
+          JOOBLE_KEYWORDS: "jobs"
+          JOOBLE_LOCATION: "Tanzania"
+
+        run: |
+          node scripts/jooble-fetch.js
+
+      - name: Upload sync report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jooble-sync-report
+          path: jooble-report.json
+          if-no-files-found: ignore
