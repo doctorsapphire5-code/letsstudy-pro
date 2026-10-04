@@ -1,0 +1,1510 @@
+name: LetsStudy Pro - Global SEO Auto Fix
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+  schedule:
+    - cron: "0 2 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: letsstudy-global-seo
+  cancel-in-progress: true
+
+jobs:
+  global-seo:
+    name: Global SEO Audit & Auto Fix
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # ==========================================================
+      # 1. CHECKOUT
+      # ==========================================================
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ==========================================================
+      # 2. NODE
+      # ==========================================================
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # ==========================================================
+      # 3. INSTALL DEPENDENCIES
+      # ==========================================================
+      - name: Install SEO dependencies
+        run: |
+          npm install --no-save cheerio@1.1.2
+
+      # ==========================================================
+      # 4. CREATE SEO ENGINE
+      # ==========================================================
+      - name: Create Global SEO Engine
+        shell: bash
+        run: |
+          mkdir -p .github/scripts
+
+          cat > .github/scripts/global-seo.mjs <<'EOF'
+
+          import fs from "fs";
+          import path from "path";
+          import * as cheerio from "cheerio";
+
+          const ROOT = process.cwd();
+
+          const SITE = "https://letsstudy.pro";
+
+          const BRAND = "LetsStudy Pro";
+
+          const DEFAULT_DESCRIPTION =
+            "LetsStudy Pro is a global digital learning and growth ecosystem for courses, scholarships, careers, jobs, resources, tutors, digital skills and opportunities.";
+
+          const EXCLUDED_DIRS = new Set([
+            ".git",
+            ".github",
+            "node_modules",
+            "functions",
+            "scripts",
+            "admin",
+            "private",
+            "test",
+            "tests",
+            "dist",
+            "build",
+            "coverage"
+          ]);
+
+          const EXCLUDED_FILES = new Set([
+            "404.html",
+            "auth.html",
+            "auth-admin.html",
+            "login.html",
+            "register.html",
+            "admin.html"
+          ]);
+
+          const NOINDEX_PATTERNS = [
+            /\/admin\//i,
+            /\/private\//i,
+            /\/dashboard\//i,
+            /\/checkout\//i,
+            /\/cart\//i,
+            /\/account\//i,
+            /\/login/i,
+            /\/auth-admin/i
+          ];
+
+          const changedUrls = new Set();
+
+          const report = {
+            scanned: 0,
+            changed: 0,
+            missingTitle: 0,
+            missingDescription: 0,
+            missingCanonical: 0,
+            missingRobots: 0,
+            missingViewport: 0,
+            missingLang: 0,
+            missingOG: 0,
+            missingTwitter: 0,
+            missingAlt: 0,
+            missingH1: 0,
+            duplicateH1: 0,
+            noindex: 0,
+            sitemapUrls: 0,
+            excluded: 0
+          };
+
+          function walk(dir) {
+
+            let results = [];
+
+            let entries = [];
+
+            try {
+              entries = fs.readdirSync(dir, {
+                withFileTypes: true
+              });
+            } catch {
+              return results;
+            }
+
+            for (const entry of entries) {
+
+              if (
+                entry.name.startsWith(".") &&
+                entry.name !== ".well-known"
+              ) {
+                continue;
+              }
+
+              if (EXCLUDED_DIRS.has(entry.name)) {
+                continue;
+              }
+
+              const fullPath = path.join(
+                dir,
+                entry.name
+              );
+
+              if (entry.isDirectory()) {
+
+                results.push(
+                  ...walk(fullPath)
+                );
+
+              } else if (
+                entry.isFile() &&
+                entry.name
+                  .toLowerCase()
+                  .endsWith(".html") &&
+                !EXCLUDED_FILES.has(entry.name)
+              ) {
+
+                results.push(fullPath);
+              }
+            }
+
+            return results;
+          }
+
+          function cleanText(value) {
+
+            return String(value || "")
+              .replace(/\s+/g, " ")
+              .trim();
+          }
+
+          function escapeXml(value) {
+
+            return String(value)
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/"/g, "&quot;")
+              .replace(/'/g, "&apos;");
+          }
+
+          function escapeHtml(value) {
+
+            return String(value)
+              .replace(/&/g, "&amp;")
+              .replace(/"/g, "&quot;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;");
+          }
+
+          function pageUrl(file) {
+
+            let relative = path
+              .relative(ROOT, file)
+              .split(path.sep)
+              .join("/");
+
+            if (relative === "index.html") {
+              return `${SITE}/`;
+            }
+
+            return `${SITE}/${relative}`;
+          }
+
+          function pageName(file) {
+
+            return path
+              .basename(file, ".html")
+              .replace(/[-_]+/g, " ")
+              .replace(/\b\w/g, char =>
+                char.toUpperCase()
+              );
+          }
+
+          function isExcludedUrl(url) {
+
+            return NOINDEX_PATTERNS.some(
+              pattern => pattern.test(url)
+            );
+          }
+
+          function hasMeta($, name) {
+
+            return $(
+              `meta[name="${name}"]`
+            ).length > 0;
+          }
+
+          function hasProperty($, property) {
+
+            return $(
+              `meta[property="${property}"]`
+            ).length > 0;
+          }
+
+          function addMetaName(
+            $,
+            name,
+            content
+          ) {
+
+            if (hasMeta($, name)) {
+              return false;
+            }
+
+            $("head").append(
+              `<meta name="${escapeHtml(name)}" content="${escapeHtml(content)}">`
+            );
+
+            return true;
+          }
+
+          function addMetaProperty(
+            $,
+            property,
+            content
+          ) {
+
+            if (hasProperty($, property)) {
+              return false;
+            }
+
+            $("head").append(
+              `<meta property="${escapeHtml(property)}" content="${escapeHtml(content)}">`
+            );
+
+            return true;
+          }
+
+          function addLink(
+            $,
+            rel,
+            href
+          ) {
+
+            if (
+              $(`link[rel="${rel}"]`).length
+            ) {
+              return false;
+            }
+
+            $("head").append(
+              `<link rel="${rel}" href="${escapeHtml(href)}">`
+            );
+
+            return true;
+          }
+
+          function createDescription(
+            $,
+            file
+          ) {
+
+            const h1 = cleanText(
+              $("h1").first().text()
+            );
+
+            const title = cleanText(
+              $("title").first().text()
+            );
+
+            const name = pageName(file);
+
+            let base =
+              h1 ||
+              title ||
+              name ||
+              "Digital learning and growth opportunities";
+
+            let description =
+              `${base}. Explore courses, scholarships, careers, jobs, learning resources, tutors and digital opportunities on LetsStudy Pro.`;
+
+            description =
+              cleanText(description);
+
+            if (description.length > 155) {
+              description =
+                description.substring(
+                  0,
+                  152
+                ).replace(/\s+\S*$/, "") +
+                "...";
+            }
+
+            return description;
+          }
+
+          function schemaExists($) {
+
+            return $(
+              'script[type="application/ld+json"]'
+            ).length > 0;
+          }
+
+          function appendSchema(
+            $,
+            schema
+          ) {
+
+            $("head").append(
+              `<script type="application/ld+json">${JSON.stringify(
+                schema
+              )}</script>`
+            );
+          }
+
+          // ======================================================
+          // FIND HTML
+          // ======================================================
+
+          const htmlFiles = walk(ROOT);
+
+          console.log(
+            `Found ${htmlFiles.length} HTML pages.`
+          );
+
+          // ======================================================
+          // PROCESS PAGES
+          // ======================================================
+
+          for (const file of htmlFiles) {
+
+            report.scanned++;
+
+            const url = pageUrl(file);
+
+            let source =
+              fs.readFileSync(
+                file,
+                "utf8"
+              );
+
+            const $ = cheerio.load(
+              source,
+              {
+                decodeEntities: false
+              }
+            );
+
+            if (!$("html").length) {
+              continue;
+            }
+
+            if (!$("head").length) {
+              $("html").prepend(
+                "<head></head>"
+              );
+            }
+
+            let changed = false;
+
+            // ----------------------------------------------------
+            // LANG
+            // ----------------------------------------------------
+
+            if (!$("html").attr("lang")) {
+
+              $("html").attr(
+                "lang",
+                "en"
+              );
+
+              report.missingLang++;
+              changed = true;
+            }
+
+            // ----------------------------------------------------
+            // VIEWPORT
+            // ----------------------------------------------------
+
+            if (
+              !$('meta[name="viewport"]').length
+            ) {
+
+              $("head").append(
+                '<meta name="viewport" content="width=device-width, initial-scale=1.0">'
+              );
+
+              report.missingViewport++;
+              changed = true;
+            }
+
+            // ----------------------------------------------------
+            // TITLE
+            // ----------------------------------------------------
+
+            if (!$("title").length) {
+
+              let title;
+
+              if (
+                path.basename(file) ===
+                "index.html"
+              ) {
+
+                title =
+                  "LetsStudy Pro - Global Digital Learning & Growth Ecosystem";
+
+              } else {
+
+                title =
+                  `${pageName(file)} | ${BRAND}`;
+              }
+
+              $("head").append(
+                `<title>${escapeHtml(title)}</title>`
+              );
+
+              report.missingTitle++;
+              changed = true;
+            }
+
+            // ----------------------------------------------------
+            // DESCRIPTION
+            // ----------------------------------------------------
+
+            if (
+              !hasMeta(
+                $,
+                "description"
+              )
+            ) {
+
+              const description =
+                createDescription(
+                  $,
+                  file
+                );
+
+              $("head").append(
+                `<meta name="description" content="${escapeHtml(description)}">`
+              );
+
+              report.missingDescription++;
+              changed = true;
+            }
+
+            // ----------------------------------------------------
+            // CANONICAL
+            // ----------------------------------------------------
+
+            if (
+              !$('link[rel="canonical"]').length
+            ) {
+
+              addLink(
+                $,
+                "canonical",
+                url
+              );
+
+              report.missingCanonical++;
+              changed = true;
+            }
+
+            // ----------------------------------------------------
+            // ROBOTS
+            // ----------------------------------------------------
+
+            if (
+              !hasMeta(
+                $,
+                "robots"
+              )
+            ) {
+
+              if (
+                isExcludedUrl(url)
+              ) {
+
+                addMetaName(
+                  $,
+                  "robots",
+                  "noindex, nofollow"
+                );
+
+              } else {
+
+                addMetaName(
+                  $,
+                  "robots",
+                  "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+                );
+              }
+
+              report.missingRobots++;
+              changed = true;
+            }
+
+            // ----------------------------------------------------
+            // OG TITLE
+            // ----------------------------------------------------
+
+            const title =
+              cleanText(
+                $("title").text()
+              );
+
+            if (
+              addMetaProperty(
+                $,
+                "og:title",
+                title
+              )
+            ) {
+
+              report.missingOG++;
+              changed = true;
+            }
+
+            // ----------------------------------------------------
+            // OG DESCRIPTION
+            // ----------------------------------------------------
+
+            const description =
+              $('meta[name="description"]')
+                .attr("content") ||
+              DEFAULT_DESCRIPTION;
+
+            if (
+              addMetaProperty(
+                $,
+                "og:description",
+                description
+              )
+            ) {
+
+              changed = true;
+            }
+
+            // ----------------------------------------------------
+            // OG URL
+            // ----------------------------------------------------
+
+            if (
+              addMetaProperty(
+                $,
+                "og:url",
+                url
+              )
+            ) {
+
+              changed = true;
+            }
+
+            // ----------------------------------------------------
+            // OG TYPE
+            // ----------------------------------------------------
+
+            if (
+              addMetaProperty(
+                $,
+                "og:type",
+                "website"
+              )
+            ) {
+
+              changed = true;
+            }
+
+            // ----------------------------------------------------
+            // OG SITE NAME
+            // ----------------------------------------------------
+
+            if (
+              addMetaProperty(
+                $,
+                "og:site_name",
+                BRAND
+              )
+            ) {
+
+              changed = true;
+            }
+
+            // ----------------------------------------------------
+            // TWITTER CARD
+            // ----------------------------------------------------
+
+            if (
+              addMetaName(
+                $,
+                "twitter:card",
+                "summary_large_image"
+              )
+            ) {
+
+              report.missingTwitter++;
+              changed = true;
+            }
+
+            if (
+              addMetaName(
+                $,
+                "twitter:title",
+                title
+              )
+            ) {
+
+              changed = true;
+            }
+
+            if (
+              addMetaName(
+                $,
+                "twitter:description",
+                description
+              )
+            ) {
+
+              changed = true;
+            }
+
+            // ----------------------------------------------------
+            // H1 AUDIT
+            // ----------------------------------------------------
+
+            const h1Count =
+              $("h1").length;
+
+            if (h1Count === 0) {
+
+              report.missingH1++;
+
+            } else if (h1Count > 1) {
+
+              report.duplicateH1++;
+            }
+
+            // ----------------------------------------------------
+            // IMAGE ALT AUDIT
+            // ----------------------------------------------------
+
+            $("img").each(
+              (_, img) => {
+
+                const alt =
+                  $(img).attr("alt");
+
+                if (
+                  alt === undefined ||
+                  cleanText(alt) === ""
+                ) {
+
+                  report.missingAlt++;
+                }
+              }
+            );
+
+            // ----------------------------------------------------
+            // HOMEPAGE SCHEMA
+            // ----------------------------------------------------
+
+            const isHomepage =
+              path.basename(file)
+                .toLowerCase() ===
+              "index.html";
+
+            if (
+              isHomepage &&
+              !schemaExists($)
+            ) {
+
+              const schema = {
+
+                "@context":
+                  "https://schema.org",
+
+                "@graph": [
+
+                  {
+                    "@type":
+                      "Organization",
+
+                    "@id":
+                      `${SITE}/#organization`,
+
+                    "name":
+                      BRAND,
+
+                    "url":
+                      SITE,
+
+                    "description":
+                      "Global Digital Learning & Growth Ecosystem",
+
+                    "sameAs": [
+                      "https://www.instagram.com/letstudyworld2026",
+                      "https://www.linkedin.com/company/lets-study-pro-4a2bab393",
+                      "https://www.youtube.com/@LetsStudyPro-p9w",
+                      "https://www.tiktok.com/@letsstudy.pro",
+                      "https://www.pinterest.com/letstudypro"
+                    ]
+                  },
+
+                  {
+                    "@type":
+                      "WebSite",
+
+                    "@id":
+                      `${SITE}/#website`,
+
+                    "name":
+                      BRAND,
+
+                    "url":
+                      SITE,
+
+                    "publisher": {
+                      "@id":
+                        `${SITE}/#organization`
+                    },
+
+                    "potentialAction": {
+
+                      "@type":
+                        "SearchAction",
+
+                      "target":
+                        `${SITE}/search.html?q={search_term_string}`,
+
+                      "query-input":
+                        "required name=search_term_string"
+                    }
+                  }
+
+                ]
+              };
+
+              appendSchema(
+                $,
+                schema
+              );
+
+              changed = true;
+            }
+
+            // ----------------------------------------------------
+            // COURSE PAGE SCHEMA
+            // ----------------------------------------------------
+
+            const fileLower =
+              file.toLowerCase();
+
+            if (
+              fileLower.includes("course") &&
+              !schemaExists($)
+            ) {
+
+              const courseName =
+                cleanText(
+                  $("h1").first().text()
+                ) ||
+                title;
+
+              const courseSchema = {
+
+                "@context":
+                  "https://schema.org",
+
+                "@type":
+                  "Course",
+
+                "name":
+                  courseName,
+
+                "description":
+                  description,
+
+                "provider": {
+
+                  "@type":
+                    "Organization",
+
+                                    "name":
+                    BRAND,
+
+                  "url":
+                    SITE,
+
+                  "logo": {
+                    "@type":
+                      "ImageObject",
+
+                    "url":
+                      `${SITE}/logo.png`
+                  },
+
+                  "description":
+                    "LetsStudy Pro is a global digital learning and growth ecosystem for courses, scholarships, careers, jobs, learning resources, tutors, digital skills and opportunities.",
+
+                  "sameAs": [
+                    "https://www.instagram.com/letstudyworld2026",
+                    "https://www.linkedin.com/company/lets-study-pro-4a2bab393",
+                    "https://www.youtube.com/@LetsStudyPro-p9w",
+                    "https://www.tiktok.com/@letsstudy.pro",
+                    "https://www.pinterest.com/letstudypro"
+                  ]
+                },
+
+                {
+                  "@type":
+                    "WebSite",
+
+                  "@id":
+                    `${SITE}/#website`,
+
+                  "name":
+                    BRAND,
+
+                  "url":
+                    SITE,
+
+                  "description":
+                    "Global Digital Learning & Growth Ecosystem",
+
+                  "publisher": {
+                    "@id":
+                      `${SITE}/#organization`
+                  },
+
+                  "inLanguage":
+                    "en",
+
+                  "potentialAction": {
+                    "@type":
+                      "SearchAction",
+
+                    "target":
+                      `${SITE}/search.html?q={search_term_string}`,
+
+                    "query-input":
+                      "required name=search_term_string"
+                  }
+                },
+
+                {
+                  "@type":
+                    "WebPage",
+
+                  "@id":
+                    `${SITE}/#webpage`,
+
+                  "url":
+                    SITE,
+
+                  "name":
+                    "LetsStudy Pro - Global Digital Learning & Growth Ecosystem",
+
+                  "description":
+                    "Learn, build, work and grow with courses, scholarships, jobs, careers, resources, tutors and digital opportunities.",
+
+                  "isPartOf": {
+                    "@id":
+                      `${SITE}/#website`
+                  },
+
+                  "about": {
+                    "@id":
+                      `${SITE}/#organization`
+                  },
+
+                  "inLanguage":
+                    "en"
+                }
+
+              ]
+            };
+
+            appendSchema(
+              $,
+              schema
+            );
+
+            changed = true;
+          }
+
+          // ----------------------------------------------------
+          // COURSE PAGE SCHEMA
+          // ----------------------------------------------------
+
+          const fileLower =
+            file.toLowerCase();
+
+          if (
+            fileLower.includes("course") &&
+            !schemaExists($)
+          ) {
+
+            const courseName =
+              cleanText(
+                $("h1").first().text()
+              ) ||
+              title;
+
+            const courseSchema = {
+
+              "@context":
+                "https://schema.org",
+
+              "@type":
+                "Course",
+
+              "name":
+                courseName,
+
+              "description":
+                description,
+
+              "url":
+                url,
+
+              "provider": {
+
+                "@type":
+                  "Organization",
+
+                "name":
+                  BRAND,
+
+                "url":
+                  SITE
+              }
+            };
+
+            appendSchema(
+              $,
+              courseSchema
+            );
+
+            changed = true;
+          }
+
+          // ----------------------------------------------------
+          // BLOG / ARTICLE SCHEMA
+          // ----------------------------------------------------
+
+          if (
+            (
+              fileLower.includes("blog") ||
+              fileLower.includes("article")
+            ) &&
+            !schemaExists($)
+          ) {
+
+            const articleName =
+              cleanText(
+                $("h1").first().text()
+              ) ||
+              title;
+
+            const articleSchema = {
+
+              "@context":
+                "https://schema.org",
+
+              "@type":
+                "Article",
+
+              "headline":
+                articleName,
+
+              "description":
+                description,
+
+              "url":
+                url,
+
+              "publisher": {
+
+                "@type":
+                  "Organization",
+
+                "name":
+                  BRAND,
+
+                "url":
+                  SITE
+              },
+
+              "mainEntityOfPage": {
+
+                "@type":
+                  "WebPage",
+
+                "@id":
+                  url
+              }
+            };
+
+            appendSchema(
+              $,
+              articleSchema
+            );
+
+            changed = true;
+          }
+
+          // ----------------------------------------------------
+          // SAVE PAGE CHANGES
+          // ----------------------------------------------------
+
+          if (changed) {
+
+            fs.writeFileSync(
+              file,
+              $.html(),
+              "utf8"
+            );
+
+            report.changed++;
+
+            changedUrls.add(url);
+
+            console.log(
+              `SEO FIXED: ${url}`
+            );
+          }
+        }
+
+        // ======================================================
+        // SITEMAP
+        // ======================================================
+
+        const sitemapUrls = [];
+
+        for (
+          const file of htmlFiles
+        ) {
+
+          const url =
+            pageUrl(file);
+
+          if (
+            isExcludedUrl(url)
+          ) {
+
+            report.excluded++;
+
+            continue;
+          }
+
+          const $ =
+            cheerio.load(
+              fs.readFileSync(
+                file,
+                "utf8"
+              ),
+              {
+                decodeEntities:
+                  false
+              }
+            );
+
+          const robots =
+            cleanText(
+              $('meta[name="robots"]')
+                .attr("content")
+            ).toLowerCase();
+
+          if (
+            robots.includes("noindex")
+          ) {
+
+            report.noindex++;
+
+            continue;
+          }
+
+          sitemapUrls.push({
+            url
+          });
+        }
+
+        sitemapUrls.sort(
+          (a, b) =>
+            a.url.localeCompare(
+              b.url
+            )
+        );
+
+        report.sitemapUrls =
+          sitemapUrls.length;
+
+        const sitemapXml =
+          `<?xml version="1.0" encoding="UTF-8"?>\n` +
+          `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+          sitemapUrls
+            .map(
+              item =>
+                `  <url>\n` +
+                `    <loc>${escapeXml(item.url)}</loc>\n` +
+                `  </url>`
+            )
+            .join("\n") +
+          `\n</urlset>\n`;
+
+        fs.writeFileSync(
+          path.join(
+            ROOT,
+            "sitemap.xml"
+          ),
+          sitemapXml,
+          "utf8"
+        );
+
+        // ======================================================
+        // ROBOTS.TXT
+        // ======================================================
+
+        const robotsPath =
+          path.join(
+            ROOT,
+            "robots.txt"
+          );
+
+        let robotsText =
+          fs.existsSync(
+            robotsPath
+          )
+            ? fs.readFileSync(
+                robotsPath,
+                "utf8"
+              )
+            : "";
+
+        if (
+          !robotsText.trim()
+        ) {
+
+          robotsText =
+`User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /private/
+Disallow: /dashboard/
+Disallow: /checkout/
+Disallow: /cart/
+Disallow: /account/
+Disallow: /auth-admin.html
+
+Sitemap: ${SITE}/sitemap.xml
+`;
+
+        } else if (
+          !/Sitemap:\s*https:\/\/letsstudy\.pro\/sitemap\.xml/i.test(
+            robotsText
+          )
+        ) {
+
+          robotsText =
+            robotsText.trimEnd() +
+            `\n\nSitemap: ${SITE}/sitemap.xml\n`;
+        }
+
+        fs.writeFileSync(
+          robotsPath,
+          robotsText,
+          "utf8"
+        );
+
+        // ======================================================
+        // CHANGED URLS
+        // ======================================================
+
+        fs.writeFileSync(
+          path.join(
+            ROOT,
+            ".seo-changed-urls.txt"
+          ),
+          [
+            ...changedUrls
+          ].join("\n") +
+            (
+              changedUrls.size
+                ? "\n"
+                : ""
+            ),
+          "utf8"
+        );
+
+        // ======================================================
+        // SEO REPORT
+        // ======================================================
+
+        const reportText =
+`LetsStudy Pro Global SEO Report
+
+Generated:
+${new Date().toISOString()}
+
+Pages scanned:
+${report.scanned}
+
+Pages changed:
+${report.changed}
+
+Missing titles fixed:
+${report.missingTitle}
+
+Missing descriptions fixed:
+${report.missingDescription}
+
+Missing canonical fixed:
+${report.missingCanonical}
+
+Missing robots fixed:
+${report.missingRobots}
+
+Missing viewport fixed:
+${report.missingViewport}
+
+Missing language fixed:
+${report.missingLang}
+
+Missing OG metadata:
+${report.missingOG}
+
+Missing Twitter metadata:
+${report.missingTwitter}
+
+Pages with missing H1:
+${report.missingH1}
+
+Pages with multiple H1:
+${report.duplicateH1}
+
+Images missing ALT:
+${report.missingAlt}
+
+Noindex pages:
+${report.noindex}
+
+Excluded URLs:
+${report.excluded}
+
+Sitemap URLs:
+${report.sitemapUrls}
+
+Changed URLs:
+${changedUrls.size}
+`;
+
+        fs.writeFileSync(
+          path.join(
+            ROOT,
+            "seo-report.txt"
+          ),
+          reportText,
+          "utf8"
+        );
+
+        console.log(
+          reportText
+        );
+
+        EOF
+
+    # ==========================================================
+    # RUN SEO ENGINE
+    # ==========================================================
+
+    - name: Run Global SEO Engine
+      run: |
+        node .github/scripts/global-seo.mjs
+
+    # ==========================================================
+    # VALIDATE SITEMAP
+    # ==========================================================
+
+    - name: Validate sitemap
+      run: |
+        test -s sitemap.xml
+
+        grep -q \
+          "http://www.sitemaps.org/schemas/sitemap/0.9" \
+          sitemap.xml
+
+        echo "Sitemap validation passed."
+
+    # ==========================================================
+    # VALIDATE ROBOTS
+    # ==========================================================
+
+    - name: Validate robots.txt
+      run: |
+        test -s robots.txt
+
+        grep -qi \
+          "Sitemap: https://letsstudy.pro/sitemap.xml" \
+          robots.txt
+
+        echo "robots.txt validation passed."
+
+    # ==========================================================
+    # SEO REPORT
+    # ==========================================================
+
+    - name: Display SEO report
+      run: |
+        echo "======================================"
+        echo "LETSTUDY PRO GLOBAL SEO REPORT"
+        echo "======================================"
+
+        cat seo-report.txt
+
+        echo ""
+        echo "======================================"
+        echo "CHANGED URLS"
+        echo "======================================"
+
+        cat .seo-changed-urls.txt || true
+
+    # ==========================================================
+    # INDEXNOW
+    # ==========================================================
+
+    - name: Submit changed URLs to IndexNow
+      if: ${{ secrets.INDEXNOW_KEY != '' }}
+      env:
+        INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+      run: |
+
+        set -e
+
+        if [ ! -s .seo-changed-urls.txt ]; then
+          echo "No changed URLs found."
+          exit 0
+        fi
+
+        echo "$INDEXNOW_KEY" \
+          > "${INDEXNOW_KEY}.txt"
+
+        python3 <<'PY'
+
+        import json
+        import os
+        import urllib.request
+
+        key = os.environ["INDEXNOW_KEY"]
+
+        with open(
+            ".seo-changed-urls.txt",
+            "r",
+            encoding="utf-8"
+        ) as file:
+
+            urls = [
+                line.strip()
+                for line in file
+                if line.strip()
+            ]
+
+        urls = urls[:10000]
+
+        payload = {
+            "host":
+                "letsstudy.pro",
+
+            "key":
+                key,
+
+            "keyLocation":
+                f"https://letsstudy.pro/{key}.txt",
+
+            "urlList":
+                urls
+        }
+
+        body = json.dumps(
+            payload
+        ).encode("utf-8")
+
+        request = urllib.request.Request(
+            "https://api.indexnow.org/indexnow",
+            data=body,
+            headers={
+                "Content-Type":
+                    "application/json; charset=utf-8"
+            },
+            method="POST"
+        )
+
+        try:
+
+            with urllib.request.urlopen(
+                request,
+                timeout=30
+            ) as response:
+
+                print(
+                    "IndexNow status:",
+                    response.status
+                )
+
+                print(
+                    response.read()
+                    .decode(
+                        "utf-8",
+                        errors="ignore"
+                    )
+                )
+
+        except Exception as error:
+
+            print(
+                "IndexNow warning:",
+                error
+            )
+
+        PY
+
+    # ==========================================================
+    # GIT STATUS
+    # ==========================================================
+
+    - name: Check repository changes
+      run: |
+        git status --short
+
+    # ==========================================================
+    # COMMIT
+    # ==========================================================
+
+    - name: Commit SEO changes
+      run: |
+
+        git config \
+          user.name \
+          "LetsStudy Pro SEO Bot"
+
+        git config \
+          user.email \
+          "actions@github.com"
+
+        git add .
+
+        if git diff --cached --quiet; then
+          echo "No changes to commit."
+          exit 0
+        fi
+
+        git commit \
+          -m "chore(seo): global SEO auto-fix [skip ci]"
+
+    # ==========================================================
+    # PUSH
+    # ==========================================================
+
+    - name: Push SEO changes
+      run: |
+        git push
