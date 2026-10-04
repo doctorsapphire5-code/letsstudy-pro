@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   fetch-jooble-jobs:
+    name: Fetch Jooble Jobs
     runs-on: ubuntu-latest
 
     steps:
@@ -25,8 +26,13 @@ jobs:
         env:
           JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
         run: |
+          echo "Checking Jooble API key..."
+
           if [ -z "$JOOBLE_API_KEY" ]; then
-            echo "ERROR: JOOBLE_API_KEY secret is missing."
+            echo "::error::JOOBLE_API_KEY secret is missing."
+            echo "Go to:"
+            echo "Settings -> Secrets and variables -> Actions"
+            echo "and create JOOBLE_API_KEY."
             exit 1
           fi
 
@@ -39,6 +45,8 @@ jobs:
           mkdir -p data
 
       - name: Create Jooble fetch script
+        env:
+          JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
         run: |
           cat > scripts/jooble-fetch.js <<'EOF'
           const fs = require("fs");
@@ -76,42 +84,71 @@ jobs:
           ];
 
           async function fetchJobs(search) {
+            console.log(
+              `Request: ${search.keywords} | ${search.location}`
+            );
+
             const response = await fetch(API_URL, {
               method: "POST",
               headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Accept": "application/json"
               },
               body: JSON.stringify({
                 keywords: search.keywords,
-                location: search.location
+                location: search.location,
+                page: 1,
+                ResultOnPage: 50
               })
             });
 
+            const text = await response.text();
+
+            console.log(
+              `HTTP ${response.status} ${response.statusText}`
+            );
+
             if (!response.ok) {
               throw new Error(
-                `Jooble API error ${response.status}: ${response.statusText}`
+                `Jooble API returned HTTP ${response.status}: ${text.slice(0, 500)}`
               );
             }
 
-            return response.json();
+            let data;
+
+            try {
+              data = JSON.parse(text);
+            } catch {
+              throw new Error(
+                `Jooble returned invalid JSON: ${text.slice(0, 500)}`
+              );
+            }
+
+            return data;
           }
 
           async function main() {
             const jobs = [];
             const seen = new Set();
+            let successfulRequests = 0;
+            let failedRequests = 0;
 
             for (const search of searches) {
-              console.log(
-                `Fetching ${search.keywords} - ${search.location}`
-              );
-
               try {
                 const result = await fetchJobs(search);
 
+                successfulRequests++;
+
                 if (!Array.isArray(result.jobs)) {
-                  console.log("No jobs returned.");
+                  console.log(
+                    "No jobs array returned for this search."
+                  );
                   continue;
                 }
+
+                console.log(
+                  `Jobs returned: ${result.jobs.length}`
+                );
 
                 for (const job of result.jobs) {
                   const id =
@@ -137,17 +174,37 @@ jobs:
                     source: "Jooble"
                   });
                 }
+
               } catch (error) {
+                failedRequests++;
+
                 console.error(
-                  `Search failed: ${error.message}`
+                  `FAILED: ${search.keywords} - ${search.location}`
                 );
+
+                console.error(error.message);
               }
+            }
+
+            /*
+             * If every API request failed,
+             * fail the workflow instead of creating fake/empty data.
+             */
+            if (
+              successfulRequests === 0 &&
+              failedRequests > 0
+            ) {
+              throw new Error(
+                "All Jooble API requests failed. Check JOOBLE_API_KEY and Jooble API access."
+              );
             }
 
             const output = {
               source: "Jooble",
               updatedAt: new Date().toISOString(),
               total: jobs.length,
+              successfulRequests,
+              failedRequests,
               jobs
             };
 
@@ -157,28 +214,38 @@ jobs:
               "utf8"
             );
 
-            console.log(
-              `Saved ${jobs.length} Jooble jobs.`
-            );
+            console.log("");
+            console.log("================================");
+            console.log("JOOBLE SYNC COMPLETE");
+            console.log("================================");
+            console.log(`Successful requests: ${successfulRequests}`);
+            console.log(`Failed requests: ${failedRequests}`);
+            console.log(`Total unique jobs: ${jobs.length}`);
           }
 
-          main().catch((error) => {
-            console.error(error);
+          main().catch(error => {
+            console.error("");
+            console.error("================================");
+            console.error("JOOBLE SYNC FAILED");
+            console.error("================================");
+            console.error(error.message);
             process.exit(1);
           });
           EOF
 
-          echo "Jooble fetch script created successfully."
+          echo "Jooble script created."
 
-      - name: Verify fetch script
+      - name: Verify script
         run: |
-          if [ ! -f scripts/jooble-fetch.js ]; then
-            echo "ERROR: Failed to create scripts/jooble-fetch.js"
-            exit 1
-          fi
+          test -f scripts/jooble-fetch.js
 
-          echo "Fetch script found."
+          echo "Script exists:"
           ls -lh scripts/jooble-fetch.js
+
+      - name: Test Node.js
+        run: |
+          node --version
+          node --check scripts/jooble-fetch.js
 
       - name: Fetch jobs from Jooble
         env:
@@ -186,10 +253,10 @@ jobs:
         run: |
           node scripts/jooble-fetch.js
 
-      - name: Validate jobs file
+      - name: Validate generated JSON
         run: |
           if [ ! -f data/jooble-jobs.json ]; then
-            echo "ERROR: data/jooble-jobs.json was not created."
+            echo "::error::data/jooble-jobs.json was not created."
             exit 1
           fi
 
@@ -198,38 +265,34 @@ jobs:
 
           const file = "data/jooble-jobs.json";
 
-          let data;
-
-          try {
-            data = JSON.parse(
-              fs.readFileSync(file, "utf8")
-            );
-          } catch (error) {
-            console.error(
-              "ERROR: Invalid JSON:",
-              error.message
-            );
-            process.exit(1);
-          }
+          const data = JSON.parse(
+            fs.readFileSync(file, "utf8")
+          );
 
           if (!Array.isArray(data.jobs)) {
-            console.error("ERROR: jobs must be an array.");
-            process.exit(1);
+            throw new Error("jobs is not an array");
           }
 
-          console.log("Jooble jobs:", data.jobs.length);
-          console.log(
-            "Updated:",
-            data.updatedAt || "N/A"
-          );
+          console.log("================================");
+          console.log("JOOBLE DATA VALID");
+          console.log("================================");
+          console.log("Jobs:", data.jobs.length);
+          console.log("Updated:", data.updatedAt);
+          console.log("Successful requests:", data.successfulRequests);
+          console.log("Failed requests:", data.failedRequests);
           NODE
 
-      - name: Show generated jobs
+      - name: Show job count
         run: |
-          echo "Jooble jobs file:"
-          wc -c data/jooble-jobs.json
-          head -c 1000 data/jooble-jobs.json
-          echo
+          node - <<'NODE'
+          const data = require("./data/jooble-jobs.json");
+
+          console.log("");
+          console.log("================================");
+          console.log("JOBS READY FOR LETSSTUDY PRO");
+          console.log("================================");
+          console.log(`Total jobs: ${data.jobs.length}`);
+          NODE
 
       - name: Commit updated jobs
         run: |
@@ -239,8 +302,12 @@ jobs:
           git add data/jooble-jobs.json
 
           if git diff --cached --quiet; then
-            echo "No job changes to commit."
-          else
-            git commit -m "Update Jooble jobs"
-            git push
+            echo "No job data changes."
+            exit 0
           fi
+
+          git commit -m "chore(jobs): update Jooble jobs [skip ci]"
+
+      - name: Push updated jobs
+        run: |
+          git push origin HEAD:main
