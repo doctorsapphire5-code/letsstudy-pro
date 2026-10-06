@@ -1,0 +1,41 @@
+name: Global Search Engine Indexing Check
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  indexing-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run indexing checker
+        env:
+          SITE_URL: https://letsstudy.pro
+          GOOGLE_SITE_URL: ${{ secrets.GOOGLE_SITE_URL }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          BING_API_KEY: ${{ secrets.BING_API_KEY }}
+        run: node scripts/global-indexing-check.js
+
+      - name: Commit indexing report
+        run: |
+          git config user.name "LetsStudy Pro Indexing Bot"
+          git config user.email "actions@github.com"
+
+          git add reports/indexing-report.json
+
+          git diff --cached --quiet || git commit -m "Update global indexing report"
+
+          git push
