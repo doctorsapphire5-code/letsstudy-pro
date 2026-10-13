@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Jobs & Careers | LetsStudy Pro</title>
+  <meta name="description" content="Explore the latest job vacancies, remote jobs, internships and career opportunities worldwide on LetsStudy Pro.">
+
+  <link rel="canonical" href="https://letsstudy.pro/jobs.html">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f7fb;
+      color: #172033;
+    }
+
+    header {
+      background: #102b50;
+      color: white;
+      padding: 25px 16px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0 0 10px;
+      font-size: 30px;
+    }
+
+    header p {
+      margin: 0;
+      color: #d8e5f7;
+    }
+
+    .container {
+      width: min(1100px, 94%);
+      margin: 25px auto;
+    }
+
+    .search-panel {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 3px 14px #00000008;
+      margin-bottom: 20px;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d5dce7;
+      border-radius: 7px;
+      font-size: 15px;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    .summary {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 20px 0;
+      color: #536176;
+      font-size: 14px;
+    }
+
+    .job-list {
+      display: grid;
+      gap: 16px;
+    }
+
+    .job-card {
+      background: white;
+      border: 1px solid #e5eaf1;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 3px 12px #00000005;
+    }
+
+    .job-card h2 {
+      margin: 0 0 10px;
+      color: #123b70;
+      font-size: 21px;
+    }
+
+    .company {
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #edf4ff;
+      color: #174d91;
+      padding: 6px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+    }
+
+    .description {
+      line-height: 1.6;
+      color: #536176;
+      overflow-wrap: anywhere;
+    }
+
+    .apply-btn, .secondary-btn {
+      display: inline-block;
+      width: auto;
+      padding: 11px 18px;
+      margin-top: 12px;
+      border: none;
+      border-radius: 7px;
+      text-decoration: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .apply-btn {
+      background: #1769d2;
+      color: white;
+    }
+
+    .secondary-btn {
+      background: #e9eef6;
+      color: #17365e;
+    }
+
+    .status {
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      text-align: center;
+      line-height: 1.7;
+    }
+
+    .pagination {
+      text-align: center;
+      margin: 25px 0;
+    }
+
+    footer {
+      text-align: center;
+      padding: 25px 15px;
+      color: #667085;
+      font-size: 14px;
+    }
+
+    @media (max-width: 650px) {
+      .filters {
+        grid-template-columns: 1fr;
+      }
+
+      header h1 {
+        font-size: 25px;
+      }
+
+      .job-card {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>Jobs & Careers</h1>
+  <p>Discover opportunities. Build your career. Grow globally.</p>
+</header>
+
+<main class="container">
+
+  <section class="search-panel">
+    <div class="filters">
+      <input
+        type="search"
+        id="searchInput"
+        placeholder="Search job title, company or keyword..."
+        aria-label="Search jobs"
+      >
+
+      <select id="countryFilter" aria-label="Filter by country">
+        <option value="">All countries</option>
+      </select>
+
+      <select id="typeFilter" aria-label="Filter by job type">
+        <option value="">All job types</option>
+        <option value="remote">Remote</option>
+        <option value="full-time">Full-time</option>
+        <option value="part-time">Part-time</option>
+        <option value="internship">Internship</option>
+        <option value="contract">Contract</option>
+      </select>
+    </div>
+  </section>
+
+  <div class="summary">
+    <span id="jobCount">Loading jobs...</span>
+    <span id="lastUpdated"></span>
+  </div>
+
+  <section id="jobList" class="job-list" aria-live="polite">
+    <div class="status">Loading available opportunities...</div>
+  </section>
+
+  <div class="pagination">
+    <button id="loadMore" class="secondary-btn" hidden>
+      Load More Jobs
+    </button>
+  </div>
+
+  <div style="text-align:center">
+    <button id="retryButton" class="secondary-btn" hidden>
+      Try Again
+    </button>
+  </div>
+
+</main>
+
+<footer>
+  <p>© <span id="year"></span> LetsStudy Pro. Learn. Build. Work. Grow.</p>
+  <p>Job listings are provided by external sources. Verify each opportunity before applying.</p>
+</footer>
+
+<script>
+(() => {
+  "use strict";
+
+  const DATA_URL = "/data/jooble-jobs.json";
+  const PAGE_SIZE = 10;
+
+  const searchInput = document.getElementById("searchInput");
+  const countryFilter = document.getElementById("countryFilter");
+  const typeFilter = document.getElementById("typeFilter");
+  const jobList = document.getElementById("jobList");
+  const jobCount = document.getElementById("jobCount");
+  const lastUpdated = document.getElementById("lastUpdated");
+  const loadMore = document.getElementById("loadMore");
+  const retryButton = document.getElementById("retryButton");
+
+  let jobs = [];
+  let visibleCount = PAGE_SIZE;
+
+  document.getElementById("year").textContent =
+    new Date().getFullYear();
+
+  function getText(value) {
+    if (typeof value === "string" || typeof value === "number") {
+      return String(value).trim();
+    }
+    return "";
+  }
+
+  function getFirst(job, keys) {
+    for (const key of keys) {
+      const value = getText(job[key]);
+      if (value) return value;
+    }
+    return "";
+  }
+
+  function normalizeJob(item) {
+    return {
+      title: getFirst(item, ["title", "job_title", "position", "name"]),
+      company: getFirst(item, [
+        "company", "company_name", "employer"
+      ]),
+      location: getFirst(item, [
+        "location", "city", "job_location"
+      ]),
+      country: getFirst(item, ["country", "country_name"]),
+      type: getFirst(item, [
+        "type", "job_type", "employment_type"
+      ]),
+      salary: getFirst(item, [
+        "salary", "salary_text", "compensation"
+      ]),
+      description: getFirst(item, [
+        "snippet", "description", "job_description"
+      ]),
+      url: getFirst(item, [
+        "link", "url", "apply_url", "application_url"
+      ]),
+      date: getFirst(item, [
+        "updated", "created", "date", "posted_at"
+      ])
+    };
+  }
+
+  function escapeHTML(value) {
+    return String(value).replace(/[&<>"']/g, char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[char]);
+  }
+
+  function safeURL(value) {
+    try {
+      const url = new URL(value);
+      return ["https:", "http:"].includes(url.protocol)
+        ? url.href
+        : "";
+    } catch {
+      return "";
+    }
+  }
+
+  function extractJobs(data) {
+    if (Array.isArray(data)) return data;
+
+    if (data && typeof data === "object") {
+      for (const key of ["jobs", "data", "results", "items"]) {
+        if (Array.isArray(data[key])) return data[key];
+      }
+    }
+
+    return null;
+  }
+
+  async function loadJobs() {
+    jobList.innerHTML =
+      '<div class="status">Loading available opportunities...</div>';
+
+    jobCount.textContent = "Loading jobs...";
+    lastUpdated.textContent = "";
+    retryButton.hidden = true;
+
+    try {
+      const response = await fetch(
+        DATA_URL + "?t=" + Date.now(),
+        { cache: "no-store" }
+      );
+
+      if (!response.ok) {
+        throw new Error("Jobs file returned HTTP " + response.status);
+      }
+
+      const data = await response.json();
+      const records = extractJobs(data);
+
+      if (!records) {
+        throw new Error(
+          "Unrecognized JSON structure. Check jooble-jobs.json."
+        );
+      }
+
+      jobs = records
+        .filter(item => item && typeof item === "object")
+        .map(normalizeJob)
+        .filter(job => job.title);
+
+      visibleCount = PAGE_SIZE;
+
+      populateCountries();
+      renderJobs();
+
+      lastUpdated.textContent =
+        "Checked: " + new Date().toLocaleString();
+
+    } catch (error) {
+      console.error("Unable to load jobs:", error);
+
+      jobs = [];
+      jobCount.textContent = "Jobs could not be loaded.";
+
+      jobList.innerHTML = `
+        <div class="status">
+          <strong>Unable to load job vacancies.</strong>
+          <p>Please try again later.</p>
+          <p>Check that ${escapeHTML(DATA_URL)}
+          exists and is publicly accessible.</p>
+        </div>
+      `;
+
+      retryButton.hidden = false;
+    }
+  }
+
+  function populateCountries() {
+    const previous = countryFilter.value;
+
+    const countries = [...new Set(
+      jobs.map(job => job.country).filter(Boolean)
+    )].sort((a, b) => a.localeCompare(b));
+
+    countryFilter.innerHTML =
+      '<option value="">All countries</option>';
+
+    countries.forEach(country => {
+      const option = document.createElement("option");
+      option.value = country;
+      option.textContent = country;
+      countryFilter.appendChild(option);
+    });
+
+    if (countries.includes(previous)) {
+      countryFilter.value = previous;
+    }
+  }
+
+  function getFilteredJobs() {
+    const query = searchInput.value.trim().toLowerCase();
+    const country = countryFilter.value.toLowerCase();
+    const type = typeFilter.value.toLowerCase();
+
+    return jobs.filter(job => {
+      const searchable = [
+        job.title,
+        job.company,
+        job.location,
+        job.country,
+        job.type,
+        job.description
+      ].join(" ").toLowerCase();
+
+      const matchesQuery = !query || searchable.includes(query);
+      const matchesCountry =
+        !country || job.country.toLowerCase() === country;
+
+      const normalizedType = job.type.toLowerCase();
+
+      const matchesType = !type ||
+        normalizedType.includes(type) ||
+        (type === "remote" &&
+          searchable.includes("remote")) ||
+        (type === "internship" &&
+          searchable.includes("internship"));
+
+      return matchesQuery && matchesCountry && matchesType;
+    });
+  }
+
+  function renderJobs() {
+    const filtered = getFilteredJobs();
+    const visible = filtered.slice(0, visibleCount);
+
+    jobCount.textContent =
+      filtered.length + " job(s) found";
+
+    loadMore.hidden = visible.length >= filtered.length;
+
+    if (!filtered.length) {
+      jobList.innerHTML = `
+        <div class="status">
+          No matching jobs found. Try another keyword or filter.
+        </div>
+      `;
+      return;
+    }
+
+    jobList.innerHTML = visible.map(job => {
+      const title = escapeHTML(job.title);
+      const company = escapeHTML(job.company || "Company not specified");
+      const location = escapeHTML(job.location || "Location not specified");
+      const country = escapeHTML(job.country);
+      const type = escapeHTML(job.type);
+      const salary = escapeHTML(job.salary);
+      const description = escapeHTML(job.description);
+      const date = escapeHTML(job.date);
+      const applyURL = safeURL(job.url);
+
+      return `
+        <article class="job-card">
+          <h2>${title}</h2>
+
+          <div class="company">${company}</div>
+
+          <div class="details">
+            <span class="tag">${location}</span>
+            ${country ? `<span class="tag">${country}</span>` : ""}
+            ${type ? `<span class="tag">${type}</span>` : ""}
+            ${salary ? `<span class="tag">${salary}</span>` : ""}
+          </div>
+
+          <p class="description">
+            ${description || "Open the original listing to view the full job description."}
+          </p>
+
+          ${date ? `<small>Posted/updated: ${date}</small>` : ""}
+
+          ${
+            applyURL
+              ? `<br><a class="apply-btn"
+                   href="${escapeHTML(applyURL)}"
+                   target="_blank"
+                   rel="noopener noreferrer nofollow">
+                   Apply Now ↗
+                 </a>`
+              : `<p><small>Application link unavailable.</small></p>`
+          }
+        </article>
+      `;
+    }).join("");
+  }
+
+  searchInput.addEventListener("input", () => {
+    visibleCount = PAGE_SIZE;
+    renderJobs();
+  });
+
+  countryFilter.addEventListener("change", () => {
+    visibleCount = PAGE_SIZE;
+    renderJobs();
+  });
+
+  typeFilter.addEventListener("change", () => {
+    visibleCount = PAGE_SIZE;
+    renderJobs();
+  });
+
+  loadMore.addEventListener("click", () => {
+    visibleCount += PAGE_SIZE;
+    renderJobs();
+  });
+
+  retryButton.addEventListener("click", loadJobs);
+
+  loadJobs();
+})();
+</script>
+
+</body>
+</html>
