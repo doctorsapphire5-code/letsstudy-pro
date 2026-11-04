@@ -460,7 +460,88 @@ form.addEventListener("submit", async e => {
         alert(`Daily limit reached: only ${DAILY_LIMIT} careers per day are allowed.`);
         return;
       }
-data.views = 0;
+     editingCareerId = null;
+  form.reset();
+  $("formTitle").textContent = "Add Career";
+  $("country").value = "Tanzania";
+  $("currency").value = "TZS";
+  $("status").value = "draft";
+  $("featured").value = "false";
+  $("formWrap").style.display = "block";
+  window.scrollTo({ top:0, behavior:"smooth" });
+};
+
+window.closeForm = function(){
+  $("formWrap").style.display = "none";
+  editingCareerId = null;
+};
+
+/* ===== EDIT ===== */
+window.editCareer = function(id){
+  const c = careers.find(x => x.id === id);
+  if(!c) return;
+  editingCareerId = id;
+
+  ["title","slug","shortDescription","description","type","category","industry","companyId",
+   "companyName","companyLogo","location","country","workMode","experienceLevel","educationLevel",
+   "skills","salaryMin","salaryMax","currency","applicationUrl","deadline","requirements",
+   "responsibilities","benefits"].forEach(f => {
+    const el = $(f);
+    if(el) el.value = Array.isArray(c[f]) ? c[f].join(", ") : (c[f] ?? "");
+  });
+
+  $("status").value = c.status || "draft";
+  $("featured").value = String(!!c.featured);
+  $("formTitle").textContent = "Edit Career";
+  $("formWrap").style.display = "block";
+  window.scrollTo({ top:0, behavior:"smooth" });
+};
+
+/* ===== SAVE ===== */
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const data = {
+    title: value("title"),
+    slug: value("slug"),
+    description: value("description"),
+    shortDescription: value("shortDescription"),
+    type: value("type"),
+    category: value("category"),
+    industry: value("industry"),
+    companyId: value("companyId"),
+    companyName: value("companyName"),
+    companyLogo: value("companyLogo"),
+    location: value("location"),
+    country: value("country"),
+    workMode: value("workMode"),
+    experienceLevel: value("experienceLevel"),
+    educationLevel: value("educationLevel"),
+    skills: value("skills").split(",").map(x => x.trim()).filter(Boolean),
+    salaryMin: Number(value("salaryMin")) || 0,
+    salaryMax: Number(value("salaryMax")) || 0,
+    currency: value("currency"),
+    applicationUrl: value("applicationUrl"),
+    deadline: value("deadline"),
+    requirements: value("requirements"),
+    responsibilities: value("responsibilities"),
+    benefits: value("benefits"),
+    status: value("status"),
+    featured: value("featured") === "true",
+    updatedAt: serverTimestamp()
+  };
+
+  try{
+    if(editingCareerId){
+      await updateDoc(doc(db, "careers", editingCareerId), data);
+    }else{
+      // refresh data, then enforce the daily limit
+      await loadCareers();
+      if(postsToday() >= DAILY_LIMIT){
+        alert(`Daily limit reached: only ${DAILY_LIMIT} careers per day are allowed.`);
+        return;
+      }
+      data.views = 0;
       data.applicationsCount = 0;
       data.createdBy = currentUser.uid;
       data.createdByEmail = currentUser.email || "";
