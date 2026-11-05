@@ -1,0 +1,245 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101828">
+  <title>Admin Login | Vorix Career</title>
+  <style>
+    *{box-sizing:border-box}
+    body{
+      margin:0;min-height:100vh;display:grid;place-items:center;
+      padding:20px;background:#f3f6fb;
+      font-family:Arial,Helvetica,sans-serif;color:#172033
+    }
+    .login-card{
+      width:100%;max-width:430px;background:#fff;padding:32px;
+      border:1px solid #e5eaf2;border-radius:18px;
+      box-shadow:0 15px 45px rgba(16,24,40,.08)
+    }
+    .brand{text-align:center;margin-bottom:25px}
+    .logo{
+      width:55px;height:55px;margin:auto auto 13px;
+      display:grid;place-items:center;border-radius:15px;
+      background:#175cd3;color:white;font-size:25px;font-weight:bold
+    }
+    h1{font-size:25px;margin:0 0 8px}
+    .subtitle{color:#667085;font-size:14px;line-height:1.6}
+    label{display:block;font-size:13px;font-weight:700;margin:17px 0 7px}
+    input{
+      width:100%;padding:13px 14px;border:1px solid #d0d5dd;
+      border-radius:9px;font-size:15px;outline:none
+    }
+    input:focus{border-color:#175cd3;box-shadow:0 0 0 3px #175cd31a}
+    button{
+      width:100%;padding:14px;border:0;border-radius:9px;
+      background:#175cd3;color:white;font-size:15px;
+      font-weight:700;cursor:pointer;margin-top:22px
+    }
+    button:disabled{opacity:.6;cursor:not-allowed}
+    .links{display:flex;justify-content:space-between;gap:10px;margin-top:18px}
+    a{color:#175cd3;text-decoration:none;font-size:13px}
+    .message{display:none;padding:12px;border-radius:8px;font-size:13px;margin-top:17px;line-height:1.5}
+    .error{display:block;background:#fef3f2;color:#b42318}
+    .success{display:block;background:#ecfdf3;color:#027a48}
+    .footer{text-align:center;color:#98a2b3;font-size:12px;margin-top:25px}
+  </style>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="brand">
+    <div class="logo">V</div>
+    <h1>Admin Login</h1>
+    <div class="subtitle">Sign in to manage Vorix Career.</div>
+  </div>
+
+  <form id="loginForm">
+    <label for="email">Admin Email</label>
+    <input id="email" type="email" placeholder="admin@example.com"
+      autocomplete="username" required>
+
+    <label for="password">Password</label>
+    <input id="password" type="password" placeholder="Enter your password"
+      autocomplete="current-password" required>
+
+    <button id="loginButton" type="submit">Sign In</button>
+    <div id="message" class="message" role="alert"></div>
+  </form>
+
+  <div class="links">
+    <a href="career-admin-forgot-password.html">Forgot password?</a>
+    <a href="login.html">User login</a>
+  </div>
+
+  <div class="footer">Secure Admin Access · Vorix Career</div>
+</div>
+
+<script type="module">
+import { initializeApp } from
+  "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  updateDoc,
+  serverTimestamp,
+  increment
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBhEY3Igjv0oWcQ3cAQQy6KU8d0StydJdY",
+  authDomain: "vorix-career.firebaseapp.com",
+  projectId: "vorix-career",
+  storageBucket: "vorix-career.firebasestorage.app",
+  messagingSenderId: "601220299726",
+  appId: "1:601220299726:web:21888081707f5d35c9899f"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const form = document.getElementById("loginForm");
+const button = document.getElementById("loginButton");
+const message = document.getElementById("message");
+
+function showMessage(text, type = "error") {
+  message.textContent = text;
+  message.className = "message " + type;
+}
+
+function friendlyError(error) {
+  const errors = {
+    "auth/invalid-email": "Please enter a valid email address.",
+    "auth/invalid-credential": "Incorrect email or password.",
+    "auth/user-not-found": "Admin account was not found.",
+    "auth/wrong-password": "Incorrect password.",
+    "auth/too-many-requests": "Too many attempts. Try again later.",
+    "auth/network-request-failed": "Network error. Check your internet."
+  };
+  return errors[error.code] || error.message || "Login failed.";
+}
+
+// Check an existing signed-in session.
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return;
+
+  try {
+    const adminQuery = query(
+      collection(db, "admins"),
+      where("uid", "==", user.uid)
+    );
+
+    const snapshot = await getDocs(adminQuery);
+
+    if (snapshot.empty) {
+      await signOut(auth);
+      return;
+    }
+
+    const adminDoc = snapshot.docs[0];
+    const adminData = adminDoc.data();
+
+    if (adminData.status !== "active") {
+      await signOut(auth);
+      showMessage("Your admin account is not active.");
+      return;
+    }
+
+    window.location.replace("career-admin-dashboard.html");
+
+  } catch (error) {
+    console.error(error);
+    showMessage("Unable to verify admin access. Please try again.");
+  }
+});
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  button.disabled = true;
+  button.textContent = "Signing in...";
+  message.className = "message";
+
+  let authenticatedUser = null;
+
+  try {
+    const credential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+
+    authenticatedUser = credential.user;
+
+    const adminQuery = query(
+      collection(db, "admins"),
+      where("uid", "==", authenticatedUser.uid)
+    );
+
+    const snapshot = await getDocs(adminQuery);
+
+    if (snapshot.empty) {
+      await signOut(auth);
+      showMessage("Access denied. This account is not registered as an admin.");
+      return;
+    }
+
+    const adminDoc = snapshot.docs[0];
+    const adminData = adminDoc.data();
+
+    if (adminData.status !== "active") {
+      await signOut(auth);
+      showMessage("Your admin account is not active. Contact the administrator.");
+      return;
+    }
+
+    await updateDoc(doc(db, "admins", adminDoc.id), {
+      lastLoginAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      loginCount: increment(1),
+      emailVerified: authenticatedUser.emailVerified
+    });
+
+    showMessage("Login successful. Redirecting...", "success");
+
+    window.location.replace("career-admin-dashboard.html");
+
+  } catch (error) {
+    console.error(error);
+
+    if (authenticatedUser && auth.currentUser) {
+      try {
+        await signOut(auth);
+      } catch (signOutError) {
+        console.error(signOutError);
+      }
+    }
+
+    showMessage(friendlyError(error));
+
+  } finally {
+    button.disabled = false;
+    button.textContent = "Sign In";
+  }
+});
+</script>
+
+</body>
+</html>
