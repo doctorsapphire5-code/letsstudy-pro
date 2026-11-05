@@ -1,0 +1,325 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f172a">
+  <title>Admin Account | Vorix Course</title>
+
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#f1f5f9;color:#172033;font-family:Arial,sans-serif}
+    header{background:#0f172a;color:white;padding:17px 22px;display:flex;justify-content:space-between;align-items:center}
+    header a{color:white;text-decoration:none;font-weight:bold}
+    main{max-width:850px;margin:30px auto;padding:0 16px}
+    .card{background:white;padding:23px;border-radius:15px;margin-bottom:20px;box-shadow:0 5px 20px #0f172a0b}
+    h1{font-size:25px;margin:0 0 8px}
+    h2{font-size:18px;margin:0 0 17px}
+    p{line-height:1.6}
+    .muted{color:#64748b;font-size:14px}
+    .row{display:flex;justify-content:space-between;gap:15px;padding:13px 0;border-bottom:1px solid #e2e8f0;font-size:14px}
+    .row:last-child{border:0}
+    .row span:first-child{color:#64748b}
+    .row span:last-child{font-weight:bold;text-align:right;overflow-wrap:anywhere}
+    .badge{display:inline-block;padding:5px 11px;background:#dcfce7;color:#166534;border-radius:20px;font-size:12px}
+    .actions{display:flex;gap:10px;flex-wrap:wrap}
+    button{border:0;border-radius:9px;padding:12px 17px;font-weight:bold;cursor:pointer}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    .primary{background:#2563eb;color:white}
+    .secondary{background:#e2e8f0;color:#172033}
+    .danger{background:#fee2e2;color:#991b1b}
+    .warning{background:#fff7ed;color:#9a3412;padding:14px;border-radius:10px;font-size:13px;line-height:1.6}
+    .message{display:none;padding:12px;border-radius:9px;margin-bottom:15px;font-size:14px}
+    .success{display:block;background:#dcfce7;color:#166534}
+    .error{display:block;background:#fee2e2;color:#991b1b}
+    footer{text-align:center;padding:25px;color:#64748b;font-size:12px}
+    @media(max-width:550px){.card{padding:17px}.row{font-size:13px}}
+  </style>
+</head>
+
+<body>
+
+<header>
+  <a href="course-admin-dashboard.html">← Admin Dashboard</a>
+  <span>Vorix Course</span>
+</header>
+
+<main>
+  <section class="card">
+    <h1>Admin Account</h1>
+    <p class="muted">Manage your administrator account, security and account information.</p>
+    <div id="message" class="message"></div>
+  </section>
+
+  <section class="card">
+    <h2>Account Information</h2>
+
+    <div class="row"><span>Full Name</span><span id="fullName">Loading...</span></div>
+    <div class="row"><span>Email Address</span><span id="email">—</span></div>
+    <div class="row"><span>Email Verification</span><span id="emailVerified">—</span></div>
+    <div class="row"><span>Admin ID</span><span id="adminId">—</span></div>
+    <div class="row"><span>User ID</span><span id="userId">—</span></div>
+    <div class="row"><span>Role</span><span id="role">—</span></div>
+    <div class="row"><span>Account Status</span><span id="status">—</span></div>
+    <div class="row"><span>Admin Type</span><span id="adminType">—</span></div>
+  </section>
+
+  <section class="card">
+    <h2>Account Activity</h2>
+
+    <div class="row"><span>Account Created</span><span id="createdAt">—</span></div>
+    <div class="row"><span>Last Login</span><span id="lastLoginAt">—</span></div>
+    <div class="row"><span>Login Count</span><span id="loginCount">—</span></div>
+    <div class="row"><span>Last Updated</span><span id="updatedAt">—</span></div>
+  </section>
+
+  <section class="card">
+    <h2>Account Security</h2>
+    <p class="muted">Protect your administrator account by keeping your password private and using a secure email address.</p>
+
+    <div class="actions">
+      <button class="primary" id="passwordBtn">Send Password Reset</button>
+      <button class="secondary" id="verifyBtn">Verify Email</button>
+      <button class="secondary" id="refreshBtn">Refresh Account</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Account Management</h2>
+    <p class="muted">You can request account deletion. This request will be sent for authorized review. Your account will not be deleted automatically.</p>
+
+    <div class="warning">
+      <strong>Important:</strong> Deleting an administrator account may affect administrative access. Make sure another authorized administrator can manage the platform before requesting deletion.
+    </div>
+
+    <br>
+
+    <div class="actions">
+      <button class="danger" id="deleteBtn">Request Account Deletion</button>
+      <button class="secondary" id="logoutBtn">Sign Out</button>
+    </div>
+  </section>
+</main>
+
+<footer>© <span id="year"></span> Vorix Course. All rights reserved.</footer>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+  import {
+    getAuth,
+    onAuthStateChanged,
+    sendPasswordResetEmail,
+    sendEmailVerification,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    addDoc,
+    collection,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDaJ0LKede-fz0MTZl-V1SxZ4Ps0IETepE",
+    authDomain: "vorix-course.firebaseapp.com",
+    projectId: "vorix-course",
+    storageBucket: "vorix-course.firebasestorage.app",
+    messagingSenderId: "277814413742",
+    appId: "1:277814413742:web:fb4515f03591ea07c7603f",
+    measurementId: "G-SQ6PN704M7"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const $ = id => document.getElementById(id);
+
+  let currentAdmin = null;
+  let adminData = null;
+
+  $("year").textContent = new Date().getFullYear();
+
+  function showMessage(message, type = "success") {
+    const box = $("message");
+    box.textContent = message;
+    box.className = "message " + type;
+    box.scrollIntoView({behavior:"smooth",block:"center"});
+  }
+
+  function formatDate(value) {
+    if (!value) return "Not available";
+
+    const date = value.toDate ? value.toDate() : new Date(value);
+
+    if (isNaN(date.getTime())) return "Not available";
+
+    return date.toLocaleString();
+  }
+
+  function display(id, value) {
+    $(id).textContent = value ?? "Not available";
+  }
+
+  async function loadAccount() {
+    const adminRef = doc(db, "admins", currentAdmin.uid);
+    const snapshot = await getDoc(adminRef);
+
+    if (!snapshot.exists()) {
+      await signOut(auth);
+      location.replace("course-admin-login.html");
+      return;
+    }
+
+    const data = snapshot.data();
+
+    if (
+      data.role !== "admin" ||
+      data.status !== "active" ||
+      typeof data.adminId !== "string" ||
+      !data.adminId.trim()
+    ) {
+      await signOut(auth);
+      location.replace("course-admin-login.html");
+      return;
+    }
+
+    adminData = data;
+
+    display("fullName", data.fullName || data.displayName || currentAdmin.displayName || "Admin");
+    display("email", currentAdmin.email || data.email);
+    display("emailVerified", currentAdmin.emailVerified ? "Verified" : "Not Verified");
+    display("adminId", data.adminId);
+    display("userId", currentAdmin.uid);
+    display("role", data.role);
+    display("status", data.status);
+    display("adminType", data.adminType || "Admin");
+
+    display("createdAt", formatDate(data.createdAt));
+    display("lastLoginAt", formatDate(data.lastLoginAt));
+    display("loginCount", data.loginCount ?? 0);
+    display("updatedAt", formatDate(data.updatedAt));
+  }
+
+  onAuthStateChanged(auth, async user => {
+    if (!user) {
+      location.replace("course-admin-login.html");
+      return;
+    }
+
+    currentAdmin = user;
+
+    try {
+      await loadAccount();
+    } catch (error) {
+      console.error(error);
+      showMessage(error.message || "Unable to load account.", "error");
+    }
+  });
+
+  $("refreshBtn").addEventListener("click", async () => {
+    if (!currentAdmin) return;
+
+    try {
+      await currentAdmin.reload();
+      currentAdmin = auth.currentUser;
+      await loadAccount();
+      showMessage("Account information refreshed.");
+    } catch (error) {
+      showMessage(error.message || "Unable to refresh account.", "error");
+    }
+  });
+
+  $("passwordBtn").addEventListener("click", async () => {
+    if (!currentAdmin || !currentAdmin.email) return;
+
+    try {
+      await sendPasswordResetEmail(auth, currentAdmin.email);
+      showMessage("Password reset instructions have been sent to your email.");
+    } catch (error) {
+      console.error(error);
+      showMessage(error.message || "Unable to send password reset email.", "error");
+    }
+  });
+
+  $("verifyBtn").addEventListener("click", async () => {
+    if (!currentAdmin) return;
+
+    try {
+      await currentAdmin.reload();
+      currentAdmin = auth.currentUser;
+
+      if (currentAdmin.emailVerified) {
+        showMessage("Your email is already verified.");
+        await loadAccount();
+        return;
+      }
+
+      await sendEmailVerification(currentAdmin);
+      showMessage("Verification email sent. Check your inbox.");
+    } catch (error) {
+      console.error(error);
+      showMessage(error.message || "Unable to send verification email.", "error");
+    }
+  });
+
+  $("deleteBtn").addEventListener("click", async () => {
+    if (!currentAdmin || !adminData) return;
+
+    const confirmed = confirm(
+      "Are you sure you want to submit an account deletion request? Your account will not be deleted immediately."
+    );
+
+    if (!confirmed) return;
+
+    const button = $("deleteBtn");
+    button.disabled = true;
+    button.textContent = "Submitting...";
+
+    try {
+      await addDoc(collection(db, "adminDeletionRequests"), {
+        adminUid: currentAdmin.uid,
+        adminId: adminData.adminId,
+        email: currentAdmin.email || "",
+        fullName: adminData.fullName || adminData.displayName || "",
+        status: "pending",
+        reason: "Admin account deletion request",
+        requestedAt: serverTimestamp(),
+        reviewedAt: null,
+        reviewedBy: null
+      });
+
+      showMessage("Your deletion request has been submitted for review.");
+
+    } catch (error) {
+      console.error(error);
+      showMessage(
+        error.code === "permission-denied"
+          ? "Permission denied. Configure Firestore Security Rules for deletion requests."
+          : error.message || "Unable to submit deletion request.",
+        "error"
+      );
+    } finally {
+      button.disabled = false;
+      button.textContent = "Request Account Deletion";
+    }
+  });
+
+  $("logoutBtn").addEventListener("click", async () => {
+    try {
+      await signOut(auth);
+      sessionStorage.removeItem("vorixAdminId");
+      location.replace("course-admin-login.html");
+    } catch (error) {
+      showMessage("Unable to sign out. Please try again.", "error");
+    }
+  });
+</script>
+
+</body>
+</html>
