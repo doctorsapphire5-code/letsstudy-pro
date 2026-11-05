@@ -1,0 +1,359 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login | Vorix Course</title>
+<meta name="description" content="Securely log in to your Vorix Course account and continue learning.">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:Arial,sans-serif;
+  background:#f4f7fb;
+  color:#172033;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px
+}
+.container{
+  width:100%;
+  max-width:430px;
+  background:#fff;
+  border-radius:18px;
+  padding:32px;
+  box-shadow:0 10px 40px rgba(0,0,0,.08)
+}
+.logo{
+  text-align:center;
+  margin-bottom:25px
+}
+.logo h1{
+  color:#2563eb;
+  font-size:27px;
+  margin-bottom:8px
+}
+.logo p{color:#64748b;font-size:14px}
+h2{font-size:22px;margin-bottom:8px}
+.subtitle{color:#64748b;font-size:14px;margin-bottom:25px}
+label{
+  display:block;
+  font-size:14px;
+  font-weight:600;
+  margin-bottom:8px
+}
+input{
+  width:100%;
+  padding:13px;
+  border:1px solid #dbe2ea;
+  border-radius:9px;
+  font-size:15px;
+  margin-bottom:18px;
+  outline:none
+}
+input:focus{border-color:#2563eb}
+.password-box{position:relative}
+.password-box input{padding-right:70px}
+.toggle{
+  position:absolute;
+  right:12px;
+  top:13px;
+  border:0;
+  background:none;
+  color:#2563eb;
+  cursor:pointer
+}
+.forgot{
+  display:block;
+  text-align:right;
+  margin-top:-8px;
+  margin-bottom:20px;
+  font-size:13px;
+  color:#2563eb;
+  text-decoration:none
+}
+button{
+  width:100%;
+  padding:14px;
+  border:0;
+  border-radius:9px;
+  background:#2563eb;
+  color:white;
+  font-size:15px;
+  font-weight:600;
+  cursor:pointer
+}
+button:disabled{opacity:.6;cursor:not-allowed}
+.message{
+  display:none;
+  padding:12px;
+  border-radius:8px;
+  font-size:14px;
+  margin-bottom:18px;
+  line-height:1.5
+}
+.error{background:#fee2e2;color:#991b1b}
+.success{background:#dcfce7;color:#166534}
+.links{
+  text-align:center;
+  margin-top:22px;
+  font-size:14px;
+  color:#64748b;
+  line-height:2
+}
+.links a{color:#2563eb;text-decoration:none;font-weight:600}
+.footer{
+  text-align:center;
+  margin-top:25px;
+  color:#94a3b8;
+  font-size:12px
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="logo">
+    <h1>Vorix Course</h1>
+    <p>Learn. Build. Grow.</p>
+  </div>
+
+  <h2>Welcome Back</h2>
+  <p class="subtitle">Sign in to continue your learning journey.</p>
+
+  <div id="message" class="message"></div>
+
+  <form id="loginForm">
+
+    <label for="email">Email Address</label>
+    <input
+      type="email"
+      id="email"
+      placeholder="you@example.com"
+      autocomplete="email"
+      required
+    >
+
+    <label for="password">Password</label>
+    <div class="password-box">
+      <input
+        type="password"
+        id="password"
+        placeholder="Enter your password"
+        autocomplete="current-password"
+        required
+      >
+      <button type="button" class="toggle" id="togglePassword">
+        Show
+      </button>
+    </div>
+
+    <a href="course-forgot-password.html" class="forgot">
+      Forgot password?
+    </a>
+
+    <button type="submit" id="loginBtn">
+      Sign In
+    </button>
+
+  </form>
+
+  <div class="links">
+    Don't have an account?
+    <a href="course-register.html">Create Account</a>
+    <br>
+    <a href="index.html">Back to Home</a>
+  </div>
+
+  <div class="footer">
+    Secure authentication powered by Vorix Course
+  </div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  onAuthStateChanged
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc,
+  increment,
+  serverTimestamp
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+// FIREBASE CONFIGURATION
+const firebaseConfig = {
+  apiKey: "AIzaSyDaJ0LKede-fz0MTZl-V1SxZ4Ps0IETepE",
+  authDomain: "vorix-course.firebaseapp.com",
+  projectId: "vorix-course",
+  storageBucket: "vorix-course.firebasestorage.app",
+  messagingSenderId: "277814413742",
+  appId: "1:277814413742:web:fb4515f03591ea07c7603f",
+  measurementId: "G-SQ6PN704M7"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const form = document.getElementById("loginForm");
+const loginBtn = document.getElementById("loginBtn");
+const message = document.getElementById("message");
+
+function showMessage(text, type="error"){
+  message.textContent = text;
+  message.className = "message " + type;
+  message.style.display = "block";
+}
+
+function hideMessage(){
+  message.style.display = "none";
+}
+
+function friendlyError(error){
+  switch(error.code){
+    case "auth/invalid-credential":
+    case "auth/wrong-password":
+    case "auth/user-not-found":
+      return "Incorrect email or password.";
+    case "auth/invalid-email":
+      return "Please enter a valid email address.";
+    case "auth/user-disabled":
+      return "This account has been disabled.";
+    case "auth/too-many-requests":
+      return "Too many attempts. Please try again later.";
+    case "auth/network-request-failed":
+      return "Network error. Check your internet connection.";
+    default:
+      return "Login failed. Please try again.";
+  }
+}
+
+// SHOW / HIDE PASSWORD
+document.getElementById("togglePassword").addEventListener("click",()=>{
+  const password = document.getElementById("password");
+  const btn = document.getElementById("togglePassword");
+
+  if(password.type === "password"){
+    password.type = "text";
+    btn.textContent = "Hide";
+  }else{
+    password.type = "password";
+    btn.textContent = "Show";
+  }
+});
+
+// LOGIN
+form.addEventListener("submit",async(e)=>{
+  e.preventDefault();
+  hideMessage();
+
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  loginBtn.disabled = true;
+  loginBtn.textContent = "Signing In...";
+
+  try{
+    const credential = await signInWithEmailAndPassword(
+      auth,email,password
+    );
+
+    const user = credential.user;
+    const userRef = doc(db,"users",user.uid);
+    const userSnap = await getDoc(userRef);
+
+    if(!userSnap.exists()){
+      await auth.signOut();
+      showMessage("User profile was not found. Please register again.");
+      return;
+    }
+
+    const userData = userSnap.data();
+
+    if(userData.status === "suspended" ||
+       userData.status === "banned" ||
+       userData.status === "disabled"){
+      await auth.signOut();
+      showMessage("Your account is restricted. Contact support.");
+      return;
+    }
+
+    await updateDoc(userRef,{
+      lastLoginAt: serverTimestamp(),
+      loginCount: increment(1),
+      updatedAt: serverTimestamp(),
+      emailVerified: user.emailVerified
+    });
+
+    showMessage("Login successful. Redirecting...","success");
+
+    const redirect = new URLSearchParams(location.search)
+      .get("redirect");
+
+    setTimeout(()=>{
+      location.href = redirect || "course-dashboard.html";
+    },700);
+
+  }catch(error){
+    console.error(error);
+    showMessage(friendlyError(error));
+  }finally{
+    loginBtn.disabled = false;
+    loginBtn.textContent = "Sign In";
+  }
+});
+
+// FORGOT PASSWORD
+document.querySelector(".forgot").addEventListener("click",async(e)=>{
+  e.preventDefault();
+
+  const email = document.getElementById("email").value.trim();
+
+  if(!email){
+    showMessage("Enter your email address first.");
+    document.getElementById("email").focus();
+    return;
+  }
+
+  try{
+    await sendPasswordResetEmail(auth,email);
+    showMessage(
+      "If an account exists for this email, a password reset link has been sent.",
+      "success"
+    );
+  }catch(error){
+    console.error(error);
+    showMessage("Unable to send reset email. Please try again.");
+  }
+});
+
+// REDIRECT IF ALREADY LOGGED IN
+onAuthStateChanged(auth,(user)=>{
+  if(user){
+    location.href = "course-dashboard.html";
+  }
+});
+
+</script>
+
+</body>
+</html>
