@@ -1,0 +1,537 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101828">
+<title>Admin Dashboard | Vorix Career</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f4f6fa;color:#172033;font-family:Arial,Helvetica,sans-serif}
+button,a{font:inherit}
+a{text-decoration:none;color:inherit}
+.layout{display:flex;min-height:100vh}
+.sidebar{
+  width:250px;background:#101828;color:#fff;
+  padding:24px 16px;position:fixed;inset:0 auto 0 0;
+  display:flex;flex-direction:column;z-index:10
+}
+.brand{display:flex;align-items:center;gap:11px;padding:0 10px 28px}
+.logo{
+  width:40px;height:40px;background:#175cd3;border-radius:11px;
+  display:grid;place-items:center;font-weight:bold;font-size:21px
+}
+.brand strong{font-size:17px}
+.brand small{display:block;color:#98a2b3;margin-top:4px;font-size:11px}
+.nav-title{font-size:10px;color:#98a2b3;padding:14px 12px 8px;text-transform:uppercase;letter-spacing:1px}
+.nav-link{
+  display:flex;align-items:center;gap:12px;padding:12px;
+  border-radius:8px;color:#d0d5dd;font-size:13px;margin:2px 0
+}
+.nav-link:hover,.nav-link.active{background:#26364f;color:#fff}
+.sidebar-bottom{margin-top:auto}
+.main{margin-left:250px;width:calc(100% - 250px);min-width:0}
+.topbar{
+  background:#fff;border-bottom:1px solid #eaecf0;
+  padding:17px 28px;display:flex;justify-content:space-between;
+  align-items:center;gap:15px
+}
+.topbar h1{font-size:20px;margin:0}
+.topbar p{font-size:12px;color:#667085;margin:5px 0 0}
+.admin-info{display:flex;align-items:center;gap:10px}
+.avatar{
+  width:38px;height:38px;border-radius:50%;
+  background:#dbeafe;color:#175cd3;display:grid;place-items:center;
+  font-weight:bold;overflow:hidden
+}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.admin-name{font-size:12px;font-weight:bold}
+.admin-role{font-size:11px;color:#667085;margin-top:4px}
+.content{padding:27px;max-width:1500px;margin:auto}
+.welcome{
+  background:linear-gradient(115deg,#175cd3,#1849a9);
+  color:#fff;padding:25px;border-radius:15px;margin-bottom:24px
+}
+.welcome h2{margin:0 0 8px;font-size:22px}
+.welcome p{margin:0;color:#dbeafe;font-size:13px;line-height:1.6}
+.stats{
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:15px;margin-bottom:25px
+}
+.stat{
+  background:#fff;border:1px solid #eaecf0;border-radius:12px;
+  padding:19px;min-width:0
+}
+.stat-label{font-size:12px;color:#667085}
+.stat-value{font-size:27px;font-weight:700;margin-top:12px;word-break:break-word}
+.stat-note{font-size:11px;color:#98a2b3;margin-top:7px}
+.section{
+  background:#fff;border:1px solid #eaecf0;border-radius:12px;
+  margin-bottom:22px;overflow:hidden
+}
+.section-head{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;padding:18px 20px;border-bottom:1px solid #eaecf0
+}
+.section-head h3{margin:0;font-size:15px}
+.section-head a{font-size:12px;color:#175cd3;font-weight:bold}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:600px}
+th,td{text-align:left;padding:14px 18px;border-bottom:1px solid #f0f1f3;font-size:12px}
+th{color:#667085;font-weight:600;background:#fcfcfd}
+td{color:#344054}
+.status{
+  display:inline-block;padding:5px 9px;border-radius:20px;
+  font-size:10px;font-weight:bold;text-transform:capitalize
+}
+.status.published{background:#ecfdf3;color:#027a48}
+.status.draft{background:#f2f4f7;color:#475467}
+.status.other{background:#fffaeb;color:#b54708}
+.empty{text-align:center;padding:30px;color:#667085;font-size:13px}
+.quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+.quick-link{
+  padding:17px;border:1px solid #eaecf0;border-radius:10px;
+  display:block;transition:.2s
+}
+.quick-link:hover{border-color:#84adff;background:#f8fbff}
+.quick-link strong{display:block;font-size:13px;margin-bottom:7px}
+.quick-link span{font-size:11px;color:#667085;line-height:1.5}
+.loading{color:#667085;font-size:13px;padding:20px}
+.error-box{background:#fef3f2;color:#b42318;padding:13px;border-radius:9px;font-size:12px;margin-bottom:18px;display:none}
+.logout{
+  border:0;background:#344054;color:white;padding:10px 13px;
+  border-radius:8px;font-size:12px;cursor:pointer
+}
+.mobile-menu{display:none;border:0;background:#f2f4f7;padding:9px;border-radius:7px}
+.footer{text-align:center;color:#98a2b3;font-size:11px;padding:20px}
+@media(max-width:1100px){
+ .stats{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:760px){
+ .sidebar{transform:translateX(-100%);transition:.25s}
+ .sidebar.open{transform:translateX(0)}
+ .main{margin-left:0;width:100%}
+ .topbar{padding:14px 16px}
+ .mobile-menu{display:block}
+ .content{padding:17px}
+ .stats{grid-template-columns:repeat(2,1fr);gap:10px}
+ .stat{padding:15px}
+ .stat-value{font-size:23px}
+ .quick-grid{grid-template-columns:1fr 1fr}
+ .welcome{padding:20px}
+ .welcome h2{font-size:19px}
+}
+@media(max-width:390px){
+ .quick-grid{grid-template-columns:1fr}
+ .admin-name{max-width:100px;overflow:hidden;text-overflow:ellipsis}
+}
+</style>
+</head>
+
+<body>
+
+<div class="layout">
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <div class="logo">V</div>
+    <div>
+      <strong>Vorix Career</strong>
+      <small>Administration</small>
+    </div>
+  </div>
+
+  <div class="nav-title">Main menu</div>
+
+  <a class="nav-link active" href="career-admin-dashboard.html">
+    <span>▦</span> Dashboard
+  </a>
+
+  <a class="nav-link" href="admin-career.html">
+    <span>▤</span> Manage Careers
+  </a>
+
+  <a class="nav-link" href="career-admin-profile.html">
+    <span>◉</span> Admin Profile
+  </a>
+
+  <a class="nav-link" href="career-admin-account.html">
+    <span>♙</span> Admin Account
+  </a>
+
+  <a class="nav-link" href="career-admin-settings.html">
+    <span>⚙</span> Settings
+  </a>
+
+  <div class="nav-title">Account</div>
+
+  <a class="nav-link" href="career-admin-login.html">
+    <span>⇥</span> Login Page
+  </a>
+
+  <div class="sidebar-bottom">
+    <button class="logout" id="sidebarLogout" style="width:100%">
+      Sign Out
+    </button>
+  </div>
+</aside>
+
+<main class="main">
+
+<header class="topbar">
+  <div style="display:flex;align-items:center;gap:12px">
+    <button class="mobile-menu" id="menuButton" aria-label="Open menu">☰</button>
+    <div>
+      <h1>Dashboard</h1>
+      <p>Manage your career platform</p>
+    </div>
+  </div>
+
+  <div class="admin-info">
+    <div class="avatar" id="adminAvatar">A</div>
+    <div>
+      <div class="admin-name" id="adminName">Loading...</div>
+      <div class="admin-role">Administrator</div>
+    </div>
+  </div>
+</header>
+
+<div class="content">
+
+  <div class="error-box" id="errorBox"></div>
+
+  <section class="welcome">
+    <h2>Welcome back, <span id="welcomeName">Admin</span></h2>
+    <p>
+      Manage career opportunities, monitor platform activity
+      and keep your career information up to date.
+    </p>
+  </section>
+
+  <section class="stats">
+
+    <div class="stat">
+      <div class="stat-label">Total Careers</div>
+      <div class="stat-value" id="totalCareers">—</div>
+      <div class="stat-note">All career records</div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-label">Published Careers</div>
+      <div class="stat-value" id="publishedCareers">—</div>
+      <div class="stat-note">Currently published</div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-label">Draft Careers</div>
+      <div class="stat-value" id="draftCareers">—</div>
+      <div class="stat-note">Unpublished records</div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-label">Featured Careers</div>
+      <div class="stat-value" id="featuredCareers">—</div>
+      <div class="stat-note">Featured opportunities</div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-label">Registered Users</div>
+      <div class="stat-value" id="totalUsers">—</div>
+      <div class="stat-note">Platform user records</div>
+    </div>
+
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h3>Recent Career Opportunities</h3>
+      <a href="admin-career.html">Manage Careers →</a>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Career Title</th>
+            <th>Company</th>
+            <th>Location</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="recentCareers">
+          <tr><td colspan="4" class="loading">Loading careers...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h3>Quick Actions</h3>
+    </div>
+
+    <div style="padding:18px">
+      <div class="quick-grid">
+        <a class="quick-link" href="admin-career.html">
+          <strong>+ Manage Careers</strong>
+          <span>Create, edit, publish and manage career opportunities.</span>
+        </a>
+
+        <a class="quick-link" href="career-admin-profile.html">
+          <strong>Admin Profile</strong>
+          <span>View and update your administrator information.</span>
+        </a>
+
+        <a class="quick-link" href="career-admin-settings.html">
+          <strong>Account Settings</strong>
+          <span>Manage your account preferences and settings.</span>
+        </a>
+
+        <a class="quick-link" href="career-admin-account.html">
+          <strong>Account Management</strong>
+          <span>Manage your administrator account.</span>
+        </a>
+
+        <a class="quick-link" href="career-admin-login.html">
+          <strong>Admin Login</strong>
+          <span>Open the administrator login page.</span>
+        </a>
+
+        <a class="quick-link" href="login.html">
+          <strong>User Portal</strong>
+          <span>Open the Vorix Career user login page.</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">
+    © <span id="year"></span> Vorix Career. All rights reserved.
+  </div>
+
+</div>
+</main>
+</div>
+
+<script type="module">
+import { initializeApp } from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  updateDoc,
+  serverTimestamp,
+  limit
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBhEY3Igjv0oWcQ3cAQQy6KU8d0StydJdY",
+  authDomain: "vorix-career.firebaseapp.com",
+  projectId: "vorix-career",
+  storageBucket: "vorix-career.firebasestorage.app",
+  messagingSenderId: "601220299726",
+  appId: "1:601220299726:web:21888081707f5d35c9899f"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const $ = id => document.getElementById(id);
+
+$("year").textContent = new Date().getFullYear();
+
+function showError(text){
+  $("errorBox").textContent = text;
+  $("errorBox").style.display = "block";
+}
+
+function escapeHTML(value=""){
+  return String(value).replace(/[&<>"']/g,char=>({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#039;"
+  })[char]);
+}
+
+function setAdminDisplay(data,user){
+  const name=data.fullName || data.displayName ||
+    user.displayName || "Admin";
+
+  $("adminName").textContent=name;
+  $("welcomeName").textContent=name.split(" ")[0];
+
+  const photo=data.photoURL || user.photoURL;
+
+  if(photo){
+    const image=document.createElement("img");
+    image.src=photo;
+    image.alt="Admin profile";
+    $("adminAvatar").replaceChildren(image);
+  }else{
+    $("adminAvatar").textContent=name.charAt(0).toUpperCase();
+  }
+}
+
+async function loadDashboard(){
+  try{
+    // Load careers.
+    const careerSnapshot=await getDocs(collection(db,"careers"));
+    const careers=careerSnapshot.docs.map(item=>({
+      id:item.id,
+      ...item.data()
+    }));
+
+    const published=careers.filter(c=>
+      String(c.status || "").toLowerCase()==="published"
+    ).length;
+
+    const drafts=careers.filter(c=>
+      String(c.status || "").toLowerCase()==="draft"
+    ).length;
+
+    const featured=careers.filter(c=>c.featured===true).length;
+
+    $("totalCareers").textContent=careers.length;
+    $("publishedCareers").textContent=published;
+    $("draftCareers").textContent=drafts;
+    $("featuredCareers").textContent=featured;
+
+    // Load users.
+    const userSnapshot=await getDocs(collection(db,"users"));
+    $("totalUsers").textContent=userSnapshot.size;
+
+    // Sort recent careers by createdAt when available.
+    careers.sort((a,b)=>{
+      const aTime=a.createdAt?.toMillis?.() || 0;
+      const bTime=b.createdAt?.toMillis?.() || 0;
+      return bTime-aTime;
+    });
+
+    const recent=careers.slice(0,7);
+
+    if(!recent.length){
+      $("recentCareers").innerHTML=
+        '<tr><td colspan="4" class="empty">No career opportunities found.</td></tr>';
+      return;
+    }
+
+    $("recentCareers").innerHTML=recent.map(c=>{
+      const status=String(c.status || "draft").toLowerCase();
+      const statusClass=status==="published"?"published":
+        status==="draft"?"draft":"other";
+
+      return `
+        <tr>
+          <td><strong>${escapeHTML(c.title || "Untitled Career")}</strong></td>
+          <td>${escapeHTML(c.companyName || "—")}</td>
+          <td>${escapeHTML(c.location || c.country || "—")}</td>
+          <td><span class="status ${statusClass}">${escapeHTML(status)}</span></td>
+        </tr>
+      `;
+    }).join("");
+
+  }catch(error){
+    console.error("Dashboard data error:",error);
+    showError("Some dashboard information could not be loaded. Check Firestore permissions and try refreshing.");
+  }
+}
+
+let currentAdminRef=null;
+
+onAuthStateChanged(auth,async user=>{
+  if(!user){
+    window.location.replace("career-admin-login.html");
+    return;
+  }
+
+  try{
+    const adminQuery=query(
+      collection(db,"admins"),
+      where("uid","==",user.uid),
+      limit(1)
+    );
+
+    const adminSnapshot=await getDocs(adminQuery);
+
+    if(adminSnapshot.empty){
+      await signOut(auth);
+      window.location.replace("career-admin-login.html");
+      return;
+    }
+
+    const adminDoc=adminSnapshot.docs[0];
+    const adminData=adminDoc.data();
+
+    if(adminData.status!=="active"){
+      await signOut(auth);
+      window.location.replace("career-admin-login.html");
+      return;
+    }
+
+    currentAdminRef=doc(db,"admins",adminDoc.id);
+
+    setAdminDisplay(adminData,user);
+
+    // Update last login timestamp and email verification status.
+    await updateDoc(currentAdminRef,{
+      lastLoginAt:serverTimestamp(),
+      updatedAt:serverTimestamp(),
+      emailVerified:user.emailVerified
+    });
+
+    await loadDashboard();
+
+  }catch(error){
+    console.error("Admin verification error:",error);
+    showError("Unable to verify administrator access. Please check your connection and Firestore Security Rules.");
+  }
+});
+
+// Sign out.
+async function logout(){
+  const confirmed=confirm("Are you sure you want to sign out?");
+  if(!confirmed)return;
+
+  try{
+    await signOut(auth);
+    window.location.replace("career-admin-login.html");
+  }catch(error){
+    console.error(error);
+    alert("Unable to sign out. Please try again.");
+  }
+}
+
+$("sidebarLogout").addEventListener("click",logout);
+
+// Mobile sidebar.
+$("menuButton").addEventListener("click",()=>{
+  $("sidebar").classList.toggle("open");
+});
+
+document.addEventListener("click",event=>{
+  if(window.innerWidth<=760 &&
+     !$("sidebar").contains(event.target) &&
+     !$("menuButton").contains(event.target)){
+    $("sidebar").classList.remove("open");
+  }
+});
+</script>
+
+</body>
+</html>
