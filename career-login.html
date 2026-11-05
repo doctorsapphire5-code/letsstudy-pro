@@ -1,0 +1,234 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#102b55">
+<title>Career Login | LetsStudy Pro</title>
+<meta name="description" content="Login to your LetsStudy Pro career account.">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f3f6fb;color:#17243b;min-height:100vh;display:flex;flex-direction:column}
+header{background:#102b55;color:white;padding:20px 6%;display:flex;justify-content:space-between}
+header a{color:white;text-decoration:none}
+.brand{font-size:21px;font-weight:bold}
+main{flex:1;display:grid;place-items:center;padding:25px 15px}
+.card{background:white;padding:32px;width:100%;max-width:430px;border-radius:15px;box-shadow:0 8px 35px #102b5512}
+.logo{background:#e8f3ff;color:#1769c2;width:55px;height:55px;display:grid;place-items:center;border-radius:12px;font-size:25px;font-weight:bold;margin-bottom:20px}
+h1{font-size:25px;margin-bottom:10px}
+.sub{font-size:13px;color:#718096;line-height:1.7;margin-bottom:20px}
+label{display:block;font-size:13px;font-weight:bold;margin:17px 0 8px}
+input{width:100%;padding:14px;border:1px solid #dce3ed;border-radius:8px;font-size:14px;outline:none}
+input:focus{border-color:#1769c2}
+.pass{position:relative}
+.pass button{position:absolute;right:5px;top:5px;width:auto;margin:0;background:none;color:#1769c2;padding:10px}
+button{width:100%;padding:14px;background:#1769c2;color:white;border:0;border-radius:8px;font-weight:bold;margin-top:20px;cursor:pointer}
+button:disabled{opacity:.6}
+.google{background:white;color:#17243b;border:1px solid #dce3ed;margin-top:12px}
+.forgot{text-align:right;margin-top:12px;font-size:12px}
+a{color:#1769c2;text-decoration:none}
+.divider{text-align:center;color:#94a3b8;margin:20px}
+.register{text-align:center;font-size:13px;margin-top:25px;color:#64748b}
+#message{display:none;margin-top:15px;padding:12px;border-radius:8px;font-size:13px;line-height:1.5}
+footer{text-align:center;padding:20px;color:#8491a5;font-size:11px}
+</style>
+</head>
+<body>
+
+<header>
+<div class="brand">LetsStudy Pro</div>
+<a href="index.html">Home</a>
+</header>
+
+<main>
+<section class="card">
+
+<div class="logo">L</div>
+<h1>Welcome Back</h1>
+<p class="sub">Login to your account and continue exploring career opportunities.</p>
+
+<form id="loginForm">
+
+<label>Email Address</label>
+<input id="email" type="email" placeholder="Enter your email" autocomplete="email" required>
+
+<label>Password</label>
+<div class="pass">
+<input id="password" type="password" placeholder="Enter password" autocomplete="current-password" required>
+<button type="button" id="toggle">Show</button>
+</div>
+
+<div class="forgot">
+<a href="forgot-password.html">Forgot Password?</a>
+</div>
+
+<button type="submit" id="loginBtn">Sign In</button>
+</form>
+
+<div class="divider">OR</div>
+
+<button type="button" class="google" id="googleBtn">Continue with Google</button>
+
+<div id="message"></div>
+
+<p class="register">
+Don't have an account?
+<a href="register.html">Create Account</a>
+</p>
+
+</section>
+</main>
+
+<footer>© 2026 LetsStudy Pro. All rights reserved.</footer>
+
+<script type="module">
+import {initializeApp}
+from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
+import {
+getAuth,
+signInWithEmailAndPassword,
+GoogleAuthProvider,
+signInWithPopup
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+import {
+getFirestore,
+doc,
+getDoc,
+setDoc,
+serverTimestamp,
+increment
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyBhEY3Igjv0oWcQ3cAQQy6KU8d0StydJdY",
+authDomain: "vorix-career.firebaseapp.com",
+projectId: "vorix-career",
+storageBucket: "vorix-career.firebasestorage.app",
+messagingSenderId: "601220299726",
+appId: "1:601220299726:web:21888081707f5d35c9899f"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const googleProvider = new GoogleAuthProvider();
+
+const message = document.getElementById("message");
+const loginBtn = document.getElementById("loginBtn");
+const googleBtn = document.getElementById("googleBtn");
+
+function notify(text,success=false){
+message.style.display="block";
+message.style.background=success?"#e8f8ee":"#fff0f0";
+message.style.color=success?"#087443":"#b42318";
+message.textContent=text;
+}
+
+function loading(value){
+loginBtn.disabled=value;
+googleBtn.disabled=value;
+loginBtn.textContent=value?"Please wait...":"Sign In";
+}
+
+document.getElementById("toggle").onclick=()=>{
+const p=document.getElementById("password");
+p.type=p.type==="password"?"text":"password";
+document.getElementById("toggle").textContent=
+p.type==="password"?"Show":"Hide";
+};
+
+// USER ONLY
+async function saveUser(user){
+
+const userRef=doc(db,"users",user.uid);
+const snap=await getDoc(userRef);
+
+const old=snap.exists()?snap.data():{};
+
+if(old.status && old.status!=="active"){
+throw new Error("Your account is not active. Please contact support.");
+}
+
+const name=user.displayName || old.fullName || "";
+
+await setDoc(userRef,{
+userId:user.uid,
+adminId:old.adminId || "",
+fullName:name,
+firstName:old.firstName || name.split(" ")[0] || "",
+lastName:old.lastName || name.split(" ").slice(1).join(" "),
+displayName:user.displayName || old.displayName || "",
+email:user.email || old.email || "",
+phoneNumber:user.phoneNumber || old.phoneNumber || "",
+photoURL:user.photoURL || old.photoURL || "",
+role:"user",
+accountType:old.accountType || "individual",
+status:old.status || "active",
+emailVerified:user.emailVerified,
+phoneVerified:old.phoneVerified || false,
+provider:user.providerData[0]?.providerId || "password",
+providers:user.providerData.map(p=>p.providerId),
+timezone:old.timezone || "Africa/Dar_es_Salaam",
+language:old.language || "en",
+lastLoginAt:serverTimestamp(),
+loginCount:increment(1),
+createdAt:old.createdAt || serverTimestamp(),
+updatedAt:serverTimestamp()
+},{merge:true});
+
+window.location.replace("dashboard.html");
+}
+
+function errorText(error){
+const errors={
+"auth/invalid-email":"Invalid email address.",
+"auth/invalid-credential":"Incorrect email or password.",
+"auth/user-disabled":"Your account has been disabled.",
+"auth/too-many-requests":"Too many attempts. Try again later.",
+"auth/unauthorized-domain":"This domain is not authorized in Firebase Authentication.",
+"permission-denied":"Firestore permission denied. Check your security rules.",
+};
+return errors[error.code] || error.message || "Login failed. Please try again.";
+}
+
+// Email login
+document.getElementById("loginForm").addEventListener("submit",async e=>{
+e.preventDefault();
+loading(true);
+message.style.display="none";
+
+try{
+const result=await signInWithEmailAndPassword(
+auth,
+document.getElementById("email").value.trim(),
+document.getElementById("password").value
+);
+await saveUser(result.user);
+}catch(error){
+notify(errorText(error));
+}finally{
+loading(false);
+}
+});
+
+// Google login
+googleBtn.addEventListener("click",async()=>{
+loading(true);
+message.style.display="none";
+
+try{
+const result=await signInWithPopup(auth,googleProvider);
+await saveUser(result.user);
+}catch(error){
+notify(errorText(error));
+}finally{
+loading(false);
+}
+});
+</script>
+</body>
+</html>
