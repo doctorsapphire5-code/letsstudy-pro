@@ -1,0 +1,288 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101828">
+<title>Admin Registration | Vorix Career</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;padding:20px;
+  display:grid;place-items:center;
+  background:#f3f6fb;color:#172033;
+  font-family:Arial,Helvetica,sans-serif
+}
+.card{
+  width:100%;max-width:470px;background:#fff;
+  padding:30px;border:1px solid #e5eaf2;
+  border-radius:18px;box-shadow:0 15px 45px #10182812
+}
+.brand{text-align:center;margin-bottom:25px}
+.logo{
+  width:55px;height:55px;border-radius:15px;
+  display:grid;place-items:center;margin:0 auto 13px;
+  background:#175cd3;color:white;font-size:25px;font-weight:bold
+}
+h1{font-size:25px;margin:0 0 8px}
+.subtitle{font-size:14px;color:#667085;line-height:1.6}
+label{display:block;font-size:13px;font-weight:700;margin:16px 0 7px}
+input{
+  width:100%;padding:13px;border:1px solid #d0d5dd;
+  border-radius:9px;font-size:15px;outline:none
+}
+input:focus{border-color:#175cd3;box-shadow:0 0 0 3px #175cd31a}
+button{
+  width:100%;padding:14px;margin-top:22px;
+  border:0;border-radius:9px;background:#175cd3;
+  color:white;font-weight:700;font-size:15px;cursor:pointer
+}
+button:disabled{opacity:.6;cursor:not-allowed}
+.message{
+  display:none;margin-top:16px;padding:12px;
+  border-radius:8px;font-size:13px;line-height:1.5
+}
+.error{display:block;background:#fef3f2;color:#b42318}
+.success{display:block;background:#ecfdf3;color:#027a48}
+.info{
+  margin-top:17px;padding:12px;background:#eff8ff;
+  color:#175cd3;border-radius:8px;font-size:12px;line-height:1.6
+}
+.links{text-align:center;margin-top:20px;font-size:13px}
+a{color:#175cd3;text-decoration:none}
+.footer{text-align:center;margin-top:24px;color:#98a2b3;font-size:12px}
+</style>
+</head>
+
+<body>
+<div class="card">
+
+  <div class="brand">
+    <div class="logo">V</div>
+    <h1>Admin Registration</h1>
+    <div class="subtitle">
+      Create your Vorix Career administrator account.
+    </div>
+  </div>
+
+  <form id="registerForm">
+
+    <label for="adminId">Admin ID</label>
+    <input id="adminId" type="text"
+      placeholder="Enter your assigned Admin ID"
+      autocomplete="off" required>
+
+    <label for="fullName">Full Name</label>
+    <input id="fullName" type="text"
+      placeholder="Enter your full name" required>
+
+    <label for="email">Admin Email</label>
+    <input id="email" type="email"
+      placeholder="admin@example.com"
+      autocomplete="email" required>
+
+    <label for="phoneNumber">Phone Number</label>
+    <input id="phoneNumber" type="tel"
+      placeholder="+255..." autocomplete="tel">
+
+    <label for="password">Password</label>
+    <input id="password" type="password"
+      placeholder="Minimum 8 characters"
+      autocomplete="new-password" minlength="8" required>
+
+    <label for="confirmPassword">Confirm Password</label>
+    <input id="confirmPassword" type="password"
+      placeholder="Confirm your password"
+      autocomplete="new-password" minlength="8" required>
+
+    <button id="registerButton" type="submit">
+      Create Admin Account
+    </button>
+
+    <div id="message" class="message" role="alert"></div>
+  </form>
+
+  <div class="info">
+    <strong>Admin account registration</strong><br>
+    Use the Admin ID and email assigned to your administrator account.
+    No additional approval is required.
+  </div>
+
+  <div class="links">
+    Already registered?
+    <a href="career-admin-login.html">Admin Login</a>
+  </div>
+
+  <div class="footer">
+    Secure Administrator Registration · Vorix Career
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from
+"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  updateProfile,
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBhEY3Igjv0oWcQ3cAQQy6KU8d0StydJdY",
+  authDomain: "vorix-career.firebaseapp.com",
+  projectId: "vorix-career",
+  storageBucket: "vorix-career.firebasestorage.app",
+  messagingSenderId: "601220299726",
+  appId: "1:601220299726:web:21888081707f5d35c9899f"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const form = document.getElementById("registerForm");
+const button = document.getElementById("registerButton");
+const message = document.getElementById("message");
+
+function showMessage(text,type="error"){
+  message.textContent=text;
+  message.className="message "+type;
+}
+
+function friendlyError(error){
+  const errors={
+    "auth/email-already-in-use":"This email is already registered.",
+    "auth/invalid-email":"Enter a valid email address.",
+    "auth/weak-password":"Choose a stronger password.",
+    "auth/network-request-failed":"Network error. Check your internet.",
+    "permission-denied":"Permission denied. Check Firestore Security Rules."
+  };
+  return errors[error.code] || error.message || "Registration failed.";
+}
+
+form.addEventListener("submit",async(event)=>{
+  event.preventDefault();
+
+  const adminId=document.getElementById("adminId").value.trim();
+  const fullName=document.getElementById("fullName").value.trim();
+  const email=document.getElementById("email").value.trim().toLowerCase();
+  const phoneNumber=document.getElementById("phoneNumber").value.trim();
+  const password=document.getElementById("password").value;
+  const confirmPassword=document.getElementById("confirmPassword").value;
+
+  if(password.length<8){
+    showMessage("Password must contain at least 8 characters.");
+    return;
+  }
+
+  if(password!==confirmPassword){
+    showMessage("Passwords do not match.");
+    return;
+  }
+
+  button.disabled=true;
+  button.textContent="Verifying Admin ID...";
+  message.className="message";
+
+  let createdUser=null;
+
+  try{
+    // Verify the pre-created admin record.
+    const adminRef=doc(db,"admins",adminId);
+    const adminSnap=await getDoc(adminRef);
+
+    if(!adminSnap.exists()){
+      throw new Error("Invalid Admin ID. Contact your administrator.");
+    }
+
+    const adminData=adminSnap.data();
+
+    if(adminData.adminId!==adminId){
+      throw new Error("Admin ID verification failed.");
+    }
+
+    if(!adminData.email ||
+       adminData.email.trim().toLowerCase()!==email){
+      throw new Error("Email does not match the Admin ID.");
+    }
+
+    if(adminData.uid && adminData.uid.trim()!==""){
+      throw new Error("This Admin ID is already registered.");
+    }
+
+    if(adminData.status!=="active"){
+      throw new Error("This Admin ID is not active.");
+    }
+
+    button.textContent="Creating account...";
+
+    // Create Firebase Authentication account.
+    const credential=await createUserWithEmailAndPassword(
+      auth,email,password
+    );
+
+    createdUser=credential.user;
+
+    await updateProfile(createdUser,{
+      displayName:fullName
+    });
+
+    // Connect Firebase UID to the existing admin document.
+    await updateDoc(adminRef,{
+      uid:createdUser.uid,
+      fullName:fullName,
+      displayName:fullName,
+      email:email,
+      phoneNumber:phoneNumber,
+      photoURL:createdUser.photoURL || "",
+      emailVerified:createdUser.emailVerified,
+      lastLoginAt:serverTimestamp(),
+      loginCount:1,
+      updatedAt:serverTimestamp()
+    });
+
+    showMessage(
+      "Admin registration successful. You can now log in.",
+      "success"
+    );
+
+    await signOut(auth);
+    form.reset();
+
+    setTimeout(()=>{
+      window.location.href="career-admin-login.html";
+    },1800);
+
+  }catch(error){
+    console.error("Admin registration:",error);
+
+    if(createdUser && auth.currentUser){
+      try{
+        await signOut(auth);
+      }catch(signOutError){
+        console.error(signOutError);
+      }
+    }
+
+    showMessage(friendlyError(error));
+
+  }finally{
+    button.disabled=false;
+    button.textContent="Create Admin Account";
+  }
+});
+</script>
+</body>
+</html>
