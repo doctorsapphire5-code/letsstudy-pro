@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f172a">
+<title>Admin Login | Vorix Sponsor</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  font-family:Arial,sans-serif;
+  background:#f1f5f9;
+  color:#172033;
+}
+.container{
+  width:100%;
+  max-width:430px;
+  background:#fff;
+  padding:30px 25px;
+  border-radius:16px;
+  box-shadow:0 8px 35px #0f172a12;
+}
+.logo{
+  width:65px;
+  height:65px;
+  border-radius:16px;
+  background:#eff6ff;
+  color:#2563eb;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:30px;
+  margin:0 auto 18px;
+}
+h1{text-align:center;font-size:24px;margin:0 0 9px}
+.subtitle{
+  text-align:center;
+  color:#64748b;
+  font-size:14px;
+  line-height:1.6;
+  margin-bottom:27px;
+}
+label{
+  display:block;
+  font-size:13px;
+  font-weight:bold;
+  margin-bottom:8px;
+}
+input{
+  width:100%;
+  padding:14px;
+  border:1px solid #cbd5e1;
+  border-radius:9px;
+  outline:none;
+  font-size:14px;
+  margin-bottom:17px;
+}
+input:focus{
+  border-color:#2563eb;
+  box-shadow:0 0 0 3px #2563eb15;
+}
+.password-wrap{position:relative}
+.password-wrap input{padding-right:65px}
+.toggle{
+  position:absolute;
+  right:9px;
+  top:10px;
+  border:0;
+  background:#e2e8f0;
+  border-radius:6px;
+  padding:7px 9px;
+  cursor:pointer;
+  font-size:11px;
+}
+.options{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin:0 0 20px;
+  font-size:12px;
+}
+.remember{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  color:#64748b;
+}
+.remember input{width:auto;margin:0}
+a{color:#2563eb;text-decoration:none;font-weight:bold}
+.login-btn{
+  width:100%;
+  padding:14px;
+  border:0;
+  border-radius:9px;
+  background:#2563eb;
+  color:white;
+  font-size:15px;
+  font-weight:bold;
+  cursor:pointer;
+}
+.login-btn:disabled{opacity:.6;cursor:not-allowed}
+.message{
+  display:none;
+  padding:12px;
+  border-radius:8px;
+  margin-bottom:17px;
+  font-size:13px;
+  line-height:1.5;
+}
+.error{display:block;background:#fee2e2;color:#991b1b}
+.success{display:block;background:#dcfce7;color:#166534}
+.info{display:block;background:#dbeafe;color:#1e40af}
+.security{
+  text-align:center;
+  color:#64748b;
+  font-size:12px;
+  line-height:1.6;
+  margin-top:23px;
+}
+footer{
+  text-align:center;
+  color:#94a3b8;
+  font-size:11px;
+  margin-top:23px;
+}
+</style>
+</head>
+
+<body>
+
+<main class="container">
+
+  <div class="logo">🔐</div>
+
+  <h1>Admin Login</h1>
+
+  <p class="subtitle">
+    Securely access your Vorix Sponsor administration dashboard.
+  </p>
+
+  <div id="message" class="message" aria-live="polite"></div>
+
+  <form id="loginForm">
+
+    <label for="adminId">Admin ID</label>
+    <input
+      type="text"
+      id="adminId"
+      placeholder="Enter your Admin ID"
+      autocomplete="username"
+      required
+    >
+
+    <label for="email">Authorized Email Address</label>
+    <input
+      type="email"
+      id="email"
+      placeholder="Enter your authorized email"
+      autocomplete="email"
+      required
+    >
+
+    <label for="password">Password</label>
+
+    <div class="password-wrap">
+      <input
+        type="password"
+        id="password"
+        placeholder="Enter your password"
+        autocomplete="current-password"
+        required
+      >
+      <button type="button" class="toggle" id="togglePassword">
+        Show
+      </button>
+    </div>
+
+    <div class="options">
+      <label class="remember">
+        <input type="checkbox" id="rememberMe" checked>
+        Remember me
+      </label>
+
+      <a href="sponsor-admin-forgot-password.html">
+        Forgot password?
+      </a>
+    </div>
+
+    <button type="submit" class="login-btn" id="loginBtn">
+      Sign In
+    </button>
+
+  </form>
+
+  <div class="security">
+    <strong>Protected Admin Access</strong><br>
+    Authorized administrators only.
+  </div>
+
+  <footer>
+    &copy; <span id="year"></span> Vorix Sponsor. All rights reserved.
+  </footer>
+
+</main>
+
+<script type="module">
+
+import { initializeApp } from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  setPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence,
+  signOut
+} from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc,
+  serverTimestamp,
+  increment
+} from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// FIREBASE CONFIGURATION
+const firebaseConfig = {
+  apiKey: "AIzaSyC_bGZrFXPTS_TBj4l0E3KJ42uQC6OG8y0",
+  authDomain: "vorix-sponsor.firebaseapp.com",
+  databaseURL: "https://vorix-sponsor-default-rtdb.firebaseio.com",
+  projectId: "vorix-sponsor",
+  storageBucket: "vorix-sponsor.firebasestorage.app",
+  messagingSenderId: "595130943286",
+  appId: "1:595130943286:web:a3c8d16b9bb5567f18d597",
+  measurementId: "G-914TSCJ747"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const $ = id => document.getElementById(id);
+
+$("year").textContent = new Date().getFullYear();
+
+function showMessage(text,type="error"){
+  const message = $("message");
+  message.textContent = text;
+  message.className = "message " + type;
+}
+
+function getErrorMessage(code){
+
+  const errors = {
+    "auth/invalid-credential":
+      "Incorrect email or password.",
+    "auth/user-not-found":
+      "Incorrect email or password.",
+    "auth/wrong-password":
+      "Incorrect email or password.",
+    "auth/too-many-requests":
+      "Too many login attempts. Please try again later.",
+    "auth/network-request-failed":
+      "Network error. Check your internet connection.",
+    "auth/user-disabled":
+      "This account has been disabled.",
+    "auth/operation-not-allowed":
+      "Email and password login is not enabled in Firebase."
+  };
+
+  return errors[code] || "Login failed. Please try again.";
+}
+
+// Show / hide password.
+$("togglePassword").addEventListener("click",()=>{
+
+  const password = $("password");
+
+  if(password.type === "password"){
+    password.type = "text";
+    $("togglePassword").textContent = "Hide";
+  }else{
+    password.type = "password";
+    $("togglePassword").textContent = "Show";
+  }
+
+});
+
+// LOGIN
+$("loginForm").addEventListener("submit",async event=>{
+
+  event.preventDefault();
+
+  const adminId = $("adminId").value.trim();
+  const email = $("email").value.trim().toLowerCase();
+  const password = $("password").value;
+
+  const loginBtn = $("loginBtn");
+
+  if(!adminId || !email || !password){
+    showMessage("Please fill in all required fields.");
+    return;
+  }
+
+  loginBtn.disabled = true;
+  loginBtn.textContent = "Signing in...";
+
+  let authenticatedUser = null;
+
+  try{
+
+    // Set persistence according to Remember Me.
+    await setPersistence(
+      auth,
+      $("rememberMe").checked
+        ? browserLocalPersistence
+        : browserSessionPersistence
+    );
+
+    // Firebase Authentication.
+    const credential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+
+    authenticatedUser = credential.user;
+
+    // Check Firebase email verification.
+    if(!authenticatedUser.emailVerified){
+      await signOut(auth);
+
+      showMessage(
+        "Please verify your email address before accessing the admin dashboard."
+      );
+
+      return;
+    }
+
+    const uid = authenticatedUser.uid;
+
+    // Admin document ID must be the Firebase Auth UID.
+    const adminRef = doc(db,"admins",uid);
+    const adminSnapshot = await getDoc(adminRef);
+
+    if(!adminSnapshot.exists()){
+      await signOut(auth);
+      showMessage("Administrator account not found.");
+      return;
+    }
+
+    const adminData = adminSnapshot.data();
+
+    // Verify admin identity and permissions.
+    const authorized =
+      adminData.uid === uid &&
+      adminData.adminId === adminId &&
+      String(adminData.email || "").trim().toLowerCase() === email &&
+      adminData.role === "admin" &&
+      adminData.status === "active";
+
+    if(!authorized){
+      await signOut(auth);
+
+      showMessage(
+        "Access denied. Your Admin ID, email or administrator status is invalid."
+      );
+
+      return;
+    }
+
+    // Update login activity.
+    await updateDoc(adminRef,{
+
+      emailVerified: authenticatedUser.emailVerified,
+
+      lastLoginAt: serverTimestamp(),
+
+      lastLoginDevice:
+        navigator.userAgent.substring(0,250),
+
+      loginCount: increment(1),
+
+      updatedAt: serverTimestamp()
+
+    });
+
+    // Save convenience information only.
+    // Firestore Rules must remain the actual authorization boundary.
+    sessionStorage.setItem("sponsorAdminAuthenticated","true");
+    sessionStorage.setItem("sponsorAdminId",adminData.adminId);
+    sessionStorage.setItem("sponsorAdminUid",uid);
+    sessionStorage.setItem(
+      "sponsorAdminName",
+      adminData.displayName || adminData.fullName || "Administrator"
+    );
+    sessionStorage.setItem("sponsorAdminRole",adminData.role);
+
+    showMessage("Login successful. Redirecting...","success");
+
+    window.location.href = "sponsor-admin-dashboard.html";
+
+  }catch(error){
+
+    console.error("Admin login error:",error);
+
+    // Sign out if authentication succeeded but verification failed.
+    if(authenticatedUser && auth.currentUser){
+      try{
+        await signOut(auth);
+      }catch(signOutError){
+        console.error(signOutError);
+      }
+    }
+
+    showMessage(getErrorMessage(error.code));
+
+  }finally{
+
+    loginBtn.disabled = false;
+    loginBtn.textContent = "Sign In";
+
+  }
+
+});
+
+</script>
+
+</body>
+</html>
