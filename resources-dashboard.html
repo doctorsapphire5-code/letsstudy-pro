@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f172a">
+<title>Dashboard | Vorix Resources</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172033}
+header{background:#0f172a;color:white;padding:17px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+header h1{font-size:20px;margin:0}
+header p{margin:5px 0 0;color:#cbd5e1;font-size:12px}
+.container{max-width:1150px;margin:auto;padding:22px 16px}
+.welcome{background:white;border-radius:14px;padding:22px;margin-bottom:20px;box-shadow:0 3px 15px #0f172a0d}
+.welcome h2{margin:0 0 8px;font-size:22px}
+.muted{color:#64748b;font-size:13px;line-height:1.6}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:22px}
+.stat{background:white;padding:20px;border-radius:12px;box-shadow:0 3px 15px #0f172a0d}
+.stat span{display:block;color:#64748b;font-size:13px}
+.stat strong{display:block;font-size:27px;margin-top:10px}
+.card{background:white;padding:20px;border-radius:14px;margin-bottom:20px;box-shadow:0 3px 15px #0f172a0d}
+.card h3{margin:0 0 16px;font-size:17px}
+nav{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+nav a,.btn{display:block;text-decoration:none;padding:13px;border-radius:9px;text-align:center;font-size:13px;font-weight:bold}
+nav a{background:#eff6ff;color:#1d4ed8}
+.btn{border:0;cursor:pointer}
+.primary{background:#2563eb;color:white}
+.secondary{background:#e2e8f0;color:#172033}
+.danger{background:#dc2626;color:white}
+.resource{padding:14px 0;border-bottom:1px solid #e2e8f0}
+.resource:last-child{border:0}
+.resource strong{display:block;font-size:14px;margin-bottom:5px}
+.resource small{color:#64748b}
+.status{display:inline-block;padding:5px 9px;border-radius:20px;font-size:11px;background:#e2e8f0;margin-top:7px}
+.published{background:#dcfce7;color:#166534}
+.pending{background:#fef3c7;color:#92400e}
+.draft{background:#e2e8f0;color:#475569}
+#message{margin-bottom:15px}
+.alert{padding:12px;border-radius:8px;background:#fee2e2;color:#991b1b;font-size:13px}
+.empty{padding:20px;text-align:center;color:#64748b;font-size:14px}
+footer{text-align:center;padding:25px;color:#64748b;font-size:12px}
+@media(max-width:750px){.grid{grid-template-columns:repeat(2,1fr)}nav{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:420px){.grid{gap:9px}.stat{padding:14px}.stat strong{font-size:23px}}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div>
+    <h1>Vorix Resources</h1>
+    <p>User Dashboard</p>
+  </div>
+  <button class="btn danger" id="logoutBtn">Logout</button>
+</header>
+
+<main class="container">
+
+<div id="message"></div>
+
+<section class="welcome">
+  <h2>Welcome, <span id="userName">Loading...</span></h2>
+  <p class="muted">Manage your resources, explore learning materials and access your account from one place.</p>
+  <p class="muted">Account: <strong id="userEmail">Loading...</strong></p>
+</section>
+
+<section class="grid">
+  <div class="stat">
+    <span>My Resources</span>
+    <strong id="totalResources">0</strong>
+  </div>
+  <div class="stat">
+    <span>Published</span>
+    <strong id="publishedResources">0</strong>
+  </div>
+  <div class="stat">
+    <span>Pending</span>
+    <strong id="pendingResources">0</strong>
+  </div>
+  <div class="stat">
+    <span>Drafts</span>
+    <strong id="draftResources">0</strong>
+  </div>
+</section>
+
+<section class="card">
+  <h3>Quick Access</h3>
+  <nav>
+    <a href="resources-profile.html">My Profile</a>
+    <a href="resources-edit-profile.html">Edit Profile</a>
+    <a href="resources-account.html">Account Management</a>
+    <a href="resources-settings.html">Account Settings</a>
+    <a href="resources.html">Explore Resources</a>
+    <a href="resources-register.html">Create Account</a>
+  </nav>
+</section>
+
+<section class="card">
+  <h3>My Recent Resources</h3>
+  <div id="recentResources">
+    <div class="empty">Loading your resources...</div>
+  </div>
+</section>
+
+<section class="card">
+  <h3>Account Information</h3>
+  <p class="muted">Account type: <strong id="accountType">Loading...</strong></p>
+  <p class="muted">Account status: <strong id="accountStatus">Loading...</strong></p>
+  <p class="muted">Email verification: <strong id="verificationStatus">Loading...</strong></p>
+  <p class="muted">Member since: <strong id="memberSince">Loading...</strong></p>
+</section>
+
+</main>
+
+<footer>
+  &copy; <span id="year"></span> Vorix Resources. All rights reserved.
+</footer>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut,
+  reload
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  limit,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// FIREBASE CONFIGURATION
+const firebaseConfig = {
+  apiKey: "AIzaSyBuP13ggQsiZiZgoIf9nFK8hmw8Bx6KYr0",
+  authDomain: "vorix-resources.firebaseapp.com",
+  projectId: "vorix-resources",
+  storageBucket: "vorix-resources.firebasestorage.app",
+  messagingSenderId: "789688947048",
+  appId: "1:789688947048:web:31598720b1e0cef9db06dd",
+  measurementId: "G-VEYGNMJ6N1"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const $ = id => document.getElementById(id);
+
+$("year").textContent = new Date().getFullYear();
+
+function showError(message){
+  $("message").innerHTML = "";
+  const div = document.createElement("div");
+  div.className = "alert";
+  div.textContent = message;
+  $("message").appendChild(div);
+}
+
+function displayDate(value){
+  if(!value) return "Not available";
+  const date = value.toDate ? value.toDate() : new Date(value);
+  if(Number.isNaN(date.getTime())) return "Not available";
+  return date.toLocaleDateString();
+}
+
+function safeText(value, fallback = "Not provided"){
+  return typeof value === "string" && value.trim() ? value.trim() : fallback;
+}
+
+async function loadDashboard(user){
+
+  // Load user profile
+  const userRef = doc(db, "users", user.uid);
+  const userSnapshot = await getDoc(userRef);
+
+  if(!userSnapshot.exists()){
+    throw new Error("Your user profile was not found.");
+  }
+
+  const userData = userSnapshot.data();
+
+  if(userData.userId !== user.uid){
+    throw new Error("User identity verification failed.");
+  }
+
+  if(userData.email && user.email &&
+    userData.email.toLowerCase() !== user.email.toLowerCase()){
+    throw new Error("Account email verification mismatch.");
+  }
+
+  if(userData.status !== "active"){
+    throw new Error("Your account is not active. Contact support.");
+  }
+
+  $("userName").textContent = safeText(
+    userData.firstName || userData.displayName || user.displayName,
+    "User"
+  );
+
+  $("userEmail").textContent = safeText(user.email);
+  $("accountType").textContent = safeText(userData.accountType, "Standard");
+  $("accountStatus").textContent = safeText(userData.status);
+  $("verificationStatus").textContent =
+    user.emailVerified ? "Verified" : "Not verified";
+
+  $("memberSince").textContent = displayDate(userData.createdAt);
+
+  await loadUserResources(user.uid);
+}
+
+async function loadUserResources(uid){
+
+  const resourcesRef = collection(db, "resources");
+
+  // Only resources belonging to the signed-in user
+  const resourcesQuery = query(
+    resourcesRef,
+    where("userId", "==", uid),
+    limit(100)
+  );
+
+  const snapshot = await getDocs(resourcesQuery);
+
+  let total = 0;
+  let published = 0;
+  let pending = 0;
+  let drafts = 0;
+
+  const resources = [];
+
+  snapshot.forEach(documentSnapshot => {
+    const data = documentSnapshot.data();
+
+    total++;
+
+    const status = String(data.status || "").toLowerCase();
+
+    if(status === "published"){
+      published++;
+    }else if(status === "pending"){
+      pending++;
+    }else if(status === "draft"){
+      drafts++;
+    }
+
+    resources.push({
+      id: documentSnapshot.id,
+      title: data.title || data.resourceTitle || "Untitled Resource",
+      category: data.category || "Uncategorized",
+      status: status || "unknown",
+      createdAt: data.createdAt || null
+    });
+  });
+
+  $("totalResources").textContent = total;
+  $("publishedResources").textContent = published;
+  $("pendingResources").textContent = pending;
+  $("draftResources").textContent = drafts;
+
+  resources.sort((a,b) => {
+    const dateA = a.createdAt?.toMillis?.() || 0;
+    const dateB = b.createdAt?.toMillis?.() || 0;
+    return dateB - dateA;
+  });
+
+  renderRecentResources(resources.slice(0,10));
+}
+
+function renderRecentResources(resources){
+
+  const container = $("recentResources");
+  container.innerHTML = "";
+
+  if(resources.length === 0){
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent = "You have not submitted any resources yet.";
+    container.appendChild(empty);
+    return;
+  }
+
+  resources.forEach(resource => {
+
+    const item = document.createElement("div");
+    item.className = "resource";
+
+    const title = document.createElement("strong");
+    title.textContent = resource.title;
+
+    const details = document.createElement("small");
+    details.textContent =
+      resource.category + " • " + displayDate(resource.createdAt);
+
+    const status = document.createElement("span");
+    status.className = "status";
+
+    if(resource.status === "published"){
+      status.classList.add("published");
+    }else if(resource.status === "pending"){
+      status.classList.add("pending");
+    }else{
+      status.classList.add("draft");
+    }
+
+    status.textContent = resource.status;
+
+    item.appendChild(title);
+    item.appendChild(details);
+    item.appendChild(document.createElement("br"));
+    item.appendChild(status);
+
+    container.appendChild(item);
+  });
+}
+
+// AUTHENTICATION AND ACCESS CONTROL
+onAuthStateChanged(auth, async user => {
+
+  if(!user){
+    window.location.replace("resources-login.html");
+    return;
+  }
+
+  try{
+    await loadDashboard(user);
+  }catch(error){
+    console.error("Dashboard error:", error);
+    showError(error.message || "Unable to load dashboard.");
+  }
+});
+
+// LOGOUT
+$("logoutBtn").addEventListener("click", async () => {
+  try{
+    await signOut(auth);
+    window.location.replace("resources-login.html");
+  }catch(error){
+    showError("Logout failed: " + error.message);
+  }
+});
+
+</script>
+</body>
+</html>
