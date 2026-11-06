@@ -1,0 +1,411 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Resources Admin Registration | Vorix</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+font-family:Arial,sans-serif;background:#f3f6fb;
+min-height:100vh;padding:25px 15px;
+display:flex;justify-content:center;align-items:center;
+color:#172033
+}
+.container{
+width:100%;max-width:650px;background:white;
+padding:30px;border-radius:16px;
+box-shadow:0 10px 35px #00000012
+}
+.header{text-align:center;margin-bottom:25px}
+.logo{
+width:55px;height:55px;background:#172554;color:white;
+border-radius:14px;display:grid;place-items:center;
+font-size:25px;font-weight:bold;margin:0 auto 12px
+}
+h1{font-size:24px;margin-bottom:8px}
+.subtitle{font-size:14px;color:#718096}
+.section-title{
+font-size:15px;font-weight:bold;margin:23px 0 12px;
+padding-bottom:9px;border-bottom:1px solid #e5eaf1
+}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.field{margin-bottom:14px}
+label{display:block;font-size:13px;font-weight:bold;margin-bottom:7px}
+input,select{
+width:100%;padding:12px;border:1px solid #dce2eb;
+border-radius:8px;font-size:14px;background:white;
+outline:none
+}
+input:focus,select:focus{border-color:#2563eb}
+.password{position:relative}
+.password input{padding-right:65px}
+.toggle{
+position:absolute;right:10px;top:12px;
+background:none;border:0;color:#2563eb;cursor:pointer
+}
+button.submit{
+width:100%;padding:14px;background:#1d4ed8;
+border:0;color:white;font-size:15px;font-weight:bold;
+border-radius:9px;cursor:pointer;margin-top:12px
+}
+button:disabled{opacity:.6}
+#message{display:none;margin-top:15px;padding:12px;
+border-radius:8px;font-size:13px;line-height:1.5}
+.error{display:block!important;background:#fee2e2;color:#991b1b}
+.success{display:block!important;background:#dcfce7;color:#166534}
+.footer{text-align:center;margin-top:22px;font-size:12px;color:#8792a4}
+@media(max-width:500px){
+.grid{grid-template-columns:1fr}
+.container{padding:22px}
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<div class="header">
+<div class="logo">V</div>
+<h1>Resources Admin Registration</h1>
+<p class="subtitle">Create your authorized administrator account</p>
+</div>
+
+<form id="registerForm">
+
+<div class="section-title">Administrator Information</div>
+
+<div class="grid">
+<div class="field">
+<label>Admin ID *</label>
+<input id="adminId" required placeholder="Enter authorized Admin ID">
+</div>
+
+<div class="field">
+<label>Username *</label>
+<input id="username" required placeholder="Username">
+</div>
+</div>
+
+<div class="grid">
+<div class="field">
+<label>First Name *</label>
+<input id="firstName" required placeholder="First name">
+</div>
+
+<div class="field">
+<label>Last Name *</label>
+<input id="lastName" required placeholder="Last name">
+</div>
+</div>
+
+<div class="field">
+<label>Full Name *</label>
+<input id="fullName" required placeholder="Full name">
+</div>
+
+<div class="section-title">Contact Information</div>
+
+<div class="grid">
+<div class="field">
+<label>Email Address *</label>
+<input id="email" type="email" required placeholder="admin@example.com">
+</div>
+
+<div class="field">
+<label>Phone Number</label>
+<input id="phoneNumber" type="tel" placeholder="+255...">
+</div>
+</div>
+
+<div class="grid">
+<div class="field">
+<label>Country</label>
+<input id="country" placeholder="Country">
+</div>
+
+<div class="field">
+<label>Department</label>
+<input id="department" placeholder="Resources Management">
+</div>
+</div>
+
+<div class="section-title">Account Security</div>
+
+<div class="grid">
+<div class="field">
+<label>Password *</label>
+<div class="password">
+<input id="password" type="password" minlength="8"
+required placeholder="Minimum 8 characters">
+<button type="button" class="toggle" data-target="password">Show</button>
+</div>
+</div>
+
+<div class="field">
+<label>Confirm Password *</label>
+<div class="password">
+<input id="confirmPassword" type="password"
+required placeholder="Confirm password">
+<button type="button" class="toggle" data-target="confirmPassword">Show</button>
+</div>
+</div>
+</div>
+
+<div class="section-title">Preferences</div>
+
+<div class="grid">
+<div class="field">
+<label>Language</label>
+<select id="language">
+<option value="English">English</option>
+<option value="Swahili">Swahili</option>
+</select>
+</div>
+
+<div class="field">
+<label>Timezone</label>
+<select id="timezone">
+<option value="Africa/Dar_es_Salaam">Africa/Dar_es_Salaam</option>
+<option value="UTC">UTC</option>
+<option value="Europe/London">Europe/London</option>
+<option value="America/New_York">America/New_York</option>
+</select>
+</div>
+</div>
+
+<button type="submit" class="submit" id="submitButton">
+Create Admin Account
+</button>
+
+<div id="message"></div>
+
+</form>
+
+<div class="footer">
+Secure Administrator Registration<br>
+© <span id="year"></span> Vorix Resources
+</div>
+
+</div>
+
+<script type="module">
+
+import {initializeApp}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getAuth,
+createUserWithEmailAndPassword,
+sendEmailVerification
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+getFirestore,
+collection,
+query,
+where,
+getDocs,
+doc,
+updateDoc,
+serverTimestamp
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// FIREBASE CONFIG
+const firebaseConfig = {
+apiKey: "AIzaSyBuP13ggQsiZiZgoIf9nFK8hmw8Bx6KYr0",
+authDomain: "vorix-resources.firebaseapp.com",
+projectId: "vorix-resources",
+storageBucket: "vorix-resources.firebasestorage.app",
+messagingSenderId: "789688947048",
+appId: "1:789688947048:web:31598720b1e0cef9db06dd",
+measurementId: "G-VEYGNMJ6N1"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const form = document.getElementById("registerForm");
+const message = document.getElementById("message");
+const submitButton = document.getElementById("submitButton");
+
+document.getElementById("year").textContent = new Date().getFullYear();
+
+function showMessage(text,type){
+message.textContent = text;
+message.className = type;
+}
+
+document.querySelectorAll(".toggle").forEach(button=>{
+button.addEventListener("click",()=>{
+const input = document.getElementById(button.dataset.target);
+input.type = input.type === "password" ? "text" : "password";
+button.textContent = input.type === "password" ? "Show" : "Hide";
+});
+});
+
+form.addEventListener("submit",async(e)=>{
+
+e.preventDefault();
+
+const data = {
+adminId:document.getElementById("adminId").value.trim(),
+username:document.getElementById("username").value.trim(),
+firstName:document.getElementById("firstName").value.trim(),
+lastName:document.getElementById("lastName").value.trim(),
+fullName:document.getElementById("fullName").value.trim(),
+email:document.getElementById("email").value.trim().toLowerCase(),
+phoneNumber:document.getElementById("phoneNumber").value.trim(),
+country:document.getElementById("country").value.trim(),
+department:document.getElementById("department").value.trim(),
+language:document.getElementById("language").value,
+timezone:document.getElementById("timezone").value
+};
+
+const password = document.getElementById("password").value;
+const confirmPassword = document.getElementById("confirmPassword").value;
+
+if(password.length < 8){
+showMessage("Password must contain at least 8 characters.","error");
+return;
+}
+
+if(password !== confirmPassword){
+showMessage("Passwords do not match.","error");
+return;
+}
+
+submitButton.disabled = true;
+submitButton.textContent = "Creating Account...";
+
+try{
+
+// 1. FIND PRE-AUTHORIZED ADMIN RECORD
+const adminQuery = query(
+collection(db,"admins"),
+where("adminId","==",data.adminId)
+);
+
+const result = await getDocs(adminQuery);
+
+if(result.empty){
+throw new Error("INVALID_ADMIN_ID");
+}
+
+if(result.size !== 1){
+throw new Error("ADMIN_CONFIGURATION_ERROR");
+}
+
+const adminDoc = result.docs[0];
+const existing = adminDoc.data();
+
+// 2. VERIFY PRE-REGISTERED EMAIL
+if(existing.email?.toLowerCase() !== data.email){
+throw new Error("EMAIL_MISMATCH");
+}
+
+// 3. ONLY UNUSED INVITATIONS CAN REGISTER
+if(existing.uid || existing.status !== "invited"){
+throw new Error("ADMIN_ALREADY_REGISTERED");
+}
+
+// 4. CREATE FIREBASE AUTH ACCOUNT
+const credential = await createUserWithEmailAndPassword(
+auth,data.email,password
+);
+
+const user = credential.user;
+
+// 5. UPDATE EXISTING ADMIN DOCUMENT
+await updateDoc(doc(db,"admins",adminDoc.id),{
+
+adminId:data.adminId,
+uid:user.uid,
+
+username:data.username,
+firstName:data.firstName,
+lastName:data.lastName,
+fullName:data.fullName,
+displayName:data.fullName,
+
+email:data.email,
+phoneNumber:data.phoneNumber,
+country:data.country,
+department:data.department,
+
+language:data.language,
+timezone:data.timezone,
+
+role:"admin",
+adminType:existing.adminType || "admin",
+accessLevel:existing.accessLevel || "admin",
+permissions:existing.permissions || {},
+
+status:"active",
+emailVerified:false,
+phoneVerified:false,
+twoFactorEnabled:false,
+
+loginCount:0,
+createdAt:serverTimestamp(),
+updatedAt:serverTimestamp(),
+lastLoginAt:null,
+lastLoginDevice:"",
+lastLoginIP:"",
+createdBy:existing.createdBy || "system"
+
+});
+
+// 6. SEND EMAIL VERIFICATION
+await sendEmailVerification(user);
+
+// 7. SUCCESS
+showMessage(
+"Registration successful! Please verify your email before logging in.",
+"success"
+);
+
+form.reset();
+
+setTimeout(()=>{
+window.location.href="resources-admin-login.html";
+},3500);
+
+}catch(error){
+
+console.error(error);
+
+const errors = {
+"INVALID_ADMIN_ID":"Invalid Admin ID. Contact your administrator.",
+"EMAIL_MISMATCH":"This email is not authorized for this Admin ID.",
+"ADMIN_ALREADY_REGISTERED":"This Admin ID has already been registered or is not available.",
+"ADMIN_CONFIGURATION_ERROR":"Admin configuration error. Contact support.",
+"auth/email-already-in-use":"This email already has an account.",
+"auth/weak-password":"Please choose a stronger password.",
+"auth/invalid-email":"Invalid email address.",
+"permission-denied":"Registration permission denied. Check Firestore Security Rules."
+};
+
+showMessage(
+errors[error.message] || errors[error.code] ||
+"Registration failed. Please try again.",
+"error"
+);
+
+}finally{
+
+submitButton.disabled = false;
+submitButton.textContent = "Create Admin Account";
+
+}
+
+});
+
+</script>
+</body>
+</html>
