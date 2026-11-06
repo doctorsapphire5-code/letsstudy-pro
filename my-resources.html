@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f172a">
+<title>My Resources | Vorix Resources</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:#f1f5f9;
+  color:#172033;
+  font-family:Arial,sans-serif;
+}
+header{
+  background:#0f172a;
+  color:white;
+  padding:17px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+}
+.brand{font-size:19px;font-weight:bold}
+.brand span{color:#60a5fa}
+.header-actions{display:flex;gap:8px;flex-wrap:wrap}
+.header-actions a,.header-actions button{
+  color:white;
+  text-decoration:none;
+  background:#263449;
+  border:0;
+  padding:9px 12px;
+  border-radius:7px;
+  font-size:12px;
+  cursor:pointer;
+}
+.container{max-width:1100px;margin:auto;padding:25px 16px}
+.welcome{margin-bottom:22px}
+.welcome h1{font-size:25px;margin:0 0 8px}
+.welcome p{color:#64748b;margin:0;font-size:14px}
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:13px;
+  margin-bottom:24px;
+}
+.stat{
+  background:white;
+  padding:18px;
+  border-radius:12px;
+  box-shadow:0 2px 10px #0f172a08;
+}
+.stat small{color:#64748b;font-size:12px}
+.stat h2{font-size:25px;margin:10px 0 0}
+.toolbar{
+  background:white;
+  padding:16px;
+  border-radius:12px;
+  display:flex;
+  gap:10px;
+  margin-bottom:17px;
+  flex-wrap:wrap;
+}
+.toolbar input,.toolbar select{
+  padding:12px;
+  border:1px solid #cbd5e1;
+  border-radius:8px;
+  font-size:14px;
+  background:white;
+}
+.toolbar input{flex:1;min-width:180px}
+.toolbar select{min-width:150px}
+.add-btn{
+  background:#2563eb;
+  color:white;
+  padding:12px 16px;
+  border-radius:8px;
+  text-decoration:none;
+  font-size:13px;
+  font-weight:bold;
+}
+.resource-list{display:grid;gap:13px}
+.resource{
+  background:white;
+  border-radius:12px;
+  padding:18px;
+  box-shadow:0 2px 10px #0f172a08;
+}
+.resource-top{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+}
+.resource h3{margin:0 0 8px;font-size:17px}
+.resource p{
+  color:#64748b;
+  font-size:13px;
+  line-height:1.6;
+  margin:7px 0;
+  overflow-wrap:anywhere;
+}
+.meta{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  color:#64748b;
+  font-size:12px;
+  margin-top:12px;
+}
+.status{
+  padding:6px 10px;
+  border-radius:20px;
+  font-size:11px;
+  font-weight:bold;
+  white-space:nowrap;
+  background:#e2e8f0;
+  color:#334155;
+}
+.published{background:#dcfce7;color:#166534}
+.pending{background:#fef3c7;color:#92400e}
+.draft{background:#e0e7ff;color:#3730a3}
+.rejected{background:#fee2e2;color:#991b1b}
+.resource-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:15px;
+}
+.action{
+  border:0;
+  border-radius:7px;
+  padding:9px 12px;
+  font-size:12px;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-block;
+}
+.view{background:#dbeafe;color:#1d4ed8}
+.edit{background:#fef3c7;color:#92400e}
+.delete{background:#fee2e2;color:#991b1b}
+.download{background:#dcfce7;color:#166534}
+.empty,.loading{
+  background:white;
+  text-align:center;
+  padding:45px 20px;
+  border-radius:12px;
+  color:#64748b;
+  line-height:1.7;
+}
+.empty strong{display:block;color:#172033;font-size:17px;margin-bottom:7px}
+.message{
+  padding:12px;
+  border-radius:8px;
+  margin-bottom:15px;
+  font-size:13px;
+  display:none;
+}
+.error{background:#fee2e2;color:#991b1b}
+.success{background:#dcfce7;color:#166534}
+footer{
+  text-align:center;
+  padding:25px;
+  color:#94a3b8;
+  font-size:12px;
+}
+@media(max-width:700px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .resource-top{align-items:flex-start}
+  .welcome h1{font-size:22px}
+}
+@media(max-width:420px){
+  header{align-items:flex-start;flex-direction:column}
+  .toolbar input,.toolbar select,.add-btn{width:100%}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="brand">VORIX <span>RESOURCES</span></div>
+
+  <div class="header-actions">
+    <a href="resources-dashboard.html">Dashboard</a>
+    <a href="resources-profile.html">Profile</a>
+    <button id="logoutBtn" type="button">Logout</button>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="welcome">
+    <h1>My Resources</h1>
+    <p>Manage, monitor and organize the resources you have submitted.</p>
+  </section>
+
+  <div id="message" class="message"></div>
+
+  <section class="stats">
+    <div class="stat">
+      <small>Total Resources</small>
+      <h2 id="totalCount">0</h2>
+    </div>
+
+    <div class="stat">
+      <small>Published</small>
+      <h2 id="publishedCount">0</h2>
+    </div>
+
+    <div class="stat">
+      <small>Pending</small>
+      <h2 id="pendingCount">0</h2>
+    </div>
+
+    <div class="stat">
+      <small>Drafts</small>
+      <h2 id="draftCount">0</h2>
+    </div>
+  </section>
+
+  <section class="toolbar">
+    <input
+      type="search"
+      id="searchInput"
+      placeholder="Search your resources..."
+      aria-label="Search resources"
+    >
+
+    <select id="statusFilter" aria-label="Filter by status">
+      <option value="all">All Statuses</option>
+      <option value="published">Published</option>
+      <option value="pending">Pending</option>
+      <option value="draft">Draft</option>
+      <option value="rejected">Rejected</option>
+    </select>
+
+    <a href="resources-add.html" class="add-btn">+ Add Resource</a>
+  </section>
+
+  <section id="resourceList" class="resource-list">
+    <div class="loading">Loading your resources...</div>
+  </section>
+
+</main>
+
+<footer>
+  &copy; <span id="year"></span> Vorix Resources. All rights reserved.
+</footer>
+
+<script type="module">
+
+import { initializeApp } from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut
+} from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  deleteDoc,
+  serverTimestamp,
+  updateDoc
+} from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBuP13ggQsiZiZgoIf9nFK8hmw8Bx6KYr0",
+  authDomain: "vorix-resources.firebaseapp.com",
+  projectId: "vorix-resources",
+  storageBucket: "vorix-resources.firebasestorage.app",
+  messagingSenderId: "789688947048",
+  appId: "1:789688947048:web:31598720b1e0cef9db06dd",
+  measurementId: "G-VEYGNMJ6N1"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const $ = id => document.getElementById(id);
+
+$("year").textContent = new Date().getFullYear();
+
+let currentUser = null;
+let allResources = [];
+
+function showMessage(text,type="success"){
+  const box = $("message");
+  box.textContent = text;
+  box.className = "message " + type;
+  box.style.display = "block";
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function normalizeStatus(value){
+  const status = String(value || "pending").toLowerCase().trim();
+
+  if(status === "published" || status === "approved") return "published";
+  if(status === "draft") return "draft";
+  if(status === "rejected") return "rejected";
+
+  return "pending";
+}
+
+function safeText(value){
+  return String(value ?? "");
+}
+
+function formatDate(value){
+
+  if(!value) return "Date unavailable";
+
+  let date;
+
+  if(typeof value.toDate === "function"){
+    date = value.toDate();
+  }else{
+    date = new Date(value);
+  }
+
+  if(isNaN(date.getTime())) return "Date unavailable";
+
+  return date.toLocaleDateString("en-GB",{
+    day:"2-digit",
+    month:"short",
+    year:"numeric"
+  });
+}
+
+function createElement(tag,className,text){
+  const element = document.createElement(tag);
+
+  if(className) element.className = className;
+  if(text !== undefined) element.textContent = text;
+
+  return element;
+}
+
+function getResourceTitle(resource){
+  return safeText(
+    resource.title ||
+    resource.resourceTitle ||
+    resource.name ||
+    "Untitled Resource"
+  );
+}
+
+function getResourceDescription(resource){
+  return safeText(
+    resource.description ||
+    resource.summary ||
+    resource.details ||
+    "No description available."
+  );
+}
+
+function getResourceDate(resource){
+  return resource.createdAt || resource.updatedAt || null;
+}
+
+function updateStatistics(){
+
+  $("totalCount").textContent = allResources.length;
+
+  $("publishedCount").textContent =
+    allResources.filter(r=>normalizeStatus(r.status)==="published").length;
+
+  $("pendingCount").textContent =
+    allResources.filter(r=>normalizeStatus(r.status)==="pending").length;
+
+  $("draftCount").textContent =
+    allResources.filter(r=>normalizeStatus(r.status)==="draft").length;
+}
+
+function createResourceCard(item){
+
+  const resource = item.data;
+  const id = item.id;
+  const status = normalizeStatus(resource.status);
+
+  const card = createElement("article","resource");
+
+  const top = createElement("div","resource-top");
+  const details = createElement("div");
+
+  const title = createElement("h3","",getResourceTitle(resource));
+  const description = createElement("p","",getResourceDescription(resource));
+
+  const category = safeText(resource.category || "Uncategorized");
+  const date = formatDate(getResourceDate(resource));
+
+  const statusBadge = createElement(
+    "span",
+    "status " + status,
+    status.charAt(0).toUpperCase() + status.slice(1)
+  );
+
+  details.append(title,description);
+  top.append(details,statusBadge);
+
+  const meta = createElement("div","meta");
+
+  const categoryText = createElement("span","", "Category: " + category);
+  const dateText = createElement("span","", "Submitted: " + date);
+
+  meta.append(categoryText,dateText);
+
+  const actions = createElement("div","resource-actions");
+
+  // Open the resource using a separate details page.
+  const viewLink = createElement("a","action view","View");
+  viewLink.href = "resources-view.html?id=" + encodeURIComponent(id);
+
+  // Edit page must verify ownership on the server/client and in Rules.
+  const editLink = createElement("a","action edit","Edit");
+  editLink.href = "resources-edit.html?id=" + encodeURIComponent(id);
+
+  actions.append(viewLink,editLink);
+
+  const resourceUrl = resource.fileUrl || resource.downloadUrl || resource.url;
+
+  if(resourceUrl){
+    try{
+      const parsed = new URL(resourceUrl);
+
+      if(parsed.protocol === "https:" || parsed.protocol === "http:"){
+        const downloadLink = createElement("a","action download","Open File");
+        downloadLink.href = parsed.href;
+        downloadLink.target = "_blank";
+        downloadLink.rel = "noopener noreferrer";
+        actions.append(downloadLink);
+      }
+    }catch(error){
+      console.warn("Invalid resource URL:",error);
+    }
+  }
+
+  const deleteButton = createElement("button","action delete","Delete");
+  deleteButton.type = "button";
+
+  deleteButton.addEventListener("click",()=>deleteResource(id));
+
+  actions.append(deleteButton);
+
+  card.append(top,meta,actions);
+
+  return card;
+}
+
+function renderResources(){
+
+  const list = $("resourceList");
+  list.replaceChildren();
+
+  const search = $("searchInput").value.toLowerCase().trim();
+  const selectedStatus = $("statusFilter").value;
+
+  const filtered = allResources.filter(item=>{
+
+    const resource = item.data;
+
+    const title = getResourceTitle(resource).toLowerCase();
+    const description = getResourceDescription(resource).toLowerCase();
+    const category = safeText(resource.category).toLowerCase();
+
+    const matchesSearch =
+      title.includes(search) ||
+      description.includes(search) ||
+      category.includes(search);
+
+    const matchesStatus =
+      selectedStatus === "all" ||
+      normalizeStatus(resource.status) === selectedStatus;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  if(filtered.length === 0){
+
+    const empty = createElement("div","empty");
+
+    const heading = createElement(
+      "strong",
+      "",
+      allResources.length === 0
+        ? "You haven't submitted any resources yet."
+        : "No matching resources found."
+    );
+
+    const description = createElement(
+      "div",
+      "",
+      allResources.length === 0
+        ? "Start sharing useful learning materials and resources."
+        : "Try another search term or status filter."
+    );
+
+    empty.append(heading,description);
+
+    if(allResources.length === 0){
+      const add = createElement("a","add-btn","Add Your First Resource");
+      add.href = "resources-add.html";
+      add.style.display = "inline-block";
+      add.style.marginTop = "15px";
+      empty.append(add);
+    }
+
+    list.append(empty);
+    return;
+  }
+
+  filtered.forEach(item=>{
+    list.append(createResourceCard(item));
+  });
+}
+
+async function loadResources(){
+
+  $("resourceList").innerHTML =
+    '<div class="loading">Loading your resources...</div>';
+
+  try{
+
+    const resourcesQuery = query(
+      collection(db,"resources"),
+      where("userId","==",currentUser.uid)
+    );
+
+    const snapshot = await getDocs(resourcesQuery);
+
+    allResources = snapshot.docs.map(documentSnapshot=>({
+      id:documentSnapshot.id,
+      data:documentSnapshot.data()
+    }));
+
+    allResources.sort((a,b)=>{
+
+      const dateA = getResourceDate(a.data);
+      const dateB = getResourceDate(b.data);
+
+      const timeA = dateA?.toMillis
+        ? dateA.toMillis()
+        : new Date(dateA || 0).getTime();
+
+      const timeB = dateB?.toMillis
+        ? dateB.toMillis()
+        : new Date(dateB || 0).getTime();
+
+      return timeB-timeA;
+    });
+
+    updateStatistics();
+    renderResources();
+
+  }catch(error){
+
+    console.error("Resources loading error:",error);
+
+    $("resourceList").innerHTML =
+      '<div class="empty">Unable to load your resources. Check your internet connection and Firestore security rules.</div>';
+
+  }
+}
+
+async function deleteResource(resourceId){
+
+  const confirmed = confirm(
+    "Are you sure you want to delete this resource? This action cannot be undone."
+  );
+
+  if(!confirmed) return;
+
+  try{
+
+    const resourceRef = doc(db,"resources",resourceId);
+    const resourceSnapshot = await getDoc(resourceRef);
+
+    if(!resourceSnapshot.exists()){
+      showMessage("This resource no longer exists.","error");
+      await loadResources();
+      return;
+    }
+
+    const resource = resourceSnapshot.data();
+
+    // Verify ownership before deleting.
+    if(resource.userId !== currentUser.uid){
+      showMessage(
+        "You are not authorized to delete this resource.",
+        "error"
+      );
+      return;
+    }
+
+    await deleteDoc(resourceRef);
+
+    allResources = allResources.filter(item=>item.id !== resourceId);
+
+    updateStatistics();
+    renderResources();
+
+    showMessage("Resource deleted successfully.","success");
+
+  }catch(error){
+
+    console.error("Delete error:",error);
+
+    showMessage(
+      "Unable to delete this resource. Check your permissions and try again.",
+      "error"
+    );
+  }
+}
+
+// Search and status filter.
+$("searchInput").addEventListener("input",renderResources);
+$("statusFilter").addEventListener("change",renderResources);
+
+// Logout.
+$("logoutBtn").addEventListener("click",async()=>{
+
+  const confirmed = confirm("Are you sure you want to log out?");
+
+  if(!confirmed) return;
+
+  try{
+    await signOut(auth);
+    window.location.href = "resources-login.html";
+  }catch(error){
+    console.error(error);
+    showMessage("Unable to log out. Please try again.","error");
+  }
+});
+
+// Authentication and user account verification.
+onAuthStateChanged(auth,async user=>{
+
+  if(!user){
+    window.location.href = "resources-login.html";
+    return;
+  }
+
+  currentUser = user;
+
+  try{
+
+    const userRef = doc(db,"users",user.uid);
+    const userSnapshot = await getDoc(userRef);
+
+    if(!userSnapshot.exists()){
+      await signOut(auth);
+      window.location.href = "resources-login.html";
+      return;
+    }
+
+    const userData = userSnapshot.data();
+
+    if(
+      userData.userId !== user.uid ||
+      userData.email !== user.email ||
+      userData.status !== "active"
+    ){
+      await signOut(auth);
+      window.location.href = "resources-login.html";
+      return;
+    }
+
+    await loadResources();
+
+  }catch(error){
+
+    console.error("Account verification error:",error);
+
+    showMessage(
+      "Unable to verify your account. Please try again.",
+      "error"
+    );
+
+    $("resourceList").innerHTML =
+      '<div class="empty">Account verification failed.</div>';
+  }
+
+});
+
+</script>
+
+</body>
+</html>
