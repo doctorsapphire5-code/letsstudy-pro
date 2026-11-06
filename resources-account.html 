@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f172a">
+  <title>Account Management | Vorix Resources</title>
+
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172033}
+    header{background:#0f172a;color:white;padding:20px}
+    header h1{margin:0;font-size:22px}
+    header p{margin:7px 0 0;color:#cbd5e1;font-size:14px}
+    main{max-width:850px;margin:25px auto;padding:0 15px}
+    .card{background:white;padding:22px;border-radius:14px;margin-bottom:18px;box-shadow:0 3px 15px #0f172a0d}
+    h2{font-size:18px;margin:0 0 17px}
+    .detail{padding:12px 0;border-bottom:1px solid #e2e8f0}
+    .detail:last-child{border:0}
+    .label{display:block;color:#64748b;font-size:12px;margin-bottom:5px}
+    .value{font-size:14px;overflow-wrap:anywhere}
+    input{width:100%;padding:13px;border:1px solid #cbd5e1;border-radius:8px;margin:8px 0 14px;font-size:15px}
+    button,.btn{display:inline-block;border:0;border-radius:8px;padding:12px 16px;font-size:14px;font-weight:bold;cursor:pointer;text-decoration:none;margin:4px 4px 4px 0}
+    .primary{background:#2563eb;color:white}
+    .success{background:#059669;color:white}
+    .danger{background:#dc2626;color:white}
+    .secondary{background:#e2e8f0;color:#172033}
+    .status{padding:10px;border-radius:8px;font-size:13px;margin-bottom:15px}
+    .good{background:#dcfce7;color:#166534}
+    .warning{background:#fef3c7;color:#92400e}
+    .error{background:#fee2e2;color:#991b1b}
+    .muted{color:#64748b;font-size:13px;line-height:1.6}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    footer{text-align:center;color:#64748b;font-size:12px;padding:25px}
+  </style>
+</head>
+
+<body>
+<header>
+  <h1>Vorix Resources</h1>
+  <p>Account Management</p>
+</header>
+
+<main>
+  <div id="message" aria-live="polite"></div>
+
+  <section class="card">
+    <h2>Account Overview</h2>
+
+    <div class="detail">
+      <span class="label">Full Name</span>
+      <span class="value" id="fullName">Loading...</span>
+    </div>
+
+    <div class="detail">
+      <span class="label">Email Address</span>
+      <span class="value" id="email">Loading...</span>
+    </div>
+
+    <div class="detail">
+      <span class="label">User ID</span>
+      <span class="value" id="userId">Loading...</span>
+    </div>
+
+    <div class="detail">
+      <span class="label">Account Type</span>
+      <span class="value" id="accountType">Loading...</span>
+    </div>
+
+    <div class="detail">
+      <span class="label">Account Status</span>
+      <span class="value" id="accountStatus">Loading...</span>
+    </div>
+
+    <div class="detail">
+      <span class="label">Email Verification</span>
+      <span class="value" id="emailStatus">Checking...</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Email Verification</h2>
+    <p class="muted">
+      Verify your email address to help protect your account and receive important notifications.
+    </p>
+    <button class="success" id="verifyEmailBtn">Send Verification Email</button>
+    <button class="secondary" id="refreshBtn">Refresh Status</button>
+  </section>
+
+  <section class="card">
+    <h2>Change Password</h2>
+    <p class="muted">
+      For security, enter your current password before setting a new password.
+    </p>
+
+    <label for="currentPassword">Current Password</label>
+    <input type="password" id="currentPassword" autocomplete="current-password" placeholder="Enter current password">
+
+    <label for="newPassword">New Password</label>
+    <input type="password" id="newPassword" autocomplete="new-password" placeholder="At least 8 characters">
+
+    <label for="confirmPassword">Confirm New Password</label>
+    <input type="password" id="confirmPassword" autocomplete="new-password" placeholder="Confirm new password">
+
+    <button class="primary" id="changePasswordBtn">Update Password</button>
+  </section>
+
+  <section class="card">
+    <h2>Account Security</h2>
+    <p class="muted">
+      Never share your password or verification codes with anyone.
+      Vorix Resources will never ask you to send your password.
+    </p>
+    <button class="secondary" id="reloadBtn">Refresh Account</button>
+    <button class="danger" id="logoutBtn">Logout</button>
+  </section>
+
+  <section class="card">
+    <h2>Quick Navigation</h2>
+    <a class="btn secondary" href="resources-dashboard.html">Dashboard</a>
+    <a class="btn secondary" href="resources-profile.html">My Profile</a>
+    <a class="btn secondary" href="resources-edit-profile.html">Edit Profile</a>
+    <a class="btn secondary" href="resources-settings.html">Settings</a>
+  </section>
+</main>
+
+<footer>
+  &copy; <span id="year"></span> Vorix Resources. All rights reserved.
+</footer>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signOut,
+    sendEmailVerification,
+    EmailAuthProvider,
+    reauthenticateWithCredential,
+    updatePassword,
+    reload
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    updateDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBuP13ggQsiZiZgoIf9nFK8hmw8Bx6KYr0",
+    authDomain: "vorix-resources.firebaseapp.com",
+    projectId: "vorix-resources",
+    storageBucket: "vorix-resources.firebasestorage.app",
+    messagingSenderId: "789688947048",
+    appId: "1:789688947048:web:31598720b1e0cef9db06dd",
+    measurementId: "G-VEYGNMJ6N1"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const $ = id => document.getElementById(id);
+  let currentUser = null;
+  let userData = null;
+
+  $("year").textContent = new Date().getFullYear();
+
+  function showMessage(message, type = "good") {
+    $("message").innerHTML = "";
+    const box = document.createElement("div");
+    box.className = "status " + type;
+    box.textContent = message;
+    $("message").appendChild(box);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function setLoading(button, loading, text) {
+    button.disabled = loading;
+    button.textContent = loading ? "Please wait..." : text;
+  }
+
+  async function loadAccount(user) {
+    const ref = doc(db, "users", user.uid);
+    const snapshot = await getDoc(ref);
+
+    if (!snapshot.exists()) {
+      throw new Error("Your user profile was not found. Please contact support.");
+    }
+
+    const data = snapshot.data();
+
+    if (data.userId !== user.uid) {
+      throw new Error("Account identity verification failed.");
+    }
+
+    if (data.email && user.email &&
+        data.email.toLowerCase() !== user.email.toLowerCase()) {
+      throw new Error("Account email does not match your login.");
+    }
+
+    if (data.status !== "active") {
+      throw new Error("Your account is not active. Please contact support.");
+    }
+
+    currentUser = user;
+    userData = data;
+
+    $("fullName").textContent =
+      data.fullName || data.displayName || user.displayName || "Not provided";
+
+    $("email").textContent = user.email || "Not provided";
+    $("userId").textContent = user.uid;
+    $("accountType").textContent = data.accountType || "Standard";
+    $("accountStatus").textContent = data.status || "Unknown";
+    $("emailStatus").textContent = user.emailVerified ? "Verified" : "Not verified";
+  }
+
+  onAuthStateChanged(auth, async user => {
+    if (!user) {
+      window.location.replace("resources-login.html");
+      return;
+    }
+
+    try {
+      await loadAccount(user);
+    } catch (error) {
+      showMessage(error.message, "error");
+      if (error.code === "permission-denied") {
+        console.error("Firestore permission denied:", error);
+      }
+    }
+  });
+
+  $("verifyEmailBtn").addEventListener("click", async () => {
+    if (!currentUser) return;
+
+    const button = $("verifyEmailBtn");
+    setLoading(button, true, "Send Verification Email");
+
+    try {
+      await reload(currentUser);
+      currentUser = auth.currentUser;
+
+      if (currentUser.emailVerified) {
+        $("emailStatus").textContent = "Verified";
+        showMessage("Your email is already verified.");
+      } else {
+        await sendEmailVerification(currentUser);
+        showMessage("Verification email sent. Check your inbox and spam folder.");
+      }
+    } catch (error) {
+      showMessage(error.message, "error");
+    } finally {
+      setLoading(button, false, "Send Verification Email");
+    }
+  });
+
+  $("refreshBtn").addEventListener("click", async () => {
+    try {
+      await reload(auth.currentUser);
+      await loadAccount(auth.currentUser);
+      showMessage("Email verification status refreshed.");
+    } catch (error) {
+      showMessage(error.message, "error");
+    }
+  });
+
+  $("changePasswordBtn").addEventListener("click", async () => {
+    const button = $("changePasswordBtn");
+    const currentPassword = $("currentPassword").value;
+    const newPassword = $("newPassword").value;
+    const confirmPassword = $("confirmPassword").value;
+
+    if (!currentUser || !currentUser.email) {
+      showMessage("Unable to identify your account email.", "error");
+      return;
+    }
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      showMessage("Please complete all password fields.", "warning");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      showMessage("New password must contain at least 8 characters.", "warning");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      showMessage("New passwords do not match.", "warning");
+      return;
+    }
+
+    if (currentPassword === newPassword) {
+      showMessage("Choose a password different from your current password.", "warning");
+      return;
+    }
+
+    setLoading(button, true, "Update Password");
+
+    try {
+      const credential = EmailAuthProvider.credential(
+        currentUser.email,
+        currentPassword
+      );
+
+      await reauthenticateWithCredential(currentUser, credential);
+      await updatePassword(currentUser, newPassword);
+
+      $("currentPassword").value = "";
+      $("newPassword").value = "";
+      $("confirmPassword").value = "";
+
+      await updateDoc(doc(db, "users", currentUser.uid), {
+        updatedAt: serverTimestamp()
+      });
+
+      showMessage("Your password has been updated successfully.");
+    } catch (error) {
+      let message = error.message;
+
+      if (error.code === "auth/wrong-password" ||
+          error.code === "auth/invalid-credential") {
+        message = "Your current password is incorrect.";
+      } else if (error.code === "auth/weak-password") {
+        message = "Please choose a stronger password.";
+      } else if (error.code === "auth/requires-recent-login") {
+        message = "Please log in again before changing your password.";
+      }
+
+      showMessage(message, "error");
+    } finally {
+      setLoading(button, false, "Update Password");
+    }
+  });
+
+  $("reloadBtn").addEventListener("click", async () => {
+    try {
+      await reload(auth.currentUser);
+      await loadAccount(auth.currentUser);
+      showMessage("Account information refreshed.");
+    } catch (error) {
+      showMessage(error.message, "error");
+    }
+  });
+
+  $("logoutBtn").addEventListener("click", async () => {
+    try {
+      await signOut(auth);
+      window.location.replace("resources-login.html");
+    } catch (error) {
+      showMessage("Logout failed: " + error.message, "error");
+    }
+  });
+</script>
+</body>
+</html>
