@@ -1,0 +1,366 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Account | Vorix Resources</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f3f6fb;color:#172033}
+.sidebar{position:fixed;top:0;bottom:0;left:0;width:235px;background:#111d36;padding:25px 16px;color:white}
+.brand{font-size:23px;font-weight:bold;padding:10px;margin-bottom:25px}
+.brand span{color:#60a5fa}
+.nav-title{font-size:10px;color:#94a3b8;margin:20px 10px 10px}
+.nav a{display:block;padding:12px;color:#cbd5e1;text-decoration:none;border-radius:8px;font-size:14px;margin-bottom:5px}
+.nav a:hover,.nav a.active{background:#263b60;color:white}
+main{margin-left:235px;padding:28px;max-width:1400px}
+header{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:25px;flex-wrap:wrap}
+h1{font-size:24px}
+.subtitle{font-size:13px;color:#718096;margin-top:6px}
+.card{background:white;border:1px solid #e8edf4;border-radius:13px;padding:23px;margin-bottom:20px}
+.card h2{font-size:17px;margin-bottom:17px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.item{background:#f8fafc;padding:14px;border-radius:8px;overflow-wrap:anywhere}
+.item label{font-size:11px;color:#718096;display:block;margin-bottom:7px}
+.item p{font-size:14px;font-weight:bold}
+button,.btn{border:0;padding:12px 16px;border-radius:8px;font-size:13px;cursor:pointer;text-decoration:none;display:inline-block}
+.primary{background:#1d4ed8;color:white}
+.secondary{background:#e9eef7;color:#334155}
+.danger{background:#fee2e2;color:#b91c1c}
+input{width:100%;padding:12px;border:1px solid #dce2eb;border-radius:8px;margin:8px 0 14px;font-size:14px}
+label{font-size:13px;font-weight:bold}
+#message{font-size:13px;color:#475569;margin-bottom:15px}
+.hidden{display:none}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+@media(max-width:650px){
+.sidebar{position:relative;width:100%;padding:12px}
+.brand{margin:0}
+.nav{display:flex;overflow-x:auto}
+.nav-title{display:none}
+.nav a{white-space:nowrap}
+main{margin:0;padding:15px}
+.grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<aside class="sidebar">
+<div class="brand">VORIX<span>.</span></div>
+<nav class="nav">
+<div class="nav-title">MAIN MENU</div>
+<a href="resources-admin-dashboard.html">Dashboard</a>
+<a href="resources-admin-resources.html">Resources</a>
+<div class="nav-title">ACCOUNT</div>
+<a href="resources-admin-profile.html">My Profile</a>
+<a href="resources-admin-edit-profile.html">Edit Profile</a>
+<a href="resources-admin-account.html" class="active">My Account</a>
+<a href="resources-admin-settings.html">Settings</a>
+<a href="#" id="logoutLink">Logout</a>
+</nav>
+</aside>
+
+<main>
+
+<header>
+<div>
+<h1>Account Management</h1>
+<p class="subtitle">Manage your administrator account and security.</p>
+</div>
+<a href="resources-admin-dashboard.html" class="btn secondary">Dashboard</a>
+</header>
+
+<div id="message">Verifying account...</div>
+
+<section class="card">
+<h2>Account Overview</h2>
+<div class="grid">
+<div class="item"><label>Admin ID</label><p id="adminId">—</p></div>
+<div class="item"><label>Full Name</label><p id="fullName">—</p></div>
+<div class="item"><label>Email Address</label><p id="email">—</p></div>
+<div class="item"><label>Firebase UID</label><p id="uid">—</p></div>
+<div class="item"><label>Account Status</label><p id="status">—</p></div>
+<div class="item"><label>Administrator Role</label><p id="role">—</p></div>
+<div class="item"><label>Email Verification</label><p id="verified">—</p></div>
+<div class="item"><label>Login Count</label><p id="loginCount">—</p></div>
+<div class="item"><label>Created At</label><p id="createdAt">—</p></div>
+<div class="item"><label>Last Login</label><p id="lastLogin">—</p></div>
+</div>
+</section>
+
+<section class="card">
+<h2>Email Security</h2>
+<p style="font-size:13px;color:#718096;margin-bottom:15px">
+Your email is used to authenticate your administrator account.
+</p>
+<div class="actions">
+<button class="primary" id="verifyEmail">Send Verification Email</button>
+<button class="secondary" id="reloadUser">Refresh Verification Status</button>
+</div>
+</section>
+
+<section class="card">
+<h2>Change Password</h2>
+<form id="passwordForm">
+<label>Current Password</label>
+<input id="currentPassword" type="password" required autocomplete="current-password">
+
+<label>New Password</label>
+<input id="newPassword" type="password" minlength="8" required autocomplete="new-password">
+
+<label>Confirm New Password</label>
+<input id="confirmPassword" type="password" minlength="8" required autocomplete="new-password">
+
+<button class="primary" type="submit" id="changePasswordBtn">Update Password</button>
+</form>
+</section>
+
+<section class="card">
+<h2>Account Security</h2>
+<div class="grid">
+<div class="item"><label>Two-Factor Authentication</label><p id="twoFactor">—</p></div>
+<div class="item"><label>Phone Verification</label><p id="phoneVerified">—</p></div>
+<div class="item"><label>Access Level</label><p id="accessLevel">—</p></div>
+<div class="item"><label>Admin Type</label><p id="adminType">—</p></div>
+</div>
+</section>
+
+<section class="card">
+<h2>Account Actions</h2>
+<div class="actions">
+<button class="danger" id="logoutBtn">Sign Out</button>
+</div>
+</section>
+
+</main>
+
+<script type="module">
+
+import {initializeApp}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getAuth,onAuthStateChanged,signOut,
+sendEmailVerification,updatePassword,
+reauthenticateWithCredential,
+EmailAuthProvider, reload
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+getFirestore,collection,query,where,getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyBuP13ggQsiZiZgoIf9nFK8hmw8Bx6KYr0",
+authDomain: "vorix-resources.firebaseapp.com",
+projectId: "vorix-resources",
+storageBucket: "vorix-resources.firebasestorage.app",
+messagingSenderId: "789688947048",
+appId: "1:789688947048:web:31598720b1e0cef9db06dd",
+measurementId: "G-VEYGNMJ6N1"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+const message=document.getElementById("message");
+let currentUser=null;
+
+function showMessage(text){
+message.textContent=text;
+}
+
+function setValue(id,value){
+document.getElementById(id).textContent =
+value === undefined || value === null || value === "" ? "—" : value;
+}
+
+function dateValue(value){
+if(!value)return "—";
+const date=value.toDate ? value.toDate() : new Date(value);
+return isNaN(date.getTime()) ? "—" : date.toLocaleString();
+}
+
+async function loadAccount(user){
+
+const q=query(
+collection(db,"admins"),
+where("uid","==",user.uid)
+);
+
+const result=await getDocs(q);
+
+if(result.size!==1){
+throw new Error("Administrator record not found.");
+}
+
+const admin=result.docs[0].data();
+
+if(
+admin.status!=="active" ||
+admin.role!=="admin" ||
+admin.email?.toLowerCase()!==user.email?.toLowerCase()
+){
+await signOut(auth);
+window.location.replace("resources-admin-login.html");
+return;
+}
+
+setValue("adminId",admin.adminId);
+setValue("fullName",admin.fullName);
+setValue("email",user.email);
+setValue("uid",user.uid);
+setValue("status",admin.status);
+setValue("role",admin.role);
+setValue("verified",user.emailVerified?"Verified":"Not verified");
+setValue("loginCount",admin.loginCount ?? 0);
+setValue("createdAt",dateValue(admin.createdAt));
+setValue("lastLogin",dateValue(admin.lastLoginAt));
+setValue("twoFactor",admin.twoFactorEnabled?"Enabled":"Disabled");
+setValue("phoneVerified",admin.phoneVerified?"Verified":"Not verified");
+setValue("accessLevel",admin.accessLevel);
+setValue("adminType",admin.adminType);
+
+showMessage("Account information loaded successfully.");
+}
+
+onAuthStateChanged(auth,async(user)=>{
+
+if(!user){
+window.location.replace("resources-admin-login.html");
+return;
+}
+
+currentUser=user;
+
+try{
+
+if(!user.emailVerified){
+showMessage("Please verify your email address.");
+}
+
+await loadAccount(user);
+
+}catch(error){
+console.error(error);
+showMessage("Unable to load account. Check Firestore permissions.");
+}
+
+});
+
+// SEND VERIFICATION EMAIL
+document.getElementById("verifyEmail").onclick=async()=>{
+
+try{
+if(!currentUser) return;
+await sendEmailVerification(currentUser);
+showMessage("Verification email sent successfully.");
+}catch(error){
+showMessage(error.message);
+}
+
+};
+
+// REFRESH EMAIL STATUS
+document.getElementById("reloadUser").onclick=async()=>{
+
+try{
+await reload(currentUser);
+await loadAccount(currentUser);
+showMessage(currentUser.emailVerified?
+"Your email is verified.":"Your email is not verified yet.");
+}catch(error){
+showMessage(error.message);
+}
+
+};
+
+// CHANGE PASSWORD
+document.getElementById("passwordForm").addEventListener("submit",async(e)=>{
+
+e.preventDefault();
+
+const oldPassword=document.getElementById("currentPassword").value;
+const newPassword=document.getElementById("newPassword").value;
+const confirm=document.getElementById("confirmPassword").value;
+
+if(newPassword.length<8){
+showMessage("New password must contain at least 8 characters.");
+return;
+}
+
+if(newPassword!==confirm){
+showMessage("New passwords do not match.");
+return;
+}
+
+if(oldPassword===newPassword){
+showMessage("Choose a different new password.");
+return;
+}
+
+try{
+
+if(!currentUser || !currentUser.email) return;
+
+const credential=EmailAuthProvider.credential(
+currentUser.email,oldPassword
+);
+
+await reauthenticateWithCredential(currentUser,credential);
+await updatePassword(currentUser,newPassword);
+
+document.getElementById("passwordForm").reset();
+
+showMessage("Password updated successfully.");
+
+}catch(error){
+
+console.error(error);
+
+const errors={
+"auth/wrong-password":"Current password is incorrect.",
+"auth/invalid-credential":"Current password is incorrect.",
+"auth/weak-password":"Choose a stronger password.",
+"auth/too-many-requests":"Too many attempts. Try later.",
+"auth/requires-recent-login":"Please sign in again and retry."
+};
+
+showMessage(errors[error.code]||"Unable to update password.");
+
+}
+
+});
+
+// LOGOUT
+async function logout(){
+
+try{
+
+await signOut(auth);
+
+sessionStorage.clear();
+
+window.location.replace("resources-admin-login.html");
+
+}catch(error){
+showMessage("Unable to sign out.");
+console.error(error);
+}
+
+}
+
+document.getElementById("logoutBtn").onclick=logout;
+
+document.getElementById("logoutLink").onclick=async(e)=>{
+e.preventDefault();
+await logout();
+};
+
+</script>
+</body>
+</html>
