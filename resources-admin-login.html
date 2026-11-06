@@ -1,0 +1,301 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resources Admin Login | Vorix</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+font-family:Arial,sans-serif;
+background:#f3f6fb;
+min-height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:20px;
+color:#172033
+}
+.login-card{
+width:100%;max-width:420px;background:white;
+padding:32px;border-radius:18px;
+box-shadow:0 12px 40px rgba(0,0,0,.08)
+}
+.logo{text-align:center;margin-bottom:25px}
+.logo-icon{
+width:58px;height:58px;background:#172554;
+color:white;border-radius:16px;
+display:inline-flex;align-items:center;
+justify-content:center;font-size:25px;
+margin-bottom:12px
+}
+h1{font-size:23px;margin-bottom:7px}
+.subtitle{color:#718096;font-size:14px}
+label{display:block;font-size:13px;font-weight:bold;margin:17px 0 7px}
+input{
+width:100%;padding:13px;border:1px solid #dce2eb;
+border-radius:9px;font-size:14px;outline:none
+}
+input:focus{border-color:#2563eb}
+.password-box{position:relative}
+.password-box input{padding-right:65px}
+.toggle{
+position:absolute;right:12px;top:13px;
+border:0;background:none;color:#2563eb;cursor:pointer
+}
+button.login{
+width:100%;padding:14px;border:0;
+background:#1d4ed8;color:white;
+border-radius:9px;font-size:15px;
+font-weight:bold;margin-top:23px;cursor:pointer
+}
+button:disabled{opacity:.6;cursor:not-allowed}
+.message{
+display:none;margin-top:15px;padding:12px;
+border-radius:8px;font-size:13px;line-height:1.5
+}
+.error{display:block;background:#fee2e2;color:#991b1b}
+.success{display:block;background:#dcfce7;color:#166534}
+.footer{text-align:center;color:#8993a4;font-size:12px;margin-top:25px}
+</style>
+</head>
+
+<body>
+
+<div class="login-card">
+
+<div class="logo">
+<div class="logo-icon">V</div>
+<h1>Resources Admin</h1>
+<p class="subtitle">Secure administrator access</p>
+</div>
+
+<form id="loginForm">
+
+<label for="adminId">Admin ID</label>
+<input id="adminId" type="text"
+placeholder="Enter your Admin ID" required autocomplete="username">
+
+<label for="email">Email Address</label>
+<input id="email" type="email"
+placeholder="Enter admin email" required autocomplete="email">
+
+<label for="password">Password</label>
+<div class="password-box">
+<input id="password" type="password"
+placeholder="Enter password" required autocomplete="current-password">
+<button type="button" class="toggle" id="togglePassword">Show</button>
+</div>
+
+<button type="submit" class="login" id="loginButton">
+Sign In
+</button>
+
+<div id="message" class="message"></div>
+
+</form>
+
+<div class="footer">
+Protected Admin Authentication<br>
+© <span id="year"></span> Vorix Resources
+</div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getAuth,
+signInWithEmailAndPassword,
+signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+getFirestore,
+collection,
+query,
+where,
+getDocs,
+doc,
+updateDoc,
+increment,
+serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// FIREBASE CONFIGURATION
+const firebaseConfig = {
+apiKey: "AIzaSyBuP13ggQsiZiZgoIf9nFK8hmw8Bx6KYr0",
+authDomain: "vorix-resources.firebaseapp.com",
+projectId: "vorix-resources",
+storageBucket: "vorix-resources.firebasestorage.app",
+messagingSenderId: "789688947048",
+appId: "1:789688947048:web:31598720b1e0cef9db06dd",
+measurementId: "G-VEYGNMJ6N1"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const form = document.getElementById("loginForm");
+const message = document.getElementById("message");
+const loginButton = document.getElementById("loginButton");
+
+document.getElementById("year").textContent =
+new Date().getFullYear();
+
+function showMessage(text,type){
+message.textContent = text;
+message.className = "message " + type;
+}
+
+document.getElementById("togglePassword")
+.addEventListener("click",()=>{
+const input = document.getElementById("password");
+const visible = input.type === "password";
+input.type = visible ? "text" : "password";
+document.getElementById("togglePassword").textContent =
+visible ? "Hide" : "Show";
+});
+
+form.addEventListener("submit",async(e)=>{
+
+e.preventDefault();
+
+const adminId = document.getElementById("adminId").value.trim();
+const email = document.getElementById("email").value.trim().toLowerCase();
+const password = document.getElementById("password").value;
+
+if(!adminId || !email || !password){
+showMessage("Please complete all fields.","error");
+return;
+}
+
+loginButton.disabled = true;
+loginButton.textContent = "Verifying...";
+message.className = "message";
+
+let user = null;
+
+try{
+
+// STEP 1: FIREBASE AUTHENTICATION
+const credential = await signInWithEmailAndPassword(
+auth,email,password
+);
+
+user = credential.user;
+
+// STEP 2: VERIFY EMAIL
+if(!user.emailVerified){
+await signOut(auth);
+showMessage("Please verify your email before accessing the admin panel.","error");
+return;
+}
+
+// STEP 3: FIND ADMIN RECORD
+const adminQuery = query(
+collection(db,"admins"),
+where("adminId","==",adminId)
+);
+
+const snapshot = await getDocs(adminQuery);
+
+if(snapshot.empty){
+await signOut(auth);
+showMessage("Invalid Admin ID.","error");
+return;
+}
+
+if(snapshot.size !== 1){
+await signOut(auth);
+showMessage("Admin account configuration error. Contact support.","error");
+return;
+}
+
+const adminDoc = snapshot.docs[0];
+const admin = adminDoc.data();
+
+// STEP 4: VERIFY ADMIN ID, EMAIL AND UID
+if(
+admin.email?.toLowerCase() !== user.email.toLowerCase() ||
+admin.uid !== user.uid
+){
+await signOut(auth);
+showMessage("Admin credentials do not match the registered account.","error");
+return;
+}
+
+// STEP 5: CHECK STATUS
+if(admin.status !== "active"){
+await signOut(auth);
+showMessage("Your administrator account is not active.","error");
+return;
+}
+
+// STEP 6: CHECK ROLE
+if(admin.role !== "admin" || !admin.accessLevel){
+await signOut(auth);
+showMessage("Your account does not have administrator access.","error");
+return;
+}
+
+// STEP 7: UPDATE LOGIN INFORMATION
+await updateDoc(doc(db,"admins",adminDoc.id),{
+lastLoginAt:serverTimestamp(),
+loginCount:increment(1),
+updatedAt:serverTimestamp()
+});
+
+// STEP 8: SAVE SESSION DETAILS
+sessionStorage.setItem("resourcesAdminAuthenticated","true");
+sessionStorage.setItem("resourcesAdminId",admin.adminId);
+sessionStorage.setItem("resourcesAdminUid",user.uid);
+sessionStorage.setItem("resourcesAdminName",admin.fullName || admin.displayName || "");
+sessionStorage.setItem("resourcesAdminRole",admin.role);
+
+// STEP 9: REDIRECT
+showMessage("Login successful. Redirecting...","success");
+
+window.location.replace("resources-admin-dashboard.html");
+
+}catch(error){
+
+console.error("Admin login error:",error);
+
+if(user){
+try{await signOut(auth);}catch(e){}
+}
+
+const errors = {
+"auth/invalid-credential":"Incorrect email or password.",
+"auth/user-not-found":"Admin account not found.",
+"auth/wrong-password":"Incorrect password.",
+"auth/too-many-requests":"Too many attempts. Try again later.",
+"auth/network-request-failed":"Network connection failed.",
+"permission-denied":"Access denied by Firestore security rules."
+};
+
+showMessage(
+errors[error.code] ||
+"Login failed. Please check your details and try again.",
+"error"
+);
+
+}finally{
+
+loginButton.disabled = false;
+loginButton.textContent = "Sign In";
+
+}
+
+});
+
+</script>
+</body>
+</html>
