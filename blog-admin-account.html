@@ -1,0 +1,660 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101828">
+  <title>Admin Account | Vorix Blog</title>
+
+  <style>
+    :root {
+      --primary:#3157d5;
+      --dark:#101828;
+      --bg:#f4f6fb;
+      --text:#202939;
+      --muted:#667085;
+      --border:#e5e9f2;
+      --green:#067647;
+      --red:#b42318;
+    }
+
+    * { box-sizing:border-box; }
+
+    body {
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    .layout { display:flex; min-height:100vh; }
+
+    .sidebar {
+      width:250px;
+      background:var(--dark);
+      color:white;
+      padding:25px 17px;
+      position:fixed;
+      inset:0 auto 0 0;
+      overflow-y:auto;
+      z-index:20;
+    }
+
+    .brand {
+      font-size:21px;
+      font-weight:800;
+      padding:5px 10px 28px;
+    }
+
+    .brand span { color:#91a9ff; }
+
+    .nav-label {
+      color:#98a2b3;
+      font-size:11px;
+      font-weight:bold;
+      padding:14px 10px 8px;
+      text-transform:uppercase;
+      letter-spacing:1px;
+    }
+
+    .sidebar a {
+      display:block;
+      color:#d0d5dd;
+      text-decoration:none;
+      padding:12px 13px;
+      border-radius:8px;
+      margin:4px 0;
+      font-size:14px;
+    }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      background:#253b75;
+      color:white;
+    }
+
+    .main {
+      margin-left:250px;
+      width:calc(100% - 250px);
+      min-height:100vh;
+    }
+
+    .topbar {
+      background:white;
+      border-bottom:1px solid var(--border);
+      padding:17px 28px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      position:sticky;
+      top:0;
+      z-index:10;
+    }
+
+    .topbar h2 { margin:0; font-size:19px; }
+
+    .menu-btn {
+      display:none;
+      border:0;
+      background:#eef2ff;
+      padding:9px 12px;
+      border-radius:7px;
+      font-size:19px;
+      cursor:pointer;
+    }
+
+    .content {
+      max-width:1100px;
+      padding:30px;
+      margin:auto;
+    }
+
+    .page-heading { margin-bottom:25px; }
+    .page-heading h1 { margin:0 0 8px; font-size:27px; }
+    .page-heading p { color:var(--muted); margin:0; }
+
+    .grid {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px;
+    }
+
+    .card {
+      background:white;
+      border:1px solid var(--border);
+      border-radius:13px;
+      padding:23px;
+      margin-bottom:20px;
+      box-shadow:0 3px 12px rgba(16,24,40,.035);
+    }
+
+    .card h3 { margin:0 0 19px; font-size:17px; }
+
+    .profile {
+      display:flex;
+      align-items:center;
+      gap:15px;
+      margin-bottom:20px;
+    }
+
+    .avatar {
+      width:65px;
+      height:65px;
+      background:#e8edff;
+      color:var(--primary);
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:23px;
+      font-weight:bold;
+      flex-shrink:0;
+    }
+
+    .profile h2 { margin:0 0 6px; font-size:19px; }
+    .profile p { margin:0; color:var(--muted); font-size:13px; }
+
+    .field {
+      display:flex;
+      justify-content:space-between;
+      gap:15px;
+      padding:13px 0;
+      border-bottom:1px solid #edf0f5;
+      font-size:14px;
+    }
+
+    .field:last-child { border-bottom:0; }
+    .field span:first-child { color:var(--muted); }
+    .field strong {
+      text-align:right;
+      overflow-wrap:anywhere;
+    }
+
+    .status {
+      display:inline-block;
+      padding:5px 10px;
+      border-radius:20px;
+      font-size:12px;
+      font-weight:bold;
+      background:#ecfdf3;
+      color:var(--green);
+    }
+
+    .status.inactive {
+      background:#fef3f2;
+      color:var(--red);
+    }
+
+    .button {
+      display:inline-block;
+      padding:11px 16px;
+      border-radius:8px;
+      border:0;
+      background:var(--primary);
+      color:white;
+      text-decoration:none;
+      font-weight:bold;
+      font-size:13px;
+      cursor:pointer;
+      margin:5px 5px 5px 0;
+    }
+
+    .button.secondary {
+      background:#eef2ff;
+      color:#344da7;
+    }
+
+    .button.danger { background:#b42318; }
+
+    .button:disabled {
+      opacity:.6;
+      cursor:not-allowed;
+    }
+
+    .message {
+      display:none;
+      padding:12px 14px;
+      border-radius:8px;
+      margin-bottom:18px;
+      font-size:14px;
+    }
+
+    .message.success {
+      display:block;
+      color:#067647;
+      background:#ecfdf3;
+    }
+
+    .message.error {
+      display:block;
+      color:#b42318;
+      background:#fef3f2;
+    }
+
+    .loader {
+      position:fixed;
+      inset:0;
+      background:rgba(255,255,255,.88);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:100;
+      font-weight:bold;
+      color:var(--primary);
+    }
+
+    .footer {
+      text-align:center;
+      color:var(--muted);
+      font-size:12px;
+      padding:25px;
+    }
+
+    @media(max-width:850px) {
+      .sidebar {
+        transform:translateX(-100%);
+        transition:.25s;
+      }
+
+      .sidebar.open { transform:translateX(0); }
+
+      .main {
+        margin-left:0;
+        width:100%;
+      }
+
+      .menu-btn { display:block; }
+      .content { padding:20px 15px; }
+      .grid { grid-template-columns:1fr; }
+      .topbar { padding:14px 16px; }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="loader" id="loader">Loading account...</div>
+
+<div class="layout">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">VORIX <span>BLOG</span></div>
+
+    <div class="nav-label">Main menu</div>
+    <a href="blog-admin-dashboard.html">Dashboard</a>
+    <a href="blog-posts.html">Blog Posts</a>
+
+    <div class="nav-label">Administration</div>
+    <a href="blog-admin-profile.html">Admin Profile</a>
+    <a href="blog-admin-account.html" class="active">Account</a>
+    <a href="blog-admin-settings.html">Settings</a>
+    <a href="blog-admin-edit-profile.html">Edit Profile</a>
+
+    <div class="nav-label">Security</div>
+    <a href="blog-admin-forgot-password.html">Forgot Password</a>
+    <a href="blog-admin-login.html" data-action="logout">Logout</a>
+  </aside>
+
+  <main class="main">
+
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="menu-btn" id="menuBtn" type="button">☰</button>
+        <h2>Account Management</h2>
+      </div>
+      <span style="font-size:13px;color:#667085">Vorix Blog Admin</span>
+    </header>
+
+    <div class="content">
+
+      <div class="page-heading">
+        <h1>Admin Account</h1>
+        <p>Manage your administrator account information and security.</p>
+      </div>
+
+      <div id="message" class="message"></div>
+
+      <div class="grid">
+
+        <section class="card">
+          <h3>Account Overview</h3>
+
+          <div class="profile">
+            <div class="avatar" id="avatar">A</div>
+            <div>
+              <h2 id="displayName">Loading...</h2>
+              <p id="adminEmail">Loading email...</p>
+            </div>
+          </div>
+
+          <div class="field">
+            <span>Admin ID</span>
+            <strong id="adminId">—</strong>
+          </div>
+
+          <div class="field">
+            <span>Account Role</span>
+            <strong id="role">—</strong>
+          </div>
+
+          <div class="field">
+            <span>Access Level</span>
+            <strong id="accessLevel">—</strong>
+          </div>
+
+          <div class="field">
+            <span>Account Status</span>
+            <strong id="status">—</strong>
+          </div>
+
+          <div class="field">
+            <span>Admin Type</span>
+            <strong id="adminType">—</strong>
+          </div>
+        </section>
+
+        <section class="card">
+          <h3>Contact Information</h3>
+
+          <div class="field">
+            <span>Full Name</span>
+            <strong id="fullName">—</strong>
+          </div>
+
+          <div class="field">
+            <span>Email Address</span>
+            <strong id="email">—</strong>
+          </div>
+
+          <div class="field">
+            <span>Email Verified</span>
+            <strong id="emailVerified">—</strong>
+          </div>
+
+          <div class="field">
+            <span>Phone Number</span>
+            <strong id="phoneNumber">—</strong>
+          </div>
+
+          <div class="field">
+            <span>Country</span>
+            <strong id="country">—</strong>
+          </div>
+
+          <div class="field">
+            <span>Language</span>
+            <strong id="language">—</strong>
+          </div>
+
+          <div class="field">
+            <span>Timezone</span>
+            <strong id="timezone">—</strong>
+          </div>
+        </section>
+
+      </div>
+
+      <section class="card">
+        <h3>Account Activity</h3>
+
+        <div class="field">
+          <span>Created At</span>
+          <strong id="createdAt">—</strong>
+        </div>
+
+        <div class="field">
+          <span>Created By</span>
+          <strong id="createdBy">—</strong>
+        </div>
+
+        <div class="field">
+          <span>Last Login</span>
+          <strong id="lastLoginAt">—</strong>
+        </div>
+
+        <div class="field">
+          <span>Login Count</span>
+          <strong id="loginCount">—</strong>
+        </div>
+
+        <div class="field">
+          <span>Last Login Device</span>
+          <strong id="lastLoginDevice">—</strong>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3>Security & Account Actions</h3>
+        <p style="color:#667085;font-size:14px;line-height:1.6">
+          Protect your administrator account. You can update your profile,
+          change your password, or securely sign out.
+        </p>
+
+        <a href="blog-admin-edit-profile.html" class="button">Edit Profile</a>
+        <a href="blog-admin-settings.html" class="button secondary">Account Settings</a>
+        <a href="blog-admin-forgot-password.html" class="button secondary">Reset Password</a>
+
+        <hr style="border:0;border-top:1px solid #e5e9f2;margin:20px 0">
+
+        <button class="button danger" id="logoutBtn" type="button">
+          Logout from Account
+        </button>
+      </section>
+
+      <div class="footer">
+        © <span id="year"></span> Vorix Blog. All rights reserved.
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCYsJv9qChj1Wc1Xz78aZhgn4tHyGF1Grg",
+  authDomain: "vorix-blog.firebaseapp.com",
+  projectId: "vorix-blog",
+  storageBucket: "vorix-blog.firebasestorage.app",
+  messagingSenderId: "111344561738",
+  appId: "1:111344561738:web:8f7e64709698c7f58f80b3",
+  measurementId: "G-34BPPH3F77"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const $ = id => document.getElementById(id);
+
+function showLoader(show) {
+  $("loader").style.display = show ? "flex" : "none";
+}
+
+function showMessage(message, type) {
+  const box = $("message");
+  box.textContent = message;
+  box.className = "message " + type;
+}
+
+function formatDate(value) {
+  if (!value) return "Not available";
+
+  try {
+    let date = value.toDate ? value.toDate() : new Date(value);
+    if (isNaN(date.getTime())) return "Not available";
+    return date.toLocaleString();
+  } catch (error) {
+    return "Not available";
+  }
+}
+
+function setText(id, value) {
+  $(id).textContent =
+    value !== undefined && value !== null && value !== ""
+      ? value
+      : "Not available";
+}
+
+async function loadAccount(user) {
+  const adminId = sessionStorage.getItem("adminId");
+
+  if (!adminId) {
+    window.location.replace("blog-admin-login.html");
+    return;
+  }
+
+  showLoader(true);
+
+  try {
+    // Admin document is accessed by Admin ID only.
+    const adminRef = db.collection("admins").doc(adminId);
+    const snap = await adminRef.get();
+
+    if (!snap.exists) {
+      throw new Error("Administrator account was not found.");
+    }
+
+    const admin = snap.data();
+
+    if (admin.adminId !== adminId) {
+      throw new Error("Invalid administrator ID.");
+    }
+
+    if (admin.status !== "active" || admin.role !== "admin") {
+      throw new Error("Your administrator account is not active.");
+    }
+
+    if (admin.uid && admin.uid !== user.uid) {
+      throw new Error("This account does not match the signed-in user.");
+    }
+
+    if (
+      admin.email &&
+      user.email &&
+      admin.email.toLowerCase() !== user.email.toLowerCase()
+    ) {
+      throw new Error("Administrator email does not match.");
+    }
+
+    const name =
+      admin.fullName ||
+      admin.displayName ||
+      [admin.firstName, admin.lastName].filter(Boolean).join(" ") ||
+      "Administrator";
+
+    setText("displayName", name);
+    setText("adminEmail", user.email || admin.email);
+    setText("adminId", admin.adminId);
+    setText("role", admin.role);
+    setText("accessLevel", admin.accessLevel);
+    setText("adminType", admin.adminType);
+    setText("fullName", name);
+    setText("email", admin.email || user.email);
+    setText("emailVerified", user.emailVerified ? "Verified" : "Not verified");
+    setText("phoneNumber", admin.phoneNumber);
+    setText("country", admin.country);
+    setText("language", admin.language);
+    setText("timezone", admin.timezone);
+
+    setText("createdAt", formatDate(admin.createdAt));
+    setText("createdBy", admin.createdBy);
+    setText("lastLoginAt", formatDate(admin.lastLoginAt));
+    setText("loginCount", admin.loginCount ?? 0);
+    setText("lastLoginDevice", admin.lastLoginDevice);
+
+    const status = $("status");
+    status.textContent = admin.status;
+    status.className =
+      admin.status === "active" ? "status" : "status inactive";
+
+    const initials = name
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map(part => part[0])
+      .join("")
+      .toUpperCase();
+
+    $("avatar").textContent = initials || "A";
+
+  } catch (error) {
+    console.error("Account loading error:", error);
+    showMessage(error.message || "Unable to load account.", "error");
+
+    if (
+      error.message.includes("not found") ||
+      error.message.includes("Invalid administrator") ||
+      error.message.includes("not active") ||
+      error.message.includes("does not match")
+    ) {
+      await auth.signOut();
+      sessionStorage.removeItem("adminId");
+      window.location.replace("blog-admin-login.html");
+    }
+  } finally {
+    showLoader(false);
+  }
+}
+
+// Authentication check
+auth.onAuthStateChanged(async function(user) {
+  if (!user) {
+    sessionStorage.removeItem("adminId");
+    window.location.replace("blog-admin-login.html");
+    return;
+  }
+
+  await loadAccount(user);
+});
+
+// Logout
+async function logout() {
+  if (!confirm("Are you sure you want to logout?")) return;
+
+  showLoader(true);
+
+  try {
+    sessionStorage.removeItem("adminId");
+    await auth.signOut();
+    window.location.replace("blog-admin-login.html");
+  } catch (error) {
+    showLoader(false);
+    showMessage("Logout failed: " + error.message, "error");
+  }
+}
+
+$("logoutBtn").addEventListener("click", logout);
+
+// Mobile menu
+$("menuBtn").addEventListener("click", function() {
+  $("sidebar").classList.toggle("open");
+});
+
+// Close mobile menu after navigation
+document.querySelectorAll(".sidebar a").forEach(link => {
+  link.addEventListener("click", function() {
+    $("sidebar").classList.remove("open");
+  });
+});
+
+// Logout from sidebar
+document.querySelector('[data-action="logout"]').addEventListener(
+  "click",
+  function(event) {
+    event.preventDefault();
+    logout();
+  }
+);
+
+$("year").textContent = new Date().getFullYear();
+</script>
+
+</body>
+</html>
