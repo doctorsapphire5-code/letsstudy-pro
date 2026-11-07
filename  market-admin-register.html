@@ -1,0 +1,345 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101828">
+<title>Admin Registration | Vorix Market</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#f3f5f9;color:#172033}
+.card{width:100%;max-width:470px;background:#fff;padding:34px 30px;border-radius:16px;box-shadow:0 8px 35px rgba(16,24,40,.08)}
+.brand{text-align:center;margin-bottom:27px}
+.logo{width:58px;height:58px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;background:#e9efff;color:#3157c8;border-radius:15px;font-size:25px;font-weight:bold}
+.brand h1{font-size:24px;margin-bottom:6px}
+.brand p{color:#778196;font-size:13px}
+h2{font-size:21px;margin-bottom:9px}
+.description{font-size:14px;line-height:1.6;color:#667085;margin-bottom:22px}
+.group{margin-bottom:16px}
+label{display:block;font-size:13px;font-weight:600;margin-bottom:8px}
+input{width:100%;height:47px;padding:0 13px;border:1px solid #d8deea;border-radius:9px;outline:none;font-size:14px}
+input:focus{border-color:#3157c8;box-shadow:0 0 0 3px rgba(49,87,200,.1)}
+.password-wrap{position:relative}
+.password-wrap input{padding-right:65px}
+.toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:#3157c8;font-size:12px;font-weight:600;cursor:pointer}
+.hint{color:#7b8495;font-size:12px;margin-top:7px}
+.submit{width:100%;height:49px;border:0;border-radius:9px;background:#3157c8;color:white;font-size:15px;font-weight:600;cursor:pointer;margin-top:5px}
+.submit:hover{background:#2446ad}
+.submit:disabled{opacity:.6;cursor:not-allowed}
+.message{display:none;padding:12px;border-radius:8px;font-size:13px;line-height:1.6;margin-bottom:16px;overflow-wrap:anywhere}
+.success{display:block;color:#166534;background:#dcfce7}
+.error{display:block;color:#991b1b;background:#fee2e2}
+.login-link{text-align:center;font-size:13px;margin-top:23px}
+a{color:#3157c8;text-decoration:none;font-weight:600}
+.footer{text-align:center;color:#98a2b3;font-size:11px;margin-top:27px}
+@media(max-width:420px){.card{padding:27px 20px}}
+</style>
+</head>
+
+<body>
+
+<main class="card">
+
+<div class="brand">
+  <div class="logo">V</div>
+  <h1>Vorix Market</h1>
+  <p>Administrator Portal</p>
+</div>
+
+<h2>Create Admin Account</h2>
+
+<p class="description">
+Register using the Admin ID and email assigned to your administrator account.
+</p>
+
+<div id="message" class="message" role="alert"></div>
+
+<form id="registerForm">
+
+<div class="group">
+<label for="adminId">Admin ID</label>
+<input type="text" id="adminId" placeholder="Enter your assigned Admin ID" autocomplete="off" required>
+</div>
+
+<div class="group">
+<label for="email">Authorized Admin Email</label>
+<input type="email" id="email" placeholder="Enter your assigned email" autocomplete="email" required>
+</div>
+
+<div class="group">
+<label for="firstName">First Name</label>
+<input type="text" id="firstName" placeholder="Enter first name" autocomplete="given-name" required>
+</div>
+
+<div class="group">
+<label for="lastName">Last Name</label>
+<input type="text" id="lastName" placeholder="Enter last name" autocomplete="family-name" required>
+</div>
+
+<div class="group">
+<label for="password">Password</label>
+<div class="password-wrap">
+<input type="password" id="password" placeholder="Create password" minlength="8" autocomplete="new-password" required>
+<button type="button" class="toggle" data-target="password">Show</button>
+</div>
+<p class="hint">Use at least 8 characters.</p>
+</div>
+
+<div class="group">
+<label for="confirmPassword">Confirm Password</label>
+<div class="password-wrap">
+<input type="password" id="confirmPassword" placeholder="Confirm your password" minlength="8" autocomplete="new-password" required>
+<button type="button" class="toggle" data-target="confirmPassword">Show</button>
+</div>
+</div>
+
+<button type="submit" class="submit" id="registerButton">
+Create Admin Account
+</button>
+
+</form>
+
+<div class="login-link">
+Already registered?
+<a href="market-admin-login.html">Admin Login</a>
+</div>
+
+<div class="footer">
+&copy; <span id="year"></span> Vorix Market. All rights reserved.
+</div>
+
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBTMnT-PhJ44Hamu2EHyqnbP5EBoiFwGqY",
+  authDomain: "vorix-market.firebaseapp.com",
+  databaseURL: "https://vorix-market-default-rtdb.firebaseio.com",
+  projectId: "vorix-market",
+  storageBucket: "vorix-market.firebasestorage.app",
+  messagingSenderId: "686555609094",
+  appId: "1:686555609094:web:61f3e1853c0fca143a2b87",
+  measurementId: "G-2KNWRG4X08"
+};
+
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+const $ = id => document.getElementById(id);
+
+$("year").textContent = new Date().getFullYear();
+
+function showMessage(text,type) {
+  const box = $("message");
+  box.textContent = text;
+  box.className = "message " + type;
+}
+
+function clearMessage() {
+  $("message").textContent = "";
+  $("message").className = "message";
+}
+
+// Show and hide passwords
+document.querySelectorAll(".toggle").forEach(button => {
+  button.addEventListener("click",function() {
+    const field = $(this.dataset.target);
+    field.type = field.type === "password" ? "text" : "password";
+    this.textContent = field.type === "password" ? "Show" : "Hide";
+  });
+});
+
+function getErrorMessage(error) {
+  switch(error.code) {
+    case "auth/email-already-in-use":
+      return "An account already exists for this email. Please sign in or reset your password.";
+    case "auth/invalid-email":
+      return "Please enter a valid email address.";
+    case "auth/weak-password":
+      return "Your password is too weak. Use a stronger password.";
+    case "auth/operation-not-allowed":
+      return "Email and Password authentication is not enabled in Firebase.";
+    case "auth/network-request-failed":
+      return "Network error. Check your internet connection.";
+    case "permission-denied":
+    case "firestore/permission-denied":
+      return "Permission denied. Check your Firestore security rules.";
+    default:
+      return "Registration failed. Please try again or contact support.";
+  }
+}
+
+$("registerForm").addEventListener("submit",async function(e) {
+  e.preventDefault();
+  clearMessage();
+
+  const adminId = $("adminId").value.trim();
+  const email = $("email").value.trim().toLowerCase();
+  const firstName = $("firstName").value.trim();
+  const lastName = $("lastName").value.trim();
+  const password = $("password").value;
+  const confirmPassword = $("confirmPassword").value;
+  const button = $("registerButton");
+
+  if (!adminId || !email || !firstName || !lastName) {
+    showMessage("Please complete all required fields.","error");
+    return;
+  }
+
+  if (password.length < 8) {
+    showMessage("Password must contain at least 8 characters.","error");
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    showMessage("Passwords do not match.","error");
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "Creating Account...";
+
+  let createdUser = null;
+  let accountCreated = false;
+
+  try {
+    // Find the pre-authorized admin document by Admin ID
+    const adminRef = db.collection("admins").doc(adminId);
+    const adminSnap = await adminRef.get();
+
+    if (!adminSnap.exists) {
+      throw new Error("ADMIN_ID_NOT_FOUND");
+    }
+
+    const admin = adminSnap.data();
+
+    if (admin.adminId !== adminId) {
+      throw new Error("ADMIN_ID_MISMATCH");
+    }
+
+    if (!admin.email || admin.email.trim().toLowerCase() !== email) {
+      throw new Error("EMAIL_NOT_AUTHORIZED");
+    }
+
+    if (admin.status !== "active") {
+      throw new Error("ADMIN_NOT_ACTIVE");
+    }
+
+    if (admin.role !== "admin") {
+      throw new Error("INVALID_ADMIN_ROLE");
+    }
+
+    if (admin.uid) {
+      throw new Error("ADMIN_ALREADY_REGISTERED");
+    }
+
+    // Create Firebase Authentication account
+    const credential = await auth.createUserWithEmailAndPassword(
+      email,
+      password
+    );
+
+    createdUser = credential.user;
+
+    await createdUser.updateProfile({
+      displayName: firstName + " " + lastName
+    });
+
+    // Update the existing admin document.
+    // Password and confirmPassword are never stored in Firestore.
+    await adminRef.update({
+      uid: createdUser.uid,
+      firstName: firstName,
+      lastName: lastName,
+      fullName: firstName + " " + lastName,
+      displayName: firstName + " " + lastName,
+      email: email,
+      emailVerified: false,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    accountCreated = true;
+
+    // Send verification email
+    await createdUser.sendEmailVerification({
+      url: window.location.origin + "/market-admin-login.html",
+      handleCodeInApp: false
+    });
+
+    await auth.signOut();
+
+    $("registerForm").reset();
+
+    showMessage(
+      "Your administrator account has been created. A verification link has been sent to " +
+      email +
+      ". Verify your email before signing in.",
+      "success"
+    );
+
+  } catch(error) {
+    console.error("Admin registration error:",error);
+
+    // Roll back Auth account only if Firestore registration did not complete.
+    // If email delivery fails after Firestore update, retain the account
+    // so the user can request another verification email.
+    if (createdUser && !accountCreated && auth.currentUser) {
+      try {
+        await createdUser.delete();
+      } catch(deleteError) {
+        console.error("Account rollback error:",deleteError);
+      }
+    }
+
+    let message = getErrorMessage(error);
+
+    switch(error.message) {
+      case "ADMIN_ID_NOT_FOUND":
+        message = "Invalid Admin ID. Contact your administrator.";
+        break;
+      case "ADMIN_ID_MISMATCH":
+        message = "The supplied Admin ID could not be verified.";
+        break;
+      case "EMAIL_NOT_AUTHORIZED":
+        message = "This email is not assigned to the supplied Admin ID.";
+        break;
+      case "ADMIN_NOT_ACTIVE":
+        message = "This Admin ID is not active. Contact your administrator.";
+        break;
+      case "INVALID_ADMIN_ROLE":
+        message = "This record is not authorized for administrator registration.";
+        break;
+      case "ADMIN_ALREADY_REGISTERED":
+        message = "This Admin ID has already been registered. Please sign in.";
+        break;
+    }
+
+    showMessage(message,"error");
+
+    // Sign out only after a successful account creation attempt
+    if (createdUser && auth.currentUser) {
+      try {
+        await auth.signOut();
+      } catch(signOutError) {
+        console.error(signOutError);
+      }
+    }
+
+  } finally {
+    button.disabled = false;
+    button.textContent = "Create Admin Account";
+  }
+});
+</script>
+
+</body>
+</html>
