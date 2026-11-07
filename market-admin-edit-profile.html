@@ -1,0 +1,755 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#111827">
+  <title>Edit Admin Profile | Vorix Market</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      background: #f3f6fb;
+      color: #172033;
+    }
+
+    header {
+      background: #111827;
+      color: white;
+      padding: 17px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header h2 {
+      font-size: 19px;
+    }
+
+    header a {
+      color: white;
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    .container {
+      max-width: 850px;
+      margin: 30px auto;
+      padding: 0 16px;
+    }
+
+    .heading {
+      margin-bottom: 22px;
+    }
+
+    .heading h1 {
+      font-size: 25px;
+      margin-bottom: 7px;
+    }
+
+    .heading p {
+      color: #64748b;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .card {
+      background: white;
+      padding: 24px;
+      border-radius: 13px;
+      margin-bottom: 20px;
+      box-shadow: 0 5px 25px rgba(0,0,0,.05);
+    }
+
+    .card h3 {
+      font-size: 17px;
+      margin-bottom: 18px;
+    }
+
+    .profile-photo {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 25px;
+    }
+
+    .avatar {
+      width: 85px;
+      height: 85px;
+      border-radius: 50%;
+      background: #1d4ed8;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 29px;
+      font-weight: bold;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-photo p {
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+      min-width: 0;
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #d9e0ea;
+      border-radius: 8px;
+      font-size: 14px;
+      background: white;
+      outline: none;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: #1d4ed8;
+    }
+
+    input[readonly] {
+      background: #f1f5f9;
+      color: #64748b;
+      cursor: not-allowed;
+    }
+
+    .notice {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+      border-radius: 8px;
+      padding: 13px;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
+    .message {
+      display: none;
+      padding: 13px;
+      border-radius: 8px;
+      margin-bottom: 17px;
+      font-size: 14px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .btn {
+      padding: 13px 18px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .primary {
+      background: #1d4ed8;
+      color: white;
+    }
+
+    .secondary {
+      background: #e8edf5;
+      color: #172033;
+    }
+
+    .danger {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    #loading {
+      text-align: center;
+      padding: 45px 10px;
+      color: #64748b;
+    }
+
+    footer {
+      text-align: center;
+      padding: 25px;
+      color: #64748b;
+      font-size: 12px;
+    }
+
+    @media(max-width: 600px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-group.full {
+        grid-column: auto;
+      }
+
+      .card {
+        padding: 17px;
+      }
+
+      .actions .btn {
+        flex: 1;
+      }
+
+      .avatar {
+        width: 68px;
+        height: 68px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h2>Vorix Market</h2>
+  <a href="market-admin-dashboard.html">Dashboard</a>
+</header>
+
+<main class="container">
+
+  <div class="heading">
+    <h1>Edit Admin Profile</h1>
+    <p>Update your personal and contact information.</p>
+  </div>
+
+  <div class="message" id="message"></div>
+
+  <div id="loading">Loading administrator information...</div>
+
+  <section id="editContent" hidden>
+
+    <form id="profileForm">
+
+      <div class="card">
+
+        <h3>Profile Photo</h3>
+
+        <div class="profile-photo">
+
+          <div class="avatar" id="avatar">A</div>
+
+          <div>
+            <p>Enter a publicly accessible image URL below to update your profile photo.</p>
+          </div>
+
+        </div>
+
+        <div class="form-group">
+          <label for="photoURL">Profile Photo URL</label>
+          <input
+            type="url"
+            id="photoURL"
+            placeholder="https://example.com/profile.jpg"
+          >
+        </div>
+
+      </div>
+
+      <div class="card">
+
+        <h3>Personal Information</h3>
+
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label for="firstName">First Name *</label>
+            <input type="text" id="firstName" maxlength="60" required>
+          </div>
+
+          <div class="form-group">
+            <label for="lastName">Last Name *</label>
+            <input type="text" id="lastName" maxlength="60" required>
+          </div>
+
+          <div class="form-group">
+            <label for="displayName">Display Name</label>
+            <input type="text" id="displayName" maxlength="100">
+          </div>
+
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" maxlength="40">
+          </div>
+
+          <div class="form-group">
+            <label for="phoneNumber">Phone Number</label>
+            <input type="tel" id="phoneNumber" maxlength="25">
+          </div>
+
+          <div class="form-group">
+            <label for="country">Country</label>
+            <input type="text" id="country" maxlength="80">
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="card">
+
+        <h3>Professional Information</h3>
+
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label for="department">Department</label>
+            <input type="text" id="department" maxlength="100">
+          </div>
+
+          <div class="form-group">
+            <label for="language">Preferred Language</label>
+            <select id="language">
+              <option value="English">English</option>
+              <option value="Swahili">Swahili</option>
+              <option value="French">French</option>
+              <option value="Arabic">Arabic</option>
+              <option value="Spanish">Spanish</option>
+            </select>
+          </div>
+
+          <div class="form-group full">
+            <label for="timezone">Timezone</label>
+            <select id="timezone">
+              <option value="Africa/Dar_es_Salaam">Africa/Dar_es_Salaam</option>
+              <option value="Africa/Nairobi">Africa/Nairobi</option>
+              <option value="Africa/Kampala">Africa/Kampala</option>
+              <option value="Africa/Lagos">Africa/Lagos</option>
+              <option value="UTC">UTC</option>
+              <option value="Europe/London">Europe/London</option>
+              <option value="America/New_York">America/New_York</option>
+              <option value="Asia/Dubai">Asia/Dubai</option>
+            </select>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="card">
+
+        <h3>Protected Account Information</h3>
+
+        <div class="notice">
+          Admin ID, email, role, access level, account status and permissions
+          cannot be changed from this profile form.
+        </div>
+
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label for="adminId">Admin ID</label>
+            <input type="text" id="adminId" readonly>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" readonly>
+          </div>
+
+          <div class="form-group">
+            <label for="role">Role</label>
+            <input type="text" id="role" readonly>
+          </div>
+
+          <div class="form-group">
+            <label for="status">Account Status</label>
+            <input type="text" id="status" readonly>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="actions">
+
+        <button type="submit" class="btn primary" id="saveBtn">
+          Save Changes
+        </button>
+
+        <button type="button" class="btn secondary" id="reloadBtn">
+          Reload Profile
+        </button>
+
+        <a href="market-admin-profile.html" class="btn secondary">
+          View Profile
+        </a>
+
+        <button type="button" class="btn danger" id="logoutBtn">
+          Logout
+        </button>
+
+      </div>
+
+    </form>
+
+  </section>
+
+</main>
+
+<footer>
+  Vorix Market Administrator Portal
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+  // Firebase Configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyBTMnT-PhJ44Hamu2EHyqnbP5EBoiFwGqY",
+    authDomain: "vorix-market.firebaseapp.com",
+    databaseURL: "https://vorix-market-default-rtdb.firebaseio.com",
+    projectId: "vorix-market",
+    storageBucket: "vorix-market.firebasestorage.app",
+    messagingSenderId: "686555609094",
+    appId: "1:686555609094:web:61f3e1853c0fca143a2b87",
+    measurementId: "G-2KNWRG4X08"
+  };
+
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const $ = id => document.getElementById(id);
+
+  let currentUser = null;
+  let adminRef = null;
+  let originalAdmin = null;
+
+  function showMessage(message, type = "error") {
+    const box = $("message");
+
+    box.textContent = message;
+    box.style.display = "block";
+
+    box.style.background =
+      type === "success" ? "#dcfce7" : "#fee2e2";
+
+    box.style.color =
+      type === "success" ? "#166534" : "#991b1b";
+
+    box.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+  }
+
+  function setValue(id, value) {
+    $(id).value = value ?? "";
+  }
+
+  function setSelectValue(id, value) {
+    const select = $(id);
+
+    const exists = [...select.options].some(
+      option => option.value === value
+    );
+
+    if (exists) {
+      select.value = value;
+    }
+  }
+
+  function updateAvatar(photoURL, name) {
+    const avatar = $("avatar");
+    avatar.replaceChildren();
+
+    if (photoURL) {
+      const image = document.createElement("img");
+      image.src = photoURL;
+      image.alt = "Admin profile photo";
+
+      image.onerror = () => {
+        avatar.replaceChildren();
+        avatar.textContent = (name || "A").charAt(0).toUpperCase();
+      };
+
+      avatar.appendChild(image);
+    } else {
+      avatar.textContent = (name || "A").charAt(0).toUpperCase();
+    }
+  }
+
+  async function loadProfile(user) {
+    const adminId = sessionStorage.getItem("adminId");
+
+    if (!adminId) {
+      throw new Error("Admin ID not found. Please log in again.");
+    }
+
+    adminRef = db.collection("admins").doc(adminId);
+
+    const snap = await adminRef.get();
+
+    if (!snap.exists) {
+      throw new Error("Administrator record not found.");
+    }
+
+    const admin = snap.data();
+
+    if (
+      admin.adminId !== adminId ||
+      admin.status !== "active" ||
+      admin.role !== "admin" ||
+      (admin.uid && admin.uid !== user.uid) ||
+      !admin.email ||
+      admin.email.toLowerCase() !== user.email?.toLowerCase() ||
+      !user.emailVerified
+    ) {
+      throw new Error("Administrator access denied.");
+    }
+
+    if (admin.emailVerified !== true) {
+      await adminRef.update({
+        emailVerified: true,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
+    currentUser = user;
+    originalAdmin = admin;
+
+    setValue("firstName", admin.firstName);
+    setValue("lastName", admin.lastName);
+    setValue("displayName", admin.displayName);
+    setValue("username", admin.username);
+    setValue("phoneNumber", admin.phoneNumber);
+    setValue("country", admin.country);
+    setValue("department", admin.department);
+    setValue("photoURL", admin.photoURL);
+
+    setSelectValue("language", admin.language || "English");
+    setSelectValue("timezone", admin.timezone || "Africa/Dar_es_Salaam");
+
+    setValue("adminId", admin.adminId);
+    setValue("email", user.email);
+    setValue("role", admin.role);
+    setValue("status", admin.status);
+
+    updateAvatar(
+      admin.photoURL,
+      admin.fullName || admin.displayName || user.displayName
+    );
+
+    $("loading").style.display = "none";
+    $("editContent").hidden = false;
+  }
+
+  // Validate image URL.
+  function validatePhotoURL(value) {
+    if (!value) return true;
+
+    try {
+      const url = new URL(value);
+      return url.protocol === "https:" || url.protocol === "http:";
+    } catch {
+      return false;
+    }
+  }
+
+  // Save profile changes.
+  $("profileForm").addEventListener("submit", async event => {
+    event.preventDefault();
+
+    if (!currentUser || !adminRef || !originalAdmin) {
+      showMessage("Administrator information is not ready.");
+      return;
+    }
+
+    const firstName = $("firstName").value.trim();
+    const lastName = $("lastName").value.trim();
+    const displayName = $("displayName").value.trim();
+    const username = $("username").value.trim();
+    const phoneNumber = $("phoneNumber").value.trim();
+    const country = $("country").value.trim();
+    const department = $("department").value.trim();
+    const photoURL = $("photoURL").value.trim();
+
+    if (!firstName || !lastName) {
+      showMessage("First name and last name are required.");
+      return;
+    }
+
+    if (username && !/^[a-zA-Z0-9._-]{3,40}$/.test(username)) {
+      showMessage(
+        "Username must be 3–40 characters and contain only letters, numbers, dots, underscores or hyphens."
+      );
+      return;
+    }
+
+    if (!validatePhotoURL(photoURL)) {
+      showMessage("Enter a valid HTTP or HTTPS profile photo URL.");
+      return;
+    }
+
+    const button = $("saveBtn");
+    button.disabled = true;
+    button.textContent = "Saving...";
+
+    try {
+      // Update only allowed profile fields.
+      const updates = {
+        firstName: firstName,
+        lastName: lastName,
+        fullName: (firstName + " " + lastName).trim(),
+        displayName: displayName || (firstName + " " + lastName).trim(),
+        username: username,
+        phoneNumber: phoneNumber,
+        country: country,
+        department: department,
+        language: $("language").value,
+        timezone: $("timezone").value,
+        photoURL: photoURL,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      await adminRef.update(updates);
+
+      // Update Firebase Auth display name.
+      await currentUser.updateProfile({
+        displayName: updates.displayName,
+        photoURL: photoURL || null
+      });
+
+      originalAdmin = {
+        ...originalAdmin,
+        ...updates
+      };
+
+      updateAvatar(photoURL, updates.displayName);
+
+      showMessage(
+        "Your administrator profile has been updated successfully.",
+        "success"
+      );
+
+    } catch (error) {
+      console.error("Profile update error:", error);
+
+      let message = "Unable to update profile. Please try again.";
+
+      if (error.code === "permission-denied") {
+        message = "Permission denied. Check your Firestore Security Rules.";
+      } else if (error.code === "auth/requires-recent-login") {
+        message = "Please sign in again before updating your profile.";
+      } else if (error.code === "auth/network-request-failed") {
+        message = "Network error. Check your internet connection.";
+      }
+
+      showMessage(message);
+
+    } finally {
+      button.disabled = false;
+      button.textContent = "Save Changes";
+    }
+  });
+
+  // Reload profile from Firestore.
+  $("reloadBtn").addEventListener("click", async () => {
+    if (!currentUser) return;
+
+    $("reloadBtn").disabled = true;
+
+    try {
+      await loadProfile(currentUser);
+      showMessage("Profile reloaded successfully.", "success");
+    } catch (error) {
+      console.error(error);
+      showMessage("Unable to reload profile.");
+    } finally {
+      $("reloadBtn").disabled = false;
+    }
+  });
+
+  // Authentication listener.
+  auth.onAuthStateChanged(async user => {
+    if (!user) {
+      sessionStorage.removeItem("adminId");
+      window.location.replace("market-admin-login.html");
+      return;
+    }
+
+    try {
+      await loadProfile(user);
+    } catch (error) {
+      console.error("Profile loading error:", error);
+
+      $("loading").style.display = "none";
+      showMessage(error.message || "Unable to load administrator profile.");
+
+      sessionStorage.removeItem("adminId");
+
+      await auth.signOut();
+
+      setTimeout(() => {
+        window.location.replace("market-admin-login.html");
+      }, 2500);
+    }
+  });
+
+  // Logout.
+  $("logoutBtn").addEventListener("click", async () => {
+    try {
+      sessionStorage.removeItem("adminId");
+      await auth.signOut();
+      window.location.replace("market-admin-login.html");
+    } catch (error) {
+      console.error("Logout error:", error);
+      showMessage("Unable to log out. Please try again.");
+    }
+  });
+</script>
+
+</body>
+</html>
