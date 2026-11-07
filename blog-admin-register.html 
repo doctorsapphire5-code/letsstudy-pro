@@ -1,0 +1,538 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Registration | Vorix Blog</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  font-family:Arial,sans-serif;
+  background:#f1f5f9;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  color:#0f172a
+}
+
+.container{
+  width:100%;
+  max-width:480px;
+  background:white;
+  padding:30px;
+  border-radius:16px;
+  box-shadow:0 10px 35px rgba(0,0,0,.08)
+}
+
+.logo{
+  width:55px;
+  height:55px;
+  display:grid;
+  place-items:center;
+  background:#2563eb;
+  color:white;
+  font-size:25px;
+  font-weight:bold;
+  border-radius:13px;
+  margin-bottom:20px
+}
+
+h1{font-size:25px;margin-bottom:8px}
+
+.subtitle{
+  color:#64748b;
+  font-size:14px;
+  line-height:1.6;
+  margin-bottom:22px
+}
+
+label{
+  display:block;
+  font-size:14px;
+  font-weight:bold;
+  margin:15px 0 7px
+}
+
+input{
+  width:100%;
+  padding:13px;
+  border:1px solid #cbd5e1;
+  border-radius:9px;
+  font-size:15px;
+  outline:none
+}
+
+input:focus{border-color:#2563eb}
+
+button{
+  width:100%;
+  padding:14px;
+  background:#2563eb;
+  color:white;
+  border:0;
+  border-radius:9px;
+  font-size:15px;
+  font-weight:bold;
+  cursor:pointer;
+  margin-top:22px
+}
+
+button:disabled{opacity:.6;cursor:not-allowed}
+
+.message{
+  display:none;
+  padding:12px;
+  border-radius:8px;
+  margin-bottom:15px;
+  font-size:14px;
+  line-height:1.5
+}
+
+.error{background:#fee2e2;color:#991b1b}
+.success{background:#dcfce7;color:#166534}
+
+.note{
+  padding:12px;
+  background:#eff6ff;
+  color:#1e40af;
+  border-radius:8px;
+  font-size:13px;
+  line-height:1.6;
+  margin-bottom:18px
+}
+
+.links{
+  text-align:center;
+  font-size:14px;
+  margin-top:20px
+}
+
+a{color:#2563eb;text-decoration:none}
+
+.footer{
+  text-align:center;
+  color:#94a3b8;
+  font-size:12px;
+  margin-top:25px
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="logo">V</div>
+
+<h1>Admin Registration</h1>
+
+<p class="subtitle">
+Create your Vorix Blog administrator account.
+</p>
+
+<div class="note">
+Self-service registration: Create your own Admin ID and administrator account without Super Admin approval.
+</div>
+
+<div id="message" class="message"></div>
+
+<form id="registerForm">
+
+<label for="adminId">Admin ID</label>
+<input
+  id="adminId"
+  type="text"
+  placeholder="Example: blogadmin001"
+  minlength="3"
+  maxlength="30"
+  pattern="[A-Za-z0-9_-]+"
+  autocomplete="off"
+  required
+>
+
+<label for="fullName">Full Name</label>
+<input
+  id="fullName"
+  type="text"
+  placeholder="Enter your full name"
+  maxlength="100"
+  autocomplete="name"
+  required
+>
+
+<label for="username">Username</label>
+<input
+  id="username"
+  type="text"
+  placeholder="Choose username"
+  minlength="3"
+  maxlength="30"
+  autocomplete="username"
+  required
+>
+
+<label for="email">Email Address</label>
+<input
+  id="email"
+  type="email"
+  placeholder="Enter your email"
+  autocomplete="email"
+  required
+>
+
+<label for="phoneNumber">Phone Number</label>
+<input
+  id="phoneNumber"
+  type="tel"
+  placeholder="+255..."
+  autocomplete="tel"
+>
+
+<label for="country">Country</label>
+<input
+  id="country"
+  type="text"
+  placeholder="Enter your country"
+>
+
+<label for="department">Department</label>
+<input
+  id="department"
+  type="text"
+  placeholder="Example: Blog Management"
+>
+
+<label for="password">Password</label>
+<input
+  id="password"
+  type="password"
+  placeholder="Minimum 8 characters"
+  minlength="8"
+  autocomplete="new-password"
+  required
+>
+
+<label for="confirmPassword">Confirm Password</label>
+<input
+  id="confirmPassword"
+  type="password"
+  placeholder="Confirm your password"
+  minlength="8"
+  autocomplete="new-password"
+  required
+>
+
+<button type="submit" id="registerBtn">
+Create Admin Account
+</button>
+
+</form>
+
+<div class="links">
+Already have an account?
+<a href="blog-admin-login.html">Admin Login</a>
+</div>
+
+<div class="footer">
+Vorix Blog Administration
+</div>
+
+</div>
+
+<!-- FIREBASE SDK -->
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+
+// =====================================
+// FIREBASE CONFIGURATION
+// =====================================
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCYsJv9qChj1Wc1Xz78aZhgn4tHyGF1Grg",
+  authDomain: "vorix-blog.firebaseapp.com",
+  projectId: "vorix-blog",
+  storageBucket: "vorix-blog.firebasestorage.app",
+  messagingSenderId: "111344561738",
+  appId: "1:111344561738:web:8f7e64709698c7f58f80b3",
+  measurementId: "G-34BPPH3F77"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const $ = id => document.getElementById(id);
+
+
+// =====================================
+// MESSAGE
+// =====================================
+
+function showMessage(text,type="error"){
+
+  $("message").textContent=text;
+  $("message").className="message "+type;
+  $("message").style.display="block";
+
+}
+
+function setLoading(value){
+
+  $("registerBtn").disabled=value;
+
+  $("registerBtn").textContent=value
+    ? "Creating Account..."
+    : "Create Admin Account";
+
+}
+
+
+// =====================================
+// REGISTRATION
+// =====================================
+
+$("registerForm").addEventListener("submit",async function(e){
+
+  e.preventDefault();
+
+  $("message").style.display="none";
+
+  const adminId=$("adminId").value.trim();
+  const fullName=$("fullName").value.trim();
+  const username=$("username").value.trim();
+  const email=$("email").value.trim().toLowerCase();
+  const phoneNumber=$("phoneNumber").value.trim();
+  const country=$("country").value.trim();
+  const department=$("department").value.trim();
+  const password=$("password").value;
+  const confirmPassword=$("confirmPassword").value;
+
+  let createdUser=null;
+
+  setLoading(true);
+
+  try{
+
+    // VALIDATE ADMIN ID
+
+    if(!/^[A-Za-z0-9_-]{3,30}$/.test(adminId)){
+      throw new Error(
+        "Admin ID must contain 3-30 letters, numbers, underscores or hyphens."
+      );
+    }
+
+    if(fullName.length<3){
+      throw new Error("Enter your full name.");
+    }
+
+    if(username.length<3){
+      throw new Error("Username must contain at least 3 characters.");
+    }
+
+    if(password.length<8){
+      throw new Error("Password must contain at least 8 characters.");
+    }
+
+    if(password!==confirmPassword){
+      throw new Error("Passwords do not match.");
+    }
+
+    // =================================
+    // CHECK ADMIN DOCUMENT
+    // admins/{adminId} ONLY
+    // =================================
+
+    const adminRef=db.collection("admins").doc(adminId);
+
+    const adminSnap=await adminRef.get();
+
+    if(adminSnap.exists){
+      throw new Error("This Admin ID is already registered.");
+    }
+
+    // =================================
+    // CREATE FIREBASE AUTH ACCOUNT
+    // =================================
+
+    const credential=await auth.createUserWithEmailAndPassword(
+      email,
+      password
+    );
+
+    createdUser=credential.user;
+
+    // =================================
+    // UPDATE AUTH PROFILE
+    // =================================
+
+    await createdUser.updateProfile({
+      displayName:fullName
+    });
+
+    // =================================
+    // CREATE FIRESTORE ADMIN DOCUMENT
+    // admins/{adminId}
+    // =================================
+
+    const adminData={
+
+      adminId:adminId,
+
+      uid:createdUser.uid,
+
+      adminType:"blogAdmin",
+
+      accessLevel:"full",
+
+      role:"admin",
+
+      status:"active",
+
+      fullName:fullName,
+
+      firstName:fullName.split(" ")[0],
+
+      lastName:fullName.split(" ").slice(1).join(" "),
+
+      displayName:fullName,
+
+      username:username,
+
+      email:email,
+
+      emailVerified:createdUser.emailVerified,
+
+      phoneNumber:phoneNumber,
+
+      phoneVerified:false,
+
+      country:country,
+
+      department:department,
+
+      language:"English",
+
+      timezone:"Africa/Dar_es_Salaam",
+
+      photoURL:"",
+
+      permissions:"blog:manage,posts:manage,comments:manage,media:manage,settings:manage",
+
+      twoFactorEnabled:false,
+
+      loginCount:0,
+
+      createdBy:createdUser.uid,
+
+      createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+
+      lastLoginAt:null,
+
+      lastLoginDevice:"",
+
+      lastLoginIP:"",
+
+      notes:"Self-service administrator registration"
+
+    };
+
+    await adminRef.set(adminData);
+
+    // =================================
+    // SAVE ADMIN SESSION
+    // =================================
+
+    sessionStorage.setItem("adminId",adminId);
+
+    showMessage(
+      "Admin account created successfully. Redirecting...",
+      "success"
+    );
+
+    // =================================
+    // REDIRECT TO DASHBOARD
+    // =================================
+
+    setTimeout(function(){
+
+      window.location.replace(
+        "blog-admin-dashboard.html"
+      );
+
+    },1200);
+
+  }catch(error){
+
+    console.error("Registration error:",error);
+
+    // Roll back Auth account if Firestore
+    // document creation failed.
+
+    if(createdUser){
+
+      try{
+        await createdUser.delete();
+      }catch(deleteError){
+
+        console.error(
+          "Account cleanup failed:",
+          deleteError
+        );
+
+      }
+
+    }
+
+    const errors={
+
+      "auth/email-already-in-use":
+        "This email already has an account.",
+
+      "auth/invalid-email":
+        "Invalid email address.",
+
+      "auth/weak-password":
+        "Password is too weak.",
+
+      "auth/operation-not-allowed":
+        "Enable Email/Password authentication in Firebase.",
+
+      "auth/network-request-failed":
+        "Network error. Check your internet connection.",
+
+      "permission-denied":
+        "Firestore permission denied. Check your security rules.",
+
+      "unavailable":
+        "Firebase service unavailable. Try again."
+
+    };
+
+    showMessage(
+      errors[error.code] || error.message
+    );
+
+  }finally{
+
+    setLoading(false);
+
+  }
+
+});
+
+</script>
+
+</body>
+</html>
