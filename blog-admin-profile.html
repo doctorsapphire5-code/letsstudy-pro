@@ -1,0 +1,882 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#111827">
+<title>Admin Profile | Vorix Blog</title>
+
+<style>
+:root{
+  --primary:#4f46e5;
+  --dark:#111827;
+  --bg:#f4f6fb;
+  --white:#fff;
+  --text:#172033;
+  --muted:#718096;
+  --border:#e5e9f2;
+  --green:#059669;
+  --red:#dc2626;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+a{text-decoration:none;color:inherit}
+button{font:inherit}
+.sidebar{
+  width:255px;
+  position:fixed;
+  inset:0 auto 0 0;
+  background:var(--dark);
+  color:white;
+  padding:24px 16px;
+  overflow-y:auto;
+  z-index:100;
+  transition:.25s;
+}
+.brand{
+  font-size:22px;
+  font-weight:800;
+  padding:5px 12px 28px;
+}
+.brand span{color:#818cf8}
+.nav-label{
+  font-size:11px;
+  color:#9ca3af;
+  letter-spacing:1.4px;
+  padding:0 12px 12px;
+}
+.nav-link{
+  display:flex;
+  gap:13px;
+  align-items:center;
+  padding:13px;
+  border-radius:9px;
+  color:#cbd5e1;
+  margin-bottom:5px;
+  font-size:14px;
+}
+.nav-link:hover,.nav-link.active{
+  background:#312e81;
+  color:white;
+}
+.nav-divider{
+  border:0;
+  border-top:1px solid #374151;
+  margin:20px 8px;
+}
+.main{margin-left:255px;min-height:100vh}
+.topbar{
+  height:75px;
+  background:white;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:0 30px;
+  position:sticky;
+  top:0;
+  z-index:50;
+}
+.top-left{display:flex;align-items:center;gap:15px}
+.menu-btn{
+  display:none;
+  border:0;
+  padding:9px 12px;
+  background:#f1f5f9;
+  border-radius:8px;
+}
+.topbar h2{font-size:19px;margin:0}
+.top-admin{font-size:13px;font-weight:700}
+.content{max-width:1150px;margin:auto;padding:30px}
+.page-heading{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  margin-bottom:22px;
+}
+.page-heading h1{font-size:25px;margin:0 0 7px}
+.page-heading p{font-size:13px;color:var(--muted);margin:0}
+.btn{
+  border:0;
+  padding:11px 16px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:650;
+  font-size:13px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+}
+.btn-primary{background:var(--primary);color:white}
+.btn-light{background:#eef2ff;color:#3730a3}
+.btn-danger{background:#fee2e2;color:#991b1b}
+.profile-layout{
+  display:grid;
+  grid-template-columns:300px minmax(0,1fr);
+  gap:20px;
+}
+.card{
+  background:white;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:22px;
+  margin-bottom:20px;
+  min-width:0;
+}
+.profile-card{text-align:center}
+.profile-photo{
+  width:115px;
+  height:115px;
+  border-radius:50%;
+  background:#e0e7ff;
+  color:#3730a3;
+  display:grid;
+  place-items:center;
+  font-size:36px;
+  font-weight:800;
+  margin:5px auto 16px;
+  overflow:hidden;
+  border:4px solid #eef2ff;
+}
+.profile-photo img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.profile-card h2{font-size:19px;margin:0 0 6px}
+.profile-card p{color:var(--muted);font-size:13px;margin:0 0 14px}
+.status{
+  display:inline-block;
+  padding:6px 12px;
+  border-radius:30px;
+  font-size:11px;
+  font-weight:700;
+  text-transform:capitalize;
+  background:#dcfce7;
+  color:#047857;
+}
+.profile-id{
+  border-top:1px solid var(--border);
+  margin-top:20px;
+  padding-top:15px;
+  font-size:12px;
+  color:var(--muted);
+}
+.profile-id strong{display:block;color:var(--text);margin-top:6px}
+.card-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:18px;
+}
+.card-heading h3{font-size:16px;margin:0}
+.info-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px 25px;
+}
+.info-item label{
+  display:block;
+  font-size:11px;
+  color:var(--muted);
+  margin-bottom:7px;
+}
+.info-item strong{
+  display:block;
+  font-size:13px;
+  overflow-wrap:anywhere;
+}
+.permissions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.permission{
+  background:#eef2ff;
+  color:#3730a3;
+  padding:7px 10px;
+  border-radius:6px;
+  font-size:11px;
+}
+.actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.message{
+  display:none;
+  padding:13px 15px;
+  margin-bottom:18px;
+  border-radius:8px;
+  font-size:13px;
+}
+.message.error{background:#fee2e2;color:#991b1b}
+.message.success{background:#dcfce7;color:#065f46}
+.loading{
+  position:fixed;
+  inset:0;
+  z-index:999;
+  background:var(--bg);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+}
+.spinner{
+  width:38px;height:38px;
+  border:4px solid #dbeafe;
+  border-top-color:var(--primary);
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.footer{
+  text-align:center;
+  padding:15px;
+  font-size:12px;
+  color:var(--muted);
+}
+@media(max-width:950px){
+  .profile-layout{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .menu-btn{display:block}
+  .topbar{height:65px;padding:0 15px}
+  .content{padding:20px 14px}
+  .page-heading{align-items:flex-start;flex-direction:column}
+  .info-grid{grid-template-columns:1fr 1fr;gap:17px 12px}
+}
+@media(max-width:380px){
+  .info-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<div class="loading" id="loader">
+  <div class="spinner"></div>
+  <strong>Loading Admin Profile...</strong>
+  <small id="loaderText">Please wait</small>
+</div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">VORIX <span>BLOG</span></div>
+  <div class="nav-label">ADMINISTRATION</div>
+
+  <nav>
+    <a href="blog-admin-dashboard.html" class="nav-link">▦ Dashboard</a>
+    <a href="blog-posts.html" class="nav-link">▤ Blog Posts</a>
+    <a href="blog-admin-profile.html" class="nav-link active">◉ My Profile</a>
+    <a href="blog-admin-account.html" class="nav-link">▣ Account Management</a>
+    <a href="blog-admin-edit-profile.html" class="nav-link">✎ Edit Profile</a>
+    <hr class="nav-divider">
+    <a href="blog-admin-settings.html" class="nav-link">⚙ Settings</a>
+    <a href="blog-admin-register.html" class="nav-link">＋ Register Admin</a>
+    <a href="blog-admin-forgot-password.html" class="nav-link">⌑ Forgot Password</a>
+    <a href="#" class="nav-link" data-action="logout">⇥ Logout</a>
+  </nav>
+</aside>
+
+<main class="main">
+
+<header class="topbar">
+  <div class="top-left">
+    <button class="menu-btn" id="menuBtn">☰</button>
+    <h2>My Profile</h2>
+  </div>
+  <div class="top-admin" id="topName">Administrator</div>
+</header>
+
+<div class="content">
+
+  <div id="message" class="message"></div>
+
+  <div class="page-heading">
+    <div>
+      <h1>Administrator Profile</h1>
+      <p>View your personal and administrator account information.</p>
+    </div>
+    <a href="blog-admin-edit-profile.html" class="btn btn-primary">
+      Edit Profile
+    </a>
+  </div>
+
+  <div class="profile-layout">
+
+    <section>
+
+      <div class="card profile-card">
+        <div class="profile-photo" id="profilePhoto">A</div>
+
+        <h2 id="fullName">Administrator</h2>
+        <p id="adminType">Blog Administrator</p>
+
+        <span class="status" id="accountStatus">Active</span>
+
+        <div class="profile-id">
+          Administrator ID
+          <strong id="adminId">-</strong>
+        </div>
+
+        <div style="margin-top:20px">
+          <a href="blog-admin-edit-profile.html"
+             class="btn btn-light"
+             style="width:100%">
+            Edit Information
+          </a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-heading">
+          <h3>Account Actions</h3>
+        </div>
+
+        <div class="actions" style="flex-direction:column">
+          <a href="blog-admin-account.html"
+             class="btn btn-light">Manage Account</a>
+
+          <a href="blog-admin-settings.html"
+             class="btn btn-light">Account Settings</a>
+
+          <a href="blog-admin-forgot-password.html"
+             class="btn btn-light">Reset Password</a>
+
+          <button class="btn btn-danger" data-action="logout">
+            Logout
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <section>
+
+      <div class="card">
+        <div class="card-heading">
+          <h3>Personal Information</h3>
+          <a href="blog-admin-edit-profile.html"
+             class="btn btn-light">Edit</a>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <label>First Name</label>
+            <strong id="firstName">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Last Name</label>
+            <strong id="lastName">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Full Name</label>
+            <strong id="displayName">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Username</label>
+            <strong id="username">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Email Address</label>
+            <strong id="email">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Phone Number</label>
+            <strong id="phoneNumber">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Country</label>
+            <strong id="country">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Language</label>
+            <strong id="language">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Timezone</label>
+            <strong id="timezone">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Profile Photo URL</label>
+            <strong id="photoURL">-</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-heading">
+          <h3>Administrator Information</h3>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Role</label>
+            <strong id="role">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Admin Type</label>
+            <strong id="adminTypeInfo">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Access Level</label>
+            <strong id="accessLevel">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Department</label>
+            <strong id="department">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Created By</label>
+            <strong id="createdBy">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Created At</label>
+            <strong id="createdAt">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Updated At</label>
+            <strong id="updatedAt">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Email Verified</label>
+            <strong id="emailVerified">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Phone Verified</label>
+            <strong id="phoneVerified">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Two-Factor Authentication</label>
+            <strong id="twoFactorEnabled">-</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-heading">
+          <h3>Permissions</h3>
+        </div>
+        <div class="permissions" id="permissions">
+          <span class="permission">Loading...</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-heading">
+          <h3>Login Information</h3>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Last Login</label>
+            <strong id="lastLoginAt">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Login Count</label>
+            <strong id="loginCount">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Last Login Device</label>
+            <strong id="lastLoginDevice">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Last Login IP</label>
+            <strong id="lastLoginIP">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Firebase UID</label>
+            <strong id="uid">-</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-heading">
+          <h3>Additional Information</h3>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Notes</label>
+            <strong id="notes">-</strong>
+          </div>
+
+          <div class="info-item">
+            <label>Account ID</label>
+            <strong id="accountId">-</strong>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </div>
+
+  <footer class="footer">
+    © <span id="year"></span> Vorix Blog. All rights reserved.
+  </footer>
+
+</div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+"use strict";
+
+/* FIREBASE CONFIGURATION */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCYsJv9qChj1Wc1Xz78aZhgn4tHyGF1Grg",
+  authDomain: "vorix-blog.firebaseapp.com",
+  projectId: "vorix-blog",
+  storageBucket: "vorix-blog.firebasestorage.app",
+  messagingSenderId: "111344561738",
+  appId: "1:111344561738:web:8f7e64709698c7f58f80b3",
+  measurementId: "G-34BPPH3F77"
+};
+
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const $ = id => document.getElementById(id);
+
+let currentAdmin = null;
+let currentUser = null;
+
+/* HELPERS */
+
+function setText(id, value) {
+  $(id).textContent =
+    value === null || value === undefined || value === ""
+      ? "-"
+      : String(value);
+}
+
+function formatDate(value) {
+  if (!value) return "-";
+
+  let date;
+
+  if (value && typeof value.toDate === "function") {
+    date = value.toDate();
+  } else if (value.seconds) {
+    date = new Date(value.seconds * 1000);
+  } else {
+    date = new Date(value);
+  }
+
+  if (isNaN(date.getTime())) return "-";
+
+  return date.toLocaleString("en-GB", {
+    day:"2-digit",
+    month:"short",
+    year:"numeric",
+    hour:"2-digit",
+    minute:"2-digit"
+  });
+}
+
+function initials(name) {
+  return String(name || "Admin")
+    .trim()
+    .split(/\s+/)
+    .slice(0,2)
+    .map(part => part.charAt(0).toUpperCase())
+    .join("") || "A";
+}
+
+function showMessage(message, type) {
+  const box = $("message");
+  box.textContent = message;
+  box.className = "message " + type;
+  box.style.display = "block";
+}
+
+function hideLoader() {
+  $("loader").style.display = "none";
+}
+
+/* DISPLAY PROFILE */
+
+function displayProfile(admin) {
+
+  const fullName =
+    admin.fullName ||
+    admin.displayName ||
+    [admin.firstName,admin.lastName].filter(Boolean).join(" ") ||
+    admin.username ||
+    "Administrator";
+
+  setText("fullName", fullName);
+  setText("topName", fullName);
+  setText("adminId", admin.adminId);
+  setText("firstName", admin.firstName);
+  setText("lastName", admin.lastName);
+  setText("displayName", admin.displayName);
+  setText("username", admin.username);
+  setText("email", admin.email || currentUser.email);
+  setText("phoneNumber", admin.phoneNumber);
+  setText("country", admin.country);
+  setText("language", admin.language);
+  setText("timezone", admin.timezone);
+  setText("photoURL", admin.photoURL);
+
+  setText("role", admin.role);
+  setText("adminTypeInfo", admin.adminType);
+  setText("accessLevel", admin.accessLevel);
+  setText("department", admin.department);
+  setText("createdBy", admin.createdBy);
+  setText("createdAt", formatDate(admin.createdAt));
+  setText("updatedAt", formatDate(admin.updatedAt));
+
+  setText("emailVerified",
+    admin.emailVerified === true ? "Verified" : "Not verified");
+
+  setText("phoneVerified",
+    admin.phoneVerified === true ? "Verified" : "Not verified");
+
+  setText("twoFactorEnabled",
+    admin.twoFactorEnabled === true ? "Enabled" : "Disabled");
+
+  setText("lastLoginAt", formatDate(admin.lastLoginAt));
+  setText("loginCount", admin.loginCount ?? 0);
+  setText("lastLoginDevice", admin.lastLoginDevice);
+  setText("lastLoginIP", admin.lastLoginIP);
+  setText("uid", admin.uid || currentUser.uid);
+  setText("notes", admin.notes);
+  setText("accountId", admin.adminId);
+
+  setText("adminType", admin.adminType || "Blog Administrator");
+
+  const status = admin.status || "unknown";
+  $("accountStatus").textContent = status;
+  $("accountStatus").style.background =
+    status === "active" ? "#dcfce7" : "#fee2e2";
+  $("accountStatus").style.color =
+    status === "active" ? "#047857" : "#991b1b";
+
+  const photo = $("profilePhoto");
+  photo.textContent = initials(fullName);
+
+  if (admin.photoURL) {
+    const img = document.createElement("img");
+    img.src = admin.photoURL;
+    img.alt = "Administrator profile photo";
+    img.onerror = () => {
+      photo.textContent = initials(fullName);
+    };
+    photo.replaceChildren(img);
+  }
+
+  /* PERMISSIONS */
+
+  const permissions = $("permissions");
+  permissions.innerHTML = "";
+
+  let permissionList = admin.permissions || [];
+
+  if (!Array.isArray(permissionList)) {
+    permissionList = Object.entries(permissionList)
+      .filter(([key,value]) => value === true)
+      .map(([key]) => key);
+  }
+
+  if (!permissionList.length) {
+    const item = document.createElement("span");
+    item.className = "permission";
+    item.textContent = "No permissions assigned";
+    permissions.appendChild(item);
+  } else {
+    permissionList.forEach(permission => {
+      const item = document.createElement("span");
+      item.className = "permission";
+      item.textContent = String(permission);
+      permissions.appendChild(item);
+    });
+  }
+}
+
+/* LOAD ADMIN DOCUMENT */
+
+async function loadAdminProfile(user) {
+
+  const adminId = sessionStorage.getItem("adminId");
+
+  if (!adminId) {
+    throw new Error("Admin session not found. Please login again.");
+  }
+
+  // Read only admins/{adminId}; do not search by UID or email.
+  const adminRef = db.collection("admins").doc(adminId);
+  const snapshot = await adminRef.get();
+
+  if (!snapshot.exists) {
+    throw new Error("Administrator record does not exist.");
+  }
+
+  const admin = snapshot.data() || {};
+
+  if (admin.adminId !== adminId) {
+    throw new Error("Administrator ID verification failed.");
+  }
+
+  if (admin.status !== "active") {
+    throw new Error("Your administrator account is not active.");
+  }
+
+  if (admin.role !== "admin") {
+    throw new Error("You do not have administrator permissions.");
+  }
+
+  if (admin.uid && admin.uid !== user.uid) {
+    throw new Error("Your login account does not match this admin record.");
+  }
+
+  if (
+    admin.email &&
+    user.email &&
+    admin.email.toLowerCase() !== user.email.toLowerCase()
+  ) {
+    throw new Error("Administrator email verification failed.");
+  }
+
+  currentAdmin = admin;
+  displayProfile(admin);
+}
+
+/* AUTHENTICATION */
+
+auth.onAuthStateChanged(async function(user) {
+
+  if (!user) {
+    sessionStorage.removeItem("adminId");
+    window.location.replace("blog-admin-login.html");
+    return;
+  }
+
+  currentUser = user;
+
+  try {
+    await loadAdminProfile(user);
+    $("year").textContent = new Date().getFullYear();
+    hideLoader();
+
+  } catch (error) {
+    console.error("Profile loading error:", error);
+
+    alert(error.message || "Unable to load administrator profile.");
+
+    sessionStorage.removeItem("adminId");
+
+    await auth.signOut();
+
+    window.location.replace("blog-admin-login.html");
+  }
+
+});
+
+/* MOBILE MENU */
+
+$("menuBtn").addEventListener("click", function() {
+  
+  $("sidebar").classList.toggle("open");
+});
+
+/* CLOSE SIDEBAR WHEN NAVIGATING */
+
+document.querySelectorAll(".sidebar a").forEach(link => {
+  link.addEventListener("click", function() {
+    $("sidebar").classList.remove("open");
+  });
+});
+
+/* CLICK ACTIONS */
+
+document.addEventListener("click", function(e) {
+
+  const s = e.target.closest("[data-action]");
+
+  if (!s) return;
+
+  const action = s.dataset.action;
+
+  /* ADMIN LOGOUT */
+
+  if (action === "logout") {
+    e.preventDefault();
+
+    if (!confirm("Are you sure you want to logout?")) {
+      return;
+    }
+
+    $("loader").style.display = "flex";
+    $("loaderText").textContent = "Signing out...";
+
+    sessionStorage.removeItem("adminId");
+
+    auth.signOut()
+      .then(function() {
+        window.location.replace("blog-admin-login.html");
+      })
+      .catch(function(error) {
+        hideLoader();
+        showMessage(
+          "Logout failed: " + error.message,
+          "error"
+        );
+      });
+  }
+
+});
+
+/* INITIAL PAGE SETTINGS */
+
+$("year").textContent = new Date().getFullYear();
+
+/* END OF ADMIN PROFILE SCRIPT */
+</script>
+
+</body>
+</html>
