@@ -1,0 +1,444 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101828">
+  <title>Admin Login | Vorix Freelancer</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      background: #f3f5f9;
+      color: #101828;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      padding: 35px 28px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 35px rgba(0,0,0,.08);
+    }
+
+    .logo {
+      width: 55px;
+      height: 55px;
+      display: grid;
+      place-items: center;
+      background: #101828;
+      color: #fff;
+      border-radius: 14px;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      font-size: 25px;
+      margin-bottom: 9px;
+    }
+
+    .subtitle {
+      color: #667085;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #d0d5dd;
+      border-radius: 9px;
+      font-size: 15px;
+      margin-bottom: 18px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #315efb;
+      box-shadow: 0 0 0 3px rgba(49,94,251,.1);
+    }
+
+    .password-wrap {
+      position: relative;
+    }
+
+    .password-wrap input {
+      padding-right: 65px;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 13px;
+      border: none;
+      background: transparent;
+      color: #315efb;
+      font-size: 13px;
+      cursor: pointer;
+      width: auto;
+      padding: 0;
+    }
+
+    .forgot {
+      display: block;
+      text-align: right;
+      margin-top: -8px;
+      margin-bottom: 20px;
+      font-size: 13px;
+    }
+
+    a {
+      color: #315efb;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 9px;
+      background: #315efb;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .login-btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .message {
+      display: none;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 17px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .error {
+      display: block;
+      color: #b42318;
+      background: #fef3f2;
+    }
+
+    .success {
+      display: block;
+      color: #027a48;
+      background: #ecfdf3;
+    }
+
+    .bottom-links {
+      text-align: center;
+      margin-top: 23px;
+      font-size: 14px;
+      line-height: 2;
+    }
+
+    .footer {
+      margin-top: 25px;
+      text-align: center;
+      color: #98a2b3;
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="login-card">
+
+    <div class="logo">V</div>
+
+    <h1>Admin Login</h1>
+
+    <p class="subtitle">
+      Sign in to your Vorix Freelancer administrator account.
+    </p>
+
+    <div id="message" class="message" role="status"></div>
+
+    <form id="loginForm">
+
+      <label for="adminId">Admin ID</label>
+      <input
+        type="text"
+        id="adminId"
+        placeholder="Enter your Admin ID"
+        autocomplete="username"
+        required
+      >
+
+      <label for="password">Password</label>
+
+      <div class="password-wrap">
+        <input
+          type="password"
+          id="password"
+          placeholder="Enter your password"
+          autocomplete="current-password"
+          required
+        >
+
+        <button
+          type="button"
+          class="toggle-password"
+          id="togglePassword"
+        >Show</button>
+      </div>
+
+      <a
+        href="freelancer-admin-forgot-password.html"
+        class="forgot"
+      >Forgot password?</a>
+
+      <button
+        type="submit"
+        class="login-btn"
+        id="loginBtn"
+      >
+        Sign In
+      </button>
+
+    </form>
+
+    <div class="bottom-links">
+      Don't have an administrator account?
+      <br>
+      <a href="freelancer-admin-register.html">Create Admin Account</a>
+    </div>
+
+    <div class="footer">
+      © 2026 Vorix Freelancer. All rights reserved.
+    </div>
+
+  </main>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCHBwq_TIgMjld8Tn13iHby6eUkNrx8cFQ",
+      authDomain: "vorix-freelancer.firebaseapp.com",
+      projectId: "vorix-freelancer",
+      storageBucket: "vorix-freelancer.firebasestorage.app",
+      messagingSenderId: "478181968438",
+      appId: "1:478181968438:web:f605e7cd4a735e77d8e697",
+      measurementId: "G-S5230Q7K18"
+    };
+
+    // Initialize Firebase
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const loginForm = document.getElementById("loginForm");
+    const adminIdInput = document.getElementById("adminId");
+    const passwordInput = document.getElementById("password");
+    const loginBtn = document.getElementById("loginBtn");
+    const messageBox = document.getElementById("message");
+
+    // Show / Hide password
+    document.getElementById("togglePassword")
+      .addEventListener("click", function() {
+        const isPassword =
+          passwordInput.type === "password";
+
+        passwordInput.type =
+          isPassword ? "text" : "password";
+
+        this.textContent =
+          isPassword ? "Hide" : "Show";
+      });
+
+    function showMessage(message, type = "error") {
+      messageBox.textContent = message;
+      messageBox.className = "message " + type;
+    }
+
+    function setLoading(loading) {
+      loginBtn.disabled = loading;
+      loginBtn.textContent = loading
+        ? "Signing in..."
+        : "Sign In";
+    }
+
+    function getDeviceInfo() {
+      return navigator.userAgent || "Unknown device";
+    }
+
+    async function logoutCurrentUser() {
+      try {
+        await auth.signOut();
+      } catch (error) {
+        console.error(error);
+      }
+
+      sessionStorage.removeItem("adminId");
+    }
+
+    loginForm.addEventListener("submit", async function(event) {
+      event.preventDefault();
+
+      const adminId = adminIdInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!adminId || !password) {
+        showMessage("Please enter your Admin ID and password.");
+        return;
+      }
+
+      setLoading(true);
+      messageBox.className = "message";
+
+      try {
+        /*
+          Admin records are retrieved using Admin ID
+          as the Firestore document ID.
+        */
+
+        const adminRef = db.collection("admins").doc(adminId);
+        const adminSnap = await adminRef.get();
+
+        if (!adminSnap.exists) {
+          throw new Error("INVALID_ADMIN");
+        }
+
+        const admin = adminSnap.data();
+
+        // Validate administrator identity and status
+        if (
+          admin.adminId !== adminId ||
+          admin.role !== "admin" ||
+          admin.status !== "active" ||
+          !admin.email
+        ) {
+          throw new Error("ADMIN_NOT_AUTHORIZED");
+        }
+
+        // Sign in using Firebase Authentication
+        const credential = await auth.signInWithEmailAndPassword(
+          admin.email,
+          password
+        );
+
+        const user = credential.user;
+
+        // Verify actual Firebase Auth email verification
+        if (!user.emailVerified) {
+          await logoutCurrentUser();
+
+          throw new Error("EMAIL_NOT_VERIFIED");
+        }
+
+        // Verify Firebase Auth identity against Firestore
+        if (
+          user.email.toLowerCase() !==
+          admin.email.toLowerCase()
+        ) {
+          await logoutCurrentUser();
+
+          throw new Error("ACCOUNT_MISMATCH");
+        }
+
+        if (admin.uid && admin.uid !== user.uid) {
+          await logoutCurrentUser();
+
+          throw new Error("UID_MISMATCH");
+        }
+
+        // Save Admin ID for subsequent admin pages
+        sessionStorage.setItem("adminId", adminId);
+
+        // Update admin login history
+        await adminRef.update({
+          uid: user.uid,
+          emailVerified: true,
+          lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+          lastLoginDevice: getDeviceInfo(),
+          loginCount: firebase.firestore.FieldValue.increment(1),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        showMessage(
+          "Login successful. Redirecting to dashboard...",
+          "success"
+        );
+
+        window.location.href = "freelancer-admin-dashboard.html";
+
+      } catch (error) {
+        console.error("Admin login error:", error);
+
+        if (error.message === "INVALID_ADMIN") {
+          showMessage("Invalid Admin ID or password.");
+        } else if (error.message === "ADMIN_NOT_AUTHORIZED") {
+          showMessage("Your administrator account is inactive or not authorized.");
+        } else if (error.message === "EMAIL_NOT_VERIFIED") {
+          showMessage("Please verify your email address before signing in.");
+        } else if (
+          error.message === "ACCOUNT_MISMATCH" ||
+          error.message === "UID_MISMATCH"
+        ) {
+          showMessage("Your administrator account could not be verified. Contact support.");
+        } else if (error.code === "auth/wrong-password" ||
+                   error.code === "auth/invalid-credential" ||
+                   error.code === "auth/user-not-found") {
+          showMessage("Invalid Admin ID or password.");
+        } else if (error.code === "auth/too-many-requests") {
+          showMessage("Too many login attempts. Please try again later.");
+        } else if (error.code === "auth/network-request-failed") {
+          showMessage("Network error. Check your internet connection.");
+        } else {
+          showMessage("Login failed. Please try again.");
+        }
+
+        // Do not leave a partially authenticated session
+        if (auth.currentUser) {
+          await logoutCurrentUser();
+        }
+
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    // Clear stale Admin ID when opening login page
+    sessionStorage.removeItem("adminId");
+  </script>
+
+</body>
+</html>
