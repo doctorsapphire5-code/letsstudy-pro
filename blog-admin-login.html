@@ -1,0 +1,285 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login | Vorix Blog</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:Arial,sans-serif;
+  background:#f1f5f9;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  color:#0f172a
+}
+.card{
+  width:100%;
+  max-width:420px;
+  padding:32px;
+  background:#fff;
+  border-radius:16px;
+  box-shadow:0 10px 35px #00000010
+}
+.logo{
+  width:55px;height:55px;
+  display:grid;place-items:center;
+  background:#2563eb;color:white;
+  font-size:25px;font-weight:bold;
+  border-radius:13px;margin-bottom:22px
+}
+h1{font-size:26px;margin-bottom:8px}
+.subtitle{color:#64748b;font-size:14px;margin-bottom:25px}
+label{display:block;font-size:14px;font-weight:bold;margin:17px 0 8px}
+input{
+  width:100%;padding:14px;
+  border:1px solid #cbd5e1;
+  border-radius:9px;font-size:15px
+}
+input:focus{outline:2px solid #bfdbfe;border-color:#2563eb}
+button{
+  width:100%;padding:14px;
+  margin-top:23px;border:0;
+  border-radius:9px;background:#2563eb;
+  color:white;font-weight:bold;font-size:15px;
+  cursor:pointer
+}
+button:disabled{opacity:.6}
+.message{
+  display:none;padding:12px;
+  border-radius:8px;margin-bottom:15px;
+  font-size:14px;line-height:1.5
+}
+.error{background:#fee2e2;color:#991b1b}
+.success{background:#dcfce7;color:#166534}
+.links{text-align:center;margin-top:20px;font-size:14px;line-height:2}
+a{color:#2563eb;text-decoration:none}
+.footer{text-align:center;margin-top:25px;color:#94a3b8;font-size:12px}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<div class="logo">V</div>
+
+<h1>Admin Login</h1>
+<p class="subtitle">Sign in to manage Vorix Blog.</p>
+
+<div id="message" class="message"></div>
+
+<form id="loginForm">
+
+<label for="adminId">Admin ID</label>
+<input
+  id="adminId"
+  type="text"
+  placeholder="Enter your Admin ID"
+  autocomplete="username"
+  required
+>
+
+<label for="password">Password</label>
+<input
+  id="password"
+  type="password"
+  placeholder="Enter your password"
+  autocomplete="current-password"
+  required
+>
+
+<button type="submit" id="loginBtn">Sign In</button>
+
+</form>
+
+<div class="links">
+<a href="blog-admin-forgot-password.html">Forgot Password?</a>
+<br>
+<a href="blog-admin-register.html">Admin Registration</a>
+</div>
+
+<div class="footer">Vorix Blog Administration</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+
+// FIREBASE CONFIGURATION
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCYsJv9qChj1Wc1Xz78aZhgn4tHyGF1Grg",
+  authDomain: "vorix-blog.firebaseapp.com",
+  projectId: "vorix-blog",
+  storageBucket: "vorix-blog.firebasestorage.app",
+  messagingSenderId: "111344561738",
+  appId: "1:111344561738:web:8f7e64709698c7f58f80b3",
+  measurementId: "G-34BPPH3F77"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const $ = id => document.getElementById(id);
+
+function message(text,type="error"){
+  $("message").textContent=text;
+  $("message").className="message "+type;
+  $("message").style.display="block";
+}
+
+function loading(value){
+  $("loginBtn").disabled=value;
+  $("loginBtn").textContent=value?"Signing in...":"Sign In";
+}
+
+// ADMIN LOGIN
+
+$("loginForm").addEventListener("submit",async function(e){
+
+  e.preventDefault();
+
+  $("message").style.display="none";
+  loading(true);
+
+  const adminId=$("adminId").value.trim();
+  const password=$("password").value;
+
+  let authenticated=false;
+
+  try{
+
+    // ONLY admins/{adminId}
+    const adminRef=db.collection("admins").doc(adminId);
+    const adminSnap=await adminRef.get();
+
+    if(!adminSnap.exists){
+      throw new Error("Invalid Admin ID.");
+    }
+
+    const admin=adminSnap.data();
+
+    if(admin.adminId!==adminId){
+      throw new Error("Admin ID mismatch.");
+    }
+
+    if(admin.status!=="active"){
+      throw new Error("Your admin account is inactive.");
+    }
+
+    if(admin.role!=="admin"){
+      throw new Error("Access denied.");
+    }
+
+    if(!admin.email){
+      throw new Error("Admin email is missing.");
+    }
+
+    // FIREBASE AUTHENTICATION
+    const result=await auth.signInWithEmailAndPassword(
+      admin.email,
+      password
+    );
+
+    authenticated=true;
+
+    const user=result.user;
+
+    // Verify admin UID
+    if(admin.uid && admin.uid!==user.uid){
+      throw new Error("Admin UID mismatch.");
+    }
+
+    // UPDATE LOGIN INFORMATION
+    await adminRef.update({
+
+      uid:user.uid,
+
+      lastLoginAt:firebase.firestore.FieldValue.serverTimestamp(),
+
+      lastLoginDevice:navigator.userAgent,
+
+      loginCount:Number(admin.loginCount||0)+1,
+
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+
+    });
+
+    sessionStorage.setItem("adminId",adminId);
+
+    message("Login successful. Redirecting...","success");
+
+    window.location.replace("blog-admin-dashboard.html");
+
+  }catch(error){
+
+    console.error(error);
+
+    if(authenticated){
+      try{await auth.signOut();}catch(e){}
+      sessionStorage.removeItem("adminId");
+    }
+
+    const errors={
+      "auth/invalid-credential":"Incorrect Admin ID or password.",
+      "auth/user-not-found":"Authentication account not found.",
+      "auth/too-many-requests":"Too many attempts. Try again later.",
+      "auth/network-request-failed":"Check your internet connection.",
+      "permission-denied":"Permission denied. Check Firestore rules."
+    };
+
+    message(errors[error.code]||error.message);
+
+  }finally{
+    loading(false);
+  }
+
+});
+
+// EXISTING SESSION CHECK
+
+auth.onAuthStateChanged(async function(user){
+
+  if(!user)return;
+
+  const adminId=sessionStorage.getItem("adminId");
+
+  if(!adminId)return;
+
+  try{
+
+    const snap=await db.collection("admins").doc(adminId).get();
+
+    if(!snap.exists)return;
+
+    const admin=snap.data();
+
+    if(
+      admin.adminId===adminId &&
+      admin.uid===user.uid &&
+      admin.role==="admin" &&
+      admin.status==="active"
+    ){
+      window.location.replace("blog-admin-dashboard.html");
+    }
+
+  }catch(error){
+    console.error(error);
+  }
+
+});
+
+</script>
+</body>
+</html>
