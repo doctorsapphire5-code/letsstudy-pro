@@ -1,0 +1,742 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101828">
+<title>Admin Dashboard | Vorix Market</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+body{background:#f4f6fa;color:#172033;min-height:100vh}
+button,a{font:inherit}
+a{text-decoration:none;color:inherit}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:250px;background:#111827;color:#fff;position:fixed;left:0;top:0;bottom:0;padding:22px 15px;overflow-y:auto;z-index:20;transition:transform .25s}
+.brand{display:flex;align-items:center;gap:11px;padding:5px 9px 25px;border-bottom:1px solid #293345}
+.brand-icon{width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:#3157c8;border-radius:11px;font-weight:bold;font-size:20px}
+.brand h2{font-size:18px}
+.brand p{font-size:11px;color:#9ca3af;margin-top:4px}
+.nav-title{font-size:10px;color:#8994a7;text-transform:uppercase;letter-spacing:1px;margin:25px 10px 10px}
+.nav-link{display:flex;align-items:center;gap:12px;padding:12px 11px;border-radius:8px;color:#cbd5e1;font-size:13px;margin:4px 0;transition:.2s}
+.nav-link:hover,.nav-link.active{background:#263653;color:#fff}
+.nav-link.active{border-left:3px solid #668cff}
+.nav-icon{width:19px;text-align:center;font-size:15px}
+.sidebar-bottom{margin-top:30px;border-top:1px solid #293345;padding-top:18px}
+.main{margin-left:250px;width:calc(100% - 250px);min-height:100vh}
+.topbar{height:72px;background:#fff;border-bottom:1px solid #e8ebf1;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:10}
+.top-left{display:flex;align-items:center;gap:15px}
+.topbar h2{font-size:19px}
+.topbar p{font-size:12px;color:#8791a2;margin-top:4px}
+.top-actions{display:flex;align-items:center;gap:12px}
+.icon-btn{width:38px;height:38px;border:1px solid #e3e7ef;background:#fff;border-radius:9px;cursor:pointer;color:#344054}
+.admin-mini{display:flex;align-items:center;gap:9px}
+.avatar{width:36px;height:36px;border-radius:50%;background:#e8edff;color:#3157c8;display:flex;align-items:center;justify-content:center;font-weight:bold;overflow:hidden}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.admin-mini strong{display:block;font-size:12px}
+.admin-mini small{display:block;color:#8993a3;font-size:11px;margin-top:3px}
+.menu-btn{display:none}
+.content{padding:27px 28px 35px;max-width:1500px;margin:auto}
+.welcome{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:25px}
+.welcome h1{font-size:23px;margin-bottom:7px}
+.welcome p{font-size:13px;color:#7b8495}
+.welcome-actions{display:flex;gap:9px}
+.btn{border:1px solid #dfe4ed;background:#fff;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;cursor:pointer;color:#344054}
+.btn-primary{background:#3157c8;color:#fff;border-color:#3157c8}
+.btn:hover{opacity:.88}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:17px;margin-bottom:25px}
+.stat-card{background:#fff;border:1px solid #e9edf3;border-radius:12px;padding:19px;min-width:0}
+.stat-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.stat-icon{width:39px;height:39px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;background:#edf2ff;color:#3157c8}
+.stat-label{font-size:12px;color:#7b8495}
+.stat-value{font-size:26px;font-weight:700;margin-top:7px}
+.stat-note{font-size:11px;color:#98a2b3;margin-top:7px}
+.section-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(260px,1fr);gap:18px;margin-bottom:20px}
+.panel{background:#fff;border:1px solid #e9edf3;border-radius:12px;overflow:hidden}
+.panel-head{padding:18px 20px;border-bottom:1px solid #edf0f4;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.panel-head h3{font-size:15px}
+.panel-head a{font-size:12px;color:#3157c8;font-weight:600}
+.panel-body{padding:18px 20px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:490px}
+th{text-align:left;font-size:11px;color:#8993a3;font-weight:600;padding:11px 10px;border-bottom:1px solid #edf0f4}
+td{font-size:12px;padding:14px 10px;border-bottom:1px solid #f0f2f6}
+tr:last-child td{border-bottom:0}
+.status{display:inline-block;padding:5px 9px;border-radius:20px;font-size:10px;font-weight:600;background:#edf2ff;color:#3157c8}
+.status.pending{background:#fff4dc;color:#a16207}
+.status.completed{background:#dcfce7;color:#166534}
+.status.cancelled{background:#fee2e2;color:#991b1b}
+.empty{text-align:center;padding:25px;color:#98a2b3;font-size:12px}
+.quick-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.quick-link{border:1px solid #e8ecf3;border-radius:9px;padding:15px 12px;display:block;transition:.2s}
+.quick-link:hover{border-color:#3157c8;background:#f8faff}
+.quick-link span{font-size:19px;display:block;margin-bottom:10px}
+.quick-link strong{font-size:12px;display:block}
+.quick-link small{font-size:10px;color:#8993a3;display:block;margin-top:5px}
+.profile-box{display:flex;align-items:center;gap:12px;margin-bottom:17px}
+.profile-avatar{width:48px;height:48px;border-radius:50%;background:#e8edff;color:#3157c8;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:bold;overflow:hidden;flex-shrink:0}
+.profile-avatar img{width:100%;height:100%;object-fit:cover}
+.profile-box strong{font-size:13px;display:block}
+.profile-box small{font-size:11px;color:#8993a3;display:block;margin-top:5px;overflow-wrap:anywhere}
+.profile-details{border-top:1px solid #edf0f4;padding-top:13px}
+.detail-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;font-size:11px}
+.detail-row span:first-child{color:#8993a3}
+.detail-row span:last-child{font-weight:600;text-align:right;overflow-wrap:anywhere}
+.security-note{background:#f0f5ff;border:1px solid #dce7ff;border-radius:9px;padding:14px;margin-top:16px}
+.security-note strong{font-size:12px;color:#2446ad}
+.security-note p{font-size:11px;color:#53627d;line-height:1.6;margin-top:6px}
+.footer{text-align:center;color:#98a2b3;font-size:11px;padding:22px 0}
+.message{display:none;padding:12px;border-radius:8px;font-size:12px;margin-bottom:17px;line-height:1.5}
+.error{display:block;background:#fee2e2;color:#991b1b}
+.loading{color:#98a2b3}
+@media(max-width:1100px){.stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:800px){
+.sidebar{transform:translateX(-100%)}
+.sidebar.open{transform:translateX(0)}
+.main{margin-left:0;width:100%}
+.menu-btn{display:block}
+.topbar{padding:0 16px}
+.content{padding:22px 16px}
+.section-grid{grid-template-columns:1fr}
+}
+@media(max-width:480px){
+.topbar h2{font-size:16px}
+.topbar p{display:none}
+.admin-mini .admin-text{display:none}
+.welcome{align-items:flex-start;flex-direction:column}
+.welcome h1{font-size:20px}
+.stats{gap:10px}
+.stat-card{padding:14px}
+.stat-value{font-size:22px}
+.stat-label{font-size:11px}
+.welcome-actions{width:100%}
+.welcome-actions .btn{flex:1}
+}
+</style>
+</head>
+
+<body>
+
+<div class="layout">
+
+<aside class="sidebar" id="sidebar">
+
+  <div class="brand">
+    <div class="brand-icon">V</div>
+    <div>
+      <h2>Vorix Market</h2>
+      <p>Administration</p>
+    </div>
+  </div>
+
+  <div class="nav-title">Main Menu</div>
+
+  <a href="market-admin-dashboard.html" class="nav-link active">
+    <span class="nav-icon">▦</span> Dashboard
+  </a>
+
+  <a href="market-products.html" class="nav-link">
+    <span class="nav-icon">▣</span> Products
+  </a>
+
+  <a href="market-orders.html" class="nav-link">
+    <span class="nav-icon">▤</span> Orders
+  </a>
+
+  <a href="market-categories.html" class="nav-link">
+    <span class="nav-icon">▧</span> Categories
+  </a>
+
+  <a href="market-customers.html" class="nav-link">
+    <span class="nav-icon">♙</span> Customers
+  </a>
+
+  <div class="nav-title">Administration</div>
+
+  <a href="market-admin-profile.html" class="nav-link">
+    <span class="nav-icon">♙</span> Admin Profile
+  </a>
+
+  <a href="market-admin-account.html" class="nav-link">
+    <span class="nav-icon">◉</span> Account Management
+  </a>
+
+  <a href="market-admin-edit-profile.html" class="nav-link">
+    <span class="nav-icon">✎</span> Edit Profile
+  </a>
+
+  <a href="market-admin-settings.html" class="nav-link">
+    <span class="nav-icon">⚙</span> Settings
+  </a>
+
+  <div class="sidebar-bottom">
+    <button class="nav-link" id="logoutButton" style="width:100%;border:0;background:transparent;text-align:left;cursor:pointer">
+      <span class="nav-icon">↪</span> Logout
+    </button>
+  </div>
+
+</aside>
+
+<main class="main">
+
+<header class="topbar">
+
+  <div class="top-left">
+    <button class="icon-btn menu-btn" id="menuButton" aria-label="Open menu">☰</button>
+    <div>
+      <h2>Dashboard</h2>
+      <p>Vorix Market Administration</p>
+    </div>
+  </div>
+
+  <div class="top-actions">
+    <button class="icon-btn" id="refreshButton" title="Refresh dashboard">↻</button>
+
+    <div class="admin-mini">
+      <div class="avatar" id="topAvatar">A</div>
+      <div class="admin-text">
+        <strong id="topName">Administrator</strong>
+        <small id="topRole">Admin</small>
+      </div>
+    </div>
+  </div>
+
+</header>
+
+<div class="content">
+
+  <div id="pageMessage" class="message" role="alert"></div>
+
+  <section class="welcome">
+    <div>
+      <h1 id="welcomeTitle">Welcome back, Administrator</h1>
+      <p>Here's what's happening in your marketplace today.</p>
+    </div>
+
+    <div class="welcome-actions">
+      <button class="btn" id="refreshTextButton">Refresh Data</button>
+      <a href="market-products.html" class="btn btn-primary">Add Product</a>
+    </div>
+  </section>
+
+  <section class="stats">
+
+    <div class="stat-card">
+      <div class="stat-top">
+        <span class="stat-label">Total Products</span>
+        <span class="stat-icon">▣</span>
+      </div>
+      <div class="stat-value loading" id="totalProducts">—</div>
+      <div class="stat-note">Products in marketplace</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-top">
+        <span class="stat-label">Total Orders</span>
+        <span class="stat-icon">▤</span>
+      </div>
+      <div class="stat-value loading" id="totalOrders">—</div>
+      <div class="stat-note">All marketplace orders</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-top">
+        <span class="stat-label">Total Customers</span>
+        <span class="stat-icon">♙</span>
+      </div>
+      <div class="stat-value loading" id="totalCustomers">—</div>
+      <div class="stat-note">Registered customers</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-top">
+        <span class="stat-label">Categories</span>
+        <span class="stat-icon">▧</span>
+      </div>
+      <div class="stat-value loading" id="totalCategories">—</div>
+      <div class="stat-note">Marketplace categories</div>
+    </div>
+
+  </section>
+
+  <section class="section-grid">
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Recent Orders</h3>
+        <a href="market-orders.html">View All</a>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ORDER ID</th>
+              <th>CUSTOMER</th>
+              <th>AMOUNT</th>
+              <th>STATUS</th>
+            </tr>
+          </thead>
+          <tbody id="recentOrders">
+            <tr>
+              <td colspan="4" class="empty">Loading orders...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Quick Actions</h3>
+      </div>
+
+      <div class="panel-body">
+        <div class="quick-grid">
+
+          <a href="market-products.html" class="quick-link">
+            <span>▣</span>
+            <strong>Manage Products</strong>
+            <small>View and add products</small>
+          </a>
+
+          <a href="market-orders.html" class="quick-link">
+            <span>▤</span>
+            <strong>Manage Orders</strong>
+            <small>Review customer orders</small>
+          </a>
+
+          <a href="market-categories.html" class="quick-link">
+            <span>▧</span>
+            <strong>Categories</strong>
+            <small>Organize marketplace</small>
+          </a>
+
+          <a href="market-admin-settings.html" class="quick-link">
+            <span>⚙</span>
+            <strong>Settings</strong>
+            <small>Manage admin settings</small>
+          </a>
+
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="section-grid">
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Marketplace Overview</h3>
+      </div>
+
+      <div class="panel-body">
+
+        <div class="detail-row">
+          <span>Products collection</span>
+          <strong id="productCollectionStatus">Checking...</strong>
+        </div>
+
+        <div class="detail-row">
+          <span>Orders collection</span>
+          <strong id="orderCollectionStatus">Checking...</strong>
+        </div>
+
+        <div class="detail-row">
+          <span>Customers collection</span>
+          <strong id="customerCollectionStatus">Checking...</strong>
+        </div>
+
+        <div class="detail-row">
+          <span>Categories collection</span>
+          <strong id="categoryCollectionStatus">Checking...</strong>
+        </div>
+
+        <div class="security-note">
+          <strong>Administrator Security</strong>
+          <p>
+            Your administrator account is checked against the registered
+            Admin ID and Firebase Authentication session.
+            Keep your login credentials private.
+          </p>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Administrator Profile</h3>
+        <a href="market-admin-profile.html">View Profile</a>
+      </div>
+
+      <div class="panel-body">
+
+        <div class="profile-box">
+          <div class="profile-avatar" id="profileAvatar">A</div>
+
+          <div>
+            <strong id="profileName">Loading...</strong>
+            <small id="profileEmail">Loading...</small>
+          </div>
+        </div>
+
+        <div class="profile-details">
+
+          <div class="detail-row">
+            <span>Admin ID</span>
+            <span id="profileAdminId">—</span>
+          </div>
+
+          <div class="detail-row">
+            <span>Role</span>
+            <span id="profileRole">—</span>
+          </div>
+
+          <div class="detail-row">
+            <span>Department</span>
+            <span id="profileDepartment">—</span>
+          </div>
+
+          <div class="detail-row">
+            <span>Account Status</span>
+            <span id="profileStatus">—</span>
+          </div>
+
+          <div class="detail-row">
+            <span>Last Login</span>
+            <span id="profileLastLogin">—</span>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+  </section>
+
+  <footer class="footer">
+    &copy; <span id="year"></span> Vorix Market. All rights reserved.
+  </footer>
+
+</div>
+</main>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBTMnT-PhJ44Hamu2EHyqnbP5EBoiFwGqY",
+  authDomain: "vorix-market.firebaseapp.com",
+  databaseURL: "https://vorix-market-default-rtdb.firebaseio.com",
+  projectId: "vorix-market",
+  storageBucket: "vorix-market.firebasestorage.app",
+  messagingSenderId: "686555609094",
+  appId: "1:686555609094:web:61f3e1853c0fca143a2b87",
+  measurementId: "G-2KNWRG4X08"
+};
+
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const $ = id => document.getElementById(id);
+
+$("year").textContent = new Date().getFullYear();
+
+let currentAdminId = null;
+let currentAdmin = null;
+
+function showPageError(message) {
+  const box = $("pageMessage");
+  box.textContent = message;
+  box.className = "message error";
+}
+
+function formatDate(value) {
+  if (!value) return "Not available";
+
+  let date = value.toDate ? value.toDate() : new Date(value);
+
+  if (isNaN(date.getTime())) return "Not available";
+
+  return date.toLocaleString();
+}
+
+function formatAmount(value) {
+  const amount = Number(value || 0);
+
+  return amount.toLocaleString(undefined, {
+    maximumFractionDigits: 2
+  });
+}
+
+function safeText(value, fallback = "—") {
+  return value === undefined || value === null || value === ""
+    ? fallback
+    : String(value);
+}
+
+function setAvatar(elementId, name, photoURL) {
+  const element = $(elementId);
+
+  element.replaceChildren();
+
+  if (photoURL) {
+    const img = document.createElement("img");
+    img.src = photoURL;
+    img.alt = "Administrator profile";
+    img.onerror = () => {
+      element.textContent = (name || "A").charAt(0).toUpperCase();
+    };
+    element.appendChild(img);
+  } else {
+    element.textContent = (name || "A").charAt(0).toUpperCase();
+  }
+}
+
+function displayAdmin(admin, adminId) {
+  const name =
+    admin.displayName ||
+    admin.fullName ||
+    [admin.firstName, admin.lastName].filter(Boolean).join(" ") ||
+    "Administrator";
+
+  $("topName").textContent = name;
+  $("topRole").textContent = safeText(admin.role, "Admin");
+
+  $("welcomeTitle").textContent = "Welcome back, " + name;
+
+  $("profileName").textContent = name;
+  $("profileEmail").textContent = safeText(admin.email);
+  $("profileAdminId").textContent = adminId;
+  $("profileRole").textContent = safeText(admin.role);
+  $("profileDepartment").textContent = safeText(admin.department);
+  $("profileStatus").textContent = safeText(admin.status);
+  $("profileLastLogin").textContent = formatDate(admin.lastLoginAt);
+
+  setAvatar("topAvatar", name, admin.photoURL);
+  setAvatar("profileAvatar", name, admin.photoURL);
+}
+
+async function loadCount(collectionName, outputId, statusId) {
+  try {
+    const snapshot = await db.collection(collectionName).get();
+
+    $(outputId).textContent = snapshot.size.toLocaleString();
+    $(outputId).classList.remove("loading");
+
+    $(statusId).textContent = "Connected";
+
+  } catch (error) {
+    console.error("Collection error:", collectionName, error);
+
+    $(outputId).textContent = "—";
+    $(outputId).classList.remove("loading");
+    $(statusId).textContent = "Unavailable";
+  }
+}
+
+function getOrderStatusClass(status) {
+  const value = String(status || "").toLowerCase();
+
+  if (["completed", "delivered", "paid", "success"].includes(value)) {
+    return "completed";
+  }
+
+  if (["cancelled", "canceled", "rejected", "failed"].includes(value)) {
+    return "cancelled";
+  }
+
+  if (["pending", "processing", "awaiting payment"].includes(value)) {
+    return "pending";
+  }
+
+  return "";
+}
+
+async function loadRecentOrders() {
+  const tbody = $("recentOrders");
+
+  try {
+    const snapshot = await db.collection("orders")
+      .orderBy("createdAt", "desc")
+      .limit(5)
+      .get();
+
+    tbody.replaceChildren();
+
+    if (snapshot.empty) {
+      const row = document.createElement("tr");
+      const cell = document.createElement("td");
+
+      cell.colSpan = 4;
+      cell.className = "empty";
+      cell.textContent = "No orders found.";
+
+      row.appendChild(cell);
+      tbody.appendChild(row);
+      return;
+    }
+
+    snapshot.forEach(doc => {
+      const order = doc.data();
+
+      const row = document.createElement("tr");
+
+      const orderCell = document.createElement("td");
+      orderCell.textContent = safeText(
+        order.orderId || doc.id
+      );
+
+      const customerCell = document.createElement("td");
+      customerCell.textContent = safeText(
+        order.customerName || order.fullName || order.email
+      );
+
+      
+      const amountCell = document.createElement("td");
+      const amount = order.totalAmount ?? order.total ?? order.amount ?? 0;
+
+      amountCell.textContent = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: order.currency || "USD"
+      }).format(Number(amount) || 0);
+
+      const statusCell = document.createElement("td");
+      const status = String(order.status || "Pending").toLowerCase();
+
+      const statusBadge = document.createElement("span");
+      statusBadge.className = "status-badge " + status.replace(/\s+/g, "-");
+      statusBadge.textContent =
+        status.charAt(0).toUpperCase() + status.slice(1);
+
+      statusCell.appendChild(statusBadge);
+
+      row.appendChild(orderIdCell);
+      row.appendChild(customerCell);
+      row.appendChild(dateCell);
+      row.appendChild(amountCell);
+      row.appendChild(statusCell);
+
+      ordersTableBody.appendChild(row);
+    });
+
+  } catch (error) {
+    console.error("Error loading recent orders:", error);
+    ordersTableBody.innerHTML = `
+      <tr>
+        <td colspan="5">Unable to load recent orders.</td>
+      </tr>
+    `;
+  }
+}
+
+async function refreshDashboard() {
+  try {
+    await Promise.all([
+      loadDashboardStats(),
+      loadRecentOrders()
+    ]);
+  } catch (error) {
+    console.error("Dashboard refresh failed:", error);
+  }
+}
+
+document.getElementById("refreshBtn")?.addEventListener("click", refreshDashboard);
+
+document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+  try {
+    sessionStorage.removeItem("adminId");
+    await auth.signOut();
+    window.location.href = "market-admin-login.html";
+  } catch (error) {
+    console.error("Logout error:", error);
+    alert("Unable to log out. Please try again.");
+  }
+});
+
+// Initialize dashboard
+auth.onAuthStateChanged(async (user) => {
+  if (!user) {
+    sessionStorage.removeItem("adminId");
+    window.location.href = "market-admin-login.html";
+    return;
+  }
+
+  try {
+    const adminId = sessionStorage.getItem("adminId");
+
+    if (!adminId) {
+      await auth.signOut();
+      window.location.href = "market-admin-login.html";
+      return;
+    }
+
+    const adminRef = db.collection("admins").doc(adminId);
+    const adminSnap = await adminRef.get();
+
+    if (!adminSnap.exists) {
+      throw new Error("Admin record not found.");
+    }
+
+    const admin = adminSnap.data();
+
+    if (
+      admin.adminId !== adminId ||
+      admin.status !== "active" ||
+      admin.role !== "admin" ||
+      (admin.uid && admin.uid !== user.uid) ||
+      admin.email?.toLowerCase() !== user.email?.toLowerCase() ||
+      !user.emailVerified
+    ) {
+      throw new Error("Admin access denied. Check your account status and email verification.");
+    }
+
+    // Synchronize verified email status with Firestore.
+    if (admin.emailVerified !== true) {
+      await adminRef.update({
+        emailVerified: true,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
+    const displayName =
+      admin.displayName ||
+      admin.fullName ||
+      user.displayName ||
+      "Administrator";
+
+    document.getElementById("adminName").textContent = displayName;
+    document.getElementById("adminEmail").textContent = user.email || "";
+    document.getElementById("adminInitial").textContent =
+      displayName.charAt(0).toUpperCase();
+
+    const photo = document.getElementById("adminPhoto");
+    if (photo && admin.photoURL) {
+      photo.src = admin.photoURL;
+      photo.hidden = false;
+    }
+
+    await refreshDashboard();
+
+  } catch (error) {
+    console.error("Admin verification failed:", error);
+    alert(error.message || "Unable to verify administrator access.");
+    sessionStorage.removeItem("adminId");
+    await auth.signOut();
+    window.location.href = "market-admin-login.html";
+  }
+});
+</script>
+</body>
+</html>
