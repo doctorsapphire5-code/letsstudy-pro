@@ -1,0 +1,725 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101828">
+  <title>Admin Settings | Vorix Blog</title>
+
+  <style>
+    :root {
+      --primary:#3157d5;
+      --dark:#101828;
+      --bg:#f4f6fb;
+      --text:#202939;
+      --muted:#667085;
+      --border:#e5e9f2;
+      --green:#067647;
+      --red:#b42318;
+    }
+
+    * { box-sizing:border-box; }
+
+    body {
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    .sidebar {
+      width:250px;
+      background:var(--dark);
+      color:white;
+      padding:25px 17px;
+      position:fixed;
+      inset:0 auto 0 0;
+      overflow-y:auto;
+      z-index:20;
+    }
+
+    .brand {
+      font-size:21px;
+      font-weight:800;
+      padding:5px 10px 28px;
+    }
+
+    .brand span { color:#91a9ff; }
+
+    .nav-label {
+      color:#98a2b3;
+      font-size:11px;
+      font-weight:bold;
+      padding:14px 10px 8px;
+      text-transform:uppercase;
+      letter-spacing:1px;
+    }
+
+    .sidebar a {
+      display:block;
+      color:#d0d5dd;
+      text-decoration:none;
+      padding:12px 13px;
+      border-radius:8px;
+      margin:4px 0;
+      font-size:14px;
+    }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      background:#253b75;
+      color:white;
+    }
+
+    .main {
+      margin-left:250px;
+      width:calc(100% - 250px);
+      min-height:100vh;
+    }
+
+    .topbar {
+      background:white;
+      border-bottom:1px solid var(--border);
+      padding:17px 28px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      position:sticky;
+      top:0;
+      z-index:10;
+    }
+
+    .topbar h2 { margin:0; font-size:19px; }
+
+    .menu-btn {
+      display:none;
+      border:0;
+      background:#eef2ff;
+      padding:9px 12px;
+      border-radius:7px;
+      font-size:19px;
+      cursor:pointer;
+    }
+
+    .content {
+      max-width:1000px;
+      padding:30px;
+      margin:auto;
+    }
+
+    .heading { margin-bottom:25px; }
+    .heading h1 { margin:0 0 8px; font-size:27px; }
+    .heading p { margin:0; color:var(--muted); }
+
+    .card {
+      background:white;
+      border:1px solid var(--border);
+      border-radius:13px;
+      padding:24px;
+      margin-bottom:20px;
+      box-shadow:0 3px 12px rgba(16,24,40,.035);
+    }
+
+    .card h3 { margin:0 0 8px; font-size:17px; }
+    .description {
+      margin:0 0 20px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    .setting {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:20px;
+      padding:17px 0;
+      border-bottom:1px solid #edf0f5;
+    }
+
+    .setting:last-child { border-bottom:0; }
+
+    .setting-info { flex:1; }
+    .setting-info strong {
+      display:block;
+      font-size:14px;
+      margin-bottom:6px;
+    }
+
+    .setting-info small {
+      color:var(--muted);
+      line-height:1.5;
+      display:block;
+    }
+
+    select, input[type="text"] {
+      width:260px;
+      max-width:100%;
+      padding:11px;
+      border:1px solid #d0d5dd;
+      border-radius:8px;
+      background:white;
+      font-size:14px;
+      color:var(--text);
+    }
+
+    .toggle {
+      width:46px;
+      height:25px;
+      position:relative;
+      flex-shrink:0;
+    }
+
+    .toggle input {
+      width:0;
+      height:0;
+      opacity:0;
+    }
+
+    .slider {
+      position:absolute;
+      inset:0;
+      background:#cbd5e1;
+      border-radius:30px;
+      cursor:pointer;
+      transition:.2s;
+    }
+
+    .slider:before {
+      content:"";
+      position:absolute;
+      width:19px;
+      height:19px;
+      left:3px;
+      bottom:3px;
+      background:white;
+      border-radius:50%;
+      transition:.2s;
+    }
+
+    .toggle input:checked + .slider { background:var(--primary); }
+
+    .toggle input:checked + .slider:before {
+      transform:translateX(21px);
+    }
+
+    .button {
+      display:inline-block;
+      padding:11px 18px;
+      border:0;
+      border-radius:8px;
+      background:var(--primary);
+      color:white;
+      font-size:13px;
+      font-weight:bold;
+      cursor:pointer;
+    }
+
+    .button:disabled { opacity:.6; cursor:not-allowed; }
+
+    .button.secondary {
+      background:#eef2ff;
+      color:#344da7;
+    }
+
+    .button.danger { background:#b42318; }
+
+    .actions {
+      display:flex;
+      flex-wrap:wrap;
+      gap:9px;
+      margin-top:20px;
+    }
+
+    .message {
+      display:none;
+      padding:12px 14px;
+      border-radius:8px;
+      margin-bottom:18px;
+      font-size:14px;
+    }
+
+    .message.success {
+      display:block;
+      color:#067647;
+      background:#ecfdf3;
+    }
+
+    .message.error {
+      display:block;
+      color:#b42318;
+      background:#fef3f2;
+    }
+
+    .security-note {
+      background:#fffaeb;
+      color:#93370d;
+      border:1px solid #fedf89;
+      padding:14px;
+      border-radius:8px;
+      font-size:13px;
+      line-height:1.6;
+      margin-top:15px;
+    }
+
+    .loader {
+      position:fixed;
+      inset:0;
+      background:rgba(255,255,255,.88);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:100;
+      color:var(--primary);
+      font-weight:bold;
+    }
+
+    .footer {
+      text-align:center;
+      color:var(--muted);
+      font-size:12px;
+      padding:25px;
+    }
+
+    @media(max-width:850px) {
+      .sidebar {
+        transform:translateX(-100%);
+        transition:.25s;
+      }
+
+      .sidebar.open { transform:translateX(0); }
+
+      .main { margin-left:0; width:100%; }
+      .menu-btn { display:block; }
+      .content { padding:20px 15px; }
+      .topbar { padding:14px 16px; }
+    }
+
+    @media(max-width:550px) {
+      .setting {
+        align-items:flex-start;
+        flex-direction:column;
+      }
+
+      select { width:100%; }
+      .setting .toggle { align-self:flex-end; }
+      .actions .button { width:100%; }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="loader" id="loader">Loading settings...</div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">VORIX <span>BLOG</span></div>
+
+  <div class="nav-label">Main menu</div>
+  <a href="blog-admin-dashboard.html">Dashboard</a>
+  <a href="blog-posts.html">Blog Posts</a>
+
+  <div class="nav-label">Administration</div>
+  <a href="blog-admin-profile.html">Admin Profile</a>
+  <a href="blog-admin-account.html">Account</a>
+  <a href="blog-admin-settings.html" class="active">Settings</a>
+  <a href="blog-admin-edit-profile.html">Edit Profile</a>
+
+  <div class="nav-label">Security</div>
+  <a href="blog-admin-forgot-password.html">Forgot Password</a>
+  <a href="blog-admin-login.html" data-action="logout">Logout</a>
+</aside>
+
+<main class="main">
+
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="menu-btn" id="menuBtn" type="button">☰</button>
+      <h2>Admin Settings</h2>
+    </div>
+    <span style="font-size:13px;color:#667085">Vorix Blog Admin</span>
+  </header>
+
+  <div class="content">
+
+    <div class="heading">
+      <h1>Settings</h1>
+      <p>Manage your administrator preferences and security options.</p>
+    </div>
+
+    <div id="message" class="message"></div>
+
+    <section class="card">
+      <h3>General Preferences</h3>
+      <p class="description">
+        Configure your preferred language and regional settings.
+      </p>
+
+      <div class="setting">
+        <div class="setting-info">
+          <strong>Language</strong>
+          <small>Select the language used for your account preferences.</small>
+        </div>
+
+        <select id="language">
+          <option value="English">English</option>
+          <option value="Swahili">Swahili</option>
+          <option value="French">French</option>
+          <option value="Arabic">Arabic</option>
+          <option value="Spanish">Spanish</option>
+        </select>
+      </div>
+
+      <div class="setting">
+        <div class="setting-info">
+          <strong>Timezone</strong>
+          <small>Choose your local timezone.</small>
+        </div>
+
+        <select id="timezone">
+          <option value="Africa/Dar_es_Salaam">Africa/Dar_es_Salaam</option>
+          <option value="Africa/Nairobi">Africa/Nairobi</option>
+          <option value="Africa/Kampala">Africa/Kampala</option>
+          <option value="Africa/Lagos">Africa/Lagos</option>
+          <option value="Africa/Johannesburg">Africa/Johannesburg</option>
+          <option value="Europe/London">Europe/London</option>
+          <option value="Europe/Paris">Europe/Paris</option>
+          <option value="Asia/Dubai">Asia/Dubai</option>
+          <option value="Asia/Kolkata">Asia/Kolkata</option>
+          <option value="Asia/Tokyo">Asia/Tokyo</option>
+          <option value="America/New_York">America/New_York</option>
+          <option value="America/Los_Angeles">America/Los_Angeles</option>
+          <option value="Australia/Sydney">Australia/Sydney</option>
+          <option value="UTC">UTC</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Notifications</h3>
+      <p class="description">
+        Choose which account notification preferences you want to save.
+      </p>
+
+      <div class="setting">
+        <div class="setting-info">
+          <strong>Email Notifications</strong>
+          <small>Preference for receiving administrative notifications by email.</small>
+        </div>
+
+        <label class="toggle">
+          <input type="checkbox" id="emailNotifications">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting">
+        <div class="setting-info">
+          <strong>Security Alerts</strong>
+          <small>Preference for receiving account security alerts.</small>
+        </div>
+
+        <label class="toggle">
+          <input type="checkbox" id="securityAlerts">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Security Preferences</h3>
+      <p class="description">
+        Manage your security preferences. These options do not independently
+        enforce authentication security.
+      </p>
+
+      <div class="setting">
+        <div class="setting-info">
+          <strong>Two-Factor Authentication Preference</strong>
+          <small>
+            Save whether you want two-factor authentication enabled.
+            Actual enforcement must be configured in your authentication system.
+          </small>
+        </div>
+
+        <label class="toggle">
+          <input type="checkbox" id="twoFactorEnabled">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting">
+        <div class="setting-info">
+          <strong>Email Verification</strong>
+          <small>Your current Firebase Authentication email verification status.</small>
+        </div>
+        <strong id="verificationStatus">Checking...</strong>
+      </div>
+
+      <div class="security-note">
+        <strong>Security notice:</strong>
+        Never store passwords in Firestore. Firebase Authentication manages
+        passwords and email verification. Two-factor authentication requires
+        a supported authentication provider or backend implementation.
+      </div>
+
+      <div class="actions">
+        <a href="blog-admin-forgot-password.html" class="button secondary">
+          Change Password
+        </a>
+        <a href="blog-admin-account.html" class="button secondary">
+          View Account
+        </a>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Save Preferences</h3>
+      <p class="description">
+        Your settings will be saved to your administrator document.
+      </p>
+
+      <div class="actions">
+        <button class="button" id="saveBtn" type="button">
+          Save Settings
+        </button>
+
+        <button class="button secondary" id="reloadBtn" type="button">
+          Reload Settings
+        </button>
+
+        <button class="button danger" id="logoutBtn" type="button">
+          Logout
+        </button>
+      </div>
+    </section>
+
+    <div class="footer">
+      © <span id="year"></span> Vorix Blog. All rights reserved.
+    </div>
+
+  </div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCYsJv9qChj1Wc1Xz78aZhgn4tHyGF1Grg",
+  authDomain: "vorix-blog.firebaseapp.com",
+  projectId: "vorix-blog",
+  storageBucket: "vorix-blog.firebasestorage.app",
+  messagingSenderId: "111344561738",
+  appId: "1:111344561738:web:8f7e64709698c7f58f80b3",
+  measurementId: "G-34BPPH3F77"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const $ = id => document.getElementById(id);
+
+let currentAdmin = null;
+let currentUser = null;
+
+function showLoader(show) {
+  $("loader").style.display = show ? "flex" : "none";
+}
+
+function showMessage(message, type) {
+  const box = $("message");
+  box.textContent = message;
+  box.className = "message " + type;
+}
+
+function getAdminRef() {
+  const adminId = sessionStorage.getItem("adminId");
+
+  if (!adminId) {
+    throw new Error("Admin ID not found. Please login again.");
+  }
+
+  return db.collection("admins").doc(adminId);
+}
+
+function setPreferences(data) {
+  $("language").value = data.language || "English";
+  $("timezone").value = data.timezone || "Africa/Dar_es_Salaam";
+
+  $("emailNotifications").checked =
+    data.emailNotifications === true;
+
+  $("securityAlerts").checked =
+    data.securityAlerts !== false;
+
+  $("twoFactorEnabled").checked =
+    data.twoFactorEnabled === true;
+}
+
+async function loadSettings(user) {
+  showLoader(true);
+
+  try {
+    const adminId = sessionStorage.getItem("adminId");
+
+    if (!adminId) {
+      window.location.replace("blog-admin-login.html");
+      return;
+    }
+
+    const snap = await getAdminRef().get();
+
+    if (!snap.exists) {
+      throw new Error("Admin account not found.");
+    }
+
+    const data = snap.data();
+
+    if (
+      data.adminId !== adminId ||
+      data.status !== "active" ||
+      data.role !== "admin"
+    ) {
+      throw new Error("Admin account is not authorized.");
+    }
+
+    if (data.uid && data.uid !== user.uid) {
+      throw new Error("Signed-in user does not match this admin account.");
+    }
+
+    if (
+      data.email &&
+      user.email &&
+      data.email.toLowerCase() !== user.email.toLowerCase()
+    ) {
+      throw new Error("Admin email does not match.");
+    }
+
+    currentAdmin = data;
+    currentUser = user;
+
+    setPreferences(data);
+
+    $("verificationStatus").textContent =
+      user.emailVerified ? "Verified" : "Not verified";
+
+  } catch (error) {
+    console.error(error);
+    showMessage(error.message, "error");
+
+    if (
+      error.message.includes("not found") ||
+      error.message.includes("not authorized") ||
+      error.message.includes("does not match")
+    ) {
+      sessionStorage.removeItem("adminId");
+      await auth.signOut();
+      window.location.replace("blog-admin-login.html");
+    }
+  } finally {
+    showLoader(false);
+  }
+}
+
+async function saveSettings() {
+  if (!currentAdmin || !currentUser) {
+    showMessage("Account information is not ready.", "error");
+    return;
+  }
+
+  const saveBtn = $("saveBtn");
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Saving...";
+
+  try {
+    const preferences = {
+      language: $("language").value,
+      timezone: $("timezone").value,
+      emailNotifications: $("emailNotifications").checked,
+      securityAlerts: $("securityAlerts").checked,
+      twoFactorEnabled: $("twoFactorEnabled").checked,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    await getAdminRef().update(preferences);
+
+    currentAdmin = {
+      ...currentAdmin,
+      ...preferences
+    };
+
+    showMessage("Settings saved successfully.", "success");
+
+  } catch (error) {
+    console.error(error);
+    showMessage("Unable to save settings: " + error.message, "error");
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Save Settings";
+  }
+}
+
+async function reloadSettings() {
+  if (!currentUser) return;
+
+  showMessage("", "");
+  await loadSettings(currentUser);
+}
+
+async function logout() {
+  if (!confirm("Are you sure you want to logout?")) return;
+
+  showLoader(true);
+
+  try {
+    sessionStorage.removeItem("adminId");
+    await auth.signOut();
+    window.location.replace("blog-admin-login.html");
+  } catch (error) {
+    showLoader(false);
+    showMessage("Logout failed: " + error.message, "error");
+  }
+}
+
+$("saveBtn").addEventListener("click", saveSettings);
+$("reloadBtn").addEventListener("click", reloadSettings);
+$("logoutBtn").addEventListener("click", logout);
+
+$("menuBtn").addEventListener("click", function() {
+  $("sidebar").classList.toggle("open");
+});
+
+document.querySelectorAll(".sidebar a").forEach(link => {
+  link.addEventListener("click", function() {
+    $("sidebar").classList.remove("open");
+  });
+});
+
+document.querySelector('[data-action="logout"]').addEventListener(
+  "click",
+  function(event) {
+    event.preventDefault();
+    logout();
+  }
+);
+
+auth.onAuthStateChanged(async function(user) {
+  if (!user) {
+    sessionStorage.removeItem("adminId");
+    window.location.replace("blog-admin-login.html");
+    return;
+  }
+
+  await loadSettings(user);
+});
+
+$("year").textContent = new Date().getFullYear();
+</script>
+
+</body>
+</html>
