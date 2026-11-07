@@ -1,0 +1,849 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101828">
+  <title>Edit Admin Profile | Vorix Blog</title>
+
+  <style>
+    :root {
+      --primary:#3157d5;
+      --dark:#101828;
+      --bg:#f4f6fb;
+      --text:#202939;
+      --muted:#667085;
+      --border:#e5e9f2;
+      --green:#067647;
+      --red:#b42318;
+    }
+
+    * { box-sizing:border-box; }
+
+    body {
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    .sidebar {
+      width:250px;
+      background:var(--dark);
+      color:white;
+      padding:25px 17px;
+      position:fixed;
+      inset:0 auto 0 0;
+      overflow-y:auto;
+      z-index:20;
+    }
+
+    .brand {
+      font-size:21px;
+      font-weight:800;
+      padding:5px 10px 28px;
+    }
+
+    .brand span { color:#91a9ff; }
+
+    .nav-label {
+      color:#98a2b3;
+      font-size:11px;
+      font-weight:bold;
+      padding:14px 10px 8px;
+      text-transform:uppercase;
+      letter-spacing:1px;
+    }
+
+    .sidebar a {
+      display:block;
+      color:#d0d5dd;
+      text-decoration:none;
+      padding:12px 13px;
+      border-radius:8px;
+      margin:4px 0;
+      font-size:14px;
+    }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      background:#253b75;
+      color:white;
+    }
+
+    .main {
+      margin-left:250px;
+      width:calc(100% - 250px);
+      min-height:100vh;
+    }
+
+    .topbar {
+      background:white;
+      border-bottom:1px solid var(--border);
+      padding:17px 28px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      position:sticky;
+      top:0;
+      z-index:10;
+    }
+
+    .topbar h2 { margin:0; font-size:19px; }
+
+    .menu-btn {
+      display:none;
+      border:0;
+      background:#eef2ff;
+      padding:9px 12px;
+      border-radius:7px;
+      font-size:19px;
+      cursor:pointer;
+    }
+
+    .content {
+      max-width:1000px;
+      padding:30px;
+      margin:auto;
+    }
+
+    .heading { margin-bottom:25px; }
+    .heading h1 { margin:0 0 8px; font-size:27px; }
+    .heading p { margin:0; color:var(--muted); }
+
+    .card {
+      background:white;
+      border:1px solid var(--border);
+      border-radius:13px;
+      padding:24px;
+      margin-bottom:20px;
+      box-shadow:0 3px 12px rgba(16,24,40,.035);
+    }
+
+    .card h3 { margin:0 0 8px; font-size:17px; }
+
+    .description {
+      margin:0 0 22px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    .avatar-area {
+      display:flex;
+      align-items:center;
+      gap:17px;
+      margin-bottom:24px;
+    }
+
+    .avatar {
+      width:75px;
+      height:75px;
+      border-radius:50%;
+      background:#e8edff;
+      color:var(--primary);
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      font-size:25px;
+      font-weight:bold;
+      overflow:hidden;
+      flex-shrink:0;
+    }
+
+    .avatar img {
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+
+    .avatar-info strong {
+      display:block;
+      margin-bottom:6px;
+    }
+
+    .avatar-info small {
+      color:var(--muted);
+      line-height:1.5;
+    }
+
+    .form-grid {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:19px;
+    }
+
+    .form-group { min-width:0; }
+
+    .form-group.full { grid-column:1/-1; }
+
+    label {
+      display:block;
+      font-size:13px;
+      font-weight:bold;
+      margin-bottom:8px;
+    }
+
+    input, select, textarea {
+      width:100%;
+      padding:12px;
+      border:1px solid #d0d5dd;
+      border-radius:8px;
+      background:white;
+      font-size:14px;
+      color:var(--text);
+      outline:none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color:var(--primary);
+      box-shadow:0 0 0 3px rgba(49,87,213,.1);
+    }
+
+    input:disabled {
+      background:#f2f4f7;
+      color:#667085;
+      cursor:not-allowed;
+    }
+
+    textarea {
+      min-height:100px;
+      resize:vertical;
+      line-height:1.5;
+    }
+
+    .hint {
+      display:block;
+      margin-top:6px;
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.5;
+    }
+
+    .actions {
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:22px;
+    }
+
+    .button {
+      display:inline-block;
+      padding:12px 18px;
+      border:0;
+      border-radius:8px;
+      background:var(--primary);
+      color:white;
+      font-size:13px;
+      font-weight:bold;
+      cursor:pointer;
+      text-decoration:none;
+      text-align:center;
+    }
+
+    .button.secondary {
+      background:#eef2ff;
+      color:#344da7;
+    }
+
+    .button:disabled {
+      opacity:.6;
+      cursor:not-allowed;
+    }
+
+    .message {
+      display:none;
+      padding:12px 14px;
+      border-radius:8px;
+      margin-bottom:18px;
+      font-size:14px;
+    }
+
+    .message.success {
+      display:block;
+      color:#067647;
+      background:#ecfdf3;
+    }
+
+    .message.error {
+      display:block;
+      color:#b42318;
+      background:#fef3f2;
+    }
+
+    .loader {
+      position:fixed;
+      inset:0;
+      background:rgba(255,255,255,.88);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:100;
+      color:var(--primary);
+      font-weight:bold;
+    }
+
+    .footer {
+      text-align:center;
+      color:var(--muted);
+      font-size:12px;
+      padding:25px;
+    }
+
+    @media(max-width:850px) {
+      .sidebar {
+        transform:translateX(-100%);
+        transition:.25s;
+      }
+
+      .sidebar.open { transform:translateX(0); }
+
+      .main { margin-left:0; width:100%; }
+      .menu-btn { display:block; }
+      .content { padding:20px 15px; }
+      .topbar { padding:14px 16px; }
+    }
+
+    @media(max-width:550px) {
+      .form-grid { grid-template-columns:1fr; }
+      .form-group.full { grid-column:auto; }
+      .actions .button { width:100%; }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="loader" id="loader">Loading profile...</div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">VORIX <span>BLOG</span></div>
+
+  <div class="nav-label">Main menu</div>
+  <a href="blog-admin-dashboard.html">Dashboard</a>
+  <a href="blog-posts.html">Blog Posts</a>
+
+  <div class="nav-label">Administration</div>
+  <a href="blog-admin-profile.html">Admin Profile</a>
+  <a href="blog-admin-account.html">Account</a>
+  <a href="blog-admin-settings.html">Settings</a>
+  <a href="blog-admin-edit-profile.html" class="active">Edit Profile</a>
+
+  <div class="nav-label">Security</div>
+  <a href="blog-admin-forgot-password.html">Forgot Password</a>
+  <a href="blog-admin-login.html" data-action="logout">Logout</a>
+</aside>
+
+<main class="main">
+
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="menu-btn" id="menuBtn" type="button">☰</button>
+      <h2>Edit Admin Profile</h2>
+    </div>
+    <span style="font-size:13px;color:#667085">Vorix Blog Admin</span>
+  </header>
+
+  <div class="content">
+
+    <div class="heading">
+      <h1>Edit Profile</h1>
+      <p>Update your personal and professional administrator information.</p>
+    </div>
+
+    <div id="message" class="message"></div>
+
+    <form id="profileForm">
+
+      <section class="card">
+        <h3>Profile Information</h3>
+        <p class="description">
+          Manage your name and profile photo.
+        </p>
+
+        <div class="avatar-area">
+          <div class="avatar" id="avatar">A</div>
+          <div class="avatar-info">
+            <strong id="previewName">Administrator</strong>
+            <small>Your profile image will be displayed in the admin area.</small>
+          </div>
+        </div>
+
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label for="firstName">First Name</label>
+            <input type="text" id="firstName" maxlength="60" required>
+          </div>
+
+          <div class="form-group">
+            <label for="lastName">Last Name</label>
+            <input type="text" id="lastName" maxlength="60">
+          </div>
+
+          <div class="form-group">
+            <label for="fullName">Full Name</label>
+            <input type="text" id="fullName" maxlength="120" required>
+          </div>
+
+          <div class="form-group">
+            <label for="displayName">Display Name</label>
+            <input type="text" id="displayName" maxlength="80">
+          </div>
+
+          <div class="form-group full">
+            <label for="photoURL">Profile Photo URL</label>
+            <input type="url" id="photoURL" placeholder="https://example.com/photo.jpg">
+            <small class="hint">Enter a publicly accessible HTTPS image URL.</small>
+          </div>
+
+        </div>
+      </section>
+
+      <section class="card">
+        <h3>Contact Information</h3>
+        <p class="description">
+          Update your contact and account identification details.
+        </p>
+
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" maxlength="40">
+          </div>
+
+          <div class="form-group">
+            <label for="phoneNumber">Phone Number</label>
+            <input type="tel" id="phoneNumber" maxlength="25" placeholder="+255...">
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" disabled>
+            <small class="hint">
+              Email changes must be handled through Firebase Authentication.
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label for="country">Country</label>
+            <input type="text" id="country" maxlength="80">
+          </div>
+
+        </div>
+      </section>
+
+      <section class="card">
+        <h3>Professional Information</h3>
+        <p class="description">
+          Manage your department and regional preferences.
+        </p>
+
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label for="department">Department</label>
+            <input type="text" id="department" maxlength="100">
+          </div>
+
+          <div class="form-group">
+            <label for="language">Preferred Language</label>
+            <select id="language">
+              <option value="English">English</option>
+              <option value="Swahili">Swahili</option>
+              <option value="French">French</option>
+              <option value="Arabic">Arabic</option>
+              <option value="Spanish">Spanish</option>
+            </select>
+          </div>
+
+          <div class="form-group full">
+            <label for="timezone">Timezone</label>
+            <select id="timezone">
+              <option value="Africa/Dar_es_Salaam">Africa/Dar_es_Salaam</option>
+              <option value="Africa/Nairobi">Africa/Nairobi</option>
+              <option value="Africa/Kampala">Africa/Kampala</option>
+              <option value="Africa/Lagos">Africa/Lagos</option>
+              <option value="Africa/Johannesburg">Africa/Johannesburg</option>
+              <option value="Europe/London">Europe/London</option>
+              <option value="Europe/Paris">Europe/Paris</option>
+              <option value="Asia/Dubai">Asia/Dubai</option>
+              <option value="Asia/Kolkata">Asia/Kolkata</option>
+              <option value="Asia/Tokyo">Asia/Tokyo</option>
+              <option value="America/New_York">America/New_York</option>
+              <option value="America/Los_Angeles">America/Los_Angeles</option>
+              <option value="Australia/Sydney">Australia/Sydney</option>
+              <option value="UTC">UTC</option>
+            </select>
+          </div>
+
+          <div class="form-group full">
+            <label for="notes">Profile Notes</label>
+            <textarea id="notes" maxlength="1000" placeholder="Additional profile information..."></textarea>
+          </div>
+
+        </div>
+      </section>
+
+      <section class="card">
+        <h3>Administrator Account Information</h3>
+        <p class="description">
+          These protected fields are displayed for reference and cannot be edited here.
+        </p>
+
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label for="adminId">Admin ID</label>
+            <input type="text" id="adminId" disabled>
+          </div>
+
+          <div class="form-group">
+            <label for="role">Role</label>
+            <input type="text" id="role" disabled>
+          </div>
+
+          <div class="form-group">
+            <label for="accessLevel">Access Level</label>
+            <input type="text" id="accessLevel" disabled>
+          </div>
+
+          <div class="form-group">
+            <label for="status">Account Status</label>
+            <input type="text" id="status" disabled>
+          </div>
+
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="button" id="saveBtn">
+            Save Changes
+          </button>
+
+          <button type="button" class="button secondary" id="reloadBtn">
+            Reload Profile
+          </button>
+
+          <a href="blog-admin-profile.html" class="button secondary">
+            Back to Profile
+          </a>
+        </div>
+
+      </section>
+
+    </form>
+
+    <div class="footer">
+      © <span id="year"></span> Vorix Blog. All rights reserved.
+    </div>
+
+  </div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCYsJv9qChj1Wc1Xz78aZhgn4tHyGF1Grg",
+  authDomain: "vorix-blog.firebaseapp.com",
+  projectId: "vorix-blog",
+  storageBucket: "vorix-blog.firebasestorage.app",
+  messagingSenderId: "111344561738",
+  appId: "1:111344561738:web:8f7e64709698c7f58f80b3",
+  measurementId: "G-34BPPH3F77"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const $ = id => document.getElementById(id);
+
+let currentAdmin = null;
+let currentUser = null;
+
+const editableFields = [
+  "firstName",
+  "lastName",
+  "fullName",
+  "displayName",
+  "username",
+  "phoneNumber",
+  "country",
+  "department",
+  "language",
+  "timezone",
+  "photoURL",
+  "notes"
+];
+
+function showLoader(show) {
+  $("loader").style.display = show ? "flex" : "none";
+}
+
+function showMessage(message, type) {
+  const box = $("message");
+  box.textContent = message;
+  box.className = "message " + type;
+}
+
+function getAdminRef() {
+  const adminId = sessionStorage.getItem("adminId");
+
+  if (!adminId) {
+    throw new Error("Admin ID not found. Please login again.");
+  }
+
+  return db.collection("admins").doc(adminId);
+}
+
+function setValue(id, value) {
+  $(id).value = value == null ? "" : value;
+}
+
+function updatePreview() {
+  const name =
+    $("fullName").value.trim() ||
+    $("displayName").value.trim() ||
+    "Administrator";
+
+  $("previewName").textContent = name;
+
+  const photoURL = $("photoURL").value.trim();
+
+  if (photoURL) {
+    $("avatar").innerHTML = "";
+    const img = document.createElement("img");
+    img.src = photoURL;
+    img.alt = "Profile photo";
+
+    img.onerror = function() {
+      $("avatar").textContent = name.charAt(0).toUpperCase();
+    };
+
+    $("avatar").appendChild(img);
+  } else {
+    $("avatar").textContent = name.charAt(0).toUpperCase();
+  }
+}
+
+function fillProfile(data, user) {
+  editableFields.forEach(field => {
+    setValue(field, data[field]);
+  });
+
+  setValue("email", user.email || data.email);
+  setValue("adminId", data.adminId);
+  setValue("role", data.role);
+  setValue("accessLevel", data.accessLevel);
+  setValue("status", data.status);
+
+  updatePreview();
+}
+
+async function loadProfile(user) {
+  showLoader(true);
+
+  try {
+    const adminId = sessionStorage.getItem("adminId");
+
+    if (!adminId) {
+      window.location.replace("blog-admin-login.html");
+      return;
+    }
+
+    const snap = await getAdminRef().get();
+
+    if (!snap.exists) {
+      throw new Error("Admin account not found.");
+    }
+
+    const data = snap.data();
+
+    if (
+      data.adminId !== adminId ||
+      data.status !== "active" ||
+      data.role !== "admin"
+    ) {
+      throw new Error("Administrator account is not authorized.");
+    }
+
+    if (data.uid && data.uid !== user.uid) {
+      throw new Error("Signed-in user does not match this admin account.");
+    }
+
+    if (
+      data.email &&
+      user.email &&
+      data.email.toLowerCase() !== user.email.toLowerCase()
+    ) {
+      throw new Error("Admin email does not match.");
+    }
+
+    currentAdmin = data;
+    currentUser = user;
+
+    fillProfile(data, user);
+
+  } catch (error) {
+    console.error(error);
+    showMessage(error.message, "error");
+
+    if (
+      error.message.includes("not found") ||
+      error.message.includes("not authorized") ||
+      error.message.includes("does not match")
+    ) {
+      sessionStorage.removeItem("adminId");
+      await auth.signOut();
+      window.location.replace("blog-admin-login.html");
+    }
+
+  } finally {
+    showLoader(false);
+  }
+}
+
+function validateProfile() {
+  const firstName = $("firstName").value.trim();
+  const fullName = $("fullName").value.trim();
+  const photoURL = $("photoURL").value.trim();
+
+  if (!firstName || !fullName) {
+    showMessage("First Name and Full Name are required.", "error");
+    return false;
+  }
+
+  if (photoURL) {
+    try {
+      const url = new URL(photoURL);
+
+      if (url.protocol !== "https:") {
+        throw new Error("HTTPS required");
+      }
+    } catch (error) {
+      showMessage("Enter a valid HTTPS profile photo URL.", "error");
+      return false;
+    }
+  }
+
+  return true;
+}
+
+async function saveProfile(event) {
+  event.preventDefault();
+
+  if (!currentAdmin || !currentUser) {
+    showMessage("Profile is not ready. Please reload.", "error");
+    return;
+  }
+
+  if (!validateProfile()) return;
+
+  const saveBtn = $("saveBtn");
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Saving...";
+
+  try {
+    const profileData = {};
+
+    editableFields.forEach(field => {
+      profileData[field] = $(field).value.trim();
+    });
+
+    profileData.updatedAt =
+      firebase.firestore.FieldValue.serverTimestamp();
+
+    await getAdminRef().update(profileData);
+
+    currentAdmin = {
+      ...currentAdmin,
+      ...profileData
+    };
+
+    updatePreview();
+
+    showMessage("Your profile has been updated successfully.", "success");
+
+  } catch (error) {
+    console.error(error);
+    showMessage("Unable to update profile: " + error.message, "error");
+
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Save Changes";
+  }
+}
+
+async function reloadProfile() {
+  if (!currentUser) return;
+
+  $("message").className = "message";
+  await loadProfile(currentUser);
+}
+
+async function logout() {
+  if (!confirm("Are you sure you want to logout?")) return;
+
+  showLoader(true);
+
+  try {
+    sessionStorage.removeItem("adminId");
+    await auth.signOut();
+    window.location.replace("blog-admin-login.html");
+  } catch (error) {
+    showLoader(false);
+    showMessage("Logout failed: " + error.message, "error");
+  }
+}
+
+$("profileForm").addEventListener("submit", saveProfile);
+$("reloadBtn").addEventListener("click", reloadProfile);
+
+$("menuBtn").addEventListener("click", function() {
+  $("sidebar").classList.toggle("open");
+});
+
+document.querySelectorAll(".sidebar a").forEach(link => {
+  link.addEventListener("click", function() {
+    $("sidebar").classList.remove("open");
+  });
+});
+
+document.querySelector('[data-action="logout"]').addEventListener(
+  "click",
+  function(event) {
+    event.preventDefault();
+    logout();
+  }
+);
+
+
+$("fullName").addEventListener("input", updatePreview);
+$("displayName").addEventListener("input", updatePreview);
+$("photoURL").addEventListener("input", updatePreview);
+
+// Set current year
+$("year").textContent = new Date().getFullYear();
+
+// Authentication check
+auth.onAuthStateChanged(async function(user) {
+  if (!user) {
+    sessionStorage.removeItem("adminId");
+    window.location.replace("blog-admin-login.html");
+    return;
+  }
+
+  await loadProfile(user);
+});
+
+// END OF EDIT PROFILE SCRIPT
+</script>
+
+</body>
+</html>
