@@ -1,0 +1,458 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#102a43">
+<title>Manage Users | LetsStudy Pro</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f3f6fb;color:#243247;font-family:Arial,sans-serif}
+header{
+ background:#102a43;color:white;padding:17px 20px;
+ display:flex;justify-content:space-between;align-items:center;gap:10px
+}
+header a{color:white;text-decoration:none}
+.container{max-width:1200px;margin:25px auto;padding:15px}
+.card{
+ background:white;padding:20px;border-radius:12px;
+ box-shadow:0 3px 15px #00000008;margin-bottom:18px
+}
+h1{font-size:25px;color:#102a43;margin-top:0}
+h2{font-size:18px;color:#102a43;margin-top:0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:13px}
+.stat{background:#f7f9fc;padding:16px;border-radius:10px}
+.stat span{font-size:13px;color:#718096}
+.stat h2{font-size:25px;margin:10px 0 0}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}
+input,select{
+ padding:11px;border:1px solid #d8e0ea;border-radius:8px;
+ font-size:14px;background:white
+}
+#search{flex:1;min-width:180px}
+button{
+ padding:11px 15px;border:0;border-radius:8px;
+ font-weight:bold;cursor:pointer
+}
+.primary{background:#1769aa;color:white}
+.secondary{background:#e8eef6;color:#243247}
+.danger{background:#b42318;color:white}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:700px;font-size:13px}
+th,td{text-align:left;padding:13px;border-bottom:1px solid #edf0f4}
+th{color:#718096;background:#f8fafc}
+.badge{
+ display:inline-block;padding:5px 10px;border-radius:20px;
+ font-size:12px;font-weight:bold
+}
+.active{background:#e6f7ed;color:#167343}
+.pending{background:#fff4d6;color:#946200}
+.suspended,.banned{background:#fde8e7;color:#b42318}
+.actions{display:flex;gap:7px;flex-wrap:wrap}
+.small{padding:7px 10px;font-size:12px}
+.message{font-size:14px;margin:12px 0}
+.error{color:#b42318}
+.success{color:#167343}
+.empty{text-align:center;padding:25px;color:#718096}
+.modal{
+ position:fixed;inset:0;background:#0008;display:none;
+ align-items:center;justify-content:center;padding:15px;z-index:20
+}
+.modal.show{display:flex}
+.modal-content{
+ background:white;padding:22px;border-radius:12px;
+ width:100%;max-width:550px;max-height:90vh;overflow:auto
+}
+.modal-content h2{margin-top:0}
+.detail{padding:10px 0;border-bottom:1px solid #edf0f4;font-size:14px}
+.detail strong{display:inline-block;width:130px;color:#718096}
+@media(max-width:800px){.stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){
+ .stats{gap:8px}
+ .stat{padding:12px}
+ .stat h2{font-size:21px}
+ .card{padding:15px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <strong>LetsStudy Pro | User Management</strong>
+  <a href="admin-dashboard.html">Dashboard</a>
+</header>
+
+<main class="container">
+
+<h1>User Management</h1>
+<p style="color:#718096">Manage platform users and account statuses.</p>
+
+<div id="message" class="message" role="status"></div>
+
+<section class="card">
+  <div class="stats">
+    <div class="stat"><span>Total Users</span><h2 id="totalUsers">—</h2></div>
+    <div class="stat"><span>Active Users</span><h2 id="activeUsers">—</h2></div>
+    <div class="stat"><span>Pending Users</span><h2 id="pendingUsers">—</h2></div>
+    <div class="stat"><span>Suspended Users</span><h2 id="suspendedUsers">—</h2></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Users</h2>
+
+  <div class="toolbar">
+    <input id="search" type="search" placeholder="Search name, email or UID...">
+
+    <select id="statusFilter">
+      <option value="all">All Statuses</option>
+      <option value="active">Active</option>
+      <option value="pending">Pending</option>
+      <option value="suspended">Suspended</option>
+      <option value="banned">Banned</option>
+    </select>
+
+    <button class="secondary" id="refreshBtn">Refresh</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Email</th>
+          <th>UID</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="usersTable">
+        <tr><td colspan="6" class="empty">Loading users...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</main>
+
+<div class="modal" id="userModal">
+  <div class="modal-content">
+    <h2>User Details</h2>
+    <div id="userDetails"></div>
+    <div class="actions" style="margin-top:20px">
+      <button class="secondary" id="closeModal">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBcOYDfAVKXbKXjsyRgI_0rjodBn678tCc",
+  authDomain: "let-s-study-pro-course.firebaseapp.com",
+  databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId: "let-s-study-pro-course",
+  storageBucket: "let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId: "474928293390",
+  appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId: "G-85B7V5H5J0"
+};
+
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+const $ = id => document.getElementById(id);
+
+let currentAdmin = null;
+let users = [];
+let filteredUsers = [];
+
+function showMessage(text,type="success"){
+  $("message").textContent=text;
+  $("message").className="message "+type;
+}
+
+function safe(value){
+  return value==null?"—":String(value);
+}
+
+function dateFormat(value){
+  if(!value)return "—";
+  const d=value.toDate?value.toDate():new Date(value);
+  return isNaN(d.getTime())?"—":d.toLocaleDateString();
+}
+
+function normalizeStatus(status){
+  return String(status||"pending").toLowerCase();
+}
+
+function badge(status){
+  const s=normalizeStatus(status);
+  const span=document.createElement("span");
+  span.className="badge "+s;
+  span.textContent=s;
+  return span;
+}
+
+async function checkAdmin(user){
+  if(!user){
+    location.replace("admin-login.html");
+    return false;
+  }
+
+  const snap=await db.collection("admins")
+    .where("uid","==",user.uid).limit(2).get();
+
+  if(snap.empty||snap.size!==1){
+    showMessage("Administrator account not found.","error");
+    await auth.signOut();
+    location.replace("admin-login.html");
+    return false;
+  }
+
+  const admin=snap.docs[0].data();
+  const role=String(admin.role||admin.adminType||"").toLowerCase();
+
+  if(admin.status!=="active"||
+     !["admin","superadmin"].includes(role)){
+    showMessage("Administrator access denied.","error");
+    await auth.signOut();
+    location.replace("admin-login.html");
+    return false;
+  }
+
+  if(admin.email&&user.email&&
+     admin.email.toLowerCase()!==user.email.toLowerCase()){
+    showMessage("Admin email mismatch.","error");
+    await auth.signOut();
+    location.replace("admin-login.html");
+    return false;
+  }
+
+  currentAdmin=admin;
+  return true;
+}
+
+async function loadUsers(){
+  $("usersTable").innerHTML=
+    '<tr><td colspan="6" class="empty">Loading users...</td></tr>';
+
+  try{
+    const snapshot=await db.collection("users").get();
+
+    users=snapshot.docs.map(doc=>({
+      id:doc.id,
+      ...doc.data()
+    }));
+
+    updateStatistics();
+    applyFilters();
+
+    showMessage("Users loaded successfully.","success");
+
+  }catch(error){
+    console.error(error);
+    $("usersTable").innerHTML=
+      '<tr><td colspan="6" class="empty">Unable to load users. Check Firestore rules.</td></tr>';
+
+    showMessage("Failed to load users: "+error.message,"error");
+  }
+}
+
+function updateStatistics(){
+  let active=0,pending=0,suspended=0;
+
+  users.forEach(user=>{
+    const s=normalizeStatus(user.status);
+
+    if(s==="active")active++;
+    else if(s==="pending")pending++;
+    else if(s==="suspended"||s==="banned")suspended++;
+  });
+
+  $("totalUsers").textContent=users.length;
+  $("activeUsers").textContent=active;
+  $("pendingUsers").textContent=pending;
+  $("suspendedUsers").textContent=suspended;
+}
+
+function applyFilters(){
+  const query=$("search").value.trim().toLowerCase();
+  const status=$("statusFilter").value;
+
+  filteredUsers=users.filter(user=>{
+    const name=String(user.fullName||user.displayName||user.name||"").toLowerCase();
+    const email=String(user.email||"").toLowerCase();
+    const uid=String(user.uid||user.id||"").toLowerCase();
+    const s=normalizeStatus(user.status);
+
+    const matchesSearch=
+      name.includes(query)||email.includes(query)||uid.includes(query);
+
+    const matchesStatus=status==="all"||s===status;
+
+    return matchesSearch&&matchesStatus;
+  });
+
+  renderUsers();
+}
+
+function renderUsers(){
+  const tbody=$("usersTable");
+  tbody.innerHTML="";
+
+  if(!filteredUsers.length){
+    tbody.innerHTML=
+      '<tr><td colspan="6" class="empty">No users found.</td></tr>';
+    return;
+  }
+
+  filteredUsers.forEach(user=>{
+    const tr=document.createElement("tr");
+
+    const name=user.fullName||user.displayName||user.name||"Unnamed User";
+    const email=user.email||"—";
+    const uid=user.uid||user.id;
+    const status=normalizeStatus(user.status);
+
+    const tdName=document.createElement("td");
+    tdName.textContent=name;
+
+    const tdEmail=document.createElement("td");
+    tdEmail.textContent=email;
+
+    const tdUid=document.createElement("td");
+    tdUid.textContent=uid;
+
+    const tdStatus=document.createElement("td");
+    tdStatus.appendChild(badge(status));
+
+    const tdCreated=document.createElement("td");
+    tdCreated.textContent=dateFormat(user.createdAt);
+
+    const tdActions=document.createElement("td");
+    const actions=document.createElement("div");
+    actions.className="actions";
+
+    const viewBtn=document.createElement("button");
+    viewBtn.className="secondary small";
+    viewBtn.textContent="View";
+    viewBtn.onclick=()=>viewUser(user);
+
+    actions.appendChild(viewBtn);
+
+    const statusBtn=document.createElement("button");
+    statusBtn.className="primary small";
+    statusBtn.textContent=status==="active"?"Suspend":"Activate";
+    statusBtn.onclick=()=>changeStatus(user);
+
+    actions.appendChild(statusBtn);
+
+    tdActions.appendChild(actions);
+
+    [tdName,tdEmail,tdUid,tdStatus,tdCreated,tdActions]
+      .forEach(td=>tr.appendChild(td));
+
+    tbody.appendChild(tr);
+  });
+}
+
+function viewUser(user){
+  const details=$("userDetails");
+  details.innerHTML="";
+
+  const fields=[
+    ["User ID",user.id],
+    ["UID",user.uid],
+    ["Full Name",user.fullName||user.displayName||user.name],
+    ["Email",user.email],
+    ["Phone",user.phoneNumber],
+    ["Country",user.country],
+    ["Username",user.username],
+    ["Status",user.status],
+    ["Email Verified",user.emailVerified],
+    ["Created At",dateFormat(user.createdAt)],
+    ["Updated At",dateFormat(user.updatedAt)]
+  ];
+
+  fields.forEach(([label,value])=>{
+    const div=document.createElement("div");
+    div.className="detail";
+
+    const strong=document.createElement("strong");
+    strong.textContent=label;
+
+    const span=document.createElement("span");
+    span.textContent=safe(value);
+
+    div.append(strong,span);
+    details.appendChild(div);
+  });
+
+  $("userModal").classList.add("show");
+}
+
+async function changeStatus(user){
+  const oldStatus=normalizeStatus(user.status);
+  const newStatus=oldStatus==="active"?"suspended":"active";
+
+  const confirmed=confirm(
+    "Change user "+(user.fullName||user.email||user.id)+
+    " status from "+oldStatus+" to "+newStatus+"?"
+  );
+
+  if(!confirmed)return;
+
+  try{
+    await db.collection("users").doc(user.id).update({
+      status:newStatus,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    user.status=newStatus;
+    updateStatistics();
+    applyFilters();
+
+    showMessage("User status updated successfully.","success");
+
+  }catch(error){
+    console.error(error);
+    showMessage("Status update failed: "+error.message,"error");
+  }
+}
+
+$("search").addEventListener("input",applyFilters);
+$("statusFilter").addEventListener("change",applyFilters);
+$("refreshBtn").addEventListener("click",loadUsers);
+
+$("closeModal").addEventListener("click",()=>{
+  $("userModal").classList.remove("show");
+});
+
+$("userModal").addEventListener("click",event=>{
+  if(event.target===$("userModal")){
+    $("userModal").classList.remove("show");
+  }
+});
+
+auth.onAuthStateChanged(async user=>{
+  if(!user){
+    location.replace("admin-login.html");
+    return;
+  }
+
+  const allowed=await checkAdmin(user);
+  if(allowed)loadUsers();
+});
+</script>
+
+</body>
+</html>
