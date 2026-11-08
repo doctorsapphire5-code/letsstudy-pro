@@ -1,0 +1,416 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#102b55">
+  <title>Delete Account - LetsStudy Pro</title>
+  <meta name="description" content="Request deletion of your LetsStudy Pro account.">
+  <link rel="canonical" href="https://www.letsstudy.pro/delete-account.html">
+
+  <style>
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      background:#f3f6fb;
+      color:#243247;
+      line-height:1.6;
+    }
+    header{
+      background:#102b55;
+      color:white;
+      padding:25px 18px;
+      text-align:center;
+    }
+    header h1{margin:0;font-size:25px}
+    header p{margin:5px 0 0;color:#dce8fa;font-size:14px}
+    main{
+      width:min(100% - 30px,650px);
+      margin:35px auto;
+    }
+    .card{
+      background:white;
+      border-radius:14px;
+      padding:25px;
+      box-shadow:0 5px 25px rgba(16,43,85,.08);
+    }
+    h2{font-size:21px;margin:0 0 12px;color:#102b55}
+    .warning{
+      background:#fff5f3;
+      border:1px solid #f3c5bd;
+      border-left:4px solid #d93025;
+      padding:14px;
+      border-radius:8px;
+      margin:18px 0;
+      color:#71342e;
+      font-size:14px;
+    }
+    .info{
+      background:#eef5ff;
+      border:1px solid #d5e4fb;
+      padding:13px;
+      border-radius:8px;
+      font-size:14px;
+      margin:15px 0;
+    }
+    label{
+      display:block;
+      font-weight:600;
+      margin:16px 0 6px;
+      font-size:14px;
+    }
+    input{
+      width:100%;
+      padding:13px;
+      border:1px solid #cbd5e1;
+      border-radius:8px;
+      font-size:15px;
+      outline:none;
+    }
+    input:focus{border-color:#1769d2}
+    .check{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      margin:18px 0;
+      font-size:14px;
+    }
+    .check input{width:18px;height:18px;margin-top:3px}
+    button{
+      width:100%;
+      padding:14px;
+      border:0;
+      border-radius:8px;
+      background:#c62828;
+      color:white;
+      font-size:15px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    button:disabled{opacity:.6;cursor:not-allowed}
+    .secondary{
+      display:block;
+      text-align:center;
+      margin-top:18px;
+      color:#1769d2;
+      text-decoration:none;
+      font-size:14px;
+    }
+    #message{
+      display:none;
+      padding:12px;
+      margin-top:15px;
+      border-radius:8px;
+      font-size:14px;
+    }
+    #message.success{display:block;background:#e9f7ef;color:#176438}
+    #message.error{display:block;background:#fff0ef;color:#a12622}
+    footer{
+      text-align:center;
+      padding:20px;
+      color:#718096;
+      font-size:13px;
+    }
+    @media(max-width:480px){
+      .card{padding:20px}
+      header h1{font-size:22px}
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>LetsStudy Pro</h1>
+  <p>Learn. Build. Work. Grow.</p>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Delete Your Account</h2>
+
+    <p>
+      You can request deletion of your LetsStudy Pro account using
+      this page. Please read the information below before continuing.
+    </p>
+
+    <div class="warning">
+      <strong>Warning: This action is permanent.</strong>
+      Account deletion may remove your profile and access to services
+      associated with your account. Some records may need to be retained
+      where required by law or for legitimate security and transaction purposes.
+    </div>
+
+    <div class="info">
+      <strong>Before proceeding:</strong>
+      <ul>
+        <li>You must be signed in to your account.</li>
+        <li>You may need to sign in again to verify your identity.</li>
+        <li>Deleting your account does not automatically cancel external subscriptions or services.</li>
+        <li>Contact support if you need help before deletion.</li>
+      </ul>
+    </div>
+
+    <div id="accountInfo" class="info">
+      Checking your account...
+    </div>
+
+    <form id="deleteForm">
+      <label for="confirmText">
+        Type DELETE to confirm
+      </label>
+      <input
+        type="text"
+        id="confirmText"
+        placeholder="Type DELETE"
+        autocomplete="off"
+        required
+      >
+
+      <label class="check">
+        <input type="checkbox" id="agree" required>
+        <span>
+          I understand that I am requesting permanent deletion of
+          my LetsStudy Pro account and associated profile information.
+        </span>
+      </label>
+
+      <button type="submit" id="deleteButton" disabled>
+        Delete My Account
+      </button>
+    </form>
+
+    <div id="message"></div>
+
+    <a class="secondary" href="account.html">
+      Return to Account
+    </a>
+
+    <a class="secondary" href="mailto:support@letsstudy.pro">
+      Contact Support
+    </a>
+  </section>
+</main>
+
+<footer>
+  &copy; <span id="year"></span> LetsStudy Pro. All rights reserved.
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+  // LetsStudy Pro Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyBcOYDfAVKXbKXjsyRgI_0rjodBn678tCc",
+    authDomain: "let-s-study-pro-course.firebaseapp.com",
+    databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+    projectId: "let-s-study-pro-course",
+    storageBucket: "let-s-study-pro-course.firebasestorage.app",
+    messagingSenderId: "474928293390",
+    appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+    measurementId: "G-85B7V5H5J0"
+  };
+
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const accountInfo = document.getElementById("accountInfo");
+  const deleteForm = document.getElementById("deleteForm");
+  const deleteButton = document.getElementById("deleteButton");
+  const confirmText = document.getElementById("confirmText");
+  const agree = document.getElementById("agree");
+  const message = document.getElementById("message");
+
+  let currentUser = null;
+  let pageReady = false;
+
+  document.getElementById("year").textContent =
+    new Date().getFullYear();
+
+  function showMessage(text, type) {
+    message.textContent = text;
+    message.className = type;
+  }
+
+  function updateButton() {
+    deleteButton.disabled = !(
+      pageReady &&
+      confirmText.value.trim() === "DELETE" &&
+      agree.checked
+    );
+  }
+
+  confirmText.addEventListener("input", updateButton);
+  agree.addEventListener("change", updateButton);
+
+  auth.onAuthStateChanged(async user => {
+    currentUser = user;
+    pageReady = false;
+    updateButton();
+
+    if (!user) {
+      accountInfo.textContent =
+        "You are not signed in. Please sign in before requesting account deletion.";
+      showMessage(
+        "Please sign in to your LetsStudy Pro account first.",
+        "error"
+      );
+      return;
+    }
+
+    accountInfo.textContent =
+      "Signed in as: " + (user.email || user.uid);
+
+    pageReady = true;
+    updateButton();
+  });
+
+  function getFriendlyError(error) {
+    const code = error && error.code ? error.code : "";
+
+    const errors = {
+      "auth/requires-recent-login":
+        "For security, please sign in again and repeat the deletion process.",
+      "auth/wrong-password":
+        "The password is incorrect.",
+      "auth/invalid-credential":
+        "The login details are invalid. Please verify your credentials.",
+      "auth/user-mismatch":
+        "The selected sign-in account does not match your current account.",
+      "auth/popup-closed-by-user":
+        "The verification window was closed before completion.",
+      "auth/popup-blocked":
+        "Your browser blocked the verification window. Allow popups and try again.",
+      "permission-denied":
+        "Firestore permissions prevented this operation. Contact support.",
+      "unavailable":
+        "The service is temporarily unavailable. Please try again."
+    };
+
+    return errors[code] ||
+      error.message ||
+      "An unexpected error occurred. Please contact support.";
+  }
+
+  async function reauthenticateUser(user) {
+    const providers = user.providerData.map(p => p.providerId);
+
+    // Email and password accounts
+    if (providers.includes("password")) {
+      const password = prompt(
+        "For security, enter your current account password:"
+      );
+
+      if (!password) {
+        throw new Error("Password verification was cancelled.");
+      }
+
+      const credential =
+        firebase.auth.EmailAuthProvider.credential(
+          user.email,
+          password
+        );
+
+      await user.reauthenticateWithCredential(credential);
+      return;
+    }
+
+    // Google accounts
+    if (providers.includes("google.com")) {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await user.reauthenticateWithPopup(provider);
+      return;
+    }
+
+    throw new Error(
+      "Your sign-in provider requires a supported reauthentication method. Please contact support at support@letsstudy.pro."
+    );
+  }
+
+  deleteForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    if (!currentUser || !pageReady) {
+      showMessage("Please sign in first.", "error");
+      return;
+    }
+
+    if (
+      confirmText.value.trim() !== "DELETE" ||
+      !agree.checked
+    ) {
+      showMessage(
+        "Type DELETE and confirm the checkbox to continue.",
+        "error"
+      );
+      return;
+    }
+
+    const finalConfirmation = confirm(
+      "Are you absolutely sure you want to delete your LetsStudy Pro account? This action cannot easily be undone."
+    );
+
+    if (!finalConfirmation) return;
+
+    deleteButton.disabled = true;
+    deleteButton.textContent = "Verifying account...";
+
+    try {
+      const user = currentUser;
+      const uid = user.uid;
+
+      // Verify the user's identity again.
+      await reauthenticateUser(user);
+
+      deleteButton.textContent = "Deleting account...";
+
+      /*
+       * Remove the user's profile document.
+       * Firestore rules must permit an authenticated user
+       * to delete only their own users/{uid} document.
+       */
+      await db.collection("users").doc(uid).delete();
+
+      /*
+       * Delete the Firebase Authentication account.
+       * If this fails, the profile document may already be deleted.
+       */
+      await user.delete();
+
+      showMessage(
+        "Your LetsStudy Pro account has been deleted successfully.",
+        "success"
+      );
+
+      accountInfo.textContent = "Account deleted.";
+
+      deleteForm.style.display = "none";
+
+      setTimeout(() => {
+        window.location.href = "index.html";
+      }, 2500);
+
+    } catch (error) {
+      console.error("Account deletion error:", error);
+
+      showMessage(
+        getFriendlyError(error),
+        "error"
+      );
+
+      deleteButton.textContent = "Delete My Account";
+      updateButton();
+    }
+  });
+</script>
+
+</body>
+</html>
