@@ -1,0 +1,431 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#102a43">
+<title>Admin Account | LetsStudy Pro</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f3f6fb;color:#243247;font-family:Arial,sans-serif}
+header{
+ background:#102a43;color:white;padding:17px 20px;
+ display:flex;justify-content:space-between;align-items:center;gap:10px
+}
+header a{color:white;text-decoration:none}
+.container{max-width:850px;margin:28px auto;padding:15px}
+.card{
+ background:white;border-radius:13px;padding:23px;
+ margin-bottom:18px;box-shadow:0 3px 15px #00000009
+}
+h2{font-size:19px;color:#102a43;margin-top:0}
+.subtitle{font-size:14px;color:#718096;line-height:1.6}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.field{margin-bottom:15px}
+label{display:block;font-size:13px;font-weight:bold;margin-bottom:7px;color:#526477}
+input{
+ width:100%;padding:12px;border:1px solid #d8e0ea;
+ border-radius:8px;font-size:15px
+}
+input[readonly]{background:#f1f4f8;color:#64748b}
+button{
+ padding:12px 16px;border:0;border-radius:8px;
+ font-weight:bold;cursor:pointer
+}
+.primary{background:#1769aa;color:white}
+.secondary{background:#e8eef6;color:#243247}
+.danger{background:#b42318;color:white}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.status{
+ display:inline-block;padding:6px 12px;border-radius:20px;
+ background:#e6f7ed;color:#167343;font-size:12px;font-weight:bold
+}
+.message{font-size:14px;margin:12px 0}
+.error{color:#b42318}
+.success{color:#167343}
+@media(max-width:600px){
+ .grid{grid-template-columns:1fr}
+ .card{padding:18px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <strong>LetsStudy Pro | Admin Account</strong>
+  <a href="admin-dashboard.html">Dashboard</a>
+</header>
+
+<main class="container">
+
+<section class="card">
+  <h2>Account Overview</h2>
+  <p class="subtitle">View your administrator account information and security status.</p>
+
+  <div id="message" class="message" role="status"></div>
+
+  <div class="grid">
+    <div class="field">
+      <label>Admin ID</label>
+      <input id="adminId" readonly>
+    </div>
+
+    <div class="field">
+      <label>Full Name</label>
+      <input id="fullName" readonly>
+    </div>
+
+    <div class="field">
+      <label>Admin Email</label>
+      <input id="email" readonly>
+    </div>
+
+    <div class="field">
+      <label>Username</label>
+      <input id="username" readonly>
+    </div>
+
+    <div class="field">
+      <label>Role</label>
+      <input id="role" readonly>
+    </div>
+
+    <div class="field">
+      <label>Access Level</label>
+      <input id="accessLevel" readonly>
+    </div>
+
+    <div class="field">
+      <label>Account Status</label>
+      <input id="status" readonly>
+    </div>
+
+    <div class="field">
+      <label>Created At</label>
+      <input id="createdAt" readonly>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Email Verification</h2>
+  <p class="subtitle">
+    Verify your email address to help protect your administrator account.
+  </p>
+
+  <p>Email status: <span id="emailStatus" class="status">Checking...</span></p>
+
+  <div class="actions">
+    <button id="verifyBtn" class="primary">Send Verification Email</button>
+    <button id="refreshEmailBtn" class="secondary">Refresh Status</button>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Change Password</h2>
+  <p class="subtitle">
+    Change your Firebase Authentication password. Your password is not stored in Firestore.
+  </p>
+
+  <form id="passwordForm">
+    <div class="field">
+      <label for="currentPassword">Current Password</label>
+      <input id="currentPassword" type="password"
+             autocomplete="current-password" required>
+    </div>
+
+    <div class="field">
+      <label for="newPassword">New Password</label>
+      <input id="newPassword" type="password"
+             minlength="8" autocomplete="new-password" required>
+    </div>
+
+    <div class="field">
+      <label for="confirmPassword">Confirm New Password</label>
+      <input id="confirmPassword" type="password"
+             minlength="8" autocomplete="new-password" required>
+    </div>
+
+    <button type="submit" class="primary" id="changePasswordBtn">
+      Change Password
+    </button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Password Recovery</h2>
+  <p class="subtitle">
+    If you cannot remember your password, request a password reset email.
+  </p>
+  <button id="resetPasswordBtn" class="secondary">
+    Send Password Reset Email
+  </button>
+</section>
+
+<section class="card">
+  <h2>Account Security</h2>
+  <div class="grid">
+    <div class="field">
+      <label>Two-Factor Authentication</label>
+      <input id="twoFactor" readonly>
+    </div>
+    <div class="field">
+      <label>Last Login</label>
+      <input id="lastLogin" readonly>
+    </div>
+  </div>
+  <p class="subtitle">
+    Contact your system administrator to change protected roles,
+    permissions, access levels or account status.
+  </p>
+  <div class="actions">
+    <button id="profileBtn" class="secondary">My Profile</button>
+    <button id="logoutBtn" class="danger">Logout</button>
+  </div>
+</section>
+
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBcOYDfAVKXbKXjsyRgI_0rjodBn678tCc",
+  authDomain: "let-s-study-pro-course.firebaseapp.com",
+  databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+  projectId: "let-s-study-pro-course",
+  storageBucket: "let-s-study-pro-course.firebasestorage.app",
+  messagingSenderId: "474928293390",
+  appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+  measurementId: "G-85B7V5H5J0"
+};
+
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const $ = id => document.getElementById(id);
+
+let currentUser = null;
+let adminData = null;
+let adminRef = null;
+
+function message(text,type="success"){
+  $("message").textContent = text;
+  $("message").className = "message " + type;
+}
+
+function setValue(id,value){
+  $(id).value = value ?? "";
+}
+
+function formatDate(value){
+  if(!value) return "Not available";
+  const date = value.toDate ? value.toDate() : new Date(value);
+  return isNaN(date.getTime()) ? "Not available" : date.toLocaleString();
+}
+
+async function loadAccount(user){
+  currentUser = user;
+
+  if(!user){
+    location.replace("admin-login.html");
+    return;
+  }
+
+  try{
+    const result = await db.collection("admins")
+      .where("uid","==",user.uid)
+      .limit(2)
+      .get();
+
+    if(result.empty){
+      message("Administrator account not found.","error");
+      return;
+    }
+
+    if(result.size !== 1){
+      message("Multiple administrator records found. Contact support.","error");
+      return;
+    }
+
+    adminRef = result.docs[0].ref;
+    adminData = result.docs[0].data();
+
+    const role = String(
+      adminData.role || adminData.adminType || ""
+    ).toLowerCase();
+
+    if(adminData.status !== "active" ||
+       !["admin","superadmin"].includes(role)){
+      message("Your administrator account is not active or authorized.","error");
+      await auth.signOut();
+      location.replace("admin-login.html");
+      return;
+    }
+
+    if(adminData.email && user.email &&
+       adminData.email.toLowerCase() !== user.email.toLowerCase()){
+      message("Account email mismatch.","error");
+      await auth.signOut();
+      location.replace("admin-login.html");
+      return;
+    }
+
+    setValue("adminId",adminData.adminId);
+    setValue("fullName",adminData.fullName || adminData.displayName);
+    setValue("email",user.email || adminData.email);
+    setValue("username",adminData.username);
+    setValue("role",adminData.role || adminData.adminType);
+    setValue("accessLevel",adminData.accessLevel);
+    setValue("status",adminData.status);
+    setValue("createdAt",formatDate(adminData.createdAt));
+    setValue("twoFactor",adminData.twoFactorEnabled ? "Enabled" : "Disabled");
+    setValue("lastLogin",formatDate(adminData.lastLoginAt));
+
+    await refreshEmailStatus();
+    message("Account information loaded successfully.","success");
+
+  }catch(error){
+    console.error(error);
+    message("Unable to load account: "+error.message,"error");
+  }
+}
+
+async function refreshEmailStatus(){
+  if(!currentUser) return;
+
+  try{
+    await currentUser.reload();
+
+    const verified = auth.currentUser.emailVerified;
+
+    $("emailStatus").textContent =
+      verified ? "Verified" : "Not Verified";
+
+    $("verifyBtn").disabled = verified;
+    $("verifyBtn").textContent =
+      verified ? "Email Verified" : "Send Verification Email";
+
+  }catch(error){
+    message("Unable to refresh email status: "+error.message,"error");
+  }
+}
+
+$("verifyBtn").addEventListener("click",async()=>{
+  if(!auth.currentUser) return;
+
+  try{
+    await auth.currentUser.sendEmailVerification();
+    message("Verification email sent. Check your inbox.","success");
+  }catch(error){
+    message(error.message,"error");
+  }
+});
+
+$("refreshEmailBtn").addEventListener("click",refreshEmailStatus);
+
+$("passwordForm").addEventListener("submit",async event=>{
+  event.preventDefault();
+
+  const oldPassword = $("currentPassword").value;
+  const newPassword = $("newPassword").value;
+  const confirmPassword = $("confirmPassword").value;
+
+  if(newPassword.length < 8){
+    message("New password must have at least 8 characters.","error");
+    return;
+  }
+
+  if(newPassword !== confirmPassword){
+    message("New passwords do not match.","error");
+    return;
+  }
+
+  if(newPassword === oldPassword){
+    message("Choose a different password.","error");
+    return;
+  }
+
+  const user = auth.currentUser;
+
+  if(!user || !user.email){
+    message("Authentication session not found.","error");
+    return;
+  }
+
+  $("changePasswordBtn").disabled = true;
+  $("changePasswordBtn").textContent = "Updating...";
+
+  try{
+    const credential = firebase.auth.EmailAuthProvider.credential(
+      user.email,
+      oldPassword
+    );
+
+    await user.reauthenticateWithCredential(credential);
+    await user.updatePassword(newPassword);
+
+    $("passwordForm").reset();
+    message("Password changed successfully.","success");
+
+  }catch(error){
+    console.error(error);
+
+    if(error.code === "auth/wrong-password" ||
+       error.code === "auth/invalid-credential"){
+      message("Current password is incorrect.","error");
+    }else if(error.code === "auth/weak-password"){
+      message("Choose a stronger password.","error");
+    }else{
+      message("Password update failed: "+error.message,"error");
+    }
+  }finally{
+    $("changePasswordBtn").disabled = false;
+    $("changePasswordBtn").textContent = "Change Password";
+  }
+});
+
+$("resetPasswordBtn").addEventListener("click",async()=>{
+  const user = auth.currentUser;
+
+  if(!user || !user.email){
+    message("No authenticated email address found.","error");
+    return;
+  }
+
+  try{
+    await auth.sendPasswordResetEmail(user.email);
+    message("Password reset email sent to "+user.email,"success");
+  }catch(error){
+    message("Unable to send reset email: "+error.message,"error");
+  }
+});
+
+$("profileBtn").addEventListener("click",()=>{
+  location.href = "admin-profile.html";
+});
+
+$("logoutBtn").addEventListener("click",async()=>{
+  try{
+    await auth.signOut();
+    location.replace("admin-login.html");
+  }catch(error){
+    message("Logout failed: "+error.message,"error");
+  }
+});
+
+auth.onAuthStateChanged(user=>{
+  if(user) loadAccount(user);
+  else location.replace("admin-login.html");
+});
+</script>
+
+</body>
+</html>
