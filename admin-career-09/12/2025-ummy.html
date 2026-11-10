@@ -113,7 +113,7 @@ main{padding:13px}
 <header class="top">
 <div class="brand">VORIX CAREER</div>
 <div class="idbox">
-<input id="adminIdInput" placeholder="Admin ID" autocomplete="off">
+<div class="muted" id="adminLabel">Detecting admin...</div>
 <div class="muted" id="adminStatus"></div>
 </div>
 </header>
@@ -281,9 +281,12 @@ main{padding:13px}
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
 import {
 getFirestore, doc, getDoc, collection, getDocs,
-updateDoc, deleteDoc, runTransaction, serverTimestamp
+updateDoc, deleteDoc, runTransaction, serverTimestamp,
+query, where, limit
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 /* FIREBASE CONFIGURATION (no Auth) */
@@ -298,7 +301,9 @@ const firebaseConfig = {
   measurementId: "G-85B7V5H5J0"
 };
 
-const db = getFirestore(initializeApp(firebaseConfig));
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
+const auth = getAuth(firebaseApp);
 
 const $ = id => document.getElementById(id);
 
@@ -718,11 +723,12 @@ document.addEventListener("keydown",e=>{
   if(e.key==="Escape") closePreview();
 });
 
-/* ADMIN ID — checked quietly in Firebase; never blocks the page */
+/* ADMIN ID — comes from login-admin.html; page never asks for it and never blocks */
+const LOGIN_PAGE = "login-admin.html";
 const ID_PATTERN = /^[A-Za-z0-9_-]{1,100}$/;
+const STORAGE_KEYS = ["adminId","vorixAdminId"]; // saved by login-admin.html
 let verifiedId = "";
-
-function readAdminId(){ return $("adminIdInput").value.trim(); }
+let authUser = null;
 
 function assertAdminDoc(snap){
   if(!snap.exists()) throw new Error("Admin ID not found.");
@@ -730,21 +736,20 @@ function assertAdminDoc(snap){
   if(String(d.adminId || "").trim() !== adminId) throw new Error("Invalid Admin ID.");
   if(String(d.role || "").toLowerCase() !== "admin") throw new Error("Invalid administrator role.");
   if(String(d.status || "").toLowerCase() !== "active") throw new Error("Administrator account is not active.");
+  if(authUser && d.uid && String(d.uid) !== authUser.uid) throw new Error("Admin account does not match your login.");
 }
 
 // used before any change (add, edit, publish, feature, delete)
 async function requireAdmin(){
-  const id = readAdminId();
-  if(!id) throw new Error("Enter your Admin ID at the top, then try again.");
-  if(!ID_PATTERN.test(id)) throw new Error("Admin ID can only contain letters, numbers, - and _.");
-
-  adminId = id;
-
-  if(verifiedId !== id){
-    assertAdminDoc(await getDoc(doc(db,"admins",id)));
-    verifiedId = id;
+  if(!adminId || !ID_PATTERN.test(adminId)){
+    throw new Error("Admin not detected. Please login at "+LOGIN_PAGE+" first, then reload this page.");
   }
-  return id;
+
+  if(verifiedId !== adminId){
+    assertAdminDoc(await getDoc(doc(db,"admins",adminId)));
+    verifiedId = adminId;
+  }
+  return adminId;
 }
 
 function setStatus(text,cls){
@@ -753,19 +758,53 @@ function setStatus(text,cls){
   el.className = "muted " + (cls || "");
 }
 
-// background check when the ID is typed / loaded
-async function backgroundCheck(){
-  const id = readAdminId();
+// 1) Firebase session from login-admin.html  2) ID saved by login-admin.html  3) ?adminId= in URL
+async function detectAdminId(user){
+  if(user){
+    try{
+      const snap = await getDocs(query(collection(db,"admins"),where("uid","==",user.uid),limit(1)));
+      if(!snap.empty){
+        const d = snap.docs[0];
+        return String(d.data().adminId || d.id).trim();
+      }
+    }catch(error){
+      console.error(error);
+    }
+  }
+
+  try{
+    const q = new URLSearchParams(location.search);
+    const fromUrl = (q.get("adminId") || "").trim();
+    if(fromUrl) return fromUrl;
+  }catch{}
+
+  for(const key of STORAGE_KEYS){
+    try{
+      const v = (localStorage.getItem(key) || sessionStorage.getItem(key) || "").trim();
+      if(v) return v;
+    }catch{}
+  }
+  return "";
+}
+
+async function setupAdmin(user){
+  authUser = user || null;
+
+  const id = await detectAdminId(user);
   adminId = ID_PATTERN.test(id) ? id : "";
   verifiedId = "";
-  setStatus("");
 
-  try{ sessionStorage.setItem("vorixCareerAdminId",id); }catch{}
+  if(!adminId){
+    $("adminLabel").innerHTML = 'Not logged in · <a href="'+LOGIN_PAGE+'">Admin login</a>';
+    setStatus("");
+    await loadLimit();
+    return;
+  }
 
+  $("adminLabel").textContent = "Admin ID: " + adminId;
   await loadLimit();
 
-  if(!adminId) return;
-
+  // quiet background check
   try{
     await requireAdmin();
     setStatus("Verified","good");
@@ -774,23 +813,13 @@ async function backgroundCheck(){
   }
 }
 
-$("adminIdInput").addEventListener("change",backgroundCheck);
+/* START — page opens right away; admin is detected in the background */
+loadCareers();
 
-/* START — page opens fully; ID from URL (?adminId=ID) or saved in this tab */
-(function start(){
-  let id = "";
-  try{
-    const q = new URLSearchParams(location.search);
-    id = (q.get("adminId") || q.get("id") || "").trim();
-  }catch{}
-  if(!id){
-    try{ id = sessionStorage.getItem("vorixCareerAdminId") || ""; }catch{}
-  }
-  $("adminIdInput").value = id;
-
-  loadCareers();
-  if(id) backgroundCheck();
-})();
+const stop = onAuthStateChanged(auth,user=>{
+  stop();
+  setupAdmin(user);
+});
 
 </script>
 </body>
