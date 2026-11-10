@@ -285,8 +285,7 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 
 import {
 getFirestore, doc, getDoc, collection, getDocs,
-updateDoc, deleteDoc, runTransaction, serverTimestamp,
-query, where, limit
+updateDoc, deleteDoc, runTransaction, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 /* FIREBASE CONFIGURATION (no Auth) */
@@ -315,12 +314,13 @@ const dayKey = () =>
   new Date().toLocaleDateString("en-CA",{timeZone:TIME_ZONE}); // YYYY-MM-DD
 
 // one counter per admin per day
-const limitDocId = () => adminId + "_" + dayKey();
+const limitDocId = () => adminDocId + "_" + dayKey();
 
 let records = [];
 let editingId = null;
 let usedToday = 0;
-let adminId = "";
+let adminId = "";      // the adminId value shown and saved on careers
+let adminDocId = "";   // document ID in admins/{docId}
 let adminData = null;
 
 function esc(value){
@@ -355,7 +355,7 @@ function renderLimit(){
 
 async function loadLimit(){
   usedToday = 0;
-  if(adminId){
+  if(adminDocId){
     try{
       const snap = await getDoc(doc(db,"careerDailyLimits",limitDocId()));
       usedToday = snap.exists() ? (Number(snap.data().count) || 0) : 0;
@@ -570,7 +570,7 @@ $("careerForm").addEventListener("submit",async e=>{
 
       // Atomic: check the counter and create the career together
       await runTransaction(db, async tx=>{
-        assertAdminDoc(await tx.get(doc(db,"admins",adminId)));
+        assertAdminDoc(await tx.get(doc(db,"admins",adminDocId)));
 
         const snap = await tx.get(limitRef);
         const used = snap.exists() ? (Number(snap.data().count) || 0) : 0;
@@ -590,6 +590,7 @@ $("careerForm").addEventListener("submit",async e=>{
 
         tx.set(limitRef,{
           adminId,
+          adminDocId,
           date:key,
           count:used + 1,
           updatedAt:serverTimestamp()
@@ -723,33 +724,39 @@ document.addEventListener("keydown",e=>{
   if(e.key==="Escape") closePreview();
 });
 
-/* ADMIN ID — comes from login-admin.html; page never asks for it and never blocks */
+/* ADMIN — adminId from login-admin.html, checked ONLY in admins/{adminId}; page never asks for it and never blocks */
 const LOGIN_PAGE = "login-admin.html";
-const ID_PATTERN = /^[A-Za-z0-9_-]{1,100}$/;
 const STORAGE_KEYS = ["adminId","vorixAdminId"]; // saved by login-admin.html
 let verifiedId = "";
 let authUser = null;
 
 function assertAdminDoc(snap){
-  if(!snap.exists()) throw new Error("Admin ID not found.");
+  if(!snap.exists()) throw new Error("Admin account not found in admins.");
+
   const d = snap.data();
-  if(String(d.adminId || "").trim() !== adminId) throw new Error("Invalid Admin ID.");
-  if(String(d.role || "").toLowerCase() !== "admin") throw new Error("Invalid administrator role.");
-  if(String(d.status || "").toLowerCase() !== "active") throw new Error("Administrator account is not active.");
-  if(authUser && d.uid && String(d.uid) !== authUser.uid) throw new Error("Admin account does not match your login.");
+
+  const role = String(d.role || d.adminType || "").toLowerCase();
+  if(role && !role.includes("admin")) throw new Error("This account is not an administrator.");
+
+  const status = String(d.status || "active").toLowerCase();
+  if(status !== "active") throw new Error("Administrator account is not active.");
+
+  if(authUser && d.uid && String(d.uid) !== authUser.uid){
+    throw new Error("Admin account does not match your login.");
+  }
 }
 
 // used before any change (add, edit, publish, feature, delete)
 async function requireAdmin(){
-  if(!adminId || !ID_PATTERN.test(adminId)){
+  if(!adminDocId){
     throw new Error("Admin not detected. Please login at "+LOGIN_PAGE+" first, then reload this page.");
   }
 
-  if(verifiedId !== adminId){
-    assertAdminDoc(await getDoc(doc(db,"admins",adminId)));
-    verifiedId = adminId;
+  if(verifiedId !== adminDocId){
+    assertAdminDoc(await getDoc(doc(db,"admins",adminDocId)));
+    verifiedId = adminDocId;
   }
-  return adminId;
+  return adminDocId;
 }
 
 function setStatus(text,cls){
@@ -758,23 +765,10 @@ function setStatus(text,cls){
   el.className = "muted " + (cls || "");
 }
 
-// 1) Firebase session from login-admin.html  2) ID saved by login-admin.html  3) ?adminId= in URL
-async function detectAdminId(user){
-  if(user){
-    try{
-      const snap = await getDocs(query(collection(db,"admins"),where("uid","==",user.uid),limit(1)));
-      if(!snap.empty){
-        const d = snap.docs[0];
-        return String(d.data().adminId || d.id).trim();
-      }
-    }catch(error){
-      console.error(error);
-    }
-  }
-
+// adminId saved by login-admin.html (localStorage / sessionStorage) or ?adminId= in the URL
+function readAdminId(){
   try{
-    const q = new URLSearchParams(location.search);
-    const fromUrl = (q.get("adminId") || "").trim();
+    const fromUrl = (new URLSearchParams(location.search).get("adminId") || "").trim();
     if(fromUrl) return fromUrl;
   }catch{}
 
@@ -789,18 +783,23 @@ async function detectAdminId(user){
 
 async function setupAdmin(user){
   authUser = user || null;
-
-  const id = await detectAdminId(user);
-  adminId = ID_PATTERN.test(id) ? id : "";
+  adminId = "";
+  adminDocId = "";
+  adminData = null;
   verifiedId = "";
 
-  if(!adminId){
+  const id = readAdminId();
+
+  if(!id || id.includes("/")){
     $("adminLabel").innerHTML = 'Not logged in · <a href="'+LOGIN_PAGE+'">Admin login</a>';
     setStatus("");
     await loadLimit();
     return;
   }
 
+  // ONLY admins/{adminId}
+  adminId = id;
+  adminDocId = id;
   $("adminLabel").textContent = "Admin ID: " + adminId;
   await loadLimit();
 
