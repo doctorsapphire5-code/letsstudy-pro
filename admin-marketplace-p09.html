@@ -48,16 +48,13 @@ label{display:block;font-size:12.5px;font-weight:700;color:var(--mut);margin-bot
 .chk{display:flex;align-items:center;gap:10px;padding-top:24px}.chk input{width:20px;height:20px}.chk label{margin:0;font-size:14px;color:var(--ink)}
 .mf{padding:16px 24px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px}
 #err{grid-column:1/-1;color:var(--bad);font-size:13.5px;font-weight:600;display:none}
-#gate{min-height:70vh;display:grid;place-items:center;text-align:center;padding:20px}#gate p{color:var(--mut);margin:6px 0 18px}
 #toast{position:fixed;left:50%;bottom:30px;transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:11px 20px;border-radius:99px;font-size:14px;opacity:0;pointer-events:none;transition:.3s;z-index:90}#toast.on{opacity:1;transform:translate(-50%,0)}
-#main{display:none}
 @media(max-width:640px){.mb{grid-template-columns:1fr}.who span{display:none}}
 </style>
 </head>
 <body>
 <header><div class="bar"><a class="logo" href="admin-dashboard.html">LetsStudy<b>Pro</b> · Admin</a><div class="who"><span id="me"></span><button class="btn" id="out">Sign out</button></div></div></header>
 
-<div id="gate"><div><div style="font-size:48px">🔐</div><h1 id="gT">Checking access…</h1><p id="gP"></p><a class="btn p" id="gB" href="admin-login.html" style="display:none">Go to admin login</a></div></div>
 
 <div class="wrap" id="main">
   <h1>Marketplace</h1><p class="sub">Create, edit, publish and remove products shown on the marketplace.</p>
@@ -103,7 +100,7 @@ label{display:block;font-size:12.5px;font-weight:700;color:var(--mut);margin-bot
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import{getAuth,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-import{getFirestore,collection,getDocs,getDoc,doc,addDoc,updateDoc,deleteDoc,query,where,limit,serverTimestamp}from"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+import{getFirestore,collection,getDocs,doc,addDoc,updateDoc,deleteDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 // LETSSTUDY PRO FIREBASE CONFIG
   const firebaseConfig = {
@@ -127,27 +124,13 @@ const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("on");setTim
 const slugify=s=>String(s).toLowerCase().trim().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,80);
 const okUrl=u=>!u||/^https?:\/\//i.test(u);
 const eff=p=>{const a=num(p.price),d=num(p.discountPrice);return d>0&&d<a?d:a};
-let items=[],editId=null,admin=null;
+let items=[],editId=null;
 
-/* ---------- access ---------- */
-const okAdmin=d=>!d.status||["active","approved"].includes(String(d.status).toLowerCase());
-async function isAdmin(u){
-  try{
-    const s=await getDoc(doc(db,"admins",u.uid));if(s.exists())return okAdmin(s.data());
-    let q=await getDocs(query(collection(db,"admins"),where("uid","==",u.uid),limit(1)));if(!q.empty)return okAdmin(q.docs[0].data());
-    if(u.email){q=await getDocs(query(collection(db,"admins"),where("email","==",u.email),limit(1)));if(!q.empty)return okAdmin(q.docs[0].data())}
-  }catch(e){console.error(e)}
-  return false;
-}
-function gate(t,p,btn){$("#gT").textContent=t;$("#gP").textContent=p;$("#gB").style.display=btn?"inline-flex":"none";$("#gate").style.display="grid";$("#main").style.display="none"}
-onAuthStateChanged(auth,async u=>{
-  if(!u){gate("Sign in required","Please sign in with your admin account.",true);setTimeout(()=>location.replace("admin-login.html?next=admin-marketplace.html"),1200);return}
-  if(!(await isAdmin(u))){gate("Access denied","This account is not an active admin.",true);return}
-  admin=u;$("#me").innerHTML=`<span>${esc(u.email||"Admin")}</span>`;
-  $("#gate").style.display="none";$("#main").style.display="block";
-  await load();
-});
-$("#out").onclick=async()=>{await signOut(auth);location.replace("admin-login.html")};
+/* ---------- session (no access checks — Firebase rules decide who can read/write) ---------- */
+$("#out").style.display="none";
+$("#out").onclick=async()=>{await signOut(auth);location.reload()};
+onAuthStateChanged(auth,u=>{$("#me").textContent=u?(u.email||""):"";$("#out").style.display=u?"":"none"});
+try{await auth.authStateReady()}catch{}
 
 /* ---------- data ---------- */
 async function load(){
@@ -172,6 +155,7 @@ function draw(){
 $("#ft").innerHTML+=TYPES.map(t=>`<option>${t}</option>`).join("");
 $("#type").innerHTML=TYPES.map(t=>`<option>${t}</option>`).join("");
 ["q","fs","ft"].forEach(i=>$("#"+i).addEventListener("input",draw));
+load();
 
 $("#rows").onclick=async e=>{
   const b=e.target.closest("button[data-a]");if(!b)return;
