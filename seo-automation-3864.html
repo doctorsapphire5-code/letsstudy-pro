@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>SEO Automation – LetsStudy Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<!--
+  DATA (Firestore, read and written by this page and read by your GitHub Actions SEO job):
+  seoAutomation/config  { enabled, jobs:{ discover|sitemap|indexnow|inspect|audit|report:{ enabled, every:"1h|6h|24h|7d" } }, guards:{ maxBatch, maxRemovals } }
+  seoApprovals/{id}     { url, title, type, change:"new|updated|removed", status:"pending|approved|rejected", detectedAt }   (written by the job, decided here)
+  seoRuns/{id}          { job, status:"success|partial|failed", startedAt, seconds, urlsProcessed, message }                  (written by the job)
+  seoSettings/main      { automation.mode } is only read, to show whether approval is required.
+  Protect all four with Firestore rules (admins only). This page does no client-side access checks.
+  The GitHub Actions workflow runs on a fixed schedule (hourly is a good choice); each job checks this config to see whether it is due.
+-->
+<style>
+:root{--ink:#14213D;--paper:#F5F7FB;--surface:#fff;--line:#DCE1EC;--muted:#58627A;--blue:#2F5BEA;--good:#1F8A63;--warn:#B7791F;--bad:#C23B35;--hl:#FFE27A;color-scheme:light dark}
+@media (prefers-color-scheme:dark){:root{--ink:#E8ECF7;--paper:#0F1626;--surface:#151E33;--line:#27324D;--muted:#9AA6C2;--blue:#8BA6FF;--good:#4CC79A;--warn:#E8B04A;--bad:#F0726B;--hl:#6B5A14}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 15px/1.55 Figtree,system-ui,-apple-system,"Segoe UI",sans-serif}
+h1,h2{font-family:"Bricolage Grotesque",Figtree,system-ui,sans-serif;margin:0;line-height:1.15;letter-spacing:-.01em}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:4px}
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+.side{position:sticky;top:0;align-self:start;height:100vh;padding:22px 14px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:4px}
+.brand{font:700 18px "Bricolage Grotesque",sans-serif;text-decoration:none;padding:0 10px 16px}
+.side a:not(.brand){padding:8px 10px;border-radius:6px;text-decoration:none;color:var(--muted);font-weight:500}
+.side a:not(.brand):hover{color:var(--ink);background:var(--surface)}
+.side a[aria-current]{background:var(--hl);color:var(--ink);font-weight:600}
+main{padding:28px clamp(16px,4vw,44px) 0;max-width:1120px;width:100%}
+.top h1{font-size:clamp(1.5rem,3vw,2rem)}
+.top p{margin:6px 0 24px;color:var(--muted);max-width:64ch}
+.master{display:flex;gap:14px;align-items:flex-start;padding:18px 20px;border-left:4px solid var(--good);background:var(--surface);margin-bottom:8px}
+.master.off{border-left-color:var(--warn)}
+.master strong{display:block;font-size:1.05rem}
+.master span{color:var(--muted);font-size:14px}
+.sec{display:grid;grid-template-columns:240px 1fr;gap:28px;padding:28px 0;border-top:1px solid var(--line)}
+.sec h2{font-size:1.2rem}
+.sec>div>p{margin:6px 0 0;color:var(--muted);font-size:14px}
+label{display:block;font-weight:600;font-size:14px}
+label small{display:block;font-weight:400;color:var(--muted);margin-top:2px}
+input[type=number],select{display:block;width:100%;margin-top:6px;padding:9px 11px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font:inherit}
+input[aria-invalid=true]{border-color:var(--bad)}
+.chk{display:flex;gap:10px;align-items:flex-start}
+.chk input{margin-top:3px;width:18px;height:18px;accent-color:var(--blue)}
+.job{display:grid;grid-template-columns:1fr 170px;gap:16px;align-items:center;padding:12px 0}
+.job+.job{border-top:1px dashed var(--line)}
+.job small{display:block;color:var(--muted);font-weight:400;font-size:13px}
+.job select{margin:0}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:560px}
+.q{display:grid;gap:0}
+.q .it{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:12px 0}
+.q .it+.it{border-top:1px dashed var(--line)}
+.q b{display:block;overflow-wrap:anywhere}
+.q small{color:var(--muted);overflow-wrap:anywhere}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:99px;border:1px solid var(--line);margin-right:6px}
+.acts{display:flex;gap:8px}
+button{font:600 14px Figtree,sans-serif;padding:8px 14px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+button.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+@media (prefers-color-scheme:dark){button.primary{color:#0F1626}}
+button:disabled{opacity:.5;cursor:not-allowed}
+.qhead{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:6px;color:var(--muted);font-size:14px}
+.wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:560px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:13px;padding:8px 12px 8px 0}
+td{padding:10px 12px 10px 0;border-top:1px dashed var(--line);font-size:14px;vertical-align:top}
+.pill::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--c)}
+.pill.good{--c:var(--good)}.pill.warn{--c:var(--warn)}.pill.bad{--c:var(--bad)}
+.empty{color:var(--muted);margin:0}
+.bar{position:sticky;bottom:0;margin:0 calc(-1*clamp(16px,4vw,44px));padding:14px clamp(16px,4vw,44px) calc(14px + env(safe-area-inset-bottom,0px));background:var(--paper);border-top:1px solid var(--line);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#msg{color:var(--muted);flex:1;min-width:180px}
+#errors{margin:0 0 8px;padding:12px 16px;border-left:3px solid var(--bad);background:var(--surface);display:none}
+@media (max-width:860px){
+ .shell{grid-template-columns:1fr}
+ .side{position:static;height:auto;flex-direction:row;overflow-x:auto;padding:10px 12px;border-right:0;border-bottom:1px solid var(--line)}
+ .brand{padding:8px 12px 8px 4px;white-space:nowrap}.side a{white-space:nowrap}
+ .sec{grid-template-columns:1fr;gap:16px}
+ .job{grid-template-columns:1fr}
+ .q .it{grid-template-columns:1fr}
+}
+@media (max-width:520px){.pair{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="side" aria-label="SEO sections">
+    <a class="brand" href="/">LetsStudy Pro</a>
+    <a href="seo-dashboard.html">Dashboard</a>
+    <a href="seo-indexing.html">Indexing</a>
+    <a href="seo-sitemap.html">Sitemap</a>
+    <a href="seo-audit.html">Technical audit</a>
+    <a href="seo-schema.html">Structured data</a>
+    <a href="seo-automation.html" aria-current="page">Automation</a>
+    <a href="seo-reports.html">Reports</a>
+    <a href="seo-settings.html">Settings</a>
+  </nav>
+  <main>
+    <header class="top">
+      <h1>SEO automation</h1>
+      <p>Choose which SEO jobs run on their own, how often, and which changes wait for your approval. Google’s Indexing API is only for job postings and livestreams, so it is not used for articles, courses or resources.</p>
+    </header>
+
+    <form id="f" novalidate>
+      <div id="errors" role="alert"></div>
+
+      <div class="master" id="master">
+        <label class="chk"><input type="checkbox" name="enabled"><span><strong id="mt">Automation is on</strong><span id="ms">All enabled jobs below run on schedule.</span></span></label>
+      </div>
+
+      <section class="sec" aria-labelledby="h1">
+        <div><h2 id="h1">Jobs and schedule</h2><p>Each job runs only when it is switched on and due.</p></div>
+        <div id="jobs"></div>
+      </section>
+
+      <section class="sec" aria-labelledby="h2">
+        <div><h2 id="h2">Safety limits</h2><p>Stops a bad run from doing damage at scale.</p></div>
+        <div class="pair">
+          <label>Largest IndexNow batch<small>URLs per notification, 1 to 10,000.</small><input type="number" name="guards.maxBatch" min="1" max="10000" step="1"></label>
+          <label>Pause if removals exceed<small>Removed pages in one run before the job stops and waits for you.</small><input type="number" name="guards.maxRemovals" min="0" max="10000" step="1"></label>
+        </div>
+      </section>
+
+      <section class="sec" aria-labelledby="h3">
+        <div><h2 id="h3">Waiting for approval</h2><p id="modeNote">Changes the job found that need a decision before they are sent to search engines.</p></div>
+        <div>
+          <div class="qhead"><span id="qcount">Loading…</span><button type="button" id="approveAll" disabled>Approve all</button></div>
+          <div class="q" id="queue"></div>
+          <p class="empty" id="qmsg" role="status"></p>
+        </div>
+      </section>
+
+      <section class="sec" aria-labelledby="h4">
+        <div><h2 id="h4">Recent runs</h2><p>The latest ten runs reported by the job.</p></div>
+        <div class="wrap">
+          <table><thead><tr><th>Started</th><th>Job</th><th>Result</th><th>URLs</th><th>Time</th><th>Note</th></tr></thead><tbody id="runs"></tbody></table>
+          <p class="empty" id="rempty">No runs reported yet.</p>
+        </div>
+      </section>
+
+      <div class="bar">
+        <button type="submit" class="primary" id="save" disabled>Save automation</button>
+        <button type="button" id="discard" disabled>Discard changes</button>
+        <span id="msg" aria-live="polite">Loading…</span>
+      </div>
+    </form>
+  </main>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, writeBatch, collection, query, where, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+// LETSSTUDY PRO FIREBASE CONFIG
+  const firebaseConfig = {
+    apiKey: "AIzaSyBcOYDfAVKXbKXjsyRgI_0rjodBn678tCc",
+    authDomain: "let-s-study-pro-course.firebaseapp.com",
+    databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+    projectId: "let-s-study-pro-course",
+    storageBucket: "let-s-study-pro-course.firebasestorage.app",
+    messagingSenderId: "474928293390",
+    appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+    measurementId: "G-85B7V5H5J0"
+  };
+
+const JOBS = [
+  ["discover", "Find new and changed pages", "Compares your content with the sitemap to spot additions, edits and removals.", "1h"],
+  ["sitemap", "Rebuild the sitemap", "Regenerates sitemap.xml and submits it to search engines.", "1h"],
+  ["indexnow", "Notify IndexNow", "Tells participating search engines about approved changes.", "1h"],
+  ["inspect", "Check indexing status", "Asks Search Console whether tracked pages are indexed.", "24h"],
+  ["audit", "Run the technical audit", "Looks for broken links, redirects and duplicate addresses.", "7d"],
+  ["report", "Write the daily report", "Refreshes the numbers on the SEO dashboard.", "24h"]
+];
+const EVERY = [["1h", "Every hour"], ["6h", "Every 6 hours"], ["24h", "Every day"], ["7d", "Every week"]];
+const DEFAULTS = { enabled: true, jobs: Object.fromEntries(JOBS.map(j => [j[0], { enabled: true, every: j[3] }])), guards: { maxBatch: 1000, maxRemovals: 50 } };
+
+const $ = id => document.getElementById(id);
+const form = $("f");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const when = v => { if (!v) return "–"; const d = v.toDate ? v.toDate() : new Date(v); return isNaN(d) ? esc(v) : d.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }); };
+const getP = (o, p) => p.split(".").reduce((a, k) => (a == null ? a : a[k]), o);
+const setP = (o, p, v) => { const k = p.split("."); const last = k.pop(); k.reduce((a, x) => (a[x] ??= {}), o)[last] = v; };
+const merge = (b, o) => { if (typeof b !== "object" || b === null) return o === undefined ? b : o; const r = { ...b }; for (const k in (o || {})) r[k] = merge(b[k], o[k]); return r; };
+
+$("jobs").innerHTML = JOBS.map(([k, t, d]) => `
+  <div class="job"><label class="chk"><input type="checkbox" name="jobs.${k}.enabled"><span>${t}<small>${d}</small></span></label>
+  <select name="jobs.${k}.every" aria-label="${t}: how often">${EVERY.map(([v, l]) => `<option value="${v}">${l}</option>`).join("")}</select></div>`).join("");
+
+const fields = () => [...form.elements].filter(e => e.name);
+let saved = DEFAULTS, dirty = false;
+
+function paint() {
+  const on = form.elements["enabled"].checked;
+  $("master").classList.toggle("off", !on);
+  $("mt").textContent = on ? "Automation is on" : "Automation is paused";
+  $("ms").textContent = on ? "All enabled jobs below run on schedule." : "No job will run until you switch this back on.";
+}
+function fill(d) {
+  for (const el of fields()) { const v = getP(d, el.name); if (el.type === "checkbox") el.checked = !!v; else el.value = v ?? ""; el.removeAttribute("aria-invalid"); }
+  paint();
+}
+function collect() {
+  const o = {};
+  for (const el of fields()) setP(o, el.name, el.type === "checkbox" ? el.checked : el.type === "number" ? Number(el.value) : el.value);
+  return o;
+}
+function setDirty(on, text) {
+  dirty = on; $("save").disabled = !on; $("discard").disabled = !on;
+  $("msg").textContent = text || (on ? "You have unsaved changes." : "All changes saved.");
+}
+form.addEventListener("input", () => { paint(); setDirty(true); });
+$("discard").addEventListener("click", () => { fill(saved); $("errors").style.display = "none"; setDirty(false); });
+window.addEventListener("beforeunload", e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+
+function validate(d) {
+  const bad = [];
+  const chk = (name, ok, msg) => { if (!ok) { bad.push(msg); form.elements[name].setAttribute("aria-invalid", "true"); } else form.elements[name].removeAttribute("aria-invalid"); };
+  chk("guards.maxBatch", Number.isInteger(d.guards.maxBatch) && d.guards.maxBatch >= 1 && d.guards.maxBatch <= 10000, "Largest IndexNow batch must be a whole number from 1 to 10,000.");
+  chk("guards.maxRemovals", Number.isInteger(d.guards.maxRemovals) && d.guards.maxRemovals >= 0 && d.guards.maxRemovals <= 10000, "Removal limit must be a whole number from 0 to 10,000.");
+  return bad;
+}
+
+/* Approvals */
+let pending = [];
+const CH = { new: "New", updated: "Updated", removed: "Removed" };
+function drawQueue() {
+  $("qcount").textContent = pending.length ? `${pending.length} waiting` : "Nothing waiting";
+  $("approveAll").disabled = !pending.length;
+  $("queue").innerHTML = pending.map(p => `<div class="it"><div><b><span class="tag">${esc(CH[p.change] || p.change)}</span>${esc(p.title || "Untitled")}</b><small>${esc(p.url)} (found ${when(p.detectedAt)})</small></div>
+    <div class="acts"><button type="button" class="primary" data-id="${esc(p.id)}" data-a="approved">Approve</button><button type="button" data-id="${esc(p.id)}" data-a="rejected">Reject</button></div></div>`).join("");
+}
+
+fill(DEFAULTS);
+drawQueue();
+
+if (firebaseConfig.apiKey.startsWith("YOUR_")) {
+  $("msg").textContent = "Add your Firebase web config at the top of this page’s script to load and save automation settings.";
+  $("qcount").textContent = "Not connected";
+} else {
+  const db = getFirestore(initializeApp(firebaseConfig));
+  const cfg = doc(db, "seoAutomation", "config");
+  const fail = (what, err) => { $("msg").textContent = `Can’t ${what} (${err.code || "error"}). Check you are signed in and that your Firestore rules allow it.`; };
+
+  getDoc(cfg).then(s => { saved = merge(DEFAULTS, s.exists() ? s.data() : {}); fill(saved); setDirty(false, s.exists() ? "All changes saved." : "No saved settings yet. Defaults are shown; save to create them."); }).catch(e => fail("read seoAutomation/config", e));
+  getDoc(doc(db, "seoSettings", "main")).then(s => {
+    const m = s.exists() && s.data().automation?.mode;
+    if (m) $("modeNote").textContent = m === "approval" ? "Approval is required: nothing is sent to search engines until you approve it here." : "Approval is off: changes are processed automatically. Items only appear here if a safety limit paused a run.";
+  }).catch(() => {});
+
+  onSnapshot(query(collection(db, "seoApprovals"), where("status", "==", "pending"), limit(100)), snap => {
+    pending = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => String(b.detectedAt?.seconds ?? b.detectedAt).localeCompare(String(a.detectedAt?.seconds ?? a.detectedAt)));
+    drawQueue();
+  }, e => { $("qcount").textContent = "Can’t load the queue"; $("qmsg").textContent = "Error: " + (e.code || "unknown"); });
+
+  onSnapshot(query(collection(db, "seoRuns"), orderBy("startedAt", "desc"), limit(10)), snap => {
+    const tone = s => s === "success" ? "good" : s === "failed" ? "bad" : "warn";
+    $("rempty").hidden = !snap.empty;
+    $("runs").innerHTML = snap.docs.map(d => d.data()).map(r => `<tr><td>${when(r.startedAt)}</td><td>${esc(r.job)}</td><td><span class="pill ${tone(r.status)}">${esc(r.status)}</span></td><td>${r.urlsProcessed ?? "–"}</td><td>${r.seconds != null ? esc(r.seconds) + " s" : "–"}</td><td>${esc(r.message || "")}</td></tr>`).join("");
+  }, () => {});
+
+  $("queue").addEventListener("click", async e => {
+    const b = e.target.closest("button[data-id]"); if (!b) return;
+    b.disabled = true; $("qmsg").textContent = "";
+    try { await updateDoc(doc(db, "seoApprovals", b.dataset.id), { status: b.dataset.a, decidedAt: serverTimestamp() }); }
+    catch (err) { b.disabled = false; $("qmsg").textContent = "Couldn’t save that decision (" + (err.code || "error") + ")."; }
+  });
+  $("approveAll").addEventListener("click", async () => {
+    if (!confirm(`Approve all ${pending.length} waiting changes?`)) return;
+    $("approveAll").disabled = true; $("qmsg").textContent = "";
+    try {
+      for (let i = 0; i < pending.length; i += 400) {
+        const batch = writeBatch(db);
+        pending.slice(i, i + 400).forEach(p => batch.update(doc(db, "seoApprovals", p.id), { status: "approved", decidedAt: serverTimestamp() }));
+        await batch.commit();
+      }
+    } catch (err) { $("approveAll").disabled = false; $("qmsg").textContent = "Couldn’t approve all (" + (err.code || "error") + ")."; }
+  });
+
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    const d = collect(), bad = validate(d), box = $("errors");
+    box.style.display = bad.length ? "block" : "none";
+    box.innerHTML = bad.length ? "<strong>Fix this before saving</strong><ul>" + bad.map(m => `<li>${esc(m)}</li>`).join("") + "</ul>" : "";
+    if (bad.length) return;
+    $("save").disabled = true; $("msg").textContent = "Saving…";
+    try { await setDoc(cfg, { ...d, updatedAt: serverTimestamp() }, { merge: true }); saved = d; setDirty(false, "Automation settings saved."); }
+    catch (err) { $("save").disabled = false; $("msg").textContent = "Couldn’t save (" + (err.code || "error") + "). Your changes are still on this page."; }
+  });
+}
+</script>
+</body>
+</html>
