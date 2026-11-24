@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>SEO Reports – LetsStudy Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<!--
+  DATA: Firestore collection  seoReportHistory  (one document per day, written by your GitHub Actions report job; the document ID is the date)
+  { date: "2026-11-24",
+    clicks, impressions, position,                    // that single day, from Search Console
+    indexed, notIndexed, errors,                      // URL counts on that day
+    bySection: { blog|courses|careers|scholarships|resources: { clicks, impressions } },   // last 28 days
+    topPages:   [ { url, title, clicks, impressions, position } ],                          // last 28 days
+    topQueries: [ { query, clicks, impressions, position } ] }                              // last 28 days
+  The newest 180 documents are loaded. Lists and the section chart come from the latest day.
+  Protect the collection with Firestore rules (admins only). This page does no client-side access checks.
+-->
+<style>
+:root{--ink:#14213D;--paper:#F5F7FB;--surface:#fff;--line:#DCE1EC;--muted:#58627A;--blue:#2F5BEA;--good:#1F8A63;--warn:#B7791F;--bad:#C23B35;--hl:#FFE27A;color-scheme:light dark}
+@media (prefers-color-scheme:dark){:root{--ink:#E8ECF7;--paper:#0F1626;--surface:#151E33;--line:#27324D;--muted:#9AA6C2;--blue:#8BA6FF;--good:#4CC79A;--warn:#E8B04A;--bad:#F0726B;--hl:#6B5A14}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 15px/1.55 Figtree,system-ui,-apple-system,"Segoe UI",sans-serif}
+h1,h2{font-family:"Bricolage Grotesque",Figtree,system-ui,sans-serif;margin:0;line-height:1.15;letter-spacing:-.01em}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:4px}
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+.side{position:sticky;top:0;align-self:start;height:100vh;padding:22px 14px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:4px}
+.brand{font:700 18px "Bricolage Grotesque",sans-serif;text-decoration:none;padding:0 10px 16px}
+.side a:not(.brand){padding:8px 10px;border-radius:6px;text-decoration:none;color:var(--muted);font-weight:500}
+.side a:not(.brand):hover{color:var(--ink);background:var(--surface)}
+.side a[aria-current]{background:var(--hl);color:var(--ink);font-weight:600}
+main{padding:28px clamp(16px,4vw,44px) 56px;max-width:1120px;width:100%}
+.head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;align-items:flex-end;margin-bottom:22px}
+.head h1{font-size:clamp(1.5rem,3vw,2rem)}
+.head p{margin:6px 0 0;color:var(--muted)}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;border-radius:0;background:var(--surface)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed=true]{background:var(--blue);color:#fff}
+@media (prefers-color-scheme:dark){.seg button[aria-pressed=true]{color:#0F1626}}
+button{font:600 14px Figtree,sans-serif;padding:9px 14px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);cursor:pointer}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.kpi{padding:20px 16px 20px 0}
+.kpi+.kpi{padding-left:16px;border-left:1px solid var(--line)}
+.kpi b{display:block;font:700 clamp(1.5rem,3vw,2.1rem)/1.1 "Bricolage Grotesque",sans-serif;font-variant-numeric:tabular-nums}
+.kpi>span{color:var(--muted);font-size:14px}
+.d{display:block;font-size:13px;margin-top:4px;color:var(--muted)}
+.d.good{color:var(--good)}.d.bad{color:var(--bad)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:32px;padding:28px 0;border-bottom:1px solid var(--line)}
+h2.s{font-size:1.2rem;margin-bottom:12px}
+svg{display:block;width:100%;height:auto}
+.leg{display:flex;flex-wrap:wrap;gap:4px 16px;color:var(--muted);font-size:13px;margin:8px 0 0}
+.leg span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;background:var(--c)}
+.row{display:grid;grid-template-columns:110px 1fr 100px;gap:12px;align-items:center;padding:8px 0}
+.row+.row{border-top:1px dashed var(--line)}
+.bar{height:14px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--blue)}
+.n{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;font-size:14px}
+.wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:420px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:13px;padding:8px 10px 8px 0}
+th.r,td.r{text-align:right;font-variant-numeric:tabular-nums}
+td{padding:9px 10px 9px 0;border-top:1px dashed var(--line);font-size:14px;vertical-align:top}
+td b{display:block;font-weight:600;overflow-wrap:anywhere}
+td small{color:var(--muted);overflow-wrap:anywhere}
+.empty{color:var(--muted);margin:0}
+.three{display:grid;grid-template-columns:1fr 1fr;gap:32px;padding-top:28px}
+@media (max-width:860px){
+ .shell{grid-template-columns:1fr}
+ .side{position:static;height:auto;flex-direction:row;overflow-x:auto;padding:10px 12px;border-right:0;border-bottom:1px solid var(--line)}
+ .brand{padding:8px 12px 8px 4px;white-space:nowrap}.side a{white-space:nowrap}
+ .two,.three{grid-template-columns:1fr;gap:28px}
+}
+@media (max-width:520px){.kpi+.kpi{border-left:0;padding-left:0}.row{grid-template-columns:90px 1fr 80px}}
+@media print{.side,.tools{display:none!important}.shell{display:block}body{background:#fff;color:#000}main{padding:0;max-width:none}.two,.three{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="side" aria-label="SEO sections">
+    <a class="brand" href="/">LetsStudy Pro</a>
+    <a href="seo-dashboard.html">Dashboard</a>
+    <a href="seo-indexing.html">Indexing</a>
+    <a href="seo-sitemap.html">Sitemap</a>
+    <a href="seo-audit.html">Technical audit</a>
+    <a href="seo-schema.html">Structured data</a>
+    <a href="seo-automation.html">Automation</a>
+    <a href="seo-reports.html" aria-current="page">Reports</a>
+    <a href="seo-settings.html">Settings</a>
+  </nav>
+  <main>
+    <header class="head">
+      <div><h1>SEO reports</h1><p id="stamp" aria-live="polite">Loading report history…</p></div>
+      <div class="tools">
+        <div class="seg" id="range" role="group" aria-label="Report period">
+          <button type="button" data-n="7" aria-pressed="false">7 days</button>
+          <button type="button" data-n="28" aria-pressed="true">28 days</button>
+          <button type="button" data-n="90" aria-pressed="false">90 days</button>
+        </div>
+        <button type="button" id="csv">Export CSV</button>
+        <button type="button" id="print">Print or save as PDF</button>
+      </div>
+    </header>
+
+    <section class="kpis" id="kpis" aria-label="Summary for the chosen period"></section>
+
+    <div class="two">
+      <section aria-labelledby="c1"><h2 class="s" id="c1">Clicks and impressions</h2><div id="ch1"></div><p class="leg"><span style="--c:var(--blue)">Clicks (line)</span><span style="--c:var(--blue);opacity:.45">Impressions (area)</span></p></section>
+      <section aria-labelledby="c2"><h2 class="s" id="c2">Indexed pages</h2><div id="ch2"></div><p class="leg"><span style="--c:var(--good)">Indexed</span><span style="--c:var(--warn)">Not indexed</span></p></section>
+    </div>
+
+    <div class="three">
+      <section aria-labelledby="s1"><h2 class="s" id="s1">Clicks by section</h2><div id="sect"></div></section>
+      <section aria-labelledby="s2"><h2 class="s" id="s2">Top pages</h2><div class="wrap"><table><thead><tr><th>Page</th><th class="r">Clicks</th><th class="r">Impr.</th><th class="r">Pos.</th></tr></thead><tbody id="pages"></tbody></table></div></section>
+    </div>
+    <div class="three" style="grid-template-columns:1fr">
+      <section aria-labelledby="s3"><h2 class="s" id="s3">Top search queries</h2><div class="wrap"><table><thead><tr><th>Query</th><th class="r">Clicks</th><th class="r">Impressions</th><th class="r">Click rate</th><th class="r">Position</th></tr></thead><tbody id="queries"></tbody></table></div></section>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getFirestore, collection, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+// LETSSTUDY PRO FIREBASE CONFIG
+  const firebaseConfig = {
+    apiKey: "AIzaSyBcOYDfAVKXbKXjsyRgI_0rjodBn678tCc",
+    authDomain: "let-s-study-pro-course.firebaseapp.com",
+    databaseURL: "https://let-s-study-pro-course-default-rtdb.firebaseio.com",
+    projectId: "let-s-study-pro-course",
+    storageBucket: "let-s-study-pro-course.firebasestorage.app",
+    messagingSenderId: "474928293390",
+    appId: "1:474928293390:web:2bcc2aebf2351c12a9fe5f",
+    measurementId: "G-85B7V5H5J0"
+  };
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = n => Number(n || 0).toLocaleString("en");
+const day = d => { const x = new Date(d + "T00:00:00"); return isNaN(x) ? esc(d) : x.toLocaleDateString("en-GB", { dateStyle: "medium" }); };
+const sum = (rows, k) => rows.reduce((a, r) => a + (+r[k] || 0), 0);
+const SECT = { blog: "Blog", courses: "Courses", careers: "Careers", scholarships: "Scholarships", resources: "Resources" };
+let all = [], N = 28;
+
+function agg(rows) {
+  const c = sum(rows, "clicks"), i = sum(rows, "impressions");
+  const w = rows.reduce((a, r) => a + (+r.position || 0) * (+r.impressions || 0), 0);
+  return { clicks: c, impressions: i, ctr: i ? c / i * 100 : 0, position: i ? w / i : 0 };
+}
+function delta(a, b, { lower = false, abs = false } = {}) {
+  if (!b) return '<span class="d">No earlier period to compare yet</span>';
+  const diff = a - b;
+  if (abs) {
+    const v = Math.abs(diff).toFixed(1);
+    if (!+v) return '<span class="d">No change from the previous period</span>';
+    const better = lower ? diff < 0 : diff > 0;
+    return `<span class="d ${better ? "good" : "bad"}">${better ? "Improved" : "Worse"} by ${v} places</span>`;
+  }
+  if (!b) return '<span class="d">New activity</span>';
+  const p = diff / b * 100;
+  if (Math.abs(p) < 0.5) return `<span class="d">About the same as the previous ${N} days</span>`;
+  return `<span class="d ${p > 0 ? "good" : "bad"}">${p > 0 ? "Up" : "Down"} ${Math.abs(p).toFixed(0)}% from the previous ${N} days</span>`;
+}
+
+function lineChart(el, rows, defs, shared) {
+  if (rows.length < 2) { el.innerHTML = '<p class="empty">Needs at least two days of history.</p>'; return; }
+  const W = 640, H = 200, P = 8, n = rows.length, base = H - 24;
+  const sharedMax = Math.max(1, ...defs.flatMap(d => rows.map(r => +r[d.k] || 0)));
+  const x = i => P + i * (W - 2 * P) / (n - 1);
+  let g = `<line x1="${P}" x2="${W - P}" y1="${base}" y2="${base}" stroke="var(--line)"/>`;
+  for (const d of defs) {
+    const m = shared ? sharedMax : Math.max(1, ...rows.map(r => +r[d.k] || 0));
+    const pts = rows.map((r, i) => `${x(i).toFixed(1)},${(base - ((+r[d.k] || 0) / m) * (H - 44)).toFixed(1)}`).join(" ");
+    if (d.area) g += `<polygon points="${x(0)},${base} ${pts} ${x(n - 1)},${base}" fill="${d.c}" opacity=".14"/>`;
+    else g += `<polyline points="${pts}" fill="none" stroke="${d.c}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+  }
+  g += `<text x="${P}" y="${H - 6}" font-size="12" fill="var(--muted)">${esc(rows[0].date)}</text><text x="${W - P}" y="${H - 6}" font-size="12" fill="var(--muted)" text-anchor="end">${esc(rows[n - 1].date)}</text>`;
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(defs.map(d => d.l).join(" and "))} from ${esc(rows[0].date)} to ${esc(rows[n - 1].date)}">${g}</svg>`;
+}
+
+function render() {
+  const empty = !all.length;
+  const cur = all.slice(-N), prev = all.slice(-2 * N, -N);
+  const A = agg(cur), B = prev.length >= N ? agg(prev) : null;
+  const last = all[all.length - 1] || {};
+  $("stamp").textContent = empty ? "No report history yet. Your daily report job writes one document per day to seoReportHistory."
+    : `${day(cur[0].date)} to ${day(cur[cur.length - 1].date)}. ${cur.length < N ? `Only ${cur.length} of ${N} days have data so far.` : ""}`;
+  const total = (+last.indexed || 0) + (+last.notIndexed || 0) + (+last.errors || 0);
+  $("kpis").innerHTML = empty ? "" : [
+    [fmt(A.clicks), "Clicks", delta(A.clicks, B?.clicks)],
+    [fmt(A.impressions), "Impressions", delta(A.impressions, B?.impressions)],
+    [A.ctr.toFixed(1) + "%", "Average click rate", delta(A.ctr, B?.ctr)],
+    [A.position ? A.position.toFixed(1) : "–", "Average position", delta(A.position, B?.position, { lower: true, abs: true })],
+    [fmt(last.indexed), "Indexed pages", `<span class="d">of ${fmt(total)} tracked on ${day(last.date)}</span>`]
+  ].map(([v, l, d]) => `<div class="kpi"><b>${v}</b><span>${l}</span>${d}</div>`).join("");
+
+  lineChart($("ch1"), cur, [{ k: "impressions", c: "var(--blue)", area: true, l: "Impressions" }, { k: "clicks", c: "var(--blue)", l: "Clicks" }], false);
+  lineChart($("ch2"), cur, [{ k: "indexed", c: "var(--good)", l: "Indexed" }, { k: "notIndexed", c: "var(--warn)", l: "Not indexed" }], true);
+
+  const bs = last.bySection || {}, mx = Math.max(1, ...Object.values(bs).map(s => +s.clicks || 0));
+  $("sect").innerHTML = Object.keys(SECT).some(k => bs[k]) ? Object.keys(SECT).map(k => { const c = +(bs[k]?.clicks) || 0; return `<div class="row"><span>${SECT[k]}</span><div class="bar" role="img" aria-label="${SECT[k]}: ${c} clicks"><i style="width:${(c / mx * 100).toFixed(1)}%"></i></div><span class="n">${fmt(c)}</span></div>`; }).join("") + `<p class="empty" style="margin-top:8px;font-size:13px">Last 28 days, as of ${day(last.date)}.</p>` : '<p class="empty">No section data yet.</p>';
+
+  const pos = p => p ? (+p).toFixed(1) : "–";
+  $("pages").innerHTML = (last.topPages || []).slice(0, 10).map(p => `<tr><td><b>${esc(p.title || p.url)}</b><small>${esc(p.url)}</small></td><td class="r">${fmt(p.clicks)}</td><td class="r">${fmt(p.impressions)}</td><td class="r">${pos(p.position)}</td></tr>`).join("") || '<tr><td colspan="4" class="empty">No page data yet.</td></tr>';
+  $("queries").innerHTML = (last.topQueries || []).slice(0, 15).map(q => `<tr><td>${esc(q.query)}</td><td class="r">${fmt(q.clicks)}</td><td class="r">${fmt(q.impressions)}</td><td class="r">${q.impressions ? (q.clicks / q.impressions * 100).toFixed(1) + "%" : "–"}</td><td class="r">${pos(q.position)}</td></tr>`).join("") || '<tr><td colspan="5" class="empty">No query data yet.</td></tr>';
+}
+
+$("range").addEventListener("click", e => {
+  const b = e.target.closest("button[data-n]"); if (!b) return;
+  N = +b.dataset.n;
+  $("range").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  render();
+});
+$("print").addEventListener("click", () => window.print());
+$("csv").addEventListener("click", () => {
+  const cols = ["date", "clicks", "impressions", "position", "indexed", "notIndexed", "errors"];
+  const lines = [cols.join(",")].concat(all.slice(-N).map(r => cols.map(c => r[c] ?? "").join(",")));
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
+  a.download = `letsstudy-seo-report-${N}d.csv`;
+  a.click(); URL.revokeObjectURL(a.href);
+});
+
+render();
+
+if (firebaseConfig.apiKey.startsWith("YOUR_")) {
+  $("stamp").textContent = "Add your Firebase web config at the top of this page’s script to load report history.";
+} else {
+  const db = getFirestore(initializeApp(firebaseConfig));
+  onSnapshot(query(collection(db, "seoReportHistory"), orderBy("date", "desc"), limit(180)), snap => {
+    all = snap.docs.map(d => d.data()).filter(r => r.date).reverse();
+    render();
+  }, err => { $("stamp").textContent = "Can’t read seoReportHistory (" + (err.code || "error") + "). Check you are signed in and that your Firestore rules allow it."; });
+}
+</script>
+</body>
+</html>
